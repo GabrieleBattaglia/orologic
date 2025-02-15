@@ -1,17 +1,41 @@
 # Data di concepimento: 14/02/2025 by Gabriele Battaglia e ChatGPT o3-mini-high
 import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re
 from dateutil.relativedelta import relativedelta
-from	GBUtils import dgt,menu,Acusticator
-VERSION="2.1.3"
+from GBUtils import dgt,menu,Acusticator
+#QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-RELEASE_DATE=datetime.datetime(2025,2,15,12,57)
+VERSION="2.1.11"
+RELEASE_DATE=datetime.datetime(2025,2,15,22,44)
 PROGRAMMER="Gabriele Battaglia"
 DB_FILE="orologic_db.json"
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
-DOT_COMMANDS={".1":"Mostra il tempo rimanente del bianco",".2":"Mostra il tempo rimanente del nero",".3":"Confronta i tempi rimanenti e indica il vantaggio",".p":"Pausa/riavvia il countdown degli orologi",".q":"Annulla l'ultima mossa (solo in pausa)",".b+":"Aggiunge tempo al bianco (in pausa)",".b-":"Sottrae tempo al bianco (in pausa)",".n+":"Aggiunge tempo al nero (in pausa)",".n-":"Sottrae tempo al nero (in pausa)",".s":"Visualizza la scacchiera",".bianco":"Assegna vittoria al bianco (1-0)",".nero":"Assegna vittoria al nero (0-1)",".patta":"Assegna patta (1/2-1/2)",".*":"Assegna risultato non definito (*) e conclude la partita",".c":"Aggiunge un commento alla mossa corrente",".?":"Visualizza l'elenco dei comandi disponibili"}
-MENU_CHOICES={"?":"Visualizza il menù","c":"Crea un orologio","v":"Vedi gli orologi salvati","d":"Elimina un orologio salvato","e":"Modifica info default per PGN","m":"Visualizza il manuale","g":"Inizia a giocare",".":"Esci dall'applicazione"}
+DOT_COMMANDS={
+	".1":"Mostra il tempo rimanente del bianco",
+	".2":"Mostra il tempo rimanente del nero",
+	".3":"Confronta i tempi rimanenti e indica il vantaggio",
+	".p":"Pausa/riavvia il countdown degli orologi",
+	".q":"Annulla l'ultima mossa (solo in pausa)",
+	".b+":"Aggiunge tempo al bianco (in pausa)",
+	".b-":"Sottrae tempo al bianco (in pausa)",
+	".n+":"Aggiunge tempo al nero (in pausa)",
+	".n-":"Sottrae tempo al nero (in pausa)",
+	".s":"Visualizza la scacchiera",
+	".bianco":"Assegna vittoria al bianco (1-0)",
+	".nero":"Assegna vittoria al nero (0-1)",
+	".patta":"Assegna patta (1/2-1/2)",
+	".*":"Assegna risultato non definito (*) e conclude la partita",
+	".c":"Aggiunge un commento alla mossa corrente",
+	".?":"Visualizza l'elenco dei comandi disponibili"}
+MENU_CHOICES={
+	"?":"Visualizza il menù",
+	"c":"Crea un orologio",
+	"v":"Vedi gli orologi salvati",
+	"d":"Elimina un orologio salvato",
+	"e":"Modifica info default per PGN",
+	"m":"Visualizza il manuale",
+	"g":"Inizia a giocare",
+	".":"Esci dall'applicazione"}
 FILE_NAMES={0:"ancona",1:"bologna",2:"como",3:"domodossola",4:"empoli",5:"firenze",6:"genova",7:"hotel"}
-# Mappa per file da lettera a nome (es. 'a'->"ancona")
 LETTER_FILE_MAP={chr(ord("a")+i):FILE_NAMES.get(i,chr(ord("a")+i)) for i in range(8)}
 PIECE_NAMES={chess.PAWN:"pedone",chess.KNIGHT:"cavallo",chess.BISHOP:"alfiere",chess.ROOK:"torre",chess.QUEEN:"donna",chess.KING:"Re"}
 def describe_move(move, board):
@@ -41,24 +65,21 @@ def describe_move(move, board):
 	check_mark = m.group(7)
 	# Determiniamo il nome del pezzo che si muove
 	if piece_letter:
-		piece_name = PIECE_NAMES.get(chess.PIECE_SYMBOL(chess.PIECE_SYMBOL.index(piece_letter.upper())+1) if piece_letter.upper() in "RNBQK" else None, "").lower()
-		# Oppure direttamente:
-		if piece_letter=="K": piece_name = "Re"
-		elif piece_letter=="Q": piece_name = "donna"
-		elif piece_letter=="R": piece_name = "torre"
-		elif piece_letter=="B": piece_name = "alfiere"
-		elif piece_letter=="N": piece_name = "cavallo"
-		else:
-			piece_name = "pezzo"
+		mapping = {
+			"K": chess.KING,
+			"Q": chess.QUEEN,
+			"R": chess.ROOK,
+			"B": chess.BISHOP,
+			"N": chess.KNIGHT
+		}
+		piece_type = mapping.get(piece_letter.upper(), chess.PAWN)
+		piece_name = PIECE_NAMES.get(piece_type, "").lower()
 	else:
 		piece_name = "pedone"
 	# Iniziamo a comporre la descrizione
 	descr = ""
 	# Per il pedone includiamo l'articolo
-	if not piece_letter:
-		descr += "il " + piece_name
-	else:
-		descr += piece_name
+	descr += piece_name
 	# Se c'è disambiguazione, la aggiungiamo (traducendo lettere in nomi se possibile)
 	if disamb:
 		parts = []
@@ -70,7 +91,7 @@ def describe_move(move, board):
 		descr += " di " + " ".join(parts)
 	# Gestione cattura
 	if capture:
-		descr += " cattura"
+		descr += " prende"
 		# Proviamo a individuare il pezzo catturato
 		captured_piece = board.piece_at(move.to_square)
 		if not captured_piece and piece_letter=="" and chess.square_file(move.from_square) != chess.square_file(move.to_square):
@@ -78,7 +99,7 @@ def describe_move(move, board):
 			captured_sq = move.to_square + (8 if board.turn==chess.BLACK else -8)
 			captured_piece = board.piece_at(captured_sq)
 		if captured_piece:
-			descr += " la " + PIECE_NAMES.get(captured_piece.piece_type, "").lower()
+			descr += PIECE_NAMES.get(captured_piece.piece_type, "").lower()
 	# Descrizione destinazione
 	dest_file = dest[0]
 	dest_rank = dest[1]
@@ -86,9 +107,15 @@ def describe_move(move, board):
 	descr += " in " + dest_name + " " + dest_rank
 	# Promozione
 	if promo_letter:
-		descr += " e promuove a " + PIECE_NAMES.get(chess.PIECE_SYMBOL(chess.PIECE_SYMBOL.index(promo_letter.upper())+1) if promo_letter.upper() in "RNBQ" else None, "").lower()
-		if promo_letter.upper()=="Q":
-			descr = descr.replace(" la ", " la ")  # eventuale aggiustamento per il linguaggio
+		promo_mapping = {
+			"Q": chess.QUEEN,
+			"R": chess.ROOK,
+			"B": chess.BISHOP,
+			"N": chess.KNIGHT
+		}
+		promo_piece_type = promo_mapping.get(promo_letter.upper(), None)
+		promo_piece_name = PIECE_NAMES.get(promo_piece_type, "").lower() if promo_piece_type is not None else ""
+		descr += " e promuove a " + promo_piece_name
 	# Check o scacco matto
 	if check_mark:
 		if check_mark=="+":
@@ -96,6 +123,7 @@ def describe_move(move, board):
 		elif check_mark=="#":
 			descr += " scacco matto!"
 	return descr
+
 def CalculateMaterial(board):
 	white_value=0
 	black_value=0
@@ -108,6 +136,7 @@ def CalculateMaterial(board):
 			else:
 				black_value+=PIECE_VALUES[piece_symbol]
 	return white_value,black_value
+
 def normalize_move(m):
 	m=m.strip()
 	if m.lower().startswith("o-o-o") or m.lower().startswith("0-0-0"):
@@ -120,19 +149,23 @@ def normalize_move(m):
 		return m[0].upper()+m[1:]
 	else:
 		return m
+
 def load_db():
 	if not os.path.exists(DB_FILE):
 		return {"clocks":[],"default_pgn":{}}
 	with open(DB_FILE,"r") as f:
 		return json.load(f)
+
 def save_db(db):
 	with open(DB_FILE,"w") as f:
 		json.dump(db,f,indent="\t")
+
 def seconds_to_hms(seconds):
 	h=int(seconds//3600)
 	m=int((seconds%3600)//60)
 	s=int(seconds%60)
 	return "{:02d}:{:02d}:{:02d}".format(h,m,s)
+
 def format_time(seconds):
 	total=int(seconds)
 	h=total//3600
@@ -146,6 +179,7 @@ def format_time(seconds):
 	if s:
 		parts.append(f"{s} {'secondo' if s==1 else 'secondi'}")
 	return ", ".join(parts) if parts else "0 secondi"
+
 def parse_time_input(prompt):
 	t=dgt(prompt,kind="s")
 	try:
@@ -154,6 +188,7 @@ def parse_time_input(prompt):
 	except Exception as e:
 		print("Formato orario non valido. Atteso hh:mm:ss. Errore:",e)
 		return 0
+
 class ClockConfig:
 	def __init__(self,name,same_time,phases,alarms,note):
 		self.name=name
@@ -166,6 +201,7 @@ class ClockConfig:
 	@staticmethod
 	def from_dict(d):
 		return ClockConfig(d["name"],d["same_time"],d["phases"],d.get("alarms",[]),d.get("note",""))
+
 def create_clock():
 	print("\nCreazione orologi\n")
 	name=dgt("Nome dell'orologio: ",kind="s")
@@ -213,6 +249,7 @@ def create_clock():
 	db["clocks"].append(new_clock.to_dict())
 	save_db(db)
 	print("Orologio creato e salvato.")
+
 def view_clocks():
 	print("\nVisualizzazione orologi\n")
 	db=load_db()
@@ -233,6 +270,7 @@ def view_clocks():
 		print(f"{idx+1}. {c['name']} - {indicatore}{fasi}")
 		if c.get("note",""):
 			print(f"\tNota: {c['note']}")
+
 def select_clock():
 	db=load_db()
 	if not db["clocks"]:
@@ -258,6 +296,7 @@ def select_clock():
 	if index is not None and 0<=index<len(db["clocks"]):
 		return db["clocks"][index]
 	return None
+
 def delete_clock():
 	print("\nEliminazione orologio\n")
 	clock=select_clock()
@@ -271,6 +310,7 @@ def delete_clock():
 			break
 	save_db(db)
 	print("Orologio eliminato.")
+
 def edit_default_pgn():
 	print("\nModifica info default per PGN\n")
 	db=load_db()
@@ -290,6 +330,7 @@ def edit_default_pgn():
 	db["default_pgn"]={"Event":event,"Site":site,"Round":round_}
 	save_db(db)
 	print("Informazioni default per il PGN aggiornate.")
+
 class CustomBoard(chess.Board):
 	def __str__(self):
 		board_str="FEN: "+str(self.fen())+"\n"
@@ -328,6 +369,7 @@ class CustomBoard(chess.Board):
 				last_move_info=f"{move_number}... {last_move_san}"
 		board_str+=f" {last_move_info} Materiale: {white_material}/{black_material}"
 		return board_str
+
 class GameState:
 	def __init__(self,clock_config):
 		self.board=CustomBoard()
@@ -360,6 +402,7 @@ class GameState:
 					self.black_phase+=1
 					self.black_remaining=self.clock_config["phases"][self.black_phase]["black_time"]
 		self.active_color="black" if self.active_color=="white" else "white"
+
 def clock_thread(game_state):
 	last_time=time.time()
 	while not game_state.game_over:
@@ -382,6 +425,7 @@ def clock_thread(game_state):
 		if game_state.white_remaining<=0 or game_state.black_remaining<=0:
 			game_state.game_over=True
 		time.sleep(0.1)
+
 def start_game(clock_config):
 	print("\nAvvio partita\n")
 	# Richiesta dati PGN prima dell'inizio della partita
@@ -442,10 +486,13 @@ def start_game(clock_config):
 			if cmd==".?":
 				menu(DOT_COMMANDS,show_only=True,p="Comandi disponibili:")
 			elif cmd==".1":
+				Acusticator(['a6', 0.14, -1, .5], kind=1, adsr=[0, 0, 100, 100])
 				print("Tempo bianco: "+format_time(game_state.white_remaining))
 			elif cmd==".2":
+				Acusticator(['a6', 0.14, 1, .5], kind=1, adsr=[0, 0, 100, 100])
 				print("Tempo nero: "+format_time(game_state.black_remaining))
 			elif cmd==".3":
+				Acusticator(['a6', 0.14, 0, .5], kind=1, adsr=[0, 0, 100, 100])
 				diff=abs(game_state.white_remaining-game_state.black_remaining)
 				adv="bianco" if game_state.white_remaining>game_state.black_remaining else "nero"
 				print(f"{adv} in vantaggio di "+format_time(diff))
@@ -453,8 +500,10 @@ def start_game(clock_config):
 				game_state.paused=not game_state.paused
 				if game_state.paused:
 					paused_time_start=time.time()
+					Acusticator(["c5", 0.1, 1, 0.5, "g4", 0.1, 0.3, 0.5, "e4", 0.1, -0.3, 0.5, "c4", 0.1, -1, 0.5], kind=1, adsr=[2, 8, 80, 10])
 				else:
 					pause_duration=time.time()-paused_time_start if paused_time_start else 0
+					Acusticator(["c4", 0.1, -1, 0.5, "e4", 0.1, -0.3, 0.5, "g4", 0.1, 0.3, 0.5, "c5", 0.1, 1, 0.5], kind=1, adsr=[2, 8, 80, 10])
 					print("Pausa durata: "+format_time(pause_duration))
 			elif cmd==".q":
 				if game_state.paused and game_state.move_history:
@@ -506,6 +555,7 @@ def start_game(clock_config):
 				move=game_state.board.parse_san(user_input)
 				board_copy=game_state.board.copy()
 				description=describe_move(move,board_copy)
+				Acusticator([1000.0, 0.01, 0, 0.5], kind=1, adsr=[0, 0, 100, 0])
 				# Stampa la mossa preceduta dal nome del giocatore in base al turno
 				if game_state.active_color=="white":
 					print(game_state.white_player+": "+description)
@@ -528,6 +578,7 @@ def start_game(clock_config):
 	with open(filename,"w") as f:
 		f.write(pgn_str)
 	print("PGN salvato come "+filename+".")
+    
 def open_manual():
 	print("\nApertura manuale\n")
 	readme="README.md"
@@ -535,17 +586,20 @@ def open_manual():
 		webbrowser.open(readme)
 	else:
 		print("Il file README.md non esiste.")
-def show_initial_screen():
+
+def SchermataIniziale():
 	now=datetime.datetime.now()
 	diff1=relativedelta(now,BIRTH_DATE)
 	diff2=relativedelta(now,RELEASE_DATE)
-	print(f"Orologic ha {diff1.years} anni, {diff1.months} mesi, {diff1.days} giorni, {diff1.hours} ore e {diff1.minutes} minuti.")
-	print(f"L'ultima versione è la {VERSION} ed è stata rilasciato {RELEASE_DATE.strftime('%d/%m/%Y %H:%M')}.")
+	print(f"\nOrologic ha {diff1.years} anni, {diff1.months} mesi, {diff1.days} giorni, {diff1.hours} ore e {diff1.minutes} minuti.")
+	print(f"L'ultima versione è la {VERSION} ed è stata rilasciata il {RELEASE_DATE.strftime('%d/%m/%Y %H:%M')}.")
 	print(f"\tcioè: {diff2.years} anni, {diff2.months} mesi, {diff2.days} giorni, {diff2.hours} ore e {diff2.minutes} minuti fa.")
 	print("\t\tAutore: "+PROGRAMMER)
 	print("\t\t\tDigita '?' per visualizzare il menù.")
+	Acusticator(['c4', 0.125, 0, 0.5, 'd4', 0.125, 0, 0.5, 'e4', 0.125, 0, 0.5, 'g4', 0.125, 0, 0.5, 'a4', 0.125, 0, 0.5, 'e5', 0.125, 0, 0.5, 'p', 0.125, 0, 0.5, 'a5', 0.125, 0, 0.5], kind=1, adsr=[0.01, 0, 100, 99])
+
 def main():
-	show_initial_screen()
+	SchermataIniziale()
 	while True:
 		scelta=menu(MENU_CHOICES,keyslist=True,ntf="Scelta non valida")
 		if scelta=="?":
@@ -576,6 +630,7 @@ def main():
 		elif scelta==".":
 			print("Uscita dall'applicazione.")
 			exit(0)
+
 if __name__=="__main__":
 	board=CustomBoard()
 	main()
