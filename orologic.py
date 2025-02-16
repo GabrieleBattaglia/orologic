@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="2.2.0"
-RELEASE_DATE=datetime.datetime(2025,2,16,19,9)
+VERSION="2.2.3"
+RELEASE_DATE=datetime.datetime(2025,2,16,23,8)
 PROGRAMMER="Gabriele Battaglia"
 DB_FILE="orologic_db.json"
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
@@ -38,6 +38,17 @@ MENU_CHOICES={
 FILE_NAMES={0:"ancona",1:"bologna",2:"como",3:"domodossola",4:"empoli",5:"firenze",6:"genova",7:"hotel"}
 LETTER_FILE_MAP={chr(ord("a")+i):FILE_NAMES.get(i,chr(ord("a")+i)) for i in range(8)}
 PIECE_NAMES={chess.PAWN:"pedone",chess.KNIGHT:"cavallo",chess.BISHOP:"alfiere",chess.ROOK:"torre",chess.QUEEN:"donna",chess.KING:"Re"}
+def seconds_to_mmss(seconds):
+	m = int(seconds // 60)
+	s = int(seconds % 60)
+	return f"{m:02d} minuti e {s:02d} secondi!"
+def parse_mmss_to_seconds(time_str):
+	try:
+		minutes, seconds = map(int, time_str.split(":"))
+		return minutes * 60 + seconds
+	except Exception as e:
+		print("Formato orario non valido. Atteso mm:ss. Errore:", e)
+		return 0
 def DescribeMove(move, board):
 	# Gestione arrocco
 	if board.is_castling(move):
@@ -255,12 +266,10 @@ def CreateClock():
 			break
 		phase_count+=1
 	alarms=[]
-	num_alarms=dgt("Numero di allarmi da inserire (max 5, 0 per nessuno): ",kind="i")
-	if num_alarms>5:
-		num_alarms=5
+	num_alarms=dgt("Numero di allarmi da inserire (max 5, 0 per nessuno): ",kind="i",imax=5,default=0)
 	for i in range(num_alarms):
-		alarm_time=dgt(f"Inserisci il tempo (in secondi) per l'allarme {i+1}: ",kind="i")
-		alarms.append(alarm_time)
+		alarm_input = dgt(f"Inserisci il tempo (mm:ss) per l'allarme {i+1}: ", kind="s")
+		alarm_time = parse_mmss_to_seconds(alarm_input)
 	note=dgt("Inserisci una nota per l'orologio (opzionale): ",kind="s",default="")
 	new_clock=ClockConfig(name,same_time,phases,alarms,note)
 	db["clocks"].append(new_clock.to_dict())
@@ -389,8 +398,12 @@ class GameState:
 	def __init__(self,clock_config):
 		self.board=CustomBoard()
 		self.clock_config=clock_config
-		self.white_remaining=clock_config["phases"][0]["white_time"]
-		self.black_remaining=clock_config["phases"][0]["black_time"]
+		if clock_config["same_time"]:
+			self.white_remaining = clock_config["phases"][0]["white_time"]
+			self.black_remaining = clock_config["phases"][0]["black_time"]  # O equivalentemente, ["white_time"]
+		else:
+			self.white_remaining = clock_config["phases"][0]["white_time"]
+			self.black_remaining = clock_config["phases"][0]["black_time"]		
 		self.white_phase=0
 		self.black_phase=0
 		self.white_moves=0
@@ -417,7 +430,7 @@ class GameState:
 					self.black_phase+=1
 					self.black_remaining=self.clock_config["phases"][self.black_phase]["black_time"]
 		self.active_color="black" if self.active_color=="white" else "white"
-def ClockThread(game_state):
+def clock_thread(game_state):
 	last_time=time.time()
 	triggered_alarms_white = set()
 	triggered_alarms_black = set()
@@ -430,14 +443,14 @@ def ClockThread(game_state):
 				game_state.white_remaining-=elapsed
 				for alarm in game_state.clock_config.get("alarms",[]):
 					if alarm not in triggered_alarms_white and abs(game_state.white_remaining - alarm) < elapsed:
-						print(f"Allarme: tempo del bianco raggiunto {alarm}s")
+						print(f"Allarme: tempo del bianco raggiunto {seconds_to_mmss(alarm)}")
 						Acusticator(["c4",0.2,0,1])
 						triggered_alarms_white.add(alarm)
 			else:
 				game_state.black_remaining-=elapsed
 				for alarm in game_state.clock_config.get("alarms",[]):
 					if alarm not in triggered_alarms_black and abs(game_state.black_remaining - alarm) < elapsed:
-						print(f"Allarme: tempo del nero raggiunto {alarm}s")
+						print(f"Allarme: tempo del nero raggiunto {seconds_to_mmss(alarm)}")
 						Acusticator(["c4",0.2,0,1])
 						triggered_alarms_black.add(alarm)
 		if game_state.white_remaining<=0 or game_state.black_remaining<=0:
@@ -493,7 +506,7 @@ def StartGame(clock_config):
 	game_state.pgn_game.headers["Round"]=round_
 	game_state.pgn_game.headers["Annotator"]=f"Orologic {VERSION} - {PROGRAMMER}"
 	game_state.pgn_game.headers["Date"]=datetime.datetime.now().strftime("%Y.%m.%d")
-	threading.Thread(target=ClockThread,args=(game_state,),daemon=True).start()
+	threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
 	paused_time_start=None
 	while not game_state.game_over:
 		if not game_state.move_history:
