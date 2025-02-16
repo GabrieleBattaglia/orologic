@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="2.1.11"
-RELEASE_DATE=datetime.datetime(2025,2,15,22,44)
+VERSION="2.2.0"
+RELEASE_DATE=datetime.datetime(2025,2,16,19,9)
 PROGRAMMER="Gabriele Battaglia"
 DB_FILE="orologic_db.json"
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
@@ -38,7 +38,7 @@ MENU_CHOICES={
 FILE_NAMES={0:"ancona",1:"bologna",2:"como",3:"domodossola",4:"empoli",5:"firenze",6:"genova",7:"hotel"}
 LETTER_FILE_MAP={chr(ord("a")+i):FILE_NAMES.get(i,chr(ord("a")+i)) for i in range(8)}
 PIECE_NAMES={chess.PAWN:"pedone",chess.KNIGHT:"cavallo",chess.BISHOP:"alfiere",chess.ROOK:"torre",chess.QUEEN:"donna",chess.KING:"Re"}
-def describe_move(move, board):
+def DescribeMove(move, board):
 	# Gestione arrocco
 	if board.is_castling(move):
 		if chess.square_file(move.to_square) > chess.square_file(move.from_square):
@@ -123,7 +123,32 @@ def describe_move(move, board):
 		elif check_mark=="#":
 			descr += " scacco matto!"
 	return descr
-
+def GenerateMoveSummary(game_state):
+	# Genera un riepilogo testuale delle mosse della partita in formato descrittivo.
+	summary = []
+	move_number = 1
+	board_copy = CustomBoard()  # Crea una copia per simulare le mosse
+	for i in range(0, len(game_state.move_history), 2):
+		white_move_san = game_state.move_history[i]
+		try:
+			white_move = board_copy.parse_san(white_move_san)
+			white_move_desc = DescribeMove(white_move, board_copy)
+			board_copy.push(white_move)
+		except Exception as e:
+			white_move_desc = f"Errore nella mossa del bianco: {e}"
+		if i + 1 < len(game_state.move_history):  # Se esiste la mossa del nero
+			black_move_san = game_state.move_history[i + 1]
+			try:
+				black_move = board_copy.parse_san(black_move_san)
+				black_move_desc = DescribeMove(black_move, board_copy)
+				board_copy.push(black_move)
+			except Exception as e:
+				black_move_desc = f"Errore nella mossa del nero: {e}"
+			summary.append(f"{move_number}. {white_move_desc}, {black_move_desc}")
+		else:
+			summary.append(f"{move_number}. {white_move_desc}")
+		move_number += 1
+	return summary
 def CalculateMaterial(board):
 	white_value=0
 	black_value=0
@@ -136,8 +161,7 @@ def CalculateMaterial(board):
 			else:
 				black_value+=PIECE_VALUES[piece_symbol]
 	return white_value,black_value
-
-def normalize_move(m):
+def NormalizeMove(m):
 	m=m.strip()
 	if m.lower().startswith("o-o-o") or m.lower().startswith("0-0-0"):
 		suffix=m[len("o-o-o"):]
@@ -149,24 +173,20 @@ def normalize_move(m):
 		return m[0].upper()+m[1:]
 	else:
 		return m
-
-def load_db():
+def LoadDB():
 	if not os.path.exists(DB_FILE):
 		return {"clocks":[],"default_pgn":{}}
 	with open(DB_FILE,"r") as f:
 		return json.load(f)
-
-def save_db(db):
+def SaveDB(db):
 	with open(DB_FILE,"w") as f:
 		json.dump(db,f,indent="\t")
-
-def seconds_to_hms(seconds):
+def SecondsToHMS(seconds):
 	h=int(seconds//3600)
 	m=int((seconds%3600)//60)
 	s=int(seconds%60)
 	return "{:02d}:{:02d}:{:02d}".format(h,m,s)
-
-def format_time(seconds):
+def FormatTime(seconds):
 	total=int(seconds)
 	h=total//3600
 	m=(total%3600)//60
@@ -179,8 +199,7 @@ def format_time(seconds):
 	if s:
 		parts.append(f"{s} {'secondo' if s==1 else 'secondi'}")
 	return ", ".join(parts) if parts else "0 secondi"
-
-def parse_time_input(prompt):
+def ParseTime(prompt):
 	t=dgt(prompt,kind="s")
 	try:
 		h,m,s=map(int,t.split(":"))
@@ -188,7 +207,6 @@ def parse_time_input(prompt):
 	except Exception as e:
 		print("Formato orario non valido. Atteso hh:mm:ss. Errore:",e)
 		return 0
-
 class ClockConfig:
 	def __init__(self,name,same_time,phases,alarms,note):
 		self.name=name
@@ -201,11 +219,10 @@ class ClockConfig:
 	@staticmethod
 	def from_dict(d):
 		return ClockConfig(d["name"],d["same_time"],d["phases"],d.get("alarms",[]),d.get("note",""))
-
-def create_clock():
+def CreateClock():
 	print("\nCreazione orologi\n")
 	name=dgt("Nome dell'orologio: ",kind="s")
-	db=load_db()
+	db=LoadDB()
 	if any(c["name"]==name for c in db["clocks"]):
 		print("Un orologio con questo nome esiste già.")
 		return
@@ -216,16 +233,16 @@ def create_clock():
 	while phase_count<4:
 		phase={}
 		if same_time:
-			total_seconds=parse_time_input(f"Tempo (hh:mm:ss) per fase {phase_count+1}: ")
+			total_seconds=ParseTime(f"Tempo (hh:mm:ss) per fase {phase_count+1}: ")
 			inc=dgt(f"Incremento in secondi per fase {phase_count+1}: ",kind="i")
 			phase["white_time"]=total_seconds
 			phase["black_time"]=total_seconds
 			phase["white_inc"]=inc
 			phase["black_inc"]=inc
 		else:
-			total_seconds_w=parse_time_input(f"Tempo per il bianco (hh:mm:ss) fase {phase_count+1}: ")
+			total_seconds_w=ParseTime(f"Tempo per il bianco (hh:mm:ss) fase {phase_count+1}: ")
 			inc_w=dgt(f"Incremento per il bianco fase {phase_count+1}: ",kind="i")
-			total_seconds_b=parse_time_input(f"Tempo per il nero (hh:mm:ss) fase {phase_count+1}: ")
+			total_seconds_b=ParseTime(f"Tempo per il nero (hh:mm:ss) fase {phase_count+1}: ")
 			inc_b=dgt(f"Incremento per il nero fase {phase_count+1}: ",kind="i")
 			phase["white_time"]=total_seconds_w
 			phase["black_time"]=total_seconds_b
@@ -247,12 +264,11 @@ def create_clock():
 	note=dgt("Inserisci una nota per l'orologio (opzionale): ",kind="s",default="")
 	new_clock=ClockConfig(name,same_time,phases,alarms,note)
 	db["clocks"].append(new_clock.to_dict())
-	save_db(db)
+	SaveDB(db)
 	print("Orologio creato e salvato.")
-
-def view_clocks():
+def ViewClocks():
 	print("\nVisualizzazione orologi\n")
-	db=load_db()
+	db=LoadDB()
 	if not db["clocks"]:
 		print("Nessun orologio salvato.")
 		return
@@ -261,18 +277,19 @@ def view_clocks():
 		fasi=""
 		for i,phase in enumerate(c["phases"]):
 			if c["same_time"]:
-				time_str=seconds_to_hms(phase["white_time"])
+				time_str=SecondsToHMS(phase["white_time"])
 				fasi+=f" F{i+1}:{time_str}+{phase['white_inc']}"
 			else:
-				time_str_w=seconds_to_hms(phase["white_time"])
-				time_str_b=seconds_to_hms(phase["black_time"])
+				time_str_w=SecondsToHMS(phase["white_time"])
+				time_str_b=SecondsToHMS(phase["black_time"])
 				fasi+=f" F{i+1}: Bianco:{time_str_w}+{phase['white_inc']}, Nero:{time_str_b}+{phase['black_inc']}"
-		print(f"{idx+1}. {c['name']} - {indicatore}{fasi}")
+		num_alarms = len(c.get("alarms", []))  # Conta gli allarmi
+		alarms_str = f" Allarmi ({num_alarms})"
+		print(f"{idx+1}. {c['name']} - {indicatore}{fasi}{alarms_str}")
 		if c.get("note",""):
 			print(f"\tNota: {c['note']}")
-
-def select_clock():
-	db=load_db()
+def SelectClock():
+	db=LoadDB()
 	if not db["clocks"]:
 		return None
 	choices={}
@@ -281,14 +298,16 @@ def select_clock():
 		fasi=""
 		for j,phase in enumerate(c["phases"]):
 			if c["same_time"]:
-				time_str=seconds_to_hms(phase["white_time"])
+				time_str=SecondsToHMS(phase["white_time"])
 				fasi+=f" F{j+1}:{time_str}+{phase['white_inc']}"
 			else:
-				time_str_w=seconds_to_hms(phase["white_time"])
-				time_str_b=seconds_to_hms(phase["black_time"])
+				time_str_w=SecondsToHMS(phase["white_time"])
+				time_str_b=SecondsToHMS(phase["black_time"])
 				fasi+=f" F{j+1}: Bianco:{time_str_w}+{phase['white_inc']}, Nero:{time_str_b}+{phase['black_inc']}"
-		choices[str(i+1)]=f"{c['name']} - {indicatore}{fasi}"
-	choice=menu(choices,show=True,keyslist=False,p="Scegli dizionario")
+		num_alarms = len(c.get("alarms", []))  # Conta gli allarmi *PRIMA*
+		alarms_str = f" Allarmi ({num_alarms})"
+		choices[str(i + 1)] = f"{c['name']} - {indicatore}{fasi}{alarms_str}"		
+	choice=menu(choices,show=True,keyslist=False,p="Scegli orologio")
 	try:
 		index=int(choice)-1
 	except:
@@ -296,24 +315,22 @@ def select_clock():
 	if index is not None and 0<=index<len(db["clocks"]):
 		return db["clocks"][index]
 	return None
-
-def delete_clock():
+def DeleteClock():
 	print("\nEliminazione orologio\n")
-	clock=select_clock()
+	clock=SelectClock()
 	if clock is None:
 		print("Scelta non valida o nessun orologio disponibile.")
 		return
-	db=load_db()
+	db=LoadDB()
 	for i,c in enumerate(db["clocks"]):
 		if c["name"]==clock["name"]:
 			del db["clocks"][i]
 			break
-	save_db(db)
+	SaveDB(db)
 	print("Orologio eliminato.")
-
-def edit_default_pgn():
+def EditPGN():
 	print("\nModifica info default per PGN\n")
-	db=load_db()
+	db=LoadDB()
 	default_pgn=db.get("default_pgn",{})
 	default_event=default_pgn.get("Event","Orologic Game")
 	event=dgt(f"Evento [{default_pgn.get('Event','Orologic Game')}]: ",kind="s",default=default_pgn.get("Event","Orologic Game"))
@@ -328,9 +345,8 @@ def edit_default_pgn():
 	if round_.strip()=="":
 		round_=default_pgn.get("Round","Round 1")
 	db["default_pgn"]={"Event":event,"Site":site,"Round":round_}
-	save_db(db)
+	SaveDB(db)
 	print("Informazioni default per il PGN aggiornate.")
-
 class CustomBoard(chess.Board):
 	def __str__(self):
 		board_str="FEN: "+str(self.fen())+"\n"
@@ -369,7 +385,6 @@ class CustomBoard(chess.Board):
 				last_move_info=f"{move_number}... {last_move_san}"
 		board_str+=f" {last_move_info} Materiale: {white_material}/{black_material}"
 		return board_str
-
 class GameState:
 	def __init__(self,clock_config):
 		self.board=CustomBoard()
@@ -402,9 +417,10 @@ class GameState:
 					self.black_phase+=1
 					self.black_remaining=self.clock_config["phases"][self.black_phase]["black_time"]
 		self.active_color="black" if self.active_color=="white" else "white"
-
-def clock_thread(game_state):
+def ClockThread(game_state):
 	last_time=time.time()
+	triggered_alarms_white = set()
+	triggered_alarms_black = set()
 	while not game_state.game_over:
 		current_time=time.time()
 		elapsed=current_time-last_time
@@ -413,22 +429,33 @@ def clock_thread(game_state):
 			if game_state.active_color=="white":
 				game_state.white_remaining-=elapsed
 				for alarm in game_state.clock_config.get("alarms",[]):
-					if abs(game_state.white_remaining-alarm)<elapsed:
+					if alarm not in triggered_alarms_white and abs(game_state.white_remaining - alarm) < elapsed:
 						print(f"Allarme: tempo del bianco raggiunto {alarm}s")
 						Acusticator(["c4",0.2,0,1])
+						triggered_alarms_white.add(alarm)
 			else:
 				game_state.black_remaining-=elapsed
 				for alarm in game_state.clock_config.get("alarms",[]):
-					if abs(game_state.black_remaining-alarm)<elapsed:
+					if alarm not in triggered_alarms_black and abs(game_state.black_remaining - alarm) < elapsed:
 						print(f"Allarme: tempo del nero raggiunto {alarm}s")
 						Acusticator(["c4",0.2,0,1])
+						triggered_alarms_black.add(alarm)
 		if game_state.white_remaining<=0 or game_state.black_remaining<=0:
+			Acusticator(["e4", 0.2, -0.5, 0.5, "d4", 0.2, 0, 0.5, "c4", 0.2, 0.5, 0.5], kind=1, adsr=[10, 0, 90, 10])
 			game_state.game_over=True
+			print("Bandierina caduta!")
+			if game_state.white_remaining <= 0:
+				game_state.pgn_game.headers["Result"] = "0-1"  # Nero vince
+				print(f"Tempo del Bianco scaduto. {game_state.black_player} vince.")
+				Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+			else:
+				game_state.pgn_game.headers["Result"] = "1-0"  # Bianco vince
+				print(f"Tempo del Nero scaduto. {game_state.white_player} vince.")
+				Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
 		time.sleep(0.1)
-
-def start_game(clock_config):
+def StartGame(clock_config):
 	print("\nAvvio partita\n")
-	# Richiesta dati PGN prima dell'inizio della partita
+	Acusticator(["f5", .25, 0, .5, "p", .25, 0, .5, "f5", .25, 0, .5, "p", .25, 0, .5, "f5", .25, 0, .5, "p", .25, 0, .5, "f5", .25, 0, .5, "p", .25, 0, .5, "f#5", .5, 0, .5], kind=1)
 	white_player=dgt("Nome del bianco: ",kind="s")
 	if white_player.strip()=="":
 		white_player="Bianco"
@@ -441,7 +468,7 @@ def start_game(clock_config):
 	black_elo=dgt("Elo del nero: ",kind="s")
 	if black_elo.strip()=="":
 		black_elo="?"
-	db=load_db()
+	db=LoadDB()
 	default_pgn=db.get("default_pgn",{})
 	event=dgt(f"Evento [{default_pgn.get('Event','Orologic Game')}]: ",kind="s",default=default_pgn.get("Event","Orologic Game"))
 	if event.strip()=="":
@@ -449,7 +476,7 @@ def start_game(clock_config):
 	site=dgt(f"Sede [{default_pgn.get('Site','Sede sconosciuta')}]: ",kind="s",default=default_pgn.get("Site","Sede sconosciuta"))
 	round_=dgt(f"Round [{default_pgn.get('Round','Round 1')}]: ",kind="s",default=default_pgn.get("Round","Round 1"))
 	db["default_pgn"]={"Event":event,"Site":site,"Round":round_}
-	save_db(db)
+	SaveDB(db)
 	input("Premi invio per iniziare la partita quando sei pronto...")
 	# Creazione dello stato di gioco; il turno iniziale resta "white" (bianco a muovere)
 	game_state=GameState(clock_config)
@@ -466,7 +493,7 @@ def start_game(clock_config):
 	game_state.pgn_game.headers["Round"]=round_
 	game_state.pgn_game.headers["Annotator"]=f"Orologic {VERSION} - {PROGRAMMER}"
 	game_state.pgn_game.headers["Date"]=datetime.datetime.now().strftime("%Y.%m.%d")
-	threading.Thread(target=clock_thread,args=(game_state,),daemon=True).start()
+	threading.Thread(target=ClockThread,args=(game_state,),daemon=True).start()
 	paused_time_start=None
 	while not game_state.game_over:
 		if not game_state.move_history:
@@ -487,15 +514,15 @@ def start_game(clock_config):
 				menu(DOT_COMMANDS,show_only=True,p="Comandi disponibili:")
 			elif cmd==".1":
 				Acusticator(['a6', 0.14, -1, .5], kind=1, adsr=[0, 0, 100, 100])
-				print("Tempo bianco: "+format_time(game_state.white_remaining))
+				print("Tempo bianco: "+FormatTime(game_state.white_remaining))
 			elif cmd==".2":
 				Acusticator(['a6', 0.14, 1, .5], kind=1, adsr=[0, 0, 100, 100])
-				print("Tempo nero: "+format_time(game_state.black_remaining))
+				print("Tempo nero: "+FormatTime(game_state.black_remaining))
 			elif cmd==".3":
 				Acusticator(['a6', 0.14, 0, .5], kind=1, adsr=[0, 0, 100, 100])
 				diff=abs(game_state.white_remaining-game_state.black_remaining)
 				adv="bianco" if game_state.white_remaining>game_state.black_remaining else "nero"
-				print(f"{adv} in vantaggio di "+format_time(diff))
+				print(f"{adv} in vantaggio di "+FormatTime(diff))
 			elif cmd==".p":
 				game_state.paused=not game_state.paused
 				if game_state.paused:
@@ -504,7 +531,7 @@ def start_game(clock_config):
 				else:
 					pause_duration=time.time()-paused_time_start if paused_time_start else 0
 					Acusticator(["c4", 0.1, -1, 0.5, "e4", 0.1, -0.3, 0.5, "g4", 0.1, 0.3, 0.5, "c5", 0.1, 1, 0.5], kind=1, adsr=[2, 8, 80, 10])
-					print("Pausa durata: "+format_time(pause_duration))
+					print("Pausa durata: "+FormatTime(pause_duration))
 			elif cmd==".q":
 				if game_state.paused and game_state.move_history:
 					game_state.board.pop()
@@ -523,12 +550,21 @@ def start_game(clock_config):
 							game_state.black_remaining+=adjust
 						elif cmd.startswith(".n-"):
 							game_state.black_remaining-=adjust
-						print("Nuovo tempo bianco: "+format_time(game_state.white_remaining)+", nero: "+format_time(game_state.black_remaining))
+						print("Nuovo tempo bianco: "+FormatTime(game_state.white_remaining)+", nero: "+FormatTime(game_state.black_remaining))
 					except:
 						print("Comando non valido.")
 			elif cmd==".s":
+				Acusticator(["c4", 0.2, -1, 0.5, "g4", 0.2, -0.3, 0.5, "c5", 0.2, 0.3, 0.5, "e5", 0.2, 1, 0.5, "g5", 0.4, 0, 0.5], kind=1, adsr=[10, 5, 80, 5])
 				print(game_state.board)
+			elif cmd==".l":
+				summary = GenerateMoveSummary(game_state)
+				if summary:
+					for line in summary:
+						print(line)
+				else:
+					print("Nessuna mossa ancora giocata.")
 			elif cmd in [".bianco",".nero",".patta",".*"]:
+				Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
 				if cmd==".bianco":
 					result="1-0"
 				elif cmd==".nero":
@@ -550,11 +586,11 @@ def start_game(clock_config):
 			else:
 				print("Comando non riconosciuto.")
 		else:
-			user_input=normalize_move(user_input)
+			user_input=NormalizeMove(user_input)
 			try:
 				move=game_state.board.parse_san(user_input)
 				board_copy=game_state.board.copy()
-				description=describe_move(move,board_copy)
+				description=DescribeMove(move,board_copy)
 				Acusticator([1000.0, 0.01, 0, 0.5], kind=1, adsr=[0, 0, 100, 0])
 				# Stampa la mossa preceduta dal nome del giocatore in base al turno
 				if game_state.active_color=="white":
@@ -565,6 +601,51 @@ def start_game(clock_config):
 				game_state.board.push(move)
 				game_state.move_history.append(san_move)
 				game_state.pgn_node=game_state.pgn_node.add_variation(move)
+				if game_state.board.is_checkmate():
+					game_state.game_over = True
+					result = "1-0" if game_state.active_color == "white" else "0-1"
+					game_state.pgn_game.headers["Result"] = result
+					print(f"Scacco matto! Vince {game_state.white_player if game_state.active_color == 'white' else game_state.black_player}.")
+					Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+					break  # Esci dal ciclo
+				elif game_state.board.is_stalemate():
+					game_state.game_over = True
+					game_state.pgn_game.headers["Result"] = "1/2-1/2"
+					print("Patta per stallo!")
+					Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+					break
+				elif game_state.board.is_insufficient_material():
+					game_state.game_over = True
+					game_state.pgn_game.headers["Result"] = "1/2-1/2"
+					print("Patta per materiale insufficiente!")
+					Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+					break
+				elif game_state.board.is_seventyfive_moves():
+					game_state.game_over = True
+					game_state.pgn_game.headers["Result"] = "1/2-1/2"
+					print("Patta per la regola delle 75 mosse!")
+					Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+					break
+				elif game_state.board.is_fivefold_repetition():
+					game_state.game_over = True
+					game_state.pgn_game.headers["Result"] = "1/2-1/2"
+					print("Patta per ripetizione della posizione (5 volte)!")
+					Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+					break
+
+				elif game_state.board.can_claim_fifty_moves():  # Controllo per la *richiesta* delle 50 mosse
+					game_state.game_over = True
+					game_state.pgn_game.headers["Result"] = "1/2-1/2"
+					print("Patta per la regola delle 50 mosse (su richiesta)!")
+					Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+					break
+
+				elif game_state.board.can_claim_threefold_repetition(): # Controllo per la *richiesta* della triplice ripetizione.
+					game_state.game_over = True
+					game_state.pgn_game.headers["Result"] = "1/2-1/2"
+					print("Patta per triplice ripetizione della posizione (su richiesta)!")
+					Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+					break
 				if game_state.active_color=="white":
 					game_state.white_remaining+=game_state.clock_config["phases"][game_state.white_phase]["white_inc"]
 				else:
@@ -578,15 +659,13 @@ def start_game(clock_config):
 	with open(filename,"w") as f:
 		f.write(pgn_str)
 	print("PGN salvato come "+filename+".")
-    
-def open_manual():
+def OpenManual():
 	print("\nApertura manuale\n")
 	readme="README.md"
 	if os.path.exists(readme):
 		webbrowser.open(readme)
 	else:
 		print("Il file README.md non esiste.")
-
 def SchermataIniziale():
 	now=datetime.datetime.now()
 	diff1=relativedelta(now,BIRTH_DATE)
@@ -597,8 +676,7 @@ def SchermataIniziale():
 	print("\t\tAutore: "+PROGRAMMER)
 	print("\t\t\tDigita '?' per visualizzare il menù.")
 	Acusticator(['c4', 0.125, 0, 0.5, 'd4', 0.125, 0, 0.5, 'e4', 0.125, 0, 0.5, 'g4', 0.125, 0, 0.5, 'a4', 0.125, 0, 0.5, 'e5', 0.125, 0, 0.5, 'p', 0.125, 0, 0.5, 'a5', 0.125, 0, 0.5], kind=1, adsr=[0.01, 0, 100, 99])
-
-def main():
+def Main():
 	SchermataIniziale()
 	while True:
 		scelta=menu(MENU_CHOICES,keyslist=True,ntf="Scelta non valida")
@@ -607,30 +685,35 @@ def main():
 			for k,v in MENU_CHOICES.items():
 				print(f"{k} - {v}")
 		elif scelta=="c":
-			create_clock()
+			Acusticator([1000.0, 0.05, -1, 0.5, "p", 0.05, 0, 0, 900.0, 0.05, 1, 0.5], kind=1, adsr=[0, 0, 100, 0])
+			CreateClock()
 		elif scelta=="v":
-			view_clocks()
+			Acusticator([1000.0, 0.05, -1, 0.5, "p", 0.05, 0, 0, 900.0, 0.05, 1, 0.5], kind=1, adsr=[0, 0, 100, 0])
+			ViewClocks()
 		elif scelta=="d":
-			delete_clock()
+			DeleteClock()
+			Acusticator([1000.0, 0.05, -1, 0.5, "p", 0.05, 0, 0, 900.0, 0.05, 1, 0.5], kind=1, adsr=[0, 0, 100, 0])
 		elif scelta=="e":
-			edit_default_pgn()
+			EditPGN()
+			Acusticator([1000.0, 0.05, -1, 0.5, "p", 0.05, 0, 0, 900.0, 0.05, 1, 0.5], kind=1, adsr=[0, 0, 100, 0])
 		elif scelta=="m":
-			open_manual()
+			OpenManual()
 		elif scelta=="g":
+			Acusticator(["c5", 0.1, 0, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0, 0.5, "c6", 0.3, 0, 0.5, "g5", 0.1, 0, 0.5, "e5", 0.1, 0, 0.5, "c5", 0.1, 0, 0.5], kind=1, adsr=[5, 5, 90, 10])
 			print("\nAvvio partita\n")
-			db=load_db()
+			db=LoadDB()
 			if not db["clocks"]:
 				print("Nessun orologio disponibile. Creane uno prima.")
 			else:
-				clock_config=select_clock()
+				clock_config=SelectClock()
 				if clock_config is not None:
-					start_game(clock_config)
+					StartGame(clock_config)
 				else:
 					print("Scelta non valida.")
 		elif scelta==".":
+			Acusticator(["g4", 0.15, -0.5, 0.5, "g4", 0.15, 0.5, 0.5, "a4", 0.15, -0.5, 0.5, "g4", 0.15, 0.5, 0.5, "p", 0.15, 0, 0, "b4", 0.15, -0.5, 0.5, "c5", 0.3, 0.5, 0.5], kind=1, adsr=[5, 0, 100, 5])
 			print("Uscita dall'applicazione.")
 			exit(0)
-
 if __name__=="__main__":
 	board=CustomBoard()
-	main()
+	Main()
