@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="2.2.3"
-RELEASE_DATE=datetime.datetime(2025,2,16,23,8)
+VERSION="2.2.11"
+RELEASE_DATE=datetime.datetime(2025,2,17,15,7)
 PROGRAMMER="Gabriele Battaglia"
 DB_FILE="orologic_db.json"
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
@@ -38,6 +38,37 @@ MENU_CHOICES={
 FILE_NAMES={0:"ancona",1:"bologna",2:"como",3:"domodossola",4:"empoli",5:"firenze",6:"genova",7:"hotel"}
 LETTER_FILE_MAP={chr(ord("a")+i):FILE_NAMES.get(i,chr(ord("a")+i)) for i in range(8)}
 PIECE_NAMES={chess.PAWN:"pedone",chess.KNIGHT:"cavallo",chess.BISHOP:"alfiere",chess.ROOK:"torre",chess.QUEEN:"donna",chess.KING:"Re"}
+#QF
+import re
+
+def format_pgn_comments(pgn_str):
+	def repl(match):
+		comment_text = match.group(1).strip()
+		return "{\n" + comment_text + "\n}"
+	return re.sub(r'\{(.*?)\}', repl, pgn_str, flags=re.DOTALL)
+def generate_time_control_string(clock_config):
+	phases = clock_config["phases"]
+	tc_list = []
+	for phase in phases:
+		moves = phase["moves"]
+		# Se l'orologio è simmetrico, si usa il tempo del bianco
+		if clock_config["same_time"]:
+			base_time = int(phase["white_time"])
+			inc = int(phase["white_inc"])
+		else:
+			# In caso di orologi asimmetrici, per PGN si sceglie un riferimento (qui il bianco)
+			base_time = int(phase["white_time"])
+			inc = int(phase["white_inc"])
+		# Se moves == 0, consideriamo la fase come "sudden death"
+		if moves == 0:
+			tc = f"{base_time}"
+		else:
+			if inc > 0:
+				tc = f"{moves}/{base_time}:{inc}"
+			else:
+				tc = f"{moves}/{base_time}"
+		tc_list.append(tc)
+	return ", ".join(tc_list)
 def seconds_to_mmss(seconds):
 	m = int(seconds // 60)
 	s = int(seconds % 60)
@@ -468,35 +499,39 @@ def clock_thread(game_state):
 		time.sleep(0.1)
 def StartGame(clock_config):
 	print("\nAvvio partita\n")
-	Acusticator(["f5", .25, 0, .5, "p", .25, 0, .5, "f5", .25, 0, .5, "p", .25, 0, .5, "f5", .25, 0, .5, "p", .25, 0, .5, "f5", .25, 0, .5, "p", .25, 0, .5, "f#5", .5, 0, .5], kind=1)
 	white_player=dgt("Nome del bianco: ",kind="s")
+	Acusticator(["c5", 0.05, 0, 0.5, "e5", 0.05, 0, 0.5, "g5", 0.05, 0, 0.5], kind=1, adsr=[0, 0, 100, 5])
 	if white_player.strip()=="":
 		white_player="Bianco"
 	black_player=dgt("Nome del nero: ",kind="s")
+	Acusticator(["c5", 0.05, 0, 0.5, "e5", 0.05, 0, 0.5, "g5", 0.05, 0, 0.5], kind=1, adsr=[0, 0, 100, 5])
 	if black_player.strip()=="":
 		black_player="Nero"
 	white_elo=dgt("Elo del bianco: ",kind="s")
+	Acusticator(["c5", 0.05, 0, 0.5, "e5", 0.05, 0, 0.5, "g5", 0.05, 0, 0.5], kind=1, adsr=[0, 0, 100, 5])
 	if white_elo.strip()=="":
 		white_elo="?"
 	black_elo=dgt("Elo del nero: ",kind="s")
+	Acusticator(["c5", 0.05, 0, 0.5, "e5", 0.05, 0, 0.5, "g5", 0.05, 0, 0.5], kind=1, adsr=[0, 0, 100, 5])
 	if black_elo.strip()=="":
 		black_elo="?"
 	db=LoadDB()
 	default_pgn=db.get("default_pgn",{})
 	event=dgt(f"Evento [{default_pgn.get('Event','Orologic Game')}]: ",kind="s",default=default_pgn.get("Event","Orologic Game"))
+	Acusticator(["c5", 0.05, 0, 0.5, "e5", 0.05, 0, 0.5, "g5", 0.05, 0, 0.5], kind=1, adsr=[0, 0, 100, 5])
 	if event.strip()=="":
 		event="Orologic Game"
 	site=dgt(f"Sede [{default_pgn.get('Site','Sede sconosciuta')}]: ",kind="s",default=default_pgn.get("Site","Sede sconosciuta"))
+	Acusticator(["c5", 0.05, 0, 0.5, "e5", 0.05, 0, 0.5, "g5", 0.05, 0, 0.5], kind=1, adsr=[0, 0, 100, 5])
 	round_=dgt(f"Round [{default_pgn.get('Round','Round 1')}]: ",kind="s",default=default_pgn.get("Round","Round 1"))
+	Acusticator(["c5", 0.05, 0, 0.5, "e5", 0.05, 0, 0.5, "g5", 0.05, 0, 0.5], kind=1, adsr=[0, 0, 100, 5])
 	db["default_pgn"]={"Event":event,"Site":site,"Round":round_}
 	SaveDB(db)
 	input("Premi invio per iniziare la partita quando sei pronto...")
-	# Creazione dello stato di gioco; il turno iniziale resta "white" (bianco a muovere)
+	Acusticator(["c6", .07, 0, .5, "p", .93, 0, .5, "c6", .07, 0, .5, "p", .93, 0, .5, "c6", .07, 0, .5, "p", .93, 0, .5, "c7", .5, 0, .5], kind=1, sync=True)
 	game_state=GameState(clock_config)
-	# Salva i nomi dei giocatori nello stato di gioco
 	game_state.white_player=white_player
 	game_state.black_player=black_player
-	# Imposta le intestazioni PGN
 	game_state.pgn_game.headers["White"]=white_player
 	game_state.pgn_game.headers["Black"]=black_player
 	game_state.pgn_game.headers["WhiteElo"]=white_elo
@@ -504,8 +539,9 @@ def StartGame(clock_config):
 	game_state.pgn_game.headers["Event"]=event
 	game_state.pgn_game.headers["Site"]=site
 	game_state.pgn_game.headers["Round"]=round_
-	game_state.pgn_game.headers["Annotator"]=f"Orologic {VERSION} - {PROGRAMMER}"
+	game_state.pgn_game.headers["TimeControl"] = generate_time_control_string(clock_config)
 	game_state.pgn_game.headers["Date"]=datetime.datetime.now().strftime("%Y.%m.%d")
+	game_state.pgn_game.headers["Annotator"]=f"Orologic {VERSION} - {PROGRAMMER}"
 	threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
 	paused_time_start=None
 	while not game_state.game_over:
@@ -527,15 +563,28 @@ def StartGame(clock_config):
 				menu(DOT_COMMANDS,show_only=True,p="Comandi disponibili:")
 			elif cmd==".1":
 				Acusticator(['a6', 0.14, -1, .5], kind=1, adsr=[0, 0, 100, 100])
-				print("Tempo bianco: "+FormatTime(game_state.white_remaining))
+				initial_white = game_state.clock_config["phases"][game_state.white_phase]["white_time"]
+				elapsed_white = initial_white - game_state.white_remaining
+				if elapsed_white < 0:
+					elapsed_white = 0
+				perc_white = (elapsed_white / initial_white * 100) if initial_white > 0 else 0
+				print("Tempo bianco: " + FormatTime(game_state.white_remaining) + f" ({perc_white:.0f}%)")
 			elif cmd==".2":
 				Acusticator(['a6', 0.14, 1, .5], kind=1, adsr=[0, 0, 100, 100])
-				print("Tempo nero: "+FormatTime(game_state.black_remaining))
+				initial_black = game_state.clock_config["phases"][game_state.black_phase]["black_time"]
+				elapsed_black = initial_black - game_state.black_remaining
+				if elapsed_black < 0:
+					elapsed_black = 0
+				perc_black = (elapsed_black / initial_black * 100) if initial_black > 0 else 0
+				print("Tempo nero: " + FormatTime(game_state.black_remaining) + f" ({perc_black:.0f}%)")
 			elif cmd==".3":
 				Acusticator(['a6', 0.14, 0, .5], kind=1, adsr=[0, 0, 100, 100])
 				diff=abs(game_state.white_remaining-game_state.black_remaining)
 				adv="bianco" if game_state.white_remaining>game_state.black_remaining else "nero"
 				print(f"{adv} in vantaggio di "+FormatTime(diff))
+			elif cmd==".m":
+				white_material,black_material=CalculateMaterial(game_state.board)
+				print(f"Materiale: {game_state.white_player} {white_material}, {game_state.black_player} {black_material}")
 			elif cmd==".p":
 				game_state.paused=not game_state.paused
 				if game_state.paused:
@@ -590,10 +639,13 @@ def StartGame(clock_config):
 				game_state.pgn_game.headers["Result"]=result
 				game_state.game_over=True
 			elif cmd.startswith(".c"):
-				comment=cmd[2:].strip()
+				new_comment = cmd[2:].strip()
 				if game_state.move_history:
-					game_state.pgn_node.comment=comment
-					print("Commento registrato per la mossa: "+game_state.move_history[-1])
+					if game_state.pgn_node.comment:
+						game_state.pgn_node.comment += "\n" + new_comment
+					else:
+						game_state.pgn_node.comment = new_comment
+					print("Commento registrato per la mossa: " + game_state.move_history[-1])
 				else:
 					print("Nessuna mossa da commentare.")
 			else:
@@ -668,8 +720,9 @@ def StartGame(clock_config):
 				print("Mossa illegale: "+str(e))
 	print("Partita terminata.")
 	pgn_str=str(game_state.pgn_game)
+	pgn_str = format_pgn_comments(pgn_str)
 	filename=f"{white_player}-{black_player}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
-	with open(filename,"w") as f:
+	with open(filename, "w", encoding="utf-8") as f:
 		f.write(pgn_str)
 	print("PGN salvato come "+filename+".")
 def OpenManual():
