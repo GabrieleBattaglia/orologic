@@ -4,15 +4,17 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="2.2.11"
-RELEASE_DATE=datetime.datetime(2025,2,17,15,7)
+VERSION="2.9.0"
+RELEASE_DATE=datetime.datetime(2025,2,17,19,33)
 PROGRAMMER="Gabriele Battaglia"
 DB_FILE="orologic_db.json"
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
 DOT_COMMANDS={
 	".1":"Mostra il tempo rimanente del bianco",
 	".2":"Mostra il tempo rimanente del nero",
-	".3":"Confronta i tempi rimanenti e indica il vantaggio",
+	".3":"Mostra entrambe gli orologi",
+	".4":"Confronta i tempi rimanenti e indica il vantaggio",
+	".m":"Mostra il valore del materiale ancora in gioco",
 	".p":"Pausa/riavvia il countdown degli orologi",
 	".q":"Annulla l'ultima mossa (solo in pausa)",
 	".b+":"Aggiunge tempo al bianco (in pausa)",
@@ -20,27 +22,204 @@ DOT_COMMANDS={
 	".n+":"Aggiunge tempo al nero (in pausa)",
 	".n-":"Sottrae tempo al nero (in pausa)",
 	".s":"Visualizza la scacchiera",
-	".bianco":"Assegna vittoria al bianco (1-0)",
-	".nero":"Assegna vittoria al nero (0-1)",
-	".patta":"Assegna patta (1/2-1/2)",
-	".*":"Assegna risultato non definito (*) e conclude la partita",
 	".c":"Aggiunge un commento alla mossa corrente",
-	".?":"Visualizza l'elenco dei comandi disponibili"}
+	".1-0":"Assegna vittoria al bianco (1-0) e conclude la partita",
+	".0-1":"Assegna vittoria al nero (0-1) e conclude la partita",
+	".1/2":"Assegna patta (1/2-1/2) e conclude la partita",
+	".*":"Assegna risultato non definito (*) e conclude la partita",
+	".?":"Visualizza l'elenco dei comandi disponibili",
+	"/[colonna]":"Mostra la diagonale alto-destra partendo dalla base della colonna data",
+	"\\[colonna]":"Mostra la diagonale alto-sinistra partendo dalla base della colonna data",
+	"-[colonna|traversa|casa]":"Mostra le figure su quella colonna o traversa o casa",
+	",[NomePezzo]":"Mostra la/le posizione/i del pezzo indicato"}
 MENU_CHOICES={
 	"?":"Visualizza il menù",
-	"c":"Crea un orologio",
-	"v":"Vedi gli orologi salvati",
-	"d":"Elimina un orologio salvato",
-	"e":"Modifica info default per PGN",
-	"m":"Visualizza il manuale",
-	"g":"Inizia a giocare",
+	"crea":"... un nuovo orologio da aggiungere alla collezione",
+	"comandi":"... da utilizzare durante la fase di gioco",
+	"vedi":"... gli orologi salvati",
+	"elimina":"... uno degli orologi salvati",
+	"imposta":"... info di default per il PGN",
+	"manuale":"Mostra la guida dell'app",
+	"gioca":"Inizia la partita",
 	".":"Esci dall'applicazione"}
 FILE_NAMES={0:"ancona",1:"bologna",2:"como",3:"domodossola",4:"empoli",5:"firenze",6:"genova",7:"hotel"}
 LETTER_FILE_MAP={chr(ord("a")+i):FILE_NAMES.get(i,chr(ord("a")+i)) for i in range(8)}
 PIECE_NAMES={chess.PAWN:"pedone",chess.KNIGHT:"cavallo",chess.BISHOP:"alfiere",chess.ROOK:"torre",chess.QUEEN:"donna",chess.KING:"Re"}
-#QF
-import re
-
+PIECE_GENDER = {
+	chess.PAWN: "m",    # pedone
+	chess.KNIGHT: "m",  # cavallo
+	chess.BISHOP: "m",  # alfiere
+	chess.ROOK: "f",    # torre
+	chess.QUEEN: "f",   # donna
+	chess.KING: "m"     # re
+}
+#qf
+def get_color_adjective(piece_color, gender):
+	if gender == "m":
+		return "bianco" if piece_color == chess.WHITE else "nero"
+	else:
+		return "bianca" if piece_color == chess.WHITE else "nera"
+def extended_piece_description(piece):
+	piece_name = PIECE_NAMES.get(piece.piece_type, "pezzo").capitalize()
+	gender = PIECE_GENDER.get(piece.piece_type, "m")
+	color_adj = get_color_adjective(piece.color, gender)
+	return f"{piece_name} {color_adj}"
+def read_diagonal(game_state, base_column, direction_right):
+	"""
+	Legge la diagonale a partire dalla casa sulla traversa 1 della colonna base.
+	Il parametro direction_right:
+		- True: direzione alto-destra (file +1, traversa +1)
+		- False: direzione alto-sinistra (file -1, traversa +1)
+	"""
+	base_column = base_column.lower()
+	if base_column not in "abcdefgh":
+		print("Colonna base non valida.")
+		return
+	file_index = ord(base_column) - ord("a")
+	rank_index = 0  # partiamo da traversa 1 (indice 0)
+	report = []
+	base_descr = f"{LETTER_FILE_MAP.get(base_column, base_column)} 1"
+	while 0 <= file_index < 8 and 0 <= rank_index < 8:
+		square = chess.square(file_index, rank_index)
+		piece = game_state.board.piece_at(square)
+		if piece:
+			current_file = chr(ord("a") + file_index)
+			descriptive_file = LETTER_FILE_MAP.get(current_file, current_file)
+			report.append(f"{descriptive_file} {rank_index+1}: {extended_piece_description(piece)}")
+		rank_index += 1
+		file_index = file_index + 1 if direction_right else file_index - 1
+	dir_str = "alto-destra" if direction_right else "alto-sinistra"
+	if report:
+		print(f"Diagonale da {base_descr} in direzione {dir_str}: " + ", ".join(report))
+	else:
+		print(f"Diagonale da {base_descr} in direzione {dir_str} non contiene pezzi.")
+def read_rank(game_state, rank_number):
+	# Ottiene l'insieme delle case della traversa (rank_number: 1-8)
+	try:
+		rank_bb = getattr(chess, f"BB_RANK_{rank_number}")
+	except AttributeError:
+		print("Traversa non valida.")
+		return
+	squares = chess.SquareSet(rank_bb)
+	report = []
+	for square in squares:
+		piece = game_state.board.piece_at(square)
+		if piece:
+			file_index = chess.square_file(square)
+			file_letter = chr(ord("a") + file_index)
+			descriptive_file = LETTER_FILE_MAP.get(file_letter, file_letter)
+			# Usa la funzione helper per il pezzo
+			report.append(f"{descriptive_file} {rank_number}: {extended_piece_description(piece)}")
+	if report:
+		print(f"Traversa {rank_number}: " + ", ".join(report))
+	else:
+		print(f"La traversa {rank_number} è vuota.")
+def read_file(game_state, file_letter):
+	# file_letter deve essere una lettera da 'a' ad 'h'
+	file_letter = file_letter.lower()
+	if file_letter not in "abcdefgh":
+		print("Colonna non valida.")
+		return
+	try:
+		file_bb = getattr(chess, f"BB_FILE_{file_letter.upper()}")
+	except AttributeError:
+		print("Colonna non valida.")
+		return
+	squares = chess.SquareSet(file_bb)
+	report = []
+	for square in squares:
+		piece = game_state.board.piece_at(square)
+		if piece:
+			rank = chess.square_rank(square) + 1
+			file_index = chess.square_file(square)
+			file_letter_descr = LETTER_FILE_MAP.get(chr(ord("a") + file_index), file_letter)
+			report.append(f"{file_letter_descr} {rank}: {extended_piece_description(piece)}")
+	if report:
+		print(f"Colonna {LETTER_FILE_MAP.get(file_letter, file_letter)}: " + ", ".join(report))
+	else:
+		print(f"La colonna {LETTER_FILE_MAP.get(file_letter, file_letter)} è vuota.")
+def read_square(game_state, square_str):
+	try:
+		square = chess.parse_square(square_str)
+	except Exception as e:
+		print("Casa non valida.")
+		return
+	# Calcola il colore della casa: (file+rank) pari -> scura, altrimenti chiara
+	if (chess.square_file(square) + chess.square_rank(square)) % 2 == 0:
+		color_descr = "scura"
+	else:
+		color_descr = "chiara"
+	piece = game_state.board.piece_at(square)
+	if piece:
+		base_msg = f"La casa {square_str.upper()} è {color_descr} e contiene {extended_piece_description(piece)}."
+		# Calcola difensori e attaccanti per la casa occupata
+		defenders = game_state.board.attackers(piece.color, square)
+		attackers = game_state.board.attackers(not piece.color, square)
+		info_parts = []
+		if defenders:
+			count = len(defenders)
+			word = "pezzo" if count == 1 else "pezzi"
+			info_parts.append(f"difesa da {count} {word} { 'bianchi' if piece.color == chess.WHITE else 'neri' }")
+		if attackers:
+			count = len(attackers)
+			word = "pezzo" if count == 1 else "pezzi"
+			info_parts.append(f"attaccata da {count} {word} { 'neri' if piece.color == chess.WHITE else 'bianchi' }")
+		if info_parts:
+			base_msg += " " + " e ".join(info_parts) + "."
+		print(base_msg)
+	else:
+		base_msg = f"La casa {square_str.upper()} è {color_descr} e risulta vuota."
+		white_attackers = game_state.board.attackers(chess.WHITE, square)
+		black_attackers = game_state.board.attackers(chess.BLACK, square)
+		info_parts = []
+		if white_attackers:
+			count = len(white_attackers)
+			word = "pezzo" if count == 1 else "pezzi"
+			info_parts.append(f"attaccata da {count} {word} bianchi")
+		if black_attackers:
+			count = len(black_attackers)
+			word = "pezzo" if count == 1 else "pezzi"
+			info_parts.append(f"attaccata da {count} {word} neri")
+		if info_parts:
+			base_msg += " " + " e ".join(info_parts) + "."
+		print(base_msg)
+def report_piece_positions(game_state, piece_symbol):
+	try:
+		piece = chess.Piece.from_symbol(piece_symbol)
+	except Exception as e:
+		print("Non riconosciuto: inserisci R N B Q K P, r n b q k p")
+		return
+	color_string = "bianco" if piece.color == chess.WHITE else "nero"
+	full_name = PIECE_NAMES.get(piece.piece_type, "pezzo")
+	squares = game_state.board.pieces(piece.piece_type, piece.color)
+	positions = []
+	for square in squares:
+		# Ottieni file e traversa
+		file_index = chess.square_file(square)
+		rank = chess.square_rank(square) + 1
+		file_letter = chr(ord("a") + file_index)
+		descriptive_file = LETTER_FILE_MAP.get(file_letter, file_letter)
+		positions.append(f"{descriptive_file} {rank}")
+	if positions:
+		print(f"{color_string}: {full_name} in: " + ", ".join(positions))
+	else:
+		print(f"Nessun {full_name} {color_string} trovato.")
+def report_white_time(game_state):
+	initial_white = game_state.clock_config["phases"][game_state.white_phase]["white_time"]
+	elapsed_white = initial_white - game_state.white_remaining
+	if elapsed_white < 0:
+		elapsed_white = 0
+	perc_white = (elapsed_white / initial_white * 100) if initial_white > 0 else 0
+	print("Tempo bianco: " + FormatTime(game_state.white_remaining) + f" ({perc_white:.0f}%)")
+	return
+def report_black_time(game_state):
+	initial_black = game_state.clock_config["phases"][game_state.black_phase]["black_time"]
+	elapsed_black = initial_black - game_state.black_remaining
+	if elapsed_black < 0:
+		elapsed_black = 0
+	perc_black = (elapsed_black / initial_black * 100) if initial_black > 0 else 0
+	print("Tempo nero: " + FormatTime(game_state.black_remaining) + f" ({perc_black:.0f}%)")
+	return
 def format_pgn_comments(pgn_str):
 	def repl(match):
 		comment_text = match.group(1).strip()
@@ -133,11 +312,9 @@ def DescribeMove(move, board):
 		descr += " di " + " ".join(parts)
 	# Gestione cattura
 	if capture:
-		descr += " prende"
-		# Proviamo a individuare il pezzo catturato
+		descr += " prende "
 		captured_piece = board.piece_at(move.to_square)
 		if not captured_piece and piece_letter=="" and chess.square_file(move.from_square) != chess.square_file(move.to_square):
-			# Possibile en passant
 			captured_sq = move.to_square + (8 if board.turn==chess.BLACK else -8)
 			captured_piece = board.piece_at(captured_sq)
 		if captured_piece:
@@ -328,10 +505,7 @@ def ViewClocks():
 		print(f"{idx+1}. {c['name']} - {indicatore}{fasi}{alarms_str}")
 		if c.get("note",""):
 			print(f"\tNota: {c['note']}")
-def SelectClock():
-	db=LoadDB()
-	if not db["clocks"]:
-		return None
+def SelectClock(db):
 	choices={}
 	for i,c in enumerate(db["clocks"]):
 		indicatore="B=N" if c["same_time"] else "B/N"
@@ -353,6 +527,7 @@ def SelectClock():
 	except:
 		index=None
 	if index is not None and 0<=index<len(db["clocks"]):
+		Acusticator(["d6",.02,0,.8],kind=1,adsr=[.001,0,100,.001])
 		return db["clocks"][index]
 	return None
 def DeleteClock():
@@ -556,29 +731,46 @@ def StartGame(clock_config):
 		if game_state.paused:
 			prompt="["+prompt.strip()+"] "
 		user_input=dgt(prompt,kind="s")
-		if user_input.startswith("."):
+		if user_input.startswith("/"):
+			base_column = user_input[1:2].strip()
+			read_diagonal(game_state, base_column, True)
+		elif user_input.startswith("\\"):
+			base_column = user_input[1:2].strip()
+			read_diagonal(game_state, base_column, False)
+		elif user_input.startswith("-"):
+			param = user_input[1:].strip()
+			if len(param) == 1 and param.isalpha():
+				read_file(game_state, param)
+			elif len(param) == 1 and param.isdigit():
+				rank_number = int(param)
+				if 1 <= rank_number <= 8:
+					read_rank(game_state, rank_number)
+				else:
+					print("Traversa non valida.")
+			elif len(param) == 2 and param[0].isalpha() and param[1].isdigit():
+				read_square(game_state, param)
+			else:
+				print("Comando dash non riconosciuto.")
+		elif user_input.startswith(","):
+			Acusticator(["a3", .06, -1, 0.5, "c4", .06, -0.5, 0.5, "d#4", .06, 0.5, 0.5, "f4", .06, 1, 0.5], kind=3, adsr=[20, 5, 70, 25])
+			report_piece_positions(game_state, user_input[1:2])
+		elif user_input.startswith("."):
 			u=user_input.strip()
 			cmd=u.rstrip(".").lower()
 			if cmd==".?":
 				menu(DOT_COMMANDS,show_only=True,p="Comandi disponibili:")
 			elif cmd==".1":
 				Acusticator(['a6', 0.14, -1, .5], kind=1, adsr=[0, 0, 100, 100])
-				initial_white = game_state.clock_config["phases"][game_state.white_phase]["white_time"]
-				elapsed_white = initial_white - game_state.white_remaining
-				if elapsed_white < 0:
-					elapsed_white = 0
-				perc_white = (elapsed_white / initial_white * 100) if initial_white > 0 else 0
-				print("Tempo bianco: " + FormatTime(game_state.white_remaining) + f" ({perc_white:.0f}%)")
+				report_white_time(game_state)
 			elif cmd==".2":
-				Acusticator(['a6', 0.14, 1, .5], kind=1, adsr=[0, 0, 100, 100])
-				initial_black = game_state.clock_config["phases"][game_state.black_phase]["black_time"]
-				elapsed_black = initial_black - game_state.black_remaining
-				if elapsed_black < 0:
-					elapsed_black = 0
-				perc_black = (elapsed_black / initial_black * 100) if initial_black > 0 else 0
-				print("Tempo nero: " + FormatTime(game_state.black_remaining) + f" ({perc_black:.0f}%)")
-			elif cmd==".3":
-				Acusticator(['a6', 0.14, 0, .5], kind=1, adsr=[0, 0, 100, 100])
+				Acusticator(['b6', 0.14, 1, .5], kind=1, adsr=[0, 0, 100, 100])
+				report_black_time(game_state)
+			elif	cmd==".3":
+				Acusticator(['e7', 0.14, 0, .5], kind=1, adsr=[0, 0, 100, 100])
+				report_white_time(game_state)
+				report_black_time(game_state)
+			elif cmd==".4":
+				Acusticator(['f7', 0.14, 0, .5], kind=1, adsr=[0, 0, 100, 100])
 				diff=abs(game_state.white_remaining-game_state.black_remaining)
 				adv="bianco" if game_state.white_remaining>game_state.black_remaining else "nero"
 				print(f"{adv} in vantaggio di "+FormatTime(diff))
@@ -625,13 +817,13 @@ def StartGame(clock_config):
 						print(line)
 				else:
 					print("Nessuna mossa ancora giocata.")
-			elif cmd in [".bianco",".nero",".patta",".*"]:
+			elif cmd in [".1-0",".0-1",".1/2",".*"]:
 				Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
-				if cmd==".bianco":
+				if cmd==".1-0":
 					result="1-0"
-				elif cmd==".nero":
+				elif cmd==".0-1":
 					result="0-1"
-				elif cmd==".patta":
+				elif cmd==".1/2":
 					result="1/2-1/2"
 				else:
 					result="*"
@@ -750,28 +942,31 @@ def Main():
 			print("\nMenù principale\n")
 			for k,v in MENU_CHOICES.items():
 				print(f"{k} - {v}")
-		elif scelta=="c":
+		elif scelta=="crea":
 			Acusticator([1000.0, 0.05, -1, 0.5, "p", 0.05, 0, 0, 900.0, 0.05, 1, 0.5], kind=1, adsr=[0, 0, 100, 0])
 			CreateClock()
-		elif scelta=="v":
+		elif scelta=="comandi":
+			Acusticator([500.0, 0.4, -1, 0.5, 800.0, 0.4, 1, 0.5], kind=3, adsr=[20, 10, 50, 20])
+			menu(DOT_COMMANDS,show_only=True)
+		elif scelta=="vedi":
 			Acusticator([1000.0, 0.05, -1, 0.5, "p", 0.05, 0, 0, 900.0, 0.05, 1, 0.5], kind=1, adsr=[0, 0, 100, 0])
 			ViewClocks()
-		elif scelta=="d":
+		elif scelta=="elimina":
 			DeleteClock()
 			Acusticator([1000.0, 0.05, -1, 0.5, "p", 0.05, 0, 0, 900.0, 0.05, 1, 0.5], kind=1, adsr=[0, 0, 100, 0])
-		elif scelta=="e":
+		elif scelta=="imposta":
 			EditPGN()
 			Acusticator([1000.0, 0.05, -1, 0.5, "p", 0.05, 0, 0, 900.0, 0.05, 1, 0.5], kind=1, adsr=[0, 0, 100, 0])
-		elif scelta=="m":
+		elif scelta=="manuale":
 			OpenManual()
-		elif scelta=="g":
+		elif scelta=="gioca":
 			Acusticator(["c5", 0.1, 0, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0, 0.5, "c6", 0.3, 0, 0.5, "g5", 0.1, 0, 0.5, "e5", 0.1, 0, 0.5, "c5", 0.1, 0, 0.5], kind=1, adsr=[5, 5, 90, 10])
 			print("\nAvvio partita\n")
 			db=LoadDB()
 			if not db["clocks"]:
 				print("Nessun orologio disponibile. Creane uno prima.")
 			else:
-				clock_config=SelectClock()
+				clock_config=SelectClock(db)
 				if clock_config is not None:
 					StartGame(clock_config)
 				else:
