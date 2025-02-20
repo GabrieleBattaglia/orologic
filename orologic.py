@@ -1,14 +1,43 @@
 # Data di concepimento: 14/02/2025 by Gabriele Battaglia e ChatGPT o3-mini-high
-import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re
+import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine
 from dateutil.relativedelta import relativedelta
-from GBUtils import dgt,menu,Acusticator
+from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="2.9.0"
-RELEASE_DATE=datetime.datetime(2025,2,17,19,33)
-PROGRAMMER="Gabriele Battaglia"
+VERSION="3.0.24"
+RELEASE_DATE=datetime.datetime(2025,2,20,19,41)
+PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
+ENGINE = None
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
+analysis_time = 3
+multipv = 2
+ANALYSIS_COMMAND = {
+	"a": "Vai all'inizio o nodo padre (se in variante)",
+	"s": "Indietro di 1 mossa",
+	"d": "Avanti di 1 mossa e visualizza eventuale commento",
+	"f": "Vai alla fine o nodo del prossimo ramo variante",
+	"g": "Seleziona nodo variante precedente",
+	"h": "Seleziona nodo variante successivo",
+	"j": "Legge gli headers della partita",
+	"k": "Salva il PGN	se diverso dall'originale",
+	"l": "Carica il PGN	dagli appunti",
+	"z": "Inserisce la bestline come variante nel PGN",
+	"x": "Inserisce la bestmove nel PGN",
+	"c": "Richiede un commento all'utente e lo aggiunge",
+	"v": "Inserisce la valutazione in centipawn nel PGN",
+	"b": "Visualizza nuovamente il commento",
+	"n": "Elimina il commento (o consente di sceglierlo se ce ne sono più di uno)",
+	"q": "Calcola e aggiungi la bestmove al prompt",
+	"w": "Calcola e visualizza la bestline, aggiungendo anche la bestmove al prompt",
+	"e": "Calcola e visualizza le linee di analisi del motore",
+	"r": "Calcola e aggiungi la valutazione al prompt",
+	"t": "Visualizza le percentuali WDL del motore",
+	"y": "Imposta i secondi di analisi per il motore",
+	"u": "Imposta il numero di linee di analisi da visualizzare",
+	"?": "Mostra questa lista di comandi",
+	"esc": "Esci dalla modalità analisi e salva il PGN se diverso dall'originale"
+}
 DOT_COMMANDS={
 	".1":"Mostra il tempo rimanente del bianco",
 	".2":"Mostra il tempo rimanente del nero",
@@ -34,13 +63,14 @@ DOT_COMMANDS={
 	",[NomePezzo]":"Mostra la/le posizione/i del pezzo indicato"}
 MENU_CHOICES={
 	"?":"Visualizza il menù",
+	"analizza":"Entra in modalità analisi partita",
 	"crea":"... un nuovo orologio da aggiungere alla collezione",
-	"comandi":"... da utilizzare durante la fase di gioco",
-	"vedi":"... gli orologi salvati",
 	"elimina":"... uno degli orologi salvati",
-	"imposta":"... info di default per il PGN",
-	"manuale":"Mostra la guida dell'app",
 	"gioca":"Inizia la partita",
+	"manuale":"Mostra la guida dell'app",
+	"motore":"Configura le impostazioni per il motore di scacchi",
+	"pgn":"Imposta le info di default per il PGN",
+	"vedi":"... gli orologi salvati",
 	".":"Esci dall'applicazione"}
 FILE_NAMES={0:"ancona",1:"bologna",2:"como",3:"domodossola",4:"empoli",5:"firenze",6:"genova",7:"hotel"}
 LETTER_FILE_MAP={chr(ord("a")+i):FILE_NAMES.get(i,chr(ord("a")+i)) for i in range(8)}
@@ -54,6 +84,431 @@ PIECE_GENDER = {
 	chess.KING: "m"     # re
 }
 #qf
+def CalculateBestMove(board):
+	"""
+	Calcola e restituisce la best move per la board data.
+	Restituisce il movimento come oggetto move.
+	"""
+	global ENGINE, analysis_time
+	try:
+		analysis = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=1)
+		best_move = analysis[0].get("pv", [None])[0]
+		return best_move
+	except Exception as e:
+		print("Errore in CalculateBestMove:", e)
+		return None
+def CalculateBestLine(board):
+	"""
+	Calcola e restituisce la best line per la board data.
+	Restituisce una lista di mosse (oggetti move).
+	"""
+	global ENGINE, analysis_time, multipv
+	try:
+		analysis = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+		best_line = analysis[0].get("pv", [])
+		return best_line
+	except Exception as e:
+		print("Errore in CalculateBestLine:", e)
+		return None
+def CalculateEvaluation(board):
+	"""
+	Calcola e restituisce la valutazione in centipawn per la board data.
+	Se la valutazione è mate, restituisce un valore speciale.
+	"""
+	global ENGINE, analysis_time, multipv
+	if ENGINE is None:
+		print("Motore non inizializzato.")
+		return None
+	try:
+		analysis = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+		score = analysis[0].get("score")
+		if score is None:
+			return None
+		# Converti il punteggio da Score ad intero in centipawn se possibile
+		if score.is_mate():
+			# Per esempio, restituisce 10000 per mate a favore del bianco, -10000 per mate a favore del nero
+			return 10000 if score.mate() > 0 else -10000
+		else:
+			return score.white().score()
+	except Exception as e:
+		print("Errore in CalculateEvaluation:", e)
+		return None
+def CalculateWDL(board):
+	"""
+	Calcola e restituisce le percentuali WDL (win/draw/loss) fornite dal motore.
+	Restituisce una tupla (win, draw, loss) in percentuali.
+	"""
+	global ENGINE, analysis_time, multipv
+	if ENGINE is None:
+		print("Motore non inizializzato.")
+		return None
+	try:
+		analysis = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+		# Se il motore supporta UCI_ShowWDL, il dizionario score avrà una chiave "wdl"
+		score = analysis[0].get("score")
+		if score is None or not hasattr(score, "wdl"):
+			return None
+		wdl = score.wdl()
+		# wdl è una tupla con valori in decimi, convertili in percentuali
+		total = sum(wdl)
+		if total == 0:
+			return (0, 0, 0)
+		return (wdl[0] * 10, wdl[1] * 10, wdl[2] * 10)
+	except Exception as e:
+		print("Errore in CalculateWDL:", e)
+		return None
+def SetAnalysisTime(new_time):
+	"""
+	Permette di impostare il tempo di analisi (in secondi) per il motore.
+	"""
+	global analysis_time
+	try:
+		new_time = float(new_time)
+		if new_time <= 0:
+			print("Il tempo di analisi deve essere positivo.")
+		else:
+			analysis_time = new_time
+			print(f"Tempo di analisi impostato a {analysis_time} secondi.")
+	except Exception as e:
+		print("Errore in SetAnalysisTime:", e)
+def SetMultipv(new_multipv):
+	"""
+	Permette di impostare il numero di linee (multipv) da visualizzare.
+	"""
+	global multipv
+	try:
+		new_multipv = int(new_multipv)
+		if new_multipv < 1:
+			print("Il numero di linee deve essere almeno 1.")
+		else:
+			multipv = new_multipv
+			print(f"Multipv impostato a {multipv}.")
+	except Exception as e:
+		print("Errore in SetMultipv:", e)
+def LoadPGNFromClipboard():
+	"""
+	Carica il PGN dagli appunti e lo restituisce come oggetto pgn_game.
+	"""
+	try:
+		clipboard_pgn = pyperclip.paste()
+		if not clipboard_pgn:
+			print("Appunti vuoti.")
+			return None
+		pgn_io = io.StringIO(clipboard_pgn)
+		game = chess.pgn.read_game(pgn_io)
+		if game is None:
+			print("PGN non valido negli appunti.")
+		return game
+	except Exception as e:
+		print("Errore in LoadPGNFromClipboard:", e)
+		return None
+def InitEngine():
+	global ENGINE
+	db = LoadDB()
+	engine_config = db.get("engine_config", {})
+	if not engine_config or not engine_config.get("engine_path"):
+		print("\nMotore non configurato. Usa il comando 'motore' per impostarlo.")
+		return False
+	try:
+		ENGINE = chess.engine.SimpleEngine.popen_uci(engine_config["engine_path"])
+		ENGINE.configure({
+			"Hash": engine_config.get("hash_size", 128),
+			"Threads": engine_config.get("num_cores", 1),
+			"Skill Level": engine_config.get("skill_level", 20),
+			"Move Overhead": engine_config.get("move_overhead", 0)
+		})
+		print("\nMotore inizializzato correttamente.")
+		return True
+	except Exception as e:
+		print("\nErrore nell'inizializzazione del motore:", e)
+		return False
+def EditEngineConfig():
+	print("\nImposta configurazione del motore scacchistico\n")
+	db = LoadDB()
+	engine_config = db.get("engine_config", {})
+	if engine_config:
+		print("Configurazione attuale del motore:")
+		for key, val in engine_config.items():
+			print(f"  {key}: {val}")
+	else:
+		print("Nessuna configurazione trovata.")
+	path = dgt(prompt="Inserisci il percorso dove è salvato il motore UCI: ", kind="s", smin=3, smax=256)
+	executable = dgt(prompt="Inserisci il nome dell'eseguibile del motore (es. stockfish_15_x64_popcnt.exe): ", kind="s", smin=5, smax=64)
+	full_engine_path = os.path.join(path, executable)
+	if not os.path.isfile(full_engine_path):
+		print("Il file specificato non esiste. Verifica il percorso e il nome dell'eseguibile.")
+		return
+	hash_size = dgt(prompt="Inserisci la dimensione della hash table (min: 1, max: 4096 MB): ", kind="i", imin=1, imax=4096)
+	max_cores = os.cpu_count()
+	num_cores = dgt(prompt=f"Inserisci il numero di core da utilizzare (min: 1, max: {max_cores}): ", kind="i", imin=1, imax=max_cores, default=4)
+	skill_level = dgt(prompt="Inserisci il livello di skill (min: 0, max: 20): ", kind="i", imin=0, imax=20)
+	move_overhead = dgt(prompt="Inserisci il move overhead in millisecondi (min: 0, max: 500): ", kind="i", imin=0, imax=500, default=0)
+	wdl_switch = True  # Puoi eventualmente renderlo configurabile
+	engine_config = {
+		"engine_path": full_engine_path,
+		"hash_size": hash_size,
+		"num_cores": num_cores,
+		"skill_level": skill_level,
+		"move_overhead": move_overhead,
+		"wdl_switch": wdl_switch
+	}
+	db["engine_config"] = engine_config
+	SaveDB(db)
+	print("Configurazione del motore salvata in orologic_db.json.")
+	InitEngine()
+	return
+def AnalyzeGame(pgn_game):
+	"""
+	Funzione di analisi della partita (PGN).
+	All'entrata viene mostrato l'header e il numero totale di mosse.
+	Se le mosse sono inferiori a 2, si invita l'utente a tornare al menù
+	oppure a caricare un nuovo PGN dagli appunti.
+	"""
+	if pgn_game	is None:
+		pgn_game	= LoadPGNFromClipboard()
+		if pgn_game:
+			AnalyzeGame(pgn_game)
+		else:
+			print("Gli appunti non contengono un PGN valido. Ritorno al menù.")
+		return
+	print("\nModalità analisi. Premi '?' per la lista dei comandi.\nHeader della partita:")
+	for k, v in pgn_game.headers.items():
+		print(f"{k}: {v}")
+	move_list = list(pgn_game.mainline_moves())
+	total_moves = len(move_list)
+	print(f"Numero totale di mosse: {total_moves}")
+	if total_moves < 2:
+		choice = dgt("Mosse insufficienti. [M] per tornare al menù o [L] per caricare un nuovo PGN dagli appunti: ", kind="s").lower()
+		if choice == "l":
+			new_pgn = LoadPGNFromClipboard()
+			if new_pgn:
+				AnalyzeGame(new_pgn)
+			else:
+				print("Gli appunti non contengono un PGN valido. Ritorno al menù.")
+		return
+	print(f"Tempo analisi impsotato a {analysis_time} secondi.\nLinee riportate dal motore impostate a {multipv}.")
+	saved = False
+	current_filename = pgn_game.headers.get("Filename", None)
+	current_node = pgn_game
+	extra_prompt=""
+	while True:
+		if current_node.move:
+			move_san = current_node.san()
+			fullmove = current_node.parent.board().fullmove_number if current_node.parent else 1
+			if current_node.parent and len(current_node.parent.variations) > 1:
+				if current_node.board().turn == chess.WHITE:  # la mossa appena giocata era del nero
+					prompt = f"\n{extra_prompt} <{fullmove}... {move_san}"
+				else:  # la mossa appena giocata era del bianco
+					prompt = f"\n{extra_prompt} <{fullmove}. {move_san}"
+			else:
+				if current_node.board().turn == chess.WHITE:
+					prompt = f"\n{extra_prompt} {fullmove}... {move_san}"
+				else:
+					prompt = f"\n{extra_prompt} {fullmove}. {move_san}"
+		else:
+			prompt = f"\n{extra_prompt} Start: "
+		cmd = key(prompt)
+		if cmd == "\x1b":  # ESC per uscire
+			break
+		elif cmd == "a":
+			if current_node.parent:
+				current_node = current_node.parent
+				extra_prompt	= ""
+			else:
+				print("Già all'inizio della partita.")
+		elif cmd == "s":
+			if current_node.parent:
+				
+				extra_prompt	= ""
+				current_node = current_node.parent
+			else:
+				print("Nessuna mossa precedente.")
+		elif cmd == "d":
+			if current_node.variations:
+				extra_prompt	= ""
+				current_node = current_node.variations[0]
+				if current_node.comment:
+					print("Commento:", current_node.comment)
+			else:
+				print("Non ci sono mosse successive.")
+		elif cmd == "f":
+			while current_node.variations:
+				extra_prompt	= ""
+				current_node = current_node.variations[0]
+			print("Sei arrivato alla fine della partita.")
+		elif cmd == "g":
+			if current_node.parent:
+				vars = current_node.parent.variations
+				index = vars.index(current_node)
+				if index > 0:
+					extra_prompt	= ""
+					current_node = vars[index - 1]
+				else:
+					print("Non ci sono varianti precedenti.")
+			else:
+				print("Nessun nodo variante disponibile.")
+		elif cmd == "h":
+			if current_node.parent:
+				vars = current_node.parent.variations
+				index = vars.index(current_node)
+				if index < len(vars) - 1:
+					extra_prompt	= ""
+					current_node = vars[index + 1]
+				else:
+					print("Non ci sono varianti successive.")
+			else:
+				print("Nessun nodo variante disponibile.")
+		elif cmd == "j":
+			print("Header della partita:")
+			for k, v in pgn_game.headers.items():
+				print(f"{k}: {v}")
+		elif cmd == "k":
+			if saved:
+				new_default_file_name=f'{pgn_game.headers.get("White")}-{pgn_game.headers.get("Black")}-{pgn_game.headers.get("Result", "*")}'
+				result = pgn_game.headers.get("Result", "*")
+				base_name = dgt("Nuovo nome del file commentato: INVIO per accettare {new_default_file_name}", kind="s",default=new_default_file_name)
+				new_filename = f"{base_name}-commentato-{result}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
+				with open(new_filename, "w", encoding="utf-8") as f:
+					f.write(str(pgn_game))
+					print("PGN aggiornato salvato come " + new_filename)
+				saved = False
+			else:
+				print("Non sono state apportate modifiche al PGN.")
+		elif cmd == "l":
+			try:
+				clipboard_pgn = pyperclip.paste()
+				extra_prompt	= ""
+				new_game = chess.pgn.read_game(io.StringIO(clipboard_pgn))
+				if new_game:
+					pgn_game = new_game
+					current_node = pgn_game
+					print("PGN caricato dagli appunti.")
+				else:
+					print("\nGli appunti non contengono un PGN valido.")
+			except Exception as e:
+				print("\nErrore nel caricamento dagli appunti:", e)
+		elif cmd == "z":
+			bestline = CalculateBestLine(current_node.board())
+			if bestline:
+				current_node.add_variation(bestline)
+				saved = True
+				print("\nBestline aggiunta come variante.")
+			else:
+				print("\nImpossibile calcolare la bestline.")
+		elif cmd == "x":
+			bestmove = CalculateBestMove(current_node.board())
+			if bestmove:
+				san_move = current_node.board().san(bestmove)
+				current_node.comment = (current_node.comment or "") + " Bestmove: " + san_move
+				saved = True
+				print("\nBestmove aggiunta al commento.")
+			else:
+				print("\nImpossibile calcolare la bestmove.")
+		elif cmd == "c":
+			user_comment = dgt("Inserisci il commento: ", kind="s")
+			if user_comment:
+				current_node.comment = (current_node.comment or "") + " " + user_comment
+				saved = True
+				print("\nCommento aggiunto.")
+		elif cmd == "v":
+			eval_cp = CalculateEvaluation(current_node.board())
+			if eval_cp is not None:
+				current_node.comment = (current_node.comment or "") + f" Valutazione: {eval_cp} centipawn"
+				saved = True
+				print("\nValutazione aggiunta al commento.")
+			else:
+				print("\nImpossibile calcolare la valutazione.")
+		elif cmd == "b":
+			print("\nCommento corrente:", current_node.comment)
+		elif cmd == "n":
+			if current_node.comment:
+				confirm = dgt("\nEliminare il commento corrente? (s/n): ", kind="s").lower()
+				if confirm == "s":
+					current_node.comment = ""
+					saved = True
+					print("Commento eliminato.")
+			else:
+				print("\nNessun commento da eliminare.")
+		elif cmd == "q":
+			bestmove = CalculateBestMove(current_node.board())
+			if bestmove:
+				extra_prompt = f" BM: {current_node.board().san(bestmove)} "
+			else:
+				print("\nImpossibile calcolare la bestmove.")
+		elif cmd == "w":
+			bestline = CalculateBestLine(current_node.board())
+			bestmove = CalculateBestMove(current_node.board())
+			if bestline and bestmove:
+				temp_board = current_node.board().copy()
+				san_moves = []
+				for move in bestline:
+					try:
+						san_moves.append(temp_board.san(move))
+						temp_board.push(move)  # Applica la mossa per aggiornare lo stato della copia
+					except Exception as e:
+						print("\nErrore nella conversione della bestline:", e)
+						break
+				line_san = " ".join(san_moves)
+				print(f"\nBestLine: {line_san}")
+				extra_prompt = f" BM:{current_node.board().san(bestmove)} "
+			else:
+				print("\nImpossibile calcolare bestline/bestmove.")
+		elif cmd	== "e":
+			print("\nLinee di analisi:\n")
+			analysis = ENGINE.analyse(current_node.board(), chess.engine.Limit(time=analysis_time), multipv=multipv)
+			for i, info in enumerate(analysis, start=1):
+				pv = info.get("pv", [])
+				if not pv:
+					print(f"Linea {i}: Nessuna mossa trovata.")
+					continue
+				temp_board = current_node.board().copy()
+				moves_san = []
+				for move in pv:
+					try:
+						san_move = temp_board.san(move)
+					except AssertionError as e:
+						print(f"\nErrore nella conversione della mossa {move} in SAN: {e}")
+						break
+					moves_san.append(san_move)
+					temp_board.push(move)
+				else:
+					moves_str = " ".join(moves_san)
+					print(f"Linea {i}: {moves_str}")
+		elif cmd == "r":
+			eval_cp = CalculateEvaluation(current_node.board())
+			if eval_cp is not None:
+				extra_prompt = f" CP: {eval_cp/100:.2f} "
+			else:
+				print("\nImpossibile calcolare la valutazione.")
+		elif cmd == "t":
+			wdl = CalculateWDL(current_node.board())
+			if wdl:
+				adj_wdl=f"W{wdl[0]/100:.1f}%/D{wdl[1]/100:.1f}%/L{wdl[2]/100:.1f}% " 
+				extra_prompt=f"{adj_wdl} "
+			else:
+				print("\nImpossibile calcolare le percentuali WDL.")
+		elif cmd == "y":
+			print(f"\nTempo di analisi attuale: {analysis_time} secondi.")
+			new_time = dgt("Imposta il nuovo valore o INVIO per mantenerlo: ", kind="i",	imin=1,	imax=300, default=analysis_time)
+			SetAnalysisTime(new_time)
+		elif cmd == "u":
+			print(f"\nNumero di linee di analisi attuale: {multipv}")
+			new_lines = dgt("Imposta il nuovo valore o INVIO per mantenerlo: ", kind="i",imin=2,imax=10, default=multipv)
+			SetMultipv(new_lines)
+		elif	cmd == "?":
+			print("\nComandi disponibili in modalità analisi:")
+			menu(ANALYSIS_COMMAND,show_only=True)
+		else:
+			print("Comando non riconosciuto.")
+	if saved:
+		if current_filename:
+			new_filename = current_filename.replace(".pgn", f"_commentato-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn")
+		else:
+			new_filename = dgt("\nInserisci il nome per il nuovo PGN: ", kind="s")
+		with open(new_filename, "w", encoding="utf-8") as f:
+			f.write(str(pgn_game))
+		print("PGN aggiornato salvato come " + new_filename)
+	print("Uscita dalla modalità analisi. Ritorno al menù principale.")
 def get_color_adjective(piece_color, gender):
 	if gender == "m":
 		return "bianco" if piece_color == chess.WHITE else "nero"
@@ -628,12 +1083,16 @@ class GameState:
 			if self.white_phase<len(self.clock_config["phases"])-1:
 				if self.white_moves>=self.clock_config["phases"][self.white_phase]["moves"] and self.clock_config["phases"][self.white_phase]["moves"]!=0:
 					self.white_phase+=1
+					Acusticator(['d2', .8, 0, .7, 'd7', .03, 0, .5, 'a#6', .03,0, .5], kind=3, adsr=[20, 10, 75, 20])
+					print(self.white_player + " entra in fase " + str(self.white_phase+1) + " tempo fase " + FormatTime(self.clock_config["phases"][self.white_phase]["white_time"]))
 					self.white_remaining=self.clock_config["phases"][self.white_phase]["white_time"]
 		else:
 			self.black_moves+=1
 			if self.black_phase<len(self.clock_config["phases"])-1:
 				if self.black_moves>=self.clock_config["phases"][self.black_phase]["moves"] and self.clock_config["phases"][self.black_phase]["moves"]!=0:
 					self.black_phase+=1
+					Acusticator(['d2', .8, 0, .7, 'd7', .03, 0, .5, 'a#6', .03,0, .5], kind=3, adsr=[20, 10, 75, 20])
+					print(self.black_player + " entra in fase " + str(self.black_phase+1) + " tempo fase " + FormatTime(self.clock_config["phases"][self.black_phase]["black_time"]))
 					self.black_remaining=self.clock_config["phases"][self.black_phase]["black_time"]
 		self.active_color="black" if self.active_color=="white" else "white"
 def clock_thread(game_state):
@@ -913,10 +1372,19 @@ def StartGame(clock_config):
 	print("Partita terminata.")
 	pgn_str=str(game_state.pgn_game)
 	pgn_str = format_pgn_comments(pgn_str)
-	filename=f"{white_player}-{black_player}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
+	filename = f"{white_player}-{black_player}-{game_state.pgn_game.headers.get('Result', '*')}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
 	with open(filename, "w", encoding="utf-8") as f:
 		f.write(pgn_str)
 	print("PGN salvato come "+filename+".")
+	analyze_choice = dgt("Vuoi analizzare la partita? (s/n): ", kind="s").lower()
+	if analyze_choice == "s":
+		db = LoadDB()
+		engine_config = db.get("engine_config", {})
+		if not engine_config or not engine_config.get("engine_path"):
+			print("Motore non configurato. Ritorno al menù.")
+			return
+		else:
+			AnalyzeGame(game_state.pgn_game)
 def OpenManual():
 	print("\nApertura manuale\n")
 	readme="README.md"
@@ -936,18 +1404,25 @@ def SchermataIniziale():
 	Acusticator(['c4', 0.125, 0, 0.5, 'd4', 0.125, 0, 0.5, 'e4', 0.125, 0, 0.5, 'g4', 0.125, 0, 0.5, 'a4', 0.125, 0, 0.5, 'e5', 0.125, 0, 0.5, 'p', 0.125, 0, 0.5, 'a5', 0.125, 0, 0.5], kind=1, adsr=[0.01, 0, 100, 99])
 def Main():
 	SchermataIniziale()
+	InitEngine()
 	while True:
 		scelta=menu(MENU_CHOICES,keyslist=True,ntf="Scelta non valida")
 		if scelta=="?":
 			print("\nMenù principale\n")
 			for k,v in MENU_CHOICES.items():
 				print(f"{k} - {v}")
+		elif scelta == "analizza":
+			Acusticator(["a5", .04, 0, 0.5, "e5", .04, 0, 0.5, "p",.08,0,0, "g5", .04, 0, 0.5, "e6", .120, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+			AnalyzeGame(None)
 		elif scelta=="crea":
 			Acusticator([1000.0, 0.05, -1, 0.5, "p", 0.05, 0, 0, 900.0, 0.05, 1, 0.5], kind=1, adsr=[0, 0, 100, 0])
 			CreateClock()
 		elif scelta=="comandi":
 			Acusticator([500.0, 0.4, -1, 0.5, 800.0, 0.4, 1, 0.5], kind=3, adsr=[20, 10, 50, 20])
 			menu(DOT_COMMANDS,show_only=True)
+		elif scelta=="motore":
+			Acusticator(["e7",.02,0,.5,"a6",.02,0,.5,"e7",.02,0,.5,"a6",.02,0,.5,"e7",.02,0,.5,"a6",.02,0,.5])
+			EditEngineConfig()
 		elif scelta=="vedi":
 			Acusticator([1000.0, 0.05, -1, 0.5, "p", 0.05, 0, 0, 900.0, 0.05, 1, 0.5], kind=1, adsr=[0, 0, 100, 0])
 			ViewClocks()
@@ -973,7 +1448,10 @@ def Main():
 					print("Scelta non valida.")
 		elif scelta==".":
 			Acusticator(["g4", 0.15, -0.5, 0.5, "g4", 0.15, 0.5, 0.5, "a4", 0.15, -0.5, 0.5, "g4", 0.15, 0.5, 0.5, "p", 0.15, 0, 0, "b4", 0.15, -0.5, 0.5, "c5", 0.3, 0.5, 0.5], kind=1, adsr=[5, 0, 100, 5])
-			print("Uscita dall'applicazione.")
+			if ENGINE is not None:
+				ENGINE.quit()
+				print("Connessione col motore UCI chiusa")
+			print("\n\t\tUscita dall'applicazione. Arrivederci.")
 			exit(0)
 if __name__=="__main__":
 	board=CustomBoard()
