@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.0.24"
-RELEASE_DATE=datetime.datetime(2025,2,20,19,41)
+VERSION="3.0.25"
+RELEASE_DATE=datetime.datetime(2025,2,21,10,1)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -84,29 +84,50 @@ PIECE_GENDER = {
 	chess.KING: "m"     # re
 }
 #qf
-def CalculateBestMove(board):
-	"""
-	Calcola e restituisce la best move per la board data.
-	Restituisce il movimento come oggetto move.
-	"""
-	global ENGINE, analysis_time
-	try:
-		analysis = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=1)
-		best_move = analysis[0].get("pv", [None])[0]
-		return best_move
-	except Exception as e:
-		print("Errore in CalculateBestMove:", e)
-		return None
-def CalculateBestLine(board):
-	"""
-	Calcola e restituisce la best line per la board data.
-	Restituisce una lista di mosse (oggetti move).
-	"""
+def CalculateBest(board, bestmove=True):
 	global ENGINE, analysis_time, multipv
 	try:
 		analysis = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
 		best_line = analysis[0].get("pv", [])
-		return best_line
+		if best_line:
+			return best_line[0]
+		score = analysis[0].get("score")
+		temp_board = board.copy()
+		moves_with_numbers = []
+		i = 0
+		# Itera sulla lista delle mosse della PV, raggruppandole in coppie (mossa bianca e, se presente, mossa nera)
+		while i < len(best_line):
+			# Se è il turno del Bianco, stampiamo il numero di mossa
+			if temp_board.turn == chess.WHITE:
+				move_num = temp_board.fullmove_number
+				# Mossa del Bianco
+				white_move = best_line[i]
+				white_san = temp_board.san(white_move)
+				temp_board.push(white_move)
+				i += 1
+				move_str = f"{move_num}. {white_san}"
+				# Se esiste anche una mossa per il Nero, la aggiungiamo senza ripetere il numero
+				if i < len(best_line) and temp_board.turn == chess.BLACK:
+					black_move = best_line[i]
+					black_san = temp_board.san(black_move)
+					temp_board.push(black_move)
+					i += 1
+					move_str += f" {black_san}"
+				moves_with_numbers.append(move_str)
+			else:
+				# Caso poco comune: se la PV inizia con una mossa del Nero, aggiungiamo il numero con "..."
+				move_num = temp_board.fullmove_number
+				black_move = best_line[i]
+				black_san = temp_board.san(black_move)
+				temp_board.push(black_move)
+				i += 1
+				moves_with_numbers.append(f"{move_num}... {black_san}")
+		moves_str = " ".join(moves_with_numbers)
+		if score is not None and score.is_mate():
+			mate_moves = abs(score.mate())
+			return f"Matto in {mate_moves}, {moves_str}"
+		else:
+			return moves_str
 	except Exception as e:
 		print("Errore in CalculateBestLine:", e)
 		return None
@@ -388,7 +409,7 @@ def AnalyzeGame(pgn_game):
 			except Exception as e:
 				print("\nErrore nel caricamento dagli appunti:", e)
 		elif cmd == "z":
-			bestline = CalculateBestLine(current_node.board())
+			bestline = CalculateBest(current_node.board())
 			if bestline:
 				current_node.add_variation(bestline)
 				saved = True
@@ -396,7 +417,7 @@ def AnalyzeGame(pgn_game):
 			else:
 				print("\nImpossibile calcolare la bestline.")
 		elif cmd == "x":
-			bestmove = CalculateBestMove(current_node.board())
+			bestmove = CalculateBest(current_node.board())
 			if bestmove:
 				san_move = current_node.board().san(bestmove)
 				current_node.comment = (current_node.comment or "") + " Bestmove: " + san_move
@@ -430,29 +451,16 @@ def AnalyzeGame(pgn_game):
 			else:
 				print("\nNessun commento da eliminare.")
 		elif cmd == "q":
-			bestmove = CalculateBestMove(current_node.board())
+			bestmove = CalculateBest(current_node.board(),	bestmove=True)
 			if bestmove:
 				extra_prompt = f" BM: {current_node.board().san(bestmove)} "
 			else:
 				print("\nImpossibile calcolare la bestmove.")
 		elif cmd == "w":
-			bestline = CalculateBestLine(current_node.board())
-			bestmove = CalculateBestMove(current_node.board())
-			if bestline and bestmove:
-				temp_board = current_node.board().copy()
-				san_moves = []
-				for move in bestline:
-					try:
-						san_moves.append(temp_board.san(move))
-						temp_board.push(move)  # Applica la mossa per aggiornare lo stato della copia
-					except Exception as e:
-						print("\nErrore nella conversione della bestline:", e)
-						break
-				line_san = " ".join(san_moves)
-				print(f"\nBestLine: {line_san}")
-				extra_prompt = f" BM:{current_node.board().san(bestmove)} "
-			else:
-				print("\nImpossibile calcolare bestline/bestmove.")
+			bestline = CalculateBest(current_node.board(),bestmove=False)
+			bestmove = bestline[0]
+			print(f"\nBestLine: {bestline}")
+			extra_prompt = f" BM:{current_node.board().san(bestmove)} "
 		elif cmd	== "e":
 			print("\nLinee di analisi:\n")
 			analysis = ENGINE.analyse(current_node.board(), chess.engine.Limit(time=analysis_time), multipv=multipv)
