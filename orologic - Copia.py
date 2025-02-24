@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.0.38"
-RELEASE_DATE=datetime.datetime(2025,2,24,14,52)
+VERSION="3.0.36"
+RELEASE_DATE=datetime.datetime(2025,2,24,12,6)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -86,54 +86,50 @@ PIECE_GENDER = {
 	chess.KING: "m"     # re
 }
 #qf
-def CalculateBest(board, bestmove=True, as_san=False):
+def CalculateBest(board, bestmove=True):
+	global ENGINE, analysis_time, multipv
 	try:
 		analysis = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
 		best_line = analysis[0].get("pv", [])
-		if not best_line:
-			return None
-		if as_san:
-			temp_board = board.copy()
-			moves_with_numbers = []
-			i = 0
-			# Itera sulla lista delle mosse della PV, raggruppandole in coppie (mossa bianca e, se presente, mossa nera)
-			while i < len(best_line):
-				if temp_board.turn == chess.WHITE:
-					move_num = temp_board.fullmove_number
-					white_move = best_line[i]
-					white_san = temp_board.san(white_move)
-					temp_board.push(white_move)
-					i += 1
-					move_str = f"{move_num}. {white_san}"
-					if i < len(best_line) and temp_board.turn == chess.BLACK:
-						black_move = best_line[i]
-						black_san = temp_board.san(black_move)
-						temp_board.push(black_move)
-						i += 1
-						move_str += f" {black_san}"
-					moves_with_numbers.append(move_str)
-				else:
-					# Caso in cui la PV inizi con una mossa del Nero (poco comune)
-					move_num = temp_board.fullmove_number
+		if best_line:
+			return best_line[0]
+		score = analysis[0].get("score")
+		temp_board = board.copy()
+		moves_with_numbers = []
+		i = 0
+		# Itera sulla lista delle mosse della PV, raggruppandole in coppie (mossa bianca e, se presente, mossa nera)
+		while i < len(best_line):
+			# Se è il turno del Bianco, stampiamo il numero di mossa
+			if temp_board.turn == chess.WHITE:
+				move_num = temp_board.fullmove_number
+				# Mossa del Bianco
+				white_move = best_line[i]
+				white_san = temp_board.san(white_move)
+				temp_board.push(white_move)
+				i += 1
+				move_str = f"{move_num}. {white_san}"
+				# Se esiste anche una mossa per il Nero, la aggiungiamo senza ripetere il numero
+				if i < len(best_line) and temp_board.turn == chess.BLACK:
 					black_move = best_line[i]
 					black_san = temp_board.san(black_move)
 					temp_board.push(black_move)
 					i += 1
-					moves_with_numbers.append(f"{move_num}... {black_san}")
-			moves_str = " ".join(moves_with_numbers)
-			score = analysis[0].get("score")
-			if score is not None and score.relative.is_mate():
-				mate_moves = abs(score.relative.mate())
-				moves_str = f"Matto in {mate_moves}, {moves_str}"
-			if bestmove:
-				return moves_with_numbers[0]
+					move_str += f" {black_san}"
+				moves_with_numbers.append(move_str)
 			else:
-				return moves_str
+				# Caso poco comune: se la PV inizia con una mossa del Nero, aggiungiamo il numero con "..."
+				move_num = temp_board.fullmove_number
+				black_move = best_line[i]
+				black_san = temp_board.san(black_move)
+				temp_board.push(black_move)
+				i += 1
+				moves_with_numbers.append(f"{move_num}... {black_san}")
+		moves_str = " ".join(moves_with_numbers)
+		if score is not None and score.is_mate():
+			mate_moves = abs(score.mate())
+			return f"Matto in {mate_moves}, {moves_str}"
 		else:
-			if bestmove:
-				return best_line[0]
-			else:
-				return best_line
+			return moves_str
 	except Exception as e:
 		print("Errore in CalculateBestLine:", e)
 		return None
@@ -152,8 +148,9 @@ def CalculateEvaluation(board):
 		if score is None:
 			return None
 		# Converti il punteggio da Score ad intero in centipawn se possibile
-		if score.relative.is_mate():
-			return 10000 if score.relative.mate() > 0 else -10000
+		if score.is_mate():
+			# Per esempio, restituisce 10000 per mate a favore del bianco, -10000 per mate a favore del nero
+			return 10000 if score.mate() > 0 else -10000
 		else:
 			return score.white().score()
 	except Exception as e:
@@ -463,12 +460,10 @@ def AnalyzeGame(pgn_game):
 			else:
 				print("\nImpossibile calcolare la bestmove.")
 		elif cmd == "w":
-			bestline_san = CalculateBest(current_node.board(), bestmove=False, as_san=True)
-			if bestline_san:
-				print(f"\nBestLine: {bestline_san}")
-				extra_prompt = f" BM:{bestline_san[0]} "
-			else:
-				print("\nImpossibile calcolare la bestline.")
+			bestline = CalculateBest(current_node.board(),bestmove=False)
+			bestmove = bestline[0]
+			print(f"\nBestLine: {bestline}")
+			extra_prompt = f" BM:{current_node.board().san(bestmove)} "
 		elif cmd	== "e":
 			print("\nLinee di analisi:\n")
 			analysis = ENGINE.analyse(current_node.board(), chess.engine.Limit(time=analysis_time), multipv=multipv)
@@ -489,10 +484,6 @@ def AnalyzeGame(pgn_game):
 					temp_board.push(move)
 				else:
 					moves_str = " ".join(moves_san)
-					score = info.get("score")
-					if score is not None and score.relative.is_mate():
-						mate_moves = abs(score.relative.mate())
-						moves_str = f"Matto in {mate_moves}, {moves_str}"
 					print(f"Linea {i}: {moves_str}")
 		elif cmd == "r":
 			eval_cp = CalculateEvaluation(current_node.board())
@@ -511,17 +502,8 @@ def AnalyzeGame(pgn_game):
 			white_material, black_material = CalculateMaterial(current_node.board())
 			extra_prompt = f"Mtrl: {white_material}/{black_material} "
 		elif cmd == "u":
-			moves = []
-			node = current_node
-			while node.parent is not None:
-				moves.append(node.move)
-				node = node.parent
-			moves.reverse()
-			starting_fen = pgn_game.headers.get("FEN", chess.STARTING_FEN)
-			b = CustomBoard(starting_fen)
-			for m in moves:
-				b.push(m)
-			print("\n" + str(b))
+			board_copy = CustomBoard()
+			print(board_copy)
 		elif cmd == "i":
 			print(f"\nTempo di analisi attuale: {analysis_time} secondi.")
 			new_time = dgt("Imposta il nuovo valore o INVIO per mantenerlo: ", kind="i",	imin=1,	imax=300, default=analysis_time)
@@ -538,7 +520,6 @@ def AnalyzeGame(pgn_game):
 	if saved:
 		new_default_file_name=f'{pgn_game.headers.get("White")}-{pgn_game.headers.get("Black")}-{pgn_game.headers.get("Result", "*")}'
 		result = pgn_game.headers.get("Result", "*")
-		if result == "*": result = "-"
 		base_name = dgt("Nuovo nome del file commentato: INVIO per accettare {new_default_file_name}", kind="s",default=new_default_file_name)
 		new_filename = f"{base_name}-commentato-{result}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
 		with open(new_filename, "w", encoding="utf-8") as f:
@@ -1058,49 +1039,42 @@ def EditPGN():
 	print("Informazioni default per il PGN aggiornate.")
 class CustomBoard(chess.Board):
 	def __str__(self):
-		board_str = "FEN: " + str(self.fen()) + "\n"
-		white_material, black_material = CalculateMaterial(self)
-		ranks = range(8, 0, -1) if self.turn == chess.WHITE else range(1, 9)
-		files = range(8) if self.turn == chess.WHITE else range(7, -1, -1)
+		board_str="FEN: "+str(self.fen())+"\n"
+		white_material,black_material=CalculateMaterial(self)
+		ranks=range(8,0,-1) if self.turn==chess.WHITE else range(1,9)
+		files=range(8) if self.turn==chess.WHITE else range(7,-1,-1)
 		for rank in ranks:
-			board_str += str(rank)
+			board_str+=str(rank)
 			for file in files:
-				square = chess.square(file, rank - 1)
-				piece = self.piece_at(square)
+				square=chess.square(file,rank-1)
+				piece=self.piece_at(square)
 				if piece:
-					symbol = piece.symbol()
-					board_str += symbol.upper() if piece.color == chess.WHITE else symbol.lower()
+					symbol=piece.symbol()
+					if piece.color==chess.WHITE:
+						board_str+=symbol.upper()
+					else:
+						board_str+=symbol.lower()
 				else:
-					board_str += "-" if (rank + file) % 2 == 0 else "+"
-			board_str += "\n"
-		board_str += " abcdefgh" if self.turn == chess.WHITE else " hgfedcba"
-		if self.fullmove_number == 1 and self.turn == chess.WHITE:
-			last_move_info = "1.???"
+					board_str+=("-" if (rank+file)%2==0 else "+")
+			board_str+="\n"
+		board_str+=" abcdefgh" if self.turn==chess.WHITE else " hgfedcba"
+		if self.fullmove_number==1 and self.turn==chess.WHITE:
+			last_move_info="1.???"
 		else:
-			move_number = self.fullmove_number - (1 if self.turn == chess.WHITE else 0)
-			if len(self.move_stack) > 0:
-				temp_board = CustomBoard()
-				for m in self.move_stack[:-1]:
-					temp_board.push(m)
-				last_move = self.move_stack[-1]
-				try:
-					last_move_san = temp_board.san(last_move)
-				except Exception as e:
-					last_move_san = "???"
+			move_number=self.fullmove_number-(1 if self.turn==chess.WHITE else 0)
+			if self.move_stack:
+				temp_board=chess.Board()
+				for move in self.move_stack[:-1]:
+					temp_board.push(move)
+				last_move_san=temp_board.san(self.move_stack[-1])
 			else:
-				last_move_san = "???"
-			if self.turn == chess.BLACK:
-				last_move_info = f"{move_number}. {last_move_san}"
+				last_move_san="???"
+			if self.turn==chess.BLACK:
+				last_move_info=f"{move_number}. {last_move_san}"
 			else:
-				last_move_info = f"{move_number}... {last_move_san}"
-		board_str += f" {last_move_info} Materiale: {white_material}/{black_material}"
+				last_move_info=f"{move_number}... {last_move_san}"
+		board_str+=f" {last_move_info} Materiale: {white_material}/{black_material}"
 		return board_str
-	def copy(self, stack=True):
-		new_board = super().copy(stack=stack)
-		new_board.__class__ = CustomBoard
-		return new_board
-	def __repr__(self):
-		return self.__str__()
 class GameState:
 	def __init__(self,clock_config):
 		self.board=CustomBoard()
@@ -1120,7 +1094,7 @@ class GameState:
 		self.paused=False
 		self.game_over=False
 		self.move_history=[]
-		self.pgn_game = chess.pgn.Game.from_board(CustomBoard())
+		self.pgn_game=chess.pgn.Game()
 		self.pgn_game.headers["Event"]="Orologic Game"
 		self.pgn_node=self.pgn_game
 	def switch_turn(self):
