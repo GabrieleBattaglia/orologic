@@ -4,14 +4,21 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.0.38"
-RELEASE_DATE=datetime.datetime(2025,2,24,14,52)
+VERSION="3.1.5"
+RELEASE_DATE=datetime.datetime(2025,2,25,11,42)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
 analysis_time = 3
 multipv = 2
+SMART_COMMANDS = {
+	"s": "Vai alla mossa precedente",
+	"d": "Vai alla mossa successiva",
+	"r": "Aggiorna valutazione CP",
+	"?": "Visualizza questa lista di comandi",
+	".": "Esci dalla modalità smart"
+}
 ANALYSIS_COMMAND = {
 	"a": "Vai all'inizio o nodo padre (se in variante)",
 	"s": "Indietro di 1 mossa",
@@ -30,9 +37,9 @@ ANALYSIS_COMMAND = {
 	"n": "Elimina il commento (o consente di sceglierlo se ce ne sono più di uno)",
 	"q": "Calcola e aggiungi la bestmove al prompt",
 	"w": "Calcola e visualizza la bestline, aggiungendo anche la bestmove al prompt",
-	"e": "Calcola e visualizza le linee di analisi del motore",
+	"e": "Visualizza le linee di analisi e ne permette l'ispezione smart",
 	"r": "Calcola e aggiungi la valutazione al prompt",
-	"t": "Visualizza le percentuali WDL del motore",
+	"t": "Visualizza le percentuali Win Draw Lost nella posizione corrente",
 	"y": "Aggiungi il bilancio materiale al prompt",
 	"u": "Visualizza la scacchiera",
 	"i": "Imposta i secondi di analisi per il motore",
@@ -86,6 +93,111 @@ PIECE_GENDER = {
 	chess.KING: "m"     # re
 }
 #qf
+def sanitize_filename(filename: str) -> str:
+	"""
+	Restituisce una versione della stringa compatibile con il filesystem,
+	sostituendo i caratteri non validi (per Windows e altri sistemi) con un
+	carattere di sottolineatura.
+	"""
+	# Caratteri non consentiti in Windows: \ / : * ? " < > |
+	# Inoltre, si eliminano i caratteri di controllo (ASCII 0-31)
+	sanitized = re.sub(r'[\\/:*?"<>|]', '_', filename)
+	sanitized = re.sub(r'[\0-\31]', '', sanitized)
+	# Rimuove spazi e punti all'inizio e alla fine
+	sanitized = sanitized.strip().strip('. ')
+	if not sanitized:
+		sanitized = "default_filename"
+	return sanitized
+def SmartInspection(analysis_lines, board):
+	print("Linee disponibili:")
+	for i, info in enumerate(analysis_lines, start=1):
+		temp_board = board.copy()
+		moves_with_numbers = []
+		pv = info.get("pv", [])
+		j = 0
+		while j < len(pv):
+			if temp_board.turn == chess.WHITE:
+				move_num = temp_board.fullmove_number
+				white_move = pv[j]
+				white_san = temp_board.san(white_move)
+				temp_board.push(white_move)
+				move_str = f"{move_num}. {white_san}"
+				if j + 1 < len(pv) and temp_board.turn == chess.BLACK:
+					black_move = pv[j+1]
+					black_san = temp_board.san(black_move)
+					temp_board.push(black_move)
+					move_str += f" {black_san}"
+					j += 2
+				else:
+					j += 1
+				moves_with_numbers.append(move_str)
+			else:
+				move_num = temp_board.fullmove_number
+				black_move = pv[j]
+				black_san = temp_board.san(black_move)
+				temp_board.push(black_move)
+				moves_with_numbers.append(f"{move_num}... {black_san}")
+				j += 1
+		line_summary = " ".join(moves_with_numbers)
+		print(f"Linea {i}: {line_summary}")
+	choice = dgt(f"Quale linea vuoi ispezionare? (1/{len(analysis_lines)} ", kind="i", imin=1, imax=len(analysis_lines),	default=1)
+	line_index = int(choice) - 1
+	chosen_info = analysis_lines[line_index]
+	pv_moves = chosen_info.get("pv", [])
+	if not pv_moves:
+		print("Linea vuota, termine ispezione.")
+		return
+	score = chosen_info.get("score")
+	if score is not None and score.relative.is_mate():
+		eval_str = f"Mate in {abs(score.relative.mate())}"
+	elif score is not None:
+		cp = score.white().score()
+		eval_str = f"{cp/100:.2f}"
+	else:
+		eval_str = "0.00"
+	total_moves = len(pv_moves)
+	current_index = 1
+	print("\nUtilizza questi comandi:")
+	menu(p=SMART_COMMANDS,show_only=True)
+	while True:
+		temp_board = board.copy()
+		for move in pv_moves[:current_index-1]:
+			temp_board.push(move)
+		current_move = pv_moves[current_index-1]
+		# Ottieni la descrizione verbosa della mossa corrente, dal punto di vista della board prima di eseguirla
+		move_verbose = DescribeMove(current_move, temp_board)
+		smart_prompt=f"\nLinea {line_index+1}: ({current_index}/{total_moves}), CP: {eval_str}, {temp_board.fullmove_number}... {move_verbose}"
+		cmd = key(smart_prompt).lower()
+		if cmd == ".":
+			break
+		elif cmd == "s":
+			if current_index > 1:
+				current_index -= 1
+			else:
+				print("\nNon ci sono mosse precedenti.")
+		elif cmd == "?":
+			menu(p=SMART_COMMANDS,show_only=True)
+		elif cmd == "r":
+			# Aggiorna la valutazione ricostruendo la board fino alla mossa corrente
+			temp_board = board.copy()
+			for move in pv_moves[:current_index]:
+				temp_board.push(move)
+			new_eval = CalculateEvaluation(temp_board)
+			if new_eval is not None:
+				if isinstance(new_eval, int):
+					eval_str = f"{new_eval/100:.2f}"
+				else:
+					eval_str = str(new_eval)
+				print("\nValutazione aggiornata.")
+			else:
+				print("\nImpossibile aggiornare la valutazione.")
+		elif cmd == "d":
+			if current_index < total_moves:
+				current_index += 1
+			else:
+				print("\nNon ci sono mosse successive.")
+		else:
+			print("\nComando non riconosciuto.")
 def CalculateBest(board, bestmove=True, as_san=False):
 	try:
 		analysis = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
@@ -304,7 +416,7 @@ def AnalyzeGame(pgn_game):
 	total_moves = len(move_list)
 	print(f"Numero totale di mosse: {(total_moves+1)//2}")
 	if total_moves < 2:
-		choice = dgt("Mosse insufficienti. [M] per tornare al menù o [L] per caricare un nuovo PGN dagli appunti: ", kind="s").lower()
+		choice = key("\nMosse insufficienti. [M] per tornare al menù o [L] per caricare un nuovo PGN dagli appunti: ").lower()
 		if choice == "l":
 			new_pgn = LoadPGNFromClipboard()
 			if new_pgn:
@@ -319,15 +431,25 @@ def AnalyzeGame(pgn_game):
 	current_node = pgn_game
 	extra_prompt=""
 	while True:
+		# Costruzione del prompt
 		if current_node.move:
 			move_san = current_node.san()
 			fullmove = current_node.parent.board().fullmove_number if current_node.parent else 1
+			# Se il nodo corrente ha un padre con più di una variazione, mostriamo simboli indicanti la presenza di rami
 			if current_node.parent and len(current_node.parent.variations) > 1:
-				if current_node.board().turn == chess.WHITE:  # la mossa appena giocata era del nero
-					prompt = f"\n{extra_prompt} <{fullmove}... {move_san}"
-				else:  # la mossa appena giocata era del bianco
+				siblings = current_node.parent.variations
+				idx = siblings.index(current_node)
+				# Se è il primo ramo (sono il primo figlio), mostro solo il prefisso "<"
+				if idx == 0:
 					prompt = f"\n{extra_prompt} <{fullmove}. {move_san}"
+				# Se è l'ultimo ramo, mostro solo il suffisso ">"
+				elif idx == len(siblings) - 1:
+					prompt = f"\n{extra_prompt} {fullmove}. {move_san}>"
+				# Se è intermedio, mostro sia il prefisso che il suffisso
+				else:
+					prompt = f"\n{extra_prompt} <{fullmove}. {move_san}>"
 			else:
+				# Se non ci sono varianti, usa la notazione standard
 				if current_node.board().turn == chess.WHITE:
 					prompt = f"\n{extra_prompt} {fullmove}... {move_san}"
 				else:
@@ -338,32 +460,42 @@ def AnalyzeGame(pgn_game):
 		if cmd == ".":
 			break
 		elif cmd == "a":
-			if current_node.parent:
-				current_node = current_node.parent
-				extra_prompt	= ""
+			node = current_node
+			# Risale finché il nodo è il primo della sua branca
+			while node.parent is not None and node == node.parent.variations[0]:
+				node = node.parent
+			if node.parent is None:
+				# Siamo nella mainline: imposta la prima mossa della partita
+				if node.variations and current_node != node.variations[0]:
+					current_node = node.variations[0]
+					extra_prompt = ""
+				else:
+					print("\nGià all'inizio della partita.")
 			else:
-				print("Già all'inizio della partita.")
+				# Siamo in una variante: torna al primo nodo del ramo corrente
+				current_node = node
+				extra_prompt = ""
 		elif cmd == "s":
 			if current_node.parent:
-				extra_prompt	= ""
 				current_node = current_node.parent
+				extra_prompt = ""
 				if current_node.move:
-					print("\n"+DescribeMove(current_node.move, current_node.parent.board() if current_node.parent else pgn_game.board()))
+					print("\n" + DescribeMove(current_node.move, current_node.parent.board() if current_node.parent else pgn_game.board()))
 			else:
-				print("Nessuna mossa precedente.")
+				print("\nNessuna mossa precedente.")
 		elif cmd == "d":
 			if current_node.variations:
-				extra_prompt	= ""
+				extra_prompt = ""
 				current_node = current_node.variations[0]
 				if current_node.move:
-					print("\n"+DescribeMove(current_node.move, current_node.parent.board() if current_node.parent else pgn_game.board()))
+					print("\n" + DescribeMove(current_node.move, current_node.parent.board() if current_node.parent else pgn_game.board()))
 				if current_node.comment:
 					print("Commento:", current_node.comment)
 			else:
-				print("Non ci sono mosse successive.")
+				print("\nNon ci sono mosse successive.")
 		elif cmd == "f":
 			while current_node.variations:
-				extra_prompt	= ""
+				extra_prompt = ""
 				current_node = current_node.variations[0]
 			print("Sei arrivato alla fine della partita.")
 		elif cmd == "g":
@@ -393,7 +525,7 @@ def AnalyzeGame(pgn_game):
 			for k, v in pgn_game.headers.items():
 				print(f"{k}: {v}")
 		elif cmd == "k":
-			move_target = dgt(f"Vai a mossa n.#: Max({int(total_moves/2)}) ", kind="i", imin=1, imax=int(total_moves/2))*2-1
+			move_target = dgt(f"\nVai a mossa n.#: Max({int(total_moves/2)}) ", kind="i", imin=1, imax=int(total_moves/2))*2-1
 			current_node = pgn_game
 			for i in range(move_target):
 				if current_node.variations:
@@ -432,7 +564,7 @@ def AnalyzeGame(pgn_game):
 			else:
 				print("\nImpossibile calcolare la bestmove.")
 		elif cmd == "c":
-			user_comment = dgt("Inserisci il commento: ", kind="s")
+			user_comment = dgt("\nInserisci il commento: ", kind="s")
 			if user_comment:
 				current_node.comment = (current_node.comment or "") + " " + user_comment
 				saved = True
@@ -469,9 +601,35 @@ def AnalyzeGame(pgn_game):
 				extra_prompt = f" BM:{bestline_san[0]} "
 			else:
 				print("\nImpossibile calcolare la bestline.")
-		elif cmd	== "e":
+		elif cmd == "e":
 			print("\nLinee di analisi:\n")
 			analysis = ENGINE.analyse(current_node.board(), chess.engine.Limit(time=analysis_time), multipv=multipv)
+			main_info = analysis[0]
+			score = main_info.get("score")
+			if score is not None and hasattr(score, "wdl"):
+				wdl = score.wdl()
+			else:
+				wdl = None
+			if wdl is None:
+				wdl_str = "N/A"
+			else:
+				wdl_str = f"{wdl[0]/10:.1f}%/{wdl[1]/10:.1f}%/{wdl[2]/10:.1f}%"
+			depth = main_info.get("depth")
+			seldepth = main_info.get("seldepth")
+			nps = main_info.get("nps")
+			pv = main_info.get("pv")
+			hashfull = main_info.get("hashfull")
+			debug_string = main_info.get("string", "N/A")
+			tbhits = main_info.get("tbhits")
+			time_used = main_info.get("time")
+			nodes = main_info.get("nodes")
+			if score is not None:
+				score_cp = score.white().score(mate_score=10000)
+				score_str = f"{score_cp/100:+.2f}"
+			else:
+				score_str = "N/A"
+			print(f"Statistiche: tempo {time_used} s, Hash {hashfull}, TB {tbhits},\nRete: {debug_string},"
+									f"\nProfondità {depth}/{seldepth}, val. CP. {score_str}, WDL: {wdl_str},\nnodi {nodes}, NPS {nps}")
 			for i, info in enumerate(analysis, start=1):
 				pv = info.get("pv", [])
 				if not pv:
@@ -489,11 +647,14 @@ def AnalyzeGame(pgn_game):
 					temp_board.push(move)
 				else:
 					moves_str = " ".join(moves_san)
-					score = info.get("score")
-					if score is not None and score.relative.is_mate():
-						mate_moves = abs(score.relative.mate())
+					score_line = info.get("score")
+					if score_line is not None and score_line.relative.is_mate():
+						mate_moves = abs(score_line.relative.mate())
 						moves_str = f"Matto in {mate_moves}, {moves_str}"
 					print(f"Linea {i}: {moves_str}")
+			smart = key("\nVuoi ispezionare le linee in modalità smart? (s/n): ").lower()
+			if smart == "s":
+				SmartInspection(analysis, current_node.board())
 		elif cmd == "r":
 			eval_cp = CalculateEvaluation(current_node.board())
 			if eval_cp is not None:
@@ -536,11 +697,14 @@ def AnalyzeGame(pgn_game):
 		else:
 			print("Comando non riconosciuto.")
 	if saved:
-		new_default_file_name=f'{pgn_game.headers.get("White")}-{pgn_game.headers.get("Black")}-{pgn_game.headers.get("Result", "*")}'
+		if "Annotator" not in pgn_game.headers or not pgn_game.headers["Annotator"].strip():
+			pgn_game.headers["Annotator"] = f'Orologic V{VERSION} by {PROGRAMMER}'
+		new_default_file_name=f'{pgn_game.headers.get("White")}-{pgn_game.headers.get("Black")}-{pgn_game.headers.get("Result", "-")}'
 		result = pgn_game.headers.get("Result", "*")
 		if result == "*": result = "-"
-		base_name = dgt("Nuovo nome del file commentato: INVIO per accettare {new_default_file_name}", kind="s",default=new_default_file_name)
+		base_name = dgt(f"Nuovo nome del file commentato: INVIO per accettare {new_default_file_name}", kind="s",default=new_default_file_name)
 		new_filename = f"{base_name}-commentato-{result}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
+		new_filename	= sanitize_filename(new_filename)
 		with open(new_filename, "w", encoding="utf-8") as f:
 			f.write(str(pgn_game))
 		print("PGN aggiornato salvato come " + new_filename)
@@ -1221,7 +1385,7 @@ def StartGame(clock_config):
 	game_state.pgn_game.headers["Round"]=round_
 	game_state.pgn_game.headers["TimeControl"] = generate_time_control_string(clock_config)
 	game_state.pgn_game.headers["Date"]=datetime.datetime.now().strftime("%Y.%m.%d")
-	game_state.pgn_game.headers["Annotator"]=f"Orologic {VERSION} - {PROGRAMMER}"
+	game_state.pgn_game.headers["Annotator"]=f"Orologic V{VERSION} by {PROGRAMMER}"
 	threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
 	paused_time_start=None
 	while not game_state.game_over:
@@ -1419,6 +1583,7 @@ def StartGame(clock_config):
 	pgn_str=str(game_state.pgn_game)
 	pgn_str = format_pgn_comments(pgn_str)
 	filename = f"{white_player}-{black_player}-{game_state.pgn_game.headers.get('Result', '*')}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
+	filename=sanitize_filename(filename)
 	with open(filename, "w", encoding="utf-8") as f:
 		f.write(pgn_str)
 	print("PGN salvato come "+filename+".")
