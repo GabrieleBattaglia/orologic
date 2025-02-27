@@ -1,9 +1,14 @@
 TodoList.
-19. I commenti lunghi, nel pgn salvato risultano intervallati da righe vuote.
-	propone di fare un parsing di ogni commento ed un replacement sui "\n" per evitare linee vuote. Dice che chess va a capo ogni 80 char circa.
-20. vedi se possibile sapere se valutazione già calcolata prima di calcolarla di nuovo.
-21.
+23.
+
 ChangeLog:
++ Sistemata la bestmove nel comando w
++ Aggiornata la documentazione. ora in html.
+- readme.md
++ Aggiunti avvisi sul numero di posizioni salvate in chache
++ svuotamento cache al cambio di analisis_time e multipv
+3.2.7
++ Ora la valutazione della posizione viene calcolata solo quando questa cambia.
 + Corretta valutazione CP inserita nei commenti
 + Migliorato il sistema di eliminazione commenti dal pgn.
 + Corretta valutazione in CP in caso di matto del bianco
