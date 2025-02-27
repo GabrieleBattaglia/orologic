@@ -204,6 +204,7 @@ def CalculateBest(board, bestmove=True, as_san=False):
 		fen = board.fen()
 		if fen not in cache_analysis:
 			cache_analysis[fen] = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+			print(f"\nAnalisi salvata in cache per la posizione {len(cache_analysis)}.")
 		analysis = cache_analysis[fen]
 		best_line = analysis[0].get("pv", [])
 		if not best_line:
@@ -263,6 +264,7 @@ def CalculateEvaluation(board):
 		fen = board.fen()
 		if fen not in cache_analysis:
 			cache_analysis[fen] = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+			print(f"\nAnalisi salvata in cache per la posizione {len(cache_analysis)}.")
 		analysis = cache_analysis[fen]
 		score = analysis[0].get("score")
 		if score is None:
@@ -292,6 +294,7 @@ def CalculateWDL(board):
 		fen = board.fen()
 		if fen not in cache_analysis:
 			cache_analysis[fen] = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+			print(f"\nAnalisi salvata in cache per la posizione {len(cache_analysis)}.")
 		analysis = cache_analysis[fen]
 		# Se il motore supporta UCI_ShowWDL, il dizionario score avrà una chiave "wdl"
 		score = analysis[0].get("score")
@@ -609,7 +612,11 @@ def AnalyzeGame(pgn_game):
 			bestline_san = CalculateBest(current_node.board(), bestmove=False, as_san=True)
 			if bestline_san:
 				print(f"\nBestLine: {bestline_san}")
-				extra_prompt = f" BM:{bestline_san[0]} "
+				bestmove=bestline_san.split()
+				if bestmove[0] ==	"Matto":
+					extra_prompt = f" BM:{bestmove[4]} "
+				else:
+					extra_prompt = f" BM:{bestmove[1]} "
 			else:
 				print("\nImpossibile calcolare la bestline.")
 		elif cmd == "e":
@@ -617,6 +624,7 @@ def AnalyzeGame(pgn_game):
 			fen = current_node.board().fen()
 			if fen not in cache_analysis:
 				cache_analysis[fen] = ENGINE.analyse(current_node.board(), chess.engine.Limit(time=analysis_time), multipv=multipv)
+				print(f"\nAnalisi salvata in cache per la posizione {len(cache_analysis)}.")
 			analysis = cache_analysis[fen]
 			main_info = analysis[0]
 			score = main_info.get("score")
@@ -1616,11 +1624,11 @@ def StartGame(clock_config):
 			AnalyzeGame(game_state.pgn_game)
 def OpenManual():
 	print("\nApertura manuale\n")
-	readme="README.md"
+	readme="readme.htm"
 	if os.path.exists(readme):
 		webbrowser.open(readme)
 	else:
-		print("Il file README.md non esiste.")
+		print("Il file readme.htm non esiste.")
 def SchermataIniziale():
 	now=datetime.datetime.now()
 	diff1=relativedelta(now,BIRTH_DATE)
