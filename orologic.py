@@ -4,14 +4,15 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.1.5"
-RELEASE_DATE=datetime.datetime(2025,2,25,11,42)
+VERSION="3.2.7"
+RELEASE_DATE=datetime.datetime(2025,2,27,10,55)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
 analysis_time = 3
 multipv = 2
+cache_analysis = {}
 SMART_COMMANDS = {
 	"s": "Vai alla mossa precedente",
 	"d": "Vai alla mossa successiva",
@@ -200,7 +201,10 @@ def SmartInspection(analysis_lines, board):
 			print("\nComando non riconosciuto.")
 def CalculateBest(board, bestmove=True, as_san=False):
 	try:
-		analysis = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+		fen = board.fen()
+		if fen not in cache_analysis:
+			cache_analysis[fen] = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+		analysis = cache_analysis[fen]
 		best_line = analysis[0].get("pv", [])
 		if not best_line:
 			return None
@@ -255,17 +259,24 @@ def CalculateEvaluation(board):
 	Se la valutazione è mate, restituisce un valore speciale.
 	"""
 	global ENGINE, analysis_time, multipv
-	if ENGINE is None:
-		print("Motore non inizializzato.")
-		return None
 	try:
-		analysis = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+		fen = board.fen()
+		if fen not in cache_analysis:
+			cache_analysis[fen] = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+		analysis = cache_analysis[fen]
 		score = analysis[0].get("score")
 		if score is None:
 			return None
-		# Converti il punteggio da Score ad intero in centipawn se possibile
-		if score.relative.is_mate():
-			return 10000 if score.relative.mate() > 0 else -10000
+		# Se l'engine rileva una situazione di matto...
+		if score.is_mate():
+			# Se la board è in checkmate, possiamo usare board.outcome()
+			if board.is_checkmate():
+				outcome = board.outcome()
+				if outcome is not None:
+					# outcome.winner è True per il bianco, False per il nero
+					return 10000 if outcome.winner == chess.WHITE else -10000
+			# In altri casi (es. mate in corso di analisi) usiamo score.white()
+			return 10000 if score.white().mate() > 0 else -10000
 		else:
 			return score.white().score()
 	except Exception as e:
@@ -277,11 +288,11 @@ def CalculateWDL(board):
 	Restituisce una tupla (win, draw, loss) in percentuali.
 	"""
 	global ENGINE, analysis_time, multipv
-	if ENGINE is None:
-		print("Motore non inizializzato.")
-		return None
 	try:
-		analysis = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+		fen = board.fen()
+		if fen not in cache_analysis:
+			cache_analysis[fen] = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
+		analysis = cache_analysis[fen]
 		# Se il motore supporta UCI_ShowWDL, il dizionario score avrà una chiave "wdl"
 		score = analysis[0].get("score")
 		if score is None or not hasattr(score, "wdl"):
@@ -521,7 +532,7 @@ def AnalyzeGame(pgn_game):
 			else:
 				print("Nessun nodo variante disponibile.")
 		elif cmd == "j":
-			print("Header della partita:")
+			print("\nHeader della partita:")
 			for k, v in pgn_game.headers.items():
 				print(f"{k}: {v}")
 		elif cmd == "k":
@@ -541,7 +552,7 @@ def AnalyzeGame(pgn_game):
 				if new_game:
 					pgn_game = new_game
 					current_node = pgn_game
-					print("PGN caricato dagli appunti.")
+					print("\nPGN caricato dagli appunti.")
 				else:
 					print("\nGli appunti non contengono un PGN valido.")
 			except Exception as e:
@@ -572,7 +583,7 @@ def AnalyzeGame(pgn_game):
 		elif cmd == "v":
 			eval_cp = CalculateEvaluation(current_node.board())
 			if eval_cp is not None:
-				current_node.comment = (current_node.comment or "") + f" Valutazione: {eval_cp} centipawn"
+				current_node.comment = (current_node.comment or "") + f" Valutazione CP: {eval_cp/100:.2f}"
 				saved = True
 				print("\nValutazione aggiunta al commento.")
 			else:
@@ -581,7 +592,7 @@ def AnalyzeGame(pgn_game):
 			print("\nCommento corrente:", current_node.comment)
 		elif cmd == "n":
 			if current_node.comment:
-				confirm = dgt("\nEliminare il commento corrente? (s/n): ", kind="s").lower()
+				confirm = key(f"\nEliminare: {current_node.comment}? (s/n): ").lower()
 				if confirm == "s":
 					current_node.comment = ""
 					saved = True
@@ -603,7 +614,10 @@ def AnalyzeGame(pgn_game):
 				print("\nImpossibile calcolare la bestline.")
 		elif cmd == "e":
 			print("\nLinee di analisi:\n")
-			analysis = ENGINE.analyse(current_node.board(), chess.engine.Limit(time=analysis_time), multipv=multipv)
+			fen = current_node.board().fen()
+			if fen not in cache_analysis:
+				cache_analysis[fen] = ENGINE.analyse(current_node.board(), chess.engine.Limit(time=analysis_time), multipv=multipv)
+			analysis = cache_analysis[fen]
 			main_info = analysis[0]
 			score = main_info.get("score")
 			if score is not None and hasattr(score, "wdl"):
@@ -684,13 +698,19 @@ def AnalyzeGame(pgn_game):
 				b.push(m)
 			print("\n" + str(b))
 		elif cmd == "i":
-			print(f"\nTempo di analisi attuale: {analysis_time} secondi.")
-			new_time = dgt("Imposta il nuovo valore o INVIO per mantenerlo: ", kind="i",	imin=1,	imax=300, default=analysis_time)
-			SetAnalysisTime(new_time)
+			print(f"\nTempo di analisi attuale: {analysis_time} secondi.\nPosizioni salvate in cache: {len(cache_analysis)}")
+			new_time = dgt("\nImposta il nuovo valore o INVIO per mantenerlo: ", kind="i",	imin=1,	imax=300, default=analysis_time)
+			if new_time != analysis_time:
+				SetAnalysisTime(new_time)
+				cache_analysis.clear()
+				print("\nTempo di analisi aggiornato e	cache svuotata.")
 		elif cmd == "o":
-			print(f"\nNumero di linee di analisi attuale: {multipv}")
+			print(f"\nNumero di linee di analisi attuale: {multipv},\nPosizioni salvate in cache: {len(cache_analysis)}")
 			new_lines = dgt("Imposta il nuovo valore o INVIO per mantenerlo: ", kind="i",imin=2,imax=10, default=multipv)
-			SetMultipv(new_lines)
+			if new_lines != multipv:
+				SetMultipv(new_lines)
+				cache_analysis.clear()
+				print("\nNumero di linee di analisi aggiornato e cache svuotata.")
 		elif	cmd == "?":
 			print("\nComandi disponibili in modalità analisi:")
 			menu(ANALYSIS_COMMAND,show_only=True)
@@ -700,10 +720,8 @@ def AnalyzeGame(pgn_game):
 		if "Annotator" not in pgn_game.headers or not pgn_game.headers["Annotator"].strip():
 			pgn_game.headers["Annotator"] = f'Orologic V{VERSION} by {PROGRAMMER}'
 		new_default_file_name=f'{pgn_game.headers.get("White")}-{pgn_game.headers.get("Black")}-{pgn_game.headers.get("Result", "-")}'
-		result = pgn_game.headers.get("Result", "*")
-		if result == "*": result = "-"
 		base_name = dgt(f"Nuovo nome del file commentato: INVIO per accettare {new_default_file_name}", kind="s",default=new_default_file_name)
-		new_filename = f"{base_name}-commentato-{result}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
+		new_filename = f"{base_name}-commentato-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
 		new_filename	= sanitize_filename(new_filename)
 		with open(new_filename, "w", encoding="utf-8") as f:
 			f.write(str(pgn_game))

@@ -1,10 +1,13 @@
 TodoList.
-17. nel nome del file di default c'è il risultato 2 volte.
-18. Valutazione inserita nel pgn: va divisa /100 credo.
 19. I commenti lunghi, nel pgn salvato risultano intervallati da righe vuote.
-20.
-
+	propone di fare un parsing di ogni commento ed un replacement sui "\n" per evitare linee vuote. Dice che chess va a capo ogni 80 char circa.
+20. vedi se possibile sapere se valutazione già calcolata prima di calcolarla di nuovo.
+21.
 ChangeLog:
++ Corretta valutazione CP inserita nei commenti
++ Migliorato il sistema di eliminazione commenti dal pgn.
++ Corretta valutazione in CP in caso di matto del bianco
+- Risultato doppio in nome file
 + Aggiunto tag annotator in file commentati.
 + Corretto un problema nella richiesta nome file commentato
 + Correzione del navigatore di varianti.
