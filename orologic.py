@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.2.7"
-RELEASE_DATE=datetime.datetime(2025,2,27,10,55)
+VERSION="3.4.9"
+RELEASE_DATE=datetime.datetime(2025,3,4,13,28)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -53,6 +53,7 @@ DOT_COMMANDS={
 	".2":"Mostra il tempo rimanente del nero",
 	".3":"Mostra entrambe gli orologi",
 	".4":"Confronta i tempi rimanenti e indica il vantaggio",
+	".5":"Riporta quale orologio è in moto o la durata della pausa, se attiva",
 	".m":"Mostra il valore del materiale ancora in gioco",
 	".p":"Pausa/riavvia il countdown degli orologi",
 	".q":"Annulla l'ultima mossa (solo in pausa)",
@@ -94,6 +95,12 @@ PIECE_GENDER = {
 	chess.KING: "m"     # re
 }
 #qf
+def FormatClock(seconds):
+	total = int(seconds)
+	hours = total // 3600
+	minutes = (total % 3600) // 60
+	secs = total % 60
+	return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 def sanitize_filename(filename: str) -> str:
 	"""
 	Restituisce una versione della stringa compatibile con il filesystem,
@@ -1166,7 +1173,7 @@ def CreateClock():
 	new_clock=ClockConfig(name,same_time,phases,alarms,note)
 	db["clocks"].append(new_clock.to_dict())
 	SaveDB(db)
-	print("Orologio creato e salvato.")
+	print("\nOrologio creato e salvato.")
 def ViewClocks():
 	print("\nVisualizzazione orologi\n")
 	db=LoadDB()
@@ -1218,7 +1225,7 @@ def DeleteClock():
 	print("\nEliminazione orologio\n")
 	clock=SelectClock()
 	if clock is None:
-		print("Scelta non valida o nessun orologio disponibile.")
+		print("\nScelta non valida o nessun orologio disponibile.")
 		return
 	db=LoadDB()
 	for i,c in enumerate(db["clocks"]):
@@ -1226,7 +1233,7 @@ def DeleteClock():
 			del db["clocks"][i]
 			break
 	SaveDB(db)
-	print("Orologio eliminato.")
+	print("\nOrologio eliminato.")
 def EditPGN():
 	print("\nModifica info default per PGN\n")
 	db=LoadDB()
@@ -1245,7 +1252,7 @@ def EditPGN():
 		round_=default_pgn.get("Round","Round 1")
 	db["default_pgn"]={"Event":event,"Site":site,"Round":round_}
 	SaveDB(db)
-	print("Informazioni default per il PGN aggiornate.")
+	print("\nInformazioni default per il PGN aggiornate.")
 class CustomBoard(chess.Board):
 	def __str__(self):
 		board_str = "FEN: " + str(self.fen()) + "\n"
@@ -1397,7 +1404,7 @@ def StartGame(clock_config):
 	Acusticator(["c5", 0.05, 0, 0.5, "e5", 0.05, 0, 0.5, "g5", 0.05, 0, 0.5], kind=1, adsr=[0, 0, 100, 5])
 	db["default_pgn"]={"Event":event,"Site":site,"Round":round_}
 	SaveDB(db)
-	input("Premi invio per iniziare la partita quando sei pronto...")
+	key("Premi un tasto qualsiasi per iniziare la partita quando sei pronto...",attesa=1800)
 	Acusticator(["c6", .07, 0, .5, "p", .93, 0, .5, "c6", .07, 0, .5, "p", .93, 0, .5, "c6", .07, 0, .5, "p", .93, 0, .5, "c7", .5, 0, .5], kind=1, sync=True)
 	game_state=GameState(clock_config)
 	game_state.white_player=white_player
@@ -1469,6 +1476,19 @@ def StartGame(clock_config):
 				diff=abs(game_state.white_remaining-game_state.black_remaining)
 				adv="bianco" if game_state.white_remaining>game_state.black_remaining else "nero"
 				print(f"{adv} in vantaggio di "+FormatTime(diff))
+			elif cmd==".5":
+				if game_state.paused:
+					Acusticator(['d4', 0.54, 0, .5], kind=1, adsr=[0, 0, 100, 100])
+					pause_duration = time.time() - paused_time_start if paused_time_start else 0
+					hours = int(pause_duration // 3600)
+					minutes = int((pause_duration % 3600) // 60)
+					seconds = int(pause_duration % 60)
+					ms = int((pause_duration - int(pause_duration)) * 1000)
+					print(f"Tempo in pausa da: {f'{hours:2d} ore, ' if hours else ''}{f'{minutes:2d} minuti, ' if minutes or hours else ''}{f'{seconds:2d} secondi e ' if seconds or minutes or hours else ''}{f'{ms:3d} ms' if ms else ''}")
+				else:
+					Acusticator(['f4', 0.54, 0, .5], kind=1, adsr=[0, 0, 100, 100])
+					player = game_state.white_player if game_state.active_color=="white" else game_state.black_player
+					print(f"Orologio di {player} in moto")
 			elif cmd==".m":
 				white_material,black_material=CalculateMaterial(game_state.board)
 				print(f"Materiale: {game_state.white_player} {white_material}, {game_state.black_player} {black_material}")
@@ -1538,6 +1558,10 @@ def StartGame(clock_config):
 			else:
 				print("Comando non riconosciuto.")
 		else:
+			if game_state.paused:
+				print("Non è possibile inserire nuove mosse mentre il tempo è in pausa. Riavvia il tempo con .p")
+				Acusticator(["b3",.2,0,.5],kind=2)
+				continue
 			user_input=NormalizeMove(user_input)
 			try:
 				move=game_state.board.parse_san(user_input)
@@ -1584,14 +1608,12 @@ def StartGame(clock_config):
 					print("Patta per ripetizione della posizione (5 volte)!")
 					Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
 					break
-
 				elif game_state.board.can_claim_fifty_moves():  # Controllo per la *richiesta* delle 50 mosse
 					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
 					print("Patta per la regola delle 50 mosse (su richiesta)!")
 					Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
 					break
-
 				elif game_state.board.can_claim_threefold_repetition(): # Controllo per la *richiesta* della triplice ripetizione.
 					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
@@ -1605,6 +1627,8 @@ def StartGame(clock_config):
 				game_state.switch_turn()
 			except Exception as e:
 				print("Mossa illegale: "+str(e))
+	game_state.pgn_game.headers["WhiteClock"] = FormatClock(game_state.white_remaining)
+	game_state.pgn_game.headers["BlackClock"] = FormatClock(game_state.black_remaining)
 	print("Partita terminata.")
 	pgn_str=str(game_state.pgn_game)
 	pgn_str = format_pgn_comments(pgn_str)
@@ -1613,7 +1637,7 @@ def StartGame(clock_config):
 	with open(filename, "w", encoding="utf-8") as f:
 		f.write(pgn_str)
 	print("PGN salvato come "+filename+".")
-	analyze_choice = dgt("Vuoi analizzare la partita? (s/n): ", kind="s").lower()
+	analyze_choice = key("Vuoi analizzare la partita? (s/n): ").lower()
 	if analyze_choice == "s":
 		db = LoadDB()
 		engine_config = db.get("engine_config", {})
@@ -1630,12 +1654,36 @@ def OpenManual():
 	else:
 		print("Il file readme.htm non esiste.")
 def SchermataIniziale():
-	now=datetime.datetime.now()
-	diff1=relativedelta(now,BIRTH_DATE)
-	diff2=relativedelta(now,RELEASE_DATE)
-	print(f"\nOrologic ha {diff1.years} anni, {diff1.months} mesi, {diff1.days} giorni, {diff1.hours} ore e {diff1.minutes} minuti.")
+	now = datetime.datetime.now()
+	diff1 = relativedelta(now, BIRTH_DATE)
+	diff2 = relativedelta(now, RELEASE_DATE)
+	parts1 = []
+	if diff1.years:
+		parts1.append(f"{diff1.years} anni")
+	if diff1.months:
+		parts1.append(f"{diff1.months} mesi")
+	if diff1.days:
+		parts1.append(f"{diff1.days} giorni")
+	if diff1.hours:
+		parts1.append(f"{diff1.hours} ore")
+	if diff1.minutes:
+		parts1.append(f"{diff1.minutes} minuti")
+	age_string = ", ".join(parts1)
+	parts2 = []
+	if diff2.years:
+		parts2.append(f"{diff2.years} anni")
+	if diff2.months:
+		parts2.append(f"{diff2.months} mesi")
+	if diff2.days:
+		parts2.append(f"{diff2.days} giorni")
+	if diff2.hours:
+		parts2.append(f"{diff2.hours} ore")
+	if diff2.minutes:
+		parts2.append(f"{diff2.minutes} minuti")
+	release_string = ", ".join(parts2)
+	print(f"\nCiao! Benvenuto, sono Orologic e ho {age_string}.")
 	print(f"L'ultima versione è la {VERSION} ed è stata rilasciata il {RELEASE_DATE.strftime('%d/%m/%Y %H:%M')}.")
-	print(f"\tcioè: {diff2.years} anni, {diff2.months} mesi, {diff2.days} giorni, {diff2.hours} ore e {diff2.minutes} minuti fa.")
+	print(f"\tcioè: {release_string} fa.")
 	print("\t\tAutore: "+PROGRAMMER)
 	print("\t\t\tDigita '?' per visualizzare il menù.")
 	Acusticator(['c4', 0.125, 0, 0.5, 'd4', 0.125, 0, 0.5, 'e4', 0.125, 0, 0.5, 'g4', 0.125, 0, 0.5, 'a4', 0.125, 0, 0.5, 'e5', 0.125, 0, 0.5, 'p', 0.125, 0, 0.5, 'a5', 0.125, 0, 0.5], kind=1, adsr=[0.01, 0, 100, 99])
@@ -1687,9 +1735,26 @@ def Main():
 			Acusticator(["g4", 0.15, -0.5, 0.5, "g4", 0.15, 0.5, 0.5, "a4", 0.15, -0.5, 0.5, "g4", 0.15, 0.5, 0.5, "p", 0.15, 0, 0, "b4", 0.15, -0.5, 0.5, "c5", 0.3, 0.5, 0.5], kind=1, adsr=[5, 0, 100, 5])
 			if ENGINE is not None:
 				ENGINE.quit()
-				print("Connessione col motore UCI chiusa")
-			print("\n\t\tUscita dall'applicazione. Arrivederci.")
-			exit(0)
+				print("\nConnessione col motore UCI chiusa")
+			break
 if __name__=="__main__":
+	time_start = datetime.datetime.now()
 	board=CustomBoard()
 	Main()
+	time_end = datetime.datetime.now()
+	delta = relativedelta(time_end, time_start)
+	components = []
+	if delta.days:
+		components.append(f"{delta.days} giorni")
+	if delta.hours:
+		components.append(f"{delta.hours} ore")
+	if delta.minutes:
+		components.append(f"{delta.minutes} minuti")
+	if delta.seconds:
+		components.append(f"{delta.seconds} secondi")
+	ms = delta.microseconds // 1000
+	if ms:
+		components.append(f"{ms} millisecondi")
+	result = ", ".join(components) if components else "0 millisecondi"
+	print(f"Arrivederci da Orologic {VERSION}.\nCi siamo divertiti assieme per: {result}")
+	sys.exit(0)
