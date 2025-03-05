@@ -1223,7 +1223,8 @@ def SelectClock(db):
 	return None
 def DeleteClock():
 	print("\nEliminazione orologio\n")
-	clock=SelectClock()
+	db = LoadDB()
+	clock=SelectClock(db)
 	if clock is None:
 		print("\nScelta non valida o nessun orologio disponibile.")
 		return
@@ -1233,7 +1234,7 @@ def DeleteClock():
 			del db["clocks"][i]
 			break
 	SaveDB(db)
-	print("\nOrologio eliminato.")
+	print(f"\nOrologio {i+1} eliminato.")
 def EditPGN():
 	print("\nModifica info default per PGN\n")
 	db=LoadDB()
