@@ -1,224 +1,201 @@
-Ciao! Ho analizzato attentamente il codice che mi hai fornito. È un progetto davvero ben strutturato e ricco di funzionalità. Complimenti per il lavoro svolto finora!
-
-Ho compreso la tua richiesta: vuoi una funzione che, data una situazione di gioco (una scacchiera e una mossa tentata) e rilevato che la mossa è illegale, spieghi in modo chiaro e comprensibile a un utente non esperto il motivo per cui la mossa non è valida.
-
-Ecco la funzione che ho sviluppato, insieme a spiegazioni dettagliate e considerazioni:
-
 def explain_illegal_move(board, move):
 	"""
-	Spiega perché una mossa è illegale, in linguaggio comprensibile per non esperti.
-
-	Args:
-		board:  L'oggetto chess.Board che rappresenta la scacchiera corrente.
-		move:   L'oggetto chess.Move che rappresenta la mossa tentata.
-
-	Returns:
-		Una stringa che spiega l'illegalità della mossa, oppure None se la mossa
-		è legale (questo non dovrebbe accadere se la funzione viene chiamata
-		correttamente, ma è una buona pratica di programmazione).
+	Spiega in linguaggio scacchistico perché una mossa è illegale.
+	Restituisce una stringa esplicativa oppure None se la mossa risulta legale.
 	"""
-
+	# Se la mossa è legale, non occorre fornire spiegazioni.
 	if move in board.legal_moves:
-		return None  # La mossa è legale, non dovrebbe succedere
-
-	# 1. Pezzo non esistente o del colore sbagliato
-	piece = board.piece_at(move.from_square)
-	if piece is None:
-		return f"Non c'è alcun pezzo in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]}."
-	if piece.color != board.turn:
-		player = "bianco" if board.turn==chess.WHITE else "nero"
-		return f"Non puoi muovere i pezzi del giocatore {player}!"
-
-	# 2. Movimento base illegale (il pezzo non può proprio muoversi così)
-	#    Usiamo una copia della scacchiera per simulare la mossa senza
-	#    modificare la scacchiera originale.  Questo è importante perché
-	#    board.is_legal() controlla anche se il re è sotto scacco *dopo* la mossa.
-	temp_board = board.copy()
-	try:
-		temp_board.push(move)  # Tenta la mossa
-		# Se arriviamo qui, la mossa *sarebbe* legale, ma lascia il re sotto scacco.
-		# Questo è gestito nel punto 3, quindi non dovremmo mai arrivare qui se la
-		# funzione è chiamata correttamente.
 		return None
 
+	# Verifica la presenza del pezzo sulla casella di partenza.
+	piece = board.piece_at(move.from_square)
+	if piece is None:
+		sq = chess.square_name(move.from_square)
+		file_letter = LETTER_FILE_MAP.get(sq[0], sq[0])
+		return f"Nessun pezzo presente sulla casella {file_letter}{sq[1]}."
+	if piece.color != board.turn:
+		player = "bianchi" if board.turn == chess.WHITE else "neri"
+		return f"Non puoi muovere i pezzi avversari. Tocca ai {player}."
+
+	# Controllo preliminare per il pedone che raggiunge l'ultima traversa senza promozione.
+	if piece.piece_type == chess.PAWN and chess.square_rank(move.to_square) in (0, 7):
+		if move.promotion is None:
+			sq = chess.square_name(move.from_square)
+			file_letter = LETTER_FILE_MAP.get(sq[0], sq[0])
+			return f"Il pedone in {file_letter}{sq[1]} deve essere promosso. Indica il pezzo di promozione (es.: e8=Q)."
+
+	# Controllo specifico per l'arrocco.
+	if piece.piece_type == chess.KING and board.is_castling(move):
+		# Verifica dei diritti di arrocco.
+		if board.turn == chess.WHITE:
+			if board.is_kingside_castling(move):
+				if not board.has_kingside_castling_rights(chess.WHITE):
+					return "Non disponi del diritto di arrocco sul lato di re."
+			elif board.is_queenside_castling(move):
+				if not board.has_queenside_castling_rights(chess.WHITE):
+					return "Non disponi del diritto di arrocco sul lato di regina."
+		else:
+			if board.is_kingside_castling(move):
+				if not board.has_kingside_castling_rights(chess.BLACK):
+					return "Non disponi del diritto di arrocco sul lato di re."
+			elif board.is_queenside_castling(move):
+				if not board.has_queenside_castling_rights(chess.BLACK):
+					return "Non disponi del diritto di arrocco sul lato di regina."
+		# Non si può arroccare se il re è in scacco.
+		if board.is_check():
+			return "Non puoi arroccare mentre il re è in scacco."
+		# Verifica delle caselle intermedie e della loro sicurezza.
+		rank = 0 if board.turn == chess.WHITE else 7
+		if board.is_kingside_castling(move):
+			if board.piece_at(chess.square(5, rank)) is not None:
+				sq_temp = chess.square_name(chess.square(5, rank))
+				file_temp = LETTER_FILE_MAP.get(sq_temp[0], sq_temp[0])
+				return f"Non puoi arroccare: la casella {file_temp}{sq_temp[1]} non è libera."
+			if board.piece_at(chess.square(6, rank)) is not None:
+				sq_temp = chess.square_name(chess.square(6, rank))
+				file_temp = LETTER_FILE_MAP.get(sq_temp[0], sq_temp[0])
+				return f"Non puoi arroccare: la casella {file_temp}{sq_temp[1]} non è libera."
+			if board.is_attacked_by(not board.turn, move.from_square):
+				return "Non puoi arroccare: il re è sotto scacco."
+			if board.is_attacked_by(not board.turn, chess.square(5, rank)):
+				sq_temp = chess.square_name(chess.square(5, rank))
+				file_temp = LETTER_FILE_MAP.get(sq_temp[0], sq_temp[0])
+				return f"Non puoi arroccare: la casella {file_temp}{sq_temp[1]} è minacciata."
+			if board.is_attacked_by(not board.turn, chess.square(6, rank)):
+				sq_temp = chess.square_name(chess.square(6, rank))
+				file_temp = LETTER_FILE_MAP.get(sq_temp[0], sq_temp[0])
+				return f"Non puoi arroccare: la casella {file_temp}{sq_temp[1]} è minacciata."
+		elif board.is_queenside_castling(move):
+			if board.turn == chess.WHITE:
+				required_squares = [chess.square(1, 0), chess.square(2, 0), chess.square(3, 0)]
+			else:
+				required_squares = [chess.square(1, 7), chess.square(2, 7), chess.square(3, 7)]
+			for sq_req in required_squares:
+				if board.piece_at(sq_req) is not None:
+					sq_temp = chess.square_name(sq_req)
+					file_temp = LETTER_FILE_MAP.get(sq_temp[0], sq_temp[0])
+					return f"Non puoi arroccare: la casella {file_temp}{sq_temp[1]} non è libera."
+			if board.is_attacked_by(not board.turn, move.from_square):
+				return "Non puoi arroccare: il re è sotto scacco."
+			if board.is_attacked_by(not board.turn, chess.square(2, rank)) or board.is_attacked_by(not board.turn, chess.square(3, rank)):
+				return "Non puoi arroccare: le caselle attraversate dal re sono minacciate."
+
+	# Simulazione del movimento base con una scacchiera temporanea.
+	temp_board = board.copy()
+	try:
+		temp_board.push(move)
 	except ValueError:
-		# Gestiamo il caso in cui ValueError indica specificamente una promozione non valida.
-		if move.promotion is None and piece.piece_type == chess.PAWN and (chess.square_rank(move.to_square) == 0 or chess.square_rank(move.to_square) == 7):
-			  return f"Il pedone in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} deve essere promosso. Specifica a quale pezzo vuoi promuoverlo (esempio: ... h8=donna)."
-		# Se arriviamo qui, la mossa è illegale *prima* di considerare lo scacco.
+		# Gestione degli errori per movimenti non conformi alle regole intrinseche del pezzo.
 		if piece.piece_type == chess.PAWN:
 			if chess.square_file(move.from_square) == chess.square_file(move.to_square):
 				if board.piece_at(move.to_square) is not None:
-					return f"Il pedone in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può avanzare perché la casa {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]} è occupata."
-				# Pedone si muove di due case, ma non dalla casa di partenza.
-				elif abs(chess.square_rank(move.to_square)- chess.square_rank(move.from_square))==2:
+					sq_from = chess.square_name(move.from_square)
+					sq_to = chess.square_name(move.to_square)
+					file_from = LETTER_FILE_MAP.get(sq_from[0], sq_from[0])
+					file_to = LETTER_FILE_MAP.get(sq_to[0], sq_to[0])
+					return f"Il pedone in {file_from}{sq_from[1]} non può avanzare verso {file_to}{sq_to[1]} perché la casella è occupata."
+				elif abs(chess.square_rank(move.to_square) - chess.square_rank(move.from_square)) == 2:
 					start_rank = 1 if board.turn == chess.WHITE else 6
-					if chess.square_rank(move.from_square)!= start_rank:
-						return f"Il pedone può muovere di due case solo dalla casa di partenza ({LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {start_rank +1})."
-					else:
-						#Controlla se la casa di mezzo è libera
-						middle_square = chess.square(chess.square_file(move.from_square), (chess.square_rank(move.from_square) + chess.square_rank(move.to_square)) // 2)
-						if board.piece_at(middle_square) is not None:
-							return f"Il pedone in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può avanzare di due case, la casa intermedia è occupata."
-			else: # Diagonale
+					sq_from = chess.square_name(move.from_square)
+					file_from = LETTER_FILE_MAP.get(sq_from[0], sq_from[0])
+					return f"Il pedone in {file_from}{sq_from[1]} può avanzare di due caselle solo dalla posizione iniziale (rango {start_rank + 1})."
+			else:
 				if board.piece_at(move.to_square) is None:
-					if board.ep_square != move.to_square: # Controlla en passant.
-						return f"Il pedone in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} può muovere in diagonale solo per catturare un pezzo."
-					else: # En Passant
-						return None
+					if board.ep_square != move.to_square:
+						sq_from = chess.square_name(move.from_square)
+						sq_to = chess.square_name(move.to_square)
+						file_from = LETTER_FILE_MAP.get(sq_from[0], sq_from[0])
+						file_to = LETTER_FILE_MAP.get(sq_to[0], sq_to[0])
+						return f"Il pedone in {file_from}{sq_from[1]} può catturare solo in diagonale."
+					else:
+						return None  # Movimento en passant
 				else:
 					return None
 		elif piece.piece_type == chess.KNIGHT:
-			return f"Il cavallo in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]}. Il cavallo si muove a 'L'."
+			sq_from = chess.square_name(move.from_square)
+			sq_to = chess.square_name(move.to_square)
+			file_from = LETTER_FILE_MAP.get(sq_from[0], sq_from[0])
+			file_to = LETTER_FILE_MAP.get(sq_to[0], sq_to[0])
+			return f"Il cavallo in {file_from}{sq_from[1]} non può raggiungere la casella {file_to}{sq_to[1]} con il suo tipico movimento a 'L'."
 		elif piece.piece_type == chess.BISHOP:
-			if abs(chess.square_rank(move.from_square) - chess.square_rank(move.to_square)) != abs(chess.square_file(move.from_square) - chess.square_file(move.to_square)):
-				return f"L'alfiere in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]}. L'alfiere si muove solo in diagonale."
-			else:
-				# Controlla se ci sono pezzi sulla diagonale
-				delta_file = 1 if move.to_square > move.from_square else -1
-				delta_rank = 1 if chess.square_rank(move.to_square) > chess.square_rank(move.from_square) else -1
-				file_index = chess.square_file(move.from_square)
-				rank_index = chess.square_rank(move.from_square)
-
-				current_file = file_index + delta_file
-				current_rank = rank_index + delta_rank
-
-				while current_file != chess.square_file(move.to_square):
-					current_square = chess.square(current_file, current_rank)
-
-					if board.piece_at(current_square):
-						return f"L'alfiere in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]} perché il percorso è ostruito."
-					current_file += delta_file
-					current_rank += delta_rank
-
-				return None # Nessun pezzo trovato, ok
+			sq_from = chess.square_name(move.from_square)
+			sq_to = chess.square_name(move.to_square)
+			file_from = LETTER_FILE_MAP.get(sq_from[0], sq_from[0])
+			file_to = LETTER_FILE_MAP.get(sq_to[0], sq_to[0])
+			return f"L'alfiere in {file_from}{sq_from[1]} può muoversi solo in diagonale, non verso {file_to}{sq_to[1]}."
 		elif piece.piece_type == chess.ROOK:
-			  #Controlliamo se il movimento è puramente verticale o orizzontale
-			if chess.square_file(move.from_square) != chess.square_file(move.to_square) and chess.square_rank(move.from_square) != chess.square_rank(move.to_square):
-				return f"La torre in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]}. La torre si muove solo in orizzontale o verticale."
-			else: #Movimento verticale od orizzontale, controlla se percorso ostruito
-				if chess.square_file(move.from_square) == chess.square_file(move.to_square):  # Movimento verticale
-					delta_rank = 1 if chess.square_rank(move.to_square) > chess.square_rank(move.from_square) else -1
-					current_rank = chess.square_rank(move.from_square) + delta_rank
-
-					while current_rank != chess.square_rank(move.to_square):
-						if board.piece_at(chess.square(chess.square_file(move.from_square), current_rank)):
-							return f"La torre in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]} perché il percorso è ostruito."
-
-						current_rank += delta_rank
-				else: #Movimento Orizzontale
-					delta_file = 1 if chess.square_file(move.to_square) > chess.square_file(move.from_square) else -1
-					current_file = chess.square_file(move.from_square) + delta_file
-
-					while current_file != chess.square_file(move.to_square):
-						if board.piece_at(chess.square(current_file, chess.square_rank(move.from_square))):
-							return f"La torre in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]} perché il percorso è ostruito."
-					current_file += delta_file
-			return None
-
+			sq_from = chess.square_name(move.from_square)
+			sq_to = chess.square_name(move.to_square)
+			file_from = LETTER_FILE_MAP.get(sq_from[0], sq_from[0])
+			file_to = LETTER_FILE_MAP.get(sq_to[0], sq_to[0])
+			return f"La torre in {file_from}{sq_from[1]} si muove esclusivamente lungo file e ranghi, non verso {file_to}{sq_to[1]}."
 		elif piece.piece_type == chess.QUEEN:
-			#Controlliamo se il movimento è puramente verticale, orizzontale o diagonale
-			if chess.square_file(move.from_square) != chess.square_file(move.to_square) and chess.square_rank(move.from_square) != chess.square_rank(move.to_square) and abs(chess.square_rank(move.from_square) - chess.square_rank(move.to_square)) != abs(chess.square_file(move.from_square) - chess.square_file(move.to_square)):
-				return f"La donna in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]}. La donna si muove solo in orizzontale, verticale o diagonale."
-			else:#Movimento verticale, orizzontale o diagonale. Controlliamo se il percorso è libero.
-				if chess.square_file(move.from_square) == chess.square_file(move.to_square):  # Movimento verticale
-					delta_rank = 1 if chess.square_rank(move.to_square) > chess.square_rank(move.from_square) else -1
-					current_rank = chess.square_rank(move.from_square) + delta_rank
-					while current_rank != chess.square_rank(move.to_square):
-						if board.piece_at(chess.square(chess.square_file(move.from_square), current_rank)):
-							return f"La donna in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]} perché il percorso è ostruito."
-						current_rank += delta_rank
-				elif chess.square_rank(move.from_square) == chess.square_rank(move.to_square): #Movimento Orizzontale
-					delta_file = 1 if chess.square_file(move.to_square) > chess.square_file(move.from_square) else -1
-					current_file = chess.square_file(move.from_square) + delta_file
-					while current_file != chess.square_file(move.to_square):
-						if board.piece_at(chess.square(current_file, chess.square_rank(move.from_square))):
-							return f"La donna in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]} perché il percorso è ostruito."
-						current_file += delta_file
-				else: # Diagonale
-					delta_file = 1 if move.to_square > move.from_square else -1
-					delta_rank = 1 if chess.square_rank(move.to_square) > chess.square_rank(move.from_square) else -1
-					file_index = chess.square_file(move.from_square)
-					rank_index = chess.square_rank(move.from_square)
-					current_file = file_index + delta_file
-					current_rank = rank_index + delta_rank
-					while current_file != chess.square_file(move.to_square):
-						current_square = chess.square(current_file, current_rank)
-						if board.piece_at(current_square):
-							return f"La donna in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]} perché il percorso è ostruito."
-						current_file += delta_file
-						current_rank += delta_rank
-				return None
+			sq_from = chess.square_name(move.from_square)
+			sq_to = chess.square_name(move.to_square)
+			file_from = LETTER_FILE_MAP.get(sq_from[0], sq_from[0])
+			file_to = LETTER_FILE_MAP.get(sq_to[0], sq_to[0])
+			return f"La donna in {file_from}{sq_from[1]} deve muoversi lungo file, ranghi o diagonali; il movimento verso {file_to}{sq_to[1]} non rispetta queste regole."
 		elif piece.piece_type == chess.KING:
-			# Controlla se è un tentativo di arrocco
-			if board.is_castling(move):
-				if board.is_kingside_castling(move):
-					rook_square = chess.square(7, chess.square_rank(move.from_square))
-				else:
-					rook_square = chess.square(0, chess.square_rank(move.from_square))
+			sq_from = chess.square_name(move.from_square)
+			return f"Il re in {LETTER_FILE_MAP.get(sq_from[0], sq_from[0])}{sq_from[1]} non può effettuare un movimento anomalo."
+		else:
+			return "Mossa illegale per una ragione non identificata."
 
-				#Controlla se il re ha già mosso
-				if board.has_castling_rights(board.turn): #Controlla se ha i diritti
-					if board.has_kingside_castling_rights(board.turn) and board.is_kingside_castling(move): #Lato di Re
-						#Controlla se ci sono pezzi tra Re e Torre
-						if not board.is_clear(chess.square(5,chess.square_rank(move.from_square))):
-							return f"Non puoi arroccare, la casa di firenze{chess.square_name(move.from_square)[1]} non è libera!"
-						if not board.is_clear(chess.square(6,chess.square_rank(move.from_square))):
-							return f"Non puoi arroccare, la casa di genova{chess.square_name(move.from_square)[1]} non è libera!"
-						#Controlliamo anche se una delle case tra re e torre è attaccata
-						if board.is_attacked_by(not board.turn, move.from_square):
-							return f"Il Re non può arroccare perché è sotto scacco."
-						if board.is_attacked_by(not board.turn, chess.square(5,chess.square_rank(move.from_square))):
-							return f"Il Re non può arroccare, la casa di firenze{chess.square_name(move.from_square)[1]} è minacciata."
-						if board.is_attacked_by(not board.turn, chess.square(6,chess.square_rank(move.from_square))):
-							return f"Il Re non può arroccare, la casa di genova{chess.square_name(move.from_square)[1]} è minacciata."
-					elif board.has_queenside_castling_rights(board.turn) and board.is_queenside_castling(move):
-						#Controlla se ci sono pezzi tra Re e Torre
-						if not board.is_clear(chess.square(3,chess.square_rank(move.from_square))):
-							return f"Non puoi arroccare, la casa di domodossola{chess.square_name(move.from_square)[1]} non è libera!"
-						if not board.is_clear(chess.square(2,chess.square_rank(move.from_square))):
-							return f"Non puoi arroccare, la casa di como{chess.square_name(move.from_square)[1]} non è libera!"
-						if not board.is_clear(chess.square(1,chess.square_rank(move.from_square))):
-							return f"Non puoi arroccare, la casa di bologna{chess.square_name(move.from_square)[1]} non è libera!"
-						#Controlliamo anche se una delle case tra re e torre è attaccata
-						if board.is_attacked_by(not board.turn, move.from_square):
-							return f"Il Re non può arroccare perché è sotto scacco."
-						if board.is_attacked_by(not board.turn, chess.square(3,chess.square_rank(move.from_square))):
-							return f"Il Re non può arroccare, la casa di domodossola{chess.square_name(move.from_square)[1]} è minacciata."
-						if board.is_attacked_by(not board.turn, chess.square(2,chess.square_rank(move.from_square))):
-							return f"Il Re non può arroccare, la casa di como{chess.square_name(move.from_square)[1]} è minacciata."
-					else: #Nessuno dei due, quindi ha mosso uno dei due pezzi
-						if board.is_kingside_castling(move):
-							return f"Non è possibile arroccare dal lato di Re perchè è già stato mosso il Re o la Torre in hotel {chess.square_name(move.from_square)[1]}"
-						else:
-							return f"Non è possibile arroccare dal lato di Donna perchè è già stato mosso il Re o la Torre in ancona {chess.square_name(move.from_square)[1]}"
-				else: #Non ha i diritti
-					return f"Non hai i diritti per arroccare!"
-			elif abs(chess.square_file(move.from_square) - chess.square_file(move.to_square)) > 1 or abs(chess.square_rank(move.from_square) - chess.square_rank(move.to_square)) > 1:
-				return f"Il re in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]}. Il re si muove di una sola casa alla volta."
-			#Il movimento è di una casa, ma controlliamo se la casa è attaccata
-			elif board.is_attacked_by(not board.turn, move.to_square):
-				return f"Il Re non può muovere in {LETTER_FILE_MAP.get(chess.square_name(move.to_square)[0],chess.square_name(move.to_square)[0])} {chess.square_name(move.to_square)[1]} perchè è attaccata!"
-			return None
-
-
-	# 3. Re sotto scacco dopo la mossa (o ancora sotto scacco)
-	temp_board.push(move)  #Applica mossa
+	# Verifica se, dopo il movimento simulato, il re risulta in scacco.
 	if temp_board.is_check():
+		sq_from = chess.square_name(move.from_square)
+		piece_name = PIECE_NAMES.get(piece.piece_type, "pezzo").lower()
 		if board.is_check():
-			return f"Il {PIECE_NAMES.get(piece.piece_type).lower()} in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere perché il tuo re è sotto scacco, devi difenderlo!"
-		return f"Il {PIECE_NAMES.get(piece.piece_type).lower()} in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} non può muovere perché metterebbe il tuo re sotto scacco."
+			return f"Il {piece_name} in {LETTER_FILE_MAP.get(sq_from[0], sq_from[0])}{sq_from[1]} non risolve lo scacco in corso al re."
+		return f"Il {piece_name} in {LETTER_FILE_MAP.get(sq_from[0], sq_from[0])}{sq_from[1]} espone il re a scacco."
 
-	# 4. Inchiodatura (il pezzo non può muoversi perché lascerebbe il re sotto scacco)
-	temp_board = board.copy()
-	temp_board.remove_piece_at(move.from_square) #Simula il movimento, rimuovendo il pezzo e testando per lo scacco al re
-	if temp_board.is_check():
-		  return f"Il {PIECE_NAMES.get(piece.piece_type).lower()} in {LETTER_FILE_MAP.get(chess.square_name(move.from_square)[0],chess.square_name(move.from_square)[0])} {chess.square_name(move.from_square)[1]} è inchiodato e non può muoversi."
-	return "Mossa illegale per un motivo sconosciuto."
-content_copy
-download
-Use code with caution.
-Python
+	# Verifica del fenomeno dell'inchiodatura.
+	temp_board2 = board.copy()
+	temp_board2.remove_piece_at(move.from_square)
+	temp_board2.set_piece_at(move.to_square, piece)
+	if temp_board2.is_check():
+		sq_from = chess.square_name(move.from_square)
+		piece_name = PIECE_NAMES.get(piece.piece_type, "pezzo").lower()
+		return f"Il {piece_name} in {LETTER_FILE_MAP.get(sq_from[0], sq_from[0])}{sq_from[1]} è inchiodato e il suo spostamento lascerebbe il re vulnerabile."
+
+	# Controllo delle ostruzioni lungo il percorso per i pezzi a movimento lineare.
+	sq_from = chess.square_name(move.from_square)
+	sq_to = chess.square_name(move.to_square)
+	file_from = LETTER_FILE_MAP.get(sq_from[0], sq_from[0])
+	file_to = LETTER_FILE_MAP.get(sq_to[0], sq_to[0])
+	# Per movimenti diagonali (alfiere e donna).
+	if piece.piece_type in (chess.BISHOP, chess.QUEEN):
+		if abs(chess.square_file(move.to_square) - chess.square_file(move.from_square)) == abs(chess.square_rank(move.to_square) - chess.square_rank(move.from_square)):
+			delta_file = 1 if chess.square_file(move.to_square) > chess.square_file(move.from_square) else -1
+			delta_rank = 1 if chess.square_rank(move.to_square) > chess.square_rank(move.from_square) else -1
+			current_file = chess.square_file(move.from_square) + delta_file
+			current_rank = chess.square_rank(move.from_square) + delta_rank
+			while current_file != chess.square_file(move.to_square) and current_rank != chess.square_rank(move.to_square):
+				if board.piece_at(chess.square(current_file, current_rank)) is not None:
+					return f"Il percorso diagonale dalla casella {file_from}{sq_from[1]} a {file_to}{sq_to[1]} è ostruito."
+				current_file += delta_file
+				current_rank += delta_rank
+	# Per movimenti rettilinei (torre e donna).
+	if piece.piece_type in (chess.ROOK, chess.QUEEN):
+		# Movimento verticale.
+		if chess.square_file(move.from_square) == chess.square_file(move.to_square):
+			delta_rank = 1 if chess.square_rank(move.to_square) > chess.square_rank(move.from_square) else -1
+			current_rank = chess.square_rank(move.from_square) + delta_rank
+			while current_rank != chess.square_rank(move.to_square):
+				if board.piece_at(chess.square(chess.square_file(move.from_square), current_rank)) is not None:
+					return f"Il percorso verticale dalla casella {file_from}{sq_from[1]} a {file_to}{sq_to[1]} è bloccato."
+				current_rank += delta_rank
+		# Movimento orizzontale.
+		elif chess.square_rank(move.from_square) == chess.square_rank(move.to_square):
+			delta_file = 1 if chess.square_file(move.to_square) > chess.square_file(move.from_square) else -1
+			current_file = chess.square_file(move.from_square) + delta_file
+			while current_file != chess.square_file(move.to_square):
+				if board.piece_at(chess.square(current_file, chess.square_rank(move.from_square))) is not None:
+					return f"Il percorso orizzontale dalla casella {file_from}{sq_from[1]} a {file_to}{sq_to[1]} è bloccato."
+				current_file += delta_file
+
+	# Se nessun controllo ha identificato un motivo specifico, la mossa è considerata illegale per ragioni non specificate.
+	return "La mossa è illegale per una ragione non identificata."
 
 Punti chiave e considerazioni:
 
@@ -251,9 +228,7 @@ Uso di PIECE_NAMES: Utilizzo il dizionario per stampare i nomi localizzati dei p
 Caso "sconosciuto": Ho aggiunto un return finale per catturare eventuali casi non previsti (anche se, idealmente, non dovrebbe mai essere raggiunto).
 
 Integrazione con il codice esistente: La funzione usa le costanti e le funzioni di supporto già presenti nel tuo codice (come LETTER_FILE_MAP, PIECE_NAMES, DescribeMove, ecc.).
-
 Come integrare la funzione nel tuo codice:
-
 Aggiungi la funzione explain_illegal_move al tuo script.
 
 Modifica la parte del ciclo while in StartGame che gestisce l'input dell'utente:
@@ -269,31 +244,15 @@ Modifica la parte del ciclo while in StartGame che gestisce l'input dell'utente:
 				print("Mossa illegale.") #Caso base, se non abbiamo spiegazioni.
 		else:
 			print("Errore: "+str(e)) #Altri tipi di errori
-content_copy
-download
-Use code with caution.
-Python
-
 In questo modo, quando viene rilevata una mossa illegale (e l'eccezione contiene "illegal move"), viene chiamata explain_illegal_move per ottenere la spiegazione, che viene poi stampata all'utente. Se non viene fornita la spiegazione, viene fornito un print generico.
 
 Test:
-
 È fondamentale testare accuratamente questa funzione con una varietà di situazioni di gioco, per assicurarsi che copra tutti i casi possibili di mosse illegali. Ecco alcuni suggerimenti per i test:
-
 Movimenti base: Prova tutti i movimenti possibili per ogni pezzo, sia legali che illegali (es. cavallo che si muove in diagonale, alfiere bloccato, torre bloccata, ecc.).
-
 Scacco: Prova mosse che lasciano il re sotto scacco o che non lo difendono da uno scacco esistente.
-
 Inchiodature: Crea situazioni di inchiodatura con diversi pezzi (alfiere, torre, donna) e prova a muovere il pezzo inchiodato.
-
 Arrocco: Prova l'arrocco in tutte le condizioni possibili (legali e illegali).
-
 Promozione: Prova a promuovere un pedone senza specificare il pezzo a cui promuoverlo.
-
 En passant: Crea la situazione per l'en passant, e prova ad eseguire l'en passant e anche a non eseguirlo
-
 Combinazioni: Combina diversi tipi di illegalità (es. pezzo inchiodato che cerca di muoversi in un modo che lascerebbe il re sotto scacco).
-
 Casi limite: Pensa a casi limite o particolari che potrebbero causare problemi (es. pedone che cerca di muoversi di due case quando è bloccato da un pezzo nella casa intermedia).
-
-Spero che questa funzione e le spiegazioni ti siano utili. Fammi sapere se hai bisogno di altre modifiche o chiarimenti!
