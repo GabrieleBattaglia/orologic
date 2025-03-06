@@ -1565,7 +1565,7 @@ def StartGame(clock_config):
 				continue
 			user_input=NormalizeMove(user_input)
 			try:
-				move=game_state.board.parse_san(user_input)
+				move = game_state.board.parse_san(user_input)
 				board_copy=game_state.board.copy()
 				description=DescribeMove(move,board_copy)
 				Acusticator([1000.0, 0.01, 0, 0.5], kind=1, adsr=[0, 0, 100, 0])
@@ -1627,7 +1627,7 @@ def StartGame(clock_config):
 					game_state.black_remaining+=game_state.clock_config["phases"][game_state.black_phase]["black_inc"]
 				game_state.switch_turn()
 			except Exception as e:
-				print("Mossa illegale: "+str(e))
+				print("Mossa illegale: ",e)
 	game_state.pgn_game.headers["WhiteClock"] = FormatClock(game_state.white_remaining)
 	game_state.pgn_game.headers["BlackClock"] = FormatClock(game_state.black_remaining)
 	print("Partita terminata.")
@@ -1668,7 +1668,7 @@ def SchermataIniziale():
 	if diff1.hours:
 		parts1.append(f"{diff1.hours} ore")
 	if diff1.minutes:
-		parts1.append(f"{diff1.minutes} minuti")
+		parts1.append(f"e {diff1.minutes} minuti")
 	age_string = ", ".join(parts1)
 	parts2 = []
 	if diff2.years:
