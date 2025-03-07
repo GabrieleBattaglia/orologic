@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.4.9"
-RELEASE_DATE=datetime.datetime(2025,3,4,13,28)
+VERSION="3.5.2"
+RELEASE_DATE=datetime.datetime(2025,3,7,9,50)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -95,6 +95,49 @@ PIECE_GENDER = {
 	chess.KING: "m"     # re
 }
 #qf
+def verbose_legal_moves_for_san(board,san_str):
+	if san_str in ["O-O","0-0","O-O-O","0-0-0"]:
+		legal_moves=[]
+		for move in board.legal_moves:
+			if board.is_castling(move):
+				legal_moves.append(move)
+	else:
+		s=san_str.replace("+","").replace("#","").strip()
+		promotion=None
+		if "=" in s:
+			parts=s.split("=")
+			s=parts[0]
+			promo_char=parts[1].strip().upper()
+			if promo_char=="Q":
+				promotion=chess.QUEEN
+			elif promo_char=="R":
+				promotion=chess.ROOK
+			elif promo_char=="B":
+				promotion=chess.BISHOP
+			elif promo_char=="N":
+				promotion=chess.KNIGHT
+		dest_str=s[-2:]
+		try:
+			dest_square=chess.parse_square(dest_str)
+		except Exception:
+			return "Destinazione non riconosciuta."
+		legal_moves=[]
+		for move in board.legal_moves:
+			if move.to_square==dest_square:
+				if promotion is not None:
+					if move.promotion==promotion:
+						legal_moves.append(move)
+				else:
+					legal_moves.append(move)
+	if not legal_moves:
+		return "Nessuna mossa legale trovata per la destinazione indicata."
+	result_lines=[]
+	i=1
+	for move in legal_moves:
+		verbose_desc=DescribeMove(move,board.copy())
+		result_lines.append(f"{i}°: {verbose_desc}")
+		i+=1
+	return "\nEcco le mosse possibili\n:".join(result_lines)
 def FormatClock(seconds):
 	total = int(seconds)
 	hours = total // 3600
@@ -1627,7 +1670,8 @@ def StartGame(clock_config):
 					game_state.black_remaining+=game_state.clock_config["phases"][game_state.black_phase]["black_inc"]
 				game_state.switch_turn()
 			except Exception as e:
-				print("Mossa illegale: ",e)
+				illegal_result=verbose_legal_moves_for_san(game_state.board,user_input)
+				print("Mossa illegale:\n"+illegal_result)
 	game_state.pgn_game.headers["WhiteClock"] = FormatClock(game_state.white_remaining)
 	game_state.pgn_game.headers["BlackClock"] = FormatClock(game_state.black_remaining)
 	print("Partita terminata.")
