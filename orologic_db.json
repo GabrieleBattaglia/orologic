@@ -19,42 +19,6 @@
 			"note": "Usato nel campionato sociale ASCId, torneo online"
 		},
 		{
-			"name": "test2",
-			"same_time": false,
-			"phases": [
-				{
-					"white_time": 3600,
-					"black_time": 7200,
-					"white_inc": 0,
-					"black_inc": 0,
-					"moves": 0
-				}
-			],
-			"alarms": [],
-			"note": "prova di visualizzazione con tempi diversi"
-		},
-		{
-			"name": "test3",
-			"same_time": true,
-			"phases": [
-				{
-					"white_time": 300,
-					"black_time": 300,
-					"white_inc": 0,
-					"black_inc": 0,
-					"moves": 0
-				}
-			],
-			"alarms": [
-				250,
-				200,
-				150,
-				100,
-				50
-			],
-			"note": "test degli allarmi"
-		},
-		{
 			"name": "Scacchierando",
 			"same_time": true,
 			"phases": [
@@ -91,8 +55,12 @@
 	],
 	"default_pgn": {
 		"Event": "Orologic Game",
-		"Site": "GabryPC",
-		"Round": "-"
+		"Site": "PC Ufficio",
+		"Round": "-",
+		"White": "Gabry",
+		"Black": "Ginny",
+		"WhiteElo": "1535",
+		"BlackElo": "1380"
 	},
 	"engine_config": {
 		"engine_path": "e:\\software\\stockfish\\stockfish.exe",
@@ -101,5 +69,6 @@
 		"skill_level": 20,
 		"move_overhead": 0,
 		"wdl_switch": true
-	}
+	},
+	"volume": 0.7
 }
