@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.9.1"
-RELEASE_DATE=datetime.datetime(2025,3,8,8,47)
+VERSION="3.9.2"
+RELEASE_DATE=datetime.datetime(2025,3,8,8,53)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -1135,14 +1135,14 @@ def LoadDB():
 def SaveDB(db):
 	with open(DB_FILE,"w") as f:
 		json.dump(db,f,indent="\t")
-def LoadEcoDatabase(filename="eco.pgn"):
+def LoadEcoDatabase(filename="eco.db"):
 	"""
 	Carica il file ECO e restituisce una lista di dizionari,
 	ciascuno contenente "eco", "opening", "variation" e "moves" (lista di mosse in SAN).
 	"""
 	eco_entries = []
 	if not os.path.exists(filename):
-		print("File eco.pgn non trovato.")
+		print("File eco.db non trovato.")
 		return eco_entries
 	with open(filename, "r", encoding="utf-8") as f:
 		content = f.read()
@@ -1177,21 +1177,24 @@ def LoadEcoDatabase(filename="eco.pgn"):
 def DetectOpening(move_history, eco_db):
 	"""
 	Dato l'elenco delle mosse giocate (move_history, lista di stringhe in SAN)
-	e il database ECO (lista di dict), restituisce il dict dell'apertura migliore,
-	ossia quella con la linea completa più corta tra quelle che matchano la sequenza attuale.
-	Viene considerata solo una voce se il numero di mosse giocate è minore o uguale
-	al numero di mosse definite nell'ECO e la sequenza giocata è esattamente un prefisso.
+	e il database ECO (lista di dict), restituisce l'entry dell'apertura
+	con il più lungo prefisso corrispondente alle mosse giocate.
+	Se nessuna mossa corrisponde, restituisce None.
 	"""
 	best_match = None
-	best_length = None
+	best_match_length = 0
 	for entry in eco_db:
 		eco_moves = entry["moves"]
-		# Considera la voce solo se l'utente non ha superato la lunghezza della linea ECO
-		if len(move_history) <= len(eco_moves) and eco_moves[:len(move_history)] == move_history:
-			candidate_length = len(eco_moves)
-			if best_length is None or candidate_length < best_length:
-				best_match = entry
-				best_length = candidate_length
+		match_length = 0
+		# Confronta elemento per elemento la lista move_history e quella dell'entry
+		for m1, m2 in zip(move_history, eco_moves):
+			if m1 == m2:
+				match_length += 1
+			else:
+				break
+		if match_length > best_match_length:
+			best_match = entry
+			best_match_length = match_length
 	return best_match
 def SecondsToHMS(seconds):
 	h=int(seconds//3600)
@@ -1512,7 +1515,7 @@ def StartGame(clock_config):
 	event_default = default_pgn.get("Event", "Orologic Game")
 	site_default = default_pgn.get("Site", "Sede sconosciuta")
 	round_default = default_pgn.get("Round", "Round 1")
-	eco_db = LoadEcoDatabase("eco.pgn")
+	eco_db = LoadEcoDatabase("eco.db")
 	last_eco_msg = None 
 	white_player = dgt(f"Nome del bianco [{white_default}]: ", kind="s", default=white_default)
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
@@ -1640,11 +1643,12 @@ def StartGame(clock_config):
 				game_state.paused=not game_state.paused
 				if game_state.paused:
 					paused_time_start=time.time()
+					print("Orologi in pausa")
 					Acusticator(["c5", 0.1, 1, volume, "g4", 0.1, 0.3, volume, "e4", 0.1, -0.3, volume, "c4", 0.1, -1, volume], kind=1, adsr=[2, 8, 80, 10])
 				else:
 					pause_duration=time.time()-paused_time_start if paused_time_start else 0
 					Acusticator(["c4", 0.1, -1, volume, "e4", 0.1, -0.3, volume, "g4", 0.1, 0.3, volume, "c5", 0.1, 1, volume], kind=1, adsr=[2, 8, 80, 10])
-					print("Pausa durata: "+FormatTime(pause_duration))
+					print("Pausa durata "+FormatTime(pause_duration))
 			elif cmd==".q":
 				if game_state.paused and game_state.move_history:
 					game_state.board.pop()
