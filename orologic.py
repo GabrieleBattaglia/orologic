@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.8.1"
-RELEASE_DATE=datetime.datetime(2025,3,7,14,50)
+VERSION="3.9.1"
+RELEASE_DATE=datetime.datetime(2025,3,8,8,47)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -1145,48 +1145,49 @@ def LoadEcoDatabase(filename="eco.pgn"):
 		print("File eco.pgn non trovato.")
 		return eco_entries
 	with open(filename, "r", encoding="utf-8") as f:
-		while True:
-			game = chess.pgn.read_game(f)
-			if game is None:
-				break
-			eco_code = game.headers.get("ECO", "")
-			opening = game.headers.get("Opening", "")
-			variation = game.headers.get("Variation", "")
-			moves = []
-			node = game
-			while node.variations:
-				next_node = node.variations[0]
-				try:
-					san = node.board().san(next_node.move)
-				except Exception as e:
-					san = "?"
-				moves.append(san)
-				node = next_node
-			eco_entries.append({
-				"eco": eco_code,
-				"opening": opening,
-				"variation": variation,
-				"moves": moves
-			})
+		content = f.read()
+	# Rimuovi eventuali blocchi di commento racchiusi tra { e }
+	content = re.sub(r'\{[^}]*\}', '', content)
+	# Utilizza StringIO per far leggere il contenuto "pulito" al parser PGN
+	stream = io.StringIO(content)
+	while True:
+		game = chess.pgn.read_game(stream)
+		if game is None:
+			break
+		eco_code = game.headers.get("ECO", "")
+		opening = game.headers.get("Opening", "")
+		variation = game.headers.get("Variation", "")
+		moves = []
+		node = game
+		while node.variations:
+			next_node = node.variations[0]
+			try:
+				san = node.board().san(next_node.move)
+			except Exception as e:
+				san = "?"
+			moves.append(san)
+			node = next_node
+		eco_entries.append({
+			"eco": eco_code,
+			"opening": opening,
+			"variation": variation,
+			"moves": moves
+		})
 	return eco_entries
 def DetectOpening(move_history, eco_db):
 	"""
 	Dato l'elenco delle mosse giocate (move_history, lista di stringhe in SAN)
 	e il database ECO (lista di dict), restituisce il dict dell'apertura migliore,
 	ossia quella con la linea completa più corta tra quelle che matchano la sequenza attuale.
+	Viene considerata solo una voce se il numero di mosse giocate è minore o uguale
+	al numero di mosse definite nell'ECO e la sequenza giocata è esattamente un prefisso.
 	"""
 	best_match = None
 	best_length = None
 	for entry in eco_db:
 		eco_moves = entry["moves"]
-		# Caso 1: le mosse giocate sono inferiori o uguali a quelle dell'eco
+		# Considera la voce solo se l'utente non ha superato la lunghezza della linea ECO
 		if len(move_history) <= len(eco_moves) and eco_moves[:len(move_history)] == move_history:
-			candidate_length = len(eco_moves)
-			if best_length is None or candidate_length < best_length:
-				best_match = entry
-				best_length = candidate_length
-		# Caso 2: le mosse giocate sono maggiori e la sequenza eco è un prefisso
-		elif len(move_history) >= len(eco_moves) and move_history[:len(eco_moves)] == eco_moves:
 			candidate_length = len(eco_moves)
 			if best_length is None or candidate_length < best_length:
 				best_match = entry
