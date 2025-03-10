@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.9.2"
-RELEASE_DATE=datetime.datetime(2025,3,8,8,53)
+VERSION="3.9.4"
+RELEASE_DATE=datetime.datetime(2025,3,9,18,15)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -256,7 +256,6 @@ def CalculateBest(board, bestmove=True, as_san=False):
 		fen = board.fen()
 		if fen not in cache_analysis:
 			cache_analysis[fen] = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
-			print(f"\nAnalisi salvata in cache per la posizione {len(cache_analysis)}.")
 		analysis = cache_analysis[fen]
 		best_line = analysis[0].get("pv", [])
 		if not best_line:
@@ -316,7 +315,6 @@ def CalculateEvaluation(board):
 		fen = board.fen()
 		if fen not in cache_analysis:
 			cache_analysis[fen] = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
-			print(f"\nAnalisi salvata in cache per la posizione {len(cache_analysis)}.")
 		analysis = cache_analysis[fen]
 		score = analysis[0].get("score")
 		if score is None:
@@ -490,7 +488,7 @@ def AnalyzeGame(pgn_game):
 			else:
 				print("Gli appunti non contengono un PGN valido. Ritorno al menù.")
 		return
-	print(f"Tempo analisi impsotato a {analysis_time} secondi.\nLinee riportate dal motore impostate a {multipv}.")
+	print(f"Tempo analisi impostato a {analysis_time} secondi.\nLinee riportate dal motore impostate a {multipv}.")
 	print("\nPremi '?' per la lista dei comandi.\n")
 	saved = False
 	current_filename = pgn_game.headers.get("Filename", None)
