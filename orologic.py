@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.9.4"
-RELEASE_DATE=datetime.datetime(2025,3,9,18,15)
+VERSION="3.9.8"
+RELEASE_DATE=datetime.datetime(2025,3,12,12,48)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -74,7 +74,6 @@ DOT_COMMANDS={
 	"-[colonna|traversa|casa]":"Mostra le figure su quella colonna o traversa o casa",
 	",[NomePezzo]":"Mostra la/le posizione/i del pezzo indicato"}
 MENU_CHOICES={
-	"?":"Visualizza il menù",
 	"analizza":"Entra in modalità analisi partita",
 	"crea":"... un nuovo orologio da aggiungere alla collezione",
 	"elimina":"... uno degli orologi salvati",
@@ -1300,44 +1299,48 @@ def ViewClocks():
 		if c.get("note",""):
 			print(f"\tNota: {c['note']}")
 def SelectClock(db):
-	choices={}
-	for i,c in enumerate(db["clocks"]):
-		indicatore="B=N" if c["same_time"] else "B/N"
-		fasi=""
-		for j,phase in enumerate(c["phases"]):
-			if c["same_time"]:
-				time_str=SecondsToHMS(phase["white_time"])
-				fasi+=f" F{j+1}:{time_str}+{phase['white_inc']}"
-			else:
-				time_str_w=SecondsToHMS(phase["white_time"])
-				time_str_b=SecondsToHMS(phase["black_time"])
-				fasi+=f" F{j+1}: Bianco:{time_str_w}+{phase['white_inc']}, Nero:{time_str_b}+{phase['black_inc']}"
-		num_alarms = len(c.get("alarms", []))  # Conta gli allarmi *PRIMA*
-		alarms_str = f" Allarmi ({num_alarms})"
-		choices[str(i + 1)] = f"{c['name']} - {indicatore}{fasi}{alarms_str}"		
-	choice=menu(choices,show=True,keyslist=False,p="Scegli orologio")
-	try:
-		index=int(choice)-1
-	except:
-		index=None
-	if index is not None and 0<=index<len(db["clocks"]):
-		Acusticator(["d6",.02,0,volume],kind=1,adsr=[.001,0,100,.001])
-		return db["clocks"][index]
-	return None
-def DeleteClock():
-	print("\nEliminazione orologio\n")
 	db = LoadDB()
-	clock=SelectClock(db)
-	if clock is None:
-		print("\nScelta non valida o nessun orologio disponibile.")
+	if not db["clocks"]:
+		print("Nessun orologio salvato.")
 		return
-	db=LoadDB()
-	for i,c in enumerate(db["clocks"]):
-		if c["name"]==clock["name"]:
-			del db["clocks"][i]
-			break
-	SaveDB(db)
-	print(f"\nOrologio {i+1} eliminato.")
+	else:
+		print(f"Ci sono {len(db['clocks'])} orologi nella collezione.")
+	choices = {}
+	for c in db["clocks"]:
+		indicatore = "B=N" if c["same_time"] else "B/N"
+		fasi = ""
+		for j, phase in enumerate(c["phases"]):
+			if c["same_time"]:
+				time_str = SecondsToHMS(phase["white_time"])
+				fasi += f" F{j+1}:{time_str}+{phase['white_inc']}"
+			else:
+				time_str_w = SecondsToHMS(phase["white_time"])
+				time_str_b = SecondsToHMS(phase["black_time"])
+				fasi += f" F{j+1}: Bianco:{time_str_w}+{phase['white_inc']}, Nero:{time_str_b}+{phase['black_inc']}"
+		num_alarms = len(c.get("alarms", []))
+		alarms_str = f" Allarmi ({num_alarms})"
+		first_line = f"{indicatore}{fasi}{alarms_str}"
+		note_line = c.get("note", "")
+		description = first_line + "\n  " + note_line
+		choices[c["name"]] = description
+	choice = menu(choices, show=True, keyslist=True, full_keyslist=False)
+	if choice:
+		idx = next((i for i, c in enumerate(db["clocks"]) if c["name"] == choice), None)
+		if idx is not None:
+			return db["clocks"][idx]
+	else:
+		print("Nessun orologio selezionato.")
+def DeleteClock(db):
+	print("\nEliminazione orologi salvati\n")
+	orologio = SelectClock(db)
+	if	orologio is not None:
+		idx = next((i for i, c in enumerate(db["clocks"]) if c["name"] == orologio["name"]), None)
+		if idx is not None:
+			clock_name = db["clocks"][idx]["name"]
+			del db["clocks"][idx]
+			SaveDB(db)
+			print(f"\nOrologio '{clock_name}' eliminato, ne rimangono {len(db['clocks'])}.")
+	return
 def EditPGN():
 	print("\nModifica info default per PGN\n")
 	db = LoadDB()
@@ -1812,11 +1815,11 @@ def StartGame(clock_config):
 			AnalyzeGame(game_state.pgn_game)
 def OpenManual():
 	print("\nApertura manuale\n")
-	readme="readme.htm"
+	readme="readme_it.htm"
 	if os.path.exists(readme):
 		webbrowser.open(readme)
 	else:
-		print("Il file readme.htm non esiste.")
+		print("Il file readme_it.htm non esiste.")
 def SchermataIniziale():
 	now = datetime.datetime.now()
 	diff1 = relativedelta(now, BIRTH_DATE)
@@ -1858,12 +1861,8 @@ def Main():
 	SchermataIniziale()
 	InitEngine()
 	while True:
-		scelta=menu(MENU_CHOICES,keyslist=True,ntf="Scelta non valida")
-		if scelta=="?":
-			print("\nMenù principale\n")
-			for k,v in MENU_CHOICES.items():
-				print(f"{k} - {v}")
-		elif scelta == "analizza":
+		scelta=menu(MENU_CHOICES, show=True, keyslist=True, full_keyslist=False)
+		if scelta == "analizza":
 			Acusticator(["a5", .04, 0, volume, "e5", .04, 0, volume, "p",.08,0,0, "g5", .04, 0, volume, "e6", .120, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 			AnalyzeGame(None)
 		elif scelta=="crea":
@@ -1887,7 +1886,7 @@ def Main():
 			Acusticator([1000.0, 0.05, -1, volume, "p", 0.05, 0, 0, 900.0, 0.05, 1, volume], kind=1, adsr=[0, 0, 100, 0])
 			ViewClocks()
 		elif scelta=="elimina":
-			DeleteClock()
+			DeleteClock(db)
 			Acusticator([1000.0, 0.05, -1, volume, "p", 0.05, 0, 0, 900.0, 0.05, 1, volume], kind=1, adsr=[0, 0, 100, 0])
 		elif scelta=="pgn":
 			EditPGN()
