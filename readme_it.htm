@@ -1,3 +1,4 @@
+<!-- readme.htm -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -7,6 +8,8 @@
 </head>
 <body>
     <h1>Orologic: Orologio Scacchistico con PGN</h1>
+    <p><strong>Versione Guida: 3.9.6</strong></p>
+
 
     <p>Orologic è un'applicazione per la gestione del tempo in partite di scacchi, progettata per essere utilizzata da riga di comando (console).  A differenza delle applicazioni con interfaccia grafica (GUI), Orologic non ha finestre, pulsanti o elementi grafici interattivi.  L'interazione avviene interamente tramite testo: si digitano comandi e si leggono le risposte fornite dal programma.</p>
 
@@ -37,6 +40,7 @@
                 <li><a href="#schermata-iniziale">Schermata Iniziale</a></li>
                 <li><a href="#menu-principale">Menù Principale</a></li>
                 <li><a href="#configura-motore">Configura Motore</a></li>
+                <li><a href="#regolazione-volume">Regolazione Volume</a></li>
             </ul>
         </li>
         <li><a href="#orologio">Orologio</a>
@@ -126,6 +130,10 @@
           <td>Elenca le configurazioni di orologio salvate.</td>
         </tr>
         <tr>
+          <td><code>volume</code></td>
+          <td>Consente di regolare il volume degli effetti audio.</td>
+        </tr>
+        <tr>
           <td><code>.</code></td>
           <td>Esce dall'applicazione.</td>
         </tr>
@@ -147,6 +155,9 @@
 <p>
     Queste impostazioni vengono salvate nel file <code>orologic_db.json</code> e caricate automaticamente all'avvio successivo.
 </p>
+
+<h3 id="regolazione-volume">Regolazione Volume</h3>
+<p>L'opzione <code>volume</code> del menù principale permette di regolare il volume degli effetti sonori di Orologic.  Il valore va da 0 (silenzioso) a 100 (massimo). Il volume predefinito è 50. Il valore impostato viene salvato e ripristinato automaticamente all'avvio successivo.</p>
 
     <h2 id="orologio">Orologio</h2>
 
@@ -272,6 +283,14 @@
         <td><code>.4</code></td>
         <td>Confronta i tempi rimanenti e indica quale giocatore è in vantaggio (e di quanto).</td>
       </tr>
+      <tr>
+        <td><code>.5</code></td>
+        <td>Riporta quale orologio è in moto o, se in pausa, la durata della stessa.</td>
+      </tr>
+      <tr>
+        <td><code>.l</code></td>
+        <td>Visualizza la lista delle mosse giocate.</td>
+     </tr>
       <tr>
         <td><code>.m</code></td>
         <td>Mostra il valore del materiale ancora in gioco.</td>
