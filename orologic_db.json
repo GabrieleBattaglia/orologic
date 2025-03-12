@@ -1,35 +1,50 @@
 {
 	"clocks": [
 		{
-			"name": "testAlarm",
+			"name": "Scacchierante",
 			"same_time": true,
 			"phases": [
 				{
-					"white_time": 300,
-					"black_time": 300,
+					"white_time": 2700,
+					"black_time": 2700,
 					"white_inc": 0,
 					"black_inc": 0,
 					"moves": 0
 				}
 			],
 			"alarms": [
-				290,
-				285,
-				280,
-				275,
-				270
+				1800,
+				900,
+				300,
+				60,
+				10
 			],
-			"note": "test allarmi"
+			"note": ""
+		},
+		{
+			"name": "provuccio",
+			"same_time": true,
+			"phases": [
+				{
+					"white_time": 7810,
+					"black_time": 7810,
+					"white_inc": 2,
+					"black_inc": 2,
+					"moves": 0
+				}
+			],
+			"alarms": [],
+			"note": ""
 		}
 	],
 	"default_pgn": {
-		"Event": "Test",
+		"Event": "Allenamento",
 		"Site": "GabryPC",
 		"Round": "-",
-		"White": "test1",
-		"Black": "test2",
-		"WhiteElo": "1000",
-		"BlackElo": "1000"
+		"White": "Di Bari, Vincenzo",
+		"Black": "Battaglia, Gabriele",
+		"WhiteElo": "1535",
+		"BlackElo": "1200"
 	},
 	"engine_config": {
 		"engine_path": "e:\\software\\stockfish\\stockfish.exe",
@@ -39,5 +54,5 @@
 		"move_overhead": 0,
 		"wdl_switch": true
 	},
-	"volume": 0.35
+	"volume": 0.55
 }
