@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.9.8"
-RELEASE_DATE=datetime.datetime(2025,3,12,12,48)
+VERSION="3.9.11"
+RELEASE_DATE=datetime.datetime(2025,3,12,17,27)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -1271,6 +1271,7 @@ def CreateClock():
 	for i in range(num_alarms):
 		alarm_input = dgt(f"Inserisci il tempo (mm:ss) per l'allarme {i+1}: ", kind="s")
 		alarm_time = parse_mmss_to_seconds(alarm_input)
+		alarms.append(alarm_time)
 	note=dgt("Inserisci una nota per l'orologio (opzionale): ",kind="s",default="")
 	new_clock=ClockConfig(name,same_time,phases,alarms,note)
 	db["clocks"].append(new_clock.to_dict())
@@ -1298,6 +1299,7 @@ def ViewClocks():
 		print(f"{idx+1}. {c['name']} - {indicatore}{fasi}{alarms_str}")
 		if c.get("note",""):
 			print(f"\tNota: {c['note']}")
+	attesa=key("Premi un tasto per tornare al menu principale.")
 def SelectClock(db):
 	db = LoadDB()
 	if not db["clocks"]:
@@ -1483,14 +1485,14 @@ def clock_thread(game_state):
 				for alarm in game_state.clock_config.get("alarms",[]):
 					if alarm not in triggered_alarms_white and abs(game_state.white_remaining - alarm) < elapsed:
 						print(f"Allarme: tempo del bianco raggiunto {seconds_to_mmss(alarm)}")
-						Acusticator(["c4",0.2,0,volume])
+						Acusticator(["c4",0.2,-0.75,volume])
 						triggered_alarms_white.add(alarm)
 			else:
 				game_state.black_remaining-=elapsed
 				for alarm in game_state.clock_config.get("alarms",[]):
 					if alarm not in triggered_alarms_black and abs(game_state.black_remaining - alarm) < elapsed:
 						print(f"Allarme: tempo del nero raggiunto {seconds_to_mmss(alarm)}")
-						Acusticator(["c4",0.2,0,volume])
+						Acusticator(["c4",0.2,0.75,volume])
 						triggered_alarms_black.add(alarm)
 		if game_state.white_remaining<=0 or game_state.black_remaining<=0:
 			Acusticator(["e4", 0.2, -0.5, volume, "d4", 0.2, 0, volume, "c4", 0.2, 0.5, volume], kind=1, adsr=[10, 0, 90, 10])
