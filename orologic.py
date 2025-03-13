@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.9.11"
-RELEASE_DATE=datetime.datetime(2025,3,12,17,27)
+VERSION="3.9.12"
+RELEASE_DATE=datetime.datetime(2025,3,13,16,4)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -389,17 +389,43 @@ def SetMultipv(new_multipv):
 def LoadPGNFromClipboard():
 	"""
 	Carica il PGN dagli appunti e lo restituisce come oggetto pgn_game.
+	Se gli appunti contengono più di una partita, viene presentato un menù numerato e
+	viene chiesto all'utente di scegliere la partita da caricare.
 	"""
 	try:
 		clipboard_pgn = pyperclip.paste()
-		if not clipboard_pgn:
+		if not clipboard_pgn.strip():
 			print("Appunti vuoti.")
 			return None
 		pgn_io = io.StringIO(clipboard_pgn)
-		game = chess.pgn.read_game(pgn_io)
-		if game is None:
+		games = []
+		while True:
+			game = chess.pgn.read_game(pgn_io)
+			if game is None:
+				break
+			games.append(game)
+		if len(games) == 0:
 			print("PGN non valido negli appunti.")
-		return game
+			return None
+		elif len(games) == 1:
+			return games[0]
+		else:
+			print(f"Sono state trovate {len(games)} partite nei PGN.")
+			for i, game in enumerate(games, start=1):
+				white = game.headers.get("White", "Sconosciuto")
+				black = game.headers.get("Black", "Sconosciuto")
+				date = game.headers.get("Date", "Data sconosciuta")
+				print(f"{i}. {white} vs {black} - {date}")
+			while True:
+				choice = input("Inserisci il numero della partita da caricare: ")
+				try:
+					index = int(choice)
+					if 1 <= index <= len(games):
+						return games[index - 1]
+					else:
+						print("Numero non valido. Riprova.")
+				except ValueError:
+					print("Input non valido. Inserisci un numero.")
 	except Exception as e:
 		print("Errore in LoadPGNFromClipboard:", e)
 		return None
