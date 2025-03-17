@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.10.4"
-RELEASE_DATE=datetime.datetime(2025,3,17,13,28)
+VERSION="3.10.1"
+RELEASE_DATE=datetime.datetime(2025,3,17,8,20)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -261,45 +261,41 @@ def CalculateBest(board, bestmove=True, as_san=False):
 			return None
 		if as_san:
 			temp_board = board.copy()
-			descriptive_moves = []
-			move_number = 1
+			moves_with_numbers = []
 			i = 0
+			# Itera sulla lista delle mosse della PV, raggruppandole in coppie (mossa bianca e, se presente, mossa nera)
 			while i < len(best_line):
 				if temp_board.turn == chess.WHITE:
+					move_num = temp_board.fullmove_number
 					white_move = best_line[i]
-					white_descr = DescribeMove(white_move, temp_board)
+					white_san = temp_board.san(white_move)
 					temp_board.push(white_move)
 					i += 1
-					move_descr = f"{move_number}°. {white_descr}"
+					move_str = f"{move_num}. {white_san}"
 					if i < len(best_line) and temp_board.turn == chess.BLACK:
 						black_move = best_line[i]
-						black_descr = DescribeMove(black_move, temp_board)
+						black_san = temp_board.san(black_move)
 						temp_board.push(black_move)
 						i += 1
-						move_descr += f", {black_descr}"
-					descriptive_moves.append(move_descr)
-					move_number += 1
+						move_str += f" {black_san}"
+					moves_with_numbers.append(move_str)
 				else:
+					# Caso in cui la PV inizi con una mossa del Nero (poco comune)
+					move_num = temp_board.fullmove_number
 					black_move = best_line[i]
-					black_descr = DescribeMove(black_move, temp_board)
+					black_san = temp_board.san(black_move)
 					temp_board.push(black_move)
 					i += 1
-					descriptive_moves.append(f"{move_number}°... {black_descr}")
-					move_number += 1
+					moves_with_numbers.append(f"{move_num}... {black_san}")
+			moves_str = " ".join(moves_with_numbers)
 			score = analysis[0].get("score")
-			mate_found = False
 			if score is not None and score.relative.is_mate():
 				mate_moves = abs(score.relative.mate())
-				mate_found = True
+				moves_str = f"Matto in {mate_moves}, {moves_str}"
 			if bestmove:
-				if mate_found:
-					return [f"Matto in {mate_moves}, {descriptive_moves[0]}"]
-				else:
-					return [descriptive_moves[0]]
+				return moves_with_numbers[0]
 			else:
-				if mate_found:
-					descriptive_moves.insert(0, f"Matto in {mate_moves}:")
-				return descriptive_moves
+				return moves_str
 		else:
 			if bestmove:
 				return best_line[0]
@@ -690,11 +686,14 @@ def AnalyzeGame(pgn_game):
 			else:
 				print("\nImpossibile calcolare la bestmove.")
 		elif cmd == "w":
-			bestline_list = CalculateBest(current_node.board(), bestmove=False, as_san=True)
-			if bestline_list:
-				print(f"\nLinea migliore:")
-				for line in bestline_list:
-					print(line)
+			bestline_san = CalculateBest(current_node.board(), bestmove=False, as_san=True)
+			if bestline_san:
+				print(f"\nBestLine: {bestline_san}")
+				bestmove=bestline_san.split()
+				if bestmove[0] ==	"Matto":
+					extra_prompt = f" BM:{bestmove[4]} "
+				else:
+					extra_prompt = f" BM:{bestmove[1]} "
 			else:
 				print("\nImpossibile calcolare la bestline.")
 		elif cmd == "e":
