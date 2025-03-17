@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.9.12"
-RELEASE_DATE=datetime.datetime(2025,3,13,16,4)
+VERSION="3.10.1"
+RELEASE_DATE=datetime.datetime(2025,3,17,8,20)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -410,14 +410,15 @@ def LoadPGNFromClipboard():
 		elif len(games) == 1:
 			return games[0]
 		else:
-			print(f"Sono state trovate {len(games)} partite nei PGN.")
+			print(f"\nSono state trovate {len(games)} partite nei PGN.")
+			partite={}
 			for i, game in enumerate(games, start=1):
 				white = game.headers.get("White", "Sconosciuto")
 				black = game.headers.get("Black", "Sconosciuto")
 				date = game.headers.get("Date", "Data sconosciuta")
-				print(f"{i}. {white} vs {black} - {date}")
+				partite[i]=f"{white} vs {black} - {date}"
 			while True:
-				choice = input("Inserisci il numero della partita da caricare: ")
+				choice = menu(d=partite,	prompt="Quale partita vuoi caricare? ",	show=True,ntf="Numero non valido. Riprova.")
 				try:
 					index = int(choice)
 					if 1 <= index <= len(games):
