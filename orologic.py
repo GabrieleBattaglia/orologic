@@ -550,6 +550,7 @@ def AnalyzeGame(pgn_game):
 					prompt = f"\n{extra_prompt} {fullmove}. {move_san}"
 		else:
 			prompt = f"\n{extra_prompt} Start: "
+		if current_node.comment: print("Commento:", current_node.comment)
 		cmd = key(prompt)
 		if cmd == ".":
 			break
@@ -568,6 +569,7 @@ def AnalyzeGame(pgn_game):
 			else:
 				# Siamo in una variante: torna al primo nodo del ramo corrente
 				current_node = node
+				if current_node.comment: print("Commento:", current_node.comment)
 				extra_prompt = ""
 		elif cmd == "s":
 			if current_node.parent:
@@ -583,8 +585,6 @@ def AnalyzeGame(pgn_game):
 				current_node = current_node.variations[0]
 				if current_node.move:
 					print("\n" + DescribeMove(current_node.move, current_node.parent.board() if current_node.parent else pgn_game.board()))
-				if current_node.comment:
-					print("Commento:", current_node.comment)
 			else:
 				print("\nNon ci sono mosse successive.")
 		elif cmd == "f":
