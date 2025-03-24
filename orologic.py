@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.10.4"
-RELEASE_DATE=datetime.datetime(2025,3,17,13,28)
+VERSION="3.14.1"
+RELEASE_DATE=datetime.datetime(2025,3,24,10,48)
 PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -992,20 +992,22 @@ def generate_time_control_string(clock_config):
 	tc_list = []
 	for phase in phases:
 		moves = phase["moves"]
-		# Se l'orologio è simmetrico, si usa il tempo del bianco
 		if clock_config["same_time"]:
 			base_time = int(phase["white_time"])
 			inc = int(phase["white_inc"])
 		else:
-			# In caso di orologi asimmetrici, per PGN si sceglie un riferimento (qui il bianco)
 			base_time = int(phase["white_time"])
 			inc = int(phase["white_inc"])
-		# Se moves == 0, consideriamo la fase come "sudden death"
 		if moves == 0:
-			tc = f"{base_time}"
-		else:
+			# Sudden death: se è presente l'incremento, lo includiamo
 			if inc > 0:
-				tc = f"{moves}/{base_time}:{inc}"
+				tc = f"{base_time}+{inc}"
+			else:
+				tc = f"{base_time}"
+		else:
+			# Time control a mosse: includiamo moves, tempo e, se presente, l'incremento
+			if inc > 0:
+				tc = f"{moves}/{base_time}+{inc}"
 			else:
 				tc = f"{moves}/{base_time}"
 		tc_list.append(tc)
@@ -1683,10 +1685,31 @@ def StartGame(clock_config):
 					print("Pausa durata "+FormatTime(pause_duration))
 			elif cmd==".q":
 				if game_state.paused and game_state.move_history:
+					# Rimuovi l'ultima mossa dalla board e dalla lista delle mosse (in SAN)
+					undone_move_san = game_state.move_history.pop()
 					game_state.board.pop()
-					game_state.pgn_node=game_state.pgn_node.parent
-					last_move=game_state.move_history.pop()
-					print("Ultima mossa annullata: "+last_move)
+					
+					# Aggiorna il PGN: riportiamo il puntatore al nodo padre
+					current_node = game_state.pgn_node
+					parent = current_node.parent
+					if current_node in parent.variations:
+						parent.variations.remove(current_node)
+					game_state.pgn_node = parent
+					
+					# Salva la mossa annullata (in formato SAN) in una lista
+					if not hasattr(game_state, "cancelled_san_moves"):
+						game_state.cancelled_san_moves = []
+					game_state.cancelled_san_moves.insert(0, undone_move_san)
+					
+					# Rollback dell'incremento applicato (rimuove solo l'incremento)
+					if game_state.active_color == "black":
+						game_state.white_remaining -= game_state.clock_config["phases"][game_state.white_phase]["white_inc"]
+						game_state.active_color = "white"
+					else:
+						game_state.black_remaining -= game_state.clock_config["phases"][game_state.black_phase]["black_inc"]
+						game_state.active_color = "black"
+					
+					print("Ultima mossa annullata: " + undone_move_san)
 			elif cmd.startswith(".b+") or cmd.startswith(".b-") or cmd.startswith(".n+") or cmd.startswith(".n-"):
 				if game_state.paused:
 					try:
@@ -1757,7 +1780,16 @@ def StartGame(clock_config):
 				san_move=game_state.board.san(move)
 				game_state.board.push(move)
 				game_state.move_history.append(san_move)
-				game_state.pgn_node=game_state.pgn_node.add_variation(move)
+				# Aggiungi la nuova mossa come mainline
+				new_node = game_state.pgn_node.add_variation(move)
+				# Se esistono mosse annullate, aggiungi un commento al nuovo nodo
+				if hasattr(game_state, "cancelled_san_moves") and game_state.cancelled_san_moves:
+					undo_comment = "Mosse annullate: " + " ".join(game_state.cancelled_san_moves)
+					new_node.comment = (new_node.comment or "") + " " + undo_comment
+					# Svuota la lista per le prossime operazioni
+					del game_state.cancelled_san_moves
+				# Aggiorna il puntatore PGN al nuovo nodo
+				game_state.pgn_node = new_node
 				if eco_db:
 					eco_entry = DetectOpening(game_state.move_history, eco_db)
 					if eco_entry:
