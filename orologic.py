@@ -193,6 +193,7 @@ def SmartInspection(analysis_lines, board):
 		line_summary = " ".join(moves_with_numbers)
 		print(f"Linea {i}: {line_summary}")
 	choice = dgt(f"Quale linea vuoi ispezionare? (1/{len(analysis_lines)} ", kind="i", imin=1, imax=len(analysis_lines),	default=1)
+	Acusticator(["e5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
 	line_index = int(choice) - 1
 	chosen_info = analysis_lines[line_index]
 	pv_moves = chosen_info.get("pv", [])
@@ -226,11 +227,12 @@ def SmartInspection(analysis_lines, board):
 			if current_index > 1:
 				current_index -= 1
 			else:
+				Acusticator(["c4", 0.1, -0.5, volume], kind=2, adsr=[10, 10, 30, 50]) 
 				print("\nNon ci sono mosse precedenti.")
 		elif cmd == "?":
+			Acusticator(["d5", 0.08, 0, volume], kind=1, adsr=[2,5,90,5])
 			menu(p=SMART_COMMANDS,show_only=True)
 		elif cmd == "r":
-			# Aggiorna la valutazione ricostruendo la board fino alla mossa corrente
 			temp_board = board.copy()
 			for move in pv_moves[:current_index]:
 				temp_board.push(move)
@@ -240,15 +242,19 @@ def SmartInspection(analysis_lines, board):
 					eval_str = f"{new_eval/100:.2f}"
 				else:
 					eval_str = str(new_eval)
+				Acusticator(["g5", 0.1, 0.3, volume], kind=1, adsr=[5,5,90,5])
 				print("\nValutazione aggiornata.")
 			else:
+				Acusticator(["a3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75])
 				print("\nImpossibile aggiornare la valutazione.")
 		elif cmd == "d":
 			if current_index < total_moves:
 				current_index += 1
 			else:
+				Acusticator(["c4", 0.1, 0.5, volume], kind=2, adsr=[10, 10, 30, 50])
 				print("\nNon ci sono mosse successive.")
 		else:
+			Acusticator(["b3", 0.12, 0, volume], kind=2, adsr=[5, 15, 20, 60])
 			print("\nComando non riconosciuto.")
 def CalculateBest(board, bestmove=True, as_san=False):
 	try:
@@ -428,8 +434,10 @@ def LoadPGNFromClipboard():
 					if 1 <= index <= len(games):
 						return games[index - 1]
 					else:
+						Acusticator(["a3", .8, 0, volume],	kind=3, adsr=[.02, 0, 100, 99])
 						print("Numero non valido. Riprova.")
 				except ValueError:
+					Acusticator(["g2", .8, 0, volume],	kind=3, adsr=[.02, 0, 100, 99])
 					print("Input non valido. Inserisci un numero.")
 	except Exception as e:
 		print("Errore in LoadPGNFromClipboard:", e)
@@ -511,6 +519,7 @@ def AnalyzeGame(pgn_game):
 	print(f"Numero totale di mosse: {(total_moves+1)//2}")
 	if total_moves < 2:
 		choice = key("\nMosse insufficienti. [M] per tornare al menù o [L] per caricare un nuovo PGN dagli appunti: ").lower()
+		Acusticator(["f5", 0.03, 0, volume], kind=1, adsr=[0,0,100,0])
 		if choice == "l":
 			new_pgn = LoadPGNFromClipboard()
 			if new_pgn:
@@ -529,25 +538,21 @@ def AnalyzeGame(pgn_game):
 		if current_node.move:
 			move_san = current_node.san()
 			fullmove = current_node.parent.board().fullmove_number if current_node.parent else 1
-			# Se il nodo corrente ha un padre con più di una variazione, mostriamo simboli indicanti la presenza di rami
+			# Se il board.turn è BLACK, l'ultima mossa è del bianco -> formato "N. mossa"
+			# Se il board.turn è WHITE, l'ultima mossa è del nero -> formato "N... mossa"
 			if current_node.parent and len(current_node.parent.variations) > 1:
 				siblings = current_node.parent.variations
 				idx = siblings.index(current_node)
-				# Se è il primo ramo (sono il primo figlio), mostro solo il prefisso "<"
+				move_display = f"{fullmove}. {move_san}" if current_node.board().turn == chess.BLACK else f"{fullmove}... {move_san}"
 				if idx == 0:
-					prompt = f"\n{extra_prompt} <{fullmove}. {move_san}"
-				# Se è l'ultimo ramo, mostro solo il suffisso ">"
+					prompt = f"\n{extra_prompt} <{move_display}"
 				elif idx == len(siblings) - 1:
-					prompt = f"\n{extra_prompt} {fullmove}. {move_san}>"
-				# Se è intermedio, mostro sia il prefisso che il suffisso
+					prompt = f"\n{extra_prompt} {move_display}>"
 				else:
-					prompt = f"\n{extra_prompt} <{fullmove}. {move_san}>"
+					prompt = f"\n{extra_prompt} <{move_display}>"
 			else:
-				# Se non ci sono varianti, usa la notazione standard
-				if current_node.board().turn == chess.WHITE:
-					prompt = f"\n{extra_prompt} {fullmove}... {move_san}"
-				else:
-					prompt = f"\n{extra_prompt} {fullmove}. {move_san}"
+				move_display = f"{fullmove}. {move_san}" if current_node.board().turn == chess.BLACK else f"{fullmove}... {move_san}"
+				prompt = f"\n{extra_prompt} {move_display}"
 		else:
 			prompt = f"\n{extra_prompt} Start: "
 		if current_node.comment: print("Commento:", current_node.comment)
@@ -565,6 +570,7 @@ def AnalyzeGame(pgn_game):
 					current_node = node.variations[0]
 					extra_prompt = ""
 				else:
+					Acusticator(["c4", 0.1, -0.5, volume], kind=2, adsr=[10, 10, 30, 50])
 					print("\nGià all'inizio della partita.")
 			else:
 				# Siamo in una variante: torna al primo nodo del ramo corrente
@@ -576,21 +582,26 @@ def AnalyzeGame(pgn_game):
 				current_node = current_node.parent
 				extra_prompt = ""
 				if current_node.move:
+					Acusticator(["g5", .03, -.2, volume, "c5", .03, -.8, volume], kind=1, adsr=[2,5,90,5])
 					print("\n" + DescribeMove(current_node.move, current_node.parent.board() if current_node.parent else pgn_game.board()))
 			else:
+				Acusticator(["c4", 0.1, -0.7, volume], kind=2, adsr=[10, 10, 30, 50])
 				print("\nNessuna mossa precedente.")
 		elif cmd == "d":
 			if current_node.variations:
 				extra_prompt = ""
 				current_node = current_node.variations[0]
 				if current_node.move:
+					Acusticator(["c5", .03, .2, volume,"g5", .03, .8, volume], kind=1, adsr=[2,5,90,5])
 					print("\n" + DescribeMove(current_node.move, current_node.parent.board() if current_node.parent else pgn_game.board()))
 			else:
+				Acusticator(["c4", 0.1, 0.7, volume], kind=2, adsr=[10, 10, 30, 50])
 				print("\nNon ci sono mosse successive.")
 		elif cmd == "f":
 			while current_node.variations:
 				extra_prompt = ""
 				current_node = current_node.variations[0]
+			Acusticator(["g5", 0.1, 0, volume,"p", 0.1, 0, volume,"c6", 0.05, 0, volume,"d6", 0.05, 0, volume,"g6", 0.2, 0, volume], kind=1, adsr=[5,5,90,5])
 			print("Sei arrivato alla fine della partita.")
 		elif cmd == "g":
 			if current_node.parent:
@@ -599,7 +610,9 @@ def AnalyzeGame(pgn_game):
 				if index > 0:
 					extra_prompt	= ""
 					current_node = vars[index - 1]
+					Acusticator(["d#5", 0.07, -0.4, volume], kind=1, adsr=[2,5,90,5]) 
 				else:
+					Acusticator(["c#4", 0.1, -0.6, volume], kind=2, adsr=[10, 10, 30, 50])
 					print("Non ci sono varianti precedenti.")
 			else:
 				print("Nessun nodo variante disponibile.")
@@ -610,15 +623,19 @@ def AnalyzeGame(pgn_game):
 				if index < len(vars) - 1:
 					extra_prompt	= ""
 					current_node = vars[index + 1]
+					Acusticator(["f5", 0.07, 0.4, volume], kind=1, adsr=[2,5,90,5])
 				else:
+					Acusticator(["c#4", 0.1, 0.6, volume], kind=2, adsr=[10, 10, 30, 50])
 					print("Non ci sono varianti successive.")
 			else:
 				print("Nessun nodo variante disponibile.")
 		elif cmd == "j":
+			Acusticator(["d5", 0.08, 0, volume,"p", 0.08, 0, volume,"d6", 0.06, 0, volume], kind=1, adsr=[2,5,90,5])
 			print("\nHeader della partita:")
 			for k, v in pgn_game.headers.items():
 				print(f"{k}: {v}")
 		elif cmd == "k":
+			Acusticator(["g3", 0.06, 0, volume,"b3", 0.06, 0, volume,"a3", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
 			move_target = dgt(f"\nVai a mossa n.#: Max({int(total_moves/2)}) ", kind="i", imin=1, imax=int(total_moves/2))*2-1
 			current_node = pgn_game
 			for i in range(move_target):
@@ -627,6 +644,7 @@ def AnalyzeGame(pgn_game):
 				else:
 					break
 			extra_prompt = ""
+			Acusticator(["g6", 0.06, 0, volume,"b6", 0.06, 0, volume,"a6", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
 		elif cmd == "l":
 			try:
 				clipboard_pgn = pyperclip.paste()
@@ -635,8 +653,10 @@ def AnalyzeGame(pgn_game):
 				if new_game:
 					pgn_game = new_game
 					current_node = pgn_game
+					Acusticator(["c6", 0.15, 0, volume], kind=1, adsr=[5, 10, 80, 5])
 					print("\nPGN caricato dagli appunti.")
 				else:
+					Acusticator(["b2", 0.4, 0, volume], kind=4, adsr=[5, 10, 80, 5])
 					print("\nGli appunti non contengono un PGN valido.")
 			except Exception as e:
 				print("\nErrore nel caricamento dagli appunti:", e)
@@ -646,7 +666,9 @@ def AnalyzeGame(pgn_game):
 				current_node.add_variation(bestline)
 				saved = True
 				print("\nBestline aggiunta come variante.")
+				Acusticator(["a5", 0.12, 0.3, volume,"b5", 0.12, 0.3, volume,"c6", 0.12, 0.3, volume,"d6", 0.12, 0.3, volume,"e6", 0.12, 0.3, volume], kind=1, adsr=[4,8,85,5])
 			else:
+				Acusticator(["a#3", 0.15, 0.3, volume], kind=2, adsr=[5, 20, 0, 75])
 				print("\nImpossibile calcolare la bestline.")
 		elif cmd == "x":
 			bestmove = CalculateBest(current_node.board())
@@ -654,48 +676,62 @@ def AnalyzeGame(pgn_game):
 				san_move = current_node.board().san(bestmove)
 				current_node.comment = (current_node.comment or "") + " Bestmove: " + san_move
 				saved = True
+				Acusticator(["a5", 0.15, 0, volume,"d6", 0.15, 0, volume], kind=1, adsr=[3,7,88,2])
 				print("\nBestmove aggiunta al commento.")
 			else:
+				Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75])
 				print("\nImpossibile calcolare la bestmove.")
 		elif cmd == "c":
+			Acusticator(["d6", 0.012, 0, volume, "p", 0.15,0,0,"a6",0.012,0,volume], kind=1, adsr=[0.01,0,100,0.01])
 			user_comment = dgt("\nInserisci il commento: ", kind="s")
 			if user_comment:
 				current_node.comment = (current_node.comment or "") + " " + user_comment
 				saved = True
+				Acusticator(["a6", 0.012, 0, volume, "p", 0.15,0,0,"d6",0.012,0,volume], kind=1, adsr=[0.01,0,100,0.01])
 				print("\nCommento aggiunto.")
 		elif cmd == "v":
 			eval_cp = CalculateEvaluation(current_node.board())
 			if eval_cp is not None:
 				current_node.comment = (current_node.comment or "") + f" Valutazione CP: {eval_cp/100:.2f}"
 				saved = True
+				Acusticator(["g5", 0.07, 0, volume,"p", 0.04, 0, volume,"b5", 0.025, 0, volume], kind=1, adsr=[3,7,88,2])
 				print("\nValutazione aggiunta al commento.")
 			else:
+				Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75])
 				print("\nImpossibile calcolare la valutazione.")
 		elif cmd == "b":
+			Acusticator(["c#5", 0.08, 0, volume], kind=1, adsr=[2,5,90,5])
 			print("\nCommento corrente:", current_node.comment)
 		elif cmd == "n":
 			if current_node.comment:
+				Acusticator(["d5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
 				confirm = key(f"\nEliminare: {current_node.comment}? (s/n): ").lower()
 				if confirm == "s":
 					current_node.comment = ""
 					saved = True
+					Acusticator(["e4", 0.1, -0.4, volume], kind=1, adsr=[5,10,70,15])
 					print("Commento eliminato.")
 			else:
-				print("\nNessun commento da eliminare.")
+				Acusticator(["b3", 0.12, -0.4, volume], kind=2, adsr=[5, 15, 20, 60])
+				print("\nNessun commento eliminato.")
 		elif cmd == "q":
 			bestmove = CalculateBest(current_node.board(),	bestmove=True)
 			if bestmove:
+				Acusticator(["f6", 0.02, 0, volume,"p", .15, 0, 0,"a6", 0.02, 0, volume,"p", .15, 0, 0,"c7", 0.02, 0, volume], kind=1, adsr=[4,8,85,5])
 				print("\nMossa migliore: "+DescribeMove(bestmove,current_node.board()))
 				extra_prompt = f" BM: {current_node.board().san(bestmove)} "
 			else:
+				Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75])
 				print("\nImpossibile calcolare la bestmove.")
 		elif cmd == "w":
 			bestline_list = CalculateBest(current_node.board(), bestmove=False, as_san=True)
 			if bestline_list:
+				Acusticator(["f6", 0.02, 0, volume,"p", .15, 0, 0,"a6", 0.02, 0, volume,"p", .15, 0, 0,"c7", 0.02, 0, volume,"p", .15, 0, 0,"e7", 0.02, 0, volume,"p", .15, 0, 0,"g7", 0.02, 0, volume,"p", .15, 0, 0,"b7", 0.02, 0, volume], kind=1, adsr=[4,8,85,5])
 				print(f"\nLinea migliore:")
 				for line in bestline_list:
 					print(line)
 			else:
+				Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75])
 				print("\nImpossibile calcolare la bestline.")
 		elif cmd == "e":
 			print("\nLinee di analisi:\n")
@@ -728,6 +764,7 @@ def AnalyzeGame(pgn_game):
 				score_str = f"{score_cp/100:+.2f}"
 			else:
 				score_str = "N/A"
+			Acusticator(["f6", .013, 0, volume,"p", .05, 0, 0,"a6", .013, 0, volume,"p", .05, 0, 0,"c7", .013, 0, volume,"p", .05, 0, 0,"e7", .013, 0, volume,"p", .05, 0, 0,"g7", .013, 0, volume,"p", .05, 0, 0,"b7", .013, 0, volume,"p", .05, 0, 0,"f6", .013, 0, volume,"p", .05, 0, 0,"a6", .013, 0, volume,"p", .05, 0, 0,"c7", .013, 0, volume,"p", .05, 0, 0,"e7", .013, 0, volume,"p", .05, 0, 0,"g7", .013, 0, volume,"p", .05, 0, 0,"b7", .013, 0, volume,"p", .05, 0, 0,"f6", .013, 0, volume,"p", .05, 0, 0,"a6", .013, 0, volume,"p", .05, 0, 0,"c7", .013, 0, volume,"p", .05, 0, 0,"e7", .013, 0, volume,"p", .05, 0, 0,"g7", .013, 0, volume,"p", .05, 0, 0,"b7", .013, 0, volume], kind=1, adsr=[4,8,85,5])
 			print(f"Statistiche: tempo {time_used} s, Hash {hashfull}, TB {tbhits},\nRete: {debug_string},"
 									f"\nProfondità {depth}/{seldepth}, val. CP. {score_str}, WDL: {wdl_str},\nnodi {nodes}, NPS {nps}")
 			for i, info in enumerate(analysis, start=1):
@@ -754,22 +791,30 @@ def AnalyzeGame(pgn_game):
 					print(f"Linea {i}: {moves_str}")
 			smart = key("\nVuoi ispezionare le linee in modalità smart? (s/n): ").lower()
 			if smart == "s":
+				Acusticator(["d5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
 				SmartInspection(analysis, current_node.board())
+			else:
+				Acusticator(["d4", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
 		elif cmd == "r":
 			eval_cp = CalculateEvaluation(current_node.board())
 			if eval_cp is not None:
+				Acusticator(["g3", 0.17, 0, volume,"g6",.012,0,volume], kind=1, adsr=[3,0,90,2])
 				extra_prompt = f" CP: {eval_cp/100:.2f} "
 			else:
+				Acusticator(["g5", 0.17, 0, volume,"g3",.012,0,volume], kind=1, adsr=[3,0,90,2])
 				print("\nImpossibile calcolare la valutazione.")
 		elif cmd == "t":
 			wdl = CalculateWDL(current_node.board())
 			if wdl:
 				adj_wdl=f"W{wdl[0]/100:.1f}%/D{wdl[1]/100:.1f}%/L{wdl[2]/100:.1f}% " 
+				Acusticator(["g#5", 0.03, 0, volume,"c6", 0.03, 0, volume,"g#5", 0.03, 0, volume,"c6", 0.03, 0, volume], kind=1, adsr=[.4,0,88,.3])
 				extra_prompt=f"{adj_wdl} "
 			else:
+				Acusticator(["g#4", 0.05, 0, volume,"c5", 0.05, 0, volume,"g#4", 0.05, 0, volume,"c5", 0.05, 0, volume], kind=1, adsr=[.4,0,88,.3])
 				print("\nImpossibile calcolare le percentuali WDL.")
 		elif cmd == "y":
 			white_material, black_material = CalculateMaterial(current_node.board())
+			Acusticator(["g#5", 0.03, 0, volume,"e5", 0.03, 0, volume,"d5", 0.03, 0, volume,"g6", 0.03, 0, volume], kind=1, adsr=[.4,0,88,.3])
 			extra_prompt = f"Mtrl: {white_material}/{black_material} "
 		elif cmd == "u":
 			moves = []
@@ -782,31 +827,39 @@ def AnalyzeGame(pgn_game):
 			b = CustomBoard(starting_fen)
 			for m in moves:
 				b.push(m)
+			Acusticator(["d6", 0.03, 0, volume,"f6", 0.03, 0, volume,"g6", 0.03, 0, volume,"d7", 0.06, 0, volume], kind=1, adsr=[.4,0,88,.3])
 			print("\n" + str(b))
 		elif cmd == "i":
 			print(f"\nTempo di analisi attuale: {analysis_time} secondi.\nPosizioni salvate in cache: {len(cache_analysis)}")
+			Acusticator(["e5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0]) 
 			new_time = dgt("\nImposta il nuovo valore o INVIO per mantenerlo: ", kind="i",	imin=1,	imax=300, default=analysis_time)
 			if new_time != analysis_time:
 				SetAnalysisTime(new_time)
 				cache_analysis.clear()
+				Acusticator(["e7", 0.06, 0, volume], kind=1, adsr=[0,0,100,0]) 
 				print("\nTempo di analisi aggiornato e	cache svuotata.")
 		elif cmd == "o":
 			print(f"\nNumero di linee di analisi attuale: {multipv},\nPosizioni salvate in cache: {len(cache_analysis)}")
+			Acusticator(["e5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0]) 
 			new_lines = dgt("Imposta il nuovo valore o INVIO per mantenerlo: ", kind="i",imin=2,imax=10, default=multipv)
 			if new_lines != multipv:
 				SetMultipv(new_lines)
 				cache_analysis.clear()
+				Acusticator(["e7", 0.06, 0, volume], kind=1, adsr=[0,0,100,0]) 
 				print("\nNumero di linee di analisi aggiornato e cache svuotata.")
 		elif	cmd == "?":
 			print("\nComandi disponibili in modalità analisi:")
+			Acusticator(["d5", .7, 0, volume], kind=3, adsr=[.02,0,100,99])
 			menu(ANALYSIS_COMMAND,show_only=True)
 		else:
+			Acusticator(["d3", 1.2, 0, volume], kind=3, adsr=[.02,0,100,99])
 			print("Comando non riconosciuto.")
 	if saved:
 		if "Annotator" not in pgn_game.headers or not pgn_game.headers["Annotator"].strip():
 			pgn_game.headers["Annotator"] = f'Orologic V{VERSION} by {PROGRAMMER}'
 		new_default_file_name=f'{pgn_game.headers.get("White")}-{pgn_game.headers.get("Black")}-{pgn_game.headers.get("Result", "-")}'
 		base_name = dgt(f"Nuovo nome del file commentato: INVIO per accettare {new_default_file_name}", kind="s",default=new_default_file_name)
+		Acusticator(["f4", 0.05, 0, volume])
 		new_filename = f"{base_name}-commentato-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
 		new_filename	= sanitize_filename(new_filename)
 		with open(new_filename, "w", encoding="utf-8") as f:
@@ -1357,6 +1410,7 @@ def SelectClock(db):
 		description = first_line + "\n  " + note_line
 		choices[c["name"]] = description
 	choice = menu(choices, show=True, keyslist=True, full_keyslist=False)
+	Acusticator(["f7", .013, 0, volume])
 	if choice:
 		idx = next((i for i, c in enumerate(db["clocks"]) if c["name"] == choice), None)
 		if idx is not None:
@@ -1371,6 +1425,7 @@ def DeleteClock(db):
 		if idx is not None:
 			clock_name = db["clocks"][idx]["name"]
 			del db["clocks"][idx]
+			Acusticator(["c4", 0.025, 0, volume])
 			SaveDB(db)
 			print(f"\nOrologio '{clock_name}' eliminato, ne rimangono {len(db['clocks'])}.")
 	return
@@ -1515,14 +1570,14 @@ def clock_thread(game_state):
 				game_state.white_remaining-=elapsed
 				for alarm in game_state.clock_config.get("alarms",[]):
 					if alarm not in triggered_alarms_white and abs(game_state.white_remaining - alarm) < elapsed:
-						print(f"Allarme: tempo del bianco raggiunto {seconds_to_mmss(alarm)}")
+						print(f"\nAllarme: tempo del bianco raggiunto {seconds_to_mmss(alarm)}",end="")
 						Acusticator(["c4",0.2,-0.75,volume])
 						triggered_alarms_white.add(alarm)
 			else:
 				game_state.black_remaining-=elapsed
 				for alarm in game_state.clock_config.get("alarms",[]):
 					if alarm not in triggered_alarms_black and abs(game_state.black_remaining - alarm) < elapsed:
-						print(f"Allarme: tempo del nero raggiunto {seconds_to_mmss(alarm)}")
+						print(f"\nAllarme: tempo del nero raggiunto {seconds_to_mmss(alarm)}",end="")
 						Acusticator(["c4",0.2,0.75,volume])
 						triggered_alarms_black.add(alarm)
 		if game_state.white_remaining<=0 or game_state.black_remaining<=0:
