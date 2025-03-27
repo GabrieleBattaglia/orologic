@@ -1,0 +1,381 @@
+Funzione EditEngineConfig (Configurazione Motore)
+
+Input percorso motore (dgt):
+
+Azione: Inserimento percorso.
+
+Proposta: Acusticator(["d4", 0.05, -0.5, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo path = dgt(...)
+
+Input nome eseguibile (dgt):
+
+Azione: Inserimento eseguibile.
+
+Proposta: Acusticator(["d4", 0.05, -0.5, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo executable = dgt(...)
+
+Errore file non trovato:
+
+Azione: Fallimento verifica file.
+
+Proposta: Acusticator(["a3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75])
+
+Dopo print("Il file specificato non esiste...")
+
+Input dimensione hash (dgt):
+
+Azione: Inserimento hash.
+
+Proposta: Acusticator(["e4", 0.05, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo hash_size = dgt(...)
+
+Input numero core (dgt):
+
+Azione: Inserimento core.
+
+Proposta: Acusticator(["e4", 0.05, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo num_cores = dgt(...)
+
+Input skill level (dgt):
+
+Azione: Inserimento skill.
+
+Proposta: Acusticator(["e4", 0.05, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo skill_level = dgt(...)
+
+Input move overhead (dgt):
+
+Azione: Inserimento overhead.
+
+Proposta: Acusticator(["e4", 0.05, 0.5, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo move_overhead = dgt(...)
+
+Funzione CreateClock (Creazione Orologio)
+
+Input nome orologio (dgt):
+
+Azione: Inserimento nome.
+
+Proposta: Acusticator(["c4", 0.05, -0.5, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo name=dgt(...)
+
+Errore nome esistente:
+
+Azione: Fallimento creazione (nome duplicato).
+
+Proposta: Acusticator(["b3", 0.12, 0, volume], kind=2, adsr=[5, 15, 20, 60])
+
+Dopo print("Un orologio con questo nome esiste già.")
+
+Input stesso tempo (s/n) (dgt):
+
+Azione: Inserimento scelta 's'/'n'.
+
+Proposta: Acusticator(["c5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo same=dgt(...)
+
+Input tempo fase (ParseTime -> dgt):
+
+Azione: Inserimento tempo hh:mm:ss.
+
+Proposta: Acusticator(["d5", 0.05, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dentro ParseTime, dopo t=dgt(...)
+
+Errore formato tempo (ParseTime):
+
+Azione: Fallimento parsing tempo.
+
+Proposta: Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75])
+
+Dentro ParseTime, nel blocco except
+
+Input incremento fase (dgt):
+
+Azione: Inserimento incremento.
+
+Proposta: Acusticator(["e5", 0.05, 0.2, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo inc=dgt(...) (e varianti inc_w, inc_b)
+
+Input mosse fase (dgt):
+
+Azione: Inserimento numero mosse.
+
+Proposta: Acusticator(["f5", 0.05, -0.2, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo moves=dgt(...)
+
+Input numero allarmi (dgt):
+
+Azione: Inserimento numero allarmi.
+
+Proposta: Acusticator(["g4", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo num_alarms=dgt(...)
+
+Input tempo allarme (dgt -> parse_mmss_to_seconds):
+
+Azione: Inserimento tempo mm:ss.
+
+Proposta: Acusticator(["a4", 0.05, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo alarm_input = dgt(...)
+
+Errore formato tempo allarme (parse_mmss_to_seconds):
+
+Azione: Fallimento parsing tempo allarme.
+
+Proposta: Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75])
+
+Dentro parse_mmss_to_seconds, nel blocco except
+
+Input nota (dgt):
+
+Azione: Inserimento nota.
+
+Proposta: Acusticator(["b4", 0.05, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo note=dgt(...)
+
+Funzione ViewClocks
+
+Pressione tasto per tornare al menu (key):
+
+Azione: Pressione tasto attesa.
+
+Proposta: Acusticator(["c5", 0.08, 0, volume], kind=1, adsr=[2,5,90,5])
+
+Dopo attesa=key(...)
+
+Funzione SelectClock
+
+Selezione orologio (menu):
+
+Azione: Scelta nome orologio dal menu.
+
+Proposta: Acusticator(["c5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo choice = menu(...)
+
+Nessun orologio selezionato (errore/uscita):
+
+Azione: Uscita da menu senza scelta.
+
+Proposta: Acusticator(["b3", 0.12, 0, volume], kind=2, adsr=[5, 15, 20, 60])
+
+Dopo print("Nessun orologio selezionato.")
+
+Funzione DeleteClock
+
+Conferma eliminazione (implicita dopo selezione): Dopo aver selezionato l'orologio da SelectClock.
+
+Azione: Eliminazione avvenuta.
+
+Proposta: Acusticator(["e4", 0.15, -0.4, volume,"p",0.1,"c4",0.15,0.4,volume], kind=1, adsr=[5,10,70,15]) (Suono di cancellazione più deciso)
+
+Dopo print(f"\nOrologio '{clock_name}' eliminato...")
+
+Funzione EditPGN
+
+Input Evento (dgt):
+
+Azione: Inserimento Evento.
+
+Proposta: Acusticator(["c4", 0.05, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo event = dgt(...)
+
+Input Sede (dgt):
+
+Azione: Inserimento Sede.
+
+Proposta: Acusticator(["c4", 0.05, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo site = dgt(...)
+
+Input Round (dgt):
+
+Azione: Inserimento Round.
+
+Proposta: Acusticator(["c4", 0.05, 0, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo round_ = dgt(...)
+
+Input Nome Bianco (dgt):
+
+Azione: Inserimento Nome Bianco.
+
+Proposta: Acusticator(["d4", 0.05, -0.3, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo white = dgt(...)
+
+Input Nome Nero (dgt):
+
+Azione: Inserimento Nome Nero.
+
+Proposta: Acusticator(["d4", 0.05, 0.3, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo black = dgt(...)
+
+Input Elo Bianco (dgt):
+
+Azione: Inserimento Elo Bianco.
+
+Proposta: Acusticator(["e4", 0.05, -0.3, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo white_elo = dgt(...)
+
+Input Elo Nero (dgt):
+
+Azione: Inserimento Elo Nero.
+
+Proposta: Acusticator(["e4", 0.05, 0.3, volume], kind=1, adsr=[0,0,100,0])
+
+Dopo black_elo = dgt(...)
+
+Funzione StartGame (Modalità Gioco)
+
+Pressione tasto per iniziare (key):
+
+Azione: Pressione tasto attesa inizio.
+
+Proposta: Acusticator(["c5", 0.08, 0, volume], kind=1, adsr=[2,5,90,5])
+
+Dopo key("Premi un tasto qualsiasi per iniziare...")
+
+Comando '/' (diagonale dx):
+
+Azione: Esecuzione comando diagonale dx.
+
+Proposta: Acusticator(["c5", 0.07, 0.6, volume], kind=3, adsr=[10, 5, 80, 5]) (Suono "scan")
+
+Prima di read_diagonal(game_state, base_column, True)
+
+Comando '' (diagonale sx):
+
+Azione: Esecuzione comando diagonale sx.
+
+Proposta: Acusticator(["c5", 0.07, -0.6, volume], kind=3, adsr=[10, 5, 80, 5]) (Suono "scan", panned opposto)
+
+Prima di read_diagonal(game_state, base_column, False)
+
+Comando '-' (colonna/traversa/casa):
+
+Azione: Esecuzione comando dash.
+
+Proposta: Acusticator(["d#5", 0.07, 0, volume], kind=3, adsr=[10, 5, 80, 5]) (Suono "query")
+
+Prima di read_file, read_rank, o read_square nel blocco elif user_input.startswith("-"):
+
+Errore comando dash non riconosciuto:
+
+Azione: Comando dash malformato.
+
+Proposta: Acusticator(["b3", 0.12, 0, volume], kind=2, adsr=[5, 15, 20, 60])
+
+Dopo print("Comando dash non riconosciuto.")
+
+Errore comando virgola non riconosciuto (pezzo):
+
+Azione: Simbolo pezzo non valido dopo ','.
+
+Proposta: Acusticator(["b3", 0.12, 0, volume], kind=2, adsr=[5, 15, 20, 60])
+
+Dentro report_piece_positions, nel except
+
+Comando '.?' (mostra comandi dot):
+
+Azione: Visualizzazione lista comandi dot.
+
+Proposta: Acusticator(["d5", 0.08, 0, volume], kind=1, adsr=[2,5,90,5]) (suono neutro informativo)
+
+Prima di menu(DOT_COMMANDS,show_only=True,p="Comandi disponibili:")
+
+Comando '.m' (materiale):
+
+Azione: Visualizzazione materiale.
+
+Proposta: Acusticator(["f#5", 0.09, 0, volume], kind=1, adsr=[3,6,90,2]) (Suono calcolo materiale)
+
+Prima di print(f"Materiale: ...")
+
+Comando '.q' (annulla mossa):
+
+Azione: Annullamento mossa riuscito.
+
+Proposta: Acusticator(["e4", 0.1, -0.4, volume,"p",0.05, "c4", 0.1, 0.4, volume], kind=1, adsr=[5,10,70,15]) (Suono "rewind" leggero)
+
+Dopo print("Ultima mossa annullata: " + undone_move_san)
+
+Comandi '.b+/-', '.n+/-' (aggiusta tempo) - Successo:
+
+Azione: Modifica tempo riuscita.
+
+Proposta: Acusticator(["f5", 0.08, 0, volume], kind=1, adsr=[3,6,90,2]) (Suono "regolazione")
+
+Dopo print("Nuovo tempo bianco:...")
+
+Comandi '.b+/-', '.n+/-' (aggiusta tempo) - Fallimento (input non valido):
+
+Azione: Fallimento modifica tempo.
+
+Proposta: Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75])
+
+Dopo print("Comando non valido.") nel blocco except
+
+Comando '.l' (lista mosse):
+
+Azione: Visualizzazione lista mosse.
+
+Proposta: Acusticator(["c#5", 0.1, 0, volume], kind=1, adsr=[2,5,90,5]) (Suono informativo lista)
+
+Prima di print("\nLista mosse giocate:\n")
+
+Comando '.c' (aggiungi commento partita):
+
+Azione: Aggiunta commento alla mossa riuscita.
+
+Proposta: Acusticator(["f5", 0.1, 0, volume], kind=1, adsr=[3,7,88,2]) (Suono annotazione)
+
+Dopo print("Commento registrato per la mossa: ...")
+
+Comando '.c' (aggiungi commento partita) - Caso limite (nessuna mossa):
+
+Azione: Tentativo commento fallito (nessuna mossa).
+
+Proposta: Acusticator(["b3", 0.12, 0, volume], kind=2, adsr=[5, 15, 20, 60])
+
+Dopo print("Nessuna mossa da commentare.")
+
+Comando non riconosciuto (Dot command):
+* Azione: Inserimento comando dot errato.
+* Proposta: Acusticator(["b3", 0.12, 0, volume], kind=2, adsr=[5, 15, 20, 60])
+* Dopo print("Comando non riconosciuto.") nell'ultimo else del blocco elif user_input.startswith("."):
+
+Mossa illegale:
+* Azione: Inserimento mossa non valida.
+* Proposta: Acusticator(["a3", 0.2, 0, volume, "p", 0.05, 0, 0, "a3", 0.1, 0, volume*0.7], kind=2, adsr=[5, 30, 0, 65]) (Suono di errore più evidente per mossa illegale)
+* Dopo print("Mossa illegale,...") nel blocco except Exception as e: della gestione mosse.
+
+Analizzare partita post-gioco? (s/n)
+* Azione: Input 's' o 'n'.
+* Proposta: Acusticator(["d5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
+* Dopo analyze_choice = key(...) alla fine di StartGame.
+
+Funzione Main (Menu Principale e Varie)
+
+Input Volume (dgt):
+* Azione: Inserimento valore volume.
+* Proposta: Acusticator(["c5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0]) (Usa il volume precedente per questo feedback)
+* Subito dopo volume = dgt(...). Nota: il suono successivo userà il nuovo volume.
+
+Questo elenco dovrebbe coprire la maggior parte delle interazioni utente non ancora sonorizzate. Ricorda di inserire queste chiamate Acusticator nei punti indicati all'interno delle rispettive funzioni e di testarle per assicurarti che il risultato sia gradevole e funzionale. Buon lavoro!
