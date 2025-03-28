@@ -447,6 +447,7 @@ def InitEngine():
 	db = LoadDB()
 	engine_config = db.get("engine_config", {})
 	if not engine_config or not engine_config.get("engine_path"):
+		Acusticator(["d4", 0.5, -1, volume],kind=4, adsr=[.001,0,100,99.9])
 		print("\nMotore non configurato. Usa il comando 'motore' per impostarlo.")
 		return False
 	try:
@@ -473,16 +474,22 @@ def EditEngineConfig():
 	else:
 		print("Nessuna configurazione trovata.")
 	path = dgt(prompt="Inserisci il percorso dove è salvato il motore UCI: ", kind="s", smin=3, smax=256)
+	Acusticator(["g6", 0.025, -.75, volume,"c5", 0.025, -75, volume],kind=3)
 	executable = dgt(prompt="Inserisci il nome dell'eseguibile del motore (es. stockfish_15_x64_popcnt.exe): ", kind="s", smin=5, smax=64)
+	Acusticator(["g6", 0.025, -.5, volume,"c5", 0.025, -.5, volume],kind=3)
 	full_engine_path = os.path.join(path, executable)
 	if not os.path.isfile(full_engine_path):
 		print("Il file specificato non esiste. Verifica il percorso e il nome dell'eseguibile.")
 		return
 	hash_size = dgt(prompt="Inserisci la dimensione della hash table (min: 1, max: 4096 MB): ", kind="i", imin=1, imax=4096)
+	Acusticator(["g6", 0.025, -.25, volume,"c5", 0.025, -.25, volume],kind=3)
 	max_cores = os.cpu_count()
 	num_cores = dgt(prompt=f"Inserisci il numero di core da utilizzare (min: 1, max: {max_cores}): ", kind="i", imin=1, imax=max_cores, default=4)
+	Acusticator(["g6", 0.025, 0, volume,"c5", 0.025, 0, volume],kind=3)
 	skill_level = dgt(prompt="Inserisci il livello di skill (min: 0, max: 20): ", kind="i", imin=0, imax=20)
+	Acusticator(["g6", 0.025, .25, volume,"c5", 0.025, .25, volume],kind=3)
 	move_overhead = dgt(prompt="Inserisci il move overhead in millisecondi (min: 0, max: 500): ", kind="i", imin=0, imax=500, default=0)
+	Acusticator(["g6", 0.025, .5, volume,"c5", 0.025, .5, volume],kind=3)
 	wdl_switch = True  # Puoi eventualmente renderlo configurabile
 	engine_config = {
 		"engine_path": full_engine_path,
@@ -496,6 +503,7 @@ def EditEngineConfig():
 	SaveDB(db)
 	print("Configurazione del motore salvata in orologic_db.json.")
 	InitEngine()
+	Acusticator(["a6", 0.5, 1, volume],kind=3, adsr=[.001,0,100,99.9])
 	return
 def AnalyzeGame(pgn_game):
 	"""
