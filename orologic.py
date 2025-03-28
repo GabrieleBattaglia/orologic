@@ -1402,11 +1402,14 @@ class ClockConfig:
 def CreateClock():
 	print("\nCreazione orologi\n")
 	name=dgt("Nome dell'orologio: ",kind="s")
+	Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume],sync=True)
 	db=LoadDB()
 	if any(c["name"]==name for c in db["clocks"]):
 		print("Un orologio con questo nome esiste già.")
+		Acusticator(["a3",1,0,volume],kind=2,adsr=[0,0,100,100])
 		return
 	same=dgt("Bianco e Nero partono con lo stesso tempo? (Invio per sì, 'n' per no): ",kind="s",smin=0,smax=1)
+	Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 	same_time=True if same=="" else False
 	phases=[]
 	phase_count=0
@@ -1415,6 +1418,7 @@ def CreateClock():
 		if same_time:
 			total_seconds=ParseTime(f"Tempo (hh:mm:ss) per fase {phase_count+1}: ")
 			inc=dgt(f"Incremento in secondi per fase {phase_count+1}: ",kind="i")
+			Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 			phase["white_time"]=total_seconds
 			phase["black_time"]=total_seconds
 			phase["white_inc"]=inc
@@ -1422,13 +1426,16 @@ def CreateClock():
 		else:
 			total_seconds_w=ParseTime(f"Tempo per il bianco (hh:mm:ss) fase {phase_count+1}: ")
 			inc_w=dgt(f"Incremento per il bianco fase {phase_count+1}: ",kind="i")
+			Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 			total_seconds_b=ParseTime(f"Tempo per il nero (hh:mm:ss) fase {phase_count+1}: ")
 			inc_b=dgt(f"Incremento per il nero fase {phase_count+1}: ",kind="i")
+			Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 			phase["white_time"]=total_seconds_w
 			phase["black_time"]=total_seconds_b
 			phase["white_inc"]=inc_w
 			phase["black_inc"]=inc_b
 		moves=dgt(f"Numero di mosse per fase {phase_count+1} (0 per terminare): ",kind="i")
+		Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 		phase["moves"]=moves
 		phases.append(phase)
 		if moves==0:
@@ -1436,11 +1443,14 @@ def CreateClock():
 		phase_count+=1
 	alarms=[]
 	num_alarms=dgt("Numero di allarmi da inserire (max 5, 0 per nessuno): ",kind="i",imax=5,default=0)
+	Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 	for i in range(num_alarms):
 		alarm_input = dgt(f"Inserisci il tempo (mm:ss) per l'allarme {i+1}: ", kind="s")
+		Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 		alarm_time = parse_mmss_to_seconds(alarm_input)
 		alarms.append(alarm_time)
 	note=dgt("Inserisci una nota per l'orologio (opzionale): ",kind="s",default="")
+	Acusticator(["f7", .09, 0, volume,"d5", .07, 0, volume,"p",.1,0,0,"d5", .07, 0, volume,"f7", .09, 0, volume])
 	new_clock=ClockConfig(name,same_time,phases,alarms,note)
 	db["clocks"].append(new_clock.to_dict())
 	SaveDB(db)
@@ -1467,10 +1477,13 @@ def ViewClocks():
 		print(f"{idx+1}. {c['name']} - {indicatore}{fasi}{alarms_str}")
 		if c.get("note",""):
 			print(f"\tNota: {c['note']}")
+	Acusticator(["c5", 0.08, 0, volume], kind=1, adsr=[2,5,90,5])
 	attesa=key("Premi un tasto per tornare al menu principale.")
+	Acusticator(["a4", 0.08, 0, volume], kind=1, adsr=[2,5,90,5])
 def SelectClock(db):
 	db = LoadDB()
 	if not db["clocks"]:
+		Acusticator(["c3", 0.72, 0, volume], kind=2, adsr=[0,0,100,100])
 		print("Nessun orologio salvato.")
 		return
 	else:
