@@ -1,4 +1,4 @@
-# Data di concepimento: 14/02/2025 by Gabriele Battaglia e ChatGPT o3-mini-high
+# Data di concepimento: 14/02/2025 by Gabriele Battaglia & AIs
 import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
@@ -6,7 +6,7 @@ from GBUtils import dgt,menu,Acusticator, key
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
 VERSION="3.14.1"
 RELEASE_DATE=datetime.datetime(2025,3,24,10,48)
-PROGRAMMER="Gabriele Battaglia & ChatGPT o3-mini-high"
+PROGRAMMER="Gabriele Battaglia & AIs"
 DB_FILE="orologic_db.json"
 ENGINE = None
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
@@ -1224,67 +1224,143 @@ def LoadDB():
 def SaveDB(db):
 	with open(DB_FILE,"w") as f:
 		json.dump(db,f,indent="\t")
-def LoadEcoDatabase(filename="eco.db"):
+def LoadEcoDatabaseWithFEN(filename="eco.db"):
 	"""
-	Carica il file ECO e restituisce una lista di dizionari,
-	ciascuno contenente "eco", "opening", "variation" e "moves" (lista di mosse in SAN).
+	Carica il file ECO, calcola il FEN finale per ogni linea
+	e restituisce una lista di dizionari contenenti:
+	"eco", "opening", "variation", "moves" (lista SAN),
+	"fen" (FEN della posizione finale), "ply" (numero di semimosse).
+	Utilizza node.board().san() per una generazione SAN più robusta.
 	"""
 	eco_entries = []
 	if not os.path.exists(filename):
-		print("File eco.db non trovato.")
+		print(f"File {filename} non trovato.")
 		return eco_entries
-	with open(filename, "r", encoding="utf-8") as f:
-		content = f.read()
+	try:
+		with open(filename, "r", encoding="utf-8") as f:
+			content = f.read()
+	except Exception as e:
+		print(f"Errore durante la lettura di {filename}: {e}")
+		return eco_entries
 	# Rimuovi eventuali blocchi di commento racchiusi tra { e }
-	content = re.sub(r'\{[^}]*\}', '', content)
-	# Utilizza StringIO per far leggere il contenuto "pulito" al parser PGN
+	content = re.sub(r'\{[^}]*\}', '', content, flags=re.DOTALL)
 	stream = io.StringIO(content)
+	game_count = 0
+	skipped_count = 0
 	while True:
-		game = chess.pgn.read_game(stream)
-		if game is None:
-			break
-		eco_code = game.headers.get("ECO", "")
-		opening = game.headers.get("Opening", "")
-		variation = game.headers.get("Variation", "")
-		moves = []
-		node = game
-		while node.variations:
-			next_node = node.variations[0]
-			try:
-				san = node.board().san(next_node.move)
-			except Exception as e:
-				san = "?"
-			moves.append(san)
-			node = next_node
-		eco_entries.append({
-			"eco": eco_code,
-			"opening": opening,
-			"variation": variation,
-			"moves": moves
-		})
+		# Salva la posizione corrente dello stream per il seek
+		stream_pos = stream.tell()
+		try:
+			headers = chess.pgn.read_headers(stream)
+			if headers is None:
+				break # Fine del file o stream
+
+			# Riposizionati e leggi il game completo
+			stream.seek(stream_pos) # Torna all'inizio degli header
+			game = chess.pgn.read_game(stream)
+			game_count += 1
+
+			if game is None:
+				# Potrebbe accadere con entry PGN malformate dopo gli header
+				print(f"Attenzione: Impossibile leggere il game PGN {game_count} dopo l'header.")
+				skipped_count += 1
+				# Prova a leggere la prossima entry saltando righe vuote
+				while True:
+					line = stream.readline()
+					if line is None: break # EOF
+					if line.strip(): # Trovata una riga non vuota
+						stream.seek(stream.tell() - len(line.encode('utf-8'))) # Torna indietro per leggerla come header la prossima volta
+						break
+				continue
+
+			eco_code = game.headers.get("ECO", "")
+			opening = game.headers.get("Opening", "")
+			variation = game.headers.get("Variation", "")
+			moves = []
+			node = game
+			last_valid_node = game # Traccia l'ultimo nodo valido per ottenere il FEN finale
+			parse_error = False
+
+			while node.variations:
+				next_node = node.variations[0]
+				move = next_node.move
+				try:
+					# Usa la board del NODO CORRENTE per generare il SAN della PROSSIMA mossa
+					# Questo è generalmente più affidabile
+					san = node.board().san(move)
+					moves.append(san)
+				except Exception as e:
+					# Stampa un messaggio più utile, se vuoi debuggare
+					# current_fen = node.board().fen()
+					# print(f"Attenzione [{game_count}]: Errore gen SAN per {eco_code}/{opening}. Mossa: {move.uci()}, FEN: {current_fen}, Err: {e}")
+					parse_error = True
+					break # Interrompi il parsing di questa linea ECO
+				node = next_node
+				last_valid_node = node # Aggiorna l'ultimo nodo processato con successo
+
+			if not parse_error and moves: # Solo se abbiamo mosse valide e nessun errore
+				# Ottieni il FEN dalla board dell'ULTIMO nodo valido raggiunto
+				final_fen = last_valid_node.board().board_fen()
+				ply_count = len(moves) # Numero di semimosse
+				eco_entries.append({
+					"eco": eco_code,
+					"opening": opening,
+					"variation": variation,
+					"moves": moves,
+					"fen": final_fen,
+					"ply": ply_count
+				})
+			elif parse_error:
+				skipped_count += 1
+
+		except ValueError as ve: # Cattura specificamente errori comuni di parsing PGN
+			print(f"Errore di valore durante il parsing del game PGN {game_count}: {ve}")
+			skipped_count += 1
+			# Prova a recuperare cercando la prossima entry PGN '['
+			while True:
+				line = stream.readline()
+				if line is None: break # EOF
+				if line.strip().startswith('['): # Trovato un possibile inizio di header
+					stream.seek(stream.tell() - len(line.encode('utf-8'))) # Torna indietro
+					break
+		except Exception as e:
+			print(f"Errore generico durante il parsing del game PGN {game_count}: {e}")
+			skipped_count += 1
+			# Tentativo di recupero simile a sopra
+			while True:
+				line = stream.readline()
+				if line is None: break # EOF
+				if line.strip().startswith('['):
+					stream.seek(stream.tell() - len(line.encode('utf-8')))
+					break
+
+	print(f"Caricate {len(eco_entries)} linee di apertura ECO.")
+	if skipped_count > 0:
+		print(f"Attenzione: {skipped_count} linee ECO sono state saltate a causa di errori di parsing.")
 	return eco_entries
-def DetectOpening(move_history, eco_db):
+def DetectOpeningByFEN(current_board, eco_db_with_fen):
 	"""
-	Dato l'elenco delle mosse giocate (move_history, lista di stringhe in SAN)
-	e il database ECO (lista di dict), restituisce l'entry dell'apertura
-	con il più lungo prefisso corrispondente alle mosse giocate.
-	Se nessuna mossa corrisponde, restituisce None.
+	restituisce l'entry dell'apertura corrispondente alla posizione attuale.
+	Gestisce le trasposizioni confrontando i FEN delle posizioni.
+	Se ci sono più match, preferisce quello con lo stesso numero di mosse (ply),
+	e tra questi, quello con la sequenza di mosse più lunga nel database ECO.
 	"""
-	best_match = None
-	best_match_length = 0
-	for entry in eco_db:
-		eco_moves = entry["moves"]
-		match_length = 0
-		# Confronta elemento per elemento la lista move_history e quella dell'entry
-		for m1, m2 in zip(move_history, eco_moves):
-			if m1 == m2:
-				match_length += 1
-			else:
-				break
-		if match_length > best_match_length:
-			best_match = entry
-			best_match_length = match_length
-	return best_match
+	current_fen = current_board.board_fen()
+	current_ply = current_board.ply()
+	possible_matches = []
+	for entry in eco_db_with_fen:
+		if entry["fen"] == current_fen:
+			possible_matches.append(entry)
+	if not possible_matches:
+		return None # Nessuna corrispondenza trovata per questa posizione
+	# Filtra per numero di mosse (ply) corrispondente, se possibile
+	exact_ply_matches = [m for m in possible_matches if m["ply"] == current_ply]
+	if exact_ply_matches:
+		# Se ci sono match con lo stesso numero di mosse, scegli il più specifico
+		# (quello definito con più mosse nel db ECO, anche se dovrebbero essere uguali se ply è uguale)
+		return max(exact_ply_matches, key=lambda x: len(x["moves"]))
+	else:
+		return None # Nessun match trovato con il numero di mosse corretto
 def SecondsToHMS(seconds):
 	h=int(seconds//3600)
 	m=int((seconds%3600)//60)
@@ -1612,8 +1688,9 @@ def StartGame(clock_config):
 	event_default = default_pgn.get("Event", "Orologic Game")
 	site_default = default_pgn.get("Site", "Sede sconosciuta")
 	round_default = default_pgn.get("Round", "Round 1")
-	eco_db = LoadEcoDatabase("eco.db")
-	last_eco_msg = None 
+	eco_database = LoadEcoDatabaseWithFEN("eco.db")
+	last_eco_msg = ""
+	last_valid_eco_entry = None
 	white_player = dgt(f"Nome del bianco [{white_default}]: ", kind="s", default=white_default)
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
 	if white_player.strip() == "":
@@ -1667,7 +1744,7 @@ def StartGame(clock_config):
 	paused_time_start=None
 	while not game_state.game_over:
 		if not game_state.move_history:
-			prompt="0. "
+			prompt="\nInizio, mossa 0. "
 		elif len(game_state.move_history)%2==1:
 			full_move=(len(game_state.move_history)+1)//2
 			prompt=f"{full_move}. {game_state.move_history[-1]} "
@@ -1853,15 +1930,21 @@ def StartGame(clock_config):
 					del game_state.cancelled_san_moves
 				# Aggiorna il puntatore PGN al nuovo nodo
 				game_state.pgn_node = new_node
-				if eco_db:
-					eco_entry = DetectOpening(game_state.move_history, eco_db)
+				if eco_database:
+					current_board = game_state.board 
+					eco_entry = DetectOpeningByFEN(current_board, eco_database)
+					new_eco_msg = ""
+					current_entry_this_turn = eco_entry if eco_entry else None 
 					if eco_entry:
 						new_eco_msg = f"{eco_entry['eco']} - {eco_entry['opening']}"
 						if eco_entry['variation']:
 							new_eco_msg += f" ({eco_entry['variation']})"
-						if new_eco_msg != last_eco_msg:
-							print("Apertura rilevata: " + new_eco_msg)
-							last_eco_msg = new_eco_msg
+					if new_eco_msg and new_eco_msg != last_eco_msg:
+						print("Apertura rilevata: " + new_eco_msg)
+						last_eco_msg = new_eco_msg
+						last_valid_eco_entry = current_entry_this_turn
+					elif not new_eco_msg and last_eco_msg:
+						last_eco_msg = ""
 				if game_state.board.is_checkmate():
 					game_state.game_over = True
 					result = "1-0" if game_state.active_color == "white" else "0-1"
@@ -1916,13 +1999,21 @@ def StartGame(clock_config):
 	game_state.pgn_game.headers["WhiteClock"] = FormatClock(game_state.white_remaining)
 	game_state.pgn_game.headers["BlackClock"] = FormatClock(game_state.black_remaining)
 	print("Partita terminata.")
-	if eco_db:
-		eco_entry = DetectOpening(game_state.move_history, eco_db)
-		if eco_entry:
-			game_state.pgn_game.headers["ECO"] = eco_entry["eco"]
-			game_state.pgn_game.headers["Opening"] = eco_entry["opening"]
-			if eco_entry["variation"]:
-				game_state.pgn_game.headers["Variation"] = eco_entry["variation"]
+	if last_valid_eco_entry:
+		game_state.pgn_game.headers["ECO"] = last_valid_eco_entry["eco"]
+		game_state.pgn_game.headers["Opening"] = last_valid_eco_entry["opening"]
+		if last_valid_eco_entry["variation"]:
+			game_state.pgn_game.headers["Variation"] = last_valid_eco_entry["variation"]
+		else:
+			if "Variation" in game_state.pgn_game.headers:
+				del game_state.pgn_game.headers["Variation"]
+	else:
+		if "ECO" in game_state.pgn_game.headers:
+			del game_state.pgn_game.headers["ECO"]
+		if "Opening" in game_state.pgn_game.headers:
+			del game_state.pgn_game.headers["Opening"]
+		if "Variation" in game_state.pgn_game.headers:
+			del game_state.pgn_game.headers["Variation"]
 	pgn_str=str(game_state.pgn_game)
 	pgn_str = format_pgn_comments(pgn_str)
 	filename = f"{white_player}-{black_player}-{game_state.pgn_game.headers.get('Result', '*')}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
