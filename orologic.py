@@ -257,6 +257,7 @@ def SmartInspection(analysis_lines, board):
 			Acusticator(["b3", 0.12, 0, volume], kind=2, adsr=[5, 15, 20, 60])
 			print("\nComando non riconosciuto.")
 def CalculateBest(board, bestmove=True, as_san=False):
+	Acusticator(["e5",.008,-1,volume]) 
 	try:
 		fen = board.fen()
 		if fen not in cache_analysis:
@@ -299,17 +300,22 @@ def CalculateBest(board, bestmove=True, as_san=False):
 				mate_found = True
 			if bestmove:
 				if mate_found:
+					Acusticator(["a6",.008,1,volume]) 
 					return [f"Matto in {mate_moves}, {descriptive_moves[0]}"]
 				else:
+					Acusticator(["f6",.008,1,volume]) 
 					return [descriptive_moves[0]]
 			else:
 				if mate_found:
 					descriptive_moves.insert(0, f"Matto in {mate_moves}:")
+				Acusticator(["d6",.008,1,volume]) 
 				return descriptive_moves
 		else:
 			if bestmove:
+				Acusticator(["g5",.008,1,volume]) 
 				return best_line[0]
 			else:
+				Acusticator(["b5",.008,1,volume]) 
 				return best_line
 	except Exception as e:
 		print("Errore in CalculateBestLine:", e)
@@ -320,6 +326,7 @@ def CalculateEvaluation(board):
 	Se la valutazione è mate, restituisce un valore speciale.
 	"""
 	global ENGINE, analysis_time, multipv
+	Acusticator(["e5",.008,-1,volume]) 
 	try:
 		fen = board.fen()
 		if fen not in cache_analysis:
@@ -335,10 +342,13 @@ def CalculateEvaluation(board):
 				outcome = board.outcome()
 				if outcome is not None:
 					# outcome.winner è True per il bianco, False per il nero
+					Acusticator(["g5",.008,1,volume]) 
 					return 10000 if outcome.winner == chess.WHITE else -10000
 			# In altri casi (es. mate in corso di analisi) usiamo score.white()
+			Acusticator(["b5",.008,1,volume]) 
 			return 10000 if score.white().mate() > 0 else -10000
 		else:
+			Acusticator(["d6",.008,1,volume]) 
 			return score.white().score()
 	except Exception as e:
 		print("Errore in CalculateEvaluation:", e)
@@ -349,11 +359,11 @@ def CalculateWDL(board):
 	Restituisce una tupla (win, draw, loss) in percentuali.
 	"""
 	global ENGINE, analysis_time, multipv
+	Acusticator(["e5",.008,-1,volume]) 
 	try:
 		fen = board.fen()
 		if fen not in cache_analysis:
 			cache_analysis[fen] = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=multipv)
-			print(f"\nAnalisi salvata in cache per la posizione {len(cache_analysis)}.")
 		analysis = cache_analysis[fen]
 		# Se il motore supporta UCI_ShowWDL, il dizionario score avrà una chiave "wdl"
 		score = analysis[0].get("score")
@@ -363,7 +373,9 @@ def CalculateWDL(board):
 		# wdl è una tupla con valori in decimi, convertili in percentuali
 		total = sum(wdl)
 		if total == 0:
+			Acusticator(["g5",.008,1,volume]) 
 			return (0, 0, 0)
+		Acusticator(["b5",.008,1,volume]) 
 		return (wdl[0] * 10, wdl[1] * 10, wdl[2] * 10)
 	except Exception as e:
 		print("Errore in CalculateWDL:", e)
@@ -1516,6 +1528,7 @@ def SelectClock(db):
 		print("Nessun orologio selezionato.")
 def DeleteClock(db):
 	print("\nEliminazione orologi salvati\n")
+	Acusticator(["b4", .02, 0, volume,"d4",.2,0,volume]) 
 	orologio = SelectClock(db)
 	if	orologio is not None:
 		idx = next((i for i, c in enumerate(db["clocks"]) if c["name"] == orologio["name"]), None)
@@ -1527,35 +1540,43 @@ def DeleteClock(db):
 			print(f"\nOrologio '{clock_name}' eliminato, ne rimangono {len(db['clocks'])}.")
 	return
 def EditPGN():
+	Acusticator(["d6", .02, 0, volume,"g4",.02,0,volume]) 
 	print("\nModifica info default per PGN\n")
 	db = LoadDB()
 	default_pgn = db.get("default_pgn", {})
 	default_event = default_pgn.get("Event", "Orologic Game")
 	event = dgt(f"Evento [{default_event}]: ", kind="s", default=default_event)
+	Acusticator(["d6", .02, -1, volume,"g4",.02,-1,volume]) 
 	if event.strip() == "":
 		event = default_event
 	default_site = default_pgn.get("Site", "Sede sconosciuta")
 	site = dgt(f"Sede [{default_site}]: ", kind="s", default=default_site)
+	Acusticator(["d6", .02, -.66, volume,"g4",.02,-.66,volume]) 
 	if site.strip() == "":
 		site = default_site
 	default_round = default_pgn.get("Round", "Round 1")
 	round_ = dgt(f"Round [{default_round}]: ", kind="s", default=default_round)
+	Acusticator(["d6", .02, -.33, volume,"g4",.02,-.33,volume]) 
 	if round_.strip() == "":
 		round_ = default_round
 	default_white = default_pgn.get("White", "Bianco")
 	white = dgt(f"Nome del Bianco [{default_white}]: ", kind="s", default=default_white)
+	Acusticator(["d6", .02, 0, volume,"g4",.02,0,volume]) 
 	if white.strip() == "":
 		white = default_white
 	default_black = default_pgn.get("Black", "Nero")
 	black = dgt(f"Nome del Nero [{default_black}]: ", kind="s", default=default_black)
+	Acusticator(["d6", .02, .33, volume,"g4",.02,.33,volume]) 
 	if black.strip() == "":
 		black = default_black
 	default_white_elo = default_pgn.get("WhiteElo", "1200")
 	white_elo = dgt(f"Elo del Bianco [{default_white_elo}]: ", kind="s", default=default_white_elo)
+	Acusticator(["d6", .02, .66, volume,"g4",.02,.66,volume]) 
 	if white_elo.strip() == "":
 		white_elo = default_white_elo
 	default_black_elo = default_pgn.get("BlackElo", "1200")
 	black_elo = dgt(f"Elo del Nero [{default_black_elo}]: ", kind="s", default=default_black_elo)
+	Acusticator(["d6", .02, 1, volume,"g4",.02,1,volume]) 
 	if black_elo.strip() == "":
 		black_elo = default_black_elo
 	db["default_pgn"] = {
@@ -1768,22 +1789,27 @@ def StartGame(clock_config):
 			prompt="["+prompt.strip()+"] "
 		user_input=dgt(prompt,kind="s")
 		if user_input.startswith("/"):
+			Acusticator(["c5", 0.07, -1, volume,"d5", 0.07, -.75, volume,"e5", 0.07, -.5, volume,"f5", 0.07, -.25, volume,"g5", 0.07, 0, volume,"a5", 0.07, .25, volume,"b5", 0.07, .5, volume,"c6", 0.07, .75, volume], kind=3, adsr=[0, 0, 100, 100])
 			base_column = user_input[1:2].strip()
 			read_diagonal(game_state, base_column, True)
 		elif user_input.startswith("\\"):
+			Acusticator(["c5", 0.07, 1, volume,"d5", 0.07, 0.75, volume,"e5", 0.07, 0.5, volume,"f5", 0.07, 0.25, volume,"g5", 0.07, 0, volume,"a5", 0.07, -0.25, volume,"b5", 0.07, -0.5, volume,"c6", 0.07, -0.75, volume], kind=3, adsr=[0, 0, 100, 100])
 			base_column = user_input[1:2].strip()
 			read_diagonal(game_state, base_column, False)
 		elif user_input.startswith("-"):
 			param = user_input[1:].strip()
 			if len(param) == 1 and param.isalpha():
+				Acusticator(["g5", 0.07, -1, volume,"g5", 0.07, -.75, volume,"g5", 0.07, -.5, volume,"g5", 0.07, -.25, volume,"g5", 0.07, 0, volume,"g5", 0.07, .25, volume,"g5", 0.07, .5, volume,"g5", 0.07, .75, volume], kind=3, adsr=[0, 0, 100, 100])
 				read_file(game_state, param)
 			elif len(param) == 1 and param.isdigit():
 				rank_number = int(param)
 				if 1 <= rank_number <= 8:
+					Acusticator(["c5", 0.07, 0, volume, "d5", 0.07, 0, volume, "e5", 0.07, 0, volume, "f5", 0.07, 0, volume, "g5", 0.07, 0, volume, "a5", 0.07, 0, volume, "b5", 0.07, 0, volume, "c6", 0.07, 0, volume], kind=3, adsr=[0, 0, 100, 100])
 					read_rank(game_state, rank_number)
 				else:
 					print("Traversa non valida.")
 			elif len(param) == 2 and param[0].isalpha() and param[1].isdigit():
+				Acusticator(["d#4", .7, 0, volume], kind=1, adsr=[0, 0, 100, 100])
 				read_square(game_state, param)
 			else:
 				print("Comando dash non riconosciuto.")
@@ -1794,6 +1820,7 @@ def StartGame(clock_config):
 			u=user_input.strip()
 			cmd=u.rstrip(".").lower()
 			if cmd==".?":
+				Acusticator([440.0, 0.3, 0, 0.5, 880.0, 0.3, 0, 0.5], kind=1, adsr=[10, 0, 100, 20])
 				menu(DOT_COMMANDS,show_only=True,p="Comandi disponibili:")
 			elif cmd==".1":
 				Acusticator(['a6', 0.14, -1, volume], kind=1, adsr=[0, 0, 100, 100])
@@ -1824,6 +1851,7 @@ def StartGame(clock_config):
 					player = game_state.white_player if game_state.active_color=="white" else game_state.black_player
 					print(f"Orologio di {player} in moto")
 			elif cmd==".m":
+				Acusticator(["c4", 0.1, -1, volume, "e4", 0.1, -0.3, volume, "g4", 0.1, 0.3, volume, "c5", 0.1, 1, volume], kind=1, adsr=[2, 8, 80, 10])
 				white_material,black_material=CalculateMaterial(game_state.board)
 				print(f"Materiale: {game_state.white_player} {white_material}, {game_state.black_player} {black_material}")
 			elif cmd==".p":
@@ -1838,22 +1866,19 @@ def StartGame(clock_config):
 					print("Pausa durata "+FormatTime(pause_duration))
 			elif cmd==".q":
 				if game_state.paused and game_state.move_history:
-					# Rimuovi l'ultima mossa dalla board e dalla lista delle mosse (in SAN)
+					Acusticator(["c5", 0.1, 1, volume, "g4", 0.1, 0.3, volume, "e4", 0.1, -0.3, volume, "c4", 0.1, -1, volume], kind=1, adsr=[2, 8, 80, 10])
 					undone_move_san = game_state.move_history.pop()
 					game_state.board.pop()
-					
 					# Aggiorna il PGN: riportiamo il puntatore al nodo padre
 					current_node = game_state.pgn_node
 					parent = current_node.parent
 					if current_node in parent.variations:
 						parent.variations.remove(current_node)
 					game_state.pgn_node = parent
-					
 					# Salva la mossa annullata (in formato SAN) in una lista
 					if not hasattr(game_state, "cancelled_san_moves"):
 						game_state.cancelled_san_moves = []
 					game_state.cancelled_san_moves.insert(0, undone_move_san)
-					
 					# Rollback dell'incremento applicato (rimuove solo l'incremento)
 					if game_state.active_color == "black":
 						game_state.white_remaining -= game_state.clock_config["phases"][game_state.white_phase]["white_inc"]
@@ -1861,19 +1886,22 @@ def StartGame(clock_config):
 					else:
 						game_state.black_remaining -= game_state.clock_config["phases"][game_state.black_phase]["black_inc"]
 						game_state.active_color = "black"
-					
 					print("Ultima mossa annullata: " + undone_move_san)
 			elif cmd.startswith(".b+") or cmd.startswith(".b-") or cmd.startswith(".n+") or cmd.startswith(".n-"):
 				if game_state.paused:
 					try:
 						adjust=float(cmd[3:])
 						if cmd.startswith(".b+"):
+							Acusticator(["d4", 0.15, -.5, volume, "f4", 0.15, -.5, volume, "a4", 0.15, -.5, volume, "c5", 0.15, -.5, volume], kind=1, adsr=[15, 0, 90, 5])
 							game_state.white_remaining+=adjust
 						elif cmd.startswith(".b-"):
+							Acusticator(["c5", 0.15, -.5, volume, "a4", 0.15, -.5, volume, "f4", 0.15, -.5, volume, "d4", 0.15, -.5, volume], kind=1, adsr=[15, 0, 90, 5])
 							game_state.white_remaining-=adjust
 						elif cmd.startswith(".n+"):
+							Acusticator(["d4", 0.15, .5, volume, "f4", 0.15, .5, volume, "a4", 0.15, .5, volume, "c5", 0.15, .5, volume], kind=1, adsr=[15, 0, 90, 5])
 							game_state.black_remaining+=adjust
 						elif cmd.startswith(".n-"):
+							Acusticator(["c5", 0.15, .5, volume, "a4", 0.15, .5, volume, "f4", 0.15, .5, volume, "d4", 0.15, .5, volume], kind=1, adsr=[15, 0, 90, 5])
 							game_state.black_remaining-=adjust
 						print("Nuovo tempo bianco: "+FormatTime(game_state.white_remaining)+", nero: "+FormatTime(game_state.black_remaining))
 					except:
@@ -1882,6 +1910,7 @@ def StartGame(clock_config):
 				Acusticator(["c4", 0.2, -1, volume, "g4", 0.2, -0.3, volume, "c5", 0.2, 0.3, volume, "e5", 0.2, 1, volume, "g5", 0.4, 0, volume], kind=1, adsr=[10, 5, 80, 5])
 				print(game_state.board)
 			elif cmd==".l":
+				Acusticator([900.0, 0.1, 0, volume, 440.0, 0.3, 0, volume], kind=1, adsr=[1, 0, 80, 19])
 				summary = GenerateMoveSummary(game_state)
 				if summary:
 					print("\nLista mosse giocate:\n")
@@ -1909,10 +1938,12 @@ def StartGame(clock_config):
 						game_state.pgn_node.comment += "\n" + new_comment
 					else:
 						game_state.pgn_node.comment = new_comment
+					Acusticator(["f5", 0.1, 0, volume,"p",0.04,0,0,"c5", 0.02, 0, volume], kind=1, adsr=[3,7,88,2])
 					print("Commento registrato per la mossa: " + game_state.move_history[-1])
 				else:
 					print("Nessuna mossa da commentare.")
 			else:
+				Acusticator(["e3", 1, 0, volume,"a2", 1, 0, volume], kind=3, adsr=[1,7,100,92])
 				print("Comando non riconosciuto.")
 		else:
 			if game_state.paused:
@@ -2043,6 +2074,7 @@ def StartGame(clock_config):
 			return
 		else:
 			AnalyzeGame(game_state.pgn_game)
+	else: Acusticator([880.0, 0.2, 0, volume, 440.0, 0.2, 0, volume], kind=1, adsr=[25, 0, 50, 25])
 def OpenManual():
 	print("\nApertura manuale\n")
 	readme="readme_it.htm"
@@ -2128,6 +2160,7 @@ def Main():
 			print("\nAvvio partita\n")
 			db=LoadDB()
 			if not db["clocks"]:
+				Acusticator(["c5", 0.3, 0, volume, "g4", 0.3, 0, volume], kind=1, adsr=[30, 20, 80, 20])
 				print("Nessun orologio disponibile. Creane uno prima.")
 			else:
 				clock_config=SelectClock(db)
