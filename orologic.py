@@ -2164,8 +2164,8 @@ def Main():
 			db = LoadDB()
 			db["volume"] = volume
 			SaveDB(db)
-			Acusticator(["c5",.5,0,old_volume],adsr=[.005,0,100,100],sync=True)
-			Acusticator(["c5",.5,0,volume],adsr=[.005,0,100,100])
+			Acusticator(["c5",.5,0,old_volume],adsr=[0,0,100,100],sync=True)
+			Acusticator(["c5",.5,0,volume],adsr=[0,0,100,100])
 		elif scelta=="vedi":
 			Acusticator([1000.0, 0.05, -1, volume, "p", 0.05, 0, 0, 900.0, 0.05, 1, volume], kind=1, adsr=[0, 0, 100, 0])
 			ViewClocks()
