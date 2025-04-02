@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.14.1"
-RELEASE_DATE=datetime.datetime(2025,3,24,10,48)
+VERSION="3.15.0"
+RELEASE_DATE=datetime.datetime(2025,4,2,15,19)
 PROGRAMMER="Gabriele Battaglia & AIs"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -703,9 +703,12 @@ def AnalyzeGame(pgn_game):
 				print("\nImpossibile calcolare la bestmove.")
 		elif cmd == "c":
 			Acusticator(["d6", 0.012, 0, volume, "p", 0.15,0,0,"a6",0.012,0,volume], kind=1, adsr=[0.01,0,100,0.01])
-			user_comment = dgt("\nInserisci il commento: ", kind="s")
+			user_comment = dgt("\nInserisci il commento: ", kind="s").strip()
 			if user_comment:
-				current_node.comment = (current_node.comment or "") + " " + user_comment
+				if current_node.comment:
+					current_node.comment += "\n" + user_comment
+				else:
+					current_node.comment = user_comment
 				saved = True
 				Acusticator(["a6", 0.012, 0, volume, "p", 0.15,0,0,"d6",0.012,0,volume], kind=1, adsr=[0.01,0,100,0.01])
 				print("\nCommento aggiunto.")
@@ -888,6 +891,14 @@ def AnalyzeGame(pgn_game):
 		saved = False
 	else:
 		print("Non sono state apportate modifiche al PGN.")
+	try:
+		# Copia lo stato corrente del PGN negli appunti
+		current_pgn_str = str(pgn_game)
+		current_pgn_str = format_pgn_comments(current_pgn_str) # Applica formattazione anche qui
+		pyperclip.copy(current_pgn_str)
+		print("PGN attuale copiato negli appunti.")
+	except Exception as e:
+		print(f"Errore durante la copia del PGN negli appunti: {e}")	
 	print("Uscita dalla modalità analisi. Ritorno al menù principale.")
 def get_color_adjective(piece_color, gender):
 	if gender == "m":
@@ -1560,12 +1571,12 @@ def EditPGN():
 	if round_.strip() == "":
 		round_ = default_round
 	default_white = default_pgn.get("White", "Bianco")
-	white = dgt(f"Nome del Bianco [{default_white}]: ", kind="s", default=default_white)
+	white = dgt(f"Nome del Bianco [{default_white}]: ", kind="s", default=default_white).strip().title()
 	Acusticator(["d6", .02, 0, volume,"g4",.02,0,volume]) 
 	if white.strip() == "":
 		white = default_white
 	default_black = default_pgn.get("Black", "Nero")
-	black = dgt(f"Nome del Nero [{default_black}]: ", kind="s", default=default_black)
+	black = dgt(f"Nome del Nero [{default_black}]: ", kind="s", default=default_black).strip().title()
 	Acusticator(["d6", .02, .33, volume,"g4",.02,.33,volume]) 
 	if black.strip() == "":
 		black = default_black
@@ -1725,13 +1736,13 @@ def StartGame(clock_config):
 	eco_database = LoadEcoDatabaseWithFEN("eco.db")
 	last_eco_msg = ""
 	last_valid_eco_entry = None
-	white_player = dgt(f"Nome del bianco [{white_default}]: ", kind="s", default=white_default)
+	white_player = dgt(f"Nome del bianco [{white_default}]: ", kind="s", default=white_default).strip().title()
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
-	if white_player.strip() == "":
+	if white_player == "":
 		white_player = white_default
-	black_player = dgt(f"Nome del nero [{black_default}]: ", kind="s", default=black_default)
+	black_player = dgt(f"Nome del nero [{black_default}]: ", kind="s", default=black_default).strip().title()
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
-	if black_player.strip() == "":
+	if black_player == "":
 		black_player = black_default
 	white_elo = dgt(f"Elo del bianco [{white_elo_default}]: ", kind="s", default=white_elo_default)
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
@@ -1759,7 +1770,7 @@ def StartGame(clock_config):
 		"BlackElo": black_elo
 	}
 	SaveDB(db)
-	key("Premi un tasto qualsiasi per iniziare la partita quando sei pronto...",attesa=1800)
+	key("Premi un tasto qualsiasi per iniziare la partita quando sei pronto...",attesa=7200)
 	Acusticator(["c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c7", .5, 0, volume], kind=1, sync=True)
 	game_state=GameState(clock_config)
 	game_state.white_player=white_player
@@ -1934,7 +1945,7 @@ def StartGame(clock_config):
 			elif cmd.startswith(".c"):
 				new_comment = cmd[2:].strip()
 				if game_state.move_history:
-					if game_state.pgn_node.comment:
+					if game_state.pgn_node.comment: 
 						game_state.pgn_node.comment += "\n" + new_comment
 					else:
 						game_state.pgn_node.comment = new_comment
@@ -2039,6 +2050,7 @@ def StartGame(clock_config):
 				game_state.switch_turn()
 			except Exception as e:
 				illegal_result=verbose_legal_moves_for_san(game_state.board,user_input)
+				Acusticator([600.0, 0.6, 0, volume], adsr=[5, 0, 35, 90])
 				print("Mossa illegale, sulla casa indicata sono possibili:\n"+illegal_result)
 	game_state.pgn_game.headers["WhiteClock"] = FormatClock(game_state.white_remaining)
 	game_state.pgn_game.headers["BlackClock"] = FormatClock(game_state.black_remaining)
@@ -2065,6 +2077,11 @@ def StartGame(clock_config):
 	with open(filename, "w", encoding="utf-8") as f:
 		f.write(pgn_str)
 	print("PGN salvato come "+filename+".")
+	try:
+		pyperclip.copy(pgn_str)
+		print("PGN copiato negli appunti.")
+	except Exception as e:
+		print(f"Errore durante la copia del PGN negli appunti: {e}")
 	analyze_choice = key("Vuoi analizzare la partita? (s/n): ").lower()
 	if analyze_choice == "s":
 		db = LoadDB()
@@ -2120,6 +2137,9 @@ def Main():
 	global	volume
 	db = LoadDB()
 	volume = db.get("volume", 0.5)
+	launch_count = db.get("launch_count", 0) + 1
+	db["launch_count"] = launch_count
+	SaveDB(db)
 	SchermataIniziale()
 	InitEngine()
 	while True:
@@ -2138,12 +2158,14 @@ def Main():
 			EditEngineConfig()
 		elif scelta=="volume":
 			Acusticator(["f6",.02,0,volume,"p",.04,0,volume,"a6",.02,0,volume])
+			old_volume=volume
 			volume = dgt(f"\nVolume attuale: {int(volume*100)}, nuovo? (0-100): ", kind="i", imin=0, imax=100, default=50)
 			volume/=100
 			db = LoadDB()
 			db["volume"] = volume
 			SaveDB(db)
-			Acusticator(["c5",1,0,volume])
+			Acusticator(["c5",.5,0,old_volume],adsr=[.005,0,100,100],sync=True)
+			Acusticator(["c5",.5,0,volume],adsr=[.005,0,100,100])
 		elif scelta=="vedi":
 			Acusticator([1000.0, 0.05, -1, volume, "p", 0.05, 0, 0, 900.0, 0.05, 1, volume], kind=1, adsr=[0, 0, 100, 0])
 			ViewClocks()
@@ -2193,5 +2215,7 @@ if __name__=="__main__":
 	if ms:
 		components.append(f"{ms} millisecondi")
 	result = ", ".join(components) if components else "0 millisecondi"
-	print(f"Arrivederci da Orologic {VERSION}.\nCi siamo divertiti assieme per: {result}")
+	final_db = LoadDB()
+	final_launch_count = final_db.get("launch_count", "sconosciuto") # Legge il contatore salvato	
+	print(f"Arrivederci da Orologic {VERSION}.\nQuesta era la nostra {final_launch_count}a volta e ci siamo divertiti assieme per: {result}")
 	sys.exit(0)
