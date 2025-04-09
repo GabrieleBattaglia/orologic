@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.15.0"
-RELEASE_DATE=datetime.datetime(2025,4,2,15,19)
+VERSION="3.15.1"
+RELEASE_DATE=datetime.datetime(2025,4,3,16,39)
 PROGRAMMER="Gabriele Battaglia & AIs"
 DB_FILE="orologic_db.json"
 ENGINE = None
