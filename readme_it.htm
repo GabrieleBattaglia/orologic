@@ -1,35 +1,44 @@
-<!-- readme.htm -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orologic: Orologio Scacchistico con PGN</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; }
+        h1, h2, h3 { color: #333; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        code { background-color: #eee; padding: 2px 4px; border-radius: 3px; }
+        pre code { display: block; background-color: #eee; padding: 10px; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; }
+        a { color: #0066cc; }
+        ul, ol { margin-left: 20px; }
+    </style>
 </head>
 <body>
     <h1>Orologic: Orologio Scacchistico con PGN</h1>
-    <p><strong>Versione Guida: 3.9.6</strong></p>
+    <p><strong>Versione Guida: 3.16.10</strong></p>
 
-
-    <p>Orologic è un'applicazione per la gestione del tempo in partite di scacchi, progettata per essere utilizzata da riga di comando (console).  A differenza delle applicazioni con interfaccia grafica (GUI), Orologic non ha finestre, pulsanti o elementi grafici interattivi.  L'interazione avviene interamente tramite testo: si digitano comandi e si leggono le risposte fornite dal programma.</p>
+    <p>Orologic è un'applicazione per la gestione del tempo in partite di scacchi, progettata per essere utilizzata da riga di comando (console). A differenza delle applicazioni con interfaccia grafica (GUI), Orologic non ha finestre, pulsanti o elementi grafici interattivi. L'interazione avviene interamente tramite testo: si digitano comandi e si leggono le risposte fornite dal programma.</p>
 
     <p><strong>Vantaggi delle applicazioni a console (CLI - Command Line Interface):</strong></p>
     <ul>
-        <li><strong>Accessibilità:</strong> Le applicazioni a console sono intrinsecamente accessibili agli utenti con disabilità visive che utilizzano screen reader (SR).  Non essendoci elementi grafici, lo screen reader può leggere direttamente il testo presente nella console, rendendo l'applicazione immediatamente utilizzabile.</li>
+        <li><strong>Accessibilità:</strong> Le applicazioni a console sono intrinsecamente accessibili agli utenti con disabilità visive che utilizzano screen reader (SR). Non essendoci elementi grafici, lo screen reader può leggere direttamente il testo presente nella console, rendendo l'applicazione immediatamente utilizzabile.</li>
         <li><strong>Leggerezza:</strong> Le applicazioni a console richiedono meno risorse di sistema rispetto alle GUI, rendendole adatte anche a computer meno potenti.</li>
         <li><strong>Automatizzazione:</strong> Le operazioni eseguite da riga di comando possono essere facilmente automatizzate tramite script.</li>
-        <li><strong>Controllo preciso:</strong>  La riga di comando offre un controllo molto preciso sulle operazioni eseguite.</li>
+        <li><strong>Controllo preciso:</strong> La riga di comando offre un controllo molto preciso sulle operazioni eseguite.</li>
     </ul>
 
-        <p><strong>Test e Compatibilità:</strong></p>
+    <p><strong>Test e Compatibilità:</strong></p>
     <p>
-        Orologic è stato testato sotto Windows 11 con lo screen reader NVDA versione 2024.3.1. Tuttavia, essendo un'applicazione Python, dovrebbe funzionare correttamente anche su altri sistemi operativi (es. Linux, macOS) e con altri screen reader, a condizione che siano installate le librerie Python richieste (vedi sotto).
+        Orologic è stato testato principalmente sotto Windows 11 con lo screen reader NVDA versione 2024.3.1. Essendo un'applicazione focalizzata sull'uso da console, dovrebbe funzionare correttamente anche su altri sistemi operativi (es. Linux, macOS) e con altri screen reader.
     </p>
-        <p>Chi volesse utilizzare i sorgenti può clonarli da github. Si dovrà però procurare anche la libreria GBUtils, sempre su github.</p>
+    <p><em>Nota:</em> Chi desiderasse utilizzare i sorgenti Python anziché la versione compilata, avrà bisogno della libreria <code>GBUtils.py</code>, disponibile tra i repository GitHub dell'autore.</p>
 
     <p><strong>Motore UCI:</strong></p>
-        <p>Per le funzionalità di analisi, Orologic necessita di un motore scacchistico compatibile con il protocollo UCI (Universal Chess Interface). Un motore UCI è un programma separato che analizza le posizioni scacchistiche e suggerisce le mosse migliori. Un esempio molto popolare e potente è Stockfish.</p>
-        <p><strong>Stockfish:</strong> Puoi scaricare l'eseguibile di Stockfish (per vari sistemi operativi) dal sito ufficiale: <a href="https://stockfishchess.org/download/" target="_blank">https://stockfishchess.org/download/</a></p>
+    <p>Per le funzionalità di analisi, Orologic necessita di un motore scacchistico compatibile con il protocollo UCI (Universal Chess Interface). Un motore UCI è un programma separato che analizza le posizioni scacchistiche e suggerisce le mosse migliori. Un esempio molto popolare e potente è Stockfish.</p>
+    <p><strong>Stockfish:</strong> Puoi scaricare l'eseguibile di Stockfish (per vari sistemi operativi) dal sito ufficiale: <a href="https://stockfishchess.org/download/" target="_blank">https://stockfishchess.org/download/</a></p>
     <p>Dopo aver scaricato Stockfish (o un altro motore UCI), dovrai configurare Orologic per indicare il percorso dell'eseguibile (vedi la sezione "Configura Motore").</p>
 
     <h2>Indice</h2>
@@ -44,14 +53,14 @@
             </ul>
         </li>
         <li><a href="#orologio">Orologio</a>
-              <ul>
-                <li><a href="#creazione-orologio">Creazione di un Orologio</a></li>
-                <li><a href="#visualizzazione-orologi">Visualizzazione degli Orologi Salvati</a></li>
-                <li><a href="#eliminazione-orologio">Eliminazione di un Orologio</a></li>
-                <li><a href="#modifica-pgn">Modifica delle Informazioni PGN Predefinite</a></li>
-                <li><a href="#avvio-partita">Avvio di una Partita</a></li>
-                <li><a href="#comandi-partita">Comandi Durante la Partita</a></li>
-              </ul>
+             <ul>
+                 <li><a href="#creazione-orologio">Creazione di un Orologio</a></li>
+                 <li><a href="#visualizzazione-orologi">Visualizzazione degli Orologi Salvati</a></li>
+                 <li><a href="#eliminazione-orologio">Eliminazione di un Orologio</a></li>
+                 <li><a href="#modifica-pgn">Modifica delle Informazioni PGN Predefinite</a></li>
+                 <li><a href="#avvio-partita">Avvio di una Partita</a></li>
+                 <li><a href="#comandi-partita">Comandi Durante la Partita</a></li>
+             </ul>
         </li>
         <li><a href="#analisi">Analisi PGN</a>
             <ul>
@@ -66,24 +75,23 @@
 
     <h2 id="utilizzo">Utilizzo</h2>
 
-    <p>Per eseguire Orologic, è necessario aprire un terminale (o prompt dei comandi) nella cartella in cui si trova l'eseguibile `orologic.exe` e digitare:</p>
+    <p>Per eseguire Orologic, è necessario aprire un terminale (o prompt dei comandi) nella cartella in cui si trova l'eseguibile <code>orologic.exe</code> e digitare:</p>
 
-    <pre><code>orologic.exe
-</code></pre>
-    <p>e premere invio.</p>
+    <pre><code>orologic.exe</code></pre>
+    <p>e premere Invio.</p>
 
     <p><strong>Suggerimenti per l'accessibilità:</strong></p>
     <ul>
         <li>Si consiglia di ingrandire la finestra del terminale per facilitare la lettura da parte degli screen reader.</li>
-        <li>Oltre al prompt dei comandi classico di Windows (<code>cmd.exe</code>), esiste un'applicazione terminale più moderna e personalizzabile chiamata <strong>Windows Terminal</strong>.  Offre funzionalità come schede multiple, pannelli divisi, personalizzazione dei colori e dei caratteri, e una migliore integrazione con gli screen reader.  Puoi scaricare Windows Terminal dal Microsoft Store: <a href="https://aka.ms/terminal" target="_blank">https://aka.ms/terminal</a></li>
+        <li>Oltre al prompt dei comandi classico di Windows (<code>cmd.exe</code>), esiste un'applicazione terminale più moderna e personalizzabile chiamata <strong>Windows Terminal</strong>. Offre funzionalità come schede multiple, pannelli divisi, personalizzazione dei colori e dei caratteri, e una migliore integrazione con gli screen reader. Puoi scaricare Windows Terminal dal Microsoft Store: <a href="https://aka.ms/terminal" target="_blank">https://aka.ms/terminal</a></li>
     </ul>
 
     <h3 id="schermata-iniziale">Schermata Iniziale</h3>
-    <p>All'avvio, Orologic mostra informazioni sulla versione, data di creazione e autore.  Fornisce anche alcune statistiche relative alla data di concepimento e all'ultima release. Viene anche mostrato un messaggio che invita a digitare `?` per visualizzare il menù principale.</p>
+    <p>All'avvio, Orologic mostra informazioni sulla versione, data di creazione e autore. Fornisce anche alcune statistiche relative alla data di concepimento e all'ultima release. Viene anche mostrato un messaggio che invita a digitare <code>?</code> per visualizzare il menù principale.</p>
 
     <h3 id="menu-principale">Menù Principale</h3>
 
-    <p>Il menù principale è accessibile digitando `?` e premendo Invio. Le opzioni disponibili sono:</p>
+    <p>Il menù principale è accessibile digitando <code>?</code> e premendo Invio. Le opzioni disponibili sono:</p>
 
     <table>
       <thead>
@@ -99,19 +107,19 @@
         </tr>
         <tr>
           <td><code>analizza</code></td>
-          <td>Entra in modalità analisi partita (carica un PGN).</td>
+          <td>Entra in modalità analisi partita (carica un PGN dagli appunti).</td>
         </tr>
         <tr>
           <td><code>crea</code></td>
-          <td>Permette di definire una nuova configurazione di orologio.</td>
+          <td>Permette di definire una nuova configurazione di orologio e aggiungerla alla collezione.</td>
         </tr>
         <tr>
           <td><code>elimina</code></td>
-          <td>Rimuove una configurazione di orologio salvata.</td>
+          <td>Rimuove una configurazione di orologio salvata dalla collezione.</td>
         </tr>
         <tr>
           <td><code>gioca</code></td>
-          <td>Avvia una nuova partita utilizzando una configurazione di orologio selezionata.</td>
+          <td>Avvia una nuova partita selezionando una configurazione di orologio salvata.</td>
         </tr>
         <tr>
             <td><code>manuale</code></td>
@@ -123,15 +131,15 @@
         </tr>
         <tr>
             <td><code>pgn</code></td>
-            <td>Imposta le info di default per il PGN (Evento, Sito, Round).</td>
+            <td>Imposta le informazioni predefinite per i file PGN generati (Evento, Sede, Round, nomi e Elo predefiniti).</td>
         </tr>
         <tr>
           <td><code>vedi</code></td>
-          <td>Elenca le configurazioni di orologio salvate.</td>
+          <td>Elenca le configurazioni di orologio salvate nella collezione.</td>
         </tr>
         <tr>
           <td><code>volume</code></td>
-          <td>Consente di regolare il volume degli effetti audio.</td>
+          <td>Consente di regolare il volume degli effetti audio (da 0 a 100).</td>
         </tr>
         <tr>
           <td><code>.</code></td>
@@ -139,31 +147,32 @@
         </tr>
       </tbody>
     </table>
-<h3 id="configura-motore">Configura Motore</h3>
 
-<p>
-  Prima di poter utilizzare le funzionalità di analisi, è necessario configurare il motore scacchistico.  Selezionare l'opzione <code>motore</code> dal menù principale.  Orologic chiederà le seguenti informazioni:
-</p>
-<ol>
-    <li><strong>Percorso dell'eseguibile del motore UCI:</strong> Inserire il percorso completo del file eseguibile del motore (es. <code>C:\Engines\Stockfish\</code>).</li>
-    <li><strong>Nome dell'eseguibile del motore:</strong> Inserire il nome dell'eseguibile del motore, *con estensione* (es. <code>stockfish-windows-x86-64.exe</code>).</li>
-    <li><strong>Dimensione della Hash Table (MB):</strong>  La dimensione della memoria (in megabyte) da allocare per la hash table del motore. Valori tipici sono 128, 256, 512, 1024 (MB).  Una hash table più grande può migliorare le prestazioni del motore, ma richiede più memoria. Il valore massimo è 4096.</li>
-    <li><strong>Numero di core da utilizzare:</strong> Il numero di core del processore che il motore può utilizzare.  Un valore più alto può migliorare le prestazioni, ma potrebbe rallentare altre applicazioni in esecuzione.</li>
-    <li><strong>Livello di skill (0-20):</strong> Il livello di abilità del motore (da 0, il più debole, a 20, il più forte).</li>
-    <li><strong>Move Overhead (millisecondi):</strong>  Un tempo aggiuntivo (in millisecondi) che il motore attende prima di restituire la mossa.  Può essere utile per simulare un avversario umano o per evitare un utilizzo eccessivo della CPU.</li>
-</ol>
-<p>
-    Queste impostazioni vengono salvate nel file <code>orologic_db.json</code> e caricate automaticamente all'avvio successivo.
-</p>
+    <h3 id="configura-motore">Configura Motore</h3>
 
-<h3 id="regolazione-volume">Regolazione Volume</h3>
-<p>L'opzione <code>volume</code> del menù principale permette di regolare il volume degli effetti sonori di Orologic.  Il valore va da 0 (silenzioso) a 100 (massimo). Il volume predefinito è 50. Il valore impostato viene salvato e ripristinato automaticamente all'avvio successivo.</p>
+    <p>
+      Prima di poter utilizzare le funzionalità di analisi, è necessario configurare il motore scacchistico. Selezionare l'opzione <code>motore</code> dal menù principale. Orologic chiederà le seguenti informazioni:
+    </p>
+    <ol>
+        <li><strong>Percorso dove è salvato il motore UCI:</strong> Inserire il percorso completo della cartella che contiene l'eseguibile del motore (es. <code>C:\Engines\Stockfish\</code>).</li>
+        <li><strong>Nome dell'eseguibile del motore:</strong> Inserire il nome del file eseguibile del motore, *con l'estensione* (es. <code>stockfish-windows-x86-64-avx2.exe</code>).</li>
+        <li><strong>Dimensione della Hash Table (MB):</strong> La dimensione della memoria (in megabyte) da allocare per la hash table del motore. Valori tipici sono 128, 256, 512, 1024 (MB). Una hash table più grande può migliorare le prestazioni del motore, ma richiede più memoria. Il valore massimo consentito è 4096 MB.</li>
+        <li><strong>Numero di core da utilizzare:</strong> Il numero di core del processore che il motore può utilizzare. Un valore più alto può migliorare le prestazioni, ma potrebbe rallentare altre applicazioni in esecuzione. Verrà mostrato il numero massimo di core disponibili sul sistema.</li>
+        <li><strong>Livello di skill (0-20):</strong> Il livello di abilità del motore (da 0, il più debole, a 20, il più forte).</li>
+        <li><strong>Move Overhead (millisecondi):</strong> Un tempo aggiuntivo (in millisecondi) che il motore attende prima di restituire la mossa. Può essere utile per simulare un avversario umano o per evitare un utilizzo eccessivo della CPU (valori tra 0 e 500 ms).</li>
+    </ol>
+    <p>
+        Queste impostazioni vengono salvate nel file <code>orologic_db.json</code> e caricate automaticamente all'avvio successivo.
+    </p>
+
+    <h3 id="regolazione-volume">Regolazione Volume</h3>
+    <p>L'opzione <code>volume</code> del menù principale permette di regolare il volume degli effetti sonori di Orologic. Il valore va da 0 (silenzioso) a 100 (massimo). Il volume predefinito è 50. Il valore impostato viene salvato e ripristinato automaticamente all'avvio successivo.</p>
 
     <h2 id="orologio">Orologio</h2>
 
     <h3 id="creazione-orologio">Creazione di un Orologio</h3>
 
-    <p>Quando si seleziona "crea" (o "crea"), l'applicazione guida l'utente attraverso una serie di domande per definire la configurazione:</p>
+    <p>Quando si seleziona <code>crea</code>, l'applicazione guida l'utente attraverso una serie di domande per definire la configurazione:</p>
 
     <ol>
         <li><strong>Nome dell'orologio:</strong> Un nome univoco per identificare la configurazione (es. "Blitz 5+3").</li>
@@ -174,33 +183,32 @@
         </li>
         <li><strong>Fasi:</strong> Un orologio può avere fino a 4 fasi. Per ogni fase:
             <ul>
-                <li><strong>Tempo (hh:mm:ss):</strong> Il tempo totale a disposizione per la fase (vedi <a href="#formato-orario">Formato Orario</a>).</li>
-                <li><strong>Incremento in secondi:</strong> L'incremento di tempo aggiunto *dopo* ogni mossa del giocatore.</li>
-                <li><strong>Numero di mosse:</strong> Il numero di mosse da completare *entro* la fase corrente. Se impostato a 0, la fase dura fino alla fine della partita (utile per l'ultima fase).</li>
+                <li><strong>Tempo (hh:mm:ss):</strong> Il tempo totale a disposizione per la fase (vedi <a href="#formato-orario">Formato Orario</a>). Se i tempi sono diversi per Bianco e Nero, verrà richiesto separatamente.</li>
+                <li><strong>Incremento in secondi:</strong> L'incremento di tempo aggiunto *dopo* ogni mossa del giocatore. Se i tempi sono diversi, verrà richiesto separatamente.</li>
+                <li><strong>Numero di mosse:</strong> Il numero di mosse da completare *entro* la fase corrente. Se impostato a 0, la fase dura fino alla fine della partita (utile per l'ultima fase, definita come "sudden death").</li>
                 <li>Se si imposta *Numero di mosse* a *0* non sarà più necessario rispondere alle successive domande di configurazione delle fasi.</li>
             </ul>
         </li>
         <li><strong>Allarmi:</strong> È possibile impostare fino a 5 allarmi sonori:
             <ul>
-                <li><strong>Tempo (in secondi):</strong> Il tempo rimanente in cui l'allarme suonerà. Ad esempio, un allarme a 30 secondi suonerà quando il tempo rimanente del giocatore attivo raggiungerà i 30 secondi. Si inserisce in formato *mm:ss*.</li>
+                <li><strong>Numero di allarmi:</strong> Indicare quanti allarmi si desidera impostare (da 0 a 5).</li>
+                <li><strong>Tempo (mm:ss):</strong> Per ciascun allarme, inserire il tempo rimanente (in formato minuti:secondi) a cui l'allarme deve suonare. Ad esempio, un allarme a <code>01:00</code> suonerà quando il tempo rimanente del giocatore attivo raggiungerà 1 minuto.</li>
             </ul>
         </li>
-        <li><strong>Nota:</strong> Una nota opzionale per descrivere la configurazione (es. "Regolamento torneo").</li>
+        <li><strong>Nota:</strong> Una nota opzionale per descrivere la configurazione (es. "Regolamento torneo FIDE").</li>
     </ol>
 
     <p><strong>Esempio: Creazione di un orologio Blitz 5+3</strong></p>
 
-    <pre>
-    Nome dell'orologio: Blitz 5+3
-    Bianco e Nero partono con lo stesso tempo?:  (Invio)
-    Tempo (hh:mm:ss) per fase 1: 00:05:00
-    Incremento in secondi per fase 1: 3
-    Numero di mosse per fase 1: 0
-    Numero di allarmi da inserire (max 5, 0 per nessuno): 2
-    Inserisci il tempo (mm:ss) per l'allarme 1: 01:00
-    Inserisci il tempo (mm:ss) per l'allarme 2: 00:30
-    Inserisci una nota per l'orologio (opzionale):  (Invio)
-    </pre>
+    <pre><code>Nome dell'orologio: Blitz 5+3
+Bianco e Nero partono con lo stesso tempo?:  (Invio)
+Tempo (hh:mm:ss) per fase 1: 00:05:00
+Incremento in secondi per fase 1: 3
+Numero di mosse per fase 1: 0
+Numero di allarmi da inserire (max 5, 0 per nessuno): 2
+Inserisci il tempo (mm:ss) per l'allarme 1: 01:00
+Inserisci il tempo (mm:ss) per l'allarme 2: 00:30
+Inserisci una nota per l'orologio (opzionale):  (Invio)</code></pre>
 
     <h3 id="visualizzazione-orologi">Visualizzazione degli Orologi Salvati</h3>
 
@@ -209,41 +217,45 @@
     <ul>
         <li>Nome dell'orologio.</li>
         <li>Indicatore <code>B=N</code> (se i tempi di Bianco e Nero sono uguali) o <code>B/N</code> (se diversi).</li>
-        <li>Dettagli delle fasi (tempo e incremento per ogni fase).</li>
-        <li>Numero di allarmi.</li>
+        <li>Dettagli delle fasi (tempo, incremento e numero mosse per ogni fase).</li>
+        <li>Numero di allarmi configurati.</li>
         <li>Eventuali note associate.</li>
     </ul>
 
     <h3 id="eliminazione-orologio">Eliminazione di un Orologio</h3>
 
-    <p>Permette di eliminare un orologio salvato (comando <code>elimina</code>). Viene visualizzato l'elenco degli orologi (come in "Visualizzazione"), e l'utente può selezionare il numero corrispondente all'orologio da eliminare.</p>
+    <p>Permette di eliminare un orologio salvato (comando <code>elimina</code>). Viene visualizzato l'elenco degli orologi (come in "Visualizzazione"), e l'utente può selezionare il nome dell'orologio da eliminare tra quelli proposti.</p>
 
     <h3 id="modifica-pgn">Modifica delle Informazioni PGN Predefinite</h3>
 
-    <p>Questa opzione (comando <code>pgn</code>) permette di modificare i valori predefiniti per i tag PGN che verranno utilizzati nelle nuove partite:</p>
+    <p>Questa opzione (comando <code>pgn</code>) permette di modificare i valori predefiniti per i tag PGN che verranno utilizzati come suggerimento all'inizio delle nuove partite:</p>
 
     <ul>
         <li><strong>Event:</strong> Nome dell'evento (es. "Campionato Sociale"). Il valore predefinito è "Orologic Game".</li>
         <li><strong>Site:</strong> Luogo dell'evento (es. "Circolo Scacchistico XYZ"). Il valore predefinito è "Sede sconosciuta".</li>
         <li><strong>Round:</strong> Turno di gioco (es. "1"). Il valore predefinito è "Round 1".</li>
+        <li><strong>Nome del Bianco:</strong> Nome predefinito per il giocatore bianco. Predefinito: "Bianco".</li>
+        <li><strong>Nome del Nero:</strong> Nome predefinito per il giocatore nero. Predefinito: "Nero".</li>
+        <li><strong>Elo del Bianco:</strong> Elo predefinito per il giocatore bianco. Predefinito: "1200".</li>
+        <li><strong>Elo del Nero:</strong> Elo predefinito per il giocatore nero. Predefinito: "1200".</li>
     </ul>
 
-    <p>Questi valori predefiniti vengono utilizzati quando si inizia una nuova partita, ma possono essere modificati anche all'inizio di ogni partita.</p>
+    <p>Questi valori predefiniti vengono proposti quando si inizia una nuova partita (comando <code>gioca</code>), ma possono essere modificati o confermati dall'utente all'inizio di ogni partita.</p>
 
     <h3 id="avvio-partita">Avvio di una Partita</h3>
     <p>Per avviare una partita (comando <code>gioca</code>):</p>
     <ol>
-        <li><strong>Selezione dell'orologio:</strong> Viene visualizzato l'elenco degli orologi salvati. Selezionare l'orologio da utilizzare inserendo il numero corrispondente.</li>
+        <li><strong>Selezione dell'orologio:</strong> Viene visualizzato l'elenco degli orologi salvati. Selezionare l'orologio da utilizzare scegliendo il nome corrispondente tra quelli proposti.</li>
         <li><strong>Inserimento dati PGN:</strong>
             <ul>
-                <li><strong>Nome del bianco:</strong> Nome del giocatore che conduce i pezzi bianchi. Se lasciato vuoto il valore di default è "Bianco".</li>
-                <li><strong>Nome del nero:</strong> Nome del giocatore che conduce i pezzi neri. Se lasciato vuoto il valore di default è "Nero".</li>
-                <li><strong>Elo del bianco:</strong> Punteggio Elo del giocatore bianco. Se lasciato vuoto il valore di default è "?".</li>
-                <li><strong>Elo del nero:</strong> Punteggio Elo del giocatore nero. Se lasciato vuoto il valore di default è "?".</li>
-                <li><strong>Event, Site, Round:</strong> Vengono richiesti questi valori, utilizzando i valori predefiniti (vedi <a href="#modifica-pgn">Modifica delle Informazioni PGN Predefinite</a>). È possibile modificarli o accettare i valori predefiniti premendo Invio.</li>
+                <li><strong>Nome del bianco:</strong> Inserire il nome del giocatore che conduce i pezzi bianchi (o premere Invio per usare il valore predefinito).</li>
+                <li><strong>Nome del nero:</strong> Inserire il nome del giocatore che conduce i pezzi neri (o premere Invio per usare il valore predefinito).</li>
+                <li><strong>Elo del bianco:</strong> Inserire il punteggio Elo del giocatore bianco (o premere Invio per usare il valore predefinito).</li>
+                <li><strong>Elo del nero:</strong> Inserire il punteggio Elo del giocatore nero (o premere Invio per usare il valore predefinito).</li>
+                <li><strong>Event, Site, Round:</strong> Vengono richiesti questi valori, mostrando i valori predefiniti (vedi <a href="#modifica-pgn">Modifica delle Informazioni PGN Predefinite</a>). È possibile modificarli o accettare i valori predefiniti premendo Invio.</li>
             </ul>
         </li>
-        <li><strong>Inizio partita:</strong> Premere Invio per iniziare la partita.</li>
+        <li><strong>Inizio partita:</strong> Premere un tasto qualsiasi per iniziare la partita quando si è pronti. Il timer del Bianco inizierà a scorrere.</li>
     </ol>
 
     <h3 id="comandi-partita">Comandi Durante la Partita</h3>
@@ -252,214 +264,231 @@
 
     <ul>
         <li>Il numero della mossa (es. <code>1.</code>).</li>
-        <li>L'ultima mossa registrata (se presente) (es. <code>e4</code>).</li>
+        <li>L'ultima mossa registrata (se presente) in notazione SAN (es. <code>e4</code>).</li>
         <li>Un prompt per inserire la mossa successiva (es. <code>1. e4 </code>).</li>
-        <li>Se il gioco è in pausa le sezioni sopra indicate saranno mostrate tra parentesi quadre (es. <code>[1. e4] </code>).</li>
+        <li>Se il gioco è in pausa, le sezioni sopra indicate saranno mostrate tra parentesi quadre (es. <code>[1. e4] </code>).</li>
     </ul>
 
-    <p>Sono disponibili i seguenti comandi, che *iniziano con un punto* (`.`):</p>
+    <p>Oltre all'inserimento delle mosse (vedi sotto), sono disponibili i seguenti comandi:</p>
 
-   <table>
-    <thead>
-      <tr>
-        <th>Comando</th>
-        <th>Descrizione</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>.1</code></td>
-        <td>Mostra il tempo rimanente del Bianco.</td>
-      </tr>
-      <tr>
-        <td><code>.2</code></td>
-        <td>Mostra il tempo rimanente del Nero.</td>
-      </tr>
-      <tr>
-        <td><code>.3</code></td>
-        <td>Mostra entrambi gli orologi.</td>
-      </tr>
+    <table>
+      <thead>
         <tr>
-        <td><code>.4</code></td>
-        <td>Confronta i tempi rimanenti e indica quale giocatore è in vantaggio (e di quanto).</td>
-      </tr>
-      <tr>
-        <td><code>.5</code></td>
-        <td>Riporta quale orologio è in moto o, se in pausa, la durata della stessa.</td>
-      </tr>
-      <tr>
-        <td><code>.l</code></td>
-        <td>Visualizza la lista delle mosse giocate.</td>
-     </tr>
-      <tr>
-        <td><code>.m</code></td>
-        <td>Mostra il valore del materiale ancora in gioco.</td>
-      </tr>
-      <tr>
-        <td><code>.p</code></td>
-        <td>Mette in pausa/riavvia il countdown degli orologi. Quando in pausa, viene visualizzato il tempo trascorso in pausa.</td>
-      </tr>
-      <tr>
-        <td><code>.q</code></td>
-        <td>*Solo in pausa:* Annulla l'ultima mossa (sia nella scacchiera che nel PGN).</td>
-      </tr>
-      <tr>
-        <td><code>.b+X</code></td>
-        <td>*Solo in pausa:* Aggiunge <code>X</code> secondi al tempo del Bianco. <code>X</code> deve essere un numero (es. <code>.b+5</code>, <code>.b+0.5</code>).</td>
-      </tr>
-      <tr>
-        <td><code>.b-X</code></td>
-        <td>*Solo in pausa:* Sottrae <code>X</code> secondi al tempo del Bianco.</td>
-      </tr>
-      <tr>
-        <td><code>.n+X</code></td>
-        <td>*Solo in pausa:* Aggiunge <code>X</code> secondi al tempo del Nero.</td>
-      </tr>
-      <tr>
-        <td><code>.n-X</code></td>
-        <td>*Solo in pausa:* Sottrae <code>X</code> secondi al tempo del Nero.</td>
-      </tr>
-      <tr>
-        <td><code>.s</code></td>
-        <td>Visualizza la scacchiera corrente.</td>
-      </tr>
-      <tr>
-        <td><code>.c commento</code></td>
-        <td>Aggiunge un commento alla mossa *precedente*.</td>
-      </tr>
+          <th>Comando</th>
+          <th>Descrizione</th>
+        </tr>
+      </thead>
+      <tbody>
         <tr>
-        <td><code>.1-0</code></td>
-        <td>Assegna vittoria al bianco (1-0) e conclude la partita.</td>
-      </tr>
-      <tr>
-        <td><code>.0-1</code></td>
-        <td>Assegna vittoria al nero (0-1) e conclude la partita.</td>
-      </tr>
-      <tr>
-        <td><code>.1/2</code></td>
-        <td>Assegna patta (1/2-1/2) e conclude la partita.</td>
-      </tr>
-      <tr>
-        <td><code>.*</code></td>
-        <td>Assegna un risultato non definito (`*`) e conclude la partita.</td>
-      </tr>
-      <tr>
-        <td><code>.?</code></td>
-        <td>Mostra l'elenco dei comandi disponibili.</td>
-      </tr>
-      <tr>
-        <td><code>/[colonna]</code></td>
-        <td>Mostra la diagonale alto-destra partendo dalla base della colonna data (es. <code>/a</code> mostra la diagonale a1-h8).</td>
-      </tr>
-      <tr>
-        <td><code>\[colonna]</code></td>
-        <td>Mostra la diagonale alto-sinistra partendo dalla base della colonna data (es. <code>\h</code> mostra la diagonale h1-a8).</td>
-      </tr>
+          <td><code>.1</code></td>
+          <td>Mostra il tempo rimanente del Bianco formattato (ore, minuti, secondi) e la percentuale di tempo consumato.</td>
+        </tr>
         <tr>
-        <td><code>-[colonna]</code></td>
-        <td>Mostra le figure su quella colonna.</td>
-      </tr>
-    <tr>
-        <td><code>-[traversa]</code></td>
-        <td>Mostra le figure su quella traversa.</td>
-      </tr>
+          <td><code>.2</code></td>
+          <td>Mostra il tempo rimanente del Nero formattato (ore, minuti, secondi) e la percentuale di tempo consumato.</td>
+        </tr>
         <tr>
-        <td><code>-[casa]</code></td>
-        <td>Mostra le figure o gli attacchi su quella casa.</td>
-      </tr>
-    <tr>
-        <td><code>,[NomePezzo]</code></td>
-        <td>Mostra la/le posizione/i del pezzo indicato (es. <code>,R</code> mostra le torri bianche, <code>,n</code> mostra i cavalli neri).</td>
-      </tr>
-    </tbody>
-  </table>
+          <td><code>.3</code></td>
+          <td>Mostra entrambi gli orologi (Bianco e Nero).</td>
+        </tr>
+          <tr>
+          <td><code>.4</code></td>
+          <td>Confronta i tempi rimanenti e indica quale giocatore è in vantaggio di tempo (e di quanto).</td>
+        </tr>
+        <tr>
+          <td><code>.5</code></td>
+          <td>Riporta quale orologio è attualmente in moto oppure, se il gioco è in pausa, da quanto tempo è attiva la pausa.</td>
+        </tr>
+        <tr>
+          <td><code>.l</code></td>
+          <td>Visualizza la lista delle mosse giocate finora, descritte verbalmente.</td>
+        </tr>
+        <tr>
+          <td><code>.m</code></td>
+          <td>Mostra il valore del materiale ancora in gioco per entrambi i colori (Pedone=1, Cavallo/Alfiere=3, Torre=5, Donna=9).</td>
+        </tr>
+        <tr>
+          <td><code>.p</code></td>
+          <td>Mette in pausa / riavvia il countdown degli orologi. Quando si riavvia, viene visualizzato il tempo trascorso in pausa.</td>
+        </tr>
+        <tr>
+          <td><code>.q</code></td>
+          <td>*Solo se in pausa:* Annulla l'ultima mossa registrata (sia dalla scacchiera interna che dal PGN in memoria). L'incremento applicato per quella mossa viene rimosso. Le mosse annullate vengono ricordate e aggiunte come commento alla prossima mossa giocata.</td>
+        </tr>
+        <tr>
+          <td><code>.b+X</code></td>
+          <td>*Solo se in pausa:* Aggiunge <code>X</code> secondi al tempo rimanente del Bianco. <code>X</code> deve essere un numero (es. <code>.b+5</code> aggiunge 5 secondi, <code>.b+0.5</code> aggiunge mezzo secondo).</td>
+        </tr>
+        <tr>
+          <td><code>.b-X</code></td>
+          <td>*Solo se in pausa:* Sottrae <code>X</code> secondi al tempo rimanente del Bianco.</td>
+        </tr>
+        <tr>
+          <td><code>.n+X</code></td>
+          <td>*Solo se in pausa:* Aggiunge <code>X</code> secondi al tempo rimanente del Nero.</td>
+        </tr>
+        <tr>
+          <td><code>.n-X</code></td>
+          <td>*Solo se in pausa:* Sottrae <code>X</code> secondi al tempo rimanente del Nero.</td>
+        </tr>
+        <tr>
+          <td><code>.s</code></td>
+          <td>Visualizza la rappresentazione testuale della scacchiera corrente, orientata dal punto di vista del giocatore a cui tocca muovere, con l'ultima mossa giocata e il bilancio materiale.</td>
+        </tr>
+        <tr>
+          <td><code>.c [testo del commento]</code></td>
+          <td>Aggiunge il <code>[testo del commento]</code> alla mossa *appena giocata*. Se esiste già un commento, il nuovo testo viene aggiunto in coda. (Es: <code>.c Questa mossa prepara un attacco</code>).</td>
+        </tr>
+          <tr>
+          <td><code>.1-0</code></td>
+          <td>Assegna la vittoria al Bianco (risultato 1-0) e conclude la partita.</td>
+        </tr>
+        <tr>
+          <td><code>.0-1</code></td>
+          <td>Assegna la vittoria al Nero (risultato 0-1) e conclude la partita.</td>
+        </tr>
+        <tr>
+          <td><code>.1/2</code></td>
+          <td>Assegna la patta (risultato 1/2-1/2) e conclude la partita.</td>
+        </tr>
+        <tr>
+          <td><code>.*</code></td>
+          <td>Assegna un risultato non definito (<code>*</code>) e conclude la partita.</td>
+        </tr>
+        <tr>
+          <td><code>.?</code></td>
+          <td>Mostra questo elenco dei comandi disponibili durante la partita.</td>
+        </tr>
+        <tr>
+          <td><code>/[colonna]</code></td>
+          <td>Mostra i pezzi presenti sulla diagonale che parte dalla casa <code>[colonna]1</code> e va verso l'alto a destra (es. <code>/a</code> mostra la diagonale a1-h8). La colonna usa la nomenclatura fonetica (a=Ancona, b=Bologna, ecc.).</td>
+        </tr>
+        <tr>
+          <td><code>\[colonna]</code></td>
+          <td>Mostra i pezzi presenti sulla diagonale che parte dalla casa <code>[colonna]1</code> e va verso l'alto a sinistra (es. <code>\h</code> mostra la diagonale h1-a8). La colonna usa la nomenclatura fonetica.</td>
+        </tr>
+          <tr>
+          <td><code>-[colonna]</code></td>
+          <td>Mostra i pezzi presenti sulla colonna indicata (es. <code>-e</code>). La colonna usa la nomenclatura fonetica.</td>
+        </tr>
+        <tr>
+            <td><code>-[traversa]</code></td>
+            <td>Mostra i pezzi presenti sulla traversa indicata (es. <code>-4</code>).</td>
+        </tr>
+          <tr>
+          <td><code>-[casa]</code></td>
+          <td>Mostra il pezzo (se presente) sulla casa indicata, il colore della casa e quali pezzi la attaccano/difendono (es. <code>-e4</code>).</td>
+        </tr>
+        <tr>
+          <td><code>,[NomePezzo]</code></td>
+          <td>Mostra la/le posizione/i del tipo di pezzo indicato. Usare la lettera maiuscola per il Bianco e minuscola per il Nero (<code>R N B Q K P / r n b q k p</code>). Es: <code>,R</code> mostra le Torri bianche, <code>,n</code> mostra i Cavalli neri. Le coordinate usano la nomenclatura fonetica.</td>
+        </tr>
+      </tbody>
+    </table>
 
     <p><strong>Inserimento delle mosse:</strong> Le mosse devono essere inserite in notazione algebrica SAN (Standard Algebraic Notation). Esempi:</p>
 
     <ul>
         <li><code>e4</code> (muove il pedone in e4)</li>
         <li><code>Nf3</code> (muove il cavallo in f3)</li>
-        <li><code>O-O</code> (arrocco corto)</li>
-        <li><code>O-O-O</code> (arrocco lungo)</li>
+        <li><code>O-O</code> o <code>0-0</code> (arrocco corto)</li>
+        <li><code>O-O-O</code> o <code>0-0-0</code> (arrocco lungo)</li>
         <li><code>exd5</code> (il pedone in e cattura il pezzo in d5)</li>
         <li><code>Bxf7+</code> (l'alfiere cattura il pezzo in f7, dando scacco)</li>
         <li><code>Qe8#</code> (la donna si muove in e8, dando scaccomatto)</li>
         <li><code>a8=Q</code> (il pedone in a7 si muove in a8 e promuove a donna)</li>
         <li><code>a8=Q+</code> (il pedone in a7 si muove in a8 e promuove a donna, dando scacco)</li>
+        <li>È possibile aggiungere suffissi di annotazione comuni direttamente alla mossa:
+            <ul>
+                <li><code>!</code> (mossa forte)</li>
+                <li><code>?</code> (mossa debole)</li>
+                <li><code>!!</code> (mossa brillante)</li>
+                <li><code>??</code> (errore grave)</li>
+                <li><code>!?</code> (mossa interessante/dubbia)</li>
+                <li><code>?!</code> (mossa dubbia/interessante)</li>
+                <li><code>=</code> (proposta di patta)</li>
+            </ul>
+            Esempi: <code>Nf3!</code>, <code>Rxd5??</code>, <code>Qh5=</code>. Questi suffissi verranno registrati nel PGN come NAG (Numeric Annotation Glyphs) o commenti specifici.
+        </li>
     </ul>
 
     <p>Dopo ogni mossa inserita correttamente, l'applicazione:</p>
 
     <ol>
-        <li>Visualizza una descrizione verbale della mossa (es. "il pedone si muove in e4").</li>
-        <li>Aggiunge l'eventuale incremento al tempo del giocatore.</li>
-        <li>Passa il turno all'altro giocatore.</li>
+        <li>Visualizza una descrizione verbale della mossa (es. "cavallo bianco in f3", "pedone e prende in d5").</li>
+        <li>Aggiunge l'eventuale incremento di tempo configurato al tempo del giocatore che ha mosso.</li>
+        <li>Salva la mossa e l'eventuale annotazione nel PGN in memoria.</li>
+        <li>Controlla se la mossa porta a una condizione di fine partita (scaccomatto, stallo, materiale insufficiente, 50/75 mosse, triplice ripetizione).</li>
+        <li>Passa il turno all'altro giocatore, avviando il suo orologio.</li>
+        <li>Tenta di identificare l'apertura scacchistica tramite il database ECO (se presente) e mostra il nome se cambia rispetto alla mossa precedente.</li>
     </ol>
-    <p>Al termine della partita (sia per abbandono, scaccomatto, patta, tempo scaduto o assegnazione manuale del risultato), il PGN completo della partita viene salvato in un file. Il nome del file è composto da:</p>
+    <p>Al termine della partita (sia per condizioni di gioco, tempo scaduto o assegnazione manuale del risultato), il PGN completo della partita viene salvato in un file. Il nome del file è composto da:</p>
 
     <p><code>NomeBianco-NomeNero-Risultato-DataOra.pgn</code></p>
 
-    <p>Esempio: <code>Carlsen-Anand-1-0-20240315143000.pgn</code></p>
-  <p>Orologic chiederà se si vuole analizzare la partita appena giocata.</p>
+    <p>Esempio: <code>Carlsen-Anand-1-0-20250501085500.pgn</code></p>
+    <p>Il PGN viene anche copiato automaticamente negli appunti. Infine, Orologic chiederà se si vuole analizzare la partita appena conclusa.</p>
 
     <h2 id="analisi">Analisi PGN</h2>
 
     <h3 id="analisi-intro">Introduzione all'Analisi</h3>
 
     <p>
-        La modalità analisi (comando <code>analizza</code>) permette di caricare e analizzare partite in formato PGN.  È possibile navigare tra le mosse, aggiungere commenti, valutazioni, varianti e utilizzare il motore scacchistico configurato per ottenere analisi approfondite.
+        La modalità analisi (comando <code>analizza</code>) permette di caricare e analizzare partite in formato PGN. È necessario che il testo PGN della partita da analizzare sia presente negli appunti prima di lanciare il comando. Se gli appunti sono vuoti o non contengono un PGN valido, Orologic lo segnalerà. Se gli appunti contengono più partite, verrà presentato un menù per scegliere quale analizzare.
     </p>
-    <p>All'ingresso in modalità analisi, Orologic mostrerà gli headers della partita e il numero di mosse. Il PGN dovrà trovarsi negli appunti. In caso non ve ne sia uno, Orologic chiederà di copiarne uno valido e poi premere l per caricarlo.</p>
+    <p>Una volta caricata la partita, è possibile navigare tra le mosse, aggiungere commenti, valutazioni, varianti e utilizzare il motore scacchistico configurato (vedi <a href="#configura-motore">Configura Motore</a>) per ottenere analisi approfondite.</p>
+    <p>All'ingresso in modalità analisi, Orologic mostrerà gli header della partita (come Evento, Sede, Giocatori, Risultato, ecc.) e il numero totale di mosse. Verrà inoltre indicato il tempo di analisi e il numero di linee (MultiPV) attualmente impostati per il motore.</p>
 
     <h3 id="comandi-analisi">Comandi in Modalità Analisi</h3>
-
-   <table>
-    <thead>
-      <tr>
-        <th>Comando</th>
-        <th>Descrizione</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td><code>a</code></td><td>Vai all'inizio o nodo padre (se in variante).</td></tr>
-      <tr><td><code>s</code></td><td>Indietro di 1 mossa.</td></tr>
-      <tr><td><code>d</code></td><td>Avanti di 1 mossa e visualizza eventuale commento.</td></tr>
-      <tr><td><code>f</code></td><td>Vai alla fine o nodo del prossimo ramo variante.</td></tr>
-      <tr><td><code>g</code></td><td>Seleziona nodo variante precedente.</td></tr>
-      <tr><td><code>h</code></td><td>Seleziona nodo variante successivo.</td></tr>
-      <tr><td><code>j</code></td><td>Legge gli headers della partita.</td></tr>
-      <tr><td><code>k</code></td><td>Vai a mossa (inserire il numero della mossa).</td></tr>
-      <tr><td><code>l</code></td><td>Carica il PGN dagli appunti.</td></tr>
-      <tr><td><code>z</code></td><td>Inserisce la bestline (migliore sequenza di mosse) come variante nel PGN.</td></tr>
-      <tr><td><code>x</code></td><td>Inserisce la bestmove (migliore mossa) nel PGN.</td></tr>
-      <tr><td><code>c</code></td><td>Richiede un commento all'utente e lo aggiunge.</td></tr>
-      <tr><td><code>v</code></td><td>Inserisce la valutazione in centipawn nel PGN.</td></tr>
-      <tr><td><code>b</code></td><td>Visualizza nuovamente il commento.</td></tr>
-      <tr><td><code>n</code></td><td>Elimina il commento (o consente di sceglierlo se ce ne sono più di uno).</td></tr>
-      <tr><td><code>q</code></td><td>Calcola e aggiungi la bestmove al prompt.</td></tr>
-      <tr><td><code>w</code></td><td>Calcola e visualizza la bestline, aggiungendo anche la bestmove al prompt.</td></tr>
-      <tr><td><code>e</code></td><td>Visualizza le linee di analisi e ne permette l'ispezione smart.</td></tr>
-      <tr><td><code>r</code></td><td>Calcola e aggiungi la valutazione (in centipawn) al prompt.</td></tr>
-      <tr><td><code>t</code></td><td>Visualizza le percentuali Win/Draw/Lost nella posizione corrente.</td></tr>
-      <tr><td><code>y</code></td><td>Aggiungi il bilancio materiale al prompt.</td></tr>
-      <tr><td><code>u</code></td><td>Visualizza la scacchiera.</td></tr>
-      <tr><td><code>i</code></td><td>Imposta i secondi di analisi per il motore.</td></tr>
-      <tr><td><code>o</code></td><td>Imposta il numero di linee di analisi (multipv) da visualizzare.</td></tr>
-      <tr><td><code>?</code></td><td>Mostra questa lista di comandi.</td></tr>
-      <tr><td><code>.</code></td><td>Esci dalla modalità analisi e salva il PGN se diverso dall'originale.</td></tr>
-    </tbody>
-  </table>
+    <p>Il prompt in modalità analisi mostra la mossa corrente (es. <code>1. e4</code> o <code>Start</code> all'inizio). È possibile inserire i seguenti comandi:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Comando</th>
+          <th>Descrizione</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>a</code></td><td>Vai all'inizio della linea principale, oppure al nodo padre se ci si trova all'interno di una variante.</td></tr>
+        <tr><td><code>s</code></td><td>Vai indietro di una mossa (al nodo genitore).</td></tr>
+        <tr><td><code>d</code></td><td>Vai avanti di una mossa lungo la linea principale (o la prima variante). Visualizza l'eventuale commento associato alla mossa raggiunta.</td></tr>
+        <tr><td><code>f</code></td><td>Vai rapidamente alla fine della linea principale corrente (o della variante corrente).</td></tr>
+        <tr><td><code>g</code></td><td>Se la mossa corrente ha delle varianti alternative (mosse sorelle), seleziona la variante precedente.</td></tr>
+        <tr><td><code>h</code></td><td>Se la mossa corrente ha delle varianti alternative, seleziona la variante successiva.</td></tr>
+        <tr><td><code>j</code></td><td>Visualizza nuovamente gli header (informazioni iniziali) della partita PGN.</td></tr>
+        <tr><td><code>k</code></td><td>Salta direttamente a un numero di mossa specifico (es. inserire <code>15</code> per andare alla 15ª mossa del Bianco).</td></tr>
+        <tr><td><code>l</code></td><td>Carica un nuovo PGN dagli appunti. Se gli appunti contengono più partite, verrà chiesto quale caricare.</td></tr>
+        <tr><td><code>z</code></td><td>Utilizza il motore per calcolare la "bestline" (la sequenza di mosse considerata migliore dalla posizione corrente) e la inserisce nel PGN come una nuova variante (o aggiorna una variante esistente se inizia con la stessa mossa). Utile per registrare le analisi principali.</td></tr>
+        <tr><td><code>x</code></td><td>Utilizza il motore per calcolare solo la "bestmove" (la singola mossa migliore) e la aggiunge come commento alla posizione corrente (es. <code>{BM: Nf3}</code>).</td></tr>
+        <tr><td><code>c</code></td><td>Richiede all'utente di inserire un commento testuale, che viene poi aggiunto alla mossa/posizione corrente nel PGN.</td></tr>
+        <tr><td><code>v</code></td><td>Utilizza il motore per calcolare la valutazione statica della posizione corrente (in centipawn, es. +0.54, o matto, es. M5) e la aggiunge come commento (es. <code>{Val: +0.54}</code>).</td></tr>
+        <tr><td><code>b</code></td><td>Visualizza nuovamente il commento associato alla mossa/posizione corrente (se presente).</td></tr>
+        <tr><td><code>n</code></td><td>Elimina il commento associato alla mossa/posizione corrente, dopo aver chiesto conferma.</td></tr>
+        <tr><td><code>q</code></td><td>Utilizza il motore per calcolare la bestmove e la sua valutazione, e le aggiunge al prompt successivo per una rapida visualizzazione (es. <code>BM: +1.20 Nf3</code>). Non modifica il PGN.</td></tr>
+        <tr><td><code>w</code></td><td>Utilizza il motore per calcolare la bestline, la visualizza descritta verbalmente, e aggiunge la bestmove con la valutazione al prompt successivo (simile a <code>q</code> ma mostrando l'intera linea). Non modifica il PGN.</td></tr>
+        <tr><td><code>e</code></td><td>Utilizza il motore per calcolare più linee di analisi (secondo l'impostazione MultiPV). Visualizza le statistiche dell'analisi (profondità, nodi, ecc.), le linee principali con le relative valutazioni e chiede se si desidera ispezionarle in modalità "smart" (vedi <a href="#smart-inspection">Ispezione Smart</a>).</td></tr>
+        <tr><td><code>r</code></td><td>Utilizza il motore per calcolare la valutazione e la aggiunge al prompt successivo (es. <code>CP: -0.88</code>). Non modifica il PGN.</td></tr>
+        <tr><td><code>t</code></td><td>Utilizza il motore per calcolare le probabilità di Vittoria/Patta/Sconfitta (Win/Draw/Loss) dal punto di vista del Bianco e le aggiunge al prompt successivo (es. <code>WDL: W45.2%/D30.1%/L24.7%</code>). Non modifica il PGN.</td></tr>
+        <tr><td><code>y</code></td><td>Calcola il bilancio materiale attuale e lo aggiunge al prompt successivo (es. <code>Mtrl: 39/39</code>). Non modifica il PGN.</td></tr>
+        <tr><td><code>u</code></td><td>Visualizza la rappresentazione testuale della scacchiera nella posizione corrente.</td></tr>
+        <tr><td><code>i</code></td><td>Permette di modificare il tempo (in secondi) che il motore utilizzerà per le prossime analisi. Mostra il valore attuale e chiede quello nuovo.</td></tr>
+        <tr><td><code>o</code></td><td>Permette di modificare il numero di linee di analisi (MultiPV) che il motore calcolerà (specialmente per il comando <code>e</code>). Mostra il valore attuale e chiede quello nuovo.</td></tr>
+        <tr><td><code>?</code></td><td>Mostra questa lista di comandi disponibili in modalità analisi.</td></tr>
+        <tr><td><code>.</code></td><td>Esce dalla modalità analisi. Se sono state apportate modifiche al PGN (aggiunta commenti, varianti, valutazioni con <code>z</code>, <code>x</code>, <code>c</code>, <code>v</code>, <code>n</code>), chiede conferma per salvare il file PGN aggiornato con un nuovo nome (aggiungendo "-analizzato" e data/ora). Il PGN finale (salvato o meno) viene comunque copiato negli appunti.</td></tr>
+      </tbody>
+    </table>
 
   <p>
-      All'uscita dalla modalità analisi, se sono state apportate modifiche, Orologic chiederà di salvare il PGN commentato. Verrà proposto un nome per il nuovo file che conterrà anche il suffisso "-commentato" seguito dalla data e ora, ma è possibile fornire un nuovo nome a scelta.
+      All'uscita dalla modalità analisi (comando <code>.</code>), se sono state apportate modifiche salvabili (come l'aggiunta di commenti, varianti, ecc.), Orologic chiederà se si desidera salvare il PGN modificato. Verrà proposto un nome di file basato sull'originale, aggiungendo il suffisso "-analizzato-" e la data/ora corrente, ma sarà possibile inserire un nome diverso. Il PGN risultante (modificato o originale) verrà anche copiato negli appunti.
   </p>
 
     <h3 id="smart-inspection">Ispezione Smart delle Linee di Analisi</h3>
 
     <p>
-        Quando si visualizzano le linee di analisi (comando <code>e</code>), è possibile ispezionarle in modalità "smart".  Questa modalità permette di navigare all'interno di una linea di analisi specifica, mossa per mossa, visualizzando la descrizione verbale di ogni mossa e la valutazione aggiornata.
+        Quando si visualizzano le linee di analisi (comando <code>e</code> nel menu analisi) e si sceglie di ispezionarle (rispondendo <code>s</code> alla domanda), si entra in una modalità dedicata per esplorare una specifica linea suggerita dal motore. Questa modalità permette di navigare all'interno di quella particolare sequenza di mosse, una mossa alla volta.
     </p>
-        <p>Dopo aver scelto la linea da analizzare, i comandi disponibili sono:</p>
+    <p>Il prompt mostrerà il numero della linea scelta, la mossa corrente all'interno della linea (es. 3/10), la valutazione iniziale della linea, e la descrizione verbale della mossa visualizzata.</p>
+    <p>I comandi disponibili in questa modalità sono:</p>
     <table>
       <thead>
         <tr>
@@ -470,30 +499,30 @@
       <tbody>
         <tr>
           <td><code>s</code></td>
-          <td>Vai alla mossa precedente.</td>
+          <td>Vai alla mossa precedente all'interno della linea di analisi selezionata.</td>
         </tr>
         <tr>
           <td><code>d</code></td>
-          <td>Vai alla mossa successiva.</td>
+          <td>Vai alla mossa successiva all'interno della linea di analisi selezionata.</td>
         </tr>
         <tr>
           <td><code>r</code></td>
-          <td>Aggiorna la valutazione della posizione corrente (ricalcola con il motore).</td>
+          <td>Aggiorna la valutazione della posizione *corrente* all'interno della linea (ricalcola con il motore). La valutazione nel prompt verrà aggiornata.</td>
         </tr>
         <tr>
           <td><code>?</code></td>
-          <td>Visualizza l'elenco dei comandi per la modalità smart.</td>
+          <td>Visualizza questo elenco dei comandi specifici per la modalità smart inspection.</td>
         </tr>
         <tr>
           <td><code>.</code></td>
-          <td>Esce dalla modalità di ispezione smart.</td>
+          <td>Esce dalla modalità di ispezione smart e torna al prompt principale della modalità analisi.</td>
         </tr>
       </tbody>
     </table>
 
     <h2 id="formato-orario">Formato Orario</h2>
 
-    <p>Il tempo, sia per le fasi dell'orologio che per gli allarmi, deve essere inserito nel formato <code>hh:mm:ss</code>:</p>
+    <p>Quando viene richiesto di inserire un tempo (es. per le fasi dell'orologio durante la creazione), utilizzare il formato <code>hh:mm:ss</code>:</p>
 
     <ul>
         <li><code>hh</code>: Ore (due cifre, es. <code>01</code>, <code>12</code>).</li>
@@ -501,21 +530,33 @@
         <li><code>ss</code>: Secondi (due cifre, es. <code>00</code>, <code>30</code>).</li>
     </ul>
 
-    <p>Esempi:</p>
-
+    <p>Quando viene richiesto un tempo per gli allarmi, utilizzare il formato <code>mm:ss</code>:</p>
     <ul>
-        <li><code>01:30:00</code> (1 ora, 30 minuti)</li>
+         <li><code>mm</code>: Minuti (due cifre, es. <code>01</code>, <code>10</code>).</li>
+         <li><code>ss</code>: Secondi (due cifre, es. <code>00</code>, <code>30</code>).</li>
+    </ul>
+
+    <p>Esempi di input <code>hh:mm:ss</code>:</p>
+    <ul>
+        <li><code>01:30:00</code> (1 ora e 30 minuti)</li>
         <li><code>00:05:00</code> (5 minuti)</li>
         <li><code>00:00:10</code> (10 secondi)</li>
     </ul>
+    <p>Esempi di input <code>mm:ss</code> (per allarmi):</p>
+     <ul>
+        <li><code>01:00</code> (1 minuto)</li>
+        <li><code>00:30</code> (30 secondi)</li>
+    </ul>
 
     <h2 id="crediti">Crediti e Ringraziamenti</h2>
-    <p>Orologic è stato sviluppato da Gabriele Battaglia. Un ringraziamento speciale va a tutti coloro che hanno contribuito con test, suggerimenti e supporto durante lo sviluppo di questa applicazione. In particolare:</p>
-        <ul>
-        <li>Gli amici del gruppo WhatsApp, Scacchierando, per i preziosi feedback e per aver testato l'applicazione in situazioni reali di gioco.</li>
-        <li>ChatGPT o3-mini-high, per il prezioso e insostituibile aiuto nella stesura del codice.</li>
-	</ul>
-	<p>Se hai bisogno di aiuto, o vuoi fornire un feedback, non esitare a contattarmi via email all'indirizzo: <a href="mailto:iz4apu@libero.it">iz4apu@libero.it</a></p>
+    <p>Orologic è stato sviluppato da Gabriele Battaglia.</p>
+    <p>Un ringraziamento speciale va a tutti coloro che hanno contribuito con test, suggerimenti e supporto durante lo sviluppo di questa applicazione. In particolare:</p>
+     <ul>
+        <li>Gli amici del gruppo WhatsApp "Scacchierando", per i preziosi feedback e per aver testato l'applicazione in situazioni reali di gioco.</li>
+        <li>Alessia Mereu e Valeria Calzolari, quali beta tester e collaboratrici, per il loro prezioso aiuto nella realizzazione e nel debugging del software.</li>
+        <li>Le Intelligenze Artificiali Gemini 2.5 Pro (Google) e ChatGPT (OpenAI), per il prezioso e insostituibile aiuto nella stesura e nel debug del codice e nella redazione di questo manuale.</li>
+    </ul>
+    <p>Se hai bisogno di aiuto, o vuoi fornire un feedback, non esitare a contattare l'autore via email all'indirizzo: <a href="mailto:iz4apu@libero.it">iz4apu@libero.it</a></p>
 
 </body>
 </html>
