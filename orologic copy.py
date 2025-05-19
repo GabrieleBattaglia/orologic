@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.16.13"
-RELEASE_DATE=datetime.datetime(2025,5,18,14,51)
+VERSION="3.16.10"
+RELEASE_DATE=datetime.datetime(2025,5,1,8,28)
 PROGRAMMER="Gabriele Battaglia & AIs"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -57,7 +57,7 @@ ANALYSIS_COMMAND = {
 	"x": "Inserisce la bestmove nel PGN",
 	"c": "Richiede un commento all'utente e lo aggiunge",
 	"v": "Inserisce la valutazione in centipawn nel PGN",
-	"b": "Attiva/disattiva la lettura automatica dei commenti",
+	"b": "Visualizza il commento",
 	"n": "Elimina il commento (o consente di sceglierlo se ce ne sono più di uno)",
 	"q": "Calcola e aggiungi la bestmove al prompt",
 	"w": "Calcola e visualizza la bestline, aggiungendo anche la bestmove al prompt",
@@ -595,7 +595,6 @@ def AnalyzeGame(pgn_game):
 	print(f"Tempo analisi impostato a {analysis_time} secondi.\nLinee riportate dal motore impostate a {multipv}.")
 	print("\nPremi '?' per la lista dei comandi.\n")
 	saved = False
-	comment_auto_read=True
 	current_filename = pgn_game.headers.get("Filename", None)
 	current_node = pgn_game
 	extra_prompt = ""
@@ -623,17 +622,15 @@ def AnalyzeGame(pgn_game):
 			else:
 				prompt_move_part = move_indicator
 
-		if current_node.move and current_node.comment and not comment_auto_read:
-			prompt_move_part += "-"
 		prompt = f"\n{extra_prompt} {prompt_move_part}: "
 		extra_prompt = "" # Resetta extra prompt per il prossimo ciclo
 
-		if current_node.comment and comment_auto_read:
+		if current_node.comment:
 			print("Commento:", current_node.comment)
-		elif current_node.comment and not comment_auto_read:
-			Acusticator(["c7",	0.024, 0, volume], kind=1, adsr=[0,0,100,0])
 
+		# --- 2. Ottieni Comando Utente ---
 		cmd = key(prompt).lower().strip()
+
 		# --- 3. Salva Nodo Attuale e Processa Comando ---
 		previous_node = current_node
 		node_changed = False # Flag per tracciare se il nodo cambia
@@ -837,14 +834,9 @@ def AnalyzeGame(pgn_game):
 				Acusticator(["g5", 0.07, 0, volume,"p", 0.04, 0, volume,"b5", 0.025, 0, volume], kind=1, adsr=[3,7,88,2])
 			else: Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75]); print("\nImpossibile calcolare la valutazione.")		
 		elif cmd == "b":
-			if comment_auto_read:
-				comment_auto_read = False
-				Acusticator(["g5", 0.025, 0, volume,"p", 0.04, 0, volume,"b4", 0.035, 0, volume], kind=1, adsr=[3,7,88,2])
-				print("\nLettura automatica dei commenti disabilitata.")
-			else:
-				comment_auto_read = True
-				Acusticator(["g5", 0.025, 0, volume,"p", 0.04, 0, volume,"b6", 0.035, 0, volume], kind=1, adsr=[3,7,88,2])
-				print("\nLettura automatica dei commenti abilitata.")
+			Acusticator(["c#5", 0.08, 0, volume], kind=1, adsr=[2,5,90,5])
+			if current_node.comment: print("\nCommento corrente:\n", current_node.comment)
+			else: print("\nNessun commento presente per questa mossa.")
 		elif cmd == "n":
 			if current_node.comment:
 				Acusticator(["d5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
@@ -1043,6 +1035,7 @@ def AnalyzeGame(pgn_game):
 	if pgn_string_raw and isinstance(pgn_string_raw, str):
 		try:
 			pgn_string_formatted = format_pgn_comments(pgn_string_raw)
+			print(f"DEBUG: Formattazione commenti completata. Lunghezza formattata: {len(pgn_string_formatted)}")
 		except Exception as e_format:
 			exception_occurred_format = True
 			print(f"!!!!!!!! DEBUG: ECCEZIONE DURANTE format_pgn_comments: {repr(e_format)} !!!!!!!!")
@@ -1385,17 +1378,18 @@ def DescribeMove(move, board, annotation=None): # Aggiunto parametro annotation
 				descr += " prende"
 				captured_piece = None
 				if board.is_en_passant(move):
-					ep_square = move.to_square + (-8 if board.turn == chess.WHITE else 8) # Offset corretto per en passant
+					ep_square = move.to_square + (chess.BLACK_TURN if board.turn == chess.WHITE else chess.WHITE_TURN) # Offset corretto per en passant
 					captured_piece = board.piece_at(ep_square)
 					descr += " en passant"
 				else:
 					captured_piece = board.piece_at(move.to_square)
-				if captured_piece and not board.is_en_passant(move):
+				if captured_piece:
 					descr += " " + PIECE_NAMES.get(captured_piece.piece_type, "pezzo").lower()
-				dest_file_info = dest[0] 
-				dest_rank_info = dest[1]
-				dest_name_info = LETTER_FILE_MAP.get(dest_file_info, dest_file_info)
-				descr += " in " + dest_name_info + " " + dest_rank_info
+				if not board.is_en_passant(move):
+					dest_file = dest[0]
+					dest_rank = dest[1]
+					dest_name = LETTER_FILE_MAP.get(dest_file, dest_file)
+					descr += " in " + dest_name + " " + dest_rank
 			else:
 				dest_file = dest[0]
 				dest_rank = dest[1]
@@ -1416,7 +1410,6 @@ def DescribeMove(move, board, annotation=None): # Aggiunto parametro annotation
 	if annotation and annotation in ANNOTATION_DESC:
 		final_descr += f" ({ANNOTATION_DESC[annotation]})"
 	return final_descr
-
 def GenerateMoveSummary(game_state):
 	summary = []
 	move_number = 1
@@ -1540,6 +1533,9 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 					san = node.board().san(move)
 					moves.append(san)
 				except Exception as e:
+					# Stampa un messaggio più utile, se vuoi debuggare
+					# current_fen = node.board().fen()
+					# print(f"Attenzione [{game_count}]: Errore gen SAN per {eco_code}/{opening}. Mossa: {move.uci()}, FEN: {current_fen}, Err: {e}")
 					parse_error = True
 					break # Interrompi il parsing di questa linea ECO
 				node = next_node

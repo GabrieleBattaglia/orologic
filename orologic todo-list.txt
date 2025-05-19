@@ -1,10 +1,12 @@
 TodoList e ChangeLog.
-52. eliminare alcune stampe debug
-53. analisi, comando b, legge male il commento ripetendolo 2 volte.
 54. Nuova funzione da studiare e pianificare attentamente. In analisi, sia da menu principale che dopo arbitraggio, si sceglie la modalità già presente o quella automatica. In quest'ultima, mossa dopo mossa, la partita viene analizzata dal motore e si crea un txt (o pgn?) con commenti autmatici e valutazioni.
-55.
+56.
 
 ChangeLog:
+3.16.13
+	Modificato il comando "b" in fase analisi. Ora attiva/disattiva la lettura automatica dei commenti mentre si scorrono le mosse. Un segnale acustico indica la presenza di un commento, così come un segno "-" appare dopo la notazione SAN
+	Eliminate ancune visualizzazioni utili per il debug
+	Corretta la gestione delle catture en-passant
 3.16.10
 	Corretta, e resa assoluta, la visualizzazione delle statistiche WDL, comando t, in analisi
 	Corretta la descrizione verbosa della mossa in caso di cattura di un pezzo da parte di un pedone
