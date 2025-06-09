@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>Orologic: Reloj de Ajedrez con PGN</h1>
-    <p><strong>Versión de la Guía: 3.9.6</strong></p>
+    <p><strong>Versión de la Guía: 3.16.13</strong></p>
 
     <p>Orologic es una aplicación para la gestión del tiempo en partidas de ajedrez, diseñada para ser utilizada desde la línea de comandos (consola). A diferencia de las aplicaciones con interfaz gráfica de usuario (GUI), Orologic no tiene ventanas, botones ni elementos gráficos interactivos. La interacción se realiza completamente a través de texto: se escriben comandos y se leen las respuestas proporcionadas por el programa.</p>
 
@@ -31,7 +31,6 @@
     <p>Después de descargar Stockfish (u otro motor UCI), deberá configurar Orologic para indicar la ruta del ejecutable (consulte la sección "Configurar Motor").</p>
 
     <h2>Índice</h2>
-
     <ol>
         <li><a href="#uso">Uso</a>
             <ul>
@@ -49,7 +48,7 @@
                 <li><a href="#modificacion-pgn">Modificación de la Información PGN Predeterminada</a></li>
                 <li><a href="#inicio-partida">Inicio de una Partida</a></li>
                 <li><a href="#comandos-partida">Comandos Durante la Partida</a></li>
-              </ul>
+            </ul>
         </li>
         <li><a href="#analisis">Análisis PGN</a>
             <ul>
@@ -63,11 +62,8 @@
     </ol>
 
     <h2 id="uso">Uso</h2>
-
     <p>Para ejecutar Orologic, debe abrir una terminal (o símbolo del sistema) en la carpeta donde se encuentra el ejecutable `orologic.exe` y escribir:</p>
-
-    <pre><code>orologic.exe
-</code></pre>
+    <pre><code>orologic.exe</code></pre>
     <p>y pulsar Enter.</p>
 
     <p><strong>Consejos de Accesibilidad:</strong></p>
@@ -80,9 +76,7 @@
     <p>Al iniciarse, Orologic muestra información sobre la versión, la fecha de creación y el autor. También proporciona algunas estadísticas relacionadas con la fecha de concepción y la última versión. También se muestra un mensaje que le invita a escribir `?` para ver el menú principal.</p>
 
     <h3 id="menu-principal">Menú Principal</h3>
-
     <p>El menú principal es accesible escribiendo `?` y pulsando Enter. Las opciones disponibles son:</p>
-
     <table>
       <thead>
         <tr>
@@ -96,7 +90,7 @@
           <td>Muestra esta lista de opciones.</td>
         </tr>
         <tr>
-          <td><code>analizza</code></td>
+          <td><code>analiza</code></td>
           <td>Entra en modo de análisis de partida (carga un PGN).</td>
         </tr>
         <tr>
@@ -138,57 +132,48 @@
       </tbody>
     </table>
 
-<h3 id="configurar-motor">Configurar Motor</h3>
+    <h3 id="configurar-motor">Configurar Motor</h3>
+    <p>Antes de poder utilizar las funciones de análisis, debe configurar el motor de ajedrez. Seleccione la opción <code>motore</code> en el menú principal. Orologic le pedirá la siguiente información:</p>
+    <ol>
+        <li><strong>Ruta del ejecutable del motor UCI:</strong> Introduzca la ruta completa de la carpeta donde se encuentra el archivo ejecutable del motor (por ejemplo, <code>C:\Engines\Stockfish\</code>).</li>
+        <li><strong>Nombre del ejecutable del motor:</strong> Introduzca el nombre del ejecutable del motor, <em>incluyendo la extensión</em> (por ejemplo, <code>stockfish-windows-x86-64.exe</code>).</li>
+        <li><strong>Tamaño de la Tabla Hash (MB):</strong> La cantidad de memoria (en megabytes) que se asignará a la tabla hash del motor. Los valores típicos son 128, 256, 512, 1024 (MB). Una tabla hash más grande puede mejorar el rendimiento del motor, pero requiere más memoria. El valor máximo es 4096.</li>
+        <li><strong>Número de núcleos a utilizar:</strong> El número de núcleos de procesador que el motor puede utilizar. Un valor más alto puede mejorar el rendimiento, pero podría ralentizar otras aplicaciones en ejecución.</li>
+        <li><strong>Nivel de habilidad (0-20):</strong> El nivel de habilidad del motor (de 0, el más débil, a 20, el más fuerte).</li>
+        <li><strong>Sobrecarga de movimiento (milisegundos):</strong> Un tiempo adicional (en milisegundos) que el motor espera antes de devolver la jugada. Puede ser útil para simular un oponente humano o para evitar un uso excesivo de la CPU.</li>
+    </ol>
+    <p>Estos ajustes se guardan en el archivo <code>orologic_db.json</code> y se cargan automáticamente en el siguiente inicio.</p>
 
-<p>
-  Antes de poder utilizar las funciones de análisis, debe configurar el motor de ajedrez. Seleccione la opción <code>motore</code> en el menú principal. Orologic le pedirá la siguiente información:
-</p>
-<ol>
-    <li><strong>Ruta del ejecutable del motor UCI:</strong> Introduzca la ruta completa del archivo ejecutable del motor (por ejemplo, <code>C:\Engines\Stockfish\</code>).</li>
-    <li><strong>Nombre del ejecutable del motor:</strong> Introduzca el nombre del ejecutable del motor, *incluyendo la extensión* (por ejemplo, <code>stockfish-windows-x86-64.exe</code>).</li>
-    <li><strong>Tamaño de la Tabla Hash (MB):</strong> La cantidad de memoria (en megabytes) que se asignará a la tabla hash del motor. Los valores típicos son 128, 256, 512, 1024 (MB). Una tabla hash más grande puede mejorar el rendimiento del motor, pero requiere más memoria. El valor máximo es 4096.</li>
-    <li><strong>Número de núcleos a utilizar:</strong> El número de núcleos de procesador que el motor puede utilizar. Un valor más alto puede mejorar el rendimiento, pero podría ralentizar otras aplicaciones en ejecución.</li>
-    <li><strong>Nivel de habilidad (0-20):</strong> El nivel de habilidad del motor (de 0, el más débil, a 20, el más fuerte).</li>
-    <li><strong>Sobrecarga de movimiento (milisegundos):</strong> Un tiempo adicional (en milisegundos) que el motor espera antes de devolver la jugada. Puede ser útil para simular un oponente humano o para evitar un uso excesivo de la CPU.</li>
-</ol>
-<p>
-    Estos ajustes se guardan en el archivo <code>orologic_db.json</code> y se cargan automáticamente en el siguiente inicio.
-</p>
-
-<h3 id="ajuste-volumen">Ajuste de Volumen</h3>
-<p>La opción <code>volume</code> del menú principal permite ajustar el volumen de los efectos de sonido de Orologic. El valor va de 0 (silencio) a 100 (máximo). El volumen predeterminado es 50. El valor establecido se guarda y se restaura automáticamente en el siguiente inicio.</p>
+    <h3 id="ajuste-volumen">Ajuste de Volumen</h3>
+    <p>La opción <code>volume</code> del menú principal permite ajustar el volumen de los efectos de sonido de Orologic. El valor va de 0 (silencio) a 100 (máximo). El volumen predeterminado es 50. El valor establecido se guarda y se restaura automáticamente en el siguiente inicio.</p>
 
     <h2 id="reloj">Reloj</h2>
 
     <h3 id="creacion-reloj">Creación de un Reloj</h3>
-
-    <p>Cuando selecciona "crea" (o "crea"), la aplicación le guía a través de una serie de preguntas para definir la configuración:</p>
-
+    <p>Cuando selecciona "crea", la aplicación le guía a través de una serie de preguntas para definir la configuración:</p>
     <ol>
         <li><strong>Nombre del reloj:</strong> Un nombre único para identificar la configuración (por ejemplo, "Blitz 5+3").</li>
         <li><strong>¿Empiezan Blanco y Negro con el mismo tiempo?:</strong>
             <ul>
-                <li>Responda pulsando Enter (para *sí*) o <code>n</code> (para *no*). Si es sí, los ajustes de tiempo serán los mismos para ambos jugadores.</li>
+                <li>Responda pulsando Enter (para <em>sí</em>) o <code>n</code> (para <em>no</em>). Si es sí, los ajustes de tiempo serán los mismos para ambos jugadores.</li>
             </ul>
         </li>
         <li><strong>Fases:</strong> Un reloj puede tener hasta 4 fases. Para cada fase:
             <ul>
                 <li><strong>Tiempo (hh:mm:ss):</strong> El tiempo total disponible para la fase (ver <a href="#formato-hora">Formato de la Hora</a>).</li>
-                <li><strong>Incremento en segundos:</strong> El incremento de tiempo añadido *después* de cada jugada del jugador.</li>
-                <li><strong>Número de jugadas:</strong> El número de jugadas a completar *dentro* de la fase actual. Si se establece en 0, la fase dura hasta el final de la partida (útil para la última fase).</li>
-                <li>Si establece *Número de jugadas* en *0*, ya no necesitará responder a las siguientes preguntas de configuración de fase.</li>
+                <li><strong>Incremento en segundos:</strong> El incremento de tiempo añadido <em>después</em> de cada jugada del jugador.</li>
+                <li><strong>Número de jugadas:</strong> El número de jugadas a completar <em>dentro</em> de la fase actual. Si se establece en 0, la fase dura hasta el final de la partida (útil para la última fase).</li>
+                <li>Si establece <em>Número de jugadas</em> en <em>0</em>, ya no necesitará responder a las siguientes preguntas de configuración de fase.</li>
             </ul>
         </li>
         <li><strong>Alarmas:</strong> Puede configurar hasta 5 alarmas sonoras:
             <ul>
-                <li><strong>Tiempo (en segundos):</strong> El tiempo restante en el que sonará la alarma. Por ejemplo, una alarma de 30 segundos sonará cuando el tiempo restante del jugador activo alcance los 30 segundos. Se introduce en formato *mm:ss*.</li>
+                <li><strong>Tiempo:</strong> El tiempo restante en el que sonará la alarma. Por ejemplo, una alarma de 30 segundos sonará cuando el tiempo restante del jugador activo alcance los 30 segundos. Se introduce en formato <em>mm:ss</em>.</li>
             </ul>
         </li>
         <li><strong>Nota:</strong> Una nota opcional para describir la configuración (por ejemplo, "Reglamento del torneo").</li>
     </ol>
-
     <p><strong>Ejemplo: Creación de un reloj Blitz 5+3</strong></p>
-
     <pre>
     Nombre del reloj: Blitz 5+3
     ¿Empiezan Blanco y Negro con el mismo tiempo?:  (Enter)
@@ -196,15 +181,13 @@
     Incremento en segundos para la fase 1: 3
     Número de jugadas para la fase 1: 0
     Número de alarmas a introducir (máx 5, 0 para ninguna): 2
-    Introduzca el tiempo (mm:ss) para la alarma 1: 01:00
-    Introduzca el tiempo (mm:ss) para la alarma 2: 00:30
-    Introduzca una nota para el reloj (opcional):  (Enter)
+    Introduce el tiempo (mm:ss) para la alarma 1: 01:00
+    Introduce el tiempo (mm:ss) para la alarma 2: 00:30
+    Introduce una nota para el reloj (opcional):  (Enter)
     </pre>
 
     <h3 id="visualizacion-relojes">Visualización de los Relojes Guardados</h3>
-
     <p>Esta opción (comando <code>vedi</code>) muestra una lista numerada de los relojes guardados, con la siguiente información:</p>
-
     <ul>
         <li>Nombre del reloj.</li>
         <li>Indicador <code>B=N</code> (si los tiempos de Blanco y Negro son iguales) o <code>B/N</code> (si son diferentes).</li>
@@ -214,51 +197,42 @@
     </ul>
 
     <h3 id="eliminacion-reloj">Eliminación de un Reloj</h3>
-
-    <p>Permite eliminar un reloj guardado (comando <code>elimina</code>). Se muestra la lista de relojes (como en "Visualización"), y el usuario puede seleccionar el número correspondiente al reloj a eliminar.</p>
+    <p>Permite eliminar un reloj guardado (comando <code>elimina</code>). Se muestra la lista de relojes (como en "Visualización"), y el usuario puede seleccionar el reloj a eliminar.</p>
 
     <h3 id="modificacion-pgn">Modificación de la Información PGN Predeterminada</h3>
-
     <p>Esta opción (comando <code>pgn</code>) permite modificar los valores predeterminados para las etiquetas PGN que se utilizarán en las nuevas partidas:</p>
-
     <ul>
         <li><strong>Evento:</strong> Nombre del evento (por ejemplo, "Campeonato Social"). El valor predeterminado es "Orologic Game".</li>
-        <li><strong>Sitio:</strong> Lugar del evento (por ejemplo, "Club de Ajedrez XYZ"). El valor predeterminado es "Lugar desconocido".</li>
-        <li><strong>Ronda:</strong> Ronda de juego (por ejemplo, "1"). El valor predeterminado es "Round 1".</li>
+        <li><strong>Lugar:</strong> Lugar del evento (por ejemplo, "Club de Ajedrez XYZ"). El valor predeterminado es "Lugar desconocido".</li>
+        <li><strong>Ronda:</strong> Ronda de juego (por ejemplo, "1"). El valor predeterminado es "Ronda 1".</li>
     </ul>
-
     <p>Estos valores predeterminados se utilizan al iniciar una nueva partida, pero también se pueden modificar al comienzo de cada partida.</p>
 
     <h3 id="inicio-partida">Inicio de una Partida</h3>
     <p>Para iniciar una partida (comando <code>gioca</code>):</p>
     <ol>
-        <li><strong>Selección del reloj:</strong> Se muestra la lista de relojes guardados. Seleccione el reloj a utilizar introduciendo el número correspondiente.</li>
+        <li><strong>Selección del reloj:</strong> Se muestra la lista de relojes guardados. Seleccione el reloj a utilizar introduciendo su nombre.</li>
         <li><strong>Introducción de datos PGN:</strong>
             <ul>
-                <li><strong>Nombre del Blanco:</strong> Nombre del jugador que conduce las piezas blancas. Si se deja en blanco, el valor predeterminado es "Blanco".</li>
-                <li><strong>Nombre del Negro:</strong> Nombre del jugador que conduce las piezas negras. Si se deja en blanco, el valor predeterminado es "Negro".</li>
-                <li><strong>Elo del Blanco:</strong> Puntuación Elo del jugador Blanco. Si se deja en blanco, el valor predeterminado es "?".</li>
-                <li><strong>Elo del Negro:</strong> Puntuación Elo del jugador Negro. Si se deja en blanco, el valor predeterminado es "?".</li>
-                <li><strong>Evento, Sitio, Ronda:</strong> Se solicitan estos valores, utilizando los valores predeterminados (ver <a href="#modificacion-pgn">Modificación de la Información PGN Predeterminada</a>). Puede modificarlos o aceptar los valores predeterminados pulsando Enter.</li>
+                <li><strong>Nombre del Blanco:</strong> Nombre del jugador que conduce las piezas blancas. Si se deja en blanco, se usa el valor predeterminado. Los nombres se capitalizan automáticamente.</li>
+                <li><strong>Nombre del Negro:</strong> Nombre del jugador que conduce las piezas negras.</li>
+                <li><strong>Elo del Blanco y Negro:</strong> Puntuación Elo de los jugadores.</li>
+                <li><strong>Evento, Lugar, Ronda:</strong> Se solicitan estos valores, utilizando los valores predeterminados. Puede modificarlos o aceptar los valores predeterminados pulsando Enter.</li>
             </ul>
         </li>
-        <li><strong>Inicio de la partida:</strong> Pulse Enter para iniciar la partida.</li>
+        <li><strong>Inicio de la partida:</strong> Pulse cualquier tecla para iniciar la partida.</li>
     </ol>
 
     <h3 id="comandos-partida">Comandos Durante la Partida</h3>
-
     <p>Durante la partida, el reloj del jugador activo (inicialmente el Blanco) está en marcha. El prompt muestra:</p>
-
     <ul>
         <li>El número de la jugada (por ejemplo, <code>1.</code>).</li>
         <li>La última jugada registrada (si la hay) (por ejemplo, <code>e4</code>).</li>
         <li>Un prompt para introducir la siguiente jugada (por ejemplo, <code>1. e4 </code>).</li>
         <li>Si la partida está en pausa, las secciones anteriores se mostrarán entre corchetes (por ejemplo, <code>[1. e4] </code>).</li>
     </ul>
-
-    <p>Están disponibles los siguientes comandos, que *comienzan con un punto* (`.`):</p>
-
-   <table>
+    <p>Están disponibles los siguientes comandos, que <em>comienzan con un punto</em> (`.`):</p>
+    <table>
     <thead>
       <tr>
         <th>Comando</th>
@@ -278,7 +252,7 @@
         <td><code>.3</code></td>
         <td>Muestra ambos relojes.</td>
       </tr>
-        <tr>
+      <tr>
         <td><code>.4</code></td>
         <td>Compara los tiempos restantes e indica qué jugador está en ventaja (y por cuánto).</td>
       </tr>
@@ -300,23 +274,23 @@
       </tr>
       <tr>
         <td><code>.q</code></td>
-        <td>*Solo en pausa:* Deshace la última jugada (tanto en el tablero como en el PGN).</td>
+        <td><em>Solo en pausa:</em> Deshace la última jugada (tanto en el tablero como en el PGN). Se añade un comentario automático al PGN para indicar qué jugadas se anularon.</td>
       </tr>
       <tr>
         <td><code>.b+X</code></td>
-        <td>*Solo en pausa:* Añade <code>X</code> segundos al tiempo del Blanco. <code>X</code> debe ser un número (por ejemplo, <code>.b+5</code>, <code>.b+0.5</code>).</td>
+        <td><em>Solo en pausa:</em> Añade <code>X</code> segundos al tiempo del Blanco. <code>X</code> debe ser un número (por ejemplo, <code>.b+5</code>).</td>
       </tr>
       <tr>
         <td><code>.b-X</code></td>
-        <td>*Solo en pausa:* Resta <code>X</code> segundos al tiempo del Blanco.</td>
+        <td><em>Solo en pausa:</em> Resta <code>X</code> segundos al tiempo del Blanco.</td>
       </tr>
       <tr>
         <td><code>.n+X</code></td>
-        <td>*Solo en pausa:* Añade <code>X</code> segundos al tiempo del Negro.</td>
+        <td><em>Solo en pausa:</em> Añade <code>X</code> segundos al tiempo del Negro.</td>
       </tr>
       <tr>
         <td><code>.n-X</code></td>
-        <td>*Solo en pausa:* Resta <code>X</code> segundos al tiempo del Negro.</td>
+        <td><em>Solo en pausa:</em> Resta <code>X</code> segundos al tiempo del Negro.</td>
       </tr>
       <tr>
         <td><code>.s</code></td>
@@ -324,9 +298,9 @@
       </tr>
       <tr>
         <td><code>.c comentario</code></td>
-        <td>Añade un comentario a la jugada *anterior*.</td>
+        <td>Añade un comentario a la jugada <em>anterior</em>.</td>
       </tr>
-        <tr>
+      <tr>
         <td><code>.1-0</code></td>
         <td>Asigna la victoria al Blanco (1-0) y termina la partida.</td>
       </tr>
@@ -354,65 +328,63 @@
         <td><code>\[columna]</code></td>
         <td>Muestra la diagonal superior izquierda desde la base de la columna dada (por ejemplo, <code>\h</code> muestra la diagonal h1-a8).</td>
       </tr>
-        <tr>
+      <tr>
         <td><code>-[columna]</code></td>
         <td>Muestra las piezas en esa columna.</td>
       </tr>
-    <tr>
+      <tr>
         <td><code>-[fila]</code></td>
         <td>Muestra las piezas en esa fila.</td>
       </tr>
-        <tr>
+      <tr>
         <td><code>-[casilla]</code></td>
         <td>Muestra las piezas o los ataques en esa casilla.</td>
       </tr>
-    <tr>
+      <tr>
         <td><code>,[NombrePieza]</code></td>
         <td>Muestra la(s) posición(es) de la pieza indicada (por ejemplo, <code>,R</code> muestra las torres blancas, <code>,n</code> muestra los caballos negros).</td>
       </tr>
     </tbody>
   </table>
 
-    <p><strong>Introducción de Jugadas:</strong> Las jugadas deben introducirse en notación algebraica estándar (SAN). Ejemplos:</p>
-
+    <h4>Introducción de Jugadas y Anotaciones (NAGs)</h4>
+    <p>Las jugadas deben introducirse en notación algebraica estándar (SAN). Ejemplos:</p>
     <ul>
         <li><code>e4</code> (mueve el peón a e4)</li>
         <li><code>Nf3</code> (mueve el caballo a f3)</li>
         <li><code>O-O</code> (enroque corto)</li>
-        <li><code>O-O-O</code> (enroque largo)</li>
         <li><code>exd5</code> (el peón en e captura la pieza en d5)</li>
         <li><code>Bxf7+</code> (el alfil captura la pieza en f7, dando jaque)</li>
-        <li><code>Qe8#</code> (la dama se mueve a e8, dando jaque mate)</li>
         <li><code>a8=Q</code> (el peón en a7 se mueve a a8 y promociona a dama)</li>
-        <li><code>a8=Q+</code> (el peón en a7 se mueve a a8 y promociona a dama, dando jaque)</li>
+    </ul>
+
+    <p><strong>Añadir anotaciones (NAGs):</strong> Puede añadir símbolos de anotación directamente después de la jugada para calificarla. Estos símbolos se guardarán en el PGN.</p>
+    <ul>
+        <li><code>e4!</code> (jugada fuerte)</li>
+        <li><code>Nf3?</code> (jugada débil)</li>
+        <li><code>Qe8#!!</code> (jugada muy fuerte que da jaque mate)</li>
+        <li><code>Rxd5?!</code> (jugada dudosa)</li>
+        <li>También puede escribir <code>=</code> después de una jugada para indicar una propuesta de tablas (ej. <code>Nf6=</code>), que se añadirá como comentario en el PGN.</li>
     </ul>
 
     <p>Después de cada jugada introducida correctamente, la aplicación:</p>
-
     <ol>
-        <li>Muestra una descripción verbal de la jugada (por ejemplo, "el peón se mueve a e4").</li>
+        <li>Muestra una descripción verbal de la jugada.</li>
         <li>Añade el incremento (si lo hay) al tiempo del jugador.</li>
         <li>Pasa el turno al otro jugador.</li>
     </ol>
-    <p>Al final de la partida (ya sea por abandono, jaque mate, tablas, tiempo agotado o asignación manual del resultado), el PGN completo de la partida se guarda en un archivo. El nombre del archivo se compone de:</p>
-
+    <p>Al final de la partida, el PGN completo se guarda en un archivo y <strong>se copia automáticamente en el portapapeles</strong>. El nombre del archivo se compone de:</p>
     <p><code>NombreBlanco-NombreNegro-Resultado-FechaHora.pgn</code></p>
-
-    <p>Ejemplo: <code>Carlsen-Anand-1-0-20240315143000.pgn</code></p>
-  <p>Orologic le preguntará si desea analizar la partida recién jugada.</p>
+    <p>Orologic le preguntará si desea analizar la partida recién jugada.</p>
 
     <h2 id="analisis">Análisis PGN</h2>
 
     <h3 id="analisis-intro">Introducción al Análisis</h3>
-
-    <p>
-        El modo de análisis (comando <code>analizza</code>) le permite cargar y analizar partidas en formato PGN. Puede navegar entre las jugadas, añadir comentarios, evaluaciones, variantes y utilizar el motor de ajedrez configurado para obtener un análisis en profundidad.
-    </p>
-    <p>Al entrar en el modo de análisis, Orologic mostrará los encabezados de la partida y el número de jugadas. El PGN debe estar en el portapapeles. Si no hay un PGN, Orologic le pedirá que copie uno válido y luego pulse l para cargarlo.</p>
+    <p>El modo de análisis (comando <code>analiza</code>) le permite cargar y analizar partidas en formato PGN. Al entrar en este modo, Orologic intentará cargar un PGN desde el portapapeles. Si el portapapeles contiene <strong>múltiples partidas</strong>, se presentará un menú para que elija cuál cargar.</p>
+    <p>Una vez cargada, puede navegar entre las jugadas, y la aplicación <strong>leerá automáticamente los comentarios y las anotaciones (NAGs)</strong> existentes para cada jugada. Puede añadir sus propios comentarios, evaluaciones, variantes y utilizar el motor de ajedrez configurado para obtener un análisis en profundidad.</p>
 
     <h3 id="comandos-analisis">Comandos en Modo Análisis</h3>
-
-   <table>
+    <table>
     <thead>
       <tr>
         <th>Comando</th>
@@ -422,43 +394,37 @@
     <tbody>
       <tr><td><code>a</code></td><td>Ir al principio o al nodo padre (si está en una variante).</td></tr>
       <tr><td><code>s</code></td><td>Retroceder 1 jugada.</td></tr>
-      <tr><td><code>d</code></td><td>Avanzar 1 jugada y mostrar cualquier comentario.</td></tr>
+      <tr><td><code>d</code></td><td>Avanzar 1 jugada y mostrar automáticamente cualquier comentario/NAG.</td></tr>
       <tr><td><code>f</code></td><td>Ir al final o al nodo de la siguiente rama de la variante.</td></tr>
       <tr><td><code>g</code></td><td>Seleccionar el nodo de la variante anterior.</td></tr>
       <tr><td><code>h</code></td><td>Seleccionar el nodo de la variante siguiente.</td></tr>
       <tr><td><code>j</code></td><td>Lee los encabezados de la partida.</td></tr>
-      <tr><td><code>k</code></td><td>Ir a la jugada (introducir el número de la jugada).</td></tr>
-      <tr><td><code>l</code></td><td>Cargar el PGN desde el portapapeles.</td></tr>
-      <tr><td><code>z</code></td><td>Inserta la mejor línea (mejor secuencia de jugadas) como una variante en el PGN.</td></tr>
-      <tr><td><code>x</code></td><td>Inserta la mejor jugada (bestmove) en el PGN.</td></tr>
-      <tr><td><code>c</code></td><td>Solicita un comentario al usuario y lo añade.</td></tr>
-      <tr><td><code>v</code></td><td>Inserta la evaluación en centipeones en el PGN.</td></tr>
-      <tr><td><code>b</code></td><td>Muestra el comentario de nuevo.</td></tr>
-      <tr><td><code>n</code></td><td>Elimina el comentario (o permite elegirlo si hay más de uno).</td></tr>
-      <tr><td><code>q</code></td><td>Calcula y añade la mejor jugada al prompt.</td></tr>
-      <tr><td><code>w</code></td><td>Calcula y muestra la mejor línea, añadiendo también la mejor jugada al prompt.</td></tr>
-      <tr><td><code>e</code></td><td>Muestra las líneas de análisis y permite la inspección inteligente.</td></tr>
-      <tr><td><code>r</code></td><td>Calcula y añade la evaluación (en centipeones) al prompt.</td></tr>
-      <tr><td><code>t</code></td><td>Muestra los porcentajes de Victoria/Empate/Derrota en la posición actual.</td></tr>
+      <tr><td><code>k</code></td><td>Ir a una jugada específica (introduciendo el número de la jugada).</td></tr>
+      <tr><td><code>l</code></td><td>Cargar un PGN desde el portapapeles (soporta múltiples partidas).</td></tr>
+      <tr><td><code>z</code></td><td>Inserta la mejor línea del motor como una variante en el PGN.</td></tr>
+      <tr><td><code>x</code></td><td>Inserta la mejor jugada del motor (bestmove) como comentario en el PGN.</td></tr>
+      <tr><td><code>c</code></td><td>Solicita un comentario al usuario y lo añade a la jugada actual.</td></tr>
+      <tr><td><code>v</code></td><td>Inserta la evaluación del motor en centipeones como comentario en el PGN.</td></tr>
+      <tr><td><code>b</code></td><td><strong>Activa/desactiva la lectura automática</strong> de comentarios al navegar por las jugadas.</td></tr>
+      <tr><td><code>n</code></td><td>Elimina el comentario de la jugada actual.</td></tr>
+      <tr><td><code>q</code></td><td>Calcula y muestra la mejor jugada en formato descriptivo, añadiéndola también al prompt.</td></tr>
+      <tr><td><code>w</code></td><td>Calcula y muestra la mejor línea del motor en formato descriptivo, añadiendo también la mejor jugada al prompt.</td></tr>
+      <tr><td><code>e</code></td><td>Muestra las líneas de análisis del motor y permite la inspección inteligente.</td></tr>
+      <tr><td><code>r</code></td><td>Calcula y añade la evaluación (en centipeones) al prompt. La evaluación es <strong>absoluta</strong> (positiva para las blancas, negativa para las negras).</td></tr>
+      <tr><td><code>t</code></td><td>Muestra los porcentajes de Victoria/Tablas/Derrota en la posición actual, desde la perspectiva de las blancas.</td></tr>
       <tr><td><code>y</code></td><td>Añade el balance de material al prompt.</td></tr>
       <tr><td><code>u</code></td><td>Muestra el tablero.</td></tr>
       <tr><td><code>i</code></td><td>Establece los segundos de análisis para el motor.</td></tr>
       <tr><td><code>o</code></td><td>Establece el número de líneas de análisis (multipv) a mostrar.</td></tr>
       <tr><td><code>?</code></td><td>Muestra esta lista de comandos.</td></tr>
-      <tr><td><code>.</code></td><td>Sale del modo de análisis y guarda el PGN si es diferente del original.</td></tr>
+      <tr><td><code>.</code></td><td>Sale del modo de análisis. Si se han realizado cambios, pregunta si se desea guardar.</td></tr>
     </tbody>
   </table>
-
-  <p>
-      Al salir del modo de análisis, si se han realizado cambios, Orologic pedirá guardar el PGN comentado. Se propondrá un nombre para el nuevo archivo que también contendrá el sufijo "-comentado" seguido de la fecha y la hora, pero puede proporcionar un nuevo nombre de su elección.
-  </p>
+  <p>Al salir del modo de análisis, si se han realizado cambios, Orologic pedirá guardar el PGN comentado. Se propondrá un nombre para el nuevo archivo que contendrá el sufijo "-analizado" seguido de la fecha y la hora. El PGN final <strong>se copia automáticamente en el portapapeles</strong>.</p>
 
     <h3 id="inspeccion-inteligente">Inspección Inteligente de las Líneas de Análisis</h3>
-
-    <p>
-        Cuando se muestran las líneas de análisis (comando <code>e</code>), se pueden inspeccionar en modo "inteligente". Este modo le permite navegar dentro de una línea de análisis específica, jugada por jugada, mostrando la descripción verbal de cada jugada y la evaluación actualizada.
-    </p>
-        <p>Después de elegir la línea a analizar, los comandos disponibles son:</p>
+    <p>Cuando se muestran las líneas de análisis (comando <code>e</code>), se pueden inspeccionar en modo "inteligente". Este modo le permite navegar dentro de una línea de análisis específica, jugada por jugada, mostrando la descripción verbal de cada jugada y la evaluación actualizada.</p>
+    <p>Después de elegir la línea a analizar, los comandos disponibles son:</p>
     <table>
       <thead>
         <tr>
@@ -491,17 +457,13 @@
     </table>
 
     <h2 id="formato-hora">Formato de la Hora</h2>
-
-    <p>La hora, tanto para las fases del reloj como para las alarmas, debe introducirse en el formato <code>hh:mm:ss</code>:</p>
-
+    <p>La hora, para las fases del reloj, debe introducirse en el formato <code>hh:mm:ss</code>. Para las alarmas, en el formato <code>mm:ss</code>.</p>
     <ul>
         <li><code>hh</code>: Horas (dos dígitos, por ejemplo, <code>01</code>, <code>12</code>).</li>
         <li><code>mm</code>: Minutos (dos dígitos, por ejemplo, <code>05</code>, <code>59</code>).</li>
         <li><code>ss</code>: Segundos (dos dígitos, por ejemplo, <code>00</code>, <code>30</code>).</li>
     </ul>
-
     <p>Ejemplos:</p>
-
     <ul>
         <li><code>01:30:00</code> (1 hora, 30 minutos)</li>
         <li><code>00:05:00</code> (5 minutos)</li>
@@ -510,11 +472,12 @@
 
     <h2 id="creditos">Créditos y Agradecimientos</h2>
     <p>Orologic fue desarrollado por Gabriele Battaglia. Un agradecimiento especial a todos aquellos que contribuyeron con pruebas, sugerencias y apoyo durante el desarrollo de esta aplicación. En particular:</p>
-        <ul>
+    <ul>
         <li>Los amigos del grupo de WhatsApp, Scacchierando, por sus valiosos comentarios y por probar la aplicación en situaciones reales de juego.</li>
         <li>ChatGPT o3-mini-high, por la invaluable e irremplazable ayuda en la escritura del código.</li>
-	</ul>
-	<p>Si necesita ayuda, o desea proporcionar comentarios, no dude en ponerse en contacto conmigo por correo electrónico en: <a href="mailto:iz4apu@libero.it">iz4apu@libero.it</a></p>
+        <li>Y sobre todo el fantastico Google Gemini 2.5 Pro.</li>
+    </ul>
+    <p>Si necesita ayuda, o desea proporcionar comentarios, no dude en ponerse en contacto conmigo por correo electrónico en: <a href="mailto:iz4apu@libero.it">iz4apu@libero.it</a></p>
 
 </body>
 </html>
