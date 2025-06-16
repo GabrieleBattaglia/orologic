@@ -1,11 +1,11 @@
 # Data di concepimento: 14/02/2025 by Gabriele Battaglia & AIs
 import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine
 from dateutil.relativedelta import relativedelta
-from GBUtils import dgt,menu,Acusticator, key
+from GBUtils import dgt,menu,Acusticator, key, Donazione
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.16.13"
-RELEASE_DATE=datetime.datetime(2025,5,18,14,51)
+VERSION="3.17.0"
+RELEASE_DATE=datetime.datetime(2025,6,16,9,58)
 PROGRAMMER="Gabriele Battaglia & AIs"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -21,7 +21,8 @@ NAG_MAP = {
 	"!?": (5, "mossa dubbia"),
 	"?!": (6, "mossa dubbia"),
 }
-NAG_REVERSE_MAP = {v[0]: k for k, v in NAG_MAP.items()} # <-- AGGIUNGI QUESTA RIGA
+NAG_REVERSE_MAP = {v[0]: k for k, v in NAG_MAP.items()}
+L10N = {}
 ANNOTATION_DESC = {
 	"=": "proposta di patta",
 	"?": "mossa debole",
@@ -561,6 +562,85 @@ def EditEngineConfig():
 	InitEngine()
 	Acusticator(["a6", 0.5, 1, volume],kind=3, adsr=[.001,0,100,99.9])
 	return
+
+def EditLocalization():
+	"""
+	Crea un'interfaccia per permettere all'utente di personalizzare
+	le stringhe usate nel programma (localizzazione).
+	"""
+	print("\n--- Personalizzazione Lingua ---\n")
+	print("Per ogni voce, inserisci il nuovo testo o premi INVIO per mantenere il valore attuale.")
+	db = LoadDB()
+	# Usiamo una copia per le modifiche, per poi salvarla tutta in una volta
+	l10n_config = db.get("localization", get_default_localization())
+	# Definiamo le voci da personalizzare e i relativi prompt
+	# Struttura: [ (chiave_cat, chiave_voce, prompt_utente), ... ]
+	# Per voci complesse (dizionari), usiamo una tupla: (chiave_cat, chiave_voce, (chiave_sub, prompt_sub))
+	items_to_edit = [
+		("pieces", "pawn", ("name", "Nome per 'Pedone'")),
+		("pieces", "knight", ("name", "Nome per 'Cavallo'")),
+		("pieces", "bishop", ("name", "Nome per 'Alfiere'")),
+		("pieces", "rook", ("name", "Nome per 'Torre'")),
+		("pieces", "queen", ("name", "Nome per 'Donna'")),
+		("pieces", "king", ("name", "Nome per 'Re'")),
+		("columns", "a", "Nome per colonna 'a' (Ancona)"),
+		("columns", "b", "Nome per colonna 'b' (Bologna)"),
+		("columns", "c", "Nome per colonna 'c' (Como)"),
+		("columns", "d", "Nome per colonna 'd' (Domodossola)"),
+		("columns", "e", "Nome per colonna 'e' (Empoli)"),
+		("columns", "f", "Nome per colonna 'f' (Firenze)"),
+		("columns", "g", "Nome per colonna 'g' (Genova)"),
+		("columns", "h", "Nome per colonna 'h' (Hotel)"),
+		("adjectives", "white", ("m", "Aggettivo 'bianco' (maschile)")),
+		("adjectives", "white", ("f", "Aggettivo 'bianco' (femminile)")),
+		("adjectives", "black", ("m", "Aggettivo 'nero' (maschile)")),
+		("adjectives", "black", ("f", "Aggettivo 'nero' (femminile)")),
+		("moves", "capture", "Verbo per la cattura (es. 'prende')"),
+		("moves", "capture_on", "Preposizione per la casa di cattura (es. 'in')"),
+		("moves", "move_to", "Preposizione per la casa di destinazione (es. 'in')"),
+		("moves", "en_passant", "Testo per 'en passant'"),
+		("moves", "short_castle", "Testo per 'arrocco corto'"),
+		("moves", "long_castle", "Testo per 'arrocco lungo'"),
+		("moves", "promotes_to", "Testo per la promozione (es. 'e promuove a')"),
+		("moves", "check", "Testo per 'scacco'"),
+		("moves", "checkmate", "Testo per 'scacco matto!'")
+	]
+	# Logica per audio elegante
+	num_items = len(items_to_edit)
+	notes = ['c3', 'd3', 'e3', 'f3', 'g3', 'a3', 'b3', 'c4', 'd4', 'e4', 'f4', 'g4', 'a4', 'b4', 'c5', 'd5', 'e5', 'f5', 'g5', 'a5', 'b5', 'c6', 'd6', 'e6', 'f6', 'g6', 'a6', 'b6', 'c7']
+	for i, item in enumerate(items_to_edit):
+		cat, key, details = item
+		pitch = notes[i % len(notes)]
+		pan = -1 + (2 * i / (num_items -1)) if num_items > 1 else 0 # Da -1 (sx) a 1 (dx)
+		if isinstance(details, tuple): # Voce complessa (es. pezzi, aggettivi)
+			sub_key, prompt_text = details
+			current_val = l10n_config[cat][key][sub_key]
+			new_val = dgt(f"{prompt_text} [{current_val}]: ", kind="s", default=current_val)
+			l10n_config[cat][key][sub_key] = new_val.strip()
+			# Se abbiamo appena modificato un pezzo, chiediamo il genere
+			if cat == "pieces":
+				current_gender = l10n_config[cat][key]['gender']
+				gender_prompt = f"  Genere per '{new_val}' (m/f/n) [{current_gender}]: "
+				while True:
+					new_gender = dgt(gender_prompt, kind="s", default=current_gender).lower()
+					if new_gender in ['m', 'f', 'n']:
+						l10n_config[cat][key]['gender'] = new_gender
+						break
+					else:
+						print("Input non valido. Inserisci 'm' (maschile), 'f' (femminile) o 'n' (neutro).")
+		else: # Voce semplice (es. colonne, mosse)
+			prompt_text = details
+			current_val = l10n_config[cat][key]
+			new_val = dgt(f"{prompt_text} [{current_val}]: ", kind="s", default=current_val)
+			l10n_config[cat][key] = new_val.strip()
+		Acusticator([pitch, 0.08, pan, volume], kind=1, adsr=[2, 5, 80, 10])
+	Acusticator(['c7', 0.05, 0, volume,'e7', 0.05, 0, volume,'g7', 0.15, 0, volume], kind=1, adsr=[2, 5, 90, 5])
+	# Salvataggio finale
+	db["localization"] = l10n_config
+	SaveDB(db)
+	LoadLocalization() # Ricarica le impostazioni per renderle subito attive
+	print("\nImpostazioni di lingua salvate con successo!")
+
 def AnalyzeGame(pgn_game):
 	"""
 	Funzione di analisi della partita (PGN).
@@ -1240,6 +1320,7 @@ def report_white_time(game_state):
 	perc_white = (elapsed_white / initial_white * 100) if initial_white > 0 else 0
 	print("Tempo bianco: " + FormatTime(game_state.white_remaining) + f" ({perc_white:.0f}%)")
 	return
+
 def report_black_time(game_state):
 	initial_black = game_state.clock_config["phases"][game_state.black_phase]["black_time"]
 	elapsed_black = initial_black - game_state.black_remaining
@@ -1248,6 +1329,66 @@ def report_black_time(game_state):
 	perc_black = (elapsed_black / initial_black * 100) if initial_black > 0 else 0
 	print("Tempo nero: " + FormatTime(game_state.black_remaining) + f" ({perc_black:.0f}%)")
 	return
+
+def save_text_summary(game_state, descriptive_moves, eco_entry):
+	"""
+	Genera e salva un riepilogo testuale della partita.
+	"""
+	headers = game_state.pgn_game.headers
+	# 1. Intestazioni (Headers) leggibili
+	header_text = f"Riepilogo Partita di Orologic\n"
+	header_text += "--------------------------------\n"
+	header_text += f"Evento: {headers.get('Event', 'N/D')}\n"
+	header_text += f"Sede: {headers.get('Site', 'N/D')}\n"
+	header_text += f"Data: {headers.get('Date', 'N/D')}\n"
+	header_text += f"Round: {headers.get('Round', 'N/D')}\n"
+	header_text += f"Bianco: {headers.get('White', 'N/D')} ({headers.get('WhiteElo', 'N/A')})\n"
+	header_text += f"Nero: {headers.get('Black', 'N/D')} ({headers.get('BlackElo', 'N/A')})\n"
+	header_text += f"Controllo del Tempo: {headers.get('TimeControl', 'N/D')}\n"
+	# 2. Informazioni sull'apertura
+	if eco_entry:
+		opening_text = f"Apertura: {eco_entry.get('eco', '')} - {eco_entry.get('opening', '')}"
+		if eco_entry.get('variation'):
+			opening_text += f" ({eco_entry.get('variation')})\n"
+		else:
+			opening_text += "\n"
+	else:
+		opening_text = "Apertura: non rilevata\n"
+	header_text += opening_text
+	header_text += "--------------------------------\n\n"
+	# 3. Lista delle mosse
+	move_list_text = "Lista Mosse:\n"
+	move_number = 1
+	i = 0
+	while i < len(descriptive_moves):
+		white_move_desc = descriptive_moves[i]
+		if i + 1 < len(descriptive_moves):
+			black_move_desc = descriptive_moves[i+1]
+			move_list_text += f"{move_number}. {white_move_desc}, {black_move_desc}\n"
+			i += 2
+		else:
+			move_list_text += f"{move_number}. {white_move_desc}\n"
+			i += 1
+		move_number += 1
+	# 4. Risultato e data di generazione
+	footer_text = f"\nRisultato finale: {headers.get('Result', '*')}\n"
+	footer_text += "--------------------------------\n"
+	footer_text += f"File generato il: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n"
+	footer_text += f"Report generato da Orologic V{VERSION} - {PROGRAMMER}\n"
+	# Combinazione di tutte le parti
+	full_text = header_text + move_list_text + footer_text
+	# Creazione del nome del file (riutilizzando la logica del PGN)
+	base_filename = f"{headers.get('White', 'Bianco')}-{headers.get('Black', 'Nero')}-{headers.get('Result', '*')}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+	filename = sanitize_filename(base_filename) + ".txt"
+	# Salvataggio su file
+	try:
+		with open(filename, "w", encoding="utf-8") as f:
+			f.write(full_text)
+		print(f"Riepilogo partita salvato come {filename}.")
+	except Exception as e:
+		print(f"Errore durante il salvataggio del riepilogo testuale: {e}")
+		Acusticator(["a3", 1, 0, volume], kind=2, adsr=[0, 0, 100, 100])
+
 def format_pgn_comments(pgn_str):
 	def repl(match):
 		comment_text = match.group(1).strip()
@@ -1471,9 +1612,67 @@ def LoadDB():
 		return {"clocks":[],"default_pgn":{}}
 	with open(DB_FILE,"r") as f:
 		return json.load(f)
+
 def SaveDB(db):
 	with open(DB_FILE,"w") as f:
 		json.dump(db,f,indent="\t")
+
+def get_default_localization():
+	"""
+	Restituisce un dizionario con tutte le stringhe di default in italiano.
+	"""
+	return {
+		"pieces": {
+			"pawn": {"name": "pedone", "gender": "m"},
+			"knight": {"name": "cavallo", "gender": "m"},
+			"bishop": {"name": "alfiere", "gender": "m"},
+			"rook": {"name": "torre", "gender": "f"},
+			"queen": {"name": "donna", "gender": "f"},
+			"king": {"name": "Re", "gender": "m"}
+		},
+		"columns": {
+			"a": "Ancona", "b": "Bologna", "c": "Como", "d": "Domodossola",
+			"e": "Empoli", "f": "Firenze", "g": "Genova", "h": "Hotel"
+		},
+		"adjectives": {
+			"white": {"m": "bianco", "f": "bianca"},
+			"black": {"m": "nero", "f": "nera"}
+		},
+		"moves": {
+			"capture": "prende",
+			"capture_on": "in",
+			"move_to": "in",
+			"en_passant": "en passant",
+			"short_castle": "arrocco corto",
+			"long_castle": "arrocco lungo",
+			"promotes_to": "e promuove a",
+			"check": "scacco",
+			"checkmate": "scacco matto!"
+		},
+		"annotations": {
+			"=": "proposta di patta",
+			"?": "mossa debole",
+			"!": "mossa forte",
+			"??": "mossa pessima",
+			"!!": "mossa geniale!",
+			"?!": "mossa dubbia",
+			"!?": "mossa dubbia"
+		}
+	}
+
+def LoadLocalization():
+	"""
+	Carica le impostazioni di localizzazione dal DB.
+	Se non esistono, crea i default italiani e li salva.
+	"""
+	global L10N
+	db = LoadDB()
+	if "localization" not in db:
+		print("Prima esecuzione, imposto la localizzazione italiana di default.")
+		db["localization"] = get_default_localization()
+		SaveDB(db)
+		L10N = db["localization"]
+
 def LoadEcoDatabaseWithFEN(filename="eco.db"):
 	"""
 	Carica il file ECO, calcola il FEN finale per ogni linea
@@ -1888,6 +2087,7 @@ class GameState:
 		self.active_color="white"
 		self.paused=False
 		self.game_over=False
+		self.descriptive_move_history = []
 		self.move_history=[]
 		self.pgn_game = chess.pgn.Game.from_board(CustomBoard())
 		self.pgn_game.headers["Event"]="Orologic Game"
@@ -2207,8 +2407,7 @@ def StartGame(clock_config):
 				board_copy=game_state.board.copy()
 				# --- MODIFICA: Passa l'annotazione a DescribeMove ---
 				description=DescribeMove(move, board_copy, annotation=annotation_suffix)
-				# --- FINE MODIFICA ---
-
+				game_state.descriptive_move_history.append(description)
 				Acusticator([1000.0, 0.01, 0, volume], kind=1, adsr=[0, 0, 100, 0])
 				if game_state.active_color=="white":
 					print(game_state.white_player+": "+description)
@@ -2356,6 +2555,7 @@ def StartGame(clock_config):
 	with open(filename, "w", encoding="utf-8") as f:
 		f.write(pgn_str)
 	print("PGN salvato come "+filename+".")
+	save_text_summary(game_state, game_state.descriptive_move_history, last_valid_eco_entry)
 	try:
 		pyperclip.copy(pgn_str)
 		print("PGN copiato negli appunti.")
@@ -2430,6 +2630,7 @@ def Main():
 	SaveDB(db)
 	SchermataIniziale()
 	InitEngine()
+	LoadLocalization()
 	while True:
 		scelta=menu(MENU_CHOICES, show=True, keyslist=True, full_keyslist=False)
 		if scelta == "analizza":
@@ -2506,4 +2707,5 @@ if __name__=="__main__":
 	final_db = LoadDB()
 	final_launch_count = final_db.get("launch_count", "sconosciuto") # Legge il contatore salvato	
 	print(f"Arrivederci da Orologic {VERSION}.\nQuesta era la nostra {final_launch_count}a volta e ci siamo divertiti assieme per: {result}")
+	Donazione()
 	sys.exit(0)
