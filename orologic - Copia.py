@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key, Donazione
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.18.0"
-RELEASE_DATE=datetime.datetime(2025,6,16,14,48)
+VERSION="3.17.0"
+RELEASE_DATE=datetime.datetime(2025,6,16,9,58)
 PROGRAMMER="Gabriele Battaglia & AIs"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -23,6 +23,15 @@ NAG_MAP = {
 }
 NAG_REVERSE_MAP = {v[0]: k for k, v in NAG_MAP.items()}
 L10N = {}
+ANNOTATION_DESC = {
+	"=": "proposta di patta",
+	"?": "mossa debole",
+	"!": "mossa forte",
+	"??": "mossa pessima",
+	"!!": "mossa geniale!",
+	"?!": "mossa dubbia",
+	"!?": "mossa dubbia"
+}
 # Pattern Regex per estrarre il suffisso di annotazione (1 o 2 caratteri !?=) alla fine della stringa.
 # Il lookbehind (?<!=.) evita di catturare l'uguale della promozione (es. non matcha '=Q').
 ANNOTATION_SUFFIX_PATTERN = re.compile(r"([!?=]{1,2}$)(?<!=.)")
@@ -101,6 +110,16 @@ MENU_CHOICES={
 	"volume":"Consente la regolazione del volume degli effetti audio",
 	".":"Esci dall'applicazione"}
 FILE_NAMES={0:"ancona",1:"bologna",2:"como",3:"domodossola",4:"empoli",5:"firenze",6:"genova",7:"hotel"}
+LETTER_FILE_MAP={chr(ord("a")+i):FILE_NAMES.get(i,chr(ord("a")+i)) for i in range(8)}
+PIECE_NAMES={chess.PAWN:"pedone",chess.KNIGHT:"cavallo",chess.BISHOP:"alfiere",chess.ROOK:"torre",chess.QUEEN:"donna",chess.KING:"Re"}
+PIECE_GENDER = {
+	chess.PAWN: "m",    # pedone
+	chess.KNIGHT: "m",  # cavallo
+	chess.BISHOP: "m",  # alfiere
+	chess.ROOK: "f",    # torre
+	chess.QUEEN: "f",   # donna
+	chess.KING: "m"     # re
+}
 #qf
 def verbose_legal_moves_for_san(board,san_str):
 	if san_str in ["O-O","0-0","O-O-O","0-0-0"]:
@@ -1145,26 +1164,15 @@ def AnalyzeGame(pgn_game):
 	print("Uscita dalla modalità analisi. Ritorno al menù principale.")
 
 def get_color_adjective(piece_color, gender):
-	# NUOVA LOGICA: Cerca le forme maschili/femminili degli aggettivi in L10N
-	white_adj = L10N['adjectives']['white']
-	black_adj = L10N['adjectives']['black']
-	
-	if piece_color == chess.WHITE:
-		# Se il genere è 'f', usa la forma femminile, altrimenti usa la maschile (anche per neutro 'n')
-		return white_adj.get('f') if gender == 'f' else white_adj.get('m')
+	if gender == "m":
+		return "bianco" if piece_color == chess.WHITE else "nero"
 	else:
-		return black_adj.get('f') if gender == 'f' else black_adj.get('m')
-
+		return "bianca" if piece_color == chess.WHITE else "nera"
 def extended_piece_description(piece):
-	# NUOVA LOGICA: Cerca il nome del pezzo e il suo genere in L10N
-	piece_type_key = chess.PIECE_NAMES[piece.piece_type].lower() # es. 'pawn', 'knight'
-	piece_info = L10N['pieces'][piece_type_key]
-	piece_name = piece_info['name'].capitalize()
-	piece_gender = piece_info['gender']
-	
-	color_adj = get_color_adjective(piece.color, piece_gender)
+	piece_name = PIECE_NAMES.get(piece.piece_type, "pezzo").capitalize()
+	gender = PIECE_GENDER.get(piece.piece_type, "m")
+	color_adj = get_color_adjective(piece.color, gender)
 	return f"{piece_name} {color_adj}"
-
 def read_diagonal(game_state, base_column, direction_right):
 	"""
 	Legge la diagonale a partire dalla casa sulla traversa 1 della colonna base.
@@ -1179,15 +1187,13 @@ def read_diagonal(game_state, base_column, direction_right):
 	file_index = ord(base_column) - ord("a")
 	rank_index = 0  # partiamo da traversa 1 (indice 0)
 	report = []
-	# NUOVA LOGICA
-	base_descr = f"{L10N['columns'].get(base_column, base_column)} 1"
+	base_descr = f"{LETTER_FILE_MAP.get(base_column, base_column)} 1"
 	while 0 <= file_index < 8 and 0 <= rank_index < 8:
 		square = chess.square(file_index, rank_index)
 		piece = game_state.board.piece_at(square)
 		if piece:
 			current_file = chr(ord("a") + file_index)
-			# NUOVA LOGICA
-			descriptive_file = L10N['columns'].get(current_file, current_file)
+			descriptive_file = LETTER_FILE_MAP.get(current_file, current_file)
 			report.append(f"{descriptive_file} {rank_index+1}: {extended_piece_description(piece)}")
 		rank_index += 1
 		file_index = file_index + 1 if direction_right else file_index - 1
@@ -1196,8 +1202,8 @@ def read_diagonal(game_state, base_column, direction_right):
 		print(f"Diagonale da {base_descr} in direzione {dir_str}: " + ", ".join(report))
 	else:
 		print(f"Diagonale da {base_descr} in direzione {dir_str} non contiene pezzi.")
-
 def read_rank(game_state, rank_number):
+	# Ottiene l'insieme delle case della traversa (rank_number: 1-8)
 	try:
 		rank_bb = getattr(chess, f"BB_RANK_{rank_number}")
 	except AttributeError:
@@ -1210,15 +1216,15 @@ def read_rank(game_state, rank_number):
 		if piece:
 			file_index = chess.square_file(square)
 			file_letter = chr(ord("a") + file_index)
-			# NUOVA LOGICA
-			descriptive_file = L10N['columns'].get(file_letter, file_letter)
+			descriptive_file = LETTER_FILE_MAP.get(file_letter, file_letter)
+			# Usa la funzione helper per il pezzo
 			report.append(f"{descriptive_file} {rank_number}: {extended_piece_description(piece)}")
 	if report:
 		print(f"Traversa {rank_number}: " + ", ".join(report))
 	else:
 		print(f"La traversa {rank_number} è vuota.")
-
 def read_file(game_state, file_letter):
+	# file_letter deve essere una lettera da 'a' ad 'h'
 	file_letter = file_letter.lower()
 	if file_letter not in "abcdefgh":
 		print("Colonna non valida.")
@@ -1235,44 +1241,38 @@ def read_file(game_state, file_letter):
 		if piece:
 			rank = chess.square_rank(square) + 1
 			file_index = chess.square_file(square)
-			# NUOVA LOGICA
-			file_letter_descr = L10N['columns'].get(chr(ord("a") + file_index), file_letter)
+			file_letter_descr = LETTER_FILE_MAP.get(chr(ord("a") + file_index), file_letter)
 			report.append(f"{file_letter_descr} {rank}: {extended_piece_description(piece)}")
-	# NUOVA LOGICA
-	col_name = L10N['columns'].get(file_letter, file_letter)
 	if report:
-		print(f"Colonna {col_name}: " + ", ".join(report))
+		print(f"Colonna {LETTER_FILE_MAP.get(file_letter, file_letter)}: " + ", ".join(report))
 	else:
-		print(f"La colonna {col_name} è vuota.")
-
+		print(f"La colonna {LETTER_FILE_MAP.get(file_letter, file_letter)} è vuota.")
 def read_square(game_state, square_str):
 	try:
 		square = chess.parse_square(square_str)
 	except Exception as e:
 		print("Casa non valida.")
 		return
+	# Calcola il colore della casa: (file+rank) pari -> scura, altrimenti chiara
 	if (chess.square_file(square) + chess.square_rank(square)) % 2 == 0:
-		color_descr = "scura" # Questa stringa potrebbe essere localizzata, ma per ora la lasciamo così.
+		color_descr = "scura"
 	else:
 		color_descr = "chiara"
 	piece = game_state.board.piece_at(square)
 	if piece:
 		base_msg = f"La casa {square_str.upper()} è {color_descr} e contiene {extended_piece_description(piece)}."
+		# Calcola difensori e attaccanti per la casa occupata
 		defenders = game_state.board.attackers(piece.color, square)
 		attackers = game_state.board.attackers(not piece.color, square)
 		info_parts = []
 		if defenders:
 			count = len(defenders)
 			word = "pezzo" if count == 1 else "pezzi"
-			# NUOVA LOGICA
-			color_adj = get_color_adjective(piece.color, 'm') # Genere maschile per 'pezzi'
-			info_parts.append(f"difesa da {count} {word} {color_adj}i") # Aggiunge la 'i' del plurale
+			info_parts.append(f"difesa da {count} {word} { 'bianchi' if piece.color == chess.WHITE else 'neri' }")
 		if attackers:
 			count = len(attackers)
 			word = "pezzo" if count == 1 else "pezzi"
-			# NUOVA LOGICA
-			color_adj = get_color_adjective(not piece.color, 'm')
-			info_parts.append(f"attaccata da {count} {word} {color_adj}i")
+			info_parts.append(f"attaccata da {count} {word} { 'neri' if piece.color == chess.WHITE else 'bianchi' }")
 		if info_parts:
 			base_msg += " " + " e ".join(info_parts) + "."
 		print(base_msg)
@@ -1284,46 +1284,35 @@ def read_square(game_state, square_str):
 		if white_attackers:
 			count = len(white_attackers)
 			word = "pezzo" if count == 1 else "pezzi"
-			# NUOVA LOGICA
-			color_adj = L10N['adjectives']['white']['m']
-			info_parts.append(f"attaccata da {count} {word} {color_adj}i")
+			info_parts.append(f"attaccata da {count} {word} bianchi")
 		if black_attackers:
 			count = len(black_attackers)
 			word = "pezzo" if count == 1 else "pezzi"
-			# NUOVA LOGICA
-			color_adj = L10N['adjectives']['black']['m']
-			info_parts.append(f"attaccata da {count} {word} {color_adj}i")
+			info_parts.append(f"attaccata da {count} {word} neri")
 		if info_parts:
 			base_msg += " " + " e ".join(info_parts) + "."
 		print(base_msg)
-
 def report_piece_positions(game_state, piece_symbol):
 	try:
 		piece = chess.Piece.from_symbol(piece_symbol)
 	except Exception as e:
 		print("Non riconosciuto: inserisci R N B Q K P, r n b q k p")
 		return
-
-	# NUOVA LOGICA: Usa L10N per i nomi dei pezzi e degli aggettivi
-	piece_type_key = chess.PIECE_SYMBOLS[piece.piece_type].lower()
-	full_name = L10N['pieces'][piece_type_key]['name']
-	gender = L10N['pieces'][piece_type_key]['gender']
-	color_string = get_color_adjective(piece.color, gender)
-	
+	color_string = "bianco" if piece.color == chess.WHITE else "nero"
+	full_name = PIECE_NAMES.get(piece.piece_type, "pezzo")
 	squares = game_state.board.pieces(piece.piece_type, piece.color)
 	positions = []
 	for square in squares:
+		# Ottieni file e traversa
 		file_index = chess.square_file(square)
 		rank = chess.square_rank(square) + 1
 		file_letter = chr(ord("a") + file_index)
-		# NUOVA LOGICA: Usa L10N per i nomi delle colonne
-		descriptive_file = L10N['columns'].get(file_letter, file_letter)
+		descriptive_file = LETTER_FILE_MAP.get(file_letter, file_letter)
 		positions.append(f"{descriptive_file} {rank}")
 	if positions:
-		print(f"{color_string.capitalize()}: {full_name} in: " + ", ".join(positions))
+		print(f"{color_string}: {full_name} in: " + ", ".join(positions))
 	else:
 		print(f"Nessun {full_name} {color_string} trovato.")
-
 def report_white_time(game_state):
 	initial_white = game_state.clock_config["phases"][game_state.white_phase]["white_time"]
 	elapsed_white = initial_white - game_state.white_remaining
@@ -1442,15 +1431,12 @@ def parse_mmss_to_seconds(time_str):
 	except Exception as e:
 		print("Formato orario non valido. Atteso mm:ss. Errore:", e)
 		return 0
-
-def DescribeMove(move, board, annotation=None):
-	# NUOVA LOGICA: Usa L10N per le stringhe delle mosse speciali
+def DescribeMove(move, board, annotation=None): # Aggiunto parametro annotation
 	if board.is_castling(move):
-		base_descr = L10N['moves']['short_castle'] if chess.square_file(move.to_square) > chess.square_file(move.from_square) else L10N['moves']['long_castle']
+		base_descr = "arrocco corto" if chess.square_file(move.to_square) > chess.square_file(move.from_square) else "arrocco lungo"
 	else:
 		san_base = ""
 		try:
-			# La logica per ricavare il SAN base rimane invariata
 			uci_move = move.uci()
 			piece_moved = board.piece_at(move.from_square)
 			is_capture = board.is_capture(move) or board.is_en_passant(move)
@@ -1461,7 +1447,7 @@ def DescribeMove(move, board, annotation=None):
 			from_sq_str = chess.square_name(move.from_square)
 			to_sq_str = chess.square_name(move.to_square)
 			disambiguation = ""
-			if piece_symbol:
+			if piece_symbol: # Solo per pezzi, non pedoni
 				potential_origins = []
 				for legal_move in board.legal_moves:
 					lm_piece = board.piece_at(legal_move.from_square)
@@ -1474,41 +1460,41 @@ def DescribeMove(move, board, annotation=None):
 							file_disamb_needed = True
 							break
 					if not file_disamb_needed:
-						disambiguation = from_sq_str[0]
+						disambiguation = from_sq_str[0] # Usa solo il file
 					else:
+						# Controlla se il rank è sufficiente
 						rank_disamb_needed = False
 						for sq in potential_origins:
 							if sq != move.from_square and chess.square_rank(sq) == chess.square_rank(move.from_square):
 								rank_disamb_needed = True
 								break
 						if not rank_disamb_needed:
-							disambiguation = from_sq_str[1]
+							disambiguation = from_sq_str[1] # Usa solo il rank
 						else:
-							disambiguation = from_sq_str
+							disambiguation = from_sq_str # Usa file e rank
 			promo_str = ""
 			if is_promo:
 				promo_piece_symbol = chess.piece_symbol(move.promotion).upper()
 				promo_str = f"={promo_piece_symbol}"
 			capture_char = "x" if is_capture else ""
-			if piece_symbol:
+			if piece_symbol: # Pezzi
 				san_base = f"{piece_symbol}{disambiguation}{capture_char}{to_sq_str}{promo_str}"
-			else:
+			else: # Pedoni (la disambiguazione è implicita nel file se cattura)
 				if is_capture:
 					san_base = f"{from_sq_str[0]}{capture_char}{to_sq_str}{promo_str}"
 				else:
-					san_base = f"{to_sq_str}{promo_str}"
+					san_base = f"{to_sq_str}{promo_str}" # Solo destinazione e promozione
 		except Exception as e:
 			try:
 				san_base = board.san(move)
-				san_base = san_base.replace("!","").replace("?","")
+				san_base = san_base.replace("!","").replace("?","") # Rimuove solo ! e ? base
 			except Exception:
+				# Ultimo fallback: descrizione basata su UCI
 				san_base = f"Mossa da {chess.square_name(move.from_square)} a {chess.square_name(move.to_square)}"
-		
-		# La logica di parsing del SAN rimane la stessa
 		pattern = re.compile(r'^([RNBQK])?([a-h1-8]{1,2})?(x)?([a-h][1-8])(=([RNBQ]))?$')
 		pawn_pattern = re.compile(r'^([a-h])?(x)?([a-h][1-8])(=([RNBQ]))?$')
 		m = pattern.match(san_base)
-		if m and m.group(1):
+		if m and m.group(1): # Match pezzo
 			piece_letter = m.group(1)
 			disamb = m.group(2) or ""
 			capture = m.group(3)
@@ -1516,70 +1502,61 @@ def DescribeMove(move, board, annotation=None):
 			promo_letter = m.group(6)
 			piece_type = chess.PIECE_SYMBOLS.index(piece_letter.lower())
 		else:
-			m = pawn_pattern.match(san_base)
+			m = pawn_pattern.match(san_base) # Prova match pedone
 			if m:
-				piece_letter = ""
+				piece_letter = "" # Pedone
+				# Disambiguazione per pedone è solo il file di partenza in caso di cattura
 				disamb = m.group(1) or ""
 				capture = m.group(2)
 				dest = m.group(3)
 				promo_letter = m.group(5)
 				piece_type = chess.PAWN
 			else:
-				base_descr = san_base
-				piece_type = None
-
-		if piece_type is not None:
-			# NUOVA LOGICA: Costruzione della descrizione usando L10N
-			piece_type_key = chess.PIECE_NAMES[piece_type].lower()
-			piece_name = L10N['pieces'][piece_type_key]['name']
+				base_descr = san_base # Usa la stringa fallback
+				piece_type = None # Tipo sconosciuto
+		if piece_type is not None: # Se il parsing ha funzionato
+			piece_name = PIECE_NAMES.get(piece_type, "pezzo").lower()
 			descr = piece_name
 			if disamb:
 				if piece_type == chess.PAWN:
-					descr += f" {L10N['columns'].get(disamb, disamb)}"
-				else:
-					parts = [L10N['columns'].get(ch, ch) if ch.isalpha() else ch for ch in disamb]
-					descr += " di " + "".join(parts) # "di" potrebbe essere localizzato, ma è un caso più complesso
+					descr += f" {LETTER_FILE_MAP.get(disamb, disamb)}"
+				else: # Per gli altri pezzi
+					parts = [LETTER_FILE_MAP.get(ch, ch) if ch.isalpha() else ch for ch in disamb]
+					descr += " di " + "".join(parts)
 			if capture:
-				descr += f" {L10N['moves']['capture']}"
+				descr += " prende"
 				captured_piece = None
 				if board.is_en_passant(move):
-					ep_square = move.to_square + (-8 if board.turn == chess.WHITE else 8)
+					ep_square = move.to_square + (-8 if board.turn == chess.WHITE else 8) # Offset corretto per en passant
 					captured_piece = board.piece_at(ep_square)
-					descr += f" {L10N['moves']['en_passant']}"
+					descr += " en passant"
 				else:
 					captured_piece = board.piece_at(move.to_square)
 				if captured_piece and not board.is_en_passant(move):
-					captured_type_key = chess.PIECE_NAMES[captured_piece.piece_type].lower()
-					captured_name = L10N['pieces'][captured_type_key]['name']
-					descr += f" {captured_name}"
-				dest_file_info = dest[0]
+					descr += " " + PIECE_NAMES.get(captured_piece.piece_type, "pezzo").lower()
+				dest_file_info = dest[0] 
 				dest_rank_info = dest[1]
-				dest_name_info = L10N['columns'].get(dest_file_info, dest_file_info)
-				descr += f" {L10N['moves']['capture_on']} {dest_name_info}{dest_rank_info}"
+				dest_name_info = LETTER_FILE_MAP.get(dest_file_info, dest_file_info)
+				descr += " in " + dest_name_info + " " + dest_rank_info
 			else:
 				dest_file = dest[0]
 				dest_rank = dest[1]
-				dest_name = L10N['columns'].get(dest_file, dest_file)
-				descr += f" {L10N['moves']['move_to']} {dest_name}{dest_rank}"
+				dest_name = LETTER_FILE_MAP.get(dest_file, dest_file)
+				descr += " in " + dest_name + " " + dest_rank
 			if promo_letter:
 				promo_type = chess.PIECE_SYMBOLS.index(promo_letter.lower())
-				promo_type_key = chess.PIECE_NAMES[promo_type].lower()
-				promo_name = L10N['pieces'][promo_type_key]['name']
-				descr += f" {L10N['moves']['promotes_to']} {promo_name}"
-			base_descr = descr
-	
+				promo_name = PIECE_NAMES.get(promo_type, "pezzo").lower()
+				descr += " e promuove a " + promo_name
+			base_descr = descr # Salva la descrizione base
 	board_after_move = board.copy()
 	board_after_move.push(move)
 	final_descr = base_descr
 	if board_after_move.is_checkmate():
-		final_descr += f" {L10N['moves']['checkmate']}"
+		final_descr += " scacco matto!"
 	elif board_after_move.is_check():
-		final_descr += f" {L10N['moves']['check']}"
-	
-	# NUOVA LOGICA: Usa L10N per le annotazioni
-	if annotation and annotation in L10N['annotations']:
-		final_descr += f" ({L10N['annotations'][annotation]})"
-		
+		final_descr += " scacco"
+	if annotation and annotation in ANNOTATION_DESC:
+		final_descr += f" ({ANNOTATION_DESC[annotation]})"
 	return final_descr
 
 def GenerateMoveSummary(game_state):
