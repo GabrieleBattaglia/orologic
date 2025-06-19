@@ -1,11 +1,15 @@
-TodoList e ChangeLog.
-54. Nuova funzione da studiare e pianificare attentamente. In analisi, sia da menu principale che dopo arbitraggio, si sceglie la modalità già presente o quella automatica. In quest'ultima, mossa dopo mossa, la partita viene analizzata dal motore e si crea un txt (o pgn?) con commenti autmatici e valutazioni.
-56. Nel json salvare stringhe personalizzate per spelling colonne arrocchi, nome pezzi.
-59.
+TodoList & ChangeLog.
+TodoList:
+	54. Nuova funzione da studiare e pianificare attentamente. In analisi, sia da menu principale che dopo arbitraggio, si sceglie la modalità già presente o quella automatica. In quest'ultima, mossa dopo mossa, la partita viene analizzata dal motore e si crea un txt (o pgn?) con commenti autmatici e valutazioni.
+	59.
 
 ChangeLog:
-3.17.0
+3.20.1
+	+ Aggiunta la gestione delle partite Fisher Random 960
+	+ Riscritta la funzione che descrive una casa, e.g. -d3, ora molto più descrittiva ed utile.
+	+ Introdotta la possibilità di personalizzare nomi di pezzi, colonne ed alcune altre parole che formano la descrizione verbosa delle mosse
 	+ Aggiunto il salvataggio automatico di un riepilogo della partita arbitrata in formato testo
+	= La richiesta di analisi post-arbitraggio avviene solo se sono state giocate almeno 4 mosse complete, 8 semi-mosse
 3.16.13
 	Modificato il comando "b" in fase analisi. Ora attiva/disattiva la lettura automatica dei commenti mentre si scorrono le mosse. Un segnale acustico indica la presenza di un commento, così come un segno "-" appare dopo la notazione SAN
 	Eliminate ancune visualizzazioni utili per il debug
