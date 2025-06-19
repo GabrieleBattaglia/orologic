@@ -1,11 +1,11 @@
-# Data di concepimento: 14/02/2025 by Gabriele Battaglia & AIs
-import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine
+# OROLOGIC (IT) - Data di concepimento: 14/02/2025 by Gabriele Battaglia & AIs
+import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine, random
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key, Donazione
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.18.0"
-RELEASE_DATE=datetime.datetime(2025,6,16,14,48)
+VERSION="3.20.1"
+RELEASE_DATE=datetime.datetime(2025,6,18,8,51)
 PROGRAMMER="Gabriele Battaglia & AIs"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -1245,57 +1245,72 @@ def read_file(game_state, file_letter):
 	else:
 		print(f"La colonna {col_name} è vuota.")
 
+def _get_piece_descriptions_from_squareset(board, squareset):
+	"""
+	Funzione helper interna.
+	Dato un insieme di case, restituisce una lista di descrizioni complete
+	per ogni pezzo che si trova su quelle case.
+	Es: ["Cavallo bianco in Firenze 3", "Donna nera in Domodossola 8"]
+	"""
+	descriptions = []
+	for sq in squareset:
+		piece = board.piece_at(sq)
+		if piece:
+			# Riutilizza la nostra funzione esistente per descrivere il pezzo
+			piece_desc = extended_piece_description(piece)
+			
+			# Riutilizza L10N per descrivere la casa
+			sq_name = chess.square_name(sq)
+			col_name = L10N['columns'].get(sq_name[0].lower(), sq_name[0])
+			rank_name = sq_name[1]
+			
+			descriptions.append(f"{piece_desc} in {col_name} {rank_name}")
+	return descriptions
+
 def read_square(game_state, square_str):
+	"""
+	Fornisce una descrizione dettagliata di una casa, elencando i pezzi
+	che la occupano, la difendono o la attaccano.
+	"""
 	try:
 		square = chess.parse_square(square_str)
 	except Exception as e:
 		print("Casa non valida.")
 		return
+	# La logica per il colore della casa rimane invariata
 	if (chess.square_file(square) + chess.square_rank(square)) % 2 == 0:
-		color_descr = "scura" # Questa stringa potrebbe essere localizzata, ma per ora la lasciamo così.
+		color_descr = "scura"
 	else:
 		color_descr = "chiara"
 	piece = game_state.board.piece_at(square)
+	
+	final_parts = []
 	if piece:
+		# --- Logica per casa occupata ---
 		base_msg = f"La casa {square_str.upper()} è {color_descr} e contiene {extended_piece_description(piece)}."
-		defenders = game_state.board.attackers(piece.color, square)
-		attackers = game_state.board.attackers(not piece.color, square)
-		info_parts = []
-		if defenders:
-			count = len(defenders)
-			word = "pezzo" if count == 1 else "pezzi"
-			# NUOVA LOGICA
-			color_adj = get_color_adjective(piece.color, 'm') # Genere maschile per 'pezzi'
-			info_parts.append(f"difesa da {count} {word} {color_adj}i") # Aggiunge la 'i' del plurale
-		if attackers:
-			count = len(attackers)
-			word = "pezzo" if count == 1 else "pezzi"
-			# NUOVA LOGICA
-			color_adj = get_color_adjective(not piece.color, 'm')
-			info_parts.append(f"attaccata da {count} {word} {color_adj}i")
-		if info_parts:
-			base_msg += " " + " e ".join(info_parts) + "."
-		print(base_msg)
+		final_parts.append(base_msg)
+		defenders_squares = game_state.board.attackers(piece.color, square)
+		if defenders_squares:
+			defender_descs = _get_piece_descriptions_from_squareset(game_state.board, defenders_squares)
+			final_parts.append(f"difesa da: {', '.join(defender_descs)}")
+		attackers_squares = game_state.board.attackers(not piece.color, square)
+		if attackers_squares:
+			attacker_descs = _get_piece_descriptions_from_squareset(game_state.board, attackers_squares)
+			final_parts.append(f"attaccata da: {', '.join(attacker_descs)}")
 	else:
+		# --- Logica per casa vuota ---
 		base_msg = f"La casa {square_str.upper()} è {color_descr} e risulta vuota."
-		white_attackers = game_state.board.attackers(chess.WHITE, square)
-		black_attackers = game_state.board.attackers(chess.BLACK, square)
-		info_parts = []
-		if white_attackers:
-			count = len(white_attackers)
-			word = "pezzo" if count == 1 else "pezzi"
-			# NUOVA LOGICA
-			color_adj = L10N['adjectives']['white']['m']
-			info_parts.append(f"attaccata da {count} {word} {color_adj}i")
-		if black_attackers:
-			count = len(black_attackers)
-			word = "pezzo" if count == 1 else "pezzi"
-			# NUOVA LOGICA
-			color_adj = L10N['adjectives']['black']['m']
-			info_parts.append(f"attaccata da {count} {word} {color_adj}i")
-		if info_parts:
-			base_msg += " " + " e ".join(info_parts) + "."
-		print(base_msg)
+		final_parts.append(base_msg)
+		white_attackers_squares = game_state.board.attackers(chess.WHITE, square)
+		if white_attackers_squares:
+			attacker_descs = _get_piece_descriptions_from_squareset(game_state.board, white_attackers_squares)
+			final_parts.append(f"attaccata dal Bianco con: {', '.join(attacker_descs)}")
+		black_attackers_squares = game_state.board.attackers(chess.BLACK, square)
+		if black_attackers_squares:
+			attacker_descs = _get_piece_descriptions_from_squareset(game_state.board, black_attackers_squares)
+			final_parts.append(f"attaccata dal Nero con: {', '.join(attacker_descs)}")
+	# Assembla la frase finale
+	print(" ".join(final_parts).replace(" .", ".").strip() + ".")
 
 def report_piece_positions(game_state, piece_symbol):
 	try:
@@ -1303,13 +1318,11 @@ def report_piece_positions(game_state, piece_symbol):
 	except Exception as e:
 		print("Non riconosciuto: inserisci R N B Q K P, r n b q k p")
 		return
-
 	# NUOVA LOGICA: Usa L10N per i nomi dei pezzi e degli aggettivi
 	piece_type_key = chess.PIECE_SYMBOLS[piece.piece_type].lower()
 	full_name = L10N['pieces'][piece_type_key]['name']
 	gender = L10N['pieces'][piece_type_key]['gender']
 	color_string = get_color_adjective(piece.color, gender)
-	
 	squares = game_state.board.pieces(piece.piece_type, piece.color)
 	positions = []
 	for square in squares:
@@ -1400,6 +1413,54 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
 	except Exception as e:
 		print(f"Errore durante il salvataggio del riepilogo testuale: {e}")
 		Acusticator(["a3", 1, 0, volume], kind=2, adsr=[0, 0, 100, 100])
+
+def setup_fischer_random_board():
+	"""
+	Gestisce il processo di setup per una partita Fischer Random (Chess960).
+	L'utente può inserire una sequenza, richiederne una casuale ('?'), o annullare ('.').
+	Restituisce (None, None) se l'utente annulla.
+	"""
+	print("\n--- Configurazione Fischer Random (Chess960) ---")
+	
+	while True:
+		prompt = "\nInserisci la sequenza di 8 pezzi, '?' per una casuale, o '.' per annullare: "
+		user_input = dgt(prompt, kind="s").upper()
+		if user_input == '?':
+			# --- NUOVA LOGICA PER LA POSIZIONE CASUALE ---
+			pos_number = random.randint(0, 959)
+			print(f"Generazione posizione casuale numero {pos_number}...")
+			# Crea la scacchiera direttamente dal numero di posizione 960
+			board_to_return = CustomBoard.from_chess960_pos(pos_number)
+			starting_fen = board_to_return.fen()
+			# Ricaviamo la sequenza dei pezzi per mostrarla all'utente
+			piece_sequence = ""
+			for i in range(8):
+				piece = board_to_return.piece_at(i)
+				if piece:
+					piece_sequence += piece.symbol().upper()
+			Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
+			print(f"Posizione generata: {piece_sequence} (Numero: {pos_number})")
+			return board_to_return, starting_fen
+		elif user_input == '.':
+			print("Configurazione annullata.")
+			return None, None
+		elif len(user_input) != 8:
+			print(f"Errore: la sequenza deve contenere 8 caratteri. Tu ne hai inseriti {len(user_input)}.")
+			Acusticator(["b3", .2, 0, volume], kind=2)
+			continue
+		# La logica per l'input manuale rimane la stessa
+		else:
+			fen_to_try = f"{user_input.lower()}/pppppppp/8/8/8/8/PPPPPPPP/{user_input} w - - 0 1"
+			try:
+				board_to_return = CustomBoard(fen_to_try, chess960=True)
+				pos_number = board_to_return.chess960_pos()
+				Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
+				print(f"Posizione valida! Numero di riferimento Chess960: {pos_number}")
+				return board_to_return, fen_to_try
+			except ValueError as e:
+				print(f"Errore: Posizione non valida. La libreria riporta: '{e}'")
+				Acusticator(["a3", .3, 0, volume], kind=2, adsr=[5, 15, 0, 80])
+				continue
 
 def format_pgn_comments(pgn_str):
 	def repl(match):
@@ -1687,15 +1748,20 @@ def get_default_localization():
 def LoadLocalization():
 	"""
 	Carica le impostazioni di localizzazione dal DB.
-	Se non esistono, crea i default italiani e li salva.
+	Se non esistono o sono incomplete, crea i default italiani e li salva.
 	"""
 	global L10N
 	db = LoadDB()
-	if "localization" not in db:
-		print("Prima esecuzione, imposto la localizzazione italiana di default.")
+	
+	# CONTROLLO MIGLIORATO:
+	# Controlla non solo se 'localization' esiste, ma anche se non è vuota o corrotta
+	# (verificando la presenza di una sotto-chiave fondamentale come 'pieces').
+	if "localization" not in db or not db["localization"].get("pieces"):
+		print("Configurazione lingua non trovata o incompleta, imposto la localizzazione italiana di default.")
 		db["localization"] = get_default_localization()
 		SaveDB(db)
-		L10N = db["localization"]
+	
+	L10N = db["localization"]
 
 def LoadEcoDatabaseWithFEN(filename="eco.db"):
 	"""
@@ -2172,6 +2238,17 @@ def clock_thread(game_state):
 		time.sleep(0.1)
 def StartGame(clock_config):
 	print("\nAvvio partita\n")
+	game_mode_choice = ''
+	while game_mode_choice not in ['s', 'f']:
+		game_mode_choice = key("Scegli la modalità: [S]tandard o [F]ischer Random 960? (S/F) ").lower()
+	Acusticator(["c4", 0.05, 0, volume, "e4", 0.05, 0, volume, "g4", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	is_fischer_random = (game_mode_choice == 'f')
+	starting_board = None
+	starting_fen = None
+	if is_fischer_random:
+		starting_board, starting_fen = setup_fischer_random_board()
+		if starting_board is None: # L'utente ha annullato
+			return # Esce dalla funzione StartGame e torna al menù
 	db = LoadDB()
 	default_pgn = db.get("default_pgn", {})
 	white_default = default_pgn.get("White", "Bianco")
@@ -2221,6 +2298,12 @@ def StartGame(clock_config):
 	key("Premi un tasto qualsiasi per iniziare la partita quando sei pronto...",attesa=7200)
 	Acusticator(["c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c7", .5, 0, volume], kind=1, sync=True)
 	game_state=GameState(clock_config)
+	if is_fischer_random:
+		game_state.board = starting_board
+		game_state.pgn_game.headers["Variant"] = "Chess960"
+		game_state.pgn_game.headers["FEN"] = starting_fen
+		game_state.pgn_game.setup(game_state.board) # Sincronizza il PGN con la scacchiera custom
+	# Se la partita è standard, non c'è bisogno di fare nulla, game_state si inizializza già correttamente.
 	game_state.white_player=white_player
 	game_state.black_player=black_player
 	game_state.pgn_game.headers["White"]=white_player
@@ -2585,25 +2668,27 @@ def StartGame(clock_config):
 		print("PGN copiato negli appunti.")
 	except Exception as e:
 		print(f"Errore durante la copia del PGN negli appunti: {e}")
-
-	analyze_choice = key("Vuoi analizzare la partita? (s/n): ").lower()
-	if analyze_choice == "s":
-		db = LoadDB()
-		engine_config = db.get("engine_config", {})
-		if not engine_config or not engine_config.get("engine_path"):
-			print("Motore non configurato. Ritorno al menù.")
-			return
+	if len(game_state.move_history) >= 8:
+		analyze_choice = key("Vuoi analizzare la partita? (s/n): ").lower()
+		if analyze_choice == "s":
+			db = LoadDB()
+			engine_config = db.get("engine_config", {})
+			if not engine_config or not engine_config.get("engine_path"):
+				print("Motore non configurato. Ritorno al menù.")
+				return
+			else:
+				# Assicurati che il motore sia inizializzato prima di analizzare
+				if ENGINE is None:
+					if not InitEngine():
+						print("Impossibile inizializzare il motore. Analisi annullata.")
+						return
+				# Pulisci la cache se necessario prima di iniziare una nuova analisi
+				cache_analysis.clear()
+				AnalyzeGame(game_state.pgn_game)
 		else:
-			# Assicurati che il motore sia inizializzato prima di analizzare
-			if ENGINE is None:
-				if not InitEngine():
-					print("Impossibile inizializzare il motore. Analisi annullata.")
-					return
-			# Pulisci la cache se necessario prima di iniziare una nuova analisi
-			cache_analysis.clear()
-			AnalyzeGame(game_state.pgn_game)
-	else:
-		Acusticator([880.0, 0.2, 0, volume, 440.0, 0.2, 0, volume], kind=1, adsr=[25, 0, 50, 25])
+			Acusticator([880.0, 0.2, 0, volume, 440.0, 0.2, 0, volume], kind=1, adsr=[25, 0, 50, 25])
+	# Se la partita ha meno di 8 semimosse, la funzione termina senza chiedere nulla.
+
 def OpenManual():
 	print("\nApertura manuale\n")
 	readme="readme_it.htm"
@@ -2688,7 +2773,7 @@ def Main():
 		elif scelta=="pgn":
 			EditPGN()
 			Acusticator([1000.0, 0.05, -1, volume, "p", 0.05, 0, 0, 900.0, 0.05, 1, volume], kind=1, adsr=[0, 0, 100, 0])
-		elif scelta=="localizzazione": # <-- BLOCCO NUOVO DA AGGIUNGERE
+		elif scelta=="nomi": # <-- BLOCCO NUOVO DA AGGIUNGERE
 			EditLocalization()		
 			Acusticator([1200.0, 0.05, 0, volume, "p", 0.05, 0, 0, 1100.0, 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 0])
 		elif scelta=="manuale":
