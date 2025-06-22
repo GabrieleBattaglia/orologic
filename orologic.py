@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key, Donazione
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="3.20.1"
-RELEASE_DATE=datetime.datetime(2025,6,18,8,51)
+VERSION="3.20.2"
+RELEASE_DATE=datetime.datetime(2025,6,22,7,36)
 PROGRAMMER="Gabriele Battaglia & AIs"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -1318,8 +1318,7 @@ def report_piece_positions(game_state, piece_symbol):
 	except Exception as e:
 		print("Non riconosciuto: inserisci R N B Q K P, r n b q k p")
 		return
-	# NUOVA LOGICA: Usa L10N per i nomi dei pezzi e degli aggettivi
-	piece_type_key = chess.PIECE_SYMBOLS[piece.piece_type].lower()
+	piece_type_key = chess.PIECE_NAMES[piece.piece_type].lower()
 	full_name = L10N['pieces'][piece_type_key]['name']
 	gender = L10N['pieces'][piece_type_key]['gender']
 	color_string = get_color_adjective(piece.color, gender)
