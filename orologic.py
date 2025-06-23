@@ -1504,7 +1504,6 @@ def parse_mmss_to_seconds(time_str):
 		return 0
 
 def DescribeMove(move, board, annotation=None):
-	# NUOVA LOGICA: Usa L10N per le stringhe delle mosse speciali
 	if board.is_castling(move):
 		base_descr = L10N['moves']['short_castle'] if chess.square_file(move.to_square) > chess.square_file(move.from_square) else L10N['moves']['long_castle']
 	else:

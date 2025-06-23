@@ -2,23 +2,11 @@ TodoList & ChangeLog.
 TodoList:
 	54. Nuova funzione da studiare e pianificare attentamente. In analisi, sia da menu principale che dopo arbitraggio, si sceglie la modalità già presente o quella automatica. In quest'ultima, mossa dopo mossa, la partita viene analizzata dal motore e si crea un txt (o pgn?) con commenti autmatici e valutazioni.
 	59. Aggiungere conferma prima di eliminazione orologio.
-	60. Aggiunta del supporto multilingua con gettext
-Ciao ti chiedo un grande aiuto.
-Mi rendo conto che il lavoro è molto oneroso e spero che tu possa aiutarmi facendolo per me. Sappi che questo aiuto sarà molto utile ad una grande comunità di giocatori ciechi, di scacchi, in tutto il mondo.
-ho questo progetto di cui sono molto orgoglioso che però è nato senza il supporto multilingue. Siccome me lo stanno chiedendo da tante nazioni del mondo, vorrei aggiungervi tale supporto.
-Perciò necessito di:
-1. Aggiungere un meccanismo che chieda all'utente la lingua da attivare.
-2. Che tale scelta venga salvata in un file (scegli tu il formato, direi che json va bene, di nome selected_language.json in modo che la scelta sia permanente e possa facilmente essere reimpostata semplicemente cancellando questo file.
-3. Che importi getext
-4. Che marchi tutte le stringhe semplici con _() per la cattura da parte di gettext
-5. Che converti tutte le f-string in .format() usando però le etichette dei campi, così da lasciare il massimo della flessibilità ai traduttori
-6. Che tu non tocca alcuna altra logica, nemmeno per eventuali miglioramenti, così da non introdurre ulteriori bugs nel programma.
-7. Che tu mi fornisca il codice python completo dell'applicazione, con le modifiche che ti ho richiesto.
-Prima di procedere a scrivere codice, se qualcosa non fosse chiaro o necessitassi di ulteriori informazioni, chiedi pure e ti fornirò ogni risposta.
-Ecco il codice.
 	61.
 
 ChangeLog:
+4.x.x
+	Aggiunto supporto multilingue via gettext
 3.20.2
 	Corretto un errore che si verificava sui comandi virgola per la ricerca dei pezzi: ,n ora funzionano di nuovo correttamente
 3.20.1
