@@ -1,13 +1,11 @@
 # OROLOGIC (IT) - Data di concepimento: 14/02/2025 by Gabriele Battaglia & AIs
 import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine, random
 from dateutil.relativedelta import relativedelta
-from GBUtils import dgt,menu,Acusticator, key, Donazione, polipo
-_ = lambda s: s
-polipo()
+from GBUtils import dgt,menu,Acusticator, key, Donazione
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.0.0"
-RELEASE_DATE=datetime.datetime(2025,6,22,17,8)
+VERSION="3.20.2"
+RELEASE_DATE=datetime.datetime(2025,6,22,7,36)
 PROGRAMMER="Gabriele Battaglia & AIs"
 DB_FILE="orologic_db.json"
 ENGINE = None
@@ -16,12 +14,12 @@ analysis_time = 3
 multipv = 2
 cache_analysis = {}
 NAG_MAP = {
-	"!": (1, _("mossa forte")),
-	"?": (2, _("mossa debole")),
-	"!!": (3, _("mossa molto forte")),
-	"??": (4, _("mossa molto debole")),
-	"!?": (5, _("mossa dubbia")),
-	"?!": (6, _("mossa dubbia")),
+	"!": (1, "mossa forte"),
+	"?": (2, "mossa debole"),
+	"!!": (3, "mossa molto forte"),
+	"??": (4, "mossa molto debole"),
+	"!?": (5, "mossa dubbia"),
+	"?!": (6, "mossa dubbia"),
 }
 NAG_REVERSE_MAP = {v[0]: k for k, v in NAG_MAP.items()}
 L10N = {}
@@ -31,77 +29,77 @@ ANNOTATION_SUFFIX_PATTERN = re.compile(r"([!?=]{1,2}$)(?<!=.)")
 # Pattern Regex specifico per gestire i suffissi DOPO una promozione (es. "d8=Q!")
 PROMOTION_PATTERN_WITH_SUFFIX = re.compile(r"(=[RNBQ])([!?=]{1,2})?$")
 SMART_COMMANDS = {
-	"s": _("Vai alla mossa precedente"),
-	"d": _("Vai alla mossa successiva"),
-	"r": _("Aggiorna valutazione CP"),
-	"?": _("Visualizza questa lista di comandi"),
-	".": _("Esci dalla modalità smart")
+	"s": "Vai alla mossa precedente",
+	"d": "Vai alla mossa successiva",
+	"r": "Aggiorna valutazione CP",
+	"?": "Visualizza questa lista di comandi",
+	".": "Esci dalla modalità smart"
 }
 ANALYSIS_COMMAND = {
-	"a": _("Vai all'inizio o nodo padre (se in variante)"),
-	"s": _("Indietro di 1 mossa"),
-	"d": _("Avanti di 1 mossa e visualizza eventuale commento"),
-	"f": _("Vai alla fine o nodo del prossimo ramo variante"),
-	"g": _("Seleziona nodo variante precedente"),
-	"h": _("Seleziona nodo variante successivo"),
-	"j": _("Legge gli headers della partita"),
-	"k": _("Vai a mossa"),
-	"l": _("Carica il PGN	dagli appunti"),
-	"z": _("Inserisce la bestline come variante nel PGN"),
-	"x": _("Inserisce la bestmove nel PGN"),
-	"c": _("Richiede un commento all'utente e lo aggiunge"),
-	"v": _("Inserisce la valutazione in centipawn nel PGN"),
-	"b": _("Attiva/disattiva la lettura automatica dei commenti"),
-	"n": _("Elimina il commento (o consente di sceglierlo se ce ne sono più di uno)"),
-	"q": _("Calcola e aggiungi la bestmove al prompt"),
-	"w": _("Calcola e visualizza la bestline, aggiungendo anche la bestmove al prompt"),
-	"e": _("Visualizza le linee di analisi e ne permette l'ispezione smart"),
-	"r": _("Calcola e aggiungi la valutazione al prompt"),
-	"t": _("Visualizza le percentuali Win Draw Lost nella posizione corrente"),
-	"y": _("Aggiungi il bilancio materiale al prompt"),
-	"u": _("Visualizza la scacchiera"),
-	"i": _("Imposta i secondi di analisi per il motore"),
-	"o": _("Imposta il numero di linee di analisi da visualizzare"),
-	"?": _("Mostra questa lista di comandi"),
-	".": _("Esci dalla modalità analisi e salva il PGN se diverso dall'originale")
+	"a": "Vai all'inizio o nodo padre (se in variante)",
+	"s": "Indietro di 1 mossa",
+	"d": "Avanti di 1 mossa e visualizza eventuale commento",
+	"f": "Vai alla fine o nodo del prossimo ramo variante",
+	"g": "Seleziona nodo variante precedente",
+	"h": "Seleziona nodo variante successivo",
+	"j": "Legge gli headers della partita",
+	"k": "Vai a mossa",
+	"l": "Carica il PGN	dagli appunti",
+	"z": "Inserisce la bestline come variante nel PGN",
+	"x": "Inserisce la bestmove nel PGN",
+	"c": "Richiede un commento all'utente e lo aggiunge",
+	"v": "Inserisce la valutazione in centipawn nel PGN",
+	"b": "Attiva/disattiva la lettura automatica dei commenti",
+	"n": "Elimina il commento (o consente di sceglierlo se ce ne sono più di uno)",
+	"q": "Calcola e aggiungi la bestmove al prompt",
+	"w": "Calcola e visualizza la bestline, aggiungendo anche la bestmove al prompt",
+	"e": "Visualizza le linee di analisi e ne permette l'ispezione smart",
+	"r": "Calcola e aggiungi la valutazione al prompt",
+	"t": "Visualizza le percentuali Win Draw Lost nella posizione corrente",
+	"y": "Aggiungi il bilancio materiale al prompt",
+	"u": "Visualizza la scacchiera",
+	"i": "Imposta i secondi di analisi per il motore",
+	"o": "Imposta il numero di linee di analisi da visualizzare",
+	"?": "Mostra questa lista di comandi",
+	".": "Esci dalla modalità analisi e salva il PGN se diverso dall'originale"
 }
 DOT_COMMANDS={
-	".1":_("Mostra il tempo rimanente del bianco"),
-	".2":_("Mostra il tempo rimanente del nero"),
-	".3":_("Mostra entrambe gli orologi"),
-	".4":_("Confronta i tempi rimanenti e indica il vantaggio"),
-	".5":_("Riporta quale orologio è in moto o la durata della pausa, se attiva"),
-	".l":_("Visualizza la lista mosse giocate"),
-	".m":_("Mostra il valore del materiale ancora in gioco"),
-	".p":_("Pausa/riavvia il countdown degli orologi"),
-	".q":_("Annulla l'ultima mossa (solo in pausa)"),
-	".b+":_("Aggiunge tempo al bianco (in pausa)"),
-	".b-":_("Sottrae tempo al bianco (in pausa)"),
-	".n+":_("Aggiunge tempo al nero (in pausa)"),
-	".n-":_("Sottrae tempo al nero (in pausa)"),
-	".s":_("Visualizza la scacchiera"),
-	".c":_("Aggiunge un commento alla mossa corrente"),
-	".1-0":_("Assegna vittoria al bianco (1-0) e conclude la partita"),
-	".0-1":_("Assegna vittoria al nero (0-1) e conclude la partita"),
-	".1/2":_("Assegna patta (1/2-1/2) e conclude la partita"),
-	".*":_("Assegna risultato non definito (*) e conclude la partita"),
-	".?":_("Visualizza l'elenco dei comandi disponibili"),
-	"/[colonna]":_("Mostra la diagonale alto-destra partendo dalla base della colonna data"),
-	"\\[colonna]":_("Mostra la diagonale alto-sinistra partendo dalla base della colonna data"),
-	"-[colonna|traversa|casa]":_("Mostra le figure su quella colonna o traversa o casa"),
-	",[NomePezzo]":_("Mostra la/le posizione/i del pezzo indicato")}
+	".1":"Mostra il tempo rimanente del bianco",
+	".2":"Mostra il tempo rimanente del nero",
+	".3":"Mostra entrambe gli orologi",
+	".4":"Confronta i tempi rimanenti e indica il vantaggio",
+	".5":"Riporta quale orologio è in moto o la durata della pausa, se attiva",
+	".l":"Visualizza la lista mosse giocate",
+	".m":"Mostra il valore del materiale ancora in gioco",
+	".p":"Pausa/riavvia il countdown degli orologi",
+	".q":"Annulla l'ultima mossa (solo in pausa)",
+	".b+":"Aggiunge tempo al bianco (in pausa)",
+	".b-":"Sottrae tempo al bianco (in pausa)",
+	".n+":"Aggiunge tempo al nero (in pausa)",
+	".n-":"Sottrae tempo al nero (in pausa)",
+	".s":"Visualizza la scacchiera",
+	".c":"Aggiunge un commento alla mossa corrente",
+	".1-0":"Assegna vittoria al bianco (1-0) e conclude la partita",
+	".0-1":"Assegna vittoria al nero (0-1) e conclude la partita",
+	".1/2":"Assegna patta (1/2-1/2) e conclude la partita",
+	".*":"Assegna risultato non definito (*) e conclude la partita",
+	".?":"Visualizza l'elenco dei comandi disponibili",
+	"/[colonna]":"Mostra la diagonale alto-destra partendo dalla base della colonna data",
+	"\\[colonna]":"Mostra la diagonale alto-sinistra partendo dalla base della colonna data",
+	"-[colonna|traversa|casa]":"Mostra le figure su quella colonna o traversa o casa",
+	",[NomePezzo]":"Mostra la/le posizione/i del pezzo indicato"}
 MENU_CHOICES={
-	"analizza":_("Entra in modalità analisi partita"),
-	"crea":_("... un nuovo orologio da aggiungere alla collezione"),
-	"elimina":_("... uno degli orologi salvati"),
-	"gioca":_("Inizia la partita"),
-	"manuale":_("Mostra la guida dell'app"),
-	"motore":_("Configura le impostazioni per il motore di scacchi"),
-	"nomi":_("Personalizza i nomi dei pezzi e delle colonne"),
-	"pgn":_("Imposta le info di default per il PGN"),
-	"vedi":_("... gli orologi salvati"),
-	"volume":_("Consente la regolazione del volume degli effetti audio"),
-	".":_("Esci dall'applicazione")}
+	"analizza":"Entra in modalità analisi partita",
+	"crea":"... un nuovo orologio da aggiungere alla collezione",
+	"elimina":"... uno degli orologi salvati",
+	"gioca":"Inizia la partita",
+	"manuale":"Mostra la guida dell'app",
+	"motore":"Configura le impostazioni per il motore di scacchi",
+	"nomi":"Personalizza i nomi dei pezzi e delle colonne",
+	"pgn":"Imposta le info di default per il PGN",
+	"vedi":"... gli orologi salvati",
+	"volume":"Consente la regolazione del volume degli effetti audio",
+	".":"Esci dall'applicazione"}
 FILE_NAMES={0:"ancona",1:"bologna",2:"como",3:"domodossola",4:"empoli",5:"firenze",6:"genova",7:"hotel"}
 #qf
 def verbose_legal_moves_for_san(board,san_str):
@@ -129,7 +127,7 @@ def verbose_legal_moves_for_san(board,san_str):
 		try:
 			dest_square=chess.parse_square(dest_str)
 		except Exception:
-			return _("Destinazione non riconosciuta.")
+			return "Destinazione non riconosciuta."
 		legal_moves=[]
 		for move in board.legal_moves:
 			if move.to_square==dest_square:
@@ -139,12 +137,12 @@ def verbose_legal_moves_for_san(board,san_str):
 				else:
 					legal_moves.append(move)
 	if not legal_moves:
-		return _("Nessuna mossa legale trovata per la destinazione indicata.")
+		return "Nessuna mossa legale trovata per la destinazione indicata."
 	result_lines=[]
 	i=1
 	for move in legal_moves:
 		verbose_desc=DescribeMove(move,board.copy())
-		result_lines.append(_("{i}°: {desc}").format(i=i, desc=verbose_desc))
+		result_lines.append(f"{i}°: {verbose_desc}")
 		i+=1
 	return "\n".join(result_lines)
 def FormatClock(seconds):
@@ -152,7 +150,7 @@ def FormatClock(seconds):
 	hours = total // 3600
 	minutes = (total % 3600) // 60
 	secs = total % 60
-	return "{hours:02d}:{minutes:02d}:{secs:02d}".format(hours=hours, minutes=minutes, secs=secs)
+	return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 def sanitize_filename(filename: str) -> str:
 	"""
 	Restituisce una versione della stringa compatibile con il filesystem,
@@ -166,10 +164,10 @@ def sanitize_filename(filename: str) -> str:
 	# Rimuove spazi e punti all'inizio e alla fine
 	sanitized = sanitized.strip().strip('. ')
 	if not sanitized:
-		sanitized = _("default_filename")
+		sanitized = "default_filename"
 	return sanitized
 def SmartInspection(analysis_lines, board):
-	print(_("Linee disponibili:"))
+	print("Linee disponibili:")
 	for i, info in enumerate(analysis_lines, start=1):
 		temp_board = board.copy()
 		moves_with_numbers = []
@@ -181,12 +179,12 @@ def SmartInspection(analysis_lines, board):
 				white_move = pv[j]
 				white_san = temp_board.san(white_move)
 				temp_board.push(white_move)
-				move_str = "{num}. {san}".format(num=move_num, san=white_san)
+				move_str = f"{move_num}. {white_san}"
 				if j + 1 < len(pv) and temp_board.turn == chess.BLACK:
 					black_move = pv[j+1]
 					black_san = temp_board.san(black_move)
 					temp_board.push(black_move)
-					move_str += " {san}".format(san=black_san)
+					move_str += f" {black_san}"
 					j += 2
 				else:
 					j += 1
@@ -196,29 +194,29 @@ def SmartInspection(analysis_lines, board):
 				black_move = pv[j]
 				black_san = temp_board.san(black_move)
 				temp_board.push(black_move)
-				moves_with_numbers.append("{num}... {san}".format(num=move_num, san=black_san))
+				moves_with_numbers.append(f"{move_num}... {black_san}")
 				j += 1
 		line_summary = " ".join(moves_with_numbers)
-		print(_("Linea {num}: {summary}").format(num=i, summary=line_summary))
-	choice = dgt(_("Quale linea vuoi ispezionare? (1/{num_lines}) ").format(num_lines=len(analysis_lines)), kind="i", imin=1, imax=len(analysis_lines),	default=1)
+		print(f"Linea {i}: {line_summary}")
+	choice = dgt(f"Quale linea vuoi ispezionare? (1/{len(analysis_lines)} ", kind="i", imin=1, imax=len(analysis_lines),	default=1)
 	Acusticator(["e5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
 	line_index = int(choice) - 1
 	chosen_info = analysis_lines[line_index]
 	pv_moves = chosen_info.get("pv", [])
 	if not pv_moves:
-		print(_("Linea vuota, termine ispezione."))
+		print("Linea vuota, termine ispezione.")
 		return
 	score = chosen_info.get("score")
 	if score is not None and score.relative.is_mate():
-		eval_str = _("Mate in {moves}").format(moves=abs(score.relative.mate()))
+		eval_str = f"Mate in {abs(score.relative.mate())}"
 	elif score is not None:
 		cp = score.white().score()
-		eval_str = "{cp:.2f}".format(cp=cp/100)
+		eval_str = f"{cp/100:.2f}"
 	else:
 		eval_str = "0.00"
 	total_moves = len(pv_moves)
 	current_index = 1
-	print(_("\nUtilizza questi comandi:"))
+	print("\nUtilizza questi comandi:")
 	menu(p=SMART_COMMANDS,show_only=True)
 	while True:
 		temp_board = board.copy()
@@ -227,7 +225,7 @@ def SmartInspection(analysis_lines, board):
 		current_move = pv_moves[current_index-1]
 		# Ottieni la descrizione verbosa della mossa corrente, dal punto di vista della board prima di eseguirla
 		move_verbose = DescribeMove(current_move, temp_board)
-		smart_prompt=_("\nLinea {line_num}: ({current}/{total}), CP: {cp}, {move_num}... {move_desc}").format(line_num=line_index+1, current=current_index, total=total_moves, cp=eval_str, move_num=temp_board.fullmove_number, move_desc=move_verbose)
+		smart_prompt=f"\nLinea {line_index+1}: ({current_index}/{total_moves}), CP: {eval_str}, {temp_board.fullmove_number}... {move_verbose}"
 		cmd = key(smart_prompt).lower()
 		if cmd == ".":
 			break
@@ -236,7 +234,7 @@ def SmartInspection(analysis_lines, board):
 				current_index -= 1
 			else:
 				Acusticator(["c4", 0.1, -0.5, volume], kind=2, adsr=[10, 10, 30, 50]) 
-				print(_("\nNon ci sono mosse precedenti."))
+				print("\nNon ci sono mosse precedenti.")
 		elif cmd == "?":
 			Acusticator(["d5", 0.08, 0, volume], kind=1, adsr=[2,5,90,5])
 			menu(p=SMART_COMMANDS,show_only=True)
@@ -246,7 +244,7 @@ def SmartInspection(analysis_lines, board):
 				for move in pv_moves[:current_index]:
 					temp_board.push(move)
 			except Exception as push_err:
-				print(_("\nErrore interno durante avanzamento per valutazione: {error}").format(error=push_err))
+				print(f"\nErrore interno durante avanzamento per valutazione: {push_err}")
 				eval_str = "ERR_NAV" # Aggiorna la stringa del prompt per indicare l'errore
 				continue # Torna all'inizio del loop while
 			score_object_si = CalculateEvaluation(temp_board)
@@ -256,29 +254,29 @@ def SmartInspection(analysis_lines, board):
 				pov_score_si = score_object_si.pov(temp_board.turn)
 				if pov_score_si.is_mate():
 					mate_in_si = pov_score_si.mate()
-					new_eval_str = _("M{moves}").format(moves=abs(mate_in_si))
+					new_eval_str = f"M{abs(mate_in_si)}"
 				else:
 					cp_si = score_object_si.white().score(mate_score=30000)
 					if cp_si is not None:
-						new_eval_str = "{cp:+.2f}".format(cp=cp_si/100) # Formatta CP assoluto
+						new_eval_str = f"{cp_si/100:+.2f}" # Formatta CP assoluto
 					else:
 						new_eval_str = "ERR"
 				eval_str = new_eval_str
 				Acusticator(["g5", 0.1, 0.3, volume], kind=1, adsr=[5,5,90,5]) # Suono successo
-				print(_("\nValutazione aggiornata."))
+				print("\nValutazione aggiornata.")
 			else:
 				Acusticator(["a3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75]) # Suono errore
-				print(_("\nImpossibile aggiornare la valutazione."))
+				print("\nImpossibile aggiornare la valutazione.")
 				eval_str = "N/A"
 		elif cmd == "d":
 			if current_index < total_moves:
 				current_index += 1
 			else:
 				Acusticator(["c4", 0.1, 0.5, volume], kind=2, adsr=[10, 10, 30, 50])
-				print(_("\nNon ci sono mosse successive."))
+				print("\nNon ci sono mosse successive.")
 		else:
 			Acusticator(["b3", 0.12, 0, volume], kind=2, adsr=[5, 15, 20, 60])
-			print(_("\nComando non riconosciuto."))
+			print("\nComando non riconosciuto.")
 def CalculateBest(board, bestmove=True, as_san=False):
 	Acusticator(["e5",.008,-1,volume]) 
 	try:
@@ -300,13 +298,13 @@ def CalculateBest(board, bestmove=True, as_san=False):
 					white_descr = DescribeMove(white_move, temp_board)
 					temp_board.push(white_move)
 					i += 1
-					move_descr = _("{num}°.").format(num=move_number) + " " + white_descr
+					move_descr = f"{move_number}°. {white_descr}"
 					if i < len(best_line) and temp_board.turn == chess.BLACK:
 						black_move = best_line[i]
 						black_descr = DescribeMove(black_move, temp_board)
 						temp_board.push(black_move)
 						i += 1
-						move_descr += ", " + black_descr
+						move_descr += f", {black_descr}"
 					descriptive_moves.append(move_descr)
 					move_number += 1
 				else:
@@ -314,7 +312,7 @@ def CalculateBest(board, bestmove=True, as_san=False):
 					black_descr = DescribeMove(black_move, temp_board)
 					temp_board.push(black_move)
 					i += 1
-					descriptive_moves.append(_("{num}°... {desc}").format(num=move_number, desc=black_descr))
+					descriptive_moves.append(f"{move_number}°... {black_descr}")
 					move_number += 1
 			score = analysis[0].get("score")
 			mate_found = False
@@ -324,13 +322,13 @@ def CalculateBest(board, bestmove=True, as_san=False):
 			if bestmove:
 				if mate_found:
 					Acusticator(["a6",.008,1,volume]) 
-					return [_("Matto in {moves}, {first_move}").format(moves=mate_moves, first_move=descriptive_moves[0])]
+					return [f"Matto in {mate_moves}, {descriptive_moves[0]}"]
 				else:
 					Acusticator(["f6",.008,1,volume]) 
 					return [descriptive_moves[0]]
 			else:
 				if mate_found:
-					descriptive_moves.insert(0, _("Matto in {moves}:").format(moves=mate_moves))
+					descriptive_moves.insert(0, f"Matto in {mate_moves}:")
 				Acusticator(["d6",.008,1,volume]) 
 				return descriptive_moves
 		else:
@@ -341,7 +339,7 @@ def CalculateBest(board, bestmove=True, as_san=False):
 				Acusticator(["b5",.008,1,volume]) 
 				return best_line
 	except Exception as e:
-		print(_("Errore in CalculateBestLine:"), e)
+		print("Errore in CalculateBestLine:", e)
 		return None
 def CalculateEvaluation(board):
 	global ENGINE, analysis_time, multipv, cache_analysis
@@ -351,12 +349,12 @@ def CalculateEvaluation(board):
 			cache_analysis[fen] = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=1)
 		analysis_result = cache_analysis[fen]
 		if not analysis_result:
-			print(_("DEBUG: Analisi per FEN {fen} ha restituito risultato vuoto.").format(fen=fen)) # Debug opzionale
+			print(f"DEBUG: Analisi per FEN {fen} ha restituito risultato vuoto.") # Debug opzionale
 			return None
 		score = analysis_result[0].get("score")
 		return score
 	except Exception as e:
-		print(_("Errore in CalculateEvaluation per FEN {fen}: {error}").format(fen=fen, error=e))
+		print(f"Errore in CalculateEvaluation per FEN {fen}: {e}")
 		return None
 def CalculateWDL(board):
 	global ENGINE, analysis_time, multipv, cache_analysis
@@ -378,7 +376,7 @@ def CalculateWDL(board):
 		try:
 			win_permille_pov, draw_permille_pov, loss_permille_pov = wdl_info
 			if not all(isinstance(x, (int, float)) for x in [win_permille_pov, draw_permille_pov, loss_permille_pov]):
-					print(_("Warning: Valori WDL dopo unpack non numerici: W={win}, D={draw}, L={loss}").format(win=win_permille_pov, draw=draw_permille_pov, loss=loss_permille_pov))
+					print(f"Warning: Valori WDL dopo unpack non numerici: W={win_permille_pov}, D={draw_permille_pov}, L={loss_permille_pov}")
 					return None
 			perspective = None
 			if hasattr(wdl_info, "color"):
@@ -388,7 +386,7 @@ def CalculateWDL(board):
 			else:
 				 # Se non riusciamo a determinare la prospettiva, assumiamo per sicurezza
 				# che sia già assoluta (WHITE) come da standard UCI.
-				print(_("Warning: Impossibile determinare prospettiva WDL da {info}. Assumo WHITE.").format(info=repr(wdl_info)))
+				print(f"Warning: Impossibile determinare prospettiva WDL da {repr(wdl_info)}. Assumo WHITE.")
 				perspective = chess.WHITE
 			if perspective == chess.BLACK:
 				win_permille_abs = loss_permille_pov
@@ -404,10 +402,10 @@ def CalculateWDL(board):
 			Acusticator(["b5",.008,1,volume])
 			return (win_pc, draw_pc, loss_pc) # Ritorna tuple percentuali (W_bianco, Pareggio, L_bianco)
 		except (TypeError, ValueError) as e_unpack:
-			print(_("Warning: Fallito unpack diretto oggetto WDL {info}: {error}").format(info=repr(wdl_info), error=e_unpack))
+			print(f"Warning: Fallito unpack diretto oggetto WDL {repr(wdl_info)}: {e_unpack}")
 			return None
 	except Exception as e:
-		print(_("Errore generale in CalculateWDL per FEN {fen}: {error}").format(fen=fen, error=e))
+		print(f"Errore generale in CalculateWDL per FEN {fen}: {e}")
 		return None
 def SetAnalysisTime(new_time):
 	"""
@@ -417,12 +415,12 @@ def SetAnalysisTime(new_time):
 	try:
 		new_time = float(new_time)
 		if new_time <= 0:
-			print(_("Il tempo di analisi deve essere positivo."))
+			print("Il tempo di analisi deve essere positivo.")
 		else:
 			analysis_time = new_time
-			print(_("Tempo di analisi impostato a {seconds} secondi.").format(seconds=analysis_time))
+			print(f"Tempo di analisi impostato a {analysis_time} secondi.")
 	except Exception as e:
-		print(_("Errore in SetAnalysisTime:"), e)
+		print("Errore in SetAnalysisTime:", e)
 def SetMultipv(new_multipv):
 	"""
 	Permette di impostare il numero di linee (multipv) da visualizzare.
@@ -431,12 +429,12 @@ def SetMultipv(new_multipv):
 	try:
 		new_multipv = int(new_multipv)
 		if new_multipv < 1:
-			print(_("Il numero di linee deve essere almeno 1."))
+			print("Il numero di linee deve essere almeno 1.")
 		else:
 			multipv = new_multipv
-			print(_("Multipv impostato a {multipv}.").format(multipv=multipv))
+			print(f"Multipv impostato a {multipv}.")
 	except Exception as e:
-		print(_("Errore in SetMultipv:"), e)
+		print("Errore in SetMultipv:", e)
 def LoadPGNFromClipboard():
 	"""
 	Carica il PGN dagli appunti e lo restituisce come oggetto pgn_game.
@@ -446,7 +444,7 @@ def LoadPGNFromClipboard():
 	try:
 		clipboard_pgn = pyperclip.paste()
 		if not clipboard_pgn.strip():
-			print(_("Appunti vuoti."))
+			print("Appunti vuoti.")
 			return None
 		pgn_io = io.StringIO(clipboard_pgn)
 		games = []
@@ -456,32 +454,32 @@ def LoadPGNFromClipboard():
 				break
 			games.append(game)
 		if len(games) == 0:
-			print(_("PGN non valido negli appunti."))
+			print("PGN non valido negli appunti.")
 			return None
 		elif len(games) == 1:
 			return games[0]
 		else:
-			print(_("\nSono state trovate {num_games} partite nei PGN.").format(num_games=len(games)))
+			print(f"\nSono state trovate {len(games)} partite nei PGN.")
 			partite={}
 			for i, game in enumerate(games, start=1):
-				white = game.headers.get("White", _("Sconosciuto"))
-				black = game.headers.get("Black", _("Sconosciuto"))
-				date = game.headers.get("Date", _("Data sconosciuta"))
-				partite[i]="{white} vs {black} - {date}".format(white=white, black=black, date=date)
+				white = game.headers.get("White", "Sconosciuto")
+				black = game.headers.get("Black", "Sconosciuto")
+				date = game.headers.get("Date", "Data sconosciuta")
+				partite[i]=f"{white} vs {black} - {date}"
 			while True:
-				choice = menu(d=partite,	prompt=_("Quale partita vuoi caricare? "),	show=True,ntf=_("Numero non valido. Riprova."))
+				choice = menu(d=partite,	prompt="Quale partita vuoi caricare? ",	show=True,ntf="Numero non valido. Riprova.")
 				try:
 					index = int(choice)
 					if 1 <= index <= len(games):
 						return games[index - 1]
 					else:
 						Acusticator(["a3", .8, 0, volume],	kind=3, adsr=[.02, 0, 100, 99])
-						print(_("Numero non valido. Riprova."))
+						print("Numero non valido. Riprova.")
 				except ValueError:
 					Acusticator(["g2", .8, 0, volume],	kind=3, adsr=[.02, 0, 100, 99])
-					print(_("Input non valido. Inserisci un numero."))
+					print("Input non valido. Inserisci un numero.")
 	except Exception as e:
-		print(_("Errore in LoadPGNFromClipboard:"), e)
+		print("Errore in LoadPGNFromClipboard:", e)
 		return None
 def InitEngine():
 	global ENGINE
@@ -489,7 +487,7 @@ def InitEngine():
 	engine_config = db.get("engine_config", {})
 	if not engine_config or not engine_config.get("engine_path"):
 		Acusticator(["d4", 0.5, -1, volume],kind=4, adsr=[.001,0,100,99.9])
-		print(_("\nMotore non configurato. Usa il comando 'motore' per impostarlo."))
+		print("\nMotore non configurato. Usa il comando 'motore' per impostarlo.")
 		return False
 	try:
 		ENGINE = chess.engine.SimpleEngine.popen_uci(engine_config["engine_path"])
@@ -499,37 +497,37 @@ def InitEngine():
 			"Skill Level": engine_config.get("skill_level", 20),
 			"Move Overhead": engine_config.get("move_overhead", 0)
 		})
-		print(_("\nMotore inizializzato correttamente."))
+		print("\nMotore inizializzato correttamente.")
 		return True
 	except Exception as e:
-		print(_("\nErrore nell'inizializzazione del motore:"), e)
+		print("\nErrore nell'inizializzazione del motore:", e)
 		return False
 def EditEngineConfig():
-	print(_("\nImposta configurazione del motore scacchistico\n"))
+	print("\nImposta configurazione del motore scacchistico\n")
 	db = LoadDB()
 	engine_config = db.get("engine_config", {})
 	if engine_config:
-		print(_("Configurazione attuale del motore:"))
+		print("Configurazione attuale del motore:")
 		for key, val in engine_config.items():
-			print("  {key}: {val}".format(key=key, val=val))
+			print(f"  {key}: {val}")
 	else:
-		print(_("Nessuna configurazione trovata."))
-	path = dgt(prompt=_("Inserisci il percorso dove è salvato il motore UCI: "), kind="s", smin=3, smax=256)
+		print("Nessuna configurazione trovata.")
+	path = dgt(prompt="Inserisci il percorso dove è salvato il motore UCI: ", kind="s", smin=3, smax=256)
 	Acusticator(["g6", 0.025, -.75, volume,"c5", 0.025, -75, volume],kind=3)
-	executable = dgt(prompt=_("Inserisci il nome dell'eseguibile del motore (es. stockfish_15_x64_popcnt.exe): "), kind="s", smin=5, smax=64)
+	executable = dgt(prompt="Inserisci il nome dell'eseguibile del motore (es. stockfish_15_x64_popcnt.exe): ", kind="s", smin=5, smax=64)
 	Acusticator(["g6", 0.025, -.5, volume,"c5", 0.025, -.5, volume],kind=3)
 	full_engine_path = os.path.join(path, executable)
 	if not os.path.isfile(full_engine_path):
-		print(_("Il file specificato non esiste. Verifica il percorso e il nome dell'eseguibile."))
+		print("Il file specificato non esiste. Verifica il percorso e il nome dell'eseguibile.")
 		return
-	hash_size = dgt(prompt=_("Inserisci la dimensione della hash table (min: 1, max: 4096 MB): "), kind="i", imin=1, imax=4096)
+	hash_size = dgt(prompt="Inserisci la dimensione della hash table (min: 1, max: 4096 MB): ", kind="i", imin=1, imax=4096)
 	Acusticator(["g6", 0.025, -.25, volume,"c5", 0.025, -.25, volume],kind=3)
 	max_cores = os.cpu_count()
-	num_cores = dgt(prompt=_("Inserisci il numero di core da utilizzare (min: 1, max: {max_cores}): ").format(max_cores=max_cores), kind="i", imin=1, imax=max_cores, default=4)
+	num_cores = dgt(prompt=f"Inserisci il numero di core da utilizzare (min: 1, max: {max_cores}): ", kind="i", imin=1, imax=max_cores, default=4)
 	Acusticator(["g6", 0.025, 0, volume,"c5", 0.025, 0, volume],kind=3)
-	skill_level = dgt(prompt=_("Inserisci il livello di skill (min: 0, max: 20): "), kind="i", imin=0, imax=20)
+	skill_level = dgt(prompt="Inserisci il livello di skill (min: 0, max: 20): ", kind="i", imin=0, imax=20)
 	Acusticator(["g6", 0.025, .25, volume,"c5", 0.025, .25, volume],kind=3)
-	move_overhead = dgt(prompt=_("Inserisci il move overhead in millisecondi (min: 0, max: 500): "), kind="i", imin=0, imax=500, default=0)
+	move_overhead = dgt(prompt="Inserisci il move overhead in millisecondi (min: 0, max: 500): ", kind="i", imin=0, imax=500, default=0)
 	Acusticator(["g6", 0.025, .5, volume,"c5", 0.025, .5, volume],kind=3)
 	wdl_switch = True  # Puoi eventualmente renderlo configurabile
 	engine_config = {
@@ -542,7 +540,7 @@ def EditEngineConfig():
 	}
 	db["engine_config"] = engine_config
 	SaveDB(db)
-	print(_("Configurazione del motore salvata in orologic_db.json."))
+	print("Configurazione del motore salvata in orologic_db.json.")
 	InitEngine()
 	Acusticator(["a6", 0.5, 1, volume],kind=3, adsr=[.001,0,100,99.9])
 	return
@@ -552,8 +550,8 @@ def EditLocalization():
 	Crea un'interfaccia per permettere all'utente di personalizzare
 	le stringhe usate nel programma (localizzazione).
 	"""
-	print(_("\n--- Personalizzazione Lingua ---\n"))
-	print(_("Per ogni voce, inserisci il nuovo testo o premi INVIO per mantenere il valore attuale."))
+	print("\n--- Personalizzazione Lingua ---\n")
+	print("Per ogni voce, inserisci il nuovo testo o premi INVIO per mantenere il valore attuale.")
 	db = LoadDB()
 	# Usiamo una copia per le modifiche, per poi salvarla tutta in una volta
 	l10n_config = db.get("localization", get_default_localization())
@@ -561,33 +559,33 @@ def EditLocalization():
 	# Struttura: [ (chiave_cat, chiave_voce, prompt_utente), ... ]
 	# Per voci complesse (dizionari), usiamo una tupla: (chiave_cat, chiave_voce, (chiave_sub, prompt_sub))
 	items_to_edit = [
-		("pieces", "pawn", ("name", _("Nome per 'Pedone'"))),
-		("pieces", "knight", ("name", _("Nome per 'Cavallo'"))),
-		("pieces", "bishop", ("name", _("Nome per 'Alfiere'"))),
-		("pieces", "rook", ("name", _("Nome per 'Torre'"))),
-		("pieces", "queen", ("name", _("Nome per 'Donna'"))),
-		("pieces", "king", ("name", _("Nome per 'Re'"))),
-		("columns", "a", _("Nome per colonna 'a' (Ancona)")),
-		("columns", "b", _("Nome per colonna 'b' (Bologna)")),
-		("columns", "c", _("Nome per colonna 'c' (Como)")),
-		("columns", "d", _("Nome per colonna 'd' (Domodossola)")),
-		("columns", "e", _("Nome per colonna 'e' (Empoli)")),
-		("columns", "f", _("Nome per colonna 'f' (Firenze)")),
-		("columns", "g", _("Nome per colonna 'g' (Genova)")),
-		("columns", "h", _("Nome per colonna 'h' (Hotel)")),
-		("adjectives", "white", ("m", _("Aggettivo 'bianco' (maschile)"))),
-		("adjectives", "white", ("f", _("Aggettivo 'bianco' (femminile)"))),
-		("adjectives", "black", ("m", _("Aggettivo 'nero' (maschile)"))),
-		("adjectives", "black", ("f", _("Aggettivo 'nero' (femminile)"))),
-		("moves", "capture", _("Verbo per la cattura (es. 'prende')")),
-		("moves", "capture_on", _("Preposizione per la casa di cattura (es. 'in')")),
-		("moves", "move_to", _("Preposizione per la casa di destinazione (es. 'in')")),
-		("moves", "en_passant", _("Testo per 'en passant'")),
-		("moves", "short_castle", _("Testo per 'arrocco corto'")),
-		("moves", "long_castle", _("Testo per 'arrocco lungo'")),
-		("moves", "promotes_to", _("Testo per la promozione (es. 'e promuove a')")),
-		("moves", "check", _("Testo per 'scacco'")),
-		("moves", "checkmate", _("Testo per 'scacco matto!'"))
+		("pieces", "pawn", ("name", "Nome per 'Pedone'")),
+		("pieces", "knight", ("name", "Nome per 'Cavallo'")),
+		("pieces", "bishop", ("name", "Nome per 'Alfiere'")),
+		("pieces", "rook", ("name", "Nome per 'Torre'")),
+		("pieces", "queen", ("name", "Nome per 'Donna'")),
+		("pieces", "king", ("name", "Nome per 'Re'")),
+		("columns", "a", "Nome per colonna 'a' (Ancona)"),
+		("columns", "b", "Nome per colonna 'b' (Bologna)"),
+		("columns", "c", "Nome per colonna 'c' (Como)"),
+		("columns", "d", "Nome per colonna 'd' (Domodossola)"),
+		("columns", "e", "Nome per colonna 'e' (Empoli)"),
+		("columns", "f", "Nome per colonna 'f' (Firenze)"),
+		("columns", "g", "Nome per colonna 'g' (Genova)"),
+		("columns", "h", "Nome per colonna 'h' (Hotel)"),
+		("adjectives", "white", ("m", "Aggettivo 'bianco' (maschile)")),
+		("adjectives", "white", ("f", "Aggettivo 'bianco' (femminile)")),
+		("adjectives", "black", ("m", "Aggettivo 'nero' (maschile)")),
+		("adjectives", "black", ("f", "Aggettivo 'nero' (femminile)")),
+		("moves", "capture", "Verbo per la cattura (es. 'prende')"),
+		("moves", "capture_on", "Preposizione per la casa di cattura (es. 'in')"),
+		("moves", "move_to", "Preposizione per la casa di destinazione (es. 'in')"),
+		("moves", "en_passant", "Testo per 'en passant'"),
+		("moves", "short_castle", "Testo per 'arrocco corto'"),
+		("moves", "long_castle", "Testo per 'arrocco lungo'"),
+		("moves", "promotes_to", "Testo per la promozione (es. 'e promuove a')"),
+		("moves", "check", "Testo per 'scacco'"),
+		("moves", "checkmate", "Testo per 'scacco matto!'")
 	]
 	# Logica per audio elegante
 	num_items = len(items_to_edit)
@@ -599,23 +597,23 @@ def EditLocalization():
 		if isinstance(details, tuple): # Voce complessa (es. pezzi, aggettivi)
 			sub_key, prompt_text = details
 			current_val = l10n_config[cat][key][sub_key]
-			new_val = dgt("{prompt} [{current}]: ".format(prompt=prompt_text, current=current_val), kind="s", default=current_val)
+			new_val = dgt(f"{prompt_text} [{current_val}]: ", kind="s", default=current_val)
 			l10n_config[cat][key][sub_key] = new_val.strip()
 			# Se abbiamo appena modificato un pezzo, chiediamo il genere
 			if cat == "pieces":
 				current_gender = l10n_config[cat][key]['gender']
-				gender_prompt = _("  Genere per '{new_val}' (m/f/n) [{current_gender}]: ").format(new_val=new_val, current_gender=current_gender)
+				gender_prompt = f"  Genere per '{new_val}' (m/f/n) [{current_gender}]: "
 				while True:
 					new_gender = dgt(gender_prompt, kind="s", default=current_gender).lower()
 					if new_gender in ['m', 'f', 'n']:
 						l10n_config[cat][key]['gender'] = new_gender
 						break
 					else:
-						print(_("Input non valido. Inserisci 'm' (maschile), 'f' (femminile) o 'n' (neutro)."))
+						print("Input non valido. Inserisci 'm' (maschile), 'f' (femminile) o 'n' (neutro).")
 		else: # Voce semplice (es. colonne, mosse)
 			prompt_text = details
 			current_val = l10n_config[cat][key]
-			new_val = dgt("{prompt} [{current}]: ".format(prompt=prompt_text, current=current_val), kind="s", default=current_val)
+			new_val = dgt(f"{prompt_text} [{current_val}]: ", kind="s", default=current_val)
 			l10n_config[cat][key] = new_val.strip()
 		Acusticator([pitch, 0.08, pan, volume], kind=1, adsr=[2, 5, 80, 10])
 	Acusticator(['c7', 0.05, 0, volume,'e7', 0.05, 0, volume,'g7', 0.15, 0, volume], kind=1, adsr=[2, 5, 90, 5])
@@ -623,7 +621,7 @@ def EditLocalization():
 	db["localization"] = l10n_config
 	SaveDB(db)
 	LoadLocalization() # Ricarica le impostazioni per renderle subito attive
-	print(_("\nImpostazioni di lingua salvate con successo!"))
+	print("\nImpostazioni di lingua salvate con successo!")
 
 def AnalyzeGame(pgn_game):
 	"""
@@ -636,50 +634,50 @@ def AnalyzeGame(pgn_game):
 			# Ricorsione sicura perché pgn_game è ora definito o None
 			AnalyzeGame(pgn_game)
 		else:
-			print(_("Gli appunti non contengono un PGN valido. Ritorno al menù."))
+			print("Gli appunti non contengono un PGN valido. Ritorno al menù.")
 		return
 
-	print(_("\nModalità analisi.\nHeaders della partita:\n"))
+	print("\nModalità analisi.\nHeaders della partita:\n")
 	for k, v in pgn_game.headers.items():
-		print("{key}: {value}".format(key=k, value=v))
+		print(f"{k}: {v}")
 	move_list = list(pgn_game.mainline_moves())
 	total_moves = len(move_list)
-	print(_("Numero totale di mosse: {num_moves}").format(num_moves=(total_moves+1)//2))
+	print(f"Numero totale di mosse: {(total_moves+1)//2}")
 
 	if total_moves < 2:
-		choice = key(_("\nMosse insufficienti. [M] per tornare al menù o [L] per caricare un nuovo PGN dagli appunti: ")).lower()
+		choice = key("\nMosse insufficienti. [M] per tornare al menù o [L] per caricare un nuovo PGN dagli appunti: ").lower()
 		Acusticator(["f5", 0.03, 0, volume], kind=1, adsr=[0,0,100,0])
 		if choice == "l":
 			new_pgn = LoadPGNFromClipboard()
 			if new_pgn:
 				AnalyzeGame(new_pgn)
 			else:
-				print(_("Gli appunti non contengono un PGN valido. Ritorno al menù."))
+				print("Gli appunti non contengono un PGN valido. Ritorno al menù.")
 		return
-	print(_("Tempo analisi impostato a {time} secondi.\nLinee riportate dal motore impostate a {multipv}.").format(time=analysis_time, multipv=multipv))
-	print(_("\nPremi '?' per la lista dei comandi.\n"))
+	print(f"Tempo analisi impostato a {analysis_time} secondi.\nLinee riportate dal motore impostate a {multipv}.")
+	print("\nPremi '?' per la lista dei comandi.\n")
 	saved = False
 	comment_auto_read=True
 	current_filename = pgn_game.headers.get("Filename", None)
 	current_node = pgn_game
 	extra_prompt = ""
 	while True:
-		prompt_move_part = _("Start")
+		prompt_move_part = "Start"
 		if current_node.move:
 			move_san = current_node.san()
 			fullmove = current_node.parent.board().fullmove_number if current_node.parent else 1
-			move_indicator = "{move_num}. {san}".format(move_num=fullmove, san=move_san) if current_node.board().turn == chess.BLACK else "{move_num}... {san}".format(move_num=fullmove, san=move_san)
+			move_indicator = f"{fullmove}. {move_san}" if current_node.board().turn == chess.BLACK else f"{fullmove}... {move_san}"
 
 			if current_node.parent and len(current_node.parent.variations) > 1:
 				siblings = current_node.parent.variations
 				try: # Aggiunto try-except per robustezza se il nodo non è nelle varianti (?)
 					idx = siblings.index(current_node)
 					if idx == 0 and len(siblings) > 1:
-						prompt_move_part = "<{indicator}".format(indicator=move_indicator)
+						prompt_move_part = f"<{move_indicator}"
 					elif idx > 0 and idx < len(siblings) - 1 :
-						prompt_move_part = "<{indicator}>".format(indicator=move_indicator)
+						prompt_move_part = f"<{move_indicator}>"
 					elif idx > 0 and idx == len(siblings) - 1:
-						prompt_move_part = "{indicator}>".format(indicator=move_indicator)
+						prompt_move_part = f"{move_indicator}>"
 					else:
 						prompt_move_part = move_indicator
 				except ValueError:
@@ -689,11 +687,11 @@ def AnalyzeGame(pgn_game):
 
 		if current_node.move and current_node.comment and not comment_auto_read:
 			prompt_move_part += "-"
-		prompt = "\n{extra} {move_part}: ".format(extra=extra_prompt, move_part=prompt_move_part)
+		prompt = f"\n{extra_prompt} {prompt_move_part}: "
 		extra_prompt = "" # Resetta extra prompt per il prossimo ciclo
 
 		if current_node.comment and comment_auto_read:
-			print(_("Commento:"), current_node.comment)
+			print("Commento:", current_node.comment)
 		elif current_node.comment and not comment_auto_read:
 			Acusticator(["c7",	0.024, 0, volume], kind=1, adsr=[0,0,100,0])
 
@@ -713,7 +711,7 @@ def AnalyzeGame(pgn_game):
 					current_node = node.variations[0]
 				else:
 					Acusticator(["c4", 0.1, -0.5, volume], kind=2, adsr=[10, 10, 30, 50])
-					print(_("\nGià all'inizio della partita."))
+					print("\nGià all'inizio della partita.")
 			else:
 				current_node = node
 			node_changed = (current_node != previous_node)
@@ -724,7 +722,7 @@ def AnalyzeGame(pgn_game):
 				Acusticator(["g5", .03, -.2, volume, "c5", .03, -.8, volume], kind=1, adsr=[2,5,90,5])
 			else:
 				Acusticator(["c4", 0.1, -0.7, volume], kind=2, adsr=[10, 10, 30, 50])
-				print(_("\nNessuna mossa precedente."))
+				print("\nNessuna mossa precedente.")
 			node_changed = (current_node != previous_node)
 
 		elif cmd == "d":
@@ -733,7 +731,7 @@ def AnalyzeGame(pgn_game):
 				Acusticator(["c5", .03, .2, volume,"g5", .03, .8, volume], kind=1, adsr=[2,5,90,5])
 			else:
 				Acusticator(["c4", 0.1, 0.7, volume], kind=2, adsr=[10, 10, 30, 50])
-				print(_("\nNon ci sono mosse successive."))
+				print("\nNon ci sono mosse successive.")
 			node_changed = (current_node != previous_node)
 
 		elif cmd == "f":
@@ -743,9 +741,9 @@ def AnalyzeGame(pgn_game):
 			node_changed = (current_node != start_node)
 			if node_changed:
 				Acusticator(["g5", 0.1, 0, volume,"p", 0.1, 0, volume,"c6", 0.05, 0, volume,"d6", 0.05, 0, volume,"g6", 0.2, 0, volume], kind=1, adsr=[5,5,90,5])
-				print(_("Sei arrivato alla fine della linea principale."))
+				print("Sei arrivato alla fine della linea principale.")
 			else:
-				print(_("Già alla fine della linea principale."))
+				print("Già alla fine della linea principale.")
 		elif cmd == "g":
 			if current_node.parent:
 				vars = current_node.parent.variations
@@ -756,11 +754,11 @@ def AnalyzeGame(pgn_game):
 						Acusticator(["d#5", 0.07, -0.4, volume], kind=1, adsr=[2,5,90,5])
 					else:
 						Acusticator(["c#4", 0.1, -0.6, volume], kind=2, adsr=[10, 10, 30, 50])
-						print(_("Non ci sono varianti precedenti."))
+						print("Non ci sono varianti precedenti.")
 				except ValueError:
-					print(_("Errore: nodo corrente non trovato nelle varianti del genitore."))
+					print("Errore: nodo corrente non trovato nelle varianti del genitore.")
 			else:
-				print(_("Nessun nodo variante disponibile (sei alla radice)."))
+				print("Nessun nodo variante disponibile (sei alla radice).")
 			node_changed = (current_node != previous_node)
 
 		elif cmd == "h":
@@ -773,17 +771,17 @@ def AnalyzeGame(pgn_game):
 						Acusticator(["f5", 0.07, 0.4, volume], kind=1, adsr=[2,5,90,5])
 					else:
 						Acusticator(["c#4", 0.1, 0.6, volume], kind=2, adsr=[10, 10, 30, 50])
-						print(_("Non ci sono varianti successive."))
+						print("Non ci sono varianti successive.")
 				except ValueError:
-					print(_("Errore: nodo corrente non trovato nelle varianti del genitore."))
+					print("Errore: nodo corrente non trovato nelle varianti del genitore.")
 			else:
-				print(_("Nessun nodo variante disponibile (sei alla radice)."))
+				print("Nessun nodo variante disponibile (sei alla radice).")
 			node_changed = (current_node != previous_node)
 
 		elif cmd == "k":
 			Acusticator(["g3", 0.06, 0, volume,"b3", 0.06, 0, volume,"a3", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
 			max_moves_num = (total_moves + 1) // 2
-			target_fullmove = dgt(_("\nVai a mossa n.# (Max {max_moves}): ").format(max_moves=max_moves_num), kind="i", imin=1, imax=max_moves_num)
+			target_fullmove = dgt(f"\nVai a mossa n.# (Max {max_moves_num}): ", kind="i", imin=1, imax=max_moves_num)
 			target_ply = max(0, 2 * (target_fullmove - 1)) # Indice semimossa Bianco
 			# target_ply = max(0, 2 * target_fullmove -1) # Indice semimossa Nero
 			temp_node = pgn_game # Ripartiamo dall'inizio
@@ -799,7 +797,7 @@ def AnalyzeGame(pgn_game):
 			else:
 				if target_ply > 0 : # Se non si cercava l'inizio
 					found_node = node # Vai all'ultimo nodo disponibile
-					print(_("\nRaggiunta la fine della linea prima della mossa richiesta."))
+					print("\nRaggiunta la fine della linea prima della mossa richiesta.")
 
 			current_node = found_node
 			Acusticator(["g6", 0.06, 0, volume,"b6", 0.06, 0, volume,"a6", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
@@ -807,12 +805,12 @@ def AnalyzeGame(pgn_game):
 			if node_changed and not current_node.move and target_ply > 0: # Siamo andati oltre l'ultima mossa
 				pass # Messaggio stampato nel loop sopra
 			elif not node_changed:
-				print(_("\nSei già a questa mossa/posizione."))
+				print("\nSei già a questa mossa/posizione.")
 		elif cmd == "j":
 			Acusticator(["d5", 0.08, 0, volume,"p", 0.08, 0, volume,"d6", 0.06, 0, volume], kind=1, adsr=[2,5,90,5])
-			print(_("\nHeader della partita:"))
+			print("\nHeader della partita:")
 			for k, v in pgn_game.headers.items():
-				print("{key}: {value}".format(key=k, value=v))
+				print(f"{k}: {v}")
 		elif cmd == "l":
 			try:
 				# Usa la funzione helper per caricare una o più partite
@@ -825,17 +823,17 @@ def AnalyzeGame(pgn_game):
 					move_list = list(pgn_game.mainline_moves())
 					total_moves = len(move_list)
 					Acusticator(["c6", 0.15, 0, volume], kind=1, adsr=[5, 10, 80, 5])
-					print(_("\nNuovo PGN caricato dagli appunti."))
-					print(_("\nHeaders della nuova partita:\n"))
+					print("\nNuovo PGN caricato dagli appunti.")
+					print("\nHeaders della nuova partita:\n")
 					for k, v in pgn_game.headers.items():
-						print("{key}: {value}".format(key=k, value=v))
-					print(_("Numero totale di mosse: {num_moves}").format(num_moves=(total_moves+1)//2))
+						print(f"{k}: {v}")
+					print(f"Numero totale di mosse: {(total_moves+1)//2}")
 				# else: LoadPGNFromClipboard stampa già i messaggi
 			except Exception as e:
-				print(_("\nErrore nel caricamento dagli appunti:"), e)
+				print("\nErrore nel caricamento dagli appunti:", e)
 		elif cmd == "z":
-			if ENGINE is None: print(_("\nMotore non inizializzato.")); Acusticator(["a#3", 0.15, 0.3, volume], kind=2, adsr=[5, 20, 0, 75]); continue
-			print(_("\nCalcolo bestline..."))
+			if ENGINE is None: print("\nMotore non inizializzato."); Acusticator(["a#3", 0.15, 0.3, volume], kind=2, adsr=[5, 20, 0, 75]); continue
+			print("\nCalcolo bestline...")
 			bestline_moves = CalculateBest(current_node.board(), bestmove=False, as_san=False)
 			if bestline_moves:
 				try:
@@ -852,75 +850,75 @@ def AnalyzeGame(pgn_game):
 							if i == 0: first_new_node = new_variation_node
 							temp_node = new_variation_node
 					if first_new_node:
-						first_new_node.comment = ((first_new_node.comment or "") + _(" {Bestline aggiunta}")).strip()
-					saved = True; print(_("Bestline aggiunta/aggiornata come variante."))
+						first_new_node.comment = ((first_new_node.comment or "") + " {Bestline aggiunta}").strip()
+					saved = True; print("Bestline aggiunta/aggiornata come variante.")
 					Acusticator(["a5", 0.12, 0.3, volume,"b5", 0.12, 0.3, volume,"c6", 0.12, 0.3, volume,"d6", 0.12, 0.3, volume,"e6", 0.12, 0.3, volume], kind=1, adsr=[4,8,85,5])
-				except Exception as e: print(_("\nErrore durante l'aggiunta della variante: {error}").format(error=e)); Acusticator(["a#3", 0.15, 0.3, volume], kind=2, adsr=[5, 20, 0, 75])
-			else: Acusticator(["a#3", 0.15, 0.3, volume], kind=2, adsr=[5, 20, 0, 75]); print(_("\nImpossibile calcolare la bestline."))
+				except Exception as e: print(f"\nErrore durante l'aggiunta della variante: {e}"); Acusticator(["a#3", 0.15, 0.3, volume], kind=2, adsr=[5, 20, 0, 75])
+			else: Acusticator(["a#3", 0.15, 0.3, volume], kind=2, adsr=[5, 20, 0, 75]); print("\nImpossibile calcolare la bestline.")
 		elif cmd == "x":
-			if ENGINE is None: print(_("\nMotore non inizializzato.")); Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75]); continue
-			print(_("\nCalcolo bestmove..."))
+			if ENGINE is None: print("\nMotore non inizializzato."); Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75]); continue
+			print("\nCalcolo bestmove...")
 			bestmove_uci = CalculateBest(current_node.board(), bestmove=True, as_san=False)
 			if bestmove_uci:
 				try:
 					san_move = current_node.board().san(bestmove_uci)
-					current_node.comment = ((current_node.comment or "").strip() + " {{BM: {san}}}".format(san=san_move)).strip()
-					saved = True; print(_("\nBestmove ({san}) aggiunta al commento.").format(san=san_move))
+					current_node.comment = ((current_node.comment or "").strip() + f" {{BM: {san_move}}}").strip()
+					saved = True; print(f"\nBestmove ({san_move}) aggiunta al commento.")
 					Acusticator(["a5", 0.15, 0, volume,"d6", 0.15, 0, volume], kind=1, adsr=[3,7,88,2])
-				except Exception as e: print(_("\nErrore nell'ottenere SAN per bestmove: {error}").format(error=e)); Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75])
-			else: Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75]); print(_("\nImpossibile calcolare la bestmove."))
+				except Exception as e: print(f"\nErrore nell'ottenere SAN per bestmove: {e}"); Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75])
+			else: Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75]); print("\nImpossibile calcolare la bestmove.")
 		elif cmd == "c":
 			Acusticator(["d6", 0.012, 0, volume, "p", 0.15,0,0,"a6",0.012,0,volume], kind=1, adsr=[0.01,0,100,0.01])
-			user_comment = dgt(_("\nInserisci il commento: "), kind="s").strip()
+			user_comment = dgt("\nInserisci il commento: ", kind="s").strip()
 			if user_comment:
 				if current_node.comment:
 					current_node.comment += user_comment
 				else:
 					current_node.comment = user_comment
-				saved = True; print(_("\nCommento aggiunto/aggiornato."))
+				saved = True; print("\nCommento aggiunto/aggiornato.")
 				Acusticator(["a6", 0.012, 0, volume, "p", 0.15,0,0,"d6",0.012,0,volume], kind=1, adsr=[0.01,0,100,0.01])
-			else: print(_("\nNessun commento inserito."))
+			else: print("\nNessun commento inserito.")
 		elif cmd == "v":
-			if ENGINE is None: print(_("\nMotore non inizializzato.")); Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75]); continue
-			print(_("\nCalcolo valutazione..."))
+			if ENGINE is None: print("\nMotore non inizializzato."); Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75]); continue
+			print("\nCalcolo valutazione...")
 			score_object = CalculateEvaluation(current_node.board())
 			if score_object is not None:
 				eval_val_str = "ERR"
 				pov_score = score_object.pov(current_node.board().turn)
 				if pov_score.is_mate():
 					mate_in = pov_score.mate()
-					eval_val_str = "M{moves}".format(moves=abs(mate_in))
+					eval_val_str = f"M{abs(mate_in)}"
 				else:
 					# --- USA SCORE ASSOLUTO ---
 					cp = score_object.white().score(mate_score=30000)
 					if cp is not None:
-						eval_val_str = "{cp:+.2f}".format(cp=cp/100) # Valore assoluto per il commento
-				eval_comment = "{{Val: {eval_str}}}".format(eval_str=eval_val_str)
-				current_node.comment = ((current_node.comment or "").strip() + " {comment}".format(comment=eval_comment)).strip()
-				saved = True; print(_("\nValutazione ({eval_str}) aggiunta al commento.").format(eval_str=eval_val_str))
+						eval_val_str = f"{cp/100:+.2f}" # Valore assoluto per il commento
+				eval_comment = f"{{Val: {eval_val_str}}}"
+				current_node.comment = ((current_node.comment or "").strip() + f" {eval_comment}").strip()
+				saved = True; print(f"\nValutazione ({eval_val_str}) aggiunta al commento.")
 				Acusticator(["g5", 0.07, 0, volume,"p", 0.04, 0, volume,"b5", 0.025, 0, volume], kind=1, adsr=[3,7,88,2])
-			else: Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75]); print(_("\nImpossibile calcolare la valutazione."))		
+			else: Acusticator(["a#3", 0.15, 0, volume], kind=2, adsr=[5, 20, 0, 75]); print("\nImpossibile calcolare la valutazione.")		
 		elif cmd == "b":
 			if comment_auto_read:
 				comment_auto_read = False
 				Acusticator(["g5", 0.025, 0, volume,"p", 0.04, 0, volume,"b4", 0.035, 0, volume], kind=1, adsr=[3,7,88,2])
-				print(_("\nLettura automatica dei commenti disabilitata."))
+				print("\nLettura automatica dei commenti disabilitata.")
 			else:
 				comment_auto_read = True
 				Acusticator(["g5", 0.025, 0, volume,"p", 0.04, 0, volume,"b6", 0.035, 0, volume], kind=1, adsr=[3,7,88,2])
-				print(_("\nLettura automatica dei commenti abilitata."))
+				print("\nLettura automatica dei commenti abilitata.")
 		elif cmd == "n":
 			if current_node.comment:
 				Acusticator(["d5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
-				confirm = key(_("\nEliminare il commento: '{comment}'? (s/n): ").format(comment=current_node.comment)).lower()
+				confirm = key(f"\nEliminare il commento: '{current_node.comment}'? (s/n): ").lower()
 				if confirm == "s":
-					current_node.comment = ""; saved = True; print(_("Commento eliminato."))
+					current_node.comment = ""; saved = True; print("Commento eliminato.")
 					Acusticator(["e4", 0.1, -0.4, volume], kind=1, adsr=[5,10,70,15])
-				else: print(_("Eliminazione annullata."))
-			else: Acusticator(["b3", 0.12, -0.4, volume], kind=2, adsr=[5, 15, 20, 60]); print(_("\nNessun commento da eliminare."))
+				else: print("Eliminazione annullata.")
+			else: Acusticator(["b3", 0.12, -0.4, volume], kind=2, adsr=[5, 15, 20, 60]); print("\nNessun commento da eliminare.")
 		elif cmd == "q":
-			if ENGINE is None: print(_("\nMotore non inizializzato.")); Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); continue
-			print(_("\nCalcolo bestmove..."))
+			if ENGINE is None: print("\nMotore non inizializzato."); Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); continue
+			print("\nCalcolo bestmove...")
 			bestmove_uci = CalculateBest(current_node.board(), bestmove=True, as_san=False)
 			if bestmove_uci:
 				score_info_str = ""
@@ -933,32 +931,32 @@ def AnalyzeGame(pgn_game):
 							pov_score = score_object.pov(current_node.board().turn)
 							if pov_score.is_mate():
 								mate_in = pov_score.mate()
-								score_info_str = "M{moves}".format(moves=abs(mate_in))
+								score_info_str = f"M{abs(mate_in)}"
 							else:
 								# --- USA SCORE ASSOLUTO ---
 								cp = score_object.white().score(mate_score=30000)
 								if cp is not None:
-									score_info_str = "{cp:+.2f}".format(cp=cp/100)
+									score_info_str = f"{cp/100:+.2f}"
 								else:
 									score_info_str = "ERR"
 				try:
 					san_move = current_node.board().san(bestmove_uci)
 					desc_move = DescribeMove(bestmove_uci, current_node.board(), annotation=None)
-					print(_("\nMossa migliore: ")+desc_move)
+					print("\nMossa migliore: "+desc_move)
 					if score_info_str:
-						extra_prompt = " BM: {score} {san} ".format(score=score_info_str, san=san_move)
+						extra_prompt = f" BM: {score_info_str} {san_move} "
 					else:
-						extra_prompt = " BM: {san} ".format(san=san_move)
+						extra_prompt = f" BM: {san_move} "
 					Acusticator(["f6", 0.02, 0, volume,"p", .15, 0, 0,"a6", 0.02, 0, volume,"p", .15, 0, 0,"c7", 0.02, 0, volume], kind=1, adsr=[4,8,85,5])
-				except Exception as e: print(_("\nErrore nell'ottenere SAN/Descr per bestmove: {error}").format(error=e)); Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); extra_prompt = _(" BM: Errore ")
-			else: Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); print(_("\nImpossibile calcolare la bestmove.")); extra_prompt = _(" BM: N/A ")		
+				except Exception as e: print(f"\nErrore nell'ottenere SAN/Descr per bestmove: {e}"); Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); extra_prompt = " BM: Errore "
+			else: Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); print("\nImpossibile calcolare la bestmove."); extra_prompt = " BM: N/A "		
 		elif cmd == "w":
-			if ENGINE is None: print(_("\nMotore non inizializzato.")); Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); continue
-			print(_("\nCalcolo bestline..."))
+			if ENGINE is None: print("\nMotore non inizializzato."); Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); continue
+			print("\nCalcolo bestline...")
 			bestline_list_descr = CalculateBest(current_node.board(), bestmove=False, as_san=True)
 			if bestline_list_descr:
 				Acusticator(["f6", 0.02, 0, volume,"p", .15, 0, 0,"a6", 0.02, 0, volume,"p", .15, 0, 0,"c7", 0.02, 0, volume,"p", .15, 0, 0,"e7", 0.02, 0, volume,"p", .15, 0, 0,"g7", 0.02, 0, volume,"p", .15, 0, 0,"b7", 0.02, 0, volume], kind=1, adsr=[4,8,85,5])
-				print(_("\nLinea migliore:")); [print(line) for line in bestline_list_descr]
+				print("\nLinea migliore:"); [print(line) for line in bestline_list_descr]
 				score_info_str = ""
 				san_move_w = "N/A"
 				fen = current_node.board().fen()
@@ -971,12 +969,12 @@ def AnalyzeGame(pgn_game):
 							pov_score = score_object.pov(current_node.board().turn)
 							if pov_score.is_mate():
 								mate_in = pov_score.mate()
-								score_info_str = "M{moves}".format(moves=abs(mate_in))
+								score_info_str = f"M{abs(mate_in)}"
 							else:
 								# --- USA SCORE ASSOLUTO ---
 								cp = score_object.white().score(mate_score=30000)
 								if cp is not None:
-									score_info_str = "{cp:+.2f}".format(cp=cp/100)
+									score_info_str = f"{cp/100:+.2f}"
 								else:
 									score_info_str = "ERR"
 						if best_move_obj:
@@ -985,41 +983,41 @@ def AnalyzeGame(pgn_game):
 						else: san_move_w = "N/A"
 				if san_move_w != "N/A" and san_move_w != "Err":
 					if score_info_str:
-						extra_prompt = " BM: {score} {san} ".format(score=score_info_str, san=san_move_w)
+						extra_prompt = f" BM: {score_info_str} {san_move_w} "
 					else:
-						extra_prompt = " BM: {san} ".format(san=san_move_w)
+						extra_prompt = f" BM: {san_move_w} "
 				else:
-					extra_prompt = " BM: {san} ".format(san=san_move_w)
-			else: Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); print(_("\nImpossibile calcolare la bestline.")); extra_prompt = _(" BM: N/A ")		
+					extra_prompt = f" BM: {san_move_w} "
+			else: Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); print("\nImpossibile calcolare la bestline."); extra_prompt = " BM: N/A "		
 		elif cmd == "e":
-			if ENGINE is None: print(_("\nMotore non inizializzato.")); Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); continue
-			print(_("\nCalcolo linee di analisi...")); fen = current_node.board().fen()
+			if ENGINE is None: print("\nMotore non inizializzato."); Acusticator(["a#3", 0.15, 0.5, volume], kind=2, adsr=[5, 20, 0, 75]); continue
+			print("\nCalcolo linee di analisi..."); fen = current_node.board().fen()
 			cache_analysis[fen] = ENGINE.analyse(current_node.board(), chess.engine.Limit(time=analysis_time), multipv=multipv)
 			analysis = cache_analysis[fen]
-			if not analysis: print(_("Nessun risultato di analisi disponibile.")); continue
+			if not analysis: print("Nessun risultato di analisi disponibile."); continue
 			main_info = analysis[0]; score = main_info.get("score"); wdl = None; wdl_str = "N/A"; score_str = "N/A"
 			if score is not None:
-				if hasattr(score, "wdl"): wdl_raw = score.wdl(); wdl = (wdl_raw[0]/10, wdl_raw[1]/10, wdl_raw[2]/10) if wdl_raw else None; wdl_str = "{win:.1f}%/{draw:.1f}%/{loss:.1f}%".format(win=wdl[0], draw=wdl[1], loss=wdl[2]) if wdl else "N/A"
-				if score.white().is_mate(): score_str = "M{mate}".format(mate=score.white().mate())
-				else: score_cp = score.white().score(); score_str = "{cp:+.2f}".format(cp=score_cp/100) if score_cp is not None else "N/A"
-			depth = main_info.get("depth", "N/A"); seldepth = main_info.get("seldepth", "N/A"); nps = main_info.get("nps", "N/A"); hashfull = main_info.get("hashfull", "N/A"); hashfull_perc = "{perc:.1f}%".format(perc=hashfull/10) if isinstance(hashfull, int) else "N/A"; debug_string = main_info.get("string", "N/A"); tbhits = main_info.get("tbhits", "N/A"); time_used = main_info.get("time", "N/A"); nodes = main_info.get("nodes", "N/A")
+				if hasattr(score, "wdl"): wdl_raw = score.wdl(); wdl = (wdl_raw[0]/10, wdl_raw[1]/10, wdl_raw[2]/10) if wdl_raw else None; wdl_str = f"{wdl[0]:.1f}%/{wdl[1]:.1f}%/{wdl[2]:.1f}%" if wdl else "N/A"
+				if score.white().is_mate(): score_str = f"M{score.white().mate()}"
+				else: score_cp = score.white().score(); score_str = f"{score_cp/100:+.2f}" if score_cp is not None else "N/A"
+			depth = main_info.get("depth", "N/A"); seldepth = main_info.get("seldepth", "N/A"); nps = main_info.get("nps", "N/A"); hashfull = main_info.get("hashfull", "N/A"); hashfull_perc = f"{hashfull/10:.1f}%" if isinstance(hashfull, int) else "N/A"; debug_string = main_info.get("string", "N/A"); tbhits = main_info.get("tbhits", "N/A"); time_used = main_info.get("time", "N/A"); nodes = main_info.get("nodes", "N/A")
 			Acusticator(["f6", .013, 0, volume,"p", .05, 0, 0,"a6", .013, 0, volume,"p", .05, 0, 0,"c7", .013, 0, volume,"p", .05, 0, 0,"e7", .013, 0, volume,"p", .05, 0, 0,"g7", .013, 0, volume,"p", .05, 0, 0,"b7", .013, 0, volume,"p", .05, 0, 0,"f6", .013, 0, volume,"p", .05, 0, 0,"a6", .013, 0, volume,"p", .05, 0, 0,"c7", .013, 0, volume,"p", .05, 0, 0,"e7", .013, 0, volume,"p", .05, 0, 0,"g7", .013, 0, volume,"p", .05, 0, 0,"b7", .013, 0, volume,"p", .05, 0, 0,"f6", .013, 0, volume,"p", .05, 0, 0,"a6", .013, 0, volume,"p", .05, 0, 0,"c7", .013, 0, volume,"p", .05, 0, 0,"e7", .013, 0, volume,"p", .05, 0, 0,"g7", .013, 0, volume,"p", .05, 0, 0,"b7", .013, 0, volume], kind=1, adsr=[4,8,85,5])
-			print(_("\nStatistiche: Tempo: {time}s, Hash: {hash}, TB: {tb}\nDebug: {debug}\nProfondità: {depth}/{seldepth}, Val: {score}, WDL: {wdl}\nNodi: {nodes}, NPS: {nps}\n\nLinee di analisi:").format(time=time_used, hash=hashfull_perc, tb=tbhits, debug=debug_string, depth=depth, seldepth=seldepth, score=score_str, wdl=wdl_str, nodes=nodes, nps=nps))
+			print(f"\nStatistiche: Tempo: {time_used}s, Hash: {hashfull_perc}, TB: {tbhits}\nDebug: {debug_string}\nProfondità: {depth}/{seldepth}, Val: {score_str}, WDL: {wdl_str}\nNodi: {nodes}, NPS: {nps}\n\nLinee di analisi:")
 			for i, info in enumerate(analysis, start=1):
 				pv = info.get("pv", []); line_score = info.get("score"); line_score_str = "N/A"
-				if line_score: line_score_str = "M{mate}".format(mate=line_score.white().mate()) if line_score.white().is_mate() else "{cp:+.2f}".format(cp=line_score.white().score()/100) if line_score.white().score() is not None else "N/A"
-				if not pv: print(_("Linea {i} ({score}): Nessuna mossa trovata.").format(i=i, score=line_score_str)); continue
+				if line_score: line_score_str = f"M{line_score.white().mate()}" if line_score.white().is_mate() else f"{line_score.white().score()/100:+.2f}" if line_score.white().score() is not None else "N/A"
+				if not pv: print(f"Linea {i} ({line_score_str}): Nessuna mossa trovata."); continue
 				temp_board_pv = current_node.board().copy(); moves_san = []
 				try:
 					for move in pv: san_move = temp_board_pv.san(move).replace("!", "").replace("?",""); moves_san.append(san_move); temp_board_pv.push(move)
-					print(_("Linea {i} ({score}): {moves}").format(i=i, score=line_score_str, moves=' '.join(moves_san)))
-				except Exception as e_pv: print(_("Linea {i} ({score}): Errore conversione PV - {error}").format(i=i, score=line_score_str, error=e_pv))
-			smart = key(_("\nVuoi ispezionare le linee in modalità smart? (s/n): ")).lower()
+					print(f"Linea {i} ({line_score_str}): {' '.join(moves_san)}")
+				except Exception as e_pv: print(f"Linea {i} ({line_score_str}): Errore conversione PV - {e_pv}")
+			smart = key("\nVuoi ispezionare le linee in modalità smart? (s/n): ").lower()
 			if smart == "s": Acusticator(["d5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0]); SmartInspection(analysis, current_node.board())
 			else: Acusticator(["d4", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
 		elif cmd == "r":
-			if ENGINE is None: print(_("\nMotore non inizializzato.")); Acusticator(["g5", 0.17, 0, volume,"g3",.012,0,volume], kind=1, adsr=[3,0,90,2]); extra_prompt = _(" CP: N/A "); continue
-			print(_("\nCalcolo valutazione..."))
+			if ENGINE is None: print("\nMotore non inizializzato."); Acusticator(["g5", 0.17, 0, volume,"g3",.012,0,volume], kind=1, adsr=[3,0,90,2]); extra_prompt = " CP: N/A "; continue
+			print("\nCalcolo valutazione...")
 			score_object = CalculateEvaluation(current_node.board())
 			Acusticator(["e5",.008,-1,volume])
 			if score_object is not None:
@@ -1027,27 +1025,27 @@ def AnalyzeGame(pgn_game):
 				pov_score = score_object.pov(current_node.board().turn)
 				if pov_score.is_mate():
 					mate_in = pov_score.mate()
-					eval_str = "M{moves}".format(moves=abs(mate_in))
+					eval_str = f"M{abs(mate_in)}"
 				else:
 					# --- USA SCORE ASSOLUTO ---
 					cp = score_object.white().score(mate_score=30000)
 					if cp is not None:
-						eval_str = "{cp:+.2f}".format(cp=cp/100)
+						eval_str = f"{cp/100:+.2f}"
 					else:
 						eval_str = "ERR"
-				extra_prompt = " CP: {eval} ".format(eval=eval_str)
+				extra_prompt = f" CP: {eval_str} "
 				Acusticator(["g3", 0.17, 0, volume,"g6",.012,0,volume], kind=1, adsr=[3,0,90,2])
 			else:
-				print(_("\nImpossibile calcolare la valutazione."))
-				extra_prompt = _(" CP: N/A ")
+				print("\nImpossibile calcolare la valutazione.")
+				extra_prompt = " CP: N/A "
 				Acusticator(["g5", 0.17, 0, volume,"g3",.012,0,volume], kind=1, adsr=[3,0,90,2])		
 		elif cmd == "t":
-			if ENGINE is None: print(_("\nMotore non inizializzato.")); Acusticator(["g#4", 0.05, 0, volume,"c5", 0.05, 0, volume,"g#4", 0.05, 0, volume,"c5", 0.05, 0, volume], kind=1, adsr=[.4,0,88,.3]); extra_prompt = _(" WDL: N/A "); continue
-			print(_("\nCalcolo WDL...")); wdl_perc = CalculateWDL(current_node.board())
-			if wdl_perc: adj_wdl="W{win:.1f}%/D{draw:.1f}%/L{loss:.1f}% ".format(win=wdl_perc[0], draw=wdl_perc[1], loss=wdl_perc[2]); extra_prompt="{wdl} ".format(wdl=adj_wdl); Acusticator(["g#5", 0.03, 0, volume,"c6", 0.03, 0, volume,"g#5", 0.03, 0, volume,"c6", 0.03, 0, volume], kind=1, adsr=[.4,0,88,.3])
-			else: print(_("\nImpossibile calcolare WDL.")); extra_prompt = _(" WDL: N/A "); Acusticator(["g#4", 0.05, 0, volume,"c5", 0.05, 0, volume,"g#4", 0.05, 0, volume,"c5", 0.05, 0, volume], kind=1, adsr=[.4,0,88,.3])
+			if ENGINE is None: print("\nMotore non inizializzato."); Acusticator(["g#4", 0.05, 0, volume,"c5", 0.05, 0, volume,"g#4", 0.05, 0, volume,"c5", 0.05, 0, volume], kind=1, adsr=[.4,0,88,.3]); extra_prompt = " WDL: N/A "; continue
+			print("\nCalcolo WDL..."); wdl_perc = CalculateWDL(current_node.board())
+			if wdl_perc: adj_wdl=f"W{wdl_perc[0]:.1f}%/D{wdl_perc[1]:.1f}%/L{wdl_perc[2]:.1f}% "; extra_prompt=f"{adj_wdl} "; Acusticator(["g#5", 0.03, 0, volume,"c6", 0.03, 0, volume,"g#5", 0.03, 0, volume,"c6", 0.03, 0, volume], kind=1, adsr=[.4,0,88,.3])
+			else: print("\nImpossibile calcolare WDL."); extra_prompt = " WDL: N/A "; Acusticator(["g#4", 0.05, 0, volume,"c5", 0.05, 0, volume,"g#4", 0.05, 0, volume,"c5", 0.05, 0, volume], kind=1, adsr=[.4,0,88,.3])
 		elif cmd == "y":
-			white_material, black_material = CalculateMaterial(current_node.board()); extra_prompt = "Mtrl: {white}/{black} ".format(white=white_material, black=black_material)
+			white_material, black_material = CalculateMaterial(current_node.board()); extra_prompt = f"Mtrl: {white_material}/{black_material} "
 			Acusticator(["g#5", 0.03, 0, volume,"e5", 0.03, 0, volume,"d5", 0.03, 0, volume,"g6", 0.03, 0, volume], kind=1, adsr=[.4,0,88,.3])
 		elif cmd == "u":
 			custom_board_view = CustomBoard(current_node.board().fen())
@@ -1055,23 +1053,23 @@ def AnalyzeGame(pgn_game):
 			custom_board_view.turn = current_node.board().turn; custom_board_view.fullmove_number = current_node.board().fullmove_number
 			print("\n" + str(custom_board_view)); Acusticator(["d6", 0.03, 0, volume,"f6", 0.03, 0, volume,"g6", 0.03, 0, volume,"d7", 0.06, 0, volume], kind=1, adsr=[.4,0,88,.3])
 		elif cmd == "i":
-			print(_("\nTempo analisi: {time}s. Cache: {cache_len} posizioni.").format(time=analysis_time, cache_len=len(cache_analysis)))
+			print(f"\nTempo analisi: {analysis_time}s. Cache: {len(cache_analysis)} posizioni.")
 			Acusticator(["e5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
-			new_time_input = dgt(_("\nNuovo tempo (secondi) o INVIO: "), kind="f", fmin=0.1, fmax=300, default=analysis_time)
-			if new_time_input != analysis_time: SetAnalysisTime(new_time_input); print(_("\nTempo di analisi aggiornato.")); Acusticator(["e7", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
-			else: print(_("\nTempo di analisi non modificato."))
+			new_time_input = dgt("\nNuovo tempo (secondi) o INVIO: ", kind="f", fmin=0.1, fmax=300, default=analysis_time)
+			if new_time_input != analysis_time: SetAnalysisTime(new_time_input); print("\nTempo di analisi aggiornato."); Acusticator(["e7", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
+			else: print("\nTempo di analisi non modificato.")
 		elif cmd == "o":
-			print(_("\nLinee analisi: {multipv}. Cache: {cache_len} posizioni.").format(multipv=multipv, cache_len=len(cache_analysis)))
+			print(f"\nLinee analisi: {multipv}. Cache: {len(cache_analysis)} posizioni.")
 			Acusticator(["e5", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
-			new_lines = dgt(_("Nuovo numero linee o INVIO: "), kind="i",imin=1,imax=10, default=multipv)
-			if new_lines != multipv: SetMultipv(new_lines); print(_("\nNumero di linee aggiornato.")); Acusticator(["e7", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
-			else: print(_("\nNumero di linee non modificato."))
+			new_lines = dgt("Nuovo numero linee o INVIO: ", kind="i",imin=1,imax=10, default=multipv)
+			if new_lines != multipv: SetMultipv(new_lines); print("\nNumero di linee aggiornato."); Acusticator(["e7", 0.06, 0, volume], kind=1, adsr=[0,0,100,0])
+			else: print("\nNumero di linee non modificato.")
 		elif cmd == "?":
-			print(_("\nComandi disponibili in modalità analisi:")); menu(ANALYSIS_COMMAND,show_only=True)
+			print("\nComandi disponibili in modalità analisi:"); menu(ANALYSIS_COMMAND,show_only=True)
 			Acusticator(["d5", .7, 0, volume], kind=3, adsr=[.02,0,100,99])
 		else: # Comando non riconosciuto
 			Acusticator(["d3", 1.2, 0, volume], kind=3, adsr=[.02,0,100,99])
-			print(_("Comando non riconosciuto."))
+			print("Comando non riconosciuto.")
 			node_changed = False # Assicura che non venga stampata descrizione
 
 		# --- 4. Stampa Descrizione se Nodo Cambiato ---
@@ -1085,22 +1083,22 @@ def AnalyzeGame(pgn_game):
 			print("\n" + DescribeMove(current_node.move,
 									   current_node.parent.board() if current_node.parent else pgn_game.board(),
 									   annotation=annotation_suffix))
-	print(_("\nFine analisi"))
+	print("\nFine analisi")
 	annotator_updated_flag = False
 	if saved:
-		new_annotator = 'Orologic V{version} by {programmer}'.format(version=VERSION, programmer=PROGRAMMER)
+		new_annotator = f'Orologic V{VERSION} by {PROGRAMMER}'
 		current_annotator = pgn_game.headers.get("Annotator", "")
 		if current_annotator != new_annotator:
 			pgn_game.headers["Annotator"] = new_annotator
 			annotator_updated_flag = True
-			print(_("\nAnnotator aggiornato."))
+			print("\nAnnotator aggiornato.")
 	pgn_string_raw = ""
 	try:
 		pgn_string_raw = str(pgn_game)
 		if not pgn_string_raw:
-			print(_("!!!!!!!! ATTENZIONE: str(pgn_game) ha restituito una stringa vuota! !!!!!!!!"))
+			print("!!!!!!!! ATTENZIONE: str(pgn_game) ha restituito una stringa vuota! !!!!!!!!")
 	except Exception as e_str_export:
-		print(_("!!!!!!!! DEBUG: ECCEZIONE durante str(pgn_game): {error} !!!!!!!!").format(error=repr(e_str_export)))
+		print(f"!!!!!!!! DEBUG: ECCEZIONE durante str(pgn_game): {repr(e_str_export)} !!!!!!!!")
 		pgn_string_raw = ""
 	pgn_string_formatted = ""
 	exception_occurred_format = False
@@ -1109,42 +1107,42 @@ def AnalyzeGame(pgn_game):
 			pgn_string_formatted = format_pgn_comments(pgn_string_raw)
 		except Exception as e_format:
 			exception_occurred_format = True
-			print(_("!!!!!!!! DEBUG: ECCEZIONE DURANTE format_pgn_comments: {error} !!!!!!!!").format(error=repr(e_format)))
+			print(f"!!!!!!!! DEBUG: ECCEZIONE DURANTE format_pgn_comments: {repr(e_format)} !!!!!!!!")
 			pgn_string_formatted = ""
 	else:
-		print(_("Attenzione: Stringa PGN grezza vuota o non valida, formattazione saltata."))
-	print("DEBUG: Eccezione durante format? {exc}".format(exc=exception_occurred_format))
+		print("Attenzione: Stringa PGN grezza vuota o non valida, formattazione saltata.")
+	print(f"DEBUG: Eccezione durante format? {exception_occurred_format}")
 	if saved:
 		if pgn_string_formatted:
-			white_h = pgn_game.headers.get("White", _("Bianco")).replace(" ", "_")
-			black_h = pgn_game.headers.get("Black", _("Nero")).replace(" ", "_")
+			white_h = pgn_game.headers.get("White", "Bianco").replace(" ", "_")
+			black_h = pgn_game.headers.get("Black", "Nero").replace(" ", "_")
 			result_h = pgn_game.headers.get("Result", "*").replace("/", "-")
-			new_default_file_name='{white}_vs_{black}_{result}'.format(white=white_h, black=black_h, result=result_h)
-			base_name = dgt(_("\nSalva PGN modificato.\nNome base (INVIO per '{default_name}'): ").format(default_name=new_default_file_name), kind="s",default=new_default_file_name).strip()
+			new_default_file_name=f'{white_h}_vs_{black_h}_{result_h}'
+			base_name = dgt(f"\nSalva PGN modificato.\nNome base (INVIO per '{new_default_file_name}'): ", kind="s",default=new_default_file_name).strip()
 			if not base_name: base_name = new_default_file_name
 			Acusticator(["f4", 0.05, 0, volume])
-			new_filename_base = "{base}-analizzato-{timestamp}".format(base=base_name, timestamp=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
+			new_filename_base = f"{base_name}-analizzato-{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
 			new_filename = sanitize_filename(new_filename_base) + ".pgn"
 			try:
 				with open(new_filename, "w", encoding="utf-8-sig") as f:
 					f.write(pgn_string_formatted)
-				print(_("PGN aggiornato salvato come ") + new_filename)
-				if annotator_updated_flag: print(_("Header Annotator è stato aggiornato nel file."))
+				print("PGN aggiornato salvato come " + new_filename)
+				if annotator_updated_flag: print("Header Annotator è stato aggiornato nel file.")
 			except Exception as e_save:
-				print(_("Errore durante il salvataggio del PGN: {error}").format(error=e_save))
+				print(f"Errore durante il salvataggio del PGN: {e_save}")
 		else:
-			print(_("Impossibile salvare il file PGN a causa di errori durante la generazione/formattazione."))
+			print("Impossibile salvare il file PGN a causa di errori durante la generazione/formattazione.")
 	else:
-		print(_("\nNon sono state apportate modifiche salvabili al PGN."))
+		print("\nNon sono state apportate modifiche salvabili al PGN.")
 	if pgn_string_formatted:
 		try:
 			pyperclip.copy(pgn_string_formatted)
-			print(_("PGN attuale (formattato) copiato negli appunti."))
+			print("PGN attuale (formattato) copiato negli appunti.")
 		except Exception as e_clip:
-			print(_("Errore durante la copia del PGN (formattato) negli appunti: {error}").format(error=e_clip))
+			print(f"Errore durante la copia del PGN (formattato) negli appunti: {e_clip}")
 	else:
-		print(_("Nessun PGN formattato da copiare negli appunti."))
-	print(_("Uscita dalla modalità analisi. Ritorno al menù principale."))
+		print("Nessun PGN formattato da copiare negli appunti.")
+	print("Uscita dalla modalità analisi. Ritorno al menù principale.")
 
 def get_color_adjective(piece_color, gender):
 	# NUOVA LOGICA: Cerca le forme maschili/femminili degli aggettivi in L10N
@@ -1165,7 +1163,7 @@ def extended_piece_description(piece):
 	piece_gender = piece_info['gender']
 	
 	color_adj = get_color_adjective(piece.color, piece_gender)
-	return "{piece} {color}".format(piece=piece_name, color=color_adj)
+	return f"{piece_name} {color_adj}"
 
 def read_diagonal(game_state, base_column, direction_right):
 	"""
@@ -1176,13 +1174,13 @@ def read_diagonal(game_state, base_column, direction_right):
 	"""
 	base_column = base_column.lower()
 	if base_column not in "abcdefgh":
-		print(_("Colonna base non valida."))
+		print("Colonna base non valida.")
 		return
 	file_index = ord(base_column) - ord("a")
 	rank_index = 0  # partiamo da traversa 1 (indice 0)
 	report = []
 	# NUOVA LOGICA
-	base_descr = "{col} 1".format(col=L10N['columns'].get(base_column, base_column))
+	base_descr = f"{L10N['columns'].get(base_column, base_column)} 1"
 	while 0 <= file_index < 8 and 0 <= rank_index < 8:
 		square = chess.square(file_index, rank_index)
 		piece = game_state.board.piece_at(square)
@@ -1190,20 +1188,20 @@ def read_diagonal(game_state, base_column, direction_right):
 			current_file = chr(ord("a") + file_index)
 			# NUOVA LOGICA
 			descriptive_file = L10N['columns'].get(current_file, current_file)
-			report.append("{file} {rank}: {piece_desc}".format(file=descriptive_file, rank=rank_index+1, piece_desc=extended_piece_description(piece)))
+			report.append(f"{descriptive_file} {rank_index+1}: {extended_piece_description(piece)}")
 		rank_index += 1
 		file_index = file_index + 1 if direction_right else file_index - 1
-	dir_str = _("alto-destra") if direction_right else _("alto-sinistra")
+	dir_str = "alto-destra" if direction_right else "alto-sinistra"
 	if report:
-		print(_("Diagonale da {base} in direzione {direction}: ").format(base=base_descr, direction=dir_str) + ", ".join(report))
+		print(f"Diagonale da {base_descr} in direzione {dir_str}: " + ", ".join(report))
 	else:
-		print(_("Diagonale da {base} in direzione {direction} non contiene pezzi.").format(base=base_descr, direction=dir_str))
+		print(f"Diagonale da {base_descr} in direzione {dir_str} non contiene pezzi.")
 
 def read_rank(game_state, rank_number):
 	try:
-		rank_bb = getattr(chess, "BB_RANK_{rank}".format(rank=rank_number))
+		rank_bb = getattr(chess, f"BB_RANK_{rank_number}")
 	except AttributeError:
-		print(_("Traversa non valida."))
+		print("Traversa non valida.")
 		return
 	squares = chess.SquareSet(rank_bb)
 	report = []
@@ -1214,21 +1212,21 @@ def read_rank(game_state, rank_number):
 			file_letter = chr(ord("a") + file_index)
 			# NUOVA LOGICA
 			descriptive_file = L10N['columns'].get(file_letter, file_letter)
-			report.append("{file} {rank}: {piece_desc}".format(file=descriptive_file, rank=rank_number, piece_desc=extended_piece_description(piece)))
+			report.append(f"{descriptive_file} {rank_number}: {extended_piece_description(piece)}")
 	if report:
-		print(_("Traversa {rank}: ").format(rank=rank_number) + ", ".join(report))
+		print(f"Traversa {rank_number}: " + ", ".join(report))
 	else:
-		print(_("La traversa {rank} è vuota.").format(rank=rank_number))
+		print(f"La traversa {rank_number} è vuota.")
 
 def read_file(game_state, file_letter):
 	file_letter = file_letter.lower()
 	if file_letter not in "abcdefgh":
-		print(_("Colonna non valida."))
+		print("Colonna non valida.")
 		return
 	try:
-		file_bb = getattr(chess, "BB_FILE_{file}".format(file=file_letter.upper()))
+		file_bb = getattr(chess, f"BB_FILE_{file_letter.upper()}")
 	except AttributeError:
-		print(_("Colonna non valida."))
+		print("Colonna non valida.")
 		return
 	squares = chess.SquareSet(file_bb)
 	report = []
@@ -1239,13 +1237,13 @@ def read_file(game_state, file_letter):
 			file_index = chess.square_file(square)
 			# NUOVA LOGICA
 			file_letter_descr = L10N['columns'].get(chr(ord("a") + file_index), file_letter)
-			report.append("{file} {rank}: {piece_desc}".format(file=file_letter_descr, rank=rank, piece_desc=extended_piece_description(piece)))
+			report.append(f"{file_letter_descr} {rank}: {extended_piece_description(piece)}")
 	# NUOVA LOGICA
 	col_name = L10N['columns'].get(file_letter, file_letter)
 	if report:
-		print(_("Colonna {col_name}: ").format(col_name=col_name) + ", ".join(report))
+		print(f"Colonna {col_name}: " + ", ".join(report))
 	else:
-		print(_("La colonna {col_name} è vuota.").format(col_name=col_name))
+		print(f"La colonna {col_name} è vuota.")
 
 def _get_piece_descriptions_from_squareset(board, squareset):
 	"""
@@ -1266,7 +1264,7 @@ def _get_piece_descriptions_from_squareset(board, squareset):
 			col_name = L10N['columns'].get(sq_name[0].lower(), sq_name[0])
 			rank_name = sq_name[1]
 			
-			descriptions.append(_("{piece_desc} in {col_name} {rank_name}").format(piece_desc=piece_desc, col_name=col_name, rank_name=rank_name))
+			descriptions.append(f"{piece_desc} in {col_name} {rank_name}")
 	return descriptions
 
 def read_square(game_state, square_str):
@@ -1277,40 +1275,40 @@ def read_square(game_state, square_str):
 	try:
 		square = chess.parse_square(square_str)
 	except Exception as e:
-		print(_("Casa non valida."))
+		print("Casa non valida.")
 		return
 	# La logica per il colore della casa rimane invariata
 	if (chess.square_file(square) + chess.square_rank(square)) % 2 == 0:
-		color_descr = _("scura")
+		color_descr = "scura"
 	else:
-		color_descr = _("chiara")
+		color_descr = "chiara"
 	piece = game_state.board.piece_at(square)
 	
 	final_parts = []
 	if piece:
 		# --- Logica per casa occupata ---
-		base_msg = _("La casa {square} è {color} e contiene {piece_desc}.").format(square=square_str.upper(), color=color_descr, piece_desc=extended_piece_description(piece))
+		base_msg = f"La casa {square_str.upper()} è {color_descr} e contiene {extended_piece_description(piece)}."
 		final_parts.append(base_msg)
 		defenders_squares = game_state.board.attackers(piece.color, square)
 		if defenders_squares:
 			defender_descs = _get_piece_descriptions_from_squareset(game_state.board, defenders_squares)
-			final_parts.append(_("difesa da: {defenders}").format(defenders=', '.join(defender_descs)))
+			final_parts.append(f"difesa da: {', '.join(defender_descs)}")
 		attackers_squares = game_state.board.attackers(not piece.color, square)
 		if attackers_squares:
 			attacker_descs = _get_piece_descriptions_from_squareset(game_state.board, attackers_squares)
-			final_parts.append(_("attaccata da: {attackers}").format(attackers=', '.join(attacker_descs)))
+			final_parts.append(f"attaccata da: {', '.join(attacker_descs)}")
 	else:
 		# --- Logica per casa vuota ---
-		base_msg = _("La casa {square} è {color} e risulta vuota.").format(square=square_str.upper(), color=color_descr)
+		base_msg = f"La casa {square_str.upper()} è {color_descr} e risulta vuota."
 		final_parts.append(base_msg)
 		white_attackers_squares = game_state.board.attackers(chess.WHITE, square)
 		if white_attackers_squares:
 			attacker_descs = _get_piece_descriptions_from_squareset(game_state.board, white_attackers_squares)
-			final_parts.append(_("attaccata dal Bianco con: {attackers}").format(attackers=', '.join(attacker_descs)))
+			final_parts.append(f"attaccata dal Bianco con: {', '.join(attacker_descs)}")
 		black_attackers_squares = game_state.board.attackers(chess.BLACK, square)
 		if black_attackers_squares:
 			attacker_descs = _get_piece_descriptions_from_squareset(game_state.board, black_attackers_squares)
-			final_parts.append(_("attaccata dal Nero con: {attackers}").format(attackers=', '.join(attacker_descs)))
+			final_parts.append(f"attaccata dal Nero con: {', '.join(attacker_descs)}")
 	# Assembla la frase finale
 	print(" ".join(final_parts).replace(" .", ".").strip() + ".")
 
@@ -1318,7 +1316,7 @@ def report_piece_positions(game_state, piece_symbol):
 	try:
 		piece = chess.Piece.from_symbol(piece_symbol)
 	except Exception as e:
-		print(_("Non riconosciuto: inserisci R N B Q K P, r n b q k p"))
+		print("Non riconosciuto: inserisci R N B Q K P, r n b q k p")
 		return
 	piece_type_key = chess.PIECE_NAMES[piece.piece_type].lower()
 	full_name = L10N['pieces'][piece_type_key]['name']
@@ -1332,11 +1330,11 @@ def report_piece_positions(game_state, piece_symbol):
 		file_letter = chr(ord("a") + file_index)
 		# NUOVA LOGICA: Usa L10N per i nomi delle colonne
 		descriptive_file = L10N['columns'].get(file_letter, file_letter)
-		positions.append("{file} {rank}".format(file=descriptive_file, rank=rank))
+		positions.append(f"{descriptive_file} {rank}")
 	if positions:
-		print("{color}: {name} in: ".format(color=color_string.capitalize(), name=full_name) + ", ".join(positions))
+		print(f"{color_string.capitalize()}: {full_name} in: " + ", ".join(positions))
 	else:
-		print(_("Nessun {name} {color} trovato.").format(name=full_name, color=color_string))
+		print(f"Nessun {full_name} {color_string} trovato.")
 
 def report_white_time(game_state):
 	initial_white = game_state.clock_config["phases"][game_state.white_phase]["white_time"]
@@ -1344,7 +1342,7 @@ def report_white_time(game_state):
 	if elapsed_white < 0:
 		elapsed_white = 0
 	perc_white = (elapsed_white / initial_white * 100) if initial_white > 0 else 0
-	print(_("Tempo bianco: ") + FormatTime(game_state.white_remaining) + " ({perc:.0f}%)".format(perc=perc_white))
+	print("Tempo bianco: " + FormatTime(game_state.white_remaining) + f" ({perc_white:.0f}%)")
 	return
 
 def report_black_time(game_state):
@@ -1353,7 +1351,7 @@ def report_black_time(game_state):
 	if elapsed_black < 0:
 		elapsed_black = 0
 	perc_black = (elapsed_black / initial_black * 100) if initial_black > 0 else 0
-	print(_("Tempo nero: ") + FormatTime(game_state.black_remaining) + " ({perc:.0f}%)".format(perc=perc_black))
+	print("Tempo nero: " + FormatTime(game_state.black_remaining) + f" ({perc_black:.0f}%)")
 	return
 
 def save_text_summary(game_state, descriptive_moves, eco_entry):
@@ -1362,57 +1360,57 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
 	"""
 	headers = game_state.pgn_game.headers
 	# 1. Intestazioni (Headers) leggibili
-	header_text = _("Riepilogo Partita di Orologic\n")
+	header_text = f"Riepilogo Partita di Orologic\n"
 	header_text += "--------------------------------\n"
-	header_text += _("Evento: {event}\n").format(event=headers.get('Event', _('N/D')))
-	header_text += _("Sede: {site}\n").format(site=headers.get('Site', _('N/D')))
-	header_text += _("Data: {date}\n").format(date=headers.get('Date', _('N/D')))
-	header_text += _("Round: {round}\n").format(round=headers.get('Round', _('N/D')))
-	header_text += _("Bianco: {white} ({elo})\n").format(white=headers.get('White', _('N/D')), elo=headers.get('WhiteElo', _('N/A')))
-	header_text += _("Nero: {black} ({elo})\n").format(black=headers.get('Black', _('N/D')), elo=headers.get('BlackElo', _('N/A')))
-	header_text += _("Controllo del Tempo: {tc}\n").format(tc=headers.get('TimeControl', _('N/D')))
+	header_text += f"Evento: {headers.get('Event', 'N/D')}\n"
+	header_text += f"Sede: {headers.get('Site', 'N/D')}\n"
+	header_text += f"Data: {headers.get('Date', 'N/D')}\n"
+	header_text += f"Round: {headers.get('Round', 'N/D')}\n"
+	header_text += f"Bianco: {headers.get('White', 'N/D')} ({headers.get('WhiteElo', 'N/A')})\n"
+	header_text += f"Nero: {headers.get('Black', 'N/D')} ({headers.get('BlackElo', 'N/A')})\n"
+	header_text += f"Controllo del Tempo: {headers.get('TimeControl', 'N/D')}\n"
 	# 2. Informazioni sull'apertura
 	if eco_entry:
-		opening_text = _("Apertura: {eco} - {opening}").format(eco=eco_entry.get('eco', ''), opening=eco_entry.get('opening', ''))
+		opening_text = f"Apertura: {eco_entry.get('eco', '')} - {eco_entry.get('opening', '')}"
 		if eco_entry.get('variation'):
-			opening_text += " ({variation})\n".format(variation=eco_entry.get('variation'))
+			opening_text += f" ({eco_entry.get('variation')})\n"
 		else:
 			opening_text += "\n"
 	else:
-		opening_text = _("Apertura: non rilevata\n")
+		opening_text = "Apertura: non rilevata\n"
 	header_text += opening_text
 	header_text += "--------------------------------\n\n"
 	# 3. Lista delle mosse
-	move_list_text = _("Lista Mosse:\n")
+	move_list_text = "Lista Mosse:\n"
 	move_number = 1
 	i = 0
 	while i < len(descriptive_moves):
 		white_move_desc = descriptive_moves[i]
 		if i + 1 < len(descriptive_moves):
 			black_move_desc = descriptive_moves[i+1]
-			move_list_text += "{num}. {white_move}, {black_move}\n".format(num=move_number, white_move=white_move_desc, black_move=black_move_desc)
+			move_list_text += f"{move_number}. {white_move_desc}, {black_move_desc}\n"
 			i += 2
 		else:
-			move_list_text += "{num}. {white_move}\n".format(num=move_number, white_move=white_move_desc)
+			move_list_text += f"{move_number}. {white_move_desc}\n"
 			i += 1
 		move_number += 1
 	# 4. Risultato e data di generazione
-	footer_text = _("\nRisultato finale: {result}\n").format(result=headers.get('Result', '*'))
+	footer_text = f"\nRisultato finale: {headers.get('Result', '*')}\n"
 	footer_text += "--------------------------------\n"
-	footer_text += _("File generato il: {datetime}\n").format(datetime=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
-	footer_text += _("Report generato da Orologic V{version} - {programmer}\n").format(version=VERSION, programmer=PROGRAMMER)
+	footer_text += f"File generato il: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n"
+	footer_text += f"Report generato da Orologic V{VERSION} - {PROGRAMMER}\n"
 	# Combinazione di tutte le parti
 	full_text = header_text + move_list_text + footer_text
 	# Creazione del nome del file (riutilizzando la logica del PGN)
-	base_filename = "{white}-{black}-{result}-{timestamp}".format(white=headers.get('White', _('Bianco')), black=headers.get('Black', _('Nero')), result=headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
+	base_filename = f"{headers.get('White', 'Bianco')}-{headers.get('Black', 'Nero')}-{headers.get('Result', '*')}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
 	filename = sanitize_filename(base_filename) + ".txt"
 	# Salvataggio su file
 	try:
 		with open(filename, "w", encoding="utf-8") as f:
 			f.write(full_text)
-		print(_("Riepilogo partita salvato come {filename}.").format(filename=filename))
+		print(f"Riepilogo partita salvato come {filename}.")
 	except Exception as e:
-		print(_("Errore durante il salvataggio del riepilogo testuale: {error}").format(error=e))
+		print(f"Errore durante il salvataggio del riepilogo testuale: {e}")
 		Acusticator(["a3", 1, 0, volume], kind=2, adsr=[0, 0, 100, 100])
 
 def setup_fischer_random_board():
@@ -1421,15 +1419,15 @@ def setup_fischer_random_board():
 	L'utente può inserire una sequenza, richiederne una casuale ('?'), o annullare ('.').
 	Restituisce (None, None) se l'utente annulla.
 	"""
-	print(_("\n--- Configurazione Fischer Random (Chess960) ---"))
+	print("\n--- Configurazione Fischer Random (Chess960) ---")
 	
 	while True:
-		prompt = _("\nInserisci la sequenza di 8 pezzi, '?' per una casuale, o '.' per annullare: ")
+		prompt = "\nInserisci la sequenza di 8 pezzi, '?' per una casuale, o '.' per annullare: "
 		user_input = dgt(prompt, kind="s").upper()
 		if user_input == '?':
 			# --- NUOVA LOGICA PER LA POSIZIONE CASUALE ---
 			pos_number = random.randint(0, 959)
-			print(_("Generazione posizione casuale numero {pos_num}...").format(pos_num=pos_number))
+			print(f"Generazione posizione casuale numero {pos_number}...")
 			# Crea la scacchiera direttamente dal numero di posizione 960
 			board_to_return = CustomBoard.from_chess960_pos(pos_number)
 			starting_fen = board_to_return.fen()
@@ -1440,26 +1438,26 @@ def setup_fischer_random_board():
 				if piece:
 					piece_sequence += piece.symbol().upper()
 			Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
-			print(_("Posizione generata: {sequence} (Numero: {number})").format(sequence=piece_sequence, number=pos_number))
+			print(f"Posizione generata: {piece_sequence} (Numero: {pos_number})")
 			return board_to_return, starting_fen
 		elif user_input == '.':
-			print(_("Configurazione annullata."))
+			print("Configurazione annullata.")
 			return None, None
 		elif len(user_input) != 8:
-			print(_("Errore: la sequenza deve contenere 8 caratteri. Tu ne hai inseriti {num_chars}.").format(num_chars=len(user_input)))
+			print(f"Errore: la sequenza deve contenere 8 caratteri. Tu ne hai inseriti {len(user_input)}.")
 			Acusticator(["b3", .2, 0, volume], kind=2)
 			continue
 		# La logica per l'input manuale rimane la stessa
 		else:
-			fen_to_try = "{sequence}/pppppppp/8/8/8/8/PPPPPPPP/{sequence_upper} w - - 0 1".format(sequence=user_input.lower(), sequence_upper=user_input)
+			fen_to_try = f"{user_input.lower()}/pppppppp/8/8/8/8/PPPPPPPP/{user_input} w - - 0 1"
 			try:
 				board_to_return = CustomBoard(fen_to_try, chess960=True)
 				pos_number = board_to_return.chess960_pos()
 				Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
-				print(_("Posizione valida! Numero di riferimento Chess960: {number}").format(number=pos_number))
+				print(f"Posizione valida! Numero di riferimento Chess960: {pos_number}")
 				return board_to_return, fen_to_try
 			except ValueError as e:
-				print(_("Errore: Posizione non valida. La libreria riporta: '{error}'").format(error=e))
+				print(f"Errore: Posizione non valida. La libreria riporta: '{e}'")
 				Acusticator(["a3", .3, 0, volume], kind=2, adsr=[5, 15, 0, 80])
 				continue
 
@@ -1482,27 +1480,27 @@ def generate_time_control_string(clock_config):
 		if moves == 0:
 			# Sudden death: se è presente l'incremento, lo includiamo
 			if inc > 0:
-				tc = "{base}+{inc}".format(base=base_time, inc=inc)
+				tc = f"{base_time}+{inc}"
 			else:
-				tc = "{base}".format(base=base_time)
+				tc = f"{base_time}"
 		else:
 			# Time control a mosse: includiamo moves, tempo e, se presente, l'incremento
 			if inc > 0:
-				tc = "{moves}/{base}+{inc}".format(moves=moves, base=base_time, inc=inc)
+				tc = f"{moves}/{base_time}+{inc}"
 			else:
-				tc = "{moves}/{base}".format(moves=moves, base=base_time)
+				tc = f"{moves}/{base_time}"
 		tc_list.append(tc)
 	return ", ".join(tc_list)
 def seconds_to_mmss(seconds):
 	m = int(seconds // 60)
 	s = int(seconds % 60)
-	return _("{minutes:02d} minuti e {seconds:02d} secondi!").format(minutes=m, seconds=s)
+	return f"{m:02d} minuti e {s:02d} secondi!"
 def parse_mmss_to_seconds(time_str):
 	try:
 		minutes, seconds = map(int, time_str.split(":"))
 		return minutes * 60 + seconds
 	except Exception as e:
-		print(_("Formato orario non valido. Atteso mm:ss. Errore:"), e)
+		print("Formato orario non valido. Atteso mm:ss. Errore:", e)
 		return 0
 
 def DescribeMove(move, board, annotation=None):
@@ -1549,21 +1547,21 @@ def DescribeMove(move, board, annotation=None):
 			promo_str = ""
 			if is_promo:
 				promo_piece_symbol = chess.piece_symbol(move.promotion).upper()
-				promo_str = "={promo}".format(promo=promo_piece_symbol)
+				promo_str = f"={promo_piece_symbol}"
 			capture_char = "x" if is_capture else ""
 			if piece_symbol:
-				san_base = "{symbol}{disambiguation}{capture}{to_sq}{promo}".format(symbol=piece_symbol, disambiguation=disambiguation, capture=capture_char, to_sq=to_sq_str, promo=promo_str)
+				san_base = f"{piece_symbol}{disambiguation}{capture_char}{to_sq_str}{promo_str}"
 			else:
 				if is_capture:
-					san_base = "{from_file}{capture}{to_sq}{promo}".format(from_file=from_sq_str[0], capture=capture_char, to_sq=to_sq_str, promo=promo_str)
+					san_base = f"{from_sq_str[0]}{capture_char}{to_sq_str}{promo_str}"
 				else:
-					san_base = "{to_sq}{promo}".format(to_sq=to_sq_str, promo=promo_str)
+					san_base = f"{to_sq_str}{promo_str}"
 		except Exception as e:
 			try:
 				san_base = board.san(move)
 				san_base = san_base.replace("!","").replace("?","")
 			except Exception:
-				san_base = _("Mossa da {from_sq} a {to_sq}").format(from_sq=chess.square_name(move.from_square), to_sq=chess.square_name(move.to_square))
+				san_base = f"Mossa da {chess.square_name(move.from_square)} a {chess.square_name(move.to_square)}"
 		
 		# La logica di parsing del SAN rimane la stessa
 		pattern = re.compile(r'^([RNBQK])?([a-h1-8]{1,2})?(x)?([a-h][1-8])(=([RNBQ]))?$')
@@ -1596,50 +1594,50 @@ def DescribeMove(move, board, annotation=None):
 			descr = piece_name
 			if disamb:
 				if piece_type == chess.PAWN:
-					descr += " {col}".format(col=L10N['columns'].get(disamb, disamb))
+					descr += f" {L10N['columns'].get(disamb, disamb)}"
 				else:
 					parts = [L10N['columns'].get(ch, ch) if ch.isalpha() else ch for ch in disamb]
-					descr += _(" di ") + "".join(parts) # "di" potrebbe essere localizzato, ma è un caso più complesso
+					descr += " di " + "".join(parts) # "di" potrebbe essere localizzato, ma è un caso più complesso
 			if capture:
-				descr += " {capture_verb}".format(capture_verb=L10N['moves']['capture'])
+				descr += f" {L10N['moves']['capture']}"
 				captured_piece = None
 				if board.is_en_passant(move):
 					ep_square = move.to_square + (-8 if board.turn == chess.WHITE else 8)
 					captured_piece = board.piece_at(ep_square)
-					descr += " {ep}".format(ep=L10N['moves']['en_passant'])
+					descr += f" {L10N['moves']['en_passant']}"
 				else:
 					captured_piece = board.piece_at(move.to_square)
 				if captured_piece and not board.is_en_passant(move):
 					captured_type_key = chess.PIECE_NAMES[captured_piece.piece_type].lower()
 					captured_name = L10N['pieces'][captured_type_key]['name']
-					descr += " {name}".format(name=captured_name)
+					descr += f" {captured_name}"
 				dest_file_info = dest[0]
 				dest_rank_info = dest[1]
 				dest_name_info = L10N['columns'].get(dest_file_info, dest_file_info)
-				descr += " {prep} {file}{rank}".format(prep=L10N['moves']['capture_on'], file=dest_name_info, rank=dest_rank_info)
+				descr += f" {L10N['moves']['capture_on']} {dest_name_info}{dest_rank_info}"
 			else:
 				dest_file = dest[0]
 				dest_rank = dest[1]
 				dest_name = L10N['columns'].get(dest_file, dest_file)
-				descr += " {prep} {file}{rank}".format(prep=L10N['moves']['move_to'], file=dest_name, rank=dest_rank)
+				descr += f" {L10N['moves']['move_to']} {dest_name}{dest_rank}"
 			if promo_letter:
 				promo_type = chess.PIECE_SYMBOLS.index(promo_letter.lower())
 				promo_type_key = chess.PIECE_NAMES[promo_type].lower()
 				promo_name = L10N['pieces'][promo_type_key]['name']
-				descr += " {promo_verb} {promo_name}".format(promo_verb=L10N['moves']['promotes_to'], promo_name=promo_name)
+				descr += f" {L10N['moves']['promotes_to']} {promo_name}"
 			base_descr = descr
 	
 	board_after_move = board.copy()
 	board_after_move.push(move)
 	final_descr = base_descr
 	if board_after_move.is_checkmate():
-		final_descr += " {checkmate}".format(checkmate=L10N['moves']['checkmate'])
+		final_descr += f" {L10N['moves']['checkmate']}"
 	elif board_after_move.is_check():
-		final_descr += " {check}".format(check=L10N['moves']['check'])
+		final_descr += f" {L10N['moves']['check']}"
 	
 	# NUOVA LOGICA: Usa L10N per le annotazioni
 	if annotation and annotation in L10N['annotations']:
-		final_descr += " ({annotation})".format(annotation=L10N['annotations'][annotation])
+		final_descr += f" ({L10N['annotations'][annotation]})"
 		
 	return final_descr
 
@@ -1654,7 +1652,7 @@ def GenerateMoveSummary(game_state):
 			white_move_desc = DescribeMove(white_move, board_copy)
 			board_copy.push(white_move)
 		except Exception as e:
-			white_move_desc = _("Errore nella mossa del bianco: {error}").format(error=e)
+			white_move_desc = f"Errore nella mossa del bianco: {e}"
 		if i + 1 < len(game_state.move_history):  # Se esiste la mossa del nero
 			black_move_san = game_state.move_history[i + 1]
 			try:
@@ -1662,10 +1660,10 @@ def GenerateMoveSummary(game_state):
 				black_move_desc = DescribeMove(black_move, board_copy)
 				board_copy.push(black_move)
 			except Exception as e:
-				black_move_desc = _("Errore nella mossa del nero: {error}").format(error=e)
-			summary.append("{num}. {white_desc}, {black_desc}".format(num=move_number, white_desc=white_move_desc, black_desc=black_move_desc))
+				black_move_desc = f"Errore nella mossa del nero: {e}"
+			summary.append(f"{move_number}. {white_move_desc}, {black_move_desc}")
 		else:
-			summary.append("{num}. {white_desc}".format(num=move_number, white_desc=white_move_desc))
+			summary.append(f"{move_number}. {white_move_desc}")
 		move_number += 1
 	return summary
 def CalculateMaterial(board):
@@ -1757,7 +1755,7 @@ def LoadLocalization():
 	# Controlla non solo se 'localization' esiste, ma anche se non è vuota o corrotta
 	# (verificando la presenza di una sotto-chiave fondamentale come 'pieces').
 	if "localization" not in db or not db["localization"].get("pieces"):
-		print(_("Configurazione lingua non trovata o incompleta, imposto la localizzazione italiana di default."))
+		print("Configurazione lingua non trovata o incompleta, imposto la localizzazione italiana di default.")
 		db["localization"] = get_default_localization()
 		SaveDB(db)
 	
@@ -1773,13 +1771,13 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 	"""
 	eco_entries = []
 	if not os.path.exists(filename):
-		print(_("File {filename} non trovato.").format(filename=filename))
+		print(f"File {filename} non trovato.")
 		return eco_entries
 	try:
 		with open(filename, "r", encoding="utf-8") as f:
 			content = f.read()
 	except Exception as e:
-		print(_("Errore durante la lettura di {filename}: {error}").format(filename=filename, error=e))
+		print(f"Errore durante la lettura di {filename}: {e}")
 		return eco_entries
 	# Rimuovi eventuali blocchi di commento racchiusi tra { e }
 	content = re.sub(r'\{[^}]*\}', '', content, flags=re.DOTALL)
@@ -1801,7 +1799,7 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 
 			if game is None:
 				# Potrebbe accadere con entry PGN malformate dopo gli header
-				print(_("Attenzione: Impossibile leggere il game PGN {game_num} dopo l'header.").format(game_num=game_count))
+				print(f"Attenzione: Impossibile leggere il game PGN {game_count} dopo l'header.")
 				skipped_count += 1
 				# Prova a leggere la prossima entry saltando righe vuote
 				while True:
@@ -1850,7 +1848,7 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 				skipped_count += 1
 
 		except ValueError as ve: # Cattura specificamente errori comuni di parsing PGN
-			print(_("Errore di valore durante il parsing del game PGN {game_num}: {error}").format(game_num=game_count, error=ve))
+			print(f"Errore di valore durante il parsing del game PGN {game_count}: {ve}")
 			skipped_count += 1
 			# Prova a recuperare cercando la prossima entry PGN '['
 			while True:
@@ -1860,7 +1858,7 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 					stream.seek(stream.tell() - len(line.encode('utf-8'))) # Torna indietro
 					break
 		except Exception as e:
-			print(_("Errore generico durante il parsing del game PGN {game_num}: {error}").format(game_num=game_count, error=e))
+			print(f"Errore generico durante il parsing del game PGN {game_count}: {e}")
 			skipped_count += 1
 			# Tentativo di recupero simile a sopra
 			while True:
@@ -1870,9 +1868,9 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 					stream.seek(stream.tell() - len(line.encode('utf-8')))
 					break
 
-	print(_("Caricate {num_entries} linee di apertura ECO.").format(num_entries=len(eco_entries)))
+	print(f"Caricate {len(eco_entries)} linee di apertura ECO.")
 	if skipped_count > 0:
-		print(_("Attenzione: {num_skipped} linee ECO sono state saltate a causa di errori di parsing.").format(num_skipped=skipped_count))
+		print(f"Attenzione: {skipped_count} linee ECO sono state saltate a causa di errori di parsing.")
 	return eco_entries
 def DetectOpeningByFEN(current_board, eco_db_with_fen):
 	"""
@@ -1909,19 +1907,19 @@ def FormatTime(seconds):
 	s=total%60
 	parts=[]
 	if h:
-		parts.append("{num} {label}".format(num=h, label=_('ora') if h==1 else _('ore')))
+		parts.append(f"{h} {'ora' if h==1 else 'ore'}")
 	if m:
-		parts.append("{num} {label}".format(num=m, label=_('minuto') if m==1 else _('minuti')))
+		parts.append(f"{m} {'minuto' if m==1 else 'minuti'}")
 	if s:
-		parts.append("{num} {label}".format(num=s, label=_('secondo') if s==1 else _('secondi')))
-	return ", ".join(parts) if parts else _("0 secondi")
+		parts.append(f"{s} {'secondo' if s==1 else 'secondi'}")
+	return ", ".join(parts) if parts else "0 secondi"
 def ParseTime(prompt):
 	t=dgt(prompt,kind="s")
 	try:
 		h,m,s=map(int,t.split(":"))
 		return h*3600+m*60+s
 	except Exception as e:
-		print(_("Formato orario non valido. Atteso hh:mm:ss. Errore:"),e)
+		print("Formato orario non valido. Atteso hh:mm:ss. Errore:",e)
 		return 0
 class ClockConfig:
 	def __init__(self,name,same_time,phases,alarms,note):
@@ -1936,15 +1934,15 @@ class ClockConfig:
 	def from_dict(d):
 		return ClockConfig(d["name"],d["same_time"],d["phases"],d.get("alarms",[]),d.get("note",""))
 def CreateClock():
-	print(_("\nCreazione orologi\n"))
-	name=dgt(_("Nome dell'orologio: "),kind="s")
+	print("\nCreazione orologi\n")
+	name=dgt("Nome dell'orologio: ",kind="s")
 	Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume],sync=True)
 	db=LoadDB()
 	if any(c["name"]==name for c in db["clocks"]):
-		print(_("Un orologio con questo nome esiste già."))
+		print("Un orologio con questo nome esiste già.")
 		Acusticator(["a3",1,0,volume],kind=2,adsr=[0,0,100,100])
 		return
-	same=dgt(_("Bianco e Nero partono con lo stesso tempo? (Invio per sì, 'n' per no): "),kind="s",smin=0,smax=1)
+	same=dgt("Bianco e Nero partono con lo stesso tempo? (Invio per sì, 'n' per no): ",kind="s",smin=0,smax=1)
 	Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 	same_time=True if same=="" else False
 	phases=[]
@@ -1952,25 +1950,25 @@ def CreateClock():
 	while phase_count<4:
 		phase={}
 		if same_time:
-			total_seconds=ParseTime(_("Tempo (hh:mm:ss) per fase {num}: ").format(num=phase_count+1))
-			inc=dgt(_("Incremento in secondi per fase {num}: ").format(num=phase_count+1),kind="i")
+			total_seconds=ParseTime(f"Tempo (hh:mm:ss) per fase {phase_count+1}: ")
+			inc=dgt(f"Incremento in secondi per fase {phase_count+1}: ",kind="i")
 			Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 			phase["white_time"]=total_seconds
 			phase["black_time"]=total_seconds
 			phase["white_inc"]=inc
 			phase["black_inc"]=inc
 		else:
-			total_seconds_w=ParseTime(_("Tempo per il bianco (hh:mm:ss) fase {num}: ").format(num=phase_count+1))
-			inc_w=dgt(_("Incremento per il bianco fase {num}: ").format(num=phase_count+1),kind="i")
+			total_seconds_w=ParseTime(f"Tempo per il bianco (hh:mm:ss) fase {phase_count+1}: ")
+			inc_w=dgt(f"Incremento per il bianco fase {phase_count+1}: ",kind="i")
 			Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
-			total_seconds_b=ParseTime(_("Tempo per il nero (hh:mm:ss) fase {num}: ").format(num=phase_count+1))
-			inc_b=dgt(_("Incremento per il nero fase {num}: ").format(num=phase_count+1),kind="i")
+			total_seconds_b=ParseTime(f"Tempo per il nero (hh:mm:ss) fase {phase_count+1}: ")
+			inc_b=dgt(f"Incremento per il nero fase {phase_count+1}: ",kind="i")
 			Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 			phase["white_time"]=total_seconds_w
 			phase["black_time"]=total_seconds_b
 			phase["white_inc"]=inc_w
 			phase["black_inc"]=inc_b
-		moves=dgt(_("Numero di mosse per fase {num} (0 per terminare): ").format(num=phase_count+1),kind="i")
+		moves=dgt(f"Numero di mosse per fase {phase_count+1} (0 per terminare): ",kind="i")
 		Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 		phase["moves"]=moves
 		phases.append(phase)
@@ -1978,24 +1976,24 @@ def CreateClock():
 			break
 		phase_count+=1
 	alarms=[]
-	num_alarms=dgt(_("Numero di allarmi da inserire (max 5, 0 per nessuno): "),kind="i",imax=5,default=0)
+	num_alarms=dgt("Numero di allarmi da inserire (max 5, 0 per nessuno): ",kind="i",imax=5,default=0)
 	Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 	for i in range(num_alarms):
-		alarm_input = dgt(_("Inserisci il tempo (mm:ss) per l'allarme {num}: ").format(num=i+1), kind="s")
+		alarm_input = dgt(f"Inserisci il tempo (mm:ss) per l'allarme {i+1}: ", kind="s")
 		Acusticator(["f7", .09, 0, volume,"d4", .07, 0, volume])
 		alarm_time = parse_mmss_to_seconds(alarm_input)
 		alarms.append(alarm_time)
-	note=dgt(_("Inserisci una nota per l'orologio (opzionale): "),kind="s",default="")
+	note=dgt("Inserisci una nota per l'orologio (opzionale): ",kind="s",default="")
 	Acusticator(["f7", .09, 0, volume,"d5", .07, 0, volume,"p",.1,0,0,"d5", .07, 0, volume,"f7", .09, 0, volume])
 	new_clock=ClockConfig(name,same_time,phases,alarms,note)
 	db["clocks"].append(new_clock.to_dict())
 	SaveDB(db)
-	print(_("\nOrologio creato e salvato."))
+	print("\nOrologio creato e salvato.")
 def ViewClocks():
-	print(_("\nVisualizzazione orologi\n"))
+	print("\nVisualizzazione orologi\n")
 	db=LoadDB()
 	if not db["clocks"]:
-		print(_("Nessun orologio salvato."))
+		print("Nessun orologio salvato.")
 		return
 	for idx,c in enumerate(db["clocks"]):
 		indicatore="B=N" if c["same_time"] else "B/N"
@@ -2003,27 +2001,27 @@ def ViewClocks():
 		for i,phase in enumerate(c["phases"]):
 			if c["same_time"]:
 				time_str=SecondsToHMS(phase["white_time"])
-				fasi+=" F{num}:{time}+{inc}".format(num=i+1, time=time_str, inc=phase['white_inc'])
+				fasi+=f" F{i+1}:{time_str}+{phase['white_inc']}"
 			else:
 				time_str_w=SecondsToHMS(phase["white_time"])
 				time_str_b=SecondsToHMS(phase["black_time"])
-				fasi+=" F{num}: Bianco:{time_w}+{inc_w}, Nero:{time_b}+{inc_b}".format(num=i+1, time_w=time_str_w, inc_w=phase['white_inc'], time_b=time_str_b, inc_b=phase['black_inc'])
+				fasi+=f" F{i+1}: Bianco:{time_str_w}+{phase['white_inc']}, Nero:{time_str_b}+{phase['black_inc']}"
 		num_alarms = len(c.get("alarms", []))  # Conta gli allarmi
-		alarms_str = _(" Allarmi ({num})").format(num=num_alarms)
-		print("{idx}. {name} - {indicator}{phases}{alarms}".format(idx=idx+1, name=c['name'], indicator=indicatore, phases=fasi, alarms=alarms_str))
+		alarms_str = f" Allarmi ({num_alarms})"
+		print(f"{idx+1}. {c['name']} - {indicatore}{fasi}{alarms_str}")
 		if c.get("note",""):
-			print("\t{label}: {note}".format(label=_("Nota"), note=c['note']))
+			print(f"\tNota: {c['note']}")
 	Acusticator(["c5", 0.08, 0, volume], kind=1, adsr=[2,5,90,5])
-	attesa=key(_("Premi un tasto per tornare al menu principale."))
+	attesa=key("Premi un tasto per tornare al menu principale.")
 	Acusticator(["a4", 0.08, 0, volume], kind=1, adsr=[2,5,90,5])
 def SelectClock(db):
 	db = LoadDB()
 	if not db["clocks"]:
 		Acusticator(["c3", 0.72, 0, volume], kind=2, adsr=[0,0,100,100])
-		print(_("Nessun orologio salvato."))
+		print("Nessun orologio salvato.")
 		return
 	else:
-		print(_("Ci sono {num_clocks} orologi nella collezione.").format(num_clocks=len(db['clocks'])))
+		print(f"Ci sono {len(db['clocks'])} orologi nella collezione.")
 	choices = {}
 	for c in db["clocks"]:
 		indicatore = "B=N" if c["same_time"] else "B/N"
@@ -2031,14 +2029,14 @@ def SelectClock(db):
 		for j, phase in enumerate(c["phases"]):
 			if c["same_time"]:
 				time_str = SecondsToHMS(phase["white_time"])
-				fasi += " F{num}:{time}+{inc}".format(num=j+1, time=time_str, inc=phase['white_inc'])
+				fasi += f" F{j+1}:{time_str}+{phase['white_inc']}"
 			else:
 				time_str_w = SecondsToHMS(phase["white_time"])
 				time_str_b = SecondsToHMS(phase["black_time"])
-				fasi += " F{num}: Bianco:{time_w}+{inc_w}, Nero:{time_b}+{inc_b}".format(num=j+1, time_w=time_str_w, inc_w=phase['white_inc'], time_b=time_str_b, inc_b=phase['black_inc'])
+				fasi += f" F{j+1}: Bianco:{time_str_w}+{phase['white_inc']}, Nero:{time_str_b}+{phase['black_inc']}"
 		num_alarms = len(c.get("alarms", []))
-		alarms_str = _(" Allarmi ({num})").format(num=num_alarms)
-		first_line = "{indicator}{phases}{alarms}".format(indicator=indicatore, phases=fasi, alarms=alarms_str)
+		alarms_str = f" Allarmi ({num_alarms})"
+		first_line = f"{indicatore}{fasi}{alarms_str}"
 		note_line = c.get("note", "")
 		description = first_line + "\n  " + note_line
 		choices[c["name"]] = description
@@ -2049,9 +2047,9 @@ def SelectClock(db):
 		if idx is not None:
 			return db["clocks"][idx]
 	else:
-		print(_("Nessun orologio selezionato."))
+		print("Nessun orologio selezionato.")
 def DeleteClock(db):
-	print(_("\nEliminazione orologi salvati\n"))
+	print("\nEliminazione orologi salvati\n")
 	Acusticator(["b4", .02, 0, volume,"d4",.2,0,volume]) 
 	orologio = SelectClock(db)
 	if	orologio is not None:
@@ -2061,45 +2059,45 @@ def DeleteClock(db):
 			del db["clocks"][idx]
 			Acusticator(["c4", 0.025, 0, volume])
 			SaveDB(db)
-			print(_("\nOrologio '{clock_name}' eliminato, ne rimangono {remaining}.").format(clock_name=clock_name, remaining=len(db['clocks'])))
+			print(f"\nOrologio '{clock_name}' eliminato, ne rimangono {len(db['clocks'])}.")
 	return
 def EditPGN():
 	Acusticator(["d6", .02, 0, volume,"g4",.02,0,volume]) 
-	print(_("\nModifica info default per PGN\n"))
+	print("\nModifica info default per PGN\n")
 	db = LoadDB()
 	default_pgn = db.get("default_pgn", {})
 	default_event = default_pgn.get("Event", "Orologic Game")
-	event = dgt(_("Evento [{default}]: ").format(default=default_event), kind="s", default=default_event)
+	event = dgt(f"Evento [{default_event}]: ", kind="s", default=default_event)
 	Acusticator(["d6", .02, -1, volume,"g4",.02,-1,volume]) 
 	if event.strip() == "":
 		event = default_event
-	default_site = default_pgn.get("Site", _("Sede sconosciuta"))
-	site = dgt(_("Sede [{default}]: ").format(default=default_site), kind="s", default=default_site)
+	default_site = default_pgn.get("Site", "Sede sconosciuta")
+	site = dgt(f"Sede [{default_site}]: ", kind="s", default=default_site)
 	Acusticator(["d6", .02, -.66, volume,"g4",.02,-.66,volume]) 
 	if site.strip() == "":
 		site = default_site
 	default_round = default_pgn.get("Round", "Round 1")
-	round_ = dgt(_("Round [{default}]: ").format(default=default_round), kind="s", default=default_round)
+	round_ = dgt(f"Round [{default_round}]: ", kind="s", default=default_round)
 	Acusticator(["d6", .02, -.33, volume,"g4",.02,-.33,volume]) 
 	if round_.strip() == "":
 		round_ = default_round
-	default_white = default_pgn.get("White", _("Bianco"))
-	white = dgt(_("Nome del Bianco [{default}]: ").format(default=default_white), kind="s", default=default_white).strip().title()
+	default_white = default_pgn.get("White", "Bianco")
+	white = dgt(f"Nome del Bianco [{default_white}]: ", kind="s", default=default_white).strip().title()
 	Acusticator(["d6", .02, 0, volume,"g4",.02,0,volume]) 
 	if white.strip() == "":
 		white = default_white
-	default_black = default_pgn.get("Black", _("Nero"))
-	black = dgt(_("Nome del Nero [{default}]: ").format(default=default_black), kind="s", default=default_black).strip().title()
+	default_black = default_pgn.get("Black", "Nero")
+	black = dgt(f"Nome del Nero [{default_black}]: ", kind="s", default=default_black).strip().title()
 	Acusticator(["d6", .02, .33, volume,"g4",.02,.33,volume]) 
 	if black.strip() == "":
 		black = default_black
 	default_white_elo = default_pgn.get("WhiteElo", "1200")
-	white_elo = dgt(_("Elo del Bianco [{default}]: ").format(default=default_white_elo), kind="s", default=default_white_elo)
+	white_elo = dgt(f"Elo del Bianco [{default_white_elo}]: ", kind="s", default=default_white_elo)
 	Acusticator(["d6", .02, .66, volume,"g4",.02,.66,volume]) 
 	if white_elo.strip() == "":
 		white_elo = default_white_elo
 	default_black_elo = default_pgn.get("BlackElo", "1200")
-	black_elo = dgt(_("Elo del Nero [{default}]: ").format(default=default_black_elo), kind="s", default=default_black_elo)
+	black_elo = dgt(f"Elo del Nero [{default_black_elo}]: ", kind="s", default=default_black_elo)
 	Acusticator(["d6", .02, 1, volume,"g4",.02,1,volume]) 
 	if black_elo.strip() == "":
 		black_elo = default_black_elo
@@ -2113,7 +2111,7 @@ def EditPGN():
 		"BlackElo": black_elo
 	}
 	SaveDB(db)
-	print(_("\nInformazioni default per il PGN aggiornate."))
+	print("\nInformazioni default per il PGN aggiornate.")
 class CustomBoard(chess.Board):
 	def __str__(self):
 		board_str = "FEN: " + str(self.fen()) + "\n"
@@ -2148,10 +2146,10 @@ class CustomBoard(chess.Board):
 			else:
 				last_move_san = "???"
 			if self.turn == chess.BLACK:
-				last_move_info = "{num}. {san}".format(num=move_number, san=last_move_san)
+				last_move_info = f"{move_number}. {last_move_san}"
 			else:
-				last_move_info = "{num}... {san}".format(num=move_number, san=last_move_san)
-		board_str += " {move_info} Materiale: {white_mat}/{black_mat}".format(move_info=last_move_info, white_mat=white_material, black_mat=black_material)
+				last_move_info = f"{move_number}... {last_move_san}"
+		board_str += f" {last_move_info} Materiale: {white_material}/{black_material}"
 		return board_str
 	def copy(self, stack=True):
 		new_board = super().copy(stack=stack)
@@ -2189,7 +2187,7 @@ class GameState:
 				if self.white_moves>=self.clock_config["phases"][self.white_phase]["moves"] and self.clock_config["phases"][self.white_phase]["moves"]!=0:
 					self.white_phase+=1
 					Acusticator(['d2', .8, 0, volume, 'd7', .03, 0, volume, 'a#6', .03,0, volume], kind=3, adsr=[20, 10, 75, 20])
-					print(self.white_player + _(" entra in fase ") + str(self.white_phase+1) + _(" tempo fase ") + FormatTime(self.clock_config["phases"][self.white_phase]["white_time"]))
+					print(self.white_player + " entra in fase " + str(self.white_phase+1) + " tempo fase " + FormatTime(self.clock_config["phases"][self.white_phase]["white_time"]))
 					self.white_remaining=self.clock_config["phases"][self.white_phase]["white_time"]
 		else:
 			self.black_moves+=1
@@ -2197,7 +2195,7 @@ class GameState:
 				if self.black_moves>=self.clock_config["phases"][self.black_phase]["moves"] and self.clock_config["phases"][self.black_phase]["moves"]!=0:
 					self.black_phase+=1
 					Acusticator(['d2', .8, 0, volume, 'd7', .03, 0, volume, 'a#6', .03,0, volume], kind=3, adsr=[20, 10, 75, 20])
-					print(self.black_player + _(" entra in fase ") + str(self.black_phase+1) + _(" tempo fase ") + FormatTime(self.clock_config["phases"][self.black_phase]["black_time"]))
+					print(self.black_player + " entra in fase " + str(self.black_phase+1) + " tempo fase " + FormatTime(self.clock_config["phases"][self.black_phase]["black_time"]))
 					self.black_remaining=self.clock_config["phases"][self.black_phase]["black_time"]
 		self.active_color="black" if self.active_color=="white" else "white"
 def clock_thread(game_state):
@@ -2213,34 +2211,34 @@ def clock_thread(game_state):
 				game_state.white_remaining-=elapsed
 				for alarm in game_state.clock_config.get("alarms",[]):
 					if alarm not in triggered_alarms_white and abs(game_state.white_remaining - alarm) < elapsed:
-						print(_("\nAllarme: tempo del bianco raggiunto {time}").format(time=seconds_to_mmss(alarm)),end="")
+						print(f"\nAllarme: tempo del bianco raggiunto {seconds_to_mmss(alarm)}",end="")
 						Acusticator(["c4",0.2,-0.75,volume])
 						triggered_alarms_white.add(alarm)
 			else:
 				game_state.black_remaining-=elapsed
 				for alarm in game_state.clock_config.get("alarms",[]):
 					if alarm not in triggered_alarms_black and abs(game_state.black_remaining - alarm) < elapsed:
-						print(_("\nAllarme: tempo del nero raggiunto {time}").format(time=seconds_to_mmss(alarm)),end="")
+						print(f"\nAllarme: tempo del nero raggiunto {seconds_to_mmss(alarm)}",end="")
 						Acusticator(["c4",0.2,0.75,volume])
 						triggered_alarms_black.add(alarm)
 		if game_state.white_remaining<=0 or game_state.black_remaining<=0:
 			Acusticator(["e4", 0.2, -0.5, volume, "d4", 0.2, 0, volume, "c4", 0.2, 0.5, volume], kind=1, adsr=[10, 0, 90, 10])
 			game_state.game_over=True
-			print(_("Bandierina caduta!"))
+			print("Bandierina caduta!")
 			if game_state.white_remaining <= 0:
 				game_state.pgn_game.headers["Result"] = "0-1"  # Nero vince
-				print(_("Tempo del Bianco scaduto. {player} vince.").format(player=game_state.black_player))
+				print(f"Tempo del Bianco scaduto. {game_state.black_player} vince.")
 				Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 			else:
 				game_state.pgn_game.headers["Result"] = "1-0"  # Bianco vince
-				print(_("Tempo del Nero scaduto. {player} vince.").format(player=game_state.white_player))
+				print(f"Tempo del Nero scaduto. {game_state.white_player} vince.")
 				Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 		time.sleep(0.1)
 def StartGame(clock_config):
-	print(_("\nAvvio partita\n"))
+	print("\nAvvio partita\n")
 	game_mode_choice = ''
 	while game_mode_choice not in ['s', 'f']:
-		game_mode_choice = key(_("Scegli la modalità: [S]tandard o [F]ischer Random 960? (S/F) ")).lower()
+		game_mode_choice = key("Scegli la modalità: [S]tandard o [F]ischer Random 960? (S/F) ").lower()
 	Acusticator(["c4", 0.05, 0, volume, "e4", 0.05, 0, volume, "g4", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
 	is_fischer_random = (game_mode_choice == 'f')
 	starting_board = None
@@ -2251,39 +2249,39 @@ def StartGame(clock_config):
 			return # Esce dalla funzione StartGame e torna al menù
 	db = LoadDB()
 	default_pgn = db.get("default_pgn", {})
-	white_default = default_pgn.get("White", _("Bianco"))
-	black_default = default_pgn.get("Black", _("Nero"))
+	white_default = default_pgn.get("White", "Bianco")
+	black_default = default_pgn.get("Black", "Nero")
 	white_elo_default = default_pgn.get("WhiteElo", "1500")
 	black_elo_default = default_pgn.get("BlackElo", "1500")
 	event_default = default_pgn.get("Event", "Orologic Game")
-	site_default = default_pgn.get("Site", _("Sede sconosciuta"))
+	site_default = default_pgn.get("Site", "Sede sconosciuta")
 	round_default = default_pgn.get("Round", "Round 1")
 	eco_database = LoadEcoDatabaseWithFEN("eco.db")
 	last_eco_msg = ""
 	last_valid_eco_entry = None
-	white_player = dgt(_("Nome del bianco [{default}]: ").format(default=white_default), kind="s", default=white_default).strip().title()
+	white_player = dgt(f"Nome del bianco [{white_default}]: ", kind="s", default=white_default).strip().title()
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
 	if white_player == "":
 		white_player = white_default
-	black_player = dgt(_("Nome del nero [{default}]: ").format(default=black_default), kind="s", default=black_default).strip().title()
+	black_player = dgt(f"Nome del nero [{black_default}]: ", kind="s", default=black_default).strip().title()
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
 	if black_player == "":
 		black_player = black_default
-	white_elo = dgt(_("Elo del bianco [{default}]: ").format(default=white_elo_default), kind="s", default=white_elo_default)
+	white_elo = dgt(f"Elo del bianco [{white_elo_default}]: ", kind="s", default=white_elo_default)
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
 	if white_elo.strip() == "":
 		white_elo = white_elo_default
-	black_elo = dgt(_("Elo del nero [{default}]: ").format(default=black_elo_default), kind="s", default=black_elo_default)
+	black_elo = dgt(f"Elo del nero [{black_elo_default}]: ", kind="s", default=black_elo_default)
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
 	if black_elo.strip() == "":
 		black_elo = black_elo_default
-	event = dgt(_("Evento [{default}]: ").format(default=event_default), kind="s", default=event_default)
+	event = dgt(f"Evento [{event_default}]: ", kind="s", default=event_default)
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
 	if event.strip() == "":
 		event = event_default
-	site = dgt(_("Sede [{default}]: ").format(default=site_default), kind="s", default=site_default)
+	site = dgt(f"Sede [{site_default}]: ", kind="s", default=site_default)
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
-	round_ = dgt(_("Round [{default}]: ").format(default=round_default), kind="s", default=round_default)
+	round_ = dgt(f"Round [{round_default}]: ", kind="s", default=round_default)
 	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
 	db["default_pgn"] = {
 		"Event": event,
@@ -2295,7 +2293,7 @@ def StartGame(clock_config):
 		"BlackElo": black_elo
 	}
 	SaveDB(db)
-	key(_("Premi un tasto qualsiasi per iniziare la partita quando sei pronto..."),attesa=7200)
+	key("Premi un tasto qualsiasi per iniziare la partita quando sei pronto...",attesa=7200)
 	Acusticator(["c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c7", .5, 0, volume], kind=1, sync=True)
 	game_state=GameState(clock_config)
 	if is_fischer_random:
@@ -2315,18 +2313,18 @@ def StartGame(clock_config):
 	game_state.pgn_game.headers["Round"]=round_
 	game_state.pgn_game.headers["TimeControl"] = generate_time_control_string(clock_config)
 	game_state.pgn_game.headers["Date"]=datetime.datetime.now().strftime("%Y.%m.%d")
-	game_state.pgn_game.headers["Annotator"]="Orologic V{version} by {programmer}".format(version=VERSION, programmer=PROGRAMMER)
+	game_state.pgn_game.headers["Annotator"]=f"Orologic V{VERSION} by {PROGRAMMER}"
 	threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
 	paused_time_start=None
 	while not game_state.game_over:
 		if not game_state.move_history:
-			prompt=_("\nInizio, mossa 0. ")
+			prompt="\nInizio, mossa 0. "
 		elif len(game_state.move_history)%2==1:
 			full_move=(len(game_state.move_history)+1)//2
-			prompt="{num}. {last_move} ".format(num=full_move, last_move=game_state.move_history[-1])
+			prompt=f"{full_move}. {game_state.move_history[-1]} "
 		else:
 			full_move=(len(game_state.move_history))//2
-			prompt="{num}... {last_move} ".format(num=full_move, last_move=game_state.move_history[-1])
+			prompt=f"{full_move}... {game_state.move_history[-1]} "
 		if game_state.paused:
 			prompt="["+prompt.strip()+"] "
 		user_input=dgt(prompt,kind="s")
@@ -2350,12 +2348,12 @@ def StartGame(clock_config):
 					Acusticator(["g5", 0.07, -1, volume,"g5", 0.07, -.75, volume,"g5", 0.07, -.5, volume,"g5", 0.07, -.25, volume,"g5", 0.07, 0, volume,"g5", 0.07, .25, volume,"g5", 0.07, .5, volume,"g5", 0.07, .75, volume], kind=3, adsr=[0, 0, 100, 100])
 					read_rank(game_state, rank_number)
 				else:
-					print(_("Traversa non valida."))
+					print("Traversa non valida.")
 			elif len(param) == 2 and param[0].isalpha() and param[1].isdigit():
 				Acusticator(["d#4", .7, 0, volume], kind=1, adsr=[0, 0, 100, 100])
 				read_square(game_state, param)
 			else:
-				print(_("Comando dash non riconosciuto."))
+				print("Comando dash non riconosciuto.")
 		elif user_input.startswith(","):
 			Acusticator(["a3", .06, -1, volume, "c4", .06, -0.5, volume, "d#4", .06, 0.5, volume, "f4", .06, 1, volume], kind=3, adsr=[20, 5, 70, 25])
 			report_piece_positions(game_state, user_input[1:2])
@@ -2364,7 +2362,7 @@ def StartGame(clock_config):
 			cmd=u.rstrip(".").lower()
 			if cmd==".?":
 				Acusticator([440.0, 0.3, 0, 0.5, 880.0, 0.3, 0, 0.5], kind=1, adsr=[10, 0, 100, 20])
-				menu(DOT_COMMANDS,show_only=True,p=_("Comandi disponibili:"))
+				menu(DOT_COMMANDS,show_only=True,p="Comandi disponibili:")
 			elif cmd==".1":
 				Acusticator(['a6', 0.14, -1, volume], kind=1, adsr=[0, 0, 100, 100])
 				report_white_time(game_state)
@@ -2378,8 +2376,8 @@ def StartGame(clock_config):
 			elif cmd==".4":
 				Acusticator(['f7', 0.14, 0, volume], kind=1, adsr=[0, 0, 100, 100])
 				diff=abs(game_state.white_remaining-game_state.black_remaining)
-				adv=_("bianco") if game_state.white_remaining>game_state.black_remaining else _("nero")
-				print(_("{player} in vantaggio di ").format(player=adv)+FormatTime(diff))
+				adv="bianco" if game_state.white_remaining>game_state.black_remaining else "nero"
+				print(f"{adv} in vantaggio di "+FormatTime(diff))
 			elif cmd==".5":
 				if game_state.paused:
 					Acusticator(['d4', 0.54, 0, volume], kind=1, adsr=[0, 0, 100, 100])
@@ -2388,30 +2386,25 @@ def StartGame(clock_config):
 					minutes = int((pause_duration % 3600) // 60)
 					seconds = int(pause_duration % 60)
 					ms = int((pause_duration - int(pause_duration)) * 1000)
-					print(_("Tempo in pausa da: {duration}").format(duration="{h_str}{m_str}{s_str}{ms_str}".format(
-						h_str=_('{h} ore, ').format(h=hours) if hours else '',
-						m_str=_('{m} minuti, ').format(m=minutes) if minutes or hours else '',
-						s_str=_('{s} secondi e ').format(s=seconds) if seconds or minutes or hours else '',
-						ms_str=_('{ms} ms').format(ms=ms) if ms else ''
-					)))
+					print(f"Tempo in pausa da: {f'{hours:2d} ore, ' if hours else ''}{f'{minutes:2d} minuti, ' if minutes or hours else ''}{f'{seconds:2d} secondi e ' if seconds or minutes or hours else ''}{f'{ms:3d} ms' if ms else ''}")
 				else:
 					Acusticator(['f4', 0.54, 0, volume], kind=1, adsr=[0, 0, 100, 100])
 					player = game_state.white_player if game_state.active_color=="white" else game_state.black_player
-					print(_("Orologio di {player} in moto").format(player=player))
+					print(f"Orologio di {player} in moto")
 			elif cmd==".m":
 				Acusticator(["c4", 0.1, -1, volume, "e4", 0.1, -0.3, volume, "g4", 0.1, 0.3, volume, "c5", 0.1, 1, volume], kind=1, adsr=[2, 8, 80, 10])
 				white_material,black_material=CalculateMaterial(game_state.board)
-				print(_("Materiale: {white_player} {white_mat}, {black_player} {black_mat}").format(white_player=game_state.white_player, white_mat=white_material, black_player=game_state.black_player, black_mat=black_material))
+				print(f"Materiale: {game_state.white_player} {white_material}, {game_state.black_player} {black_material}")
 			elif cmd==".p":
 				game_state.paused=not game_state.paused
 				if game_state.paused:
 					paused_time_start=time.time()
-					print(_("Orologi in pausa"))
+					print("Orologi in pausa")
 					Acusticator(["c5", 0.1, 1, volume, "g4", 0.1, 0.3, volume, "e4", 0.1, -0.3, volume, "c4", 0.1, -1, volume], kind=1, adsr=[2, 8, 80, 10])
 				else:
 					pause_duration=time.time()-paused_time_start if paused_time_start else 0
 					Acusticator(["c4", 0.1, -1, volume, "e4", 0.1, -0.3, volume, "g4", 0.1, 0.3, volume, "c5", 0.1, 1, volume], kind=1, adsr=[2, 8, 80, 10])
-					print(_("Pausa durata ")+FormatTime(pause_duration))
+					print("Pausa durata "+FormatTime(pause_duration))
 			elif cmd==".q":
 				if game_state.paused and game_state.move_history:
 					Acusticator(["c5", 0.1, 1, volume, "g4", 0.1, 0.3, volume, "e4", 0.1, -0.3, volume, "c4", 0.1, -1, volume], kind=1, adsr=[2, 8, 80, 10])
@@ -2434,7 +2427,7 @@ def StartGame(clock_config):
 					else:
 						game_state.black_remaining -= game_state.clock_config["phases"][game_state.black_phase]["black_inc"]
 						game_state.active_color = "black"
-					print(_("Ultima mossa annullata: ") + undone_move_san)
+					print("Ultima mossa annullata: " + undone_move_san)
 			elif cmd.startswith(".b+") or cmd.startswith(".b-") or cmd.startswith(".n+") or cmd.startswith(".n-"):
 				if game_state.paused:
 					try:
@@ -2451,9 +2444,9 @@ def StartGame(clock_config):
 						elif cmd.startswith(".n-"):
 							Acusticator(["c5", 0.15, .5, volume, "a4", 0.15, .5, volume, "f4", 0.15, .5, volume, "d4", 0.15, .5, volume], kind=1, adsr=[15, 0, 90, 5])
 							game_state.black_remaining-=adjust
-						print(_("Nuovo tempo bianco: {white_time}, nero: {black_time}").format(white_time=FormatTime(game_state.white_remaining), black_time=FormatTime(game_state.black_remaining)))
+						print("Nuovo tempo bianco: "+FormatTime(game_state.white_remaining)+", nero: "+FormatTime(game_state.black_remaining))
 					except:
-						print(_("Comando non valido."))
+						print("Comando non valido.")
 			elif cmd==".s":
 				Acusticator(["c4", 0.2, -1, volume, "g4", 0.2, -0.3, volume, "c5", 0.2, 0.3, volume, "e5", 0.2, 1, volume, "g5", 0.4, 0, volume], kind=1, adsr=[10, 5, 80, 5])
 				print(game_state.board)
@@ -2461,11 +2454,11 @@ def StartGame(clock_config):
 				Acusticator([900.0, 0.1, 0, volume, 440.0, 0.3, 0, volume], kind=1, adsr=[1, 0, 80, 19])
 				summary = GenerateMoveSummary(game_state)
 				if summary:
-					print(_("\nLista mosse giocate:\n"))
+					print("\nLista mosse giocate:\n")
 					for line in summary:
 						print(line)
 				else:
-					print(_("Nessuna mossa ancora giocata."))
+					print("Nessuna mossa ancora giocata.")
 			elif cmd in [".1-0",".0-1",".1/2",".*"]:
 				Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 				if cmd==".1-0":
@@ -2476,7 +2469,7 @@ def StartGame(clock_config):
 					result="1/2-1/2"
 				else:
 					result="*"
-				print(_("Risultato assegnato: ")+result)
+				print("Risultato assegnato: "+result)
 				game_state.pgn_game.headers["Result"]=result
 				game_state.game_over=True
 			elif cmd.startswith(".c"):
@@ -2487,16 +2480,16 @@ def StartGame(clock_config):
 					else:
 						game_state.pgn_node.comment = new_comment
 					Acusticator(["f5", 0.1, 0, volume,"p",0.04,0,0,"c5", 0.02, 0, volume], kind=1, adsr=[3,7,88,2])
-					print(_("Commento registrato per la mossa: ") + game_state.move_history[-1])
+					print("Commento registrato per la mossa: " + game_state.move_history[-1])
 				else:
-					print(_("Nessuna mossa da commentare."))
+					print("Nessuna mossa da commentare.")
 			else:
 				Acusticator(["e3", 1, 0, volume,"a2", 1, 0, volume], kind=3, adsr=[1,7,100,92])
-				print(_("Comando non riconosciuto."))
+				print("Comando non riconosciuto.")
 		# --- Gestione mosse ---
 		else:
 			if game_state.paused:
-				print(_("Non è possibile inserire nuove mosse mentre il tempo è in pausa. Riavvia il tempo con .p"))
+				print("Non è possibile inserire nuove mosse mentre il tempo è in pausa. Riavvia il tempo con .p")
 				Acusticator(["b3",.2,0,volume],kind=2)
 				continue
 
@@ -2543,9 +2536,9 @@ def StartGame(clock_config):
 						# Aggiungi un commento standard per la proposta di patta
 						existing_comment = new_node.comment or ""
 						if existing_comment:
-							new_node.comment = existing_comment + _(" {Proposta di patta}")
+							new_node.comment = existing_comment + " {Proposta di patta}"
 						else:
-							new_node.comment = _("{Proposta di patta}")
+							new_node.comment = "{Proposta di patta}"
 					elif annotation_suffix in NAG_MAP:
 						nag_value = NAG_MAP[annotation_suffix][0]
 						new_node.nags.add(nag_value)
@@ -2553,7 +2546,7 @@ def StartGame(clock_config):
 
 				# Se esistono mosse annullate, aggiungi un commento al nuovo nodo
 				if hasattr(game_state, "cancelled_san_moves") and game_state.cancelled_san_moves:
-					undo_comment = _("Mosse annullate: ") + " ".join(game_state.cancelled_san_moves)
+					undo_comment = "Mosse annullate: " + " ".join(game_state.cancelled_san_moves)
 					existing_comment = new_node.comment or ""
 					if existing_comment:
 						new_node.comment = existing_comment + " " + undo_comment
@@ -2572,11 +2565,11 @@ def StartGame(clock_config):
 					new_eco_msg = ""
 					current_entry_this_turn = eco_entry if eco_entry else None
 					if eco_entry:
-						new_eco_msg = "{eco} - {opening}".format(eco=eco_entry['eco'], opening=eco_entry['opening'])
+						new_eco_msg = f"{eco_entry['eco']} - {eco_entry['opening']}"
 						if eco_entry['variation']:
-							new_eco_msg += " ({variation})".format(variation=eco_entry['variation'])
+							new_eco_msg += f" ({eco_entry['variation']})"
 					if new_eco_msg and new_eco_msg != last_eco_msg:
-						print(_("Apertura rilevata: ") + new_eco_msg)
+						print("Apertura rilevata: " + new_eco_msg)
 						last_eco_msg = new_eco_msg
 						last_valid_eco_entry = current_entry_this_turn
 					elif not new_eco_msg and last_eco_msg:
@@ -2588,43 +2581,43 @@ def StartGame(clock_config):
 					result = "1-0" if game_state.active_color == "white" else "0-1" # Nota: il turno è già cambiato qui
 					game_state.pgn_game.headers["Result"] = result
 					winner = game_state.black_player if result == "0-1" else game_state.white_player
-					print(_("Scacco matto! Vince {winner}.").format(winner=winner))
+					print(f"Scacco matto! Vince {winner}.")
 					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.is_stalemate():
 					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
-					print(_("Patta per stallo!"))
+					print("Patta per stallo!")
 					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.is_insufficient_material():
 					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
-					print(_("Patta per materiale insufficiente!"))
+					print("Patta per materiale insufficiente!")
 					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.is_seventyfive_moves():
 					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
-					print(_("Patta per la regola delle 75 mosse!"))
+					print("Patta per la regola delle 75 mosse!")
 					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.is_fivefold_repetition():
 					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
-					print(_("Patta per ripetizione della posizione (5 volte)!"))
+					print("Patta per ripetizione della posizione (5 volte)!")
 					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.can_claim_fifty_moves():
 					game_state.game_over = True # Consideriamo la richiesta automatica per semplicità
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
-					print(_("Patta per la regola delle 50 mosse!"))
+					print("Patta per la regola delle 50 mosse!")
 					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.can_claim_threefold_repetition():
 					game_state.game_over = True # Consideriamo la richiesta automatica per semplicità
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
-					print(_("Patta per triplice ripetizione della posizione!"))
+					print("Patta per triplice ripetizione della posizione!")
 					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 					break
 
@@ -2638,12 +2631,12 @@ def StartGame(clock_config):
 			except Exception as e:
 				illegal_result=verbose_legal_moves_for_san(game_state.board,move_san_only) # Usa move_san_only qui
 				Acusticator([600.0, 0.6, 0, volume], adsr=[5, 0, 35, 90])
-				print(_("Mossa '{move}' illegale o non riconosciuta ({error}). Sulla casa indicata sono possibili:\n{alternatives}").format(move=move_san_only, error=e, alternatives=illegal_result))
+				print(f"Mossa '{move_san_only}' illegale o non riconosciuta ({e}). Sulla casa indicata sono possibili:\n{illegal_result}")
 
 	# --- Logica post-partita (invariata) ---
 	game_state.pgn_game.headers["WhiteClock"] = FormatClock(game_state.white_remaining)
 	game_state.pgn_game.headers["BlackClock"] = FormatClock(game_state.black_remaining)
-	print(_("Partita terminata."))
+	print("Partita terminata.")
 	if last_valid_eco_entry:
 		game_state.pgn_game.headers["ECO"] = last_valid_eco_entry["eco"]
 		game_state.pgn_game.headers["Opening"] = last_valid_eco_entry["opening"]
@@ -2662,30 +2655,30 @@ def StartGame(clock_config):
 
 	pgn_str=str(game_state.pgn_game)
 	pgn_str = format_pgn_comments(pgn_str) # Formatta commenti per leggibilità
-	filename = "{white}-{black}-{result}-{timestamp}.pgn".format(white=white_player, black=black_player, result=game_state.pgn_game.headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
+	filename = f"{white_player}-{black_player}-{game_state.pgn_game.headers.get('Result', '*')}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.pgn"
 	filename=sanitize_filename(filename)
 	with open(filename, "w", encoding="utf-8") as f:
 		f.write(pgn_str)
-	print(_("PGN salvato come ")+filename+".")
+	print("PGN salvato come "+filename+".")
 	save_text_summary(game_state, game_state.descriptive_move_history, last_valid_eco_entry)
 	try:
 		pyperclip.copy(pgn_str)
-		print(_("PGN copiato negli appunti."))
+		print("PGN copiato negli appunti.")
 	except Exception as e:
-		print(_("Errore durante la copia del PGN negli appunti: {error}").format(error=e))
+		print(f"Errore durante la copia del PGN negli appunti: {e}")
 	if len(game_state.move_history) >= 8:
-		analyze_choice = key(_("Vuoi analizzare la partita? (s/n): ")).lower()
+		analyze_choice = key("Vuoi analizzare la partita? (s/n): ").lower()
 		if analyze_choice == "s":
 			db = LoadDB()
 			engine_config = db.get("engine_config", {})
 			if not engine_config or not engine_config.get("engine_path"):
-				print(_("Motore non configurato. Ritorno al menù."))
+				print("Motore non configurato. Ritorno al menù.")
 				return
 			else:
 				# Assicurati che il motore sia inizializzato prima di analizzare
 				if ENGINE is None:
 					if not InitEngine():
-						print(_("Impossibile inizializzare il motore. Analisi annullata."))
+						print("Impossibile inizializzare il motore. Analisi annullata.")
 						return
 				# Pulisci la cache se necessario prima di iniziare una nuova analisi
 				cache_analysis.clear()
@@ -2695,45 +2688,45 @@ def StartGame(clock_config):
 	# Se la partita ha meno di 8 semimosse, la funzione termina senza chiedere nulla.
 
 def OpenManual():
-	print(_("\nApertura manuale\n"))
+	print("\nApertura manuale\n")
 	readme="readme_it.htm"
 	if os.path.exists(readme):
 		webbrowser.open(readme)
 	else:
-		print(_("Il file readme_it.htm non esiste."))
+		print("Il file readme_it.htm non esiste.")
 def SchermataIniziale():
 	now = datetime.datetime.now()
 	diff1 = relativedelta(now, BIRTH_DATE)
 	diff2 = relativedelta(now, RELEASE_DATE)
 	parts1 = []
 	if diff1.years:
-		parts1.append(_("{num} anni").format(num=diff1.years))
+		parts1.append(f"{diff1.years} anni")
 	if diff1.months:
-		parts1.append(_("{num} mesi").format(num=diff1.months))
+		parts1.append(f"{diff1.months} mesi")
 	if diff1.days:
-		parts1.append(_("{num} giorni").format(num=diff1.days))
+		parts1.append(f"{diff1.days} giorni")
 	if diff1.hours:
-		parts1.append(_("{num} ore").format(num=diff1.hours))
+		parts1.append(f"{diff1.hours} ore")
 	if diff1.minutes:
-		parts1.append(_("e {num} minuti").format(num=diff1.minutes))
+		parts1.append(f"e {diff1.minutes} minuti")
 	age_string = ", ".join(parts1)
 	parts2 = []
 	if diff2.years:
-		parts2.append(_("{num} anni").format(num=diff2.years))
+		parts2.append(f"{diff2.years} anni")
 	if diff2.months:
-		parts2.append(_("{num} mesi").format(num=diff2.months))
+		parts2.append(f"{diff2.months} mesi")
 	if diff2.days:
-		parts2.append(_("{num} giorni").format(num=diff2.days))
+		parts2.append(f"{diff2.days} giorni")
 	if diff2.hours:
-		parts2.append(_("{num} ore").format(num=diff2.hours))
+		parts2.append(f"{diff2.hours} ore")
 	if diff2.minutes:
-		parts2.append(_("{num} minuti").format(num=diff2.minutes))
+		parts2.append(f"{diff2.minutes} minuti")
 	release_string = ", ".join(parts2)
-	print(_("\nCiao! Benvenuto, sono Orologic e ho {age}.").format(age=age_string))
-	print(_("L'ultima versione è la {version} ed è stata rilasciata il {release_date}.").format(version=VERSION, release_date=RELEASE_DATE.strftime('%d/%m/%Y %H:%M')))
-	print(_("\tcioè: {release_ago} fa.").format(release_ago=release_string))
-	print("\t\t" + _("Autore: ") + PROGRAMMER)
-	print("\t\t\t" + _("Digita '?' per visualizzare il menù."))
+	print(f"\nCiao! Benvenuto, sono Orologic e ho {age_string}.")
+	print(f"L'ultima versione è la {VERSION} ed è stata rilasciata il {RELEASE_DATE.strftime('%d/%m/%Y %H:%M')}.")
+	print(f"\tcioè: {release_string} fa.")
+	print("\t\tAutore: "+PROGRAMMER)
+	print("\t\t\tDigita '?' per visualizzare il menù.")
 	Acusticator(['c4', 0.125, 0, volume, 'd4', 0.125, 0, volume, 'e4', 0.125, 0, volume, 'g4', 0.125, 0, volume, 'a4', 0.125, 0, volume, 'e5', 0.125, 0, volume, 'p', 0.125, 0, 0.5, 'a5', 0.125, 0, volume], kind=1, adsr=[0.01, 0, 100, 99])
 def Main():
 	global	volume
@@ -2762,7 +2755,7 @@ def Main():
 		elif scelta=="volume":
 			Acusticator(["f6",.02,0,volume,"p",.04,0,volume,"a6",.02,0,volume])
 			old_volume=volume
-			volume = dgt(_("\nVolume attuale: {vol}, nuovo? (0-100): ").format(vol=int(volume*100)), kind="i", imin=0, imax=100, default=50)
+			volume = dgt(f"\nVolume attuale: {int(volume*100)}, nuovo? (0-100): ", kind="i", imin=0, imax=100, default=50)
 			volume/=100
 			db = LoadDB()
 			db["volume"] = volume
@@ -2785,22 +2778,22 @@ def Main():
 			OpenManual()
 		elif scelta=="gioca":
 			Acusticator(["c5", 0.1, 0, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0, volume, "c6", 0.3, 0, volume, "g5", 0.1, 0, volume, "e5", 0.1, 0, volume, "c5", 0.1, 0, volume], kind=1, adsr=[5, 5, 90, 10])
-			print(_("\nAvvio partita\n"))
+			print("\nAvvio partita\n")
 			db=LoadDB()
 			if not db["clocks"]:
 				Acusticator(["c5", 0.3, 0, volume, "g4", 0.3, 0, volume], kind=1, adsr=[30, 20, 80, 20])
-				print(_("Nessun orologio disponibile. Creane uno prima."))
+				print("Nessun orologio disponibile. Creane uno prima.")
 			else:
 				clock_config=SelectClock(db)
 				if clock_config is not None:
 					StartGame(clock_config)
 				else:
-					print(_("Scelta non valida."))
+					print("Scelta non valida.")
 		elif scelta==".":
 			Acusticator(["g4", 0.15, -0.5, volume, "g4", 0.15, 0.5, volume, "a4", 0.15, -0.5, volume, "g4", 0.15, 0.5, volume, "p", 0.15, 0, 0, "b4", 0.15, -0.5, volume, "c5", 0.3, 0.5, volume], kind=1, adsr=[5, 0, 100, 5])
 			if ENGINE is not None:
 				ENGINE.quit()
-				print(_("\nConnessione col motore UCI chiusa"))
+				print("\nConnessione col motore UCI chiusa")
 			break
 if __name__=="__main__":
 	time_start = datetime.datetime.now()
@@ -2810,19 +2803,19 @@ if __name__=="__main__":
 	delta = relativedelta(time_end, time_start)
 	components = []
 	if delta.days:
-		components.append(_("{num} giorni").format(num=delta.days))
+		components.append(f"{delta.days} giorni")
 	if delta.hours:
-		components.append(_("{num} ore").format(num=delta.hours))
+		components.append(f"{delta.hours} ore")
 	if delta.minutes:
-		components.append(_("{num} minuti").format(num=delta.minutes))
+		components.append(f"{delta.minutes} minuti")
 	if delta.seconds:
-		components.append(_("{num} secondi").format(num=delta.seconds))
+		components.append(f"{delta.seconds} secondi")
 	ms = delta.microseconds // 1000
 	if ms:
-		components.append(_("{num} millisecondi").format(num=ms))
-	result = ", ".join(components) if components else _("0 millisecondi")
+		components.append(f"{ms} millisecondi")
+	result = ", ".join(components) if components else "0 millisecondi"
 	final_db = LoadDB()
-	final_launch_count = final_db.get("launch_count", _("sconosciuto")) # Legge il contatore salvato	
-	print(_("Arrivederci da Orologic {version}.\nQuesta era la nostra {launch_count}a volta e ci siamo divertiti assieme per: {duration}").format(version=VERSION, launch_count=final_launch_count, duration=result))
+	final_launch_count = final_db.get("launch_count", "sconosciuto") # Legge il contatore salvato	
+	print(f"Arrivederci da Orologic {VERSION}.\nQuesta era la nostra {final_launch_count}a volta e ci siamo divertiti assieme per: {result}")
 	Donazione()
 	sys.exit(0)
