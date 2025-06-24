@@ -3,7 +3,7 @@ import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperc
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key, Donazione, polipo
 _ = lambda s: s
-lingua_rilevata=polipo(source_language="it")
+lingua_rilevata, _ = polipo(source_language="it")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
 VERSION="4.0.0"
