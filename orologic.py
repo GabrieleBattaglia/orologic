@@ -2,14 +2,29 @@
 import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine, random
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key, Donazione, polipo
-_ = lambda s: s
+def resource_path(relative_path):
+    """
+    Restituisce il percorso assoluto a una risorsa, funzionante sia in sviluppo
+    che per un eseguibile compilato con PyInstaller (anche con la cartella _internal).
+    """
+    try:
+        # PyInstaller crea una cartella temporanea e ci salva il percorso in _MEIPASS
+        # Questo è il percorso base per le risorse quando l'app è "congelata"
+        base_path = sys._MEIPASS
+    except Exception:
+        # Se _MEIPASS non esiste, non siamo in un eseguibile PyInstaller
+        # o siamo in una build onedir, il percorso base è la cartella dello script
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 lingua_rilevata, _ = polipo(source_language="it")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.0.0"
-RELEASE_DATE=datetime.datetime(2025,6,22,17,8)
+VERSION="4.1.7"
+RELEASE_DATE=datetime.datetime(2025,6,25,14,32)
 PROGRAMMER="Gabriele Battaglia & AIs"
-DB_FILE="orologic_db.json"
+DB_FILE = resource_path("orologic_db.json")
 ENGINE = None
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
 analysis_time = 3
@@ -1124,11 +1139,12 @@ def AnalyzeGame(pgn_game):
 			if not base_name: base_name = new_default_file_name
 			Acusticator(["f4", 0.05, 0, volume])
 			new_filename_base = "{base}-analizzato-{timestamp}".format(base=base_name, timestamp=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
-			new_filename = sanitize_filename(new_filename_base) + ".pgn"
+			sanitized_name = sanitize_filename(new_filename_base) + ".pgn"
+			full_path = resource_path(sanitized_name)
 			try:
-				with open(new_filename, "w", encoding="utf-8-sig") as f:
+				with open(full_path, "w", encoding="utf-8-sig") as f:
 					f.write(pgn_string_formatted)
-				print(_("PGN aggiornato salvato come ") + new_filename)
+				print(_("PGN aggiornato salvato come ") + full_path)
 				if annotator_updated_flag: print(_("Header Annotator è stato aggiornato nel file."))
 			except Exception as e_save:
 				print(_("Errore durante il salvataggio del PGN: {error}").format(error=e_save))
@@ -1405,12 +1421,12 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
 	full_text = header_text + move_list_text + footer_text
 	# Creazione del nome del file (riutilizzando la logica del PGN)
 	base_filename = "{white}-{black}-{result}-{timestamp}".format(white=headers.get('White', _('Bianco')), black=headers.get('Black', _('Nero')), result=headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
-	filename = sanitize_filename(base_filename) + ".txt"
-	# Salvataggio su file
+	sanitized_name = sanitize_filename(base_filename) + ".txt"
+	full_path = resource_path(sanitized_name)
 	try:
-		with open(filename, "w", encoding="utf-8") as f:
+		with open(full_path, "w", encoding="utf-8") as f:
 			f.write(full_text)
-		print(_("Riepilogo partita salvato come {filename}.").format(filename=filename))
+		print(_("Riepilogo partita salvato come {filename}.").format(filename=full_path))
 	except Exception as e:
 		print(_("Errore durante il salvataggio del riepilogo testuale: {error}").format(error=e))
 		Acusticator(["a3", 1, 0, volume], kind=2, adsr=[0, 0, 100, 100])
@@ -1772,14 +1788,15 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 	Utilizza node.board().san() per una generazione SAN più robusta.
 	"""
 	eco_entries = []
-	if not os.path.exists(filename):
-		print(_("File {filename} non trovato.").format(filename=filename))
+	db_path = resource_path(filename)
+	if not os.path.exists(db_path):
+		print(_("File {filename} non trovato.").format(filename=db_path))
 		return eco_entries
 	try:
-		with open(filename, "r", encoding="utf-8") as f:
+		with open(db_path, "r", encoding="utf-8") as f:
 			content = f.read()
 	except Exception as e:
-		print(_("Errore durante la lettura di {filename}: {error}").format(filename=filename, error=e))
+		print(_("Errore durante la lettura di {filename}: {error}").format(filename=db_path, error=e))
 		return eco_entries
 	# Rimuovi eventuali blocchi di commento racchiusi tra { e }
 	content = re.sub(r'\{[^}]*\}', '', content, flags=re.DOTALL)
@@ -1793,12 +1810,10 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 			headers = chess.pgn.read_headers(stream)
 			if headers is None:
 				break # Fine del file o stream
-
 			# Riposizionati e leggi il game completo
 			stream.seek(stream_pos) # Torna all'inizio degli header
 			game = chess.pgn.read_game(stream)
 			game_count += 1
-
 			if game is None:
 				# Potrebbe accadere con entry PGN malformate dopo gli header
 				print(_("Attenzione: Impossibile leggere il game PGN {game_num} dopo l'header.").format(game_num=game_count))
@@ -1811,7 +1826,6 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 						stream.seek(stream.tell() - len(line.encode('utf-8'))) # Torna indietro per leggerla come header la prossima volta
 						break
 				continue
-
 			eco_code = game.headers.get("ECO", "")
 			opening = game.headers.get("Opening", "")
 			variation = game.headers.get("Variation", "")
@@ -1819,7 +1833,6 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 			node = game
 			last_valid_node = game # Traccia l'ultimo nodo valido per ottenere il FEN finale
 			parse_error = False
-
 			while node.variations:
 				next_node = node.variations[0]
 				move = next_node.move
@@ -1833,7 +1846,6 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 					break # Interrompi il parsing di questa linea ECO
 				node = next_node
 				last_valid_node = node # Aggiorna l'ultimo nodo processato con successo
-
 			if not parse_error and moves: # Solo se abbiamo mosse valide e nessun errore
 				# Ottieni il FEN dalla board dell'ULTIMO nodo valido raggiunto
 				final_fen = last_valid_node.board().board_fen()
@@ -1848,7 +1860,6 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 				})
 			elif parse_error:
 				skipped_count += 1
-
 		except ValueError as ve: # Cattura specificamente errori comuni di parsing PGN
 			print(_("Errore di valore durante il parsing del game PGN {game_num}: {error}").format(game_num=game_count, error=ve))
 			skipped_count += 1
@@ -1869,11 +1880,11 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
 				if line.strip().startswith('['):
 					stream.seek(stream.tell() - len(line.encode('utf-8')))
 					break
-
 	print(_("Caricate {num_entries} linee di apertura ECO.").format(num_entries=len(eco_entries)))
 	if skipped_count > 0:
 		print(_("Attenzione: {num_skipped} linee ECO sono state saltate a causa di errori di parsing.").format(num_skipped=skipped_count))
 	return eco_entries
+
 def DetectOpeningByFEN(current_board, eco_db_with_fen):
 	"""
 	restituisce l'entry dell'apertura corrispondente alla posizione attuale.
@@ -2662,11 +2673,12 @@ def StartGame(clock_config):
 
 	pgn_str=str(game_state.pgn_game)
 	pgn_str = format_pgn_comments(pgn_str) # Formatta commenti per leggibilità
-	filename = "{white}-{black}-{result}-{timestamp}.pgn".format(white=white_player, black=black_player, result=game_state.pgn_game.headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
-	filename=sanitize_filename(filename)
-	with open(filename, "w", encoding="utf-8") as f:
+	base_filename = "{white}-{black}-{result}-{timestamp}.pgn".format(white=white_player, black=black_player, result=game_state.pgn_game.headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
+	sanitized_name = sanitize_filename(base_filename)
+	full_path = resource_path(sanitized_name)
+	with open(full_path, "w", encoding="utf-8") as f:
 		f.write(pgn_str)
-	print(_("PGN salvato come ")+filename+".")
+	print(_("PGN salvato come ")+full_path+".")
 	save_text_summary(game_state, game_state.descriptive_move_history, last_valid_eco_entry)
 	try:
 		pyperclip.copy(pgn_str)
@@ -2695,12 +2707,12 @@ def StartGame(clock_config):
 	# Se la partita ha meno di 8 semimosse, la funzione termina senza chiedere nulla.
 
 def OpenManual():
-	print(_("\nApertura manuale\n"))
-	readme="readme.htm"
-	if os.path.exists(readme):
-		webbrowser.open(readme)
-	else:
-		print(_("Il file readme.htm non esiste."))
+    print(_("\nApertura manuale\n"))
+    readme_path = resource_path("readme.htm")
+    if os.path.exists(readme_path):
+        webbrowser.open("file://" + os.path.realpath(readme_path))
+    else:
+        print(_("Il file {path} non esiste.").format(path=readme_path))
 
 def SchermataIniziale():
 	now = datetime.datetime.now()
