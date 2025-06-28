@@ -21,8 +21,8 @@ def resource_path(relative_path):
 lingua_rilevata, _ = polipo(source_language="it")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.1.7"
-RELEASE_DATE=datetime.datetime(2025,6,25,14,32)
+VERSION="4.2.0"
+RELEASE_DATE=datetime.datetime(2025,6,28,14,37)
 PROGRAMMER="Gabriele Battaglia & AIs"
 DB_FILE = resource_path("orologic_db.json")
 ENGINE = None
