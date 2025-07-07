@@ -1,29 +1,30 @@
 # OROLOGIC - Data di concepimento: 14/02/2025 by Gabriele Battaglia & AIs
-import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine, random
+import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine, random, zipfile, requests
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key, Donazione, polipo
 def resource_path(relative_path):
-    """
-    Restituisce il percorso assoluto a una risorsa, funzionante sia in sviluppo
-    che per un eseguibile compilato con PyInstaller (anche con la cartella _internal).
-    """
-    try:
-        # PyInstaller crea una cartella temporanea e ci salva il percorso in _MEIPASS
-        # Questo è il percorso base per le risorse quando l'app è "congelata"
-        base_path = sys._MEIPASS
-    except Exception:
-        # Se _MEIPASS non esiste, non siamo in un eseguibile PyInstaller
-        # o siamo in una build onedir, il percorso base è la cartella dello script
-        base_path = os.path.abspath(".")
+				"""
+				Restituisce il percorso assoluto a una risorsa, funzionante sia in sviluppo
+				che per un eseguibile compilato con PyInstaller (anche con la cartella _internal).
+				"""
+				try:
+								# PyInstaller crea una cartella temporanea e ci salva il percorso in _MEIPASS
+								# Questo è il percorso base per le risorse quando l'app è "congelata"
+								base_path = sys._MEIPASS
+				except Exception:
+								# Se _MEIPASS non esiste, non siamo in un eseguibile PyInstaller
+								# o siamo in una build onedir, il percorso base è la cartella dello script
+								base_path = os.path.abspath(".")
 
-    return os.path.join(base_path, relative_path)
+				return os.path.join(base_path, relative_path)
 
 lingua_rilevata, _ = polipo(source_language="it")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.2.0"
-RELEASE_DATE=datetime.datetime(2025,6,28,14,37)
+VERSION="4.4.0"
+RELEASE_DATE=datetime.datetime(2025,7,7,19,21)
 PROGRAMMER="Gabriele Battaglia & AIs"
+STOCKFISH_DOWNLOAD_URL = "https://stockfishchess.org/files/stockfish-windows-x86-64-avx2.zip"
 DB_FILE = resource_path("orologic_db.json")
 ENGINE = None
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
@@ -113,12 +114,175 @@ MENU_CHOICES={
 	"manuale":_("Mostra la guida dell'app"),
 	"motore":_("Configura le impostazioni per il motore di scacchi"),
 	"nomi":_("Personalizza i nomi dei pezzi e delle colonne"),
-	"pgn":_("Imposta le info di default per il PGN"),
+	"impostazioni":_("Varie ed eventuali"),
 	"vedi":_("... gli orologi salvati"),
 	"volume":_("Consente la regolazione del volume degli effetti audio"),
 	".":_("Esci dall'applicazione")}
 FILE_NAMES={0:"ancona",1:"bologna",2:"como",3:"domodossola",4:"empoli",5:"firenze",6:"genova",7:"hotel"}
 #qf
+if sys.platform == 'win32':
+	import ctypes
+
+def SearchForEngine():
+	"""
+	Cerca motori UCI in tutte le unità, salva tutti i risultati, e chiede all'utente quale usare.
+	Mostra progresso e statistiche finali.
+	"""
+	print(_("\nNessuna configurazione trovata. Avvio ricerca avanzata del motore..."))
+	# --- Setup Iniziale ---
+	stockfish_keywords = ["stockfish", "sf", "cfish", "sugar", "berserk", "shashchess", "dragon", "corchess"]
+	other_engine_keywords = ["lc0", "ethereal", "slow"]
+	all_keywords = stockfish_keywords + other_engine_keywords
+	executable_extensions = (".exe",) if sys.platform == "win32" else ("",)
+	search_paths = get_available_drives()
+	shared_state = {
+		"current_path": "", "folders_scanned": 0, "files_scanned": 0,
+		"search_complete": False, "engines_found": [] # MODIFICA: Ora è una lista
+	}
+	lock = threading.Lock()
+	def reporter():
+		"""Stampa lo stato ogni 5 secondi."""
+		while True:
+			with lock:
+				if shared_state["search_complete"]: break
+				path = shared_state["current_path"]
+				path_str = f"{path[:15]}...{path[-15:]}" if len(path) > 30 else path
+			print(f"\rScanning: {path_str:<40}", end="")
+			time.sleep(5)
+	# --- Inizio Ricerca ---
+	start_time = time.time()
+	print(_("Avvio ricerca su: {paths}").format(paths=', '.join(search_paths)))
+	reporter_thread = threading.Thread(target=reporter, daemon=True)
+	reporter_thread.start()
+	for path in search_paths:
+		if not os.path.exists(path): continue
+		try:
+			for root, dirs, files in os.walk(path, topdown=True):
+				with lock:
+					shared_state["current_path"] = root
+					shared_state["folders_scanned"] += 1
+					shared_state["files_scanned"] += len(files)
+				dirs[:] = [d for d in dirs if d not in ["Windows", "$Recycle.Bin", "AppData", "Library", "System", "private"]]
+				for file in files:
+					file_lower = file.lower()
+					if file_lower.endswith(executable_extensions):
+						# MODIFICA: La logica ora usa 'in'
+						if any(keyword in file_lower for keyword in all_keywords):
+							with lock:
+								# MODIFICA: Aggiungiamo il risultato alla lista
+								shared_state["engines_found"].append((root, file))
+								found_count = len(shared_state["engines_found"])
+								print(f"\r{' ' * 60}\r🎉 Trovati finora: {found_count}. La scansione continua...", end="")
+		except Exception:
+			continue
+	# --- Fine Ricerca e Report ---
+	with lock:
+		shared_state["search_complete"] = True
+	reporter_thread.join()
+	end_time = time.time()
+	duration = end_time - start_time
+	print(f"\r{' ' * 60}\r", end="")
+	print("\n--- Report della Ricerca ---")
+	print(_("Tempo impiegato: {duration:.2f} secondi").format(duration=duration))
+	print(_("Cartelle scansionate: {folders}").format(folders=shared_state['folders_scanned']))
+	print(_("File scansionati: {files}").format(files=shared_state['files_scanned']))
+	# --- Blocco Scelta Utente ---
+	found_engines = shared_state["engines_found"]
+	if not found_engines:
+		print(_("\nRisultato: Nessun motore trovato."))
+		return None, None
+	print(_("\nSono stati trovati {num} motori compatibili:").format(num=len(found_engines)))
+	for i, (root, file) in enumerate(found_engines, 1):
+		print(f" {i}. Eseguibile: {file}\n    Percorso: {root}")
+	if len(found_engines) == 1:
+		scelta = 1 # Se ne trova solo uno, lo seleziona in automatico
+		print(_("Trovato un solo motore, verrà selezionato automaticamente."))
+	else:
+		scelta = dgt(
+			prompt=_("\nQuale motore vuoi usare? (1-{max_num}): ").format(max_num=len(found_engines)),
+			kind="i",
+			imin=1,
+			imax=len(found_engines)
+		)
+	root, file = found_engines[scelta - 1]
+	print(_("Hai selezionato: {file}").format(file=file))
+	return root, file
+
+def get_available_drives():
+	"""
+	Restituisce una lista di tutte le unità disco disponibili nel sistema.
+	Funziona su Windows, macOS e Linux.
+	"""
+	drives = []
+	if sys.platform == 'win32':
+		# Metodo per Windows: usa le API per trovare le lettere dei drive
+		bitmask = ctypes.windll.kernel32.GetLogicalDrives()
+		for i in range(26):
+			if (bitmask >> i) & 1:
+				drive_letter = chr(ord('A') + i)
+				drives.append(f"{drive_letter}:\\")
+	elif sys.platform == 'darwin':
+		# Metodo per macOS: i dischi sono montati sotto /Volumes
+		drives.append('/') # Cerca anche nella root principale
+		try:
+			drives.extend([os.path.join('/Volumes', d) for d in os.listdir('/Volumes')])
+		except FileNotFoundError:
+			pass
+	else: # Metodo per Linux
+		drives.append('/') # Cerca semplicemente dalla root
+	return drives
+
+def get_app_data_path():
+	"""Restituisce un percorso affidabile nella cartella AppData dell'utente per salvare il motore."""
+	# AppData\Local\Orologic\Engine
+	path = os.path.join(os.getenv('LOCALAPPDATA'), "Orologic", "Engine")
+	os.makedirs(path, exist_ok=True) # Crea la cartella se non esiste
+	return path
+
+def DownloadAndInstallEngine():
+	"""
+	Scarica Stockfish, lo estrae in una cartella locale e restituisce il percorso all'eseguibile.
+	"""
+	try:
+		install_path = get_app_data_path()
+		zip_filename = os.path.join(install_path, "stockfish.zip")
+		# 1. Download
+		print(_("\n📥 Sto scaricando Stockfish da {url}...").format(url=STOCKFISH_DOWNLOAD_URL))
+		response = requests.get(STOCKFISH_DOWNLOAD_URL, stream=True)
+		response.raise_for_status() # Controlla se ci sono stati errori HTTP
+		with open(zip_filename, "wb") as f:
+			total_length = int(response.headers.get('content-length'))
+			downloaded = 0
+			for chunk in response.iter_content(chunk_size=4096):
+				downloaded += len(chunk)
+				f.write(chunk)
+				done = int(50 * downloaded / total_length)
+				sys.stdout.write("\r[{}{}] {:.1f}%".format('=' * done, ' ' * (50-done), (downloaded/total_length)*100))
+				sys.stdout.flush()
+		print("\nDownload completato.")
+		# 2. Estrazione
+		print(_("...sto estraendo i file..."))
+		with zipfile.ZipFile(zip_filename, 'r') as zip_ref:
+			zip_ref.extractall(install_path)
+		print(_("Estrazione completata."))
+		os.remove(zip_filename) # Rimuoviamo il file zip dopo l'estrazione
+		# 3. Trova l'eseguibile dentro la cartella appena estratta
+		for root, dirs, files in os.walk(install_path):
+			for file in files:
+				if file.lower().startswith("stockfish") and file.lower().endswith(".exe"):
+					print(_("Installazione di Stockfish completata con successo!"))
+					return root, file # Trovato!
+	except requests.exceptions.RequestException as e:
+		print(_("\nErrore di rete durante il download: {error}").format(error=e))
+		return None, None
+	except zipfile.BadZipFile:
+		print(_("\nErrore: Il file scaricato non è uno zip valido."))
+		return None, None
+	except Exception as e:
+		print(_("\nSi è verificato un errore imprevisto durante l'installazione: {error}").format(error=e))
+		return None, None
+	return None, None # Se non trova l'eseguibile dopo l'estrazione
+
 def verbose_legal_moves_for_san(board,san_str):
 	if san_str in ["O-O","0-0","O-O-O","0-0-0"]:
 		legal_moves=[]
@@ -401,7 +565,7 @@ def CalculateWDL(board):
 			elif hasattr(wdl_info,"pov"): # Nome alternativo comune
 				perspective = wdl_info.pov
 			else:
-				 # Se non riusciamo a determinare la prospettiva, assumiamo per sicurezza
+					# Se non riusciamo a determinare la prospettiva, assumiamo per sicurezza
 				# che sia già assoluta (WHITE) come da standard UCI.
 				print(_("Warning: Impossibile determinare prospettiva WDL da {info}. Assumo WHITE.").format(info=repr(wdl_info)))
 				perspective = chess.WHITE
@@ -502,24 +666,44 @@ def InitEngine():
 	global ENGINE
 	db = LoadDB()
 	engine_config = db.get("engine_config", {})
-	if not engine_config or not engine_config.get("engine_path"):
-		Acusticator(["d4", 0.5, -1, volume],kind=4, adsr=[.001,0,100,99.9])
-		print(_("\nMotore non configurato. Usa il comando 'motore' per impostarlo."))
-		return False
-	try:
-		ENGINE = chess.engine.SimpleEngine.popen_uci(engine_config["engine_path"])
-		ENGINE.configure({
-			"Hash": engine_config.get("hash_size", 128),
-			"Threads": engine_config.get("num_cores", 1),
-			"Skill Level": engine_config.get("skill_level", 20),
-			"Move Overhead": engine_config.get("move_overhead", 0)
-		})
-		print(_("\nMotore inizializzato correttamente."))
-		return True
-	except Exception as e:
-		print(_("\nErrore nell'inizializzazione del motore:"), e)
-		return False
-def EditEngineConfig():
+	if engine_config and engine_config.get("engine_path") and os.path.exists(engine_config.get("engine_path")):
+		try:
+			ENGINE = chess.engine.SimpleEngine.popen_uci(engine_config["engine_path"])
+			ENGINE.configure({
+				"Hash": engine_config.get("hash_size", 128),
+				"Threads": engine_config.get("num_cores", 1),
+				"Skill Level": engine_config.get("skill_level", 20),
+				"Move Overhead": engine_config.get("move_overhead", 0)
+			})
+			print(_("\nMotore inizializzato correttamente dalla configurazione salvata."))
+			return True
+		except Exception as e:
+			print(_("\nErrore con la configurazione salvata: {error}. Provo a risolvere...").format(error=e))
+	engine_path, engine_exe = SearchForEngine()
+	if engine_path and engine_exe:
+		Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
+		EditEngineConfig(initial_path=engine_path, initial_executable=engine_exe)
+	else:
+		print(_("\nNessun motore di scacchi trovato nel sistema."))
+		scelta = key(_("Vuoi che Orologic scarichi e installi Stockfish per te? (invio per sì / n per no): ")).lower()
+		if scelta != 'n':
+			engine_path, engine_exe = DownloadAndInstallEngine()
+			if engine_path and engine_exe:
+				Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
+				EditEngineConfig(initial_path=engine_path, initial_executable=engine_exe)
+			else:
+				Acusticator(["a3", .3, 0, volume], kind=2, adsr=[5, 15, 0, 80])
+				print(_("\nInstallazione automatica non riuscita. Puoi configurare il motore manualmente dal menu principale."))
+				return False
+		else:
+			print(_("\nOk. Ricorda che le funzioni di analisi non saranno disponibili finché non configurerai un motore."))
+			return False
+	if not ENGINE:
+		print(_("\nRiprovo l'inizializzazione del motore..."))
+		return InitEngine()
+	return ENGINE is not None
+
+def EditEngineConfig(initial_path=None, initial_executable=None):
 	print(_("\nImposta configurazione del motore scacchistico\n"))
 	db = LoadDB()
 	engine_config = db.get("engine_config", {})
@@ -529,10 +713,11 @@ def EditEngineConfig():
 			print("  {key}: {val}".format(key=key, val=val))
 	else:
 		print(_("Nessuna configurazione trovata."))
-	path = dgt(prompt=_("Inserisci il percorso dove è salvato il motore UCI: "), kind="s", smin=3, smax=256)
+	path_prompt = _("Inserisci il percorso dove è salvato il motore UCI [{default}]: ").format(default=initial_path or "")
+	path = dgt(prompt=path_prompt, kind="s", smin=3, smax=256, default=initial_path)
 	Acusticator(["g6", 0.025, -.75, volume,"c5", 0.025, -75, volume],kind=3)
-	executable = dgt(prompt=_("Inserisci il nome dell'eseguibile del motore (es. stockfish_15_x64_popcnt.exe): "), kind="s", smin=5, smax=64)
-	Acusticator(["g6", 0.025, -.5, volume,"c5", 0.025, -.5, volume],kind=3)
+	executable_prompt = _("Inserisci il nome dell'eseguibile del motore [{default}]: ").format(default=initial_executable or "")
+	executable = dgt(prompt=executable_prompt, kind="s", smin=5, smax=64, default=initial_executable)
 	full_engine_path = os.path.join(path, executable)
 	if not os.path.isfile(full_engine_path):
 		print(_("Il file specificato non esiste. Verifica il percorso e il nome dell'eseguibile."))
@@ -808,7 +993,7 @@ def AnalyzeGame(pgn_game):
 			# Naviga lungo la linea principale
 			node_iterator = pgn_game.mainline() # Iteratore sulla linea principale
 			for i, node in enumerate(node_iterator):
-				 if i == target_ply:
+					if i == target_ply:
 						found_node = node
 						break
 			else:
@@ -1098,8 +1283,8 @@ def AnalyzeGame(pgn_game):
 					break
 			# Stampa la descrizione della mossa *su cui siamo arrivati*
 			print("\n" + DescribeMove(current_node.move,
-									   current_node.parent.board() if current_node.parent else pgn_game.board(),
-									   annotation=annotation_suffix))
+												current_node.parent.board() if current_node.parent else pgn_game.board(),
+												annotation=annotation_suffix))
 	print(_("\nFine analisi"))
 	annotator_updated_flag = False
 	if saved:
@@ -2069,11 +2254,15 @@ def DeleteClock(db):
 		idx = next((i for i, c in enumerate(db["clocks"]) if c["name"] == orologio["name"]), None)
 		if idx is not None:
 			clock_name = db["clocks"][idx]["name"]
-			del db["clocks"][idx]
-			Acusticator(["c4", 0.025, 0, volume])
-			SaveDB(db)
-			print(_("\nOrologio '{clock_name}' eliminato, ne rimangono {remaining}.").format(clock_name=clock_name, remaining=len(db['clocks'])))
+			prompt_conferma = _("sei sicuro di voler eliminare {nomeorologio}?\nL'azione è irreversibile. Premi invio per sì, qualsiasi altro tasto per no: ").format(nomeorologio=clock_name)
+			conferma = key(prompt_conferma)
+			if conferma == "":
+				del db["clocks"][idx]
+				Acusticator(["c4", 0.025, 0, volume])
+				SaveDB(db)
+				print(_("\nOrologio '{clock_name}' eliminato, ne rimangono {remaining}.").format(clock_name=clock_name, remaining=len(db['clocks'])))
 	return
+
 def EditPGN():
 	Acusticator(["d6", .02, 0, volume,"g4",.02,0,volume]) 
 	print(_("\nModifica info default per PGN\n"))
@@ -2707,12 +2896,12 @@ def StartGame(clock_config):
 	# Se la partita ha meno di 8 semimosse, la funzione termina senza chiedere nulla.
 
 def OpenManual():
-    print(_("\nApertura manuale\n"))
-    readme_path = resource_path("readme.htm")
-    if os.path.exists(readme_path):
-        webbrowser.open("file://" + os.path.realpath(readme_path))
-    else:
-        print(_("Il file {path} non esiste.").format(path=readme_path))
+				print(_("\nApertura manuale\n"))
+				readme_path = resource_path("readme.htm")
+				if os.path.exists(readme_path):
+								webbrowser.open("file://" + os.path.realpath(readme_path))
+				else:
+								print(_("Il file {path} non esiste.").format(path=readme_path))
 
 def SchermataIniziale():
 	now = datetime.datetime.now()
