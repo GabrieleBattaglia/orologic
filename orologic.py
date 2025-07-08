@@ -21,11 +21,12 @@ def resource_path(relative_path):
 lingua_rilevata, _ = polipo(source_language="it")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.6.2"
-RELEASE_DATE=datetime.datetime(2025,7,8,11,51)
+VERSION="4.6.7"
+RELEASE_DATE=datetime.datetime(2025,7,8,15,10)
 PROGRAMMER="Gabriele Battaglia & AIs"
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 ENGINE_NAME = "Nessuno" 
+STILE_MENU_NUMERICO = False
 DB_FILE = resource_path("orologic_db.json")
 ENGINE = None
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
@@ -109,14 +110,14 @@ DOT_COMMANDS={
 	",[NomePezzo]":_("Mostra la/le posizione/i del pezzo indicato")}
 MENU_CHOICES={
 	"analizza":_("Entra in modalità analisi partita"),
-	"crea":_("... un nuovo orologio da aggiungere alla collezione"),
-	"elimina":_("... uno degli orologi salvati"),
+	"crea":_("Aggiungi un nuovo orologio da aggiungere alla collezione"),
+	"elimina":_("Cancella uno degli orologi salvati"),
 	"gioca":_("Inizia la partita"),
 	"manuale":_("Mostra la guida dell'app"),
 	"motore":_("Configura le impostazioni per il motore di scacchi"),
 	"nomi":_("Personalizza i nomi dei pezzi e delle colonne"),
 	"impostazioni":_("Varie ed eventuali"),
-	"vedi":_("... gli orologi salvati"),
+	"vedi":_("Mostra gli orologi salvati"),
 	"volume":_("Consente la regolazione del volume degli effetti audio"),
 	".":_("Esci dall'applicazione")}
 FILE_NAMES={0:"ancona",1:"bologna",2:"como",3:"domodossola",4:"empoli",5:"firenze",6:"genova",7:"hotel"}
@@ -2237,15 +2238,14 @@ def ViewClocks():
 	attesa=key(_("Premi un tasto per tornare al menu principale."))
 	Acusticator(["a4", 0.08, 0, volume], kind=1, adsr=[2,5,90,5])
 def SelectClock(db):
-	db = LoadDB()
 	if not db["clocks"]:
 		Acusticator(["c3", 0.72, 0, volume], kind=2, adsr=[0,0,100,100])
 		print(_("Nessun orologio salvato."))
-		return
-	else:
-		print(_("Ci sono {num_clocks} orologi nella collezione.").format(num_clocks=len(db['clocks'])))
+		return None
+	print(_("Ci sono {num_clocks} orologi nella collezione.").format(num_clocks=len(db['clocks'])))
 	choices = {}
 	for c in db["clocks"]:
+		# La logica per creare i dettagli rimane la stessa
 		indicatore = "B=N" if c["same_time"] else "B/N"
 		fasi = ""
 		for j, phase in enumerate(c["phases"]):
@@ -2258,18 +2258,30 @@ def SelectClock(db):
 				fasi += " F{num}: Bianco:{time_w}+{inc_w}, Nero:{time_b}+{inc_b}".format(num=j+1, time_w=time_str_w, inc_w=phase['white_inc'], time_b=time_str_b, inc_b=phase['black_inc'])
 		num_alarms = len(c.get("alarms", []))
 		alarms_str = _(" Allarmi ({num})").format(num=num_alarms)
-		first_line = "{indicator}{phases}{alarms}".format(indicator=indicatore, phases=fasi, alarms=alarms_str)
+		details_line = "{indicator}{phases}{alarms}".format(indicator=indicatore, phases=fasi, alarms=alarms_str)
 		note_line = c.get("note", "")
-		description = first_line + "\n  " + note_line
-		choices[c["name"]] = description
-	choice = menu(choices, show=True, keyslist=True, full_keyslist=False)
+		display_string = ""
+		if STILE_MENU_NUMERICO:
+			# Se il menù è NUMERATO, includiamo il nome nel valore da visualizzare.
+			display_string = "'{name}' -- {details}".format(name=c["name"], details=details_line)
+		else:
+			# Se il menù è a PAROLE, NON includiamo il nome, perché verrà mostrato
+			# automaticamente dalla funzione menu (che usa la chiave del dizionario).
+			display_string = details_line
+		# Aggiungiamo la nota alla fine, in entrambi i casi.
+		if note_line:
+			display_string += "\n  " + note_line
+		choices[c["name"]] = display_string
+	# Il resto della funzione rimane identico e funziona correttamente
+	choice = menu(choices, show=True, keyslist=True, full_keyslist=False, numbered=STILE_MENU_NUMERICO)
 	Acusticator(["f7", .013, 0, volume])
 	if choice:
 		idx = next((i for i, c in enumerate(db["clocks"]) if c["name"] == choice), None)
 		if idx is not None:
 			return db["clocks"][idx]
-	else:
-		print(_("Nessun orologio selezionato."))
+	print(_("Nessun orologio selezionato o scelta non valida."))
+	return None
+
 def DeleteClock(db):
 	print(_("\nEliminazione orologi salvati\n"))
 	Acusticator(["b4", .02, 0, volume,"d4",.2,0,volume]) 
@@ -2279,7 +2291,7 @@ def DeleteClock(db):
 		if idx is not None:
 			clock_name = db["clocks"][idx]["name"]
 			prompt_conferma = _("sei sicuro di voler eliminare {nomeorologio}?\nL'azione è irreversibile. Premi invio per sì, qualsiasi altro tasto per no: ").format(nomeorologio=clock_name)
-			conferma = key(prompt_conferma)
+			conferma = key(prompt_conferma).strip()
 			if conferma == "":
 				del db["clocks"][idx]
 				Acusticator(["c4", 0.025, 0, volume])
@@ -2287,64 +2299,29 @@ def DeleteClock(db):
 				print(_("\nOrologio '{clock_name}' eliminato, ne rimangono {remaining}.").format(clock_name=clock_name, remaining=len(db['clocks'])))
 	return
 
-def Impostazioni():
-	Acusticator(["d6", .02, 0, volume,"g4",.02,0,volume]) 
+def Impostazioni(db):
+	global STILE_MENU_NUMERICO
+	prompt_newline = "\n"
 	print(_("\nModifica impostazioni varie di Orologic\n"))
-	db = LoadDB()
+	# --- Blocco per l'Autosave ---
 	autosave_enabled = db.get("autosave_enabled", False)
-	status_str = _("Attivo") if autosave_enabled else _("Non attivo")
-	default_choice = "s" if autosave_enabled else "n"
-	prompt_autosave = _("Salvataggio automatico PGN durante il gioco [{current_status}] (enter for yes)?: ").format(current_status=status_str)
-	scelta_autosave = key(prompt_autosave, ).lower()
-	db["autosave_enabled"] = (scelta_autosave == "")
-	Acusticator(["d6", .02, 1.2, volume,"g4",.02,1.2,volume])
-	default_pgn = db.get("default_pgn", {})
-	default_event = default_pgn.get("Event", "Orologic Game")
-	event = dgt(_("Evento [{default}]: ").format(default=default_event), kind="s", default=default_event)
-	Acusticator(["d6", .02, -1, volume,"g4",.02,-1,volume]) 
-	if event.strip() == "":
-		event = default_event
-	default_site = default_pgn.get("Site", _("Sede sconosciuta"))
-	site = dgt(_("Sede [{default}]: ").format(default=default_site), kind="s", default=default_site)
-	Acusticator(["d6", .02, -.66, volume,"g4",.02,-.66,volume]) 
-	if site.strip() == "":
-		site = default_site
-	default_round = default_pgn.get("Round", "Round 1")
-	round_ = dgt(_("Round [{default}]: ").format(default=default_round), kind="s", default=default_round)
-	Acusticator(["d6", .02, -.33, volume,"g4",.02,-.33,volume]) 
-	if round_.strip() == "":
-		round_ = default_round
-	default_white = default_pgn.get("White", _("Bianco"))
-	white = dgt(_("Nome del Bianco [{default}]: ").format(default=default_white), kind="s", default=default_white).strip().title()
-	Acusticator(["d6", .02, 0, volume,"g4",.02,0,volume]) 
-	if white.strip() == "":
-		white = default_white
-	default_black = default_pgn.get("Black", _("Nero"))
-	black = dgt(_("Nome del Nero [{default}]: ").format(default=default_black), kind="s", default=default_black).strip().title()
-	Acusticator(["d6", .02, .33, volume,"g4",.02,.33,volume]) 
-	if black.strip() == "":
-		black = default_black
-	default_white_elo = default_pgn.get("WhiteElo", "1200")
-	white_elo = dgt(_("Elo del Bianco [{default}]: ").format(default=default_white_elo), kind="s", default=default_white_elo)
-	Acusticator(["d6", .02, .66, volume,"g4",.02,.66,volume]) 
-	if white_elo.strip() == "":
-		white_elo = default_white_elo
-	default_black_elo = default_pgn.get("BlackElo", "1200")
-	black_elo = dgt(_("Elo del Nero [{default}]: ").format(default=default_black_elo), kind="s", default=default_black_elo)
-	Acusticator(["d6", .02, 1, volume,"g4",.02,1,volume]) 
-	if black_elo.strip() == "":
-		black_elo = default_black_elo
-	db["default_pgn"] = {
-		"Event": event,
-		"Site": site,
-		"Round": round_,
-		"White": white,
-		"Black": black,
-		"WhiteElo": white_elo,
-		"BlackElo": black_elo
-	}
+	status_autosave = _("Attivo") if autosave_enabled else _("Non attivo")
+	prompt_autosave = _("Salvataggio automatico: [{status}]. Premi Invio per cambiare, altro per confermare: ").format(status=status_autosave)
+	scelta_autosave = key(prompt_autosave).strip()
+	if scelta_autosave == "":
+		db["autosave_enabled"] = not autosave_enabled
+	# --- Blocco per lo Stile Menu ---
+	menu_numerati_attivi = db.get("menu_numerati", False)
+	status_menu = _("Numeri") if menu_numerati_attivi else _("Parole")
+	prompt_menu = _("Stile menu: [{status}]. Premi Invio per cambiare, altro per confermare: ").format(status=status_menu)
+	scelta_menu = key(prompt_menu).strip()
+	if scelta_menu == "":
+		db["menu_numerati"] = not menu_numerati_attivi
+	# --- Aggiornamento e Salvataggio ---
+	STILE_MENU_NUMERICO = db.get("menu_numerati", False)
 	SaveDB(db)
-	print(_("\nImpostazioni aggiornate."))
+	print(_("Salvataggio completato. Impostazioni aggiornate"))
+	return
 
 class CustomBoard(chess.Board):
 	def __str__(self):
@@ -3001,9 +2978,10 @@ def SchermataIniziale():
 	print("\t\t\t" + _("Digita '?' per visualizzare il menù."))
 	Acusticator(['c4', 0.125, 0, volume, 'd4', 0.125, 0, volume, 'e4', 0.125, 0, volume, 'g4', 0.125, 0, volume, 'a4', 0.125, 0, volume, 'e5', 0.125, 0, volume, 'p', 0.125, 0, 0.5, 'a5', 0.125, 0, volume], kind=1, adsr=[0.01, 0, 100, 99])
 def Main():
-	global	volume
+	global	volume, STILE_MENU_NUMERICO
 	db = LoadDB()
 	volume = db.get("volume", 0.5)
+	STILE_MENU_NUMERICO = db.get("menu_numerati", False)
 	launch_count = db.get("launch_count", 0) + 1
 	db["launch_count"] = launch_count
 	SaveDB(db)
@@ -3013,7 +2991,7 @@ def Main():
 		print(_("✅ Motore attivo: {engine_name}").format(engine_name=ENGINE_NAME))
 	LoadLocalization()
 	while True:
-		scelta=menu(MENU_CHOICES, show=True, keyslist=True, full_keyslist=False)
+		scelta=menu(MENU_CHOICES, show=True, keyslist=True, full_keyslist=False, numbered=STILE_MENU_NUMERICO)
 		if scelta == "analizza":
 			Acusticator(["a5", .04, 0, volume, "e5", .04, 0, volume, "p",.08,0,0, "g5", .04, 0, volume, "e6", .120, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 			AnalyzeGame(None)
@@ -3043,7 +3021,7 @@ def Main():
 			DeleteClock(db)
 			Acusticator([1000.0, 0.05, -1, volume, "p", 0.05, 0, 0, 900.0, 0.05, 1, volume], kind=1, adsr=[0, 0, 100, 0])
 		elif scelta=="impostazioni":
-			Impostazioni()
+			Impostazioni(db)
 			Acusticator([1000.0, 0.05, -1, volume, "p", 0.05, 0, 0, 900.0, 0.05, 1, volume], kind=1, adsr=[0, 0, 100, 0])
 		elif scelta=="nomi": # <-- BLOCCO NUOVO DA AGGIUNGERE
 			EditLocalization()		

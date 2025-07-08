@@ -1,296 +1,245 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orologic User Guide - by Gabriele Battaglia</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            line-height: 1.6;
-            margin: 2em;
-            background-color: #fdfdfd;
-            color: #1a1a1a;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            color: #005a9c;
-        }
-        h1 {
-            border-bottom: 2px solid #005a9c;
-            padding-bottom: 10px;
-        }
-        h2 {
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-        }
-        code {
-            background-color: #eef;
-            padding: 2px 5px;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1em;
-            margin-bottom: 1em;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .note {
-            background-color: #fffbe6;
-            border-left: 5px solid #ffc107;
-            padding: 10px;
-            margin: 1em 0;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guida Utente di Orologic - by Gabriele Battaglia</title>
+<style>
+body {
+font-family: sans-serif;
+line-height: 1.6;
+margin: 2em;
+background-color: #fdfdfd;
+color: #1a1a1a;
+}
+h1, h2, h3, h4, h5, h6 {
+color: #005a9c;
+}
+h1 {
+border-bottom: 2px solid #005a9c;
+padding-bottom: 10px;
+}
+h2 {
+border-bottom: 1px solid #ccc;
+padding-bottom: 5px;
+}
+code {
+background-color: #eef;
+padding: 2px 5px;
+border-radius: 4px;
+font-family: monospace;
+}
+table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 1em;
+margin-bottom: 1em;
+}
+th, td {
+border: 1px solid #ccc;
+padding: 8px;
+text-align: left;
+}
+th {
+background-color: #f2f2f2;
+}
+.note {
+background-color: #fffbe6;
+border-left: 5px solid #ffc107;
+padding: 10px;
+margin: 1em 0;
+}
+</style>
 </head>
 <body>
+<h1>Guida Utente di Orologic (Versione 4.6.7)</h1>
 
-    <h1>Orologic User Guide (Version 4.0.0)</h1>
+<div class="note">
+    <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
+</div>
 
-    <div class="note">
-        <p><strong>Language Note:</strong> This guide is currently available only in English. We encourage users to utilize the many excellent online translation tools to read it in their native language.</p>
-    </div>
+<h2>1. Introduzione</h2>
+<p>Benvenuto in Orologic, un orologio per scacchi e strumento di analisi completamente accessibile, progettato pensando agli utenti con disabilità visiva. Orologic ti permette di giocare partite a tempo, salvarle in formato PGN ed eseguire analisi dettagliate utilizzando un motore scacchistico UCI.</p>
 
-    <h2>1. Introduction</h2>
-    <p>Welcome to Orologic, a fully accessible chess clock and game analysis tool designed with visually impaired users in mind. Orologic allows you to play timed chess games, save them in PGN format, and perform detailed analysis using a UCI chess engine.</p>
+<h3>1.1. Principi Fondamentali</h3>
+<ul>
+    <li><strong>Accessibilità al Primo Posto:</strong> Ogni funzione è progettata per essere utilizzata con uno screen reader.</li>
+    <li><strong>Navigazione da Tastiera:</strong> Tutte le interazioni vengono eseguite tramite la tastiera.</li>
+    <li><strong>Autonomo:</strong> Orologic è un singolo file eseguibile. Non è richiesta alcuna installazione complessa.</li>
+</ul>
 
-    <h3>1.1. Core Principles</h3>
-    <ul>
-        <li><strong>Accessibility First:</strong> Every feature is designed to be used with a screen reader. The hierarchical structure of this guide is a reflection of the program's design.</li>
-        <li><strong>Keyboard Navigation:</strong> All interactions are performed via the keyboard.</li>
-        <li><strong>Standalone:</strong> Orologic is a single executable file. No complex installation is required.</li>
-    </ul>
+<h3>1.2. Navigare nei Menu: Lo Stile di Orologic</h3>
+<p>Orologic utilizza un sistema di selezione dei menu unico ed efficiente. Quando ti viene presentata una lista di scelte, puoi digitare le prime lettere dell'opzione desiderata per filtrarle. Se la tua digitazione restringe le scelte a una singola opzione, questa viene selezionata automaticamente. In alternativa, la nuova **modalità numerata** (configurabile nelle impostazioni) ti permette di selezionare le opzioni digitando il numero corrispondente.</p>
 
-    <h3>1.2. Navigating Menus: The Orologic Way</h3>
-    <p>Orologic uses a unique and efficient menu selection system. When presented with a list of choices, you don't need to type the full command. Instead, you can type the first few letters of your desired option.</p>
-    <ul>
-        <li>As you type, Orologic filters the list of available options to show only those that start with the characters you've entered.</li>
-        <li>If your input narrows the choices down to a single option, that option is automatically selected.</li>
-        <li>If you've typed a sequence of characters and there are still multiple matching options, pressing the <strong>Enter</strong> key will select the option that is an exact match for what you typed.</li>
-    </ul>
-    <p>For example, in the main menu, you have options like <code>crea</code>, <code>elimina</code>, <code>gioca</code>, etc. If you type <code>c</code>, the only matching option is <code>crea</code>, so it will be selected instantly. If you type <code>e</code>, both <code>elimina</code> and the exit command <code>.</code> (which is not shown but available) might be considered, so you might need to type more letters like <code>el</code> to select <code>elimina</code>.</p>
+---
 
-    <h2>2. Main Menu Options</h2>
-    <p>When you start Orologic, you are greeted with a welcome screen. Typing <code>?</code> and pressing Enter will display the main menu options. Here is a breakdown of each one.</p>
+<h2>2. Opzioni del Menu Principale</h2>
+<p>All'avvio di Orologic, vieni accolto da una schermata di benvenuto. Digitando <code>?</code> e premendo Invio verranno mostrate le opzioni del menu principale. Ecco una descrizione di ciascuna di esse.</p>
 
-    <h3>2.1. Play a Game (gioca)</h3>
-    <p>This is the core function for playing a timed chess game against an opponent.</p>
-    
-    <h4>2.1.1. Starting a Game</h4>
-    <ol>
-        <li><strong>Select a Clock:</strong> You will first be prompted to choose a pre-configured clock. If you haven't created one, you should do so first using the <code>crea</code> option.</li>
-        <li><strong>Game Mode:</strong> You can choose between a <strong>Standard</strong> game or a <strong>Fischer Random (Chess960)</strong> game.
-            <ul>
-                <li>For Fischer Random, you can either enter a specific 8-character piece sequence (e.g., <code>RNBQKBNR</code>), type <code>?</code> for a random position, or type <code>.</code> to cancel.</li>
-            </ul>
-        </li>
-        <li><strong>Player Information:</strong> You will be asked to enter names and Elo ratings for the White and Black players, as well as event details. The program saves your last entries as defaults for the next game.</li>
-    </ol>
+<h3>2.1. Gioca una Partita (gioca)</h3>
+<p>Questa è la funzione principale per giocare una partita a tempo contro un avversario.</p>
 
-    <h4>2.1.2. During the Game: Making Moves</h4>
-    <p>Moves are entered using <strong>Standard Algebraic Notation (SAN)</strong>. For example:</p>
-    <ul>
-        <li><code>e4</code> for a pawn move.</li>
-        <li><code>Nf3</code> for a knight move.</li>
-        <li><code>O-O</code> for short castling and <code>O-O-O</code> for long castling.</li>
-        <li><code>dxe5</code> for a capture.</li>
-        <li><code>e8=Q</code> for a promotion.</li>
-    </ul>
-    <p>You can also add annotations directly to your move:</p>
-    <ul>
-        <li><code>!</code> (good move), <code>?</code> (bad move), <code>!!</code> (brilliant move), <code>??</code> (blunder), <code>!?</code> (interesting move), <code>?!</code> (dubious move). Example: <code>Nf3!</code></li>
-        <li><code>=</code> to signify a draw offer. Example: <code>Qd2=</code></li>
-    </ul>
+<h4>2.1.1. Avviare una Partita</h4>
+<ol>
+    <li><strong>Seleziona un Orologio:</strong> Ti verrà prima chiesto di scegliere un orologio pre-configurato. Se non ne hai ancora creato uno, dovresti farlo prima usando l'opzione <code>crea</code>.</li>
+    <li><strong>Modalità di Gioco:</strong> Puoi scegliere tra una partita <strong>Standard</strong> o una <strong>Fischer Random (Chess960)</strong>.</li>
+    <li><strong>Informazioni Giocatori:</strong> Ti verrà chiesto di inserire nomi e punteggi Elo per i giocatori Bianco e Nero, così come i dettagli dell'evento. Il programma salva le tue ultime immissioni come predefinite per la partita successiva.</li>
+</ol>
 
-    <h4>2.1.3. In-Game Commands (Dot Commands)</h4>
-    <p>While playing, you can enter special commands that start with a period (<code>.</code>). These commands allow you to manage the clock, check game status, and more.</p>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>Command</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr><td><code>.1</code></td><td>Show White's remaining time.</td></tr>
-            <tr><td><code>.2</code></td><td>Show Black's remaining time.</td></tr>
-            <tr><td><code>.3</code></td><td>Show both clocks.</td></tr>
-            <tr><td><code>.4</code></td><td>Compare remaining times and state the advantage.</td></tr>
-            <tr><td><code>.5</code></td><td>Report which clock is running or the duration of the pause.</td></tr>
-            <tr><td><code>.l</code></td><td>Display the list of moves played.</td></tr>
-            <tr><td><code>.m</code></td><td>Show the material value still on the board for each player.</td></tr>
-            <tr><td><code>.p</code></td><td>Pause or resume the clocks.</td></tr>
-            <tr><td><code>.q</code></td><td>Undo the last move (only available when the game is paused).</td></tr>
-            <tr><td><code>.b+</code></td><td>Add time to White's clock (e.g., <code>.b+60</code> to add 60 seconds). Must be paused.</td></tr>
-            <tr><td><code>.b-</code></td><td>Subtract time from White's clock. Must be paused.</td></tr>
-            <tr><td><code>.n+</code></td><td>Add time to Black's clock. Must be paused.</td></tr>
-            <tr><td><code>.n-</code></td><td>Subtract time from Black's clock. Must be paused.</td></tr>
-            <tr><td><code>.s</code></td><td>Display the current board state as text.</td></tr>
-            <tr><td><code>.c [comment]</code></td><td>Add a comment to the current move (e.g., <code>.c This is a key moment</code>).</td></tr>
-            <tr><td><code>.1-0</code></td><td>Assign victory to White and end the game.</td></tr>
-            <tr><td><code>.0-1</code></td><td>Assign victory to Black and end the game.</td></tr>
-            <tr><td><code>.1/2</code></td><td>Assign a draw and end the game.</td></tr>
-            <tr><td><code>.*</code></td><td>Assign an undefined result and end the game.</td></tr>
-            <tr><td><code>.?</code></td><td>Display this list of commands.</td></tr>
-        </tbody>
-    </table>
+<h4>2.1.1.1. Modalità Fischer Random (Chess960)</h4>
+<p>Se scegli la modalità Fischer Random, hai tre possibilità:</p>
+<ul>
+    <li><strong>Posizione Casuale (consigliato):</strong> Digita <code>?</code> e premi Invio. Orologic genererà una delle 960 posizioni iniziali valide in modo casuale e ti comunicherà la sequenza dei pezzi e il numero di riferimento della posizione.</li>
+    <li><strong>Posizione Manuale:</strong> Se vuoi impostare una posizione specifica, devi inserire una stringa di 8 caratteri che rappresenta la disposizione dei pezzi sulla prima traversa per il Bianco. La sequenza deve rispettare le regole del Chess960:
+        <ul>
+            <li>Deve contenere esattamente: un Re (<code>K</code>), una Donna (<code>Q</code>), due Torri (<code>R</code>), due Alfieri (<code>B</code>), due Cavalli (<code>N</code>).</li>
+            <li>Il Re deve trovarsi in una casa compresa tra le due Torri.</li>
+            <li>Un Alfiere deve trovarsi su una casa chiara e l'altro su una casa scura.</li>
+        </ul>
+        <p>Esempio di sequenza <strong>valida</strong>: <code>RBNNQBKR</code>. Esempio di sequenza <strong>non valida</strong>: <code>RKRNNQBB</code> (entrambi gli alfieri su case chiare).</p>
+    </li>
+    <li><strong>Annulla:</strong> Digita <code>.</code> e premi Invio per tornare indietro e scegliere la modalità Standard.</li>
+</ul>
 
-    <h4>2.1.4. In-Game Board Inspection Commands</h4>
-    <p>You can also inspect the board without it being your turn to move.</p>
-    <table>
-        <thead>
-            <tr>
-                <th>Command</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr><td><code>/[column]</code></td><td>Shows the pieces on the top-right diagonal starting from the base of the given column (e.g., <code>/c</code> for the c1-h6 diagonal).</td></tr>
-            <tr><td><code>\[column]</code></td><td>Shows the pieces on the top-left diagonal starting from the base of the given column (e.g., <code>\f</code> for the f1-a6 diagonal).</td></tr>
-            <tr><td><code>-[column|rank|square]</code></td><td>Shows the pieces on a specific column, rank, or square (e.g., <code>-e</code>, <code>-4</code>, <code>-e4</code>).</td></tr>
-            <tr><td><code>,[PieceSymbol]</code></td><td>Shows the position(s) of the specified piece. Use uppercase for White and lowercase for Black (e.g., <code>,Q</code> for White's Queen, <code>,n</code> for Black's knights).</td></tr>
-        </tbody>
-    </table>
+<h4>2.1.2. Durante la Partita: Inserire le Mosse</h4>
+<p>Le mosse vengono inserite utilizzando la <strong>Notazione Algebrica Standard (SAN)</strong>. Esempi:</p>
+<ul>
+    <li><code>e4</code>, <code>Nf3</code>, <code>O-O</code> (arrocco corto), <code>O-O-O</code> (arrocco lungo), <code>dxe5</code> (cattura), <code>e8=Q</code> (promozione).</li>
+</ul>
+<p>Puoi anche aggiungere annotazioni direttamente alla tua mossa: <code>!</code> (buona), <code>?</code> (cattiva), <code>!!</code> (brillante), <code>??</code> (errore grave), <code>!?</code> (interessante), <code>?!</code> (dubbia). Esempio: <code>Nf3!</code>. Usa <code>=</code> per proporre la patta. Esempio: <code>Qd2=</code>.</p>
 
-    <h4>2.1.5. End of Game</h4>
-    <p>The game ends automatically on checkmate, stalemate, or other draw conditions (insufficient material, 75-move rule, etc.). When the game is over, Orologic will:</p>
-    <ol>
-        <li>Announce the result.</li>
-        <li>Save the game as a <code>.pgn</code> file.</li>
-        <li>Save a human-readable text summary as a <code>.txt</code> file.</li>
-        <li>Copy the PGN to your clipboard.</li>
-        <li>Offer to immediately analyze the game if it has at least 4 full moves.</li>
-    </ol>
+<h4>2.1.3. Comandi di Gioco (Comandi con il punto)</h4>
+<p>Durante la partita, puoi inserire comandi speciali che iniziano con un punto (<code>.</code>).</p>
 
-    <h3>2.2. Analyze a Game (analizza)</h3>
-    <p>This powerful mode allows you to review a game, add comments, and get insights from a chess engine.</p>
+<table>
+    <thead><tr><th>Comando</th><th>Descrizione</th></tr></thead>
+    <tbody>
+        <tr><td><code>.1</code> / <code>.2</code> / <code>.3</code></td><td>Mostra il tempo del Bianco / del Nero / di entrambi.</td></tr>
+        <tr><td><code>.4</code></td><td>Confronta i tempi e indica il vantaggio.</td></tr>
+        <tr><td><code>.5</code></td><td>Indica quale orologio è in moto o la durata della pausa.</td></tr>
+        <tr><td><code>.l</code></td><td>Mostra la lista delle mosse giocate.</td></tr>
+        <tr><td><code>.m</code></td><td>Mostra il valore del materiale per ciascun giocatore.</td></tr>
+        <tr><td><code>.p</code></td><td>Mette in pausa o riavvia gli orologi.</td></tr>
+        <tr><td><code>.q</code></td><td>Annulla l'ultima mossa (solo in pausa).</td></tr>
+        <tr><td><code>.b+</code>/<code>.b-</code>/<code>.n+</code>/<code>.n-</code></td><td>Aggiunge/sottrae tempo al Bianco (b) o al Nero (n). Es: <code>.b+60</code>. Solo in pausa.</td></tr>
+        <tr><td><code>.s</code></td><td>Mostra la scacchiera testuale.</td></tr>
+        <tr><td><code>.c [commento]</code></td><td>Aggiunge un commento alla mossa corrente. Es: <code>.c Mossa chiave</code>.</td></tr>
+        <tr><td><code>.1-0</code> / <code>.0-1</code> / <code>.1/2</code> / <code>.*</code></td><td>Assegna la vittoria al Bianco / al Nero / patta / risultato indefinito e termina la partita.</td></tr>
+        <tr><td><code>.?</code></td><td>Mostra questa lista di comandi.</td></tr>
+    </tbody>
+</table>
 
-    <h4>2.2.1. Starting Analysis</h4>
-    <p>To start, select <code>analizza</code> from the main menu. The program will attempt to load a PGN from your clipboard. If your clipboard contains multiple games, you will be presented with a menu to choose which one to analyze.</p>
+<h4>2.1.4. Comandi di Ispezione della Scacchiera</h4>
+<p>Puoi anche ispezionare la scacchiera con questi comandi:</p>
+<table>
+    <thead><tr><th>Comando</th><th>Descrizione</th></tr></thead>
+    <tbody>
+        <tr><td><code>/[col]</code></td><td>Mostra i pezzi sulla diagonale alto-destra (es. <code>/c</code> per c1-h6).</td></tr>
+        <tr><td><code>\[col]</code></td><td>Mostra i pezzi sulla diagonale alto-sinistra (es. <code>\f</code> per f1-a6).</td></tr>
+        <tr><td><code>-[col|trv|casa]</code></td><td>Mostra i pezzi su una colonna, traversa o casa specifica (es. <code>-e</code>, <code>-4</code>, <code>-e4</code>).</td></tr>
+        <tr><td><code>,[SimboloPezzo]</code></td><td>Mostra la posizione dei pezzi specificati (maiuscolo per Bianco, minuscolo per Nero). Es. <code>,Q</code>, <code>,n</code>.</td></tr>
+    </tbody>
+</table>
 
-    <h4>2.2.2. Analysis Mode Commands</h4>
-    <p>Once in analysis mode, you navigate the game and interact with the engine using single-letter commands. The prompt will show you the current move. Press <code>?</code> at any time to see this list.</p>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>Command</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr><td colspan="2" style="text-align:center; font-weight:bold;">Navigation</td></tr>
-            <tr><td><code>a</code></td><td>Go to the start of the game (or the parent node if in a variation).</td></tr>
-            <tr><td><code>s</code></td><td>Go back one move.</td></tr>
-            <tr><td><code>d</code></td><td>Go forward one move.</td></tr>
-            <tr><td><code>f</code></td><td>Go to the end of the current line.</td></tr>
-            <tr><td><code>g</code></td><td>Select the previous variation branch.</td></tr>
-            <tr><td><code>h</code></td><td>Select the next variation branch.</td></tr>
-            <tr><td><code>k</code></td><td>Go to a specific move number.</td></tr>
-            <tr><td colspan="2" style="text-align:center; font-weight:bold;">Engine Analysis</td></tr>
-            <tr><td><code>q</code></td><td>Calculate and show the best move in the current position.</td></tr>
-            <tr><td><code>w</code></td><td>Calculate and show the best line (sequence of moves).</td></tr>
-            <tr><td><code>e</code></td><td>Show multiple lines of analysis and enter "Smart Inspection Mode".</td></tr>
-            <tr><td><code>r</code></td><td>Calculate and show the centipawn evaluation for the current position.</td></tr>
-            <tr><td><code>t</code></td><td>Show the Win/Draw/Loss percentages for the current position.</td></tr>
-            <tr><td colspan="2" style="text-align:center; font-weight:bold;">PGN and Comments</td></tr>
-            <tr><td><code>l</code></td><td>Load a new PGN from the clipboard.</td></tr>
-            <tr><td><code>z</code></td><td>Insert the engine's best line as a new variation in the PGN.</td></tr>
-            <tr><td><code>x</code></td><td>Insert the engine's best move as a comment in the PGN.</td></tr>
-            <tr><td><code>c</code></td><td>Add a custom text comment to the current move.</td></tr>
-            <tr><td><code>v</code></td><td>Insert the centipawn evaluation as a comment in the PGN.</td></tr>
-            <tr><td><code>n</code></td><td>Delete the comment on the current move.</td></tr>
-            <tr><td><code>b</code></td><td>Toggle automatic reading of comments on/off.</td></tr>
-            <tr><td colspan="2" style="text-align:center; font-weight:bold;">Information & Settings</td></tr>
-            <tr><td><code>j</code></td><td>Read the PGN headers of the game.</td></tr>
-            <tr><td><code>y</code></td><td>Show the material balance.</td></tr>
-            <tr><td><code>u</code></td><td>Display the current board state as text.</td></tr>
-            <tr><td><code>i</code></td><td>Set the analysis time (in seconds) for the engine.</td></tr>
-            <tr><td><code>o</code></td><td>Set the number of analysis lines (MultiPV) for the engine to show.</td></tr>
-            <tr><td colspan="2" style="text-align:center; font-weight:bold;">Exit</td></tr>
-            <tr><td><code>.</code></td><td>Exit analysis mode. If you made changes, you will be prompted to save the PGN to a new file.</td></tr>
-        </tbody>
-    </table>
+<h4>2.1.5. Fine Partita</h4>
+<p>La partita termina automaticamente per scacco matto, stallo o altre condizioni di patta. Alla fine, Orologic:</p>
+<ol>
+    <li>Annuncia il risultato.</li>
+    <li>Salva la partita come file <code>.pgn</code> e un riepilogo come file <code>.txt</code>.</li>
+    <li>Copia il PGN negli appunti.</li>
+    <li>Se la partita ha almeno 4 semimosse, ti offre di analizzarla immediatamente.</li>
+</ol>
 
-    <h4>2.2.3. Smart Inspection Mode</h4>
-    <p>After using the <code>e</code> command to display multiple analysis lines, you can choose to inspect one of them in "Smart Mode". This lets you navigate through a proposed line of play move by move. The commands are simple:</p>
-    <ul>
-        <li><code>d</code>: Go to the next move in the line.</li>
-        <li><code>s</code>: Go to the previous move in the line.</li>
-        <li><code>r</code>: Re-evaluate the current position in the line.</li>
-        <li><code>.</code>: Exit Smart Inspection Mode.</li>
-        <li><code>?</code>: Show this list of commands.</li>
-    </ul>
+<h3>2.2. Analizza una Partita (analizza)</h3>
+<p>Questa potente modalità ti permette di rivedere una partita, aggiungere commenti e ottenere analisi da un motore scacchistico.</p>
+<p>Per iniziare, seleziona <code>analizza</code>; il programma caricherà un PGN dai tuoi appunti. Una volta in modalità analisi, usa i comandi a singola lettera. Premi <code>?</code> in qualsiasi momento per vedere la lista completa.</p>
 
-    <h3>2.3. Configuration</h3>
-    <p>Orologic is highly customizable. These main menu options allow you to tailor it to your needs.</p>
+<table>
+    <thead><tr><th>Comando</th><th>Descrizione</th></tr></thead>
+    <tbody>
+        <tr><td colspan="2" style="text-align:center; font-weight:bold;">Navigazione</td></tr>
+        <tr><td><code>a</code>, <code>s</code>, <code>d</code>, <code>f</code></td><td>Vai a inizio, indietro, avanti, fine linea.</td></tr>
+        <tr><td><code>g</code>, <code>h</code></td><td>Seleziona la variante precedente o successiva.</td></tr>
+        <tr><td><code>k</code></td><td>Vai a un numero di mossa specifico.</td></tr>
+        <tr><td colspan="2" style="text-align:center; font-weight:bold;">Analisi del Motore</td></tr>
+        <tr><td><code>q</code>, <code>w</code></td><td>Calcola e mostra la mossa migliore o la linea migliore.</td></tr>
+        <tr><td><code>e</code></td><td>Mostra più linee di analisi ed entra in "Modalità Ispezione Smart".</td></tr>
+        <tr><td><code>r</code>, <code>t</code></td><td>Mostra la valutazione in centipedoni o le percentuali Vittoria/Patta/Sconfitta.</td></tr>
+        <tr><td colspan="2" style="text-align:center; font-weight:bold;">PGN e Commenti</td></tr>
+        <tr><td><code>l</code></td><td>Carica un nuovo PGN dagli appunti.</td></tr>
+        <tr><td><code>z</code>, <code>x</code>, <code>v</code></td><td>Inserisce la linea migliore come variante, la mossa migliore come commento, o la valutazione come commento.</td></tr>
+        <tr><td><code>c</code>, <code>n</code>, <code>b</code></td><td>Aggiunge un commento personalizzato, cancella un commento, o attiva/disattiva la lettura automatica dei commenti.</td></tr>
+        <tr><td colspan="2" style="text-align:center; font-weight:bold;">Info e Impostazioni</td></tr>
+        <tr><td><code>j</code>, <code>y</code>, <code>u</code></td><td>Mostra gli header del PGN, il bilancio materiale, o la scacchiera.</td></tr>
+        <tr><td><code>i</code>, <code>o</code></td><td>Imposta i secondi di analisi o il numero di linee di analisi (MultiPV).</td></tr>
+        <tr><td colspan="2" style="text-align:center; font-weight:bold;">Uscita</td></tr>
+        <tr><td><code>.</code></td><td>Esce dalla modalità analisi, salvando le modifiche se necessario.</td></tr>
+    </tbody>
+</table>
 
-    <h4>2.3.1. Clock Management (crea, vedi, elimina)</h4>
-    <ul>
-        <li><strong>crea:</strong> This walks you through creating a new chess clock. You can define multiple time control phases, each with a base time, an increment per move, and a number of moves to complete in that phase. You can also set audible alarms that trigger when the clock reaches a certain time (e.g., 5 minutes).</li>
-        <li><strong>vedi:</strong> This displays a list of all your saved clocks and their configurations.</li>
-        <li><strong>elimina:</strong> This allows you to delete a clock you no longer need.</li>
-    </ul>
+<h4>2.2.3. Modalità Ispezione Smart</h4>
+<p>Dopo aver usato il comando <code>e</code>, puoi scegliere di ispezionare una linea in "Modalità Smart", navigandola mossa per mossa. I comandi sono: <code>d</code> (avanti), <code>s</code> (indietro), <code>r</code> (rivaluta), <code>.</code> (esci).</p>
 
-    <h4>2.3.2. Chess Engine Setup (motore)</h4>
-    <p>This is a crucial step for using the analysis features. Here you must provide the path to a UCI-compatible chess engine (like Stockfish). You will be asked for:</p>
-    <ul>
-        <li>The full path to the engine's folder.</li>
-        <li>The exact filename of the engine's executable.</li>
-        <li>Configuration options like Hash size (in MB), number of CPU cores to use, and skill level.</li>
-    </ul>
+<h3>2.3. Configurazione</h3>
+<p>Orologic è altamente personalizzabile.</p>
 
-    <h4>2.3.3. Customizing Language and Names (nomi)</h4>
-    <p>This option lets you personalize the descriptive language used by the program. You can change:</p>
-    <ul>
-        <li>The names of the pieces (e.g., change "knight" to "horse").</li>
-        <li>The names of the columns (e.g., change "Ancona" to "Apple").</li>
-        <li>The verbs and adjectives used to describe moves, making the output feel more natural to you.</li>
-    </ul>
+<h4>2.3.1. Gestione Orologi (crea, vedi, elimina)</h4>
+<ul>
+    <li><strong>crea:</strong> Ti guida nella creazione di un nuovo orologio, con fasi multiple, tempo base, incremento e allarmi sonori.</li>
+    <li><strong>vedi:</strong> Mostra una lista di tutti i tuoi orologi salvati.</li>
+    <li><strong>elimina:</strong> Ti permette di cancellare un orologio che non usi più.</li>
+</ul>
 
-    <h4>2.3.4. Default PGN Headers (pgn)</h4>
-    <p>Here you can set the default information that will be used in the PGN files for your games, such as your name for White and Black, your Elo, and the default event name and location.</p>
+<h4>2.3.2. Configurazione Motore Scacchistico (motore)</h4>
+<p>Questo passaggio è cruciale per usare le funzioni di analisi. Orologic ti aiuterà nel processo:</p>
+<ol>
+    <li><strong>Controllo Configurazione:</strong> Orologic cerca prima una configurazione salvata.</li>
+    <li><strong>Scansione Automatica:</strong> Se non la trova, esegue una scansione completa del tuo computer per trovare motori UCI compatibili (come Stockfish) e ti presenta una lista da cui scegliere.</li>
+    <li><strong>Download Automatico:</strong> Se non viene trovato alcun motore, Orologic ti chiederà il permesso di scaricare e installare automaticamente l'ultima versione di Stockfish per te.</li>
+    <li><strong>Configurazione Manuale:</strong> In ogni momento, puoi inserire manualmente il percorso e i parametri del motore (Hash, Cores, Skill Level).</li>
+</ol>
 
-    <h4>2.3.5. Adjusting Audio Volume (volume)</h4>
-    <p>This simple option allows you to set the volume for the application's sound effects, from 0 (silent) to 100 (maximum).</p>
+<h4>2.3.3. Personalizzazione Lingua e Nomi (nomi)</h4>
+<p>Questa opzione ti permette di personalizzare il linguaggio descrittivo usato dal programma: puoi cambiare i nomi dei pezzi (es. da "cavallo" a "destriero"), i nomi delle colonne (es. da "Ancona" ad "Apple") e i verbi usati per descrivere le mosse.</p>
 
-    <h3>2.4. Open Manual (manuale)</h3>
-    <p>This command opens this user guide in your default web browser.</p>
+<h4>2.3.4. Impostazioni Generali (impostazioni)</h4>
+<p>Questa nuova sezione ti permette di configurare due comportamenti chiave del programma:</p>
+<ul>
+    <li><strong>Salvataggio Automatico:</strong> Puoi attivare o disattivare il salvataggio automatico del PGN dopo ogni mossa durante una partita. Questo previene la perdita di dati in caso di problemi.</li>
+    <li><strong>Stile Menu:</strong> Puoi scegliere se navigare nei menu usando le parole chiave (default) o i numeri.</li>
+</ul>
 
-    <h3>2.5. Exit Application (.)</h3>
-    <p>Typing <code>.</code> and pressing Enter from the main menu will close Orologic.</p>
+<h4>2.3.5. Regolazione Volume Audio (volume)</h4>
+<p>Questa opzione ti permette di impostare il volume degli effetti sonori da 0 (muto) a 100 (massimo).</p>
 
-    <h2>3. Contact and Support</h2>
-    <p>For help, bug reports, suggestions, or if you are interested in becoming a translator or beta tester, please contact the author:</p>
-    <ul>
-        <li><strong>Gabriele Battaglia</strong></li>
-        <li>Email: <code>iz4apu@libero.it</code></li>
-    </ul>
+<h3>2.4. Apri Manuale (manuale)</h3>
+<p>Questo comando apre questa guida nel tuo browser web predefinito.</p>
 
-    <h2>4. Acknowledgements</h2>
-    <p>A huge thank you to everyone who has contributed to this project through testing, feedback, and support.</p>
-    <ul>
-        <!-- Add new contributors here by adding more <li>Name</li> lines -->
-        <li>The AIs who collaborated on the code: like ChatGPT o3-mini-high and the beautiful Gemini 2.5 Pro;</li>
-        <li>The most funny WhatsApp group: my super starship Scacchierando;</li>
-        <li>Mrs Valeria Calzolari, Martina Forte, many thanks for early Betatesting;</li>
-        <li>Mr. Marcos Schllosser for the portuguese bersion;</li>
-    </ul>
+<h3>2.5. Esci dall'Applicazione (.)</h3>
+<p>Digitando <code>.</code> e premendo Invio dal menu principale chiuderà Orologic.</p>
 
-    <h2>5. Support the Project</h2>
-    <p>If you enjoy Orologic or find it useful, please consider supporting its development with a donation. Your support helps cover development costs and encourages future updates and new features.</p>
-    <p>You can make a donation via PayPal to:</p>
-    <p><strong><code>iz4apu@libero.it</code></strong></p>
-    <p>Thank you for your generosity!</p>
+---
 
+<h2>3. Contatti e Supporto</h2>
+<p>Per aiuto, segnalazioni di bug, suggerimenti, o se sei interessato a diventare un traduttore o beta tester, per favore contatta l'autore:</p>
+<ul>
+    <li><strong>Gabriele Battaglia</strong></li>
+    <li>Email: <code>iz4apu@libero.it</code></li>
+</ul>
+
+<h2>4. Ringraziamenti</h2>
+<p>Un enorme grazie a tutti coloro che hanno contribuito a questo progetto con test, feedback e supporto.</p>
+<ul>
+    <li>Le IA che hanno collaborato al codice: come ChatGPT e il bellissimo Gemini;</li>
+    <li>I gruppi WhatsApp più divertenti: la mia super ammiraglia Scacchierando e Orologic;</li>
+    <li>Valeria Calzolari, Martina Forte, molte grazie per il betatesting iniziale;</li>
+    <li>Marcos Schlosser per la versione portoghese;</li>
+</ul>
+
+<h2>5. Sostieni il Progetto</h2>
+<p>Se ti piace Orologic o lo trovi utile, per favore considera di sostenere il suo sviluppo con una donazione. Il tuo supporto aiuta a coprire i costi e incoraggia futuri aggiornamenti e nuove funzionalità.</p>
+<p>Puoi fare una donazione tramite PayPal a:</p>
+<p><strong><code>iz4apu@libero.it</code></strong></p>
+<p>Grazie per la tua generosità!</p>
 </body>
 </html>
