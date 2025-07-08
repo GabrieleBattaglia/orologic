@@ -21,10 +21,11 @@ def resource_path(relative_path):
 lingua_rilevata, _ = polipo(source_language="it")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.4.0"
-RELEASE_DATE=datetime.datetime(2025,7,7,19,21)
+VERSION="4.5.0"
+RELEASE_DATE=datetime.datetime(2025,7,8,8,40)
 PROGRAMMER="Gabriele Battaglia & AIs"
-STOCKFISH_DOWNLOAD_URL = "https://stockfishchess.org/files/stockfish-windows-x86-64-avx2.zip"
+STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
+ENGINE_NAME = "Nessuno" 
 DB_FILE = resource_path("orologic_db.json")
 ENGINE = None
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
@@ -137,7 +138,7 @@ def SearchForEngine():
 	search_paths = get_available_drives()
 	shared_state = {
 		"current_path": "", "folders_scanned": 0, "files_scanned": 0,
-		"search_complete": False, "engines_found": [] # MODIFICA: Ora è una lista
+		"search_complete": False, "engines_found": []
 	}
 	lock = threading.Lock()
 	def reporter():
@@ -149,7 +150,7 @@ def SearchForEngine():
 				path_str = f"{path[:15]}...{path[-15:]}" if len(path) > 30 else path
 			print(f"\rScanning: {path_str:<40}", end="")
 			time.sleep(5)
-	# --- Inizio Ricerca ---
+	# --- Inizio Ricerca (Questa parte era già corretta) ---
 	start_time = time.time()
 	print(_("Avvio ricerca su: {paths}").format(paths=', '.join(search_paths)))
 	reporter_thread = threading.Thread(target=reporter, daemon=True)
@@ -166,16 +167,13 @@ def SearchForEngine():
 				for file in files:
 					file_lower = file.lower()
 					if file_lower.endswith(executable_extensions):
-						# MODIFICA: La logica ora usa 'in'
 						if any(keyword in file_lower for keyword in all_keywords):
 							with lock:
-								# MODIFICA: Aggiungiamo il risultato alla lista
 								shared_state["engines_found"].append((root, file))
 								found_count = len(shared_state["engines_found"])
 								print(f"\r{' ' * 60}\r🎉 Trovati finora: {found_count}. La scansione continua...", end="")
 		except Exception:
 			continue
-	# --- Fine Ricerca e Report ---
 	with lock:
 		shared_state["search_complete"] = True
 	reporter_thread.join()
@@ -186,27 +184,47 @@ def SearchForEngine():
 	print(_("Tempo impiegato: {duration:.2f} secondi").format(duration=duration))
 	print(_("Cartelle scansionate: {folders}").format(folders=shared_state['folders_scanned']))
 	print(_("File scansionati: {files}").format(files=shared_state['files_scanned']))
-	# --- Blocco Scelta Utente ---
+	# --- Blocco Scelta Utente (CORRETTO E PULITO) ---
 	found_engines = shared_state["engines_found"]
 	if not found_engines:
 		print(_("\nRisultato: Nessun motore trovato."))
-		return None, None
-	print(_("\nSono stati trovati {num} motori compatibili:").format(num=len(found_engines)))
+		return None, None, False
+	print(_("\nSono stati trovati {num} eseguibili che potrebbero essere motori compatibili\n\tVerifica che lo siano davvero e scegline uno da usare:").format(num=len(found_engines)))
 	for i, (root, file) in enumerate(found_engines, 1):
 		print(f" {i}. Eseguibile: {file}\n    Percorso: {root}")
 	if len(found_engines) == 1:
-		scelta = 1 # Se ne trova solo uno, lo seleziona in automatico
-		print(_("Trovato un solo motore, verrà selezionato automaticamente."))
+		# Logica per un solo motore trovato
+		prompt_text = _("\nTrovato un solo motore. Vuoi usarlo? (Invio per sì, 0 per no, 's' per scaricare): ")
+		scelta_str = key(prompt_text).lower()
+		if scelta_str == '0':
+			print(_("Nessun motore selezionato."))
+			return None, None, False
+		elif scelta_str == 's':
+			return None, None, True
+		else: # L'utente ha premuto Invio o qualsiasi altra cosa
+			root, file = found_engines[0]
+			print(_("Hai selezionato: {file}").format(file=file))
+			return root, file, False
 	else:
-		scelta = dgt(
-			prompt=_("\nQuale motore vuoi usare? (1-{max_num}): ").format(max_num=len(found_engines)),
-			kind="i",
-			imin=1,
-			imax=len(found_engines)
-		)
-	root, file = found_engines[scelta - 1]
-	print(_("Hai selezionato: {file}").format(file=file))
-	return root, file
+		# Logica per motori multipli (il tuo 'while' loop era già corretto)
+		while True:
+			prompt_text = _("\nQuale motore vuoi usare? (1-{max_num}, 0 per nessuno, 's' per scaricare Stockfish): ").format(max_num=len(found_engines))
+			scelta_str = key(prompt_text).lower()
+			if scelta_str == 's':
+				return None, None, True
+			if scelta_str == '0':
+				print(_("Nessun motore selezionato."))
+				return None, None, False
+			try:
+				scelta_num = int(scelta_str)
+				if 1 <= scelta_num <= len(found_engines):
+					root, file = found_engines[scelta_num - 1]
+					print(_("Hai selezionato: {file}").format(file=file))
+					return root, file, False
+				else:
+					print(_("Scelta non valida. Riprova."))
+			except ValueError:
+				print(_("Input non valido. Riprova."))
 
 def get_available_drives():
 	"""
@@ -675,33 +693,39 @@ def InitEngine():
 				"Skill Level": engine_config.get("skill_level", 20),
 				"Move Overhead": engine_config.get("move_overhead", 0)
 			})
+			global ENGINE_NAME
+			ENGINE_NAME = ENGINE.id.get("name", "Nome Sconosciuto")
 			print(_("\nMotore inizializzato correttamente dalla configurazione salvata."))
 			return True
 		except Exception as e:
 			print(_("\nErrore con la configurazione salvata: {error}. Provo a risolvere...").format(error=e))
-	engine_path, engine_exe = SearchForEngine()
+	engine_path, engine_exe, wants_download = SearchForEngine()
+	# Scenario 1: L'utente ha scelto un motore locale dalla lista
 	if engine_path and engine_exe:
 		Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
 		EditEngineConfig(initial_path=engine_path, initial_executable=engine_exe)
-	else:
-		print(_("\nNessun motore di scacchi trovato nel sistema."))
-		scelta = key(_("Vuoi che Orologic scarichi e installi Stockfish per te? (invio per sì / n per no): ")).lower()
-		if scelta != 'n':
-			engine_path, engine_exe = DownloadAndInstallEngine()
-			if engine_path and engine_exe:
-				Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
-				EditEngineConfig(initial_path=engine_path, initial_executable=engine_exe)
-			else:
-				Acusticator(["a3", .3, 0, volume], kind=2, adsr=[5, 15, 0, 80])
-				print(_("\nInstallazione automatica non riuscita. Puoi configurare il motore manualmente dal menu principale."))
+	# Scenario 2: L'utente ha scelto 's' per scaricare, oppure la ricerca non ha trovato nulla
+	elif wants_download or (engine_path is None and not wants_download):
+		# Se la ricerca non ha trovato nulla, chiediamo conferma prima di scaricare
+		if not wants_download:
+			scelta = key(_("\nVuoi che Orologic scarichi e installi Stockfish per te? (invio per sì / n per no): ")).lower()
+			if scelta == 'n':
+				print(_("\nOk. Ricorda che le funzioni di analisi non saranno disponibili finché non configurerai un motore."))
 				return False
+		# Procede con il download (o perché è stato richiesto, o perché è stato confermato)
+		engine_path, engine_exe = DownloadAndInstallEngine()
+		if engine_path and engine_exe:
+			Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
+			EditEngineConfig(initial_path=engine_path, initial_executable=engine_exe)
 		else:
-			print(_("\nOk. Ricorda che le funzioni di analisi non saranno disponibili finché non configurerai un motore."))
+			Acusticator(["a3", .3, 0, volume], kind=2, adsr=[5, 15, 0, 80])
+			print(_("\nInstallazione automatica non riuscita. Puoi configurare il motore manualmente dal menu principale."))
 			return False
-	if not ENGINE:
-		print(_("\nRiprovo l'inizializzazione del motore..."))
-		return InitEngine()
-	return ENGINE is not None
+	# Scenario 3: L'utente ha scelto '0' (non vuole nessuno dei motori trovati e non vuole scaricare)
+	# In questo caso, engine_path è None e wants_download è False, quindi non facciamo nulla.
+	else:
+		print(_("\nOk. Ricorda che le funzioni di analisi non saranno disponibili finché non configurerai un motore."))
+		return False
 
 def EditEngineConfig(initial_path=None, initial_executable=None):
 	print(_("\nImposta configurazione del motore scacchistico\n"))
@@ -2263,9 +2287,9 @@ def DeleteClock(db):
 				print(_("\nOrologio '{clock_name}' eliminato, ne rimangono {remaining}.").format(clock_name=clock_name, remaining=len(db['clocks'])))
 	return
 
-def EditPGN():
+def Impostazioni():
 	Acusticator(["d6", .02, 0, volume,"g4",.02,0,volume]) 
-	print(_("\nModifica info default per PGN\n"))
+	print(_("\nModifica impostazioni varie di Orologic\n"))
 	db = LoadDB()
 	default_pgn = db.get("default_pgn", {})
 	default_event = default_pgn.get("Event", "Orologic Game")
@@ -2313,7 +2337,8 @@ def EditPGN():
 		"BlackElo": black_elo
 	}
 	SaveDB(db)
-	print(_("\nInformazioni default per il PGN aggiornate."))
+	print(_("\nImpostazioni aggiornate."))
+
 class CustomBoard(chess.Board):
 	def __str__(self):
 		board_str = "FEN: " + str(self.fen()) + "\n"
@@ -2946,6 +2971,8 @@ def Main():
 	SaveDB(db)
 	SchermataIniziale()
 	InitEngine()
+	if ENGINE is not None:
+		print(_("✅ Motore attivo: {engine_name}").format(engine_name=ENGINE_NAME))
 	LoadLocalization()
 	while True:
 		scelta=menu(MENU_CHOICES, show=True, keyslist=True, full_keyslist=False)
@@ -2977,8 +3004,8 @@ def Main():
 		elif scelta=="elimina":
 			DeleteClock(db)
 			Acusticator([1000.0, 0.05, -1, volume, "p", 0.05, 0, 0, 900.0, 0.05, 1, volume], kind=1, adsr=[0, 0, 100, 0])
-		elif scelta=="pgn":
-			EditPGN()
+		elif scelta=="impostazioni":
+			Impostazioni()
 			Acusticator([1000.0, 0.05, -1, volume, "p", 0.05, 0, 0, 900.0, 0.05, 1, volume], kind=1, adsr=[0, 0, 100, 0])
 		elif scelta=="nomi": # <-- BLOCCO NUOVO DA AGGIUNGERE
 			EditLocalization()		
