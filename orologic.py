@@ -21,8 +21,8 @@ def resource_path(relative_path):
 lingua_rilevata, _ = polipo(source_language="it")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.5.0"
-RELEASE_DATE=datetime.datetime(2025,7,8,8,40)
+VERSION="4.6.2"
+RELEASE_DATE=datetime.datetime(2025,7,8,11,51)
 PROGRAMMER="Gabriele Battaglia & AIs"
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 ENGINE_NAME = "Nessuno" 
@@ -2291,6 +2291,13 @@ def Impostazioni():
 	Acusticator(["d6", .02, 0, volume,"g4",.02,0,volume]) 
 	print(_("\nModifica impostazioni varie di Orologic\n"))
 	db = LoadDB()
+	autosave_enabled = db.get("autosave_enabled", False)
+	status_str = _("Attivo") if autosave_enabled else _("Non attivo")
+	default_choice = "s" if autosave_enabled else "n"
+	prompt_autosave = _("Salvataggio automatico PGN durante il gioco [{current_status}] (enter for yes)?: ").format(current_status=status_str)
+	scelta_autosave = key(prompt_autosave, ).lower()
+	db["autosave_enabled"] = (scelta_autosave == "")
+	Acusticator(["d6", .02, 1.2, volume,"g4",.02,1.2,volume])
 	default_pgn = db.get("default_pgn", {})
 	default_event = default_pgn.get("Event", "Orologic Game")
 	event = dgt(_("Evento [{default}]: ").format(default=default_event), kind="s", default=default_event)
@@ -2461,6 +2468,28 @@ def clock_thread(game_state):
 				print(_("Tempo del Nero scaduto. {player} vince.").format(player=game_state.white_player))
 				Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 		time.sleep(0.1)
+
+def EseguiAutosave(game_state):
+	"""
+	Salva lo stato corrente della partita su un file PGN di autosave.
+	Questa funzione viene chiamata dopo ogni mossa se l'opzione è attiva.
+	"""
+	AUTOSAVE_FILENAME = "orologic_autosave.pgn"
+	try:
+		# Converte l'oggetto PGN corrente in una stringa di testo
+		pgn_str = str(game_state.pgn_game)
+		# Riutilizziamo la funzione per formattare i commenti, per un output pulito
+		pgn_str_formatted = format_pgn_comments(pgn_str)
+		# Ottiene il percorso corretto dove salvare il file
+		full_path = resource_path(AUTOSAVE_FILENAME)
+		# Scrive la stringa PGN nel file, sovrascrivendo la versione precedente
+		with open(full_path, "w", encoding="utf-8-sig") as f:
+			f.write(pgn_str_formatted)
+	except Exception as e:
+		# In caso di errore (es. permessi di scrittura mancanti),
+		# stampa un messaggio non invasivo per non interrompere il gioco.
+		print(_("\n[Errore durante il salvataggio automatico: {error}]").format(error=e))
+
 def StartGame(clock_config):
 	print(_("\nAvvio partita\n"))
 	game_mode_choice = ''
@@ -2475,6 +2504,7 @@ def StartGame(clock_config):
 		if starting_board is None: # L'utente ha annullato
 			return # Esce dalla funzione StartGame e torna al menù
 	db = LoadDB()
+	autosave_is_on = db.get("autosave_enabled", False)
 	default_pgn = db.get("default_pgn", {})
 	white_default = default_pgn.get("White", _("Bianco"))
 	black_default = default_pgn.get("Black", _("Nero"))
@@ -2789,8 +2819,9 @@ def StartGame(clock_config):
 
 				# Aggiorna il puntatore PGN al nuovo nodo
 				game_state.pgn_node = new_node
-
-				# Logica ECO (invariata)
+				if autosave_is_on:
+					EseguiAutosave(game_state)
+					Acusticator(["f3", 0.012, 0, volume], sync=True)
 				if eco_database:
 					current_board = game_state.board
 					eco_entry = DetectOpeningByFEN(current_board, eco_database)
@@ -2802,12 +2833,11 @@ def StartGame(clock_config):
 							new_eco_msg += " ({variation})".format(variation=eco_entry['variation'])
 					if new_eco_msg and new_eco_msg != last_eco_msg:
 						print(_("Apertura rilevata: ") + new_eco_msg)
+						Acusticator(["f7", 0.018, 0, volume])
 						last_eco_msg = new_eco_msg
 						last_valid_eco_entry = current_entry_this_turn
 					elif not new_eco_msg and last_eco_msg:
 						last_eco_msg = ""
-
-				# Controlli di fine partita (invariati)
 				if game_state.board.is_checkmate():
 					game_state.game_over = True
 					result = "1-0" if game_state.active_color == "white" else "0-1" # Nota: il turno è già cambiato qui
@@ -2899,6 +2929,14 @@ def StartGame(clock_config):
 		print(_("PGN copiato negli appunti."))
 	except Exception as e:
 		print(_("Errore durante la copia del PGN negli appunti: {error}").format(error=e))
+	if autosave_is_on:
+		try:
+			autosave_file_path = resource_path("orologic_autosave.pgn")
+			if os.path.exists(autosave_file_path):
+				os.remove(autosave_file_path)
+				print(_("File di salvataggio automatico eliminato."))
+		except Exception as e:
+			print(_("\n[Attenzione: impossibile eliminare il file di autosave: {error}]").format(error=e))
 	if len(game_state.move_history) >= 8:
 		analyze_choice = key(_("Vuoi analizzare la partita? (s/n): ")).lower()
 		if analyze_choice == "s":
