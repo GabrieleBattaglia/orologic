@@ -5,7 +5,6 @@ name: Build Orologic per Windows e macOS
 # In questo caso, ogni volta che carichi (push) nuovo codice sul tuo branch 'main'
 on:
   workflow_dispatch:
-    branches: [ "main" ]
 
 # Qui definiamo i "lavori" da fare. Ne abbiamo due: uno per Windows e uno per macOS.
 jobs:
@@ -25,7 +24,7 @@ jobs:
           pip install -r requirements.txt
       # Comando corretto: --windowed rimosso e separatore ; usato per --add-data
       - name: Run PyInstaller
-        run: pyinstaller --name Orologic --onefile --add-data "readme.htm;." --add-data "eco.db;." orologic.py
+        run: pyinstaller --name Orologic --onefile --target-arch universal2 --add-data "readme.htm:." --add-data "eco.db:." orologic.py
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
         with:

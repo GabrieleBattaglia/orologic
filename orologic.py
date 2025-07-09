@@ -18,16 +18,31 @@ def resource_path(relative_path):
 
 				return os.path.join(base_path, relative_path)
 
+def percorso_salvataggio(relative_path):
+	"""
+	Restituisce un percorso scrivibile vicino allo script .py o all'eseguibile .exe.
+	Ideale per salvare impostazioni, PGN e altri file utente.
+	"""
+	if getattr(sys, 'frozen', False):
+		# Siamo in un eseguibile compilato (es. .exe).
+		# os.path.dirname(sys.executable) ci dà la cartella che contiene l'eseguibile.
+		base_path = os.path.dirname(sys.executable)
+	else:
+		# Non siamo compilati, quindi siamo in modalità sviluppo.
+		# os.path.abspath(".") ci dà la cartella dove si trova lo script .py.
+		base_path = os.path.abspath(".")
+	return os.path.join(base_path, relative_path)
+
 lingua_rilevata, _ = polipo(source_language="it")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.6.7"
-RELEASE_DATE=datetime.datetime(2025,7,8,15,10)
+VERSION="4.7.1"
+RELEASE_DATE=datetime.datetime(2025,7,9,13,0)
 PROGRAMMER="Gabriele Battaglia & AIs"
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 ENGINE_NAME = "Nessuno" 
 STILE_MENU_NUMERICO = False
-DB_FILE = resource_path("orologic_db.json")
+DB_FILE = percorso_salvataggio("orologic_db.json")
 ENGINE = None
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
 analysis_time = 3
@@ -110,7 +125,7 @@ DOT_COMMANDS={
 	",[NomePezzo]":_("Mostra la/le posizione/i del pezzo indicato")}
 MENU_CHOICES={
 	"analizza":_("Entra in modalità analisi partita"),
-	"crea":_("Aggiungi un nuovo orologio da aggiungere alla collezione"),
+	"crea":_("Aggiungi un nuovo orologio alla collezione"),
 	"elimina":_("Cancella uno degli orologi salvati"),
 	"gioca":_("Inizia la partita"),
 	"manuale":_("Mostra la guida dell'app"),
@@ -164,11 +179,27 @@ def SearchForEngine():
 					shared_state["current_path"] = root
 					shared_state["folders_scanned"] += 1
 					shared_state["files_scanned"] += len(files)
-				dirs[:] = [d for d in dirs if d not in ["Windows", "$Recycle.Bin", "AppData", "Library", "System", "private"]]
+				exclude_dirs = [
+					"windows", "$recycle.bin", "programdata",
+					"system volume information", "filehistory", "library", "system", "private"
+				]
+				dirs[:] = [d for d in dirs if d.lower() not in exclude_dirs]
 				for file in files:
 					file_lower = file.lower()
 					if file_lower.endswith(executable_extensions):
-						if any(keyword in file_lower for keyword in all_keywords):
+						# Logica di controllo migliorata
+						is_match = False
+						for keyword in all_keywords:
+							# Per keyword ambigue come "sf", vogliamo un match esatto
+							if len(keyword) <= 2:
+								if file_lower == keyword + ".exe":
+									is_match = True
+									break
+							# Per le altre, "startswith" va bene
+							elif file_lower.startswith(keyword):
+								is_match = True
+								break
+						if is_match:
 							with lock:
 								shared_state["engines_found"].append((root, file))
 								found_count = len(shared_state["engines_found"])
@@ -196,7 +227,7 @@ def SearchForEngine():
 	if len(found_engines) == 1:
 		# Logica per un solo motore trovato
 		prompt_text = _("\nTrovato un solo motore. Vuoi usarlo? (Invio per sì, 0 per no, 's' per scaricare): ")
-		scelta_str = key(prompt_text).lower()
+		scelta_str = key(prompt_text).lower().strip()
 		if scelta_str == '0':
 			print(_("Nessun motore selezionato."))
 			return None, None, False
@@ -210,7 +241,7 @@ def SearchForEngine():
 		# Logica per motori multipli (il tuo 'while' loop era già corretto)
 		while True:
 			prompt_text = _("\nQuale motore vuoi usare? (1-{max_num}, 0 per nessuno, 's' per scaricare Stockfish): ").format(max_num=len(found_engines))
-			scelta_str = key(prompt_text).lower()
+			scelta_str = dgt(prompt_text,kind="s",smin=1,smax=3)
 			if scelta_str == 's':
 				return None, None, True
 			if scelta_str == '0':
@@ -682,50 +713,45 @@ def LoadPGNFromClipboard():
 		print(_("Errore in LoadPGNFromClipboard:"), e)
 		return None
 def InitEngine():
-	global ENGINE
+	global ENGINE, ENGINE_NAME
 	db = LoadDB()
 	engine_config = db.get("engine_config", {})
-	if engine_config and engine_config.get("engine_path") and os.path.exists(engine_config.get("engine_path")):
+	if not engine_config:
+		return False
+	path_da_usare = ""
+	# Leggiamo il nuovo flag. Se non c'è, consideriamo il percorso assoluto per retrocompatibilità.
+	is_relative = engine_config.get("engine_is_relative", False)
+	saved_path = engine_config.get("engine_path")
+	if not saved_path:
+		return False
+	# Se il percorso salvato è relativo, lo combiniamo con il percorso attuale dell'app
+	if is_relative:
+		path_da_usare = percorso_salvataggio(saved_path)
+	# Altrimenti, è un percorso assoluto e lo usiamo così com'è
+	else:
+		path_da_usare = saved_path
+	if os.path.exists(path_da_usare):
 		try:
-			ENGINE = chess.engine.SimpleEngine.popen_uci(engine_config["engine_path"])
+			ENGINE = chess.engine.SimpleEngine.popen_uci(path_da_usare)
 			ENGINE.configure({
 				"Hash": engine_config.get("hash_size", 128),
 				"Threads": engine_config.get("num_cores", 1),
 				"Skill Level": engine_config.get("skill_level", 20),
 				"Move Overhead": engine_config.get("move_overhead", 0)
 			})
-			global ENGINE_NAME
-			ENGINE_NAME = ENGINE.id.get("name", "Nome Sconosciuto")
-			print(_("\nMotore inizializzato correttamente dalla configurazione salvata."))
+			ENGINE_NAME = ENGINE.id.get("name", _("Nome Sconosciuto"))
 			return True
 		except Exception as e:
-			print(_("\nErrore con la configurazione salvata: {error}. Provo a risolvere...").format(error=e))
-	engine_path, engine_exe, wants_download = SearchForEngine()
-	# Scenario 1: L'utente ha scelto un motore locale dalla lista
-	if engine_path and engine_exe:
-		Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
-		EditEngineConfig(initial_path=engine_path, initial_executable=engine_exe)
-	# Scenario 2: L'utente ha scelto 's' per scaricare, oppure la ricerca non ha trovato nulla
-	elif wants_download or (engine_path is None and not wants_download):
-		# Se la ricerca non ha trovato nulla, chiediamo conferma prima di scaricare
-		if not wants_download:
-			scelta = key(_("\nVuoi che Orologic scarichi e installi Stockfish per te? (invio per sì / n per no): ")).lower()
-			if scelta == 'n':
-				print(_("\nOk. Ricorda che le funzioni di analisi non saranno disponibili finché non configurerai un motore."))
-				return False
-		# Procede con il download (o perché è stato richiesto, o perché è stato confermato)
-		engine_path, engine_exe = DownloadAndInstallEngine()
-		if engine_path and engine_exe:
-			Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
-			EditEngineConfig(initial_path=engine_path, initial_executable=engine_exe)
-		else:
-			Acusticator(["a3", .3, 0, volume], kind=2, adsr=[5, 15, 0, 80])
-			print(_("\nInstallazione automatica non riuscita. Puoi configurare il motore manualmente dal menu principale."))
+			# Se il motore esiste ma non parte, avvisa l'utente
+			print(_("\n⚠️ Errore durante l'avvio del motore: {error}").format(error=e))
+			ENGINE = None
+			ENGINE_NAME = "Nessuno"
 			return False
-	# Scenario 3: L'utente ha scelto '0' (non vuole nessuno dei motori trovati e non vuole scaricare)
-	# In questo caso, engine_path è None e wants_download è False, quindi non facciamo nulla.
+	# Se il percorso (assoluto o ricostruito) non esiste più...
 	else:
-		print(_("\nOk. Ricorda che le funzioni di analisi non saranno disponibili finché non configurerai un motore."))
+		# Non stampiamo nulla per non disturbare l'avvio pulito del programma
+		ENGINE = None
+		ENGINE_NAME = "Nessuno"
 		return False
 
 def EditEngineConfig(initial_path=None, initial_executable=None):
@@ -747,6 +773,19 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
 	if not os.path.isfile(full_engine_path):
 		print(_("Il file specificato non esiste. Verifica il percorso e il nome dell'eseguibile."))
 		return
+	app_path = percorso_salvataggio('')
+	app_drive = os.path.splitdrive(app_path)[0]
+	engine_drive = os.path.splitdrive(full_engine_path)[0]
+	path_to_save = ""
+	is_relative = False
+	if app_drive.lower() == engine_drive.lower():
+		path_to_save = os.path.relpath(full_engine_path, app_path)
+		is_relative = True
+		print(_("Info: il motore si trova sullo stesso drive, verrà salvato un percorso relativo per la portabilità."))
+	else:
+		path_to_save = full_engine_path
+		is_relative = False
+		print(_("Info: il motore si trova su un drive diverso, verrà salvato un percorso assoluto (configurazione non portatile)."))	
 	hash_size = dgt(prompt=_("Inserisci la dimensione della hash table (min: 1, max: 4096 MB): "), kind="i", imin=1, imax=4096)
 	Acusticator(["g6", 0.025, -.25, volume,"c5", 0.025, -.25, volume],kind=3)
 	max_cores = os.cpu_count()
@@ -758,7 +797,8 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
 	Acusticator(["g6", 0.025, .5, volume,"c5", 0.025, .5, volume],kind=3)
 	wdl_switch = True  # Puoi eventualmente renderlo configurabile
 	engine_config = {
-		"engine_path": full_engine_path,
+		"engine_path": path_to_save,
+		"engine_is_relative": is_relative, # Aggiungiamo il nostro nuovo flag
 		"hash_size": hash_size,
 		"num_cores": num_cores,
 		"skill_level": skill_level,
@@ -767,7 +807,7 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
 	}
 	db["engine_config"] = engine_config
 	SaveDB(db)
-	print(_("Configurazione del motore salvata in orologic_db.json."))
+	print(_("Configurazione del motore salvata."))
 	InitEngine()
 	Acusticator(["a6", 0.5, 1, volume],kind=3, adsr=[.001,0,100,99.9])
 	return
@@ -1350,7 +1390,7 @@ def AnalyzeGame(pgn_game):
 			Acusticator(["f4", 0.05, 0, volume])
 			new_filename_base = "{base}-analizzato-{timestamp}".format(base=base_name, timestamp=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
 			sanitized_name = sanitize_filename(new_filename_base) + ".pgn"
-			full_path = resource_path(sanitized_name)
+			full_path = percorso_salvataggio(sanitized_name)
 			try:
 				with open(full_path, "w", encoding="utf-8-sig") as f:
 					f.write(pgn_string_formatted)
@@ -1596,6 +1636,10 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
 	header_text += _("Round: {round}\n").format(round=headers.get('Round', _('N/D')))
 	header_text += _("Bianco: {white} ({elo})\n").format(white=headers.get('White', _('N/D')), elo=headers.get('WhiteElo', _('N/A')))
 	header_text += _("Nero: {black} ({elo})\n").format(black=headers.get('Black', _('N/D')), elo=headers.get('BlackElo', _('N/A')))
+	white_clock = headers.get('WhiteClock', _('N/D'))
+	black_clock = headers.get('BlackClock', _('N/D'))
+	header_text += _("Tempo finale Bianco: {clock}\n").format(clock=white_clock)
+	header_text += _("Tempo finale Nero: {clock}\n").format(clock=black_clock)
 	header_text += _("Controllo del Tempo: {tc}\n").format(tc=headers.get('TimeControl', _('N/D')))
 	# 2. Informazioni sull'apertura
 	if eco_entry:
@@ -1632,7 +1676,7 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
 	# Creazione del nome del file (riutilizzando la logica del PGN)
 	base_filename = "{white}-{black}-{result}-{timestamp}".format(white=headers.get('White', _('Bianco')), black=headers.get('Black', _('Nero')), result=headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
 	sanitized_name = sanitize_filename(base_filename) + ".txt"
-	full_path = resource_path(sanitized_name)
+	full_path = percorso_salvataggio(sanitized_name)
 	try:
 		with open(full_path, "w", encoding="utf-8") as f:
 			f.write(full_text)
@@ -2230,7 +2274,7 @@ def ViewClocks():
 				time_str_b=SecondsToHMS(phase["black_time"])
 				fasi+=" F{num}: Bianco:{time_w}+{inc_w}, Nero:{time_b}+{inc_b}".format(num=i+1, time_w=time_str_w, inc_w=phase['white_inc'], time_b=time_str_b, inc_b=phase['black_inc'])
 		num_alarms = len(c.get("alarms", []))  # Conta gli allarmi
-		alarms_str = _(" Allarmi ({num})").format(num=num_alarms)
+		alarms_str = _(". Allarmi: ({num})").format(num=num_alarms)
 		print("{idx}. {name} - {indicator}{phases}{alarms}".format(idx=idx+1, name=c['name'], indicator=indicatore, phases=fasi, alarms=alarms_str))
 		if c.get("note",""):
 			print("\t{label}: {note}".format(label=_("Nota"), note=c['note']))
@@ -2245,7 +2289,6 @@ def SelectClock(db):
 	print(_("Ci sono {num_clocks} orologi nella collezione.").format(num_clocks=len(db['clocks'])))
 	choices = {}
 	for c in db["clocks"]:
-		# La logica per creare i dettagli rimane la stessa
 		indicatore = "B=N" if c["same_time"] else "B/N"
 		fasi = ""
 		for j, phase in enumerate(c["phases"]):
@@ -2257,7 +2300,7 @@ def SelectClock(db):
 				time_str_b = SecondsToHMS(phase["black_time"])
 				fasi += " F{num}: Bianco:{time_w}+{inc_w}, Nero:{time_b}+{inc_b}".format(num=j+1, time_w=time_str_w, inc_w=phase['white_inc'], time_b=time_str_b, inc_b=phase['black_inc'])
 		num_alarms = len(c.get("alarms", []))
-		alarms_str = _(" Allarmi ({num})").format(num=num_alarms)
+		alarms_str = _(". Allarmi: ({num})").format(num=num_alarms)
 		details_line = "{indicator}{phases}{alarms}".format(indicator=indicatore, phases=fasi, alarms=alarms_str)
 		note_line = c.get("note", "")
 		display_string = ""
@@ -2272,7 +2315,6 @@ def SelectClock(db):
 		if note_line:
 			display_string += "\n  " + note_line
 		choices[c["name"]] = display_string
-	# Il resto della funzione rimane identico e funziona correttamente
 	choice = menu(choices, show=True, keyslist=True, full_keyslist=False, numbered=STILE_MENU_NUMERICO)
 	Acusticator(["f7", .013, 0, volume])
 	if choice:
@@ -2458,7 +2500,7 @@ def EseguiAutosave(game_state):
 		# Riutilizziamo la funzione per formattare i commenti, per un output pulito
 		pgn_str_formatted = format_pgn_comments(pgn_str)
 		# Ottiene il percorso corretto dove salvare il file
-		full_path = resource_path(AUTOSAVE_FILENAME)
+		full_path = percorso_salvataggio(AUTOSAVE_FILENAME)
 		# Scrive la stringa PGN nel file, sovrascrivendo la versione precedente
 		with open(full_path, "w", encoding="utf-8-sig") as f:
 			f.write(pgn_str_formatted)
@@ -2485,8 +2527,8 @@ def StartGame(clock_config):
 	default_pgn = db.get("default_pgn", {})
 	white_default = default_pgn.get("White", _("Bianco"))
 	black_default = default_pgn.get("Black", _("Nero"))
-	white_elo_default = default_pgn.get("WhiteElo", "1500")
-	black_elo_default = default_pgn.get("BlackElo", "1500")
+	white_elo_default = default_pgn.get("WhiteElo", "1399")
+	black_elo_default = default_pgn.get("BlackElo", "1399")
 	event_default = default_pgn.get("Event", "Orologic Game")
 	site_default = default_pgn.get("Site", _("Sede sconosciuta"))
 	round_default = default_pgn.get("Round", "Round 1")
@@ -2896,7 +2938,7 @@ def StartGame(clock_config):
 	pgn_str = format_pgn_comments(pgn_str) # Formatta commenti per leggibilità
 	base_filename = "{white}-{black}-{result}-{timestamp}.pgn".format(white=white_player, black=black_player, result=game_state.pgn_game.headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
 	sanitized_name = sanitize_filename(base_filename)
-	full_path = resource_path(sanitized_name)
+	full_path = percorso_salvataggio(sanitized_name)
 	with open(full_path, "w", encoding="utf-8") as f:
 		f.write(pgn_str)
 	print(_("PGN salvato come ")+full_path+".")
@@ -2908,7 +2950,7 @@ def StartGame(clock_config):
 		print(_("Errore durante la copia del PGN negli appunti: {error}").format(error=e))
 	if autosave_is_on:
 		try:
-			autosave_file_path = resource_path("orologic_autosave.pgn")
+			autosave_file_path = percorso_salvataggio("orologic_autosave.pgn")
 			if os.path.exists(autosave_file_path):
 				os.remove(autosave_file_path)
 				print(_("File di salvataggio automatico eliminato."))
@@ -3003,7 +3045,21 @@ def Main():
 			menu(DOT_COMMANDS,show_only=True)
 		elif scelta=="motore":
 			Acusticator(["e7",.02,0,volume,"a6",.02,0,volume,"e7",.02,0,volume,"a6",.02,0,volume,"e7",.02,0,volume,"a6",.02,0,volume])
-			EditEngineConfig()
+			print(_("\nAzioni per il motore scacchistico:"))
+			scelta_azione = key(_("Vuoi [c] cercare un motore nel tuo pc, [s] scaricare Stockfish, o [m] per modificare manualmente la configurazione? (c/s/m): ")).lower().strip()
+			if scelta_azione == 'c':
+				engine_path, engine_exe, wants_download = SearchForEngine()
+				if wants_download:
+					# L'utente ha scelto 's' durante la ricerca, quindi avviamo il download
+					e_path, e_exe = DownloadAndInstallEngine()
+					if e_path and e_exe: EditEngineConfig(initial_path=e_path, initial_executable=e_exe)
+				elif engine_path and engine_exe:
+					EditEngineConfig(initial_path=engine_path, initial_executable=engine_exe)
+			elif scelta_azione == 's':
+				engine_path, engine_exe = DownloadAndInstallEngine()
+				if engine_path and engine_exe: EditEngineConfig(initial_path=engine_path, initial_executable=engine_exe)
+			elif scelta_azione == 'm':
+				EditEngineConfig()
 		elif scelta=="volume":
 			Acusticator(["f6",.02,0,volume,"p",.04,0,volume,"a6",.02,0,volume])
 			old_volume=volume
