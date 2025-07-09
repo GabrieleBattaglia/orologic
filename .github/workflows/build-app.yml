@@ -1,14 +1,14 @@
 # Nome del tuo processo, apparirà nella scheda "Actions" di GitHub
 name: Build Orologic per Windows e macOS
 
-# Quando deve partire questo processo? 
-# In questo caso, ogni volta che carichi (push) nuovo codice sul tuo branch 'main'
+# Quando deve partire questo processo?
+# In questo caso, su richiesta manuale (workflow_dispatch) o su push a main
 on:
   workflow_dispatch:
 
-# Qui definiamo i "lavori" da fare. Ne abbiamo due: uno per Windows e uno per macOS.
+# Qui definiamo i "lavori" da fare.
 jobs:
-  # --- PRIMO LAVORO: COMPILAZIONE PER WINDOWS (CORRETTO) ---
+  # --- PRIMO LAVORO: COMPILAZIONE PER WINDOWS ---
   build-windows:
     runs-on: windows-latest
     steps:
@@ -22,16 +22,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      # Comando corretto: --windowed rimosso e separatore ; usato per --add-data
       - name: Run PyInstaller
-        run: pyinstaller --name Orologic --onefile --target-arch universal2 --add-data "readme.htm:." --add-data "eco.db:." orologic.py
+        run: pyinstaller --name Orologic.exe --onefile --add-data "readme.htm;." --add-data "eco.db;." orologic.py
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Orologic-Windows
           path: dist/Orologic.exe
 
-  # --- SECONDO LAVORO: COMPILAZIONE PER MACOS (GIÀ CORRETTO) ---
+  # --- SECONDO LAVORO: COMPILAZIONE PER MACOS ---
   build-macos:
     runs-on: macos-latest
     steps:
@@ -45,13 +44,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      # Questo comando era già corretto (senza --windowed e con : come separatore)
-      - name: Run PyInstaller
-        run: pyinstaller --name Orologic --onefile --add-data "readme.htm:." --add-data "eco.db:." orologic.py
-      - name: Zip .app file
-        run: ditto -c -k --sequesterRsrc --keepParent dist/Orologic.app Orologic-macOS.zip
+      - name: Run PyInstaller for Console App
+        run: pyinstaller --name Orologic --onefile --target-arch universal2 --add-data "readme.htm:." --add-data "eco.db:." orologic.py
+      # --- PASSAGGIO 'ditto' RIMOSSO ---
+      # Il comando 'ditto' non è necessario perché non stiamo creando un file .app
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Orologic-macOS
-          path: Orologic-macOS.zip
+          name: Orologic-macOS-Universal
+          # MODIFICATO: Carichiamo direttamente l'eseguibile generato
+          path: dist/Orologic
