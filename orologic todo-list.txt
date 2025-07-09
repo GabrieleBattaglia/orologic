@@ -1,9 +1,18 @@
 TodoList & ChangeLog.
 TodoList:
 	54. Nuova funzione da studiare e pianificare attentamente. In analisi, sia da menu principale che dopo arbitraggio, si sceglie la modalità già presente o quella automatica. In quest'ultima, mossa dopo mossa, la partita viene analizzata dal motore e si crea un txt (o pgn?) con commenti autmatici e valutazioni.
-	66.
+	74
 
 ChangeLog:
+4.7.1
+	+ Risolto un grave problema per cui Orologic non riusciva a salvare le proprie impostazioni.
+	= modificato il compotamento alla voce motore del menù principale. Ora l'utente può decidere se cercare un motore, configurarne uno o scaricare Stockfish
+	= La ricerca del motore non avviene più in automatico al lancio dell'applicazione.
+	+ Corretti alcuni problemi di visualizzazione degli orologi quando il menù si trova in forma numerata anzicché a parole chiave.
+	+ Migliorata comprensibilità nella lista degli orologi salvati.
+	+ Corretta la mancata cancellazione del file autosave.pgn quando orologic.py è in versione compilata
+	+ Ora la configurazione del motore funzionerà anche su versioni portatili in chiavette USB
+	+ Aggiunto tempo rimanente bianco e nero al sommario txt
 4.6.7
 	+ Inserita nuova impostazione, salvataggio automatico
 	+ segnale acustico su apertura rilevata
