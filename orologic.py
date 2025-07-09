@@ -36,8 +36,8 @@ def percorso_salvataggio(relative_path):
 lingua_rilevata, _ = polipo(source_language="it")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.7.1"
-RELEASE_DATE=datetime.datetime(2025,7,9,13,0)
+VERSION="4.7.2"
+RELEASE_DATE=datetime.datetime(2025,7,9,16,15)
 PROGRAMMER="Gabriele Battaglia & AIs"
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 ENGINE_NAME = "Nessuno" 
@@ -3126,4 +3126,5 @@ if __name__=="__main__":
 	final_launch_count = final_db.get("launch_count", _("sconosciuto")) # Legge il contatore salvato	
 	print(_("Arrivederci da Orologic {version}.\nQuesta era la nostra {launch_count}a volta e ci siamo divertiti assieme per: {duration}").format(version=VERSION, launch_count=final_launch_count, duration=result))
 	Donazione()
+	key(prompt=_("\nPremi un tasto per uscire..."), attesa=300)
 	sys.exit(0)
