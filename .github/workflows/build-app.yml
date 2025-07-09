@@ -2,6 +2,7 @@ name: Build Orologic per Windows e macOS
 
 on:
   workflow_dispatch:
+
 jobs:
   # --- PRIMO LAVORO: COMPILAZIONE PER WINDOWS ---
   build-windows:
@@ -18,8 +19,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run PyInstaller
-        # MANTENUTO: --hidden-import come garanzia
-        run: pyinstaller --name Orologic.exe --onefile --add-data "readme.htm;." --add-data "eco.db;." --hidden-import GBUtils --hidden-import scipy.special._cdflib orologic.py
+        # MODIFICA FINALE: Usiamo --collect-all per forzare l'inclusione di tutto il pacchetto scipy
+        run: pyinstaller --name Orologic.exe --onefile --add-data "readme.htm;." --add-data "eco.db;." --hidden-import GBUtils --collect-all scipy orologic.py
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -41,8 +42,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run PyInstaller for Console App
-        # MANTENUTO: --hidden-import come garanzia
-        run: pyinstaller --name Orologic --onefile --target-arch universal2 --add-data "readme.htm:." --add-data "eco.db:." --hidden-import GBUtils --hidden-import scipy.special._cdflib orologic.py
+        # MODIFICA FINALE: Usiamo --collect-all per forzare l'inclusione di tutto il pacchetto scipy
+        run: pyinstaller --name Orologic --onefile --target-arch universal2 --add-data "readme.htm:." --add-data "eco.db:." --hidden-import GBUtils --collect-all scipy orologic.py
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
         with:
