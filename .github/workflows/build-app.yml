@@ -1,12 +1,8 @@
-# Nome del tuo processo, apparirà nella scheda "Actions" di GitHub
 name: Build Orologic per Windows e macOS
 
-# Quando deve partire questo processo?
-# In questo caso, su richiesta manuale (workflow_dispatch) o su push a main
 on:
   workflow_dispatch:
 
-# Qui definiamo i "lavori" da fare.
 jobs:
   # --- PRIMO LAVORO: COMPILAZIONE PER WINDOWS ---
   build-windows:
@@ -22,8 +18,17 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Get site-packages path
+        # AGGIUNTO: Trova il percorso di site-packages e lo salva in una variabile d'ambiente
+        id: get-site-packages
+        run: |
+          $site_packages = python -c "import site; print(site.getsitepackages()[0])"
+          echo "SITE_PACKAGES=$site_packages" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        shell: pwsh
       - name: Run PyInstaller
-        run: pyinstaller --name Orologic.exe --onefile --add-data "readme.htm;." --add-data "eco.db;." --hidden-import GBUtils orologic.py
+        # MODIFICATO: Aggiunta l'opzione --paths per usare la variabile
+        run: pyinstaller --name Orologic.exe --onefile --add-data "readme.htm;." --add-data "eco.db;." --hidden-import GBUtils --paths "$env:SITE_PACKAGES" orologic.py
+        shell: pwsh
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -44,13 +49,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Get site-packages path
+        # AGGIUNTO: Trova il percorso di site-packages e lo salva in una variabile d'ambiente
+        id: get-site-packages-macos
+        run: echo "SITE_PACKAGES=$(python -c 'import site; print(site.getsitepackages()[0])')" >> $GITHUB_ENV
       - name: Run PyInstaller for Console App
-        run: pyinstaller --name Orologic --onefile --hidden-import GBUtils --target-arch universal2 --add-data "readme.htm:." --add-data "eco.db:." orologic.py
-      # --- PASSAGGIO 'ditto' RIMOSSO ---
-      # Il comando 'ditto' non è necessario perché non stiamo creando un file .app
+        # MODIFICATO: Aggiunta l'opzione --paths per usare la variabile
+        run: pyinstaller --name Orologic --onefile --target-arch universal2 --add-data "readme.htm:." --add-data "eco.db:." --hidden-import GBUtils --paths "$SITE_PACKAGES" orologic.py
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Orologic-macOS-Universal
-          # MODIFICATO: Carichiamo direttamente l'eseguibile generato
           path: dist/Orologic
