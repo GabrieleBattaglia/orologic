@@ -1,4 +1,4 @@
-# OROLOGIC - Data di concepimento: 14/02/2025 by Gabriele Battaglia & AIs
+# OROLOGIC - DEV - Data di concepimento: 14/02/2025 by Gabriele Battaglia & AIs
 import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine, random, zipfile, requests
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key, Donazione, polipo
@@ -36,8 +36,8 @@ def percorso_salvataggio(relative_path):
 lingua_rilevata, _ = polipo(source_language="it")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.7.3"
-RELEASE_DATE=datetime.datetime(2025,7,14,22,37)
+VERSION="4.8.5"
+RELEASE_DATE=datetime.datetime(2025,7,16,11,43)
 PROGRAMMER="Gabriele Battaglia & AIs"
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 ENGINE_NAME = "Nessuno" 
@@ -580,7 +580,6 @@ def CalculateEvaluation(board):
 			cache_analysis[fen] = ENGINE.analyse(board, chess.engine.Limit(time=analysis_time), multipv=1)
 		analysis_result = cache_analysis[fen]
 		if not analysis_result:
-			print(_("DEBUG: Analisi per FEN {fen} ha restituito risultato vuoto.").format(fen=fen)) # Debug opzionale
 			return None
 		score = analysis_result[0].get("score")
 		return score
@@ -1365,7 +1364,6 @@ def AnalyzeGame(pgn_game):
 		if not pgn_string_raw:
 			print(_("!!!!!!!! ATTENZIONE: str(pgn_game) ha restituito una stringa vuota! !!!!!!!!"))
 	except Exception as e_str_export:
-		print(_("!!!!!!!! DEBUG: ECCEZIONE durante str(pgn_game): {error} !!!!!!!!").format(error=repr(e_str_export)))
 		pgn_string_raw = ""
 	pgn_string_formatted = ""
 	exception_occurred_format = False
@@ -1374,11 +1372,9 @@ def AnalyzeGame(pgn_game):
 			pgn_string_formatted = format_pgn_comments(pgn_string_raw)
 		except Exception as e_format:
 			exception_occurred_format = True
-			print(_("!!!!!!!! DEBUG: ECCEZIONE DURANTE format_pgn_comments: {error} !!!!!!!!").format(error=repr(e_format)))
 			pgn_string_formatted = ""
 	else:
 		print(_("Attenzione: Stringa PGN grezza vuota o non valida, formattazione saltata."))
-	print("DEBUG: Eccezione durante format? {exc}".format(exc=exception_occurred_format))
 	if saved:
 		if pgn_string_formatted:
 			white_h = pgn_game.headers.get("White", _("Bianco")).replace(" ", "_")
@@ -2488,109 +2484,99 @@ def clock_thread(game_state):
 				Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 		time.sleep(0.1)
 
-def EseguiAutosave(game_state):
+def RiprendiPartita(dati_partita):
 	"""
-	Salva lo stato corrente della partita su un file PGN di autosave.
-	Questa funzione viene chiamata dopo ogni mossa se l'opzione è attiva.
+	Ricostruisce lo stato di una partita dal dizionario dei dati caricati
+	e avvia il loop di gioco per continuarla.
 	"""
-	AUTOSAVE_FILENAME = "orologic_autosave.pgn"
+	print(_("Ricostruzione dello stato della partita..."))
+	game_state = GameState(dati_partita["clock_config"])
+	game_state.board = CustomBoard(dati_partita["board_fen"])
+	game_state.white_remaining = dati_partita["white_remaining"]
+	game_state.black_remaining = dati_partita["black_remaining"]
+	game_state.white_phase = dati_partita["white_phase"]
+	game_state.black_phase = dati_partita["black_phase"]
+	game_state.white_moves = dati_partita["white_moves"]
+	game_state.black_moves = dati_partita["black_moves"]
+	game_state.active_color = dati_partita["active_color"]
+	game_state.move_history = dati_partita["move_history"]
+	game_state.white_player = dati_partita["white_player"]
+	game_state.black_player = dati_partita["black_player"]
 	try:
-		# Converte l'oggetto PGN corrente in una stringa di testo
-		pgn_str = str(game_state.pgn_game)
-		# Riutilizziamo la funzione per formattare i commenti, per un output pulito
-		pgn_str_formatted = format_pgn_comments(pgn_str)
-		# Ottiene il percorso corretto dove salvare il file
-		full_path = percorso_salvataggio(AUTOSAVE_FILENAME)
-		# Scrive la stringa PGN nel file, sovrascrivendo la versione precedente
-		with open(full_path, "w", encoding="utf-8-sig") as f:
-			f.write(pgn_str_formatted)
+		pgn_io = io.StringIO(dati_partita["pgn_string"])
+		game_state.pgn_game = chess.pgn.read_game(pgn_io)
+		if game_state.pgn_game is None:
+			# Fallback se il PGN è corrotto o vuoto
+			print(_("Attenzione: PGN non valido nel file di salvataggio. Ne creo uno nuovo."))
+			game_state.pgn_game = chess.pgn.Game.from_board(game_state.board)
+		else:
+			# Assicura che il puntatore al nodo corrente sia sull'ultima mossa
+			game_state.pgn_node = game_state.pgn_game.end()
 	except Exception as e:
-		# In caso di errore (es. permessi di scrittura mancanti),
-		# stampa un messaggio non invasivo per non interrompere il gioco.
-		print(_("\n[Errore durante il salvataggio automatico: {error}]").format(error=e))
-
-def StartGame(clock_config):
-	print(_("\nAvvio partita\n"))
-	game_mode_choice = ''
-	while game_mode_choice not in ['s', 'f']:
-		game_mode_choice = key(_("Scegli la modalità: [S]tandard o [F]ischer Random 960? (S/F) ")).lower()
-	Acusticator(["c4", 0.05, 0, volume, "e4", 0.05, 0, volume, "g4", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
-	is_fischer_random = (game_mode_choice == 'f')
-	starting_board = None
-	starting_fen = None
-	if is_fischer_random:
-		starting_board, starting_fen = setup_fischer_random_board()
-		if starting_board is None: # L'utente ha annullato
-			return # Esce dalla funzione StartGame e torna al menù
+		print(_("Errore nella lettura del PGN salvato: {error}. La partita riprenderà senza cronologia PGN.").format(error=e))
+		game_state.pgn_game = chess.pgn.Game.from_board(game_state.board)
+	game_state.paused = True
+	threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
 	db = LoadDB()
 	autosave_is_on = db.get("autosave_enabled", False)
-	default_pgn = db.get("default_pgn", {})
-	white_default = default_pgn.get("White", _("Bianco"))
-	black_default = default_pgn.get("Black", _("Nero"))
-	white_elo_default = default_pgn.get("WhiteElo", "1399")
-	black_elo_default = default_pgn.get("BlackElo", "1399")
-	event_default = default_pgn.get("Event", "Orologic Game")
-	site_default = default_pgn.get("Site", _("Sede sconosciuta"))
-	round_default = default_pgn.get("Round", "Round 1")
 	eco_database = LoadEcoDatabaseWithFEN("eco.db")
+	print("\n" + "--- Riepilogo Partita ---")
+	print(_("Bianco: {player} - Tempo: {time}").format(player=game_state.white_player, time=FormatTime(game_state.white_remaining)))
+	print(_("Nero: {player} - Tempo: {time}").format(player=game_state.black_player, time=FormatTime(game_state.black_remaining)))
+	if game_state.move_history:
+		last_move_san = game_state.move_history[-1]
+		# Determina il numero della mossa e chi l'ha fatta
+		if game_state.active_color == "black": # La mossa precedente era del bianco
+			move_num = (len(game_state.move_history) + 1) // 2
+			last_move_str = "{num}. {san}".format(num=move_num, san=last_move_san)
+		else: # La mossa precedente era del nero
+			move_num = len(game_state.move_history) // 2
+			last_move_str = "{num}... {san}".format(num=move_num, san=last_move_san)
+		print(_("Ultima mossa: {move}").format(move=last_move_str))
+	tocca_a_player = game_state.white_player if game_state.active_color == "white" else game_state.black_player
+	print(_("Tocca a: {player}").format(player=tocca_a_player))
+	print("-------------------------" + "\n")
+	last_valid_eco_entry = _loop_principale_partita(game_state, eco_database, autosave_is_on)
+	_finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on)
+	return
+
+def EseguiAutosave(game_state):
+	"""
+	Salva lo stato corrente della partita su un file JSON di autosave.
+	Questa funzione viene chiamata dopo ogni mossa se l'opzione è attiva.
+	"""
+	AUTOSAVE_FILENAME = "autosave.json"
+	full_path = percorso_salvataggio(AUTOSAVE_FILENAME)
+	# Creiamo un dizionario con tutti i dati necessari per la ripresa
+	dati_partita = {
+		"board_fen": game_state.board.fen(),
+		"clock_config": game_state.clock_config,
+		"white_remaining": game_state.white_remaining,
+		"black_remaining": game_state.black_remaining,
+		"white_phase": game_state.white_phase,
+		"black_phase": game_state.black_phase,
+		"white_moves": game_state.white_moves,
+		"black_moves": game_state.black_moves,
+		"active_color": game_state.active_color,
+		"move_history": game_state.move_history,
+		"pgn_string": str(game_state.pgn_game),
+		"white_player": game_state.white_player,
+		"black_player": game_state.black_player
+	}
+	try:
+		with open(full_path, "w", encoding="utf-8") as f:
+			json.dump(dati_partita, f, indent="\t")
+	except Exception as e:
+		print(_("\n[Errore durante il salvataggio automatico: {error}]").format(error=e))
+
+def _loop_principale_partita(game_state, eco_database, autosave_is_on):
+	"""
+	Contiene il ciclo di gioco principale. Gestisce l'input dell'utente,
+	le mosse e i comandi fino alla fine della partita.
+	Questo loop viene usato sia per le partite nuove che per quelle riprese.
+	"""
 	last_eco_msg = ""
 	last_valid_eco_entry = None
-	white_player = dgt(_("Nome del bianco [{default}]: ").format(default=white_default), kind="s", default=white_default).strip().title()
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
-	if white_player == "":
-		white_player = white_default
-	black_player = dgt(_("Nome del nero [{default}]: ").format(default=black_default), kind="s", default=black_default).strip().title()
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
-	if black_player == "":
-		black_player = black_default
-	white_elo = dgt(_("Elo del bianco [{default}]: ").format(default=white_elo_default), kind="s", default=white_elo_default)
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
-	if white_elo.strip() == "":
-		white_elo = white_elo_default
-	black_elo = dgt(_("Elo del nero [{default}]: ").format(default=black_elo_default), kind="s", default=black_elo_default)
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
-	if black_elo.strip() == "":
-		black_elo = black_elo_default
-	event = dgt(_("Evento [{default}]: ").format(default=event_default), kind="s", default=event_default)
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
-	if event.strip() == "":
-		event = event_default
-	site = dgt(_("Sede [{default}]: ").format(default=site_default), kind="s", default=site_default)
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
-	round_ = dgt(_("Round [{default}]: ").format(default=round_default), kind="s", default=round_default)
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
-	db["default_pgn"] = {
-		"Event": event,
-		"Site": site,
-		"Round": round_,
-		"White": white_player,
-		"Black": black_player,
-		"WhiteElo": white_elo,
-		"BlackElo": black_elo
-	}
-	SaveDB(db)
-	key(_("Premi un tasto qualsiasi per iniziare la partita quando sei pronto..."),attesa=7200)
-	Acusticator(["c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c7", .5, 0, volume], kind=1, sync=True)
-	game_state=GameState(clock_config)
-	if is_fischer_random:
-		game_state.board = starting_board
-		game_state.pgn_game.headers["Variant"] = "Chess960"
-		game_state.pgn_game.headers["FEN"] = starting_fen
-		game_state.pgn_game.setup(game_state.board) # Sincronizza il PGN con la scacchiera custom
-	# Se la partita è standard, non c'è bisogno di fare nulla, game_state si inizializza già correttamente.
-	game_state.white_player=white_player
-	game_state.black_player=black_player
-	game_state.pgn_game.headers["White"]=white_player
-	game_state.pgn_game.headers["Black"]=black_player
-	game_state.pgn_game.headers["WhiteElo"]=white_elo
-	game_state.pgn_game.headers["BlackElo"]=black_elo
-	game_state.pgn_game.headers["Event"]=event
-	game_state.pgn_game.headers["Site"]=site
-	game_state.pgn_game.headers["Round"]=round_
-	game_state.pgn_game.headers["TimeControl"] = generate_time_control_string(clock_config)
-	game_state.pgn_game.headers["Date"]=datetime.datetime.now().strftime("%Y.%m.%d")
-	game_state.pgn_game.headers["Annotator"]="Orologic V{version} by {programmer}".format(version=VERSION, programmer=PROGRAMMER)
-	threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
 	paused_time_start=None
 	while not game_state.game_over:
 		if not game_state.move_history:
@@ -2913,8 +2899,9 @@ def StartGame(clock_config):
 				illegal_result=verbose_legal_moves_for_san(game_state.board,move_san_only) # Usa move_san_only qui
 				Acusticator([600.0, 0.6, 0, volume], adsr=[5, 0, 35, 90])
 				print(_("Mossa '{move}' illegale o non riconosciuta ({error}). Sulla casa indicata sono possibili:\n{alternatives}").format(move=move_san_only, error=e, alternatives=illegal_result))
+	return
 
-	# --- Logica post-partita (invariata) ---
+def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
 	game_state.pgn_game.headers["WhiteClock"] = FormatClock(game_state.white_remaining)
 	game_state.pgn_game.headers["BlackClock"] = FormatClock(game_state.black_remaining)
 	print(_("Partita terminata."))
@@ -2936,7 +2923,7 @@ def StartGame(clock_config):
 
 	pgn_str=str(game_state.pgn_game)
 	pgn_str = format_pgn_comments(pgn_str) # Formatta commenti per leggibilità
-	base_filename = "{white}-{black}-{result}-{timestamp}.pgn".format(white=white_player, black=black_player, result=game_state.pgn_game.headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
+	base_filename = "{white}-{black}-{result}-{timestamp}.pgn".format(white=game_state.pgn_game.headers.get("White"), black=game_state.pgn_game.headers.get("Black"), result=game_state.pgn_game.headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
 	sanitized_name = sanitize_filename(base_filename)
 	full_path = percorso_salvataggio(sanitized_name)
 	with open(full_path, "w", encoding="utf-8") as f:
@@ -2950,7 +2937,7 @@ def StartGame(clock_config):
 		print(_("Errore durante la copia del PGN negli appunti: {error}").format(error=e))
 	if autosave_is_on:
 		try:
-			autosave_file_path = percorso_salvataggio("orologic_autosave.pgn")
+			autosave_file_path = percorso_salvataggio("autosave.json")
 			if os.path.exists(autosave_file_path):
 				os.remove(autosave_file_path)
 				print(_("File di salvataggio automatico eliminato."))
@@ -2975,7 +2962,91 @@ def StartGame(clock_config):
 				AnalyzeGame(game_state.pgn_game)
 		else:
 			Acusticator([880.0, 0.2, 0, volume, 440.0, 0.2, 0, volume], kind=1, adsr=[25, 0, 50, 25])
-	# Se la partita ha meno di 8 semimosse, la funzione termina senza chiedere nulla.
+	return
+
+def StartGame(clock_config):
+	print(_("\nAvvio partita\n"))
+	game_mode_choice = ''
+	while game_mode_choice not in ['s', 'f']:
+		game_mode_choice = key(_("Scegli la modalità: [S]tandard o [F]ischer Random 960? (S/F) ")).lower()
+	Acusticator(["c4", 0.05, 0, volume, "e4", 0.05, 0, volume, "g4", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	is_fischer_random = (game_mode_choice == 'f')
+	starting_board = None
+	starting_fen = None
+	if is_fischer_random:
+		starting_board, starting_fen = setup_fischer_random_board()
+		if starting_board is None: # L'utente ha annullato
+			return # Esce dalla funzione StartGame e torna al menù
+	db = LoadDB()
+	autosave_is_on = db.get("autosave_enabled", False)
+	default_pgn = db.get("default_pgn", {})
+	white_default = default_pgn.get("White", _("Bianco"))
+	black_default = default_pgn.get("Black", _("Nero"))
+	white_elo_default = default_pgn.get("WhiteElo", "1399")
+	black_elo_default = default_pgn.get("BlackElo", "1399")
+	event_default = default_pgn.get("Event", "Orologic Game")
+	site_default = default_pgn.get("Site", _("Sede sconosciuta"))
+	round_default = default_pgn.get("Round", "Round 1")
+	eco_database = LoadEcoDatabaseWithFEN("eco.db")
+	white_player = dgt(_("Nome del bianco [{default}]: ").format(default=white_default), kind="s", default=white_default).strip().title()
+	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	if white_player == "":
+		white_player = white_default
+	black_player = dgt(_("Nome del nero [{default}]: ").format(default=black_default), kind="s", default=black_default).strip().title()
+	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	if black_player == "":
+		black_player = black_default
+	white_elo = dgt(_("Elo del bianco [{default}]: ").format(default=white_elo_default), kind="s", default=white_elo_default)
+	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	if white_elo.strip() == "":
+		white_elo = white_elo_default
+	black_elo = dgt(_("Elo del nero [{default}]: ").format(default=black_elo_default), kind="s", default=black_elo_default)
+	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	if black_elo.strip() == "":
+		black_elo = black_elo_default
+	event = dgt(_("Evento [{default}]: ").format(default=event_default), kind="s", default=event_default)
+	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	if event.strip() == "":
+		event = event_default
+	site = dgt(_("Sede [{default}]: ").format(default=site_default), kind="s", default=site_default)
+	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	round_ = dgt(_("Round [{default}]: ").format(default=round_default), kind="s", default=round_default)
+	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	db["default_pgn"] = {
+		"Event": event,
+		"Site": site,
+		"Round": round_,
+		"White": white_player,
+		"Black": black_player,
+		"WhiteElo": white_elo,
+		"BlackElo": black_elo
+	}
+	SaveDB(db)
+	key(_("Premi un tasto qualsiasi per iniziare la partita quando sei pronto..."),attesa=7200)
+	Acusticator(["c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c7", .5, 0, volume], kind=1, sync=True)
+	game_state=GameState(clock_config)
+	if is_fischer_random:
+		game_state.board = starting_board
+		game_state.pgn_game.headers["Variant"] = "Chess960"
+		game_state.pgn_game.headers["FEN"] = starting_fen
+		game_state.pgn_game.setup(game_state.board) # Sincronizza il PGN con la scacchiera custom
+	# Se la partita è standard, non c'è bisogno di fare nulla, game_state si inizializza già correttamente.
+	game_state.white_player=white_player
+	game_state.black_player=black_player
+	game_state.pgn_game.headers["White"]=white_player
+	game_state.pgn_game.headers["Black"]=black_player
+	game_state.pgn_game.headers["WhiteElo"]=white_elo
+	game_state.pgn_game.headers["BlackElo"]=black_elo
+	game_state.pgn_game.headers["Event"]=event
+	game_state.pgn_game.headers["Site"]=site
+	game_state.pgn_game.headers["Round"]=round_
+	game_state.pgn_game.headers["TimeControl"] = generate_time_control_string(clock_config)
+	game_state.pgn_game.headers["Date"]=datetime.datetime.now().strftime("%Y.%m.%d")
+	game_state.pgn_game.headers["Annotator"]="Orologic V{version} by {programmer}".format(version=VERSION, programmer=PROGRAMMER)
+	threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
+	last_valid_eco_entry = _loop_principale_partita(game_state, eco_database, autosave_is_on)
+	_finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on)
+	return
 
 def OpenManual():
 				print(_("\nApertura manuale\n"))
@@ -3032,6 +3103,30 @@ def Main():
 	if ENGINE is not None:
 		print(_("✅ Motore attivo: {engine_name}").format(engine_name=ENGINE_NAME))
 	LoadLocalization()
+	# --- Inizio Blocco Autosave ---
+	AUTOSAVE_FILE = "autosave.json"
+	autosave_path = percorso_salvataggio(AUTOSAVE_FILE)
+	if os.path.exists(autosave_path):
+		print("\n" + "="*40)
+		print("⚠️ " + _("Trovata una partita non conclusa!"))
+		print("="*40)
+		scelta_ripresa = key(_("Vuoi riprenderla? (Invio per Sì / 'n' per No): ")).lower().strip()
+		if scelta_ripresa != 'n':
+			try:
+				with open(autosave_path, 'r', encoding='utf-8') as f:
+					dati_caricati = json.load(f)
+				print(_("Partita caricata. Avvio in corso..."))
+				Acusticator(["c5", 0.1, -0.8, volume, "e5", 0.1, 0, volume, "g5", 0.2, 0.8, volume], kind=1, adsr=[2, 8, 90, 0])
+				RiprendiPartita(dati_caricati)
+				# Dopo che la partita ripresa finisce, il programma continuerà normalmente
+				# mostrando il menu principale.
+			except Exception as e:
+				print(_("Errore critico durante il caricamento della partita: {error}").format(error=e))
+				print(_("Il file di salvataggio potrebbe essere corrotto. Verrà ignorato per questa sessione."))
+				Acusticator(["a3", .3, 0, volume], kind=2, adsr=[5, 15, 0, 80])
+		else:
+			print(_("Ok, la partita salvata verrà ignorata."))
+	# --- Fine Blocco Autosave ---
 	while True:
 		scelta=menu(MENU_CHOICES, show=True, keyslist=True, full_keyslist=False, numbered=STILE_MENU_NUMERICO)
 		if scelta == "analizza":
