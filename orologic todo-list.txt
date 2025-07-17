@@ -1,7 +1,49 @@
 TodoList & ChangeLog.
 TodoList:
 	54. Nuova funzione da studiare e pianificare attentamente. In analisi, sia da menu principale che dopo arbitraggio, si sceglie la modalità già presente o quella automatica. In quest'ultima, mossa dopo mossa, la partita viene analizzata dal motore e si crea un txt (o pgn?) con commenti autmatici e valutazioni.
-75.
+Ciao. Oggi vorrei impegnarti in un compito complesso e molto affascinante. Si tratta di aggiungere una nuova funzione ad una mia applicazione, di cui ti mostro il codice completo.
+Alcune direttive per il codice che scriveremo: niente riscrittura di funzioni intere ma solo modifiche mirate. Non riportare codice che non deve essere modificato: basta la riga prima e quella dopo la modifica. Direttiva DRY a priorità massima. Indentazione a 1 tab. Limita la quantià di commenti, li trovo troppi e troppo verbosi.
+Ora riporto uno scambio che ho avuto con te, in cui si delinea il piano d'azzione. Poi segue il codice dell'app a cui aggiungere la funzione.
+Se hai compreso tutto, partiamo pure con il lavoro. Se ti servono altri dati, fammi pure le domande che vuoi.
+Io. Quando l'app chiede se si vuole analizzare la partita, aggiungere l'opzione della analisi automatica. Accettata, il flusso passa ad una funzione tutta nuova che chiede parametri quali quanto tempo, nodi, o profondità di analisi per mossa? Quante varianti per mossa? Poi inizia ad analizzare tutte le mosse dalla prima all'ultima, magari escludendo le prime che fanno parte della teoria delle aperture. Poi valuta ogni mossa aggiungendo dei commenti in base alle valutazioni che il motore ottiene dalla mossa successiva, quindi il motore è avanti di una. Poi vengono percorsi rami di varianti migliori, se ce ne sono... Bisogna però stabilire dei criteri su cosa e quando scegliere dei rami da descrivere.
+I risultati saranno sia in pgn con i commenti e le varianti, che in txt tutto in forma descrittiva come ora.
+TU.	Certamente. L'idea di un'analisi automatica è un'evoluzione fantastica per Orologic, anche se, come hai notato, è un progetto di una certa entità. Analizziamo le tue domande.
+ 2. Stima di Fattibilità e Complessità
+ Fattibilità: Alta. L'idea è assolutamente realizzabile con le librerie `python-chess` e `chess.engine` che già utilizzi. Hai già tutti i mattoni fondamentali: funzioni per interrogare il motore, per manipolare la scacchiera e per scrivere file.
+ Complessità: Alta. Questo è un progetto complesso per diverse ragioni:
+     Logica Algoritmica: Definire cosa sia uno "svarione" o un "errore" richiede una logica precisa basata sulla variazione del punteggio (es. un calo di 100 centipawn è un errore grave?).
+     Manipolazione del PGN: Aggiungere commenti e soprattutto varianti multiple nel posto giusto dell'albero delle mosse richiede attenzione per non corrompere il file.
+     Performance: Analizzare 40 mosse con 10 secondi di profondità per ogni mossa (e magari per più varianti) può richiedere molti minuti. Bisognerà gestire bene il processo e informare l'utente.
+--
+ 3. Piano d'Azione
+Ecco un possibile piano per affrontare lo sviluppo, suddiviso in passaggi logici.
+ Fase 1: La Funzione Principale e i Parametri
+1.  Creare la funzione `AnalisiAutomatica(pgn_game)`: Sarà il punto di ingresso che riceve la partita da analizzare.
+2.  Chiedere i Parametri all'Utente:
+     Intensità Analisi: Chiedere se basarsi su tempo per mossa (secondi), profondità fissa, o numero di nodi.
+     Soglie di Errore: Chiedere all'utente di definire le soglie (in centipawn) per classificare una mossa come:
+         Inesattezza (es. perdita di 25-50 cp)
+         Errore (es. perdita di 51-100 cp)
+         Svarione (Blunder) (es. perdita > 100 cp)
+     Numero di Varianti: Quante alternative calcolare per ogni mossa.
+     Mosse da Saltare: Quante mosse iniziali (semimosse) ignorare, presumendo che facciano parte della teoria d'apertura.
+					Una buona ipotesi è saltare tutte le mosse che sono una apertura nota. Possiamo usare la funzione che interroga eco.db, così come si fa già in fase gioca partita.
+ Fase 2: Il Ciclo di Analisi
+1.  Iterare sulle Mosse: La funzione dovrà scorrere ogni mossa della partita (dopo quelle saltate).
+2.  Valutare la Posizione Prima della Mossa: Per ogni mossa `N`, calcolare la valutazione della scacchiera. Chiamiamola `eval_iniziale`.
+3.  Eseguire la Mossa: Spostare il pezzo sulla scacchiera interna.
+4.  Valutare la Posizione Dopo la Mossa: Calcolare la valutazione della nuova posizione. Chiamiamola `eval_risultante`.
+ Fase 3: Logica di Commento e Varianti
+1.  Calcolare il Delta: Confrontare `eval_iniziale` con `eval_risultante` (ricordandosi di tenere conto del cambio di turno) per capire quanto è costata la mossa in termini di valutazione.
+2.  Classificare e Commentare: In base al delta e alle soglie definite dall'utente, aggiungere un commento al PGN (es. `{Svarione. La valutazione è scesa da +0.5 a -1.2}`).
+3.  Trovare l'Alternativa Migliore: Se la mossa è stata subottimale (es. il delta è negativo), far ripartire l'analisi sulla posizione prima della mossa per trovare la linea migliore che il giocatore avrebbe potuto giocare.
+4.  Aggiungere la Variante Migliore: Inserire la linea migliore trovata come una nuova variante nel PGN, con un commento esplicativo (es. `(La mossa migliore era 22. Cg5 con un vantaggio di +1.8)`).
+ Fase 4: Output Finale
+1.  Progresso Utente: Durante il ciclo, stampare a schermo un indicatore di progresso (es. "Analizzo mossa 15 di 40...") + tempo trascorso.
+2.  Salvataggio PGN Annotato: Alla fine del processo, salvare l'oggetto `pgn_game`, ora arricchito di commenti e varianti, in un nuovo file `.pgn`.
+3.  Generazione Riepilogo TXT: Creare una seconda funzione che legga il PGN appena annotato e traduca le mosse, i commenti e le varianti principali in un file di testo descrittivo, simile a quello che già produci ma molto più dettagliato.
+Questo piano scompone un'idea complessa in una serie di problemi più piccoli e gestibili.
+	75.
 
 ChangeLog:
 4.8.x
