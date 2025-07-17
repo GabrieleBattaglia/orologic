@@ -1,5 +1,5 @@
 # OROLOGIC - DEV - Data di concepimento: 14/02/2025 by Gabriele Battaglia & AIs
-import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine, random, zipfile, requests
+import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine, random, zipfile, requests, copy
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key, Donazione, polipo
 def resource_path(relative_path):
@@ -36,8 +36,8 @@ def percorso_salvataggio(relative_path):
 lingua_rilevata, _ = polipo(source_language="it")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.8.5"
-RELEASE_DATE=datetime.datetime(2025,7,16,11,43)
+VERSION="4.9.0"
+RELEASE_DATE=datetime.datetime(2025,7,17,14,7)
 PROGRAMMER="Gabriele Battaglia & AIs"
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 ENGINE_NAME = "Nessuno" 
@@ -137,6 +137,16 @@ MENU_CHOICES={
 	".":_("Esci dall'applicazione")}
 FILE_NAMES={0:"ancona",1:"bologna",2:"como",3:"domodossola",4:"empoli",5:"firenze",6:"genova",7:"hotel"}
 #qf
+def enter_escape(prompt=""):
+	'''Ritorna vero su invio, falso su escape'''
+	while True:
+		k=key(prompt).strip()
+		if k == "":
+			return True
+		elif k == "\x1b":
+			return False
+		print(_("Conferma con invio o annulla con escape"))
+
 if sys.platform == 'win32':
 	import ctypes
 
@@ -889,20 +899,169 @@ def EditLocalization():
 	LoadLocalization() # Ricarica le impostazioni per renderle subito attive
 	print(_("\nImpostazioni di lingua salvate con successo!"))
 
+def AnalisiAutomatica(pgn_game):
+	"""
+	Esegue un'analisi automatica completa della partita, aggiungendo commenti
+	sugli errori e varianti migliori direttamente nel PGN.
+	"""
+	# Fase 1: Controllo motore e raccolta parametri
+	if ENGINE is None:
+		print(_("\nMotore non inizializzato. Impossibile avviare l'analisi automatica."))
+		return
+	def _format_score(score_obj, pov_color):
+		if not score_obj: return "N/A"
+		pov_score = score_obj.pov(pov_color)
+		if pov_score.is_mate():
+			return f"M{abs(pov_score.mate())}"
+		else:
+			cp = score_obj.white().score(mate_score=30000)
+			if cp is None: return "N/A"
+			# Per la visualizzazione, il segno è relativo a chi ha il tratto
+			final_cp = cp if pov_color == chess.WHITE else -cp
+			return f"{final_cp/100:+.2f}"
+	print(_("\n--- Analisi Automatica della Partita ---"))
+	print(_("\nImpostazione dei parametri di analisi:"))
+	analysis_mode_map = {
+		"t": _("Tempo per mossa (secondi)"),
+		"p": _("Profondità fissa (ply)"),
+		"n": _("Numero di nodi per mossa")
+	}
+	analysis_mode = menu(analysis_mode_map, show=True, keyslist=True, numbered=STILE_MENU_NUMERICO, ntf=_("Scelta non valida: "))
+	limit = None
+	if analysis_mode == 't':
+		value = dgt(_("Inserisci i secondi per mossa: "), kind="f", fmin=0.1, fmax=600, default=3)
+		limit = chess.engine.Limit(time=value)
+	elif analysis_mode == 'p':
+		value = dgt(_("Inserisci la profondità di analisi: "), kind="i", imin=5, imax=50, default=18)
+		limit = chess.engine.Limit(depth=value)
+	elif analysis_mode == 'n':
+		# Chiediamo i nodi in migliaia per rendere l'input più semplice
+		value = dgt(_("Inserisci il numero di nodi da analizzare (in migliaia): "), kind="i", imin=10, imax=99999, default=500)
+		limit = chess.engine.Limit(nodes=value * 1000)
+	else:
+		print(_("Scelta non valida. Analisi annullata."))
+		return
+	print(_("\nDefinisci le soglie di errore (in centipawn di perdita):"))
+	soglia_inesattezza = dgt(_("Inesattezza (es. 25-50 cp): "), kind="i", imin=1, imax=1000, default=50)
+	soglia_errore = dgt(_("Errore (es. 51-100 cp): "), kind="i", imin=soglia_inesattezza + 1, imax=2000, default=100)
+	soglia_svarione = dgt(_("Svarione (Blunder, > Errore): "), kind="i", imin=soglia_errore + 1, imax=10000, default=200)
+	num_varianti = dgt(_("Quante varianti alternative calcolare per le mosse cattive? (1-5): "), kind="i", imin=1, imax=5, default=1)
+	mosse_da_saltare = 0
+	if enter_escape(_("Vuoi saltare automaticamente le mosse di apertura note? (INVIO per sì, ESC per specificare manualmente): ")):
+		print(_("Rilevo la fine della teoria d'apertura..."))
+		eco_db = LoadEcoDatabaseWithFEN("eco.db")
+		if eco_db:
+			temp_board = pgn_game.board().copy()
+			for move in pgn_game.mainline_moves():
+				temp_board.push(move)
+				if DetectOpeningByFEN(temp_board, eco_db):
+					mosse_da_saltare = temp_board.ply()
+				else:
+					break # Prima mossa fuori dalla teoria
+			print(_("L'analisi salterà le prime {n} semimosse.").format(n=mosse_da_saltare))
+	else:
+		mosse_da_saltare = dgt(_("Quante semimosse (ply) iniziali vuoi saltare? "), kind="i", imin=0, imax=40, default=10)
+	# Fase 2 e 3: Ciclo di Analisi e Commento
+	print("\n" + "="*40 + _("\nInizio analisi...") + "\n" + "="*40)
+	mainline_nodes = list(pgn_game.mainline())
+	for i, node in enumerate(mainline_nodes):
+		ply = i + 1
+		if ply <= mosse_da_saltare:
+			continue
+
+		print(f"\rAnalizzo mossa {ply}/{len(mainline_nodes)}...", end="")
+		
+		parent_board = node.parent.board()
+		current_board = node.board()
+		
+		try:
+			info_before = ENGINE.analyse(parent_board, limit)
+			info_after = ENGINE.analyse(current_board, limit)
+			score_before_obj = info_before[0].get('score')
+			score_after_obj = info_after[0].get('score')
+
+			if not score_before_obj or not score_after_obj:
+				continue
+		except Exception as e:
+			print(f"Errore analisi mossa {ply}: {e}")
+			continue
+
+		cp_before = score_before_obj.white().score(mate_score=30000)
+		cp_after = score_after_obj.white().score(mate_score=30000)
+		
+		loss = (cp_before - cp_after) if parent_board.turn == chess.WHITE else (cp_after - cp_before)
+		
+		error_type = ""
+		if loss >= soglia_svarione: error_type = _("Svarione")
+		elif loss >= soglia_errore: error_type = _("Errore")
+		elif loss >= soglia_inesattezza: error_type = _("Inesattezza")
+
+		if error_type:
+			pov_before_str = _format_score(score_before_obj, parent_board.turn)
+			pov_after_str = _format_score(score_after_obj, parent_board.turn)
+			comment_str = f"{{{error_type}. Valutazione: {pov_before_str} -> {pov_after_str}}}"
+			node.comment = ((node.comment or "") + " " + comment_str).strip()
+			try:
+				# Analizza la posizione per trovare le linee migliori
+				best_lines_info = ENGINE.analyse(parent_board, limit, multipv=num_varianti + 1)
+				
+				varianti_aggiunte = 0
+				played_move = node.move
+				
+				# Itera sulle linee trovate dal motore
+				for line in best_lines_info:
+					# Se abbiamo già aggiunto abbastanza varianti, fermiamoci
+					if varianti_aggiunte >= num_varianti:
+						break
+
+					alternative_move = line['pv'][0]
+
+					# Non suggerire la mossa che è stata effettivamente giocata
+					if alternative_move == played_move:
+						continue
+
+					# Abbiamo trovato un'alternativa valida, la aggiungiamo
+					best_move_san = parent_board.san(alternative_move)
+					best_score_str = _format_score(line.get('score'), parent_board.turn)
+					
+					var_node = node.parent.add_variation(alternative_move)
+					var_node.comment = f"{{Alternativa: {best_move_san} ({best_score_str})}}"
+					
+					# Aggiungi il resto della linea a quella variante
+					temp_node = var_node
+					for move_in_line in line['pv'][1:]:
+						temp_node = temp_node.add_variation(move_in_line)
+					
+					varianti_aggiunte += 1
+
+			except Exception as e_var:
+				# Un errore qui non deve bloccare l'intera analisi
+				print(f"\n! Errore nell'aggiunta di una variante: {e_var}")
+	# Fase 4: Output Finale
+	print(f"\n\n{'='*40}\n" + _("Analisi automatica completata.") + f"\n{'='*40}")
+
+	pgn_game.headers["Annotator"] = f'Orologic V{VERSION} (Analisi Automatica)'
+	pgn_string_formatted = format_pgn_comments(str(pgn_game))
+
+	base_name = f'{pgn_game.headers.get("White", "B")}_vs_{pgn_game.headers.get("Black", "N")}_auto_{datetime.datetime.now().strftime("%Y%m%d")}'
+	sanitized_pgn_name = sanitize_filename(base_name) + ".pgn"
+	full_pgn_path = percorso_salvataggio(sanitized_pgn_name)
+
+	try:
+		with open(full_pgn_path, "w", encoding="utf-8-sig") as f:
+			f.write(pgn_string_formatted)
+		print(_("PGN analizzato salvato come: {path}").format(path=full_pgn_path))
+	except Exception as e:
+		print(_("Errore durante il salvataggio del PGN: {e}").format(e=e))
+	
+	genera_sommario_analitico_txt(pgn_game, base_name)
+	print(_("Ritorno al menù principale."))
+
 def AnalyzeGame(pgn_game):
 	"""
 	Funzione di analisi della partita (PGN).
 	Legge le annotazioni NAG durante la navigazione.
 	"""
-	if pgn_game is None:
-		pgn_game = LoadPGNFromClipboard()
-		if pgn_game:
-			# Ricorsione sicura perché pgn_game è ora definito o None
-			AnalyzeGame(pgn_game)
-		else:
-			print(_("Gli appunti non contengono un PGN valido. Ritorno al menù."))
-		return
-
 	print(_("\nModalità analisi.\nHeaders della partita:\n"))
 	for k, v in pgn_game.headers.items():
 		print("{key}: {value}".format(key=k, value=v))
@@ -1680,6 +1839,69 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
 	except Exception as e:
 		print(_("Errore durante il salvataggio del riepilogo testuale: {error}").format(error=e))
 		Acusticator(["a3", 1, 0, volume], kind=2, adsr=[0, 0, 100, 100])
+
+def genera_sommario_analitico_txt(pgn_game, base_filename):
+	"""
+	Legge un PGN analizzato e produce un file di testo descrittivo.
+	"""
+	summary_lines = []
+	headers = pgn_game.headers
+	summary_lines.append(_("Riepilogo Analisi Automatica di Orologic"))
+	summary_lines.append("="*40)
+	for key, value in headers.items():
+		summary_lines.append(f"{key}: {value}")
+	summary_lines.append("="*40 + "\n")
+
+	for node in pgn_game.mainline():
+		move_san = node.parent.board().san(node.move)
+		move_num_str = ""
+		# Gestisce correttamente il numero di mossa per Bianco e Nero
+		if node.ply() % 2 != 0:
+			move_num_str = f"{node.board().fullmove_number}. "
+		else:
+			move_num_str = f"{node.board().fullmove_number}... "
+		
+		summary_lines.append(f"\n{move_num_str}{move_san}")
+
+		if node.comment:
+			comment = node.comment.replace("{", "").replace("}", "").strip()
+			summary_lines.append(f"\t* Commento: {comment}")
+
+		# Controlla se ci sono varianti (alternative migliori)
+		if len(node.parent.variations) > 1:
+			for variation_node in node.parent.variations:
+				if variation_node.move == node.move:
+					continue # Salta la linea principale
+				
+				var_board = variation_node.parent.board().copy()
+				var_san = var_board.san(variation_node.move)
+				var_line_str = [var_san]
+				
+				# Segue la variante per alcune mosse per dare contesto
+				temp_node = variation_node
+				for _ in range(4): 
+					if temp_node.variations:
+						temp_node = temp_node.variations[0]
+						var_line_str.append(temp_node.parent.board().san(temp_node.move))
+					else:
+						break
+				
+				summary_lines.append(f"\t\t-> Alternativa: {' '.join(var_line_str)}")
+				if variation_node.comment:
+					var_comment = variation_node.comment.replace("{", "").replace("}", "").strip()
+					summary_lines.append(f"\t\t   ({var_comment})")
+
+	# Salvataggio del file di testo
+	full_text = "\n".join(summary_lines)
+	sanitized_txt_name = sanitize_filename(base_filename) + ".txt"
+	full_txt_path = percorso_salvataggio(sanitized_txt_name)
+	
+	try:
+		with open(full_txt_path, "w", encoding="utf-8") as f:
+			f.write(full_text)
+		print(_("Riepilogo testuale salvato come: {path}").format(path=full_txt_path))
+	except Exception as e:
+		print(_("Errore durante il salvataggio del riepilogo testuale: {e}").format(e=e))
 
 def setup_fischer_random_board():
 	"""
@@ -2824,9 +3046,6 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 
 				# Aggiorna il puntatore PGN al nuovo nodo
 				game_state.pgn_node = new_node
-				if autosave_is_on:
-					EseguiAutosave(game_state)
-					Acusticator(["f3", 0.012, 0, volume], sync=True)
 				if eco_database:
 					current_board = game_state.board
 					eco_entry = DetectOpeningByFEN(current_board, eco_database)
@@ -2887,14 +3106,14 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 					print(_("Patta per triplice ripetizione della posizione!"))
 					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 					break
-
-				# Applica incremento e cambia turno (invariato)
 				if game_state.active_color=="white":
 					game_state.white_remaining+=game_state.clock_config["phases"][game_state.white_phase]["white_inc"]
 				else:
 					game_state.black_remaining+=game_state.clock_config["phases"][game_state.black_phase]["black_inc"]
 				game_state.switch_turn()
-
+				if autosave_is_on:
+					EseguiAutosave(game_state)
+					Acusticator(["f3", 0.012, 0, volume], sync=True)
 			except Exception as e:
 				illegal_result=verbose_legal_moves_for_san(game_state.board,move_san_only) # Usa move_san_only qui
 				Acusticator([600.0, 0.6, 0, volume], adsr=[5, 0, 35, 90])
@@ -2943,26 +3162,24 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
 				print(_("File di salvataggio automatico eliminato."))
 		except Exception as e:
 			print(_("\n[Attenzione: impossibile eliminare il file di autosave: {error}]").format(error=e))
-	if len(game_state.move_history) >= 8:
-		analyze_choice = key(_("Vuoi analizzare la partita? (s/n): ")).lower()
-		if analyze_choice == "s":
-			db = LoadDB()
-			engine_config = db.get("engine_config", {})
-			if not engine_config or not engine_config.get("engine_path"):
-				print(_("Motore non configurato. Ritorno al menù."))
-				return
-			else:
-				# Assicurati che il motore sia inizializzato prima di analizzare
-				if ENGINE is None:
-					if not InitEngine():
-						print(_("Impossibile inizializzare il motore. Analisi annullata."))
-						return
-				# Pulisci la cache se necessario prima di iniziare una nuova analisi
+		if len(game_state.move_history) >= 8:
+			if enter_escape(_("Vuoi analizzare la partita? (INVIO per sì, ESC per no): ")):
+				db = LoadDB()
+				engine_config = db.get("engine_config", {})
+				if not engine_config or not engine_config.get("engine_path"):
+					print(_("Motore non configurato. Ritorno al menù."))
+					return
+				if ENGINE is None and not InitEngine():
+					print(_("Impossibile inizializzare il motore. Analisi annullata."))
+					return
 				cache_analysis.clear()
-				AnalyzeGame(game_state.pgn_game)
-		else:
-			Acusticator([880.0, 0.2, 0, volume, 440.0, 0.2, 0, volume], kind=1, adsr=[25, 0, 50, 25])
-	return
+				if enter_escape(_("Desideri l'analisi automatica? (INVIO per sì, ESC per manuale): ")):
+					AnalisiAutomatica(copy.deepcopy(game_state.pgn_game))
+				else:
+					AnalyzeGame(game_state.pgn_game)
+			else:
+				Acusticator([880.0, 0.2, 0, volume, 440.0, 0.2, 0, volume], kind=1, adsr=[25, 0, 50, 25])
+		return
 
 def StartGame(clock_config):
 	print(_("\nAvvio partita\n"))
@@ -3131,7 +3348,19 @@ def Main():
 		scelta=menu(MENU_CHOICES, show=True, keyslist=True, full_keyslist=False, numbered=STILE_MENU_NUMERICO)
 		if scelta == "analizza":
 			Acusticator(["a5", .04, 0, volume, "e5", .04, 0, volume, "p",.08,0,0, "g5", .04, 0, volume, "e6", .120, 0, volume], kind=1, adsr=[2, 8, 90, 0])
-			AnalyzeGame(None)
+			print(_("\nCaricamento partita dagli appunti..."))
+			pgn_da_analizzare = LoadPGNFromClipboard()
+			if pgn_da_analizzare:
+				if ENGINE is None and not InitEngine():
+					print(_("Impossibile inizializzare il motore. Analisi annullata."))
+				else:
+					cache_analysis.clear()
+					if enter_escape(_("Desideri l'analisi automatica? (INVIO per sì, ESC per manuale): ")):
+						AnalisiAutomatica(copy.deepcopy(pgn_da_analizzare))
+					else:
+						AnalyzeGame(pgn_da_analizzare)
+			else:
+				pass
 		elif scelta=="crea":
 			Acusticator([1000.0, 0.05, -1, volume, "p", 0.05, 0, 0, 900.0, 0.05, 1, volume], kind=1, adsr=[0, 0, 100, 0])
 			CreateClock()
