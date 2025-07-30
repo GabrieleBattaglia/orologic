@@ -707,7 +707,7 @@ def LoadPGNFromClipboard():
 				date = game.headers.get("Date", _("Data sconosciuta"))
 				partite[i]="{white} vs {black} - {date}".format(white=white, black=black, date=date)
 			while True:
-				choice = menu(d=partite,	prompt=_("Quale partita vuoi caricare? "),	show=True,ntf=_("Numero non valido. Riprova."))
+				choice = menu(d=partite,	p=_("Quale partita vuoi caricare? "),	show=True,ntf=_("Numero non valido. Riprova."))
 				try:
 					index = int(choice)
 					if 1 <= index <= len(games):
