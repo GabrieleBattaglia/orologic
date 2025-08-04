@@ -36,8 +36,8 @@ def percorso_salvataggio(relative_path):
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.10.35"
-RELEASE_DATE=datetime.datetime(2025,8,3,9,9)
+VERSION="4.11.66"
+RELEASE_DATE=datetime.datetime(2025,8,4,13,54)
 PROGRAMMER="Gabriele Battaglia & AIs"
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 ENGINE_NAME = "Nessuno" 
@@ -673,7 +673,7 @@ def analyze_position_deep(board, limit, multipv_count=3):
             if score is not None and pv:
                 results.append({
                     "rank": i + 1,
-                    "move": pv,
+                    "move": pv[0],
                     "score": score, # Manteniamo l'oggetto PovScore intero
                     "pv": pv
                 })
@@ -978,14 +978,12 @@ def AnalisiAutomatica(pgn_game):
 		print(_("Scelta non valida. Analisi annullata."))
 		return
 	print(_("\nDefinisci le soglie di valutazione semimosse (in centipawn):"))
-	soglia_inesattezza = dgt(_("Inesattezza (es. 25-50 cp): [INVIO per 38] "), kind="i", imin=1, imax=1000, default=38)
-	soglia_errore = dgt(_("Errore (es. 51-100 cp): [INVIO per 75] "), kind="i", imin=soglia_inesattezza + 1, imax=2000, default=75)
-	soglia_svarione = dgt(_("Svarione (Blunder, > Errore): [INVIO per 200] "), kind="i", imin=soglia_errore + 1, imax=6000, default=200)
-	
+	soglia_inesattezza = dgt(_("Inesattezza (es. 25-50 cp): [INVIO per 50] "), kind="i", imin=15, imax=200, default=50)
+	soglia_errore = dgt(_("Errore (es. 51-100 cp): [INVIO per 100] "), kind="i", imin=soglia_inesattezza + 1, imax=500, default=100)
+	soglia_svarione = dgt(_("Svarione (Blunder, > Errore): [INVIO per 250] "), kind="i", imin=soglia_errore + 1, imax=3000, default=250)
 	print(_("\nDefinisci le soglie per le mosse di qualità (in centipawn):"))
-	soglia_mossa_buona = dgt(_("Perdita massima per una 'Mossa Buona' (es. < 25 cp): [INVIO per 25] "), kind="i", imin=1, imax=soglia_inesattezza -1, default=25)
-	soglia_mossa_geniale_gap = dgt(_("Vantaggio minimo di una 'Mossa Geniale' sulla seconda migliore (es. > 100 cp): [INVIO per 100] "), kind="i", imin=1, imax=2000, default=100)
-
+	soglia_mossa_buona = dgt(_("Perdita massima per una 'Mossa Buona' (es. < 25 cp): [INVIO per 20] "), kind="i", imin=15, imax=soglia_inesattezza -1, default=20)
+	soglia_mossa_geniale_gap = dgt(_("Vantaggio minimo di una 'Mossa Geniale' sulla seconda migliore (es. > 180 cp): [INVIO per 180] "), kind="i", imin=15, imax=4000, default=180)
 	num_varianti = dgt(_("Quante varianti alternative calcolare per le mosse deboli? (1-5): [INVIO per 1] "), kind="i", imin=1, imax=5, default=1)
 	mosse_da_saltare = 0
 	last_valid_eco_entry = None
@@ -1028,6 +1026,13 @@ def AnalisiAutomatica(pgn_game):
 		
 		ply = i + 1
 		if ply <= mosse_da_saltare:
+			analysis_results.append({
+				'node': node,
+				'classification': _("Teoria"),
+				'centipawn_loss': 0,
+				'alternatives_info': [],
+				'eval_after_move': None
+			})
 			continue
 
 		parent_board = node.parent.board()
@@ -1052,52 +1057,73 @@ def AnalisiAutomatica(pgn_game):
 			continue
 
 		eval_after_move = analysis_after[0]['score']
-
+		best_alternative_move = best_alternative['move']
 		centipawn_loss = 0
-		classification = "Mossa Normale"
+		classification = ""
 
-		eval_best_pov = best_alternative['score'].pov(turn)
-		eval_after_pov = eval_after_move.pov(turn)
+		# Definiamo un tetto massimo per la perdita da usare nelle statistiche ACPL
+		# 1000cp (valore di una Donna) è uno standard comune.
+		CPL_STATISTICS_CAP = 1000
 
-		if eval_best_pov.is_mate() and eval_best_pov.mate() > 0:
-			if not eval_after_pov.is_mate() or eval_after_pov.mate() <= 0:
-				classification = "Svarione"
-				centipawn_loss = 5000
-		elif eval_after_pov.is_mate() and eval_after_pov.mate() < 0:
-			if not (eval_best_pov.is_mate() and eval_best_pov.mate() < 0):
-				classification = "Svarione"
-				centipawn_loss = 5000
+		# PRIMO CONTROLLO: La mossa giocata è la migliore in assoluto?
+		if node.move.uci() == best_alternative_move.uci():
+			if len(analysis_before) > 1:
+				score_best = analysis_before[0]['score'].pov(turn).score(mate_score=30000)
+				score_second_best = analysis_before[1]['score'].pov(turn).score(mate_score=30000)
+				if score_best is not None and score_second_best is not None:
+					if (score_best - score_second_best) >= soglia_mossa_geniale_gap:
+						classification = "Mossa Geniale"
+					else:
+						classification = "Mossa Buona"
+				else:
+					classification = "Mossa Buona"
+			else:
+				classification = "Mossa Buona"
 		else:
-			score_best = eval_best_pov.score(mate_score=30000)
-			score_after = eval_after_pov.score(mate_score=30000)
-			if score_best is not None and score_after is not None:
-				centipawn_loss = score_best - score_after
+			# La mossa giocata NON è la migliore. Calcoliamo la perdita e classifichiamo l'errore.
+			best_pov_score = best_alternative['score'].pov(turn)
+			played_pov_score = eval_after_move.pov(turn)
 
+			# Caso A: La mossa migliore era un matto che abbiamo mancato.
+			if best_pov_score.is_mate() and best_pov_score.mate() > 0:
+				classification = "Svarione"
+				centipawn_loss = 5000  # Valore simbolico alto per il report testuale
+			else:
+				# Caso B: Calcolo standard della perdita in centipedoni (versione corretta).
+				score_best = best_pov_score.score(mate_score=30000)
+				score_played = played_pov_score.score(mate_score=30000)
+				
+				if score_best is not None and score_played is not None:
+					# La perdita è la differenza tra la valutazione che avevamo e quella che abbiamo ottenuto.
+					centipawn_loss = score_best - score_played
+				else:
+					centipawn_loss = 0 # Fallback
+				
+				# Classifichiamo l'errore in base alla perdita calcolata
 				if centipawn_loss >= soglia_svarione:
 					classification = "Svarione"
 				elif centipawn_loss >= soglia_errore:
 					classification = "Errore"
 				elif centipawn_loss >= soglia_inesattezza:
 					classification = "Inesattezza"
-				elif node.move == best_alternative['move']:
-					if len(analysis_before) > 1:
-						second_best_score_pov = analysis_before[1]['score'].pov(turn)
-						second_best_score = second_best_score_pov.score(mate_score=30000)
-						if second_best_score is not None and (score_best - second_best_score) >= soglia_mossa_geniale_gap:
-							classification = "Mossa Geniale"
-						else:
-							classification = "Mossa Buona"
-					else:
-						classification = "Mossa Buona"
 				elif centipawn_loss <= soglia_mossa_buona:
 					classification = "Mossa Buona"
+				else:
+					classification = "Mossa Normale"
 
+		if not classification:
+			classification = "Mossa Normale"
+
+		# Popoliamo le statistiche
 		if classification in imprecision_stats:
 			imprecision_stats[classification][color_key] += 1
-		
-		cpl_data[color_key].append(centipawn_loss)
 
-		comment_str = f"{{[OAA] {classification}. Perdita: {centipawn_loss/100:+.2f}}}"
+		# Usiamo un valore "capped" (con un tetto massimo) per le statistiche ACPL,
+		# per evitare che un singolo svarione enorme distorca completamente la media.
+		capped_loss = min(centipawn_loss, CPL_STATISTICS_CAP)
+		cpl_data[color_key].append(capped_loss)
+
+		comment_str = f"{{OAA: {classification}. Perdita: {centipawn_loss/100:+.2f}}}"
 		node.comment = (node.comment.strip() + " " + comment_str).strip() if node.comment else comment_str
 		if classification in ["Svarione", "Errore", "Inesattezza"] and num_varianti > 0:
 			varianti_da_aggiungere = analysis_before[:num_varianti]
@@ -1108,7 +1134,7 @@ def AnalisiAutomatica(pgn_game):
 					continue
 
 				prima_mossa_variante = pv[0]
-				if prima_mossa_variante != node.move:
+				if prima_mossa_variante.uci() != node.move.uci():
 					var_node = node.parent.add_variation(prima_mossa_variante)
 
 					# --- NUOVA LOGICA PER IL COMMENTO ---
@@ -1127,11 +1153,11 @@ def AnalisiAutomatica(pgn_game):
 							temp_board.push(mossa)
 
 						linea_completa = ", ".join(mosse_descrizione)
-						commento_variante = f"{{Alternativa: Matto in {mate_in}: {linea_completa}}}"
+						commento_variante = f"{{OAA: Alternativa: Matto in {mate_in}: {linea_completa}}}"
 					else:
 						# Se non è matto, usiamo il formato standard con la valutazione
 						var_score_str = _format_score(score_obj, turn)
-						commento_variante = f"{{Alternativa: {var_score_str}}}"
+						commento_variante = f"{{OAA: Alternativa: {var_score_str}}}"
 
 					var_node.comment = commento_variante
 					# --- FINE NUOVA LOGICA ---
@@ -1140,12 +1166,12 @@ def AnalisiAutomatica(pgn_game):
 					if len(pv) > 1:
 						var_node.add_line(pv[1:])
 		analysis_results.append({
-			"node": node,
-			"classification": classification,
-			"centipawn_loss": centipawn_loss,
-			"best_alternative_pv": best_alternative['pv']
-		})
-
+						"node": node,
+						"classification": classification,
+						"centipawn_loss": centipawn_loss,
+						"alternatives_info": analysis_before,
+						"eval_after_move": eval_after_move
+			})
 	print(f"\n\n{'='*40}\n" + _("Analisi automatica completata.") + f"\n{'='*40}")
 	pgn_game.headers["Annotator"] = f'Orologic V{VERSION} (Analisi Automatica)'
 	pgn_string_formatted = format_pgn_comments(str(pgn_game))
@@ -1158,7 +1184,7 @@ def AnalisiAutomatica(pgn_game):
 		print(_("PGN analizzato salvato come: {path}").format(path=full_pgn_path))
 	except Exception as e:
 		print(_("Errore durante il salvataggio del PGN: {e}").format(e=e))
-	genera_sommario_analitico_txt(pgn_game, sanitized_pgn_name.replace('.pgn',''), analysis_results, imprecision_stats, cpl_data, last_valid_eco_entry, mosse_da_saltare)
+	genera_sommario_analitico_txt(pgn_game, sanitized_pgn_name.replace('.pgn',''), analysis_results, imprecision_stats, cpl_data, last_valid_eco_entry, mosse_da_saltare, num_varianti)
 	print(_("Ritorno al menù principale."))
 
 def AnalyzeGame(pgn_game):
@@ -1944,10 +1970,132 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
 		print(_("Errore durante il salvataggio del riepilogo testuale: {error}").format(error=e))
 		Acusticator(["a3", 1, 0, volume], kind=2, adsr=[0, 0, 100, 100])
 
-def genera_sommario_analitico_txt(pgn_game, base_filename, analysis_results, imprecision_stats, cpl_data, eco_entry, mosse_da_saltare):
+def format_pv_descriptively(board, pv):
 	"""
-	Genera un file di testo descrittivo utilizzando i nuovi risultati dell'analisi,
-	includendo le statistiche avanzate come ACPL per fasi.
+	Formatta una Principal Variation (PV) in una stringa multi-linea,
+	verbosa e numerata, simile a una trascrizione di partita.
+	Es:
+		1. Donna in como5 scacco!
+		1... Re in ancona6
+	"""
+	if not pv:
+		return ""
+	
+	temp_board = board.copy()
+	output_lines = []
+	
+	for i, move in enumerate(pv):
+		# Determina il numero di mossa e il prefisso corretto ("." o "...")
+		move_num = temp_board.fullmove_number
+		if temp_board.turn == chess.WHITE:
+			line_prefix = f"{move_num}."
+		else:
+			line_prefix = f"{move_num}..."
+
+		# Ottieni la descrizione verbosa
+		descriptive_move = DescribeMove(move, temp_board)
+		output_lines.append(f"\t\t\t{line_prefix} {descriptive_move}")
+		
+		# Esegui la mossa sulla scacchiera temporanea per la mossa successiva
+		temp_board.push(move)
+		
+	return "\n".join(output_lines)
+
+def _stampa_nodo_e_varianti(node, analysis_map, summary_lines, white_name, black_name, num_varianti, indent_level=0):
+    """
+    Funzione ricorsiva per stampare un nodo del PGN e tutte le sue varianti.
+    Naviga l'albero della partita in profondità.
+    """
+    indent = "\t" * indent_level
+    
+    # Itera su tutte le varianti che partono dal nodo corrente.
+    # La prima (variations[0]) è la continuazione della linea corrente.
+    # Le altre (variations[1:]) sono le varianti laterali.
+    for i, variation_node in enumerate(node.variations):
+        board_before = variation_node.parent.board()
+        turn = board_before.turn
+        player_name = white_name if turn == chess.WHITE else black_name
+        
+        # --- Caso 1: È una variante laterale ---
+        if i > 0:
+            summary_lines.append(f"\n{indent}\tVariante {i+1} (")
+            # Chiamata ricorsiva per questa variante, aumentando l'indentazione
+            _stampa_nodo_e_varianti(variation_node.parent, analysis_map, summary_lines, white_name, black_name, num_varianti, indent_level + 1)
+            summary_lines.append(f"{indent}\t) /Variante {i+1}")
+            # Una volta stampata una variante laterale, non dobbiamo processare le sue "sorelle" da questo livello.
+            # La ricorsione si è già occupata di tutto il ramo.
+            continue 
+
+        # --- Caso 2: È la continuazione della linea corrente (mainline o linea principale di una variante) ---
+        analysis_info = analysis_map.get(variation_node)
+        
+        move_san = DescribeMove(variation_node.move, board_before)
+        move_num_str = f"{board_before.fullmove_number}."
+        if turn == chess.BLACK:
+            move_num_str += ".. "
+
+        # Se il nodo è stato analizzato (si trova sulla mainline)
+        if analysis_info:
+            eval_str = ""
+            eval_obj = analysis_info.get('eval_after_move')
+            if eval_obj:
+                white_score = eval_obj.white()
+                if white_score.is_mate():
+                    eval_str = f"(M{white_score.mate()}) "
+                else:
+                    cp = white_score.score()
+                    if cp is not None:
+                        eval_str = f"({cp/100:+.2f}) "
+            
+            summary_lines.append(f"{indent}{move_num_str} {eval_str}{player_name} gioca: {move_san}: {analysis_info['classification']}")
+            
+            # Pulisce e stampa il commento originale se presente
+            original_comment = variation_node.comment
+            if original_comment:
+                cleaned_comment = re.sub(r'\{OAA:.*?\}', '', original_comment, flags=re.DOTALL).strip()
+                cleaned_comment = re.sub(r'\s+', ' ', cleaned_comment).strip()
+                if cleaned_comment:
+                    summary_lines.append(f"{indent}\t[Commento originale]: {cleaned_comment}")
+
+            # Stampa le alternative OAA se è una mossa debole
+            if analysis_info['classification'] in ["Svarione", "Errore", "Inesattezza"]:
+                alternatives = analysis_info.get('alternatives_info')
+                if alternatives:
+                    summary_lines.append(f"{indent}\t(OAA: Meglio era:")
+                    
+                    for idx, line_info in enumerate(alternatives[:num_varianti]):
+                        pv = line_info.get('pv')
+                        score_obj = line_info.get('score')
+                        if not pv or not score_obj: continue
+
+                        score_pov = score_obj.pov(turn)
+                        if score_pov.is_mate():
+                            val_str = f"Matto in {abs(score_pov.mate())}"
+                        else:
+                            cp = score_pov.score(mate_score=30000)
+                            val_str = f"{cp/100:+.2f}" if cp is not None else "N/A"
+                        
+                        line_label = "Bestline" if idx == 0 else f"Linea {idx+1}"
+                        summary_lines.append(f"{indent}\t\t{line_label} (Val: {val_str}):")
+                        descriptive_line = format_pv_descriptively(board_before, pv)
+                        summary_lines.append(descriptive_line.replace("\t\t\t", f"{indent}\t\t\t"))
+
+                    summary_lines.append(f"{indent}\t)")
+
+        # Se il nodo NON è stato analizzato (è in una variante)
+        else:
+            summary_lines.append(f"{indent}{move_num_str} {player_name} gioca: {move_san}")
+            if variation_node.comment:
+                summary_lines.append(f"{indent}\t[Commento]: {variation_node.comment}")
+
+        # Chiamata ricorsiva per la prossima mossa in questa linea
+        if variation_node.variations:
+            _stampa_nodo_e_varianti(variation_node, analysis_map, summary_lines, white_name, black_name, num_varianti, indent_level)
+
+def genera_sommario_analitico_txt(pgn_game, base_filename, analysis_results, imprecision_stats, cpl_data, eco_entry, mosse_da_saltare, num_varianti):
+	"""
+	Genera un file di testo descrittivo potenziato.
+	Ora naviga l'albero del PGN per mostrare mainline e varianti.
 	"""
 	summary_lines = []
 	headers = pgn_game.headers
@@ -1991,28 +2139,22 @@ def genera_sommario_analitico_txt(pgn_game, base_filename, analysis_results, imp
 	summary_lines.append(header_acpl_fmt)
 	summary_lines.append("-"*56)
 
-	w_cpls = cpl_data.get('w', []) # FIX: Assicura che il default sia una lista vuota
-	b_cpls = cpl_data.get('b', []) # FIX: Assicura che il default sia una lista vuota
-	w_num_moves = len(w_cpls)
-	b_num_moves = len(b_cpls)
+	w_cpls = cpl_data.get('w', [])
+	b_cpls = cpl_data.get('b', [])
 	fasi = []
-	# Se ci sono abbastanza mosse analizzate per una suddivisione
-	if w_num_moves > 5 and b_num_moves > 5:
-		# Se l'apertura è stata saltata, dividiamo in 2 fasi: Mediogioco e Finale
+	if len(w_cpls) > 5 and len(b_cpls) > 5:
 		if mosse_da_saltare > 0:
-			w_mid = w_num_moves // 2
-			b_mid = b_num_moves // 2
+			w_mid = len(w_cpls) // 2
+			b_mid = len(b_cpls) // 2
 			fasi.append( (_("Mediogioco"), w_cpls[:w_mid], b_cpls[:b_mid]) )
 			fasi.append( (_("Finale"), w_cpls[w_mid:], b_cpls[b_mid:]) )
-		# Altrimenti, usiamo la suddivisione standard in 3 fasi
 		else:
-			w_s1, w_s2 = w_num_moves // 3, 2 * (w_num_moves // 3)
-			b_s1, b_s2 = b_num_moves // 3, 2 * (b_num_moves // 3)
+			w_s1, w_s2 = len(w_cpls) // 3, 2 * (len(w_cpls) // 3)
+			b_s1, b_s2 = len(b_cpls) // 3, 2 * (len(b_cpls) // 3)
 			fasi.append( (_("Apertura"), w_cpls[:w_s1], b_cpls[:b_s1]) )
 			fasi.append( (_("Mediogioco"), w_cpls[w_s1:w_s2], b_cpls[b_s1:b_s2]) )
 			fasi.append( (_("Finale"), w_cpls[w_s2:], b_cpls[b_s2:]) )
 	else:
-		# Se ci sono poche mosse, calcoliamo solo il totale
 		fasi.append( (_("Totale Partita"), w_cpls, b_cpls) )	
 	for nome_fase, w_fase_cpls, b_fase_cpls in fasi:
 		w_avg = (sum(w_fase_cpls) / len(w_fase_cpls)) / 100 if w_fase_cpls else 0
@@ -2025,32 +2167,44 @@ def genera_sommario_analitico_txt(pgn_game, base_filename, analysis_results, imp
 	summary_lines.append("-"*56)
 	summary_lines.append("="*56)
 
-	summary_lines.append("\n" + _("--- Analisi Mossa per Mossa ---"))
-	for result in analysis_results:
-		node = result['node']
-		board_before = node.parent.board()
-		move_san = DescribeMove(node.move, board_before)
-		
-		move_num_str = f"{board_before.fullmove_number}."
-		if board_before.turn == chess.BLACK:
-			move_num_str += ".. "
-		
-		player_name = white_name if board_before.turn == chess.WHITE else black_name
-		
-		line = f"\n{move_num_str} {player_name} gioca {move_san}: {result['classification']}"
-		summary_lines.append(line)
-		
-		if result['classification'] not in ["Mossa Buona", "Mossa Geniale", "Mossa Normale"]:
-			loss_str = f"{result['centipawn_loss']/100:.2f}"
-			
-			best_pv = result['best_alternative_pv']
-			if best_pv: # FIX: Assicura che ci sia il :
-				best_move_san = DescribeMove(best_pv[0], board_before)
-				summary_lines.append(f"\t(Perdita: {loss_str}. Meglio era: {best_move_san})")
+	# --- NUOVA LOGICA CON RICORSIONE ---
+	summary_lines.append(_("\n--- Analisi Mossa per Mossa ---"))
 	
-	summary_lines.append("\n\n" + "="*56)
-	summary_lines.append(_("File generato da Orologic il {date}").format(date=datetime.datetime.now().strftime('%d/%m/%Y %H:%M')))
+	# 1. Crea la mappa dei dati di analisi per un accesso efficiente O(1)
+	analysis_data_map = {result['node']: result for result in analysis_results}
+	
+	# 2. Avvia la chiamata ricorsiva partendo dal nodo radice del PGN
+	summary_lines.append("Mainline (")
+	_stampa_nodo_e_varianti(pgn_game, analysis_data_map, summary_lines, white_name, black_name, num_varianti, indent_level=1)
+	summary_lines.append(") /Mainline")
+	# --- FINE NUOVA LOGICA ---
 
+	summary_lines.append("\n" + "="*56)
+	result = headers.get("Result", "*")
+	white = headers.get("White", "Il Bianco")
+	black = headers.get("Black", "Il Nero")
+	white_clock = headers.get("WhiteClock")
+	black_clock = headers.get("BlackClock")
+	winner, loser = (None, None)
+	if result == "1-0":
+		winner, loser = white, black
+	elif result == "0-1":
+		winner, loser = black, white
+	if winner and white_clock and black_clock:
+		winner_clock = white_clock if winner == white else black_clock
+		loser_clock = black_clock if loser == black else white_clock
+		# Controlliamo se la vittoria è per tempo scaduto
+		if loser_clock == "00:00:00":
+			summary_lines.append(f"{winner} vince per tempo esaurito dell'avversario con ancora {winner_clock} sull'orologio.")
+		else:
+			summary_lines.append(f"{winner} vince la partita. Tempo finale: {winner} [{winner_clock}] - {loser} [{loser_clock}].")
+	elif winner:
+		summary_lines.append(f"{winner} vince la partita.")
+	elif result == "1/2-1/2":
+		summary_lines.append(f"La partita termina in parità.")
+	else:
+		summary_lines.append(f"La partita termina con un risultato non definito ({result}).")
+	summary_lines.append(_("File generato da Orologic il {date}").format(date=datetime.datetime.now().strftime('%d/%m/%Y %H:%M')))
 	full_text = "\n".join(summary_lines)
 	sanitized_txt_name = sanitize_filename(base_filename) + ".txt"
 	full_txt_path = percorso_salvataggio(os.path.join("txt", sanitized_txt_name))
