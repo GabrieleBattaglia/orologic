@@ -36,8 +36,8 @@ def percorso_salvataggio(relative_path):
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.11.66"
-RELEASE_DATE=datetime.datetime(2025,8,4,13,54)
+VERSION="4.11.69"
+RELEASE_DATE=datetime.datetime(2025,8,5,11,3)
 PROGRAMMER="Gabriele Battaglia & AIs"
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 ENGINE_NAME = "Nessuno" 
@@ -2001,96 +2001,103 @@ def format_pv_descriptively(board, pv):
 		
 	return "\n".join(output_lines)
 
-def _stampa_nodo_e_varianti(node, analysis_map, summary_lines, white_name, black_name, num_varianti, indent_level=0):
+def _stampa_nodo_e_varianti(node, analysis_data_map, summary_lines, white_name, black_name, num_varianti, indent_level=0):
     """
-    Funzione ricorsiva per stampare un nodo del PGN e tutte le sue varianti.
-    Naviga l'albero della partita in profondità.
+    Funzione ricorsiva (versione corretta) per stampare un nodo del PGN e tutte le sue varianti.
+    Naviga l'albero della partita in profondità senza errori di ricorsione.
     """
+    # CASO BASE: se il nodo non ha una mossa (siamo al nodo radice),
+    # processiamo direttamente i suoi figli.
+    if not node.move:
+        # La mainline è sempre la prima "variation"
+        if node.variations:
+            _stampa_nodo_e_varianti(node.variations[0], analysis_data_map, summary_lines, white_name, black_name, num_varianti, indent_level)
+        return
+
+    # --- 1. Stampa la mossa del nodo corrente ---
     indent = "\t" * indent_level
+    board_before = node.parent.board()
+    turn = board_before.turn
+    player_name = white_name if turn == chess.WHITE else black_name
+    analysis_info = analysis_data_map.get(node)
     
-    # Itera su tutte le varianti che partono dal nodo corrente.
-    # La prima (variations[0]) è la continuazione della linea corrente.
-    # Le altre (variations[1:]) sono le varianti laterali.
-    for i, variation_node in enumerate(node.variations):
-        board_before = variation_node.parent.board()
-        turn = board_before.turn
-        player_name = white_name if turn == chess.WHITE else black_name
+    move_san = DescribeMove(node.move, board_before)
+    move_num_str = f"{board_before.fullmove_number}."
+    if turn == chess.BLACK:
+        move_num_str += ".. "
+
+    # Se il nodo è stato analizzato (si trova sulla mainline)
+    if analysis_info:
+        eval_str = ""
+        eval_obj = analysis_info.get('eval_after_move')
+        if eval_obj:
+            white_score = eval_obj.white()
+            if white_score.is_mate():
+                eval_str = f"(M{white_score.mate()}) "
+            else:
+                cp = white_score.score()
+                if cp is not None:
+                    eval_str = f"({cp/100:+.2f}) "
         
-        # --- Caso 1: È una variante laterale ---
-        if i > 0:
-            summary_lines.append(f"\n{indent}\tVariante {i+1} (")
-            # Chiamata ricorsiva per questa variante, aumentando l'indentazione
-            _stampa_nodo_e_varianti(variation_node.parent, analysis_map, summary_lines, white_name, black_name, num_varianti, indent_level + 1)
-            summary_lines.append(f"{indent}\t) /Variante {i+1}")
-            # Una volta stampata una variante laterale, non dobbiamo processare le sue "sorelle" da questo livello.
-            # La ricorsione si è già occupata di tutto il ramo.
-            continue 
-
-        # --- Caso 2: È la continuazione della linea corrente (mainline o linea principale di una variante) ---
-        analysis_info = analysis_map.get(variation_node)
+        summary_lines.append(f"{indent}{move_num_str} {eval_str}{player_name} gioca: {move_san}: {analysis_info['classification']}")
         
-        move_san = DescribeMove(variation_node.move, board_before)
-        move_num_str = f"{board_before.fullmove_number}."
-        if turn == chess.BLACK:
-            move_num_str += ".. "
+        original_comment = node.comment
+        if original_comment:
+            cleaned_comment = re.sub(r'\{OAA:.*?\}', '', original_comment, flags=re.DOTALL).strip()
+            cleaned_comment = re.sub(r'\s+', ' ', cleaned_comment).strip()
+            if cleaned_comment:
+                summary_lines.append(f"{indent}\t[Commento originale]: {cleaned_comment}")
 
-        # Se il nodo è stato analizzato (si trova sulla mainline)
-        if analysis_info:
-            eval_str = ""
-            eval_obj = analysis_info.get('eval_after_move')
-            if eval_obj:
-                white_score = eval_obj.white()
-                if white_score.is_mate():
-                    eval_str = f"(M{white_score.mate()}) "
-                else:
-                    cp = white_score.score()
-                    if cp is not None:
-                        eval_str = f"({cp/100:+.2f}) "
-            
-            summary_lines.append(f"{indent}{move_num_str} {eval_str}{player_name} gioca: {move_san}: {analysis_info['classification']}")
-            
-            # Pulisce e stampa il commento originale se presente
-            original_comment = variation_node.comment
-            if original_comment:
-                cleaned_comment = re.sub(r'\{OAA:.*?\}', '', original_comment, flags=re.DOTALL).strip()
-                cleaned_comment = re.sub(r'\s+', ' ', cleaned_comment).strip()
-                if cleaned_comment:
-                    summary_lines.append(f"{indent}\t[Commento originale]: {cleaned_comment}")
+        if analysis_info['classification'] in ["Svarione", "Errore", "Inesattezza"]:
+            alternatives = analysis_info.get('alternatives_info')
+            if alternatives:
+                summary_lines.append(f"{indent}\t(OAA: Meglio era:")
+                
+                for idx, line_info in enumerate(alternatives[:num_varianti]):
+                    pv = line_info.get('pv')
+                    score_obj = line_info.get('score')
+                    if not pv or not score_obj: continue
 
-            # Stampa le alternative OAA se è una mossa debole
-            if analysis_info['classification'] in ["Svarione", "Errore", "Inesattezza"]:
-                alternatives = analysis_info.get('alternatives_info')
-                if alternatives:
-                    summary_lines.append(f"{indent}\t(OAA: Meglio era:")
+                    score_pov = score_obj.pov(turn)
+                    if score_pov.is_mate():
+                        val_str = f"Matto in {abs(score_pov.mate())}"
+                    else:
+                        cp = score_pov.score(mate_score=30000)
+                        val_str = f"{cp/100:+.2f}" if cp is not None else "N/A"
                     
-                    for idx, line_info in enumerate(alternatives[:num_varianti]):
-                        pv = line_info.get('pv')
-                        score_obj = line_info.get('score')
-                        if not pv or not score_obj: continue
+                    line_label = "Bestline" if idx == 0 else f"Linea {idx+1}"
+                    summary_lines.append(f"{indent}\t\t{line_label} (Val: {val_str}):")
+                    descriptive_line = format_pv_descriptively(board_before, pv)
+                    summary_lines.append(descriptive_line.replace("\t\t\t", f"{indent}\t\t\t"))
 
-                        score_pov = score_obj.pov(turn)
-                        if score_pov.is_mate():
-                            val_str = f"Matto in {abs(score_pov.mate())}"
-                        else:
-                            cp = score_pov.score(mate_score=30000)
-                            val_str = f"{cp/100:+.2f}" if cp is not None else "N/A"
-                        
-                        line_label = "Bestline" if idx == 0 else f"Linea {idx+1}"
-                        summary_lines.append(f"{indent}\t\t{line_label} (Val: {val_str}):")
-                        descriptive_line = format_pv_descriptively(board_before, pv)
-                        summary_lines.append(descriptive_line.replace("\t\t\t", f"{indent}\t\t\t"))
+                summary_lines.append(f"{indent}\t)")
 
-                    summary_lines.append(f"{indent}\t)")
+    # Se il nodo NON è stato analizzato (è in una variante)
+    else:
+        summary_lines.append(f"{indent}{move_num_str} {player_name} gioca: {move_san}")
+        if node.comment:
+            summary_lines.append(f"{indent}\t[Commento]: {node.comment.strip()}")
 
-        # Se il nodo NON è stato analizzato (è in una variante)
-        else:
-            summary_lines.append(f"{indent}{move_num_str} {player_name} gioca: {move_san}")
-            if variation_node.comment:
-                summary_lines.append(f"{indent}\t[Commento]: {variation_node.comment}")
+    # --- 2. Gestisci le continuazioni (i figli di questo nodo) ---
+    
+    # Prima la continuazione della linea principale (se esiste)
+    if node.variations:
+        main_continuation = node.variations[0]
+        _stampa_nodo_e_varianti(main_continuation, analysis_data_map, summary_lines, white_name, black_name, num_varianti, indent_level)
 
-        # Chiamata ricorsiva per la prossima mossa in questa linea
-        if variation_node.variations:
-            _stampa_nodo_e_varianti(variation_node, analysis_map, summary_lines, white_name, black_name, num_varianti, indent_level)
+    # Poi tutte le varianti laterali del NODO GENITORE
+    parent = node.parent
+    my_index_in_parent = parent.variations.index(node)
+    
+    # Se questo nodo è la continuazione principale del suo genitore, allora
+    # è suo compito stampare le altre varianti laterali del genitore.
+    if my_index_in_parent == 0 and len(parent.variations) > 1:
+        for i, side_variation in enumerate(parent.variations[1:]):
+            variant_indent = "\t" * indent_level
+            summary_lines.append(f"\n{variant_indent}Variante {i+2} (")
+            # Chiamata ricorsiva per l'intero ramo della variante laterale
+            _stampa_nodo_e_varianti(side_variation, analysis_data_map, summary_lines, white_name, black_name, num_varianti, indent_level + 1)
+            summary_lines.append(f"{variant_indent}) /Variante {i+2}")
 
 def genera_sommario_analitico_txt(pgn_game, base_filename, analysis_results, imprecision_stats, cpl_data, eco_entry, mosse_da_saltare, num_varianti):
 	"""
@@ -2170,12 +2177,14 @@ def genera_sommario_analitico_txt(pgn_game, base_filename, analysis_results, imp
 	# --- NUOVA LOGICA CON RICORSIONE ---
 	summary_lines.append(_("\n--- Analisi Mossa per Mossa ---"))
 	
-	# 1. Crea la mappa dei dati di analisi per un accesso efficiente O(1)
+	# 1. Crea la mappa dei dati di analisi per un accesso efficiente
 	analysis_data_map = {result['node']: result for result in analysis_results}
 	
 	# 2. Avvia la chiamata ricorsiva partendo dal nodo radice del PGN
 	summary_lines.append("Mainline (")
-	_stampa_nodo_e_varianti(pgn_game, analysis_data_map, summary_lines, white_name, black_name, num_varianti, indent_level=1)
+	if pgn_game.variations:
+		# La chiamata parte dal primo nodo con una mossa reale
+		_stampa_nodo_e_varianti(pgn_game.variations[0], analysis_data_map, summary_lines, white_name, black_name, num_varianti, indent_level=1)
 	summary_lines.append(") /Mainline")
 	# --- FINE NUOVA LOGICA ---
 
