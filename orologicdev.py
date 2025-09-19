@@ -36,8 +36,8 @@ def percorso_salvataggio(relative_path):
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.11.81"
-RELEASE_DATE=datetime.datetime(2025,8,8,8,38)
+VERSION="4.11.82"
+RELEASE_DATE=datetime.datetime(2025,9,18,19,16)
 PROGRAMMER="Gabriele Battaglia & AIs"
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 ENGINE_NAME = "Nessuno" 
@@ -2825,7 +2825,7 @@ def SelectClock(db):
 		if note_line:
 			display_string += "\n  " + note_line
 		choices[c["name"]] = display_string
-	choice = menu(choices, show=True, keyslist=True, full_keyslist=False, numbered=STILE_MENU_NUMERICO)
+	choice = menu(choices, show=True, keyslist=True, numbered=STILE_MENU_NUMERICO)
 	Acusticator(["f7", .013, 0, volume])
 	if choice:
 		idx = next((i for i, c in enumerate(db["clocks"]) if c["name"] == choice), None)
@@ -3638,7 +3638,7 @@ def Main():
 		else:
 			print(_("Ok, la partita salvata verrà ignorata."))
 	while True:
-		scelta=menu(MENU_CHOICES, show=True, keyslist=True, full_keyslist=False, numbered=STILE_MENU_NUMERICO)
+		scelta=menu(MENU_CHOICES, show=True, keyslist=True, numbered=STILE_MENU_NUMERICO)
 		if scelta == "analizza":
 			Acusticator(["a5", .04, 0, volume, "e5", .04, 0, volume, "p",.08,0,0, "g5", .04, 0, volume, "e6", .120, 0, volume], kind=1, adsr=[2, 8, 90, 0])
 			print(_("\nCaricamento partita dagli appunti..."))
