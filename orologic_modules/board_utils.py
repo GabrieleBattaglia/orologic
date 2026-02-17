@@ -6,274 +6,326 @@ import os
 import io
 from GBUtils import polipo, Acusticator
 from . import config
-from . import clock
-from . import storage
 
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 
-try:
-    db = storage.LoadDB()
-    volume = db.get("volume", 1.0)
-except:
-    volume = 1.0
-
 def CalculateMaterial(board):
-    white_material = 0
-    black_material = 0
-    for square in chess.SQUARES:
-        piece = board.piece_at(square)
-        if piece:
-            value = config.PIECE_VALUES.get(piece.symbol(), 0)
-            if piece.color == chess.WHITE:
-                white_material += value
-            else:
-                black_material += value
-    return white_material, black_material
+    w, b = 0, 0
+    for sq in chess.SQUARES:
+        p = board.piece_at(sq)
+        if p:
+            v = config.PIECE_VALUES.get(p.symbol().upper(), 0)
+            if p.color == chess.WHITE: w += v
+            else: b += v
+    return w, b
 
 def NormalizeMove(m):
-    return m.replace("+", "").replace("#", "")
-
-def LoadEcoDatabaseWithFEN(filename="eco.db"):
-	"""
-	Carica il file ECO, calcola il FEN finale per ogni linea
-	e restituisce una lista di dizionari contenenti:
-	"eco", "opening", "variation", "moves" (lista SAN),
-	"fen" (FEN della posizione finale), "ply" (numero di semimosse).
-	Utilizza node.board().san() per una generazione SAN pi├╣ robusta.
-	"""
-	eco_entries = []
-	db_path = config.resource_path(os.path.join("resources", filename))
-	if not os.path.exists(db_path):
-		print(_("File {filename} non trovato.").format(filename=db_path))
-		return eco_entries
-	try:
-		with open(db_path, "r", encoding="utf-8") as f:
-			content = f.read()
-	except Exception as e:
-		print(_("Errore durante la lettura di {filename}: {error}").format(filename=db_path, error=e))
-		return eco_entries
-	# Rimuovi eventuali blocchi di commento racchiusi tra { e }
-	content = re.sub(r'\{[^}]*\}', '', content, flags=re.DOTALL)
-	stream = io.StringIO(content)
-	game_count = 0
-	skipped_count = 0
-	while True:
-		# Salva la posizione corrente dello stream per il seek
-		stream_pos = stream.tell()
-		try:
-			headers = chess.pgn.read_headers(stream)
-			if headers is None:
-				break # Fine del file o stream
-			# Riposizionati e leggi il game completo
-			stream.seek(stream_pos) # Torna all'inizio degli header
-			game = chess.pgn.read_game(stream)
-			game_count += 1
-			if game is None:
-				# Potrebbe accadere con entry PGN malformate dopo gli header
-				print(_("Attenzione: Impossibile leggere il game PGN {game_num} dopo l'header.").format(game_num=game_count))
-				skipped_count += 1
-				# Prova a leggere la prossima entry saltando righe vuote
-				while True:
-					line = stream.readline()
-					if line is None: break # EOF
-					if line.strip(): # Trovata una riga non vuota
-						stream.seek(stream.tell() - len(line.encode('utf-8'))) # Torna indietro per leggerla come header la prossima volta
-						break
-				continue
-			eco_code = game.headers.get("ECO", "")
-			opening = game.headers.get("Opening", "")
-			variation = game.headers.get("Variation", "")
-			moves = []
-			node = game
-			last_valid_node = game # Traccia l'ultimo nodo valido per ottenere il FEN finale
-			parse_error = False
-			while node.variations:
-				next_node = node.variations[0]
-				move = next_node.move
-				try:
-					# Usa la board del NODO CORRENTE per generare il SAN della PROSSIMA mossa
-					# Questo ├¿ generalmente pi├╣ affidabile
-					san = node.board().san(move)
-					moves.append(san)
-				except Exception as e:
-					parse_error = True
-					break # Interrompi il parsing di questa linea ECO
-				node = next_node
-				last_valid_node = node # Aggiorna l'ultimo nodo processato con successo
-			if not parse_error and moves: # Solo se abbiamo mosse valide e nessun errore
-				# Ottieni il FEN dalla board dell'ULTIMO nodo valido raggiunto
-				final_fen = last_valid_node.board().board_fen()
-				ply_count = len(moves) # Numero di semimosse
-				eco_entries.append({
-					"eco": eco_code,
-					"opening": opening,
-					"variation": variation,
-					"moves": moves,
-					"fen": final_fen,
-					"ply": ply_count
-				})
-			elif parse_error:
-				skipped_count += 1
-		except ValueError as ve: # Cattura specificamente errori comuni di parsing PGN
-			print(_("Errore di valore durante il parsing del game PGN {game_num}: {error}").format(game_num=game_count, error=ve))
-			skipped_count += 1
-			# Prova a recuperare cercando la prossima entry PGN '['
-			while True:
-				line = stream.readline()
-				if line is None: break # EOF
-				if line.strip().startswith('['): # Trovato un possibile inizio di header
-					stream.seek(stream.tell() - len(line.encode('utf-8'))) # Torna indietro
-					break
-		except Exception as e:
-			print(_("Errore generico durante il parsing del game PGN {game_num}: {error}").format(game_num=game_count, error=e))
-			skipped_count += 1
-			# Tentativo di recupero simile a sopra
-			while True:
-				line = stream.readline()
-				if line is None: break # EOF
-				if line.strip().startswith('['):
-					stream.seek(stream.tell() - len(line.encode('utf-8')))
-					break
-	print(_("Caricate {num_entries} linee di apertura ECO.").format(num_entries=len(eco_entries)))
-	if skipped_count > 0:
-		print(_("Attenzione: {num_skipped} linee ECO sono state saltate a causa di errori di parsing.").format(num_skipped=skipped_count))
-	return eco_entries
-
-def DetectOpeningByFEN(current_board, eco_db_with_fen):
-	"""
-	restituisce l'entry dell'apertura corrispondente alla posizione attuale.
-	Gestisce le trasposizioni confrontando i FEN delle posizioni.
-	Se ci sono pi├╣ match, preferisce quello con lo stesso numero di mosse (ply),
-	e tra questi, quello con la sequenza di mosse pi├╣ lunga nel database ECO.
-	"""
-	current_fen = current_board.board_fen()
-	current_ply = current_board.ply()
-	possible_matches = []
-	for entry in eco_db_with_fen:
-		if entry["fen"] == current_fen:
-			possible_matches.append(entry)
-	if not possible_matches:
-		return None # Nessuna corrispondenza trovata per questa posizione
-	# Filtra per numero di mosse (ply) corrispondente, se possibile
-	exact_ply_matches = [m for m in possible_matches if m["ply"] == current_ply]
-	if exact_ply_matches:
-		# Se ci sono match con lo stesso numero di mosse, scegli il pi├╣ specifico
-		# (quello definito con pi├╣ mosse nel db ECO, anche se dovrebbero essere uguali se ply ├¿ uguale)
-		return max(exact_ply_matches, key=lambda x: len(x["moves"]))
+	m=m.strip()
+	if m.lower().startswith("o-o-o") or m.lower().startswith("0-0-0"):
+		suffix=m[len("o-o-o"):]
+		return "O-O-O"+suffix
+	elif m.lower().startswith("o-o") or m.lower().startswith("0-0"):
+		suffix=m[len("o-o"):]
+		return "O-O"+suffix
+	elif m and m[0] in "rnkq" and m[0].islower():
+		return m[0].upper()+m[1:]
 	else:
-		return None # Nessun match trovato con il numero di mosse corretto
+		return m
+
+def DescribeMove(move, board, annotation=None):
+	L10N = config.L10N
+	if board.is_castling(move):
+		base_descr = L10N['moves']['short_castle'] if chess.square_file(move.to_square) > chess.square_file(move.from_square) else L10N['moves']['long_castle']
+	else:
+		san_base = ""
+		try:
+			piece_moved = board.piece_at(move.from_square)
+			is_capture = board.is_capture(move) or board.is_en_passant(move)
+			is_promo = move.promotion is not None
+			piece_symbol = ""
+			if piece_moved and piece_moved.piece_type != chess.PAWN:
+				piece_symbol = piece_moved.symbol().upper()
+			from_sq_str = chess.square_name(move.from_square)
+			to_sq_str = chess.square_name(move.to_square)
+			disambiguation = ""
+			if piece_symbol:
+				potential_origins = []
+				for legal_move in board.legal_moves:
+					lm_piece = board.piece_at(legal_move.from_square)
+					if lm_piece and lm_piece.piece_type == piece_moved.piece_type and legal_move.to_square == move.to_square:
+						potential_origins.append(legal_move.from_square)
+				if len(potential_origins) > 1:
+					file_disamb_needed = False
+					for sq in potential_origins:
+						if sq != move.from_square and chess.square_file(sq) == chess.square_file(move.from_square):
+							file_disamb_needed = True
+							break
+					if not file_disamb_needed: disambiguation = from_sq_str[0]
+					else:
+						rank_disamb_needed = False
+						for sq in potential_origins:
+							if sq != move.from_square and chess.square_rank(sq) == chess.square_rank(move.from_square):
+								rank_disamb_needed = True
+								break
+						if not rank_disamb_needed: disambiguation = from_sq_str[1]
+						else: disambiguation = from_sq_str
+			promo_str = ""
+			if is_promo:
+				promo_piece_symbol = chess.piece_symbol(move.promotion).upper()
+				promo_str = "={promo}".format(promo=promo_piece_symbol)
+			capture_char = "x" if is_capture else ""
+			if piece_symbol:
+				san_base = "{symbol}{disambiguation}{capture}{to_sq}{promo}".format(symbol=piece_symbol, disambiguation=disambiguation, capture=capture_char, to_sq=to_sq_str, promo=promo_str)
+			else:
+				if is_capture: san_base = "{from_file}{capture}{to_sq}{promo}".format(from_file=from_sq_str[0], capture=capture_char, to_sq=to_sq_str, promo=promo_str)
+				else: san_base = "{to_sq}{promo}".format(to_sq=to_sq_str, promo=promo_str)
+		except:
+			try:
+				san_base = board.san(move).replace("!","").replace("?","")
+			except:
+				san_base = _("Mossa da {from_sq} a {to_sq}").format(from_sq=chess.square_name(move.from_square), to_sq=chess.square_name(move.to_square))
+		
+		pattern = re.compile(r'^([RNBQK])?([a-h1-8]{1,2})?(x)?([a-h][1-8])(=([RNBQ]))?$')
+		pawn_pattern = re.compile(r'^([a-h])?(x)?([a-h][1-8])(=([RNBQ]))?$')
+		m = pattern.match(san_base)
+		if m and m.group(1):
+			piece_letter = m.group(1); disamb = m.group(2) or ""; capture = m.group(3); dest = m.group(4); promo_letter = m.group(6)
+			piece_type = chess.PIECE_SYMBOLS.index(piece_letter.lower())
+		else:
+			m = pawn_pattern.match(san_base)
+			if m:
+				piece_letter = ""; disamb = m.group(1) or ""; capture = m.group(2); dest = m.group(3); promo_letter = m.group(5); piece_type = chess.PAWN
+			else: base_descr = san_base; piece_type = None
+
+		if piece_type is not None:
+			piece_type_key = chess.PIECE_NAMES[piece_type].lower()
+			piece_name = L10N['pieces'][piece_type_key]['name']; descr = piece_name
+			if disamb:
+				if piece_type == chess.PAWN: descr += " {col}".format(col=L10N['columns'].get(disamb, disamb))
+				else:
+					parts = [L10N['columns'].get(ch, ch) if ch.isalpha() else ch for ch in disamb]
+					descr += _(" di ") + "".join(parts)
+			if capture:
+				descr += " {capture_verb}".format(capture_verb=L10N['moves']['capture'])
+				if board.is_en_passant(move):
+					ep_square = move.to_square + (-8 if board.turn == chess.WHITE else 8)
+					captured_piece = board.piece_at(ep_square); descr += " {ep}".format(ep=L10N['moves']['en_passant'])
+				else: captured_piece = board.piece_at(move.to_square)
+				if captured_piece and not board.is_en_passant(move):
+					captured_type_key = chess.PIECE_NAMES[captured_piece.piece_type].lower()
+					captured_name = L10N['pieces'][captured_type_key]['name']; descr += " {name}".format(name=captured_name)
+				descr += " {prep} {file}{rank}".format(prep=L10N['moves']['capture_on'], file=L10N['columns'].get(dest[0], dest[0]), rank=dest[1])
+			else: descr += " {prep} {file}{rank}".format(prep=L10N['moves']['move_to'], file=L10N['columns'].get(dest[0], dest[0]), rank=dest[1])
+			if promo_letter:
+				promo_type = chess.PIECE_SYMBOLS.index(promo_letter.lower()); promo_type_key = chess.PIECE_NAMES[promo_type].lower()
+				descr += " {promo_verb} {promo_name}".format(promo_verb=L10N['moves']['promotes_to'], promo_name=L10N['pieces'][promo_type_key]['name'])
+			base_descr = descr
+	
+	board_after = board.copy(); board_after.push(move); final_descr = base_descr
+	if board_after.is_checkmate(): final_descr += " {checkmate}".format(checkmate=L10N['moves']['checkmate'])
+	elif board_after.is_check(): final_descr += " {check}".format(check=L10N['moves']['check'])
+	if annotation and annotation in L10N['annotations']: final_descr += " ({a})".format(a=L10N['annotations'][annotation])
+	return final_descr
+
+def GenerateMoveSummary(game_state):
+	summary = []; move_number = 1; board_copy = CustomBoard()
+	for i in range(0, len(game_state.move_history), 2):
+		white_move_san = game_state.move_history[i]
+		try:
+			white_move = board_copy.parse_san(white_move_san)
+			white_move_desc = DescribeMove(white_move, board_copy)
+			board_copy.push(white_move)
+		except Exception as e: white_move_desc = _("Errore bianco: {e}").format(e=e)
+		if i + 1 < len(game_state.move_history):
+			black_move_san = game_state.move_history[i + 1]
+			try:
+				black_move = board_copy.parse_san(black_move_san)
+				black_move_desc = DescribeMove(black_move, board_copy)
+				board_copy.push(black_move)
+			except Exception as e: black_move_desc = _("Errore nero: {e}").format(e=e)
+			summary.append("{num}. {w}, {b}".format(num=move_number, w=white_move_desc, b=black_move_desc))
+		else: summary.append("{num}. {w}".format(num=move_number, w=white_move_desc))
+		move_number += 1
+	return summary
 
 def format_pgn_comments(pgn_str):
-    def repl(match):
-        comment_text = match.group(1).strip()
-        return "{\n" + comment_text + "\n}"
+    def repl(match): return "{\n" + match.group(1).strip() + "\n}"
     return re.sub(r'\{(.*?)\}', repl, pgn_str, flags=re.DOTALL)
 
 class CustomBoard(chess.Board):
     def __str__(self):
-        board_str = "FEN: " + str(self.fen()) + "\n"
-        white_material, black_material = CalculateMaterial(self)
-        ranks = range(8, 0, -1) if self.turn == chess.WHITE else range(1, 9)
-        files = range(8) if self.turn == chess.WHITE else range(7, -1, -1)
-        for rank in ranks:
-            board_str += str(rank)
-            for file in files:
-                square = chess.square(file, rank - 1)
-                piece = self.piece_at(square)
-                if piece:
-                    symbol = piece.symbol()
-                    board_str += symbol.upper() if piece.color == chess.WHITE else symbol.lower()
-                else:
-                    board_str += "-" if (rank + file) % 2 == 0 else "+"
-            board_str += "\n"
-        board_str += " abcdefgh" if self.turn == chess.WHITE else " hgfedcba"
-        
-        if self.fullmove_number == 1 and self.turn == chess.WHITE:
-            last_move_info = "1.???"
-        else:
-            move_number = self.fullmove_number - (1 if self.turn == chess.WHITE else 0)
-            if len(self.move_stack) > 0:
-                temp_board = CustomBoard()
-                for m in self.move_stack[:-1]:
-                    temp_board.push(m)
-                last_move = self.move_stack[-1]
-                try:
-                    last_move_san = temp_board.san(last_move)
-                except Exception:
-                    last_move_san = "???"
-            else:
-                last_move_san = "???"
-                
-            if self.turn == chess.BLACK:
-                last_move_info = "{num}. {san}".format(num=move_number, san=last_move_san)
-            else:
-                last_move_info = "{num}... {san}".format(num=move_number, san=last_move_san)
-                
-        board_str += " {move_info} Materiale: {white_mat}/{black_mat}".format(
-            move_info=last_move_info, white_mat=white_material, black_mat=black_material)
-        return board_str
+        res = f"FEN: {self.fen()}\n"
+        w, b = CalculateMaterial(self)
+        rs = range(8, 0, -1) if self.turn == chess.WHITE else range(1, 9)
+        fs = range(8) if self.turn == chess.WHITE else range(7, -1, -1)
+        for r in rs:
+            res += str(r)
+            for f in fs:
+                p = self.piece_at(chess.square(f, r-1))
+                if p: res += p.symbol().upper() if p.color == chess.WHITE else p.symbol().lower()
+                else: res += "-" if (r+f)%2==0 else "+"
+            res += "\n"
+        res += " abcdefgh" if self.turn == chess.WHITE else " hgfedcba"
+        return res
 
     def copy(self, stack=True):
-        new_board = super().copy(stack=stack)
-        new_board.__class__ = CustomBoard
-        return new_board
-    
-    @classmethod
-    def from_chess960_pos(cls, pos_number):
-        board = super().from_chess960_pos(pos_number)
-        board.__class__ = CustomBoard
-        return board
-        
-    def __repr__(self):
-        return self.__str__()
+        nb = super().copy(stack=stack); nb.__class__ = CustomBoard; return nb
 
 class GameState:
-    def __init__(self, clock_config):
-        self.board = CustomBoard()
-        self.clock_config = clock_config
-        if clock_config.get("same_time", True):
-            self.white_remaining = clock_config["phases"][0]["white_time"]
-            self.black_remaining = clock_config["phases"][0]["black_time"]
-        else:
-            self.white_remaining = clock_config["phases"][0]["white_time"]
-            self.black_remaining = clock_config["phases"][0]["black_time"]
-            
-        self.white_phase = 0
-        self.black_phase = 0
-        self.white_moves = 0
-        self.black_moves = 0
-        self.active_color = "white"
-        self.paused = False
-        self.game_over = False
-        self.descriptive_move_history = []
-        self.move_history = []
-        self.pgn_game = chess.pgn.Game.from_board(CustomBoard())
-        self.pgn_game.headers["Event"] = "Orologic Game"
-        self.pgn_node = self.pgn_game
-        
-        self.white_player = _("Il Bianco")
-        self.black_player = _("Il Nero")
+	def __init__(self, clock_config):
+		self.board = CustomBoard()
+		self.clock_config = clock_config
+		self.white_remaining = clock_config["phases"][0]["white_time"]
+		self.black_remaining = clock_config["phases"][0]["black_time"]
+		self.white_phase = 0
+		self.black_phase = 0
+		self.white_moves = 0
+		self.black_moves = 0
+		self.active_color = "white"
+		self.paused = False
+		self.game_over = False
+		self.descriptive_move_history = []
+		self.move_history = []
+		self.pgn_game = chess.pgn.Game.from_board(CustomBoard())
+		self.pgn_game.headers["Event"] = "Orologic Game"
+		self.pgn_node = self.pgn_game
+		self.white_player = ""
+		self.black_player = ""
 
-    def switch_turn(self):
-        if self.active_color == "white":
-            self.white_moves += 1
-            phases = self.clock_config["phases"]
-            if self.white_phase < len(phases) - 1:
-                current_phase_moves = phases[self.white_phase]["moves"]
-                if self.white_moves >= current_phase_moves and current_phase_moves != 0:
-                    self.white_phase += 1
-                    Acusticator(['d2', .8, 0, volume, 'd7', .03, 0, volume, 'a#6', .03, 0, volume], kind=3, adsr=[20, 10, 75, 20])
-                    print(self.white_player + _(" entra in fase ") + str(self.white_phase+1) + _(" tempo fase ") + clock.FormatTime(phases[self.white_phase]["white_time"]))
-                    self.white_remaining = phases[self.white_phase]["white_time"]
-        else:
-            self.black_moves += 1
-            phases = self.clock_config["phases"]
-            if self.black_phase < len(phases) - 1:
-                current_phase_moves = phases[self.black_phase]["moves"]
-                if self.black_moves >= current_phase_moves and current_phase_moves != 0:
-                    self.black_phase += 1
-                    Acusticator(['d2', .8, 0, volume, 'd7', .03, 0, volume, 'a#6', .03, 0, volume], kind=3, adsr=[20, 10, 75, 20])
-                    print(self.black_player + _(" entra in fase ") + str(self.black_phase+1) + _(" tempo fase ") + clock.FormatTime(phases[self.black_phase]["black_time"]))
-                    self.black_remaining = phases[self.black_phase]["black_time"]
-                    
-        self.active_color = "black" if self.active_color == "white" else "white"
+	def switch_turn(self):
+		if self.active_color == "white":
+			self.white_moves += 1
+			if self.white_phase < len(self.clock_config["phases"]) - 1:
+				phase_moves = self.clock_config["phases"][self.white_phase]["moves"]
+				if phase_moves != 0 and self.white_moves >= phase_moves:
+					self.white_phase += 1
+					Acusticator(['d2', .8, 0, config.VOLUME, 'd7', .03, 0, config.VOLUME, 'a#6', .03, 0, config.VOLUME], kind=3, adsr=[20, 10, 75, 20])
+					print(self.white_player + _(" entra in fase ") + str(self.white_phase + 1) + _(" tempo fase ") + FormatTime(self.clock_config["phases"][self.white_phase]["white_time"]))
+					self.white_remaining = self.clock_config["phases"][self.white_phase]["white_time"]
+		else:
+			self.black_moves += 1
+			if self.black_phase < len(self.clock_config["phases"]) - 1:
+				phase_moves = self.clock_config["phases"][self.black_phase]["moves"]
+				if phase_moves != 0 and self.black_moves >= phase_moves:
+					self.black_phase += 1
+					Acusticator(['d2', .8, 0, config.VOLUME, 'd7', .03, 0, config.VOLUME, 'a#6', .03, 0, config.VOLUME], kind=3, adsr=[20, 10, 75, 20])
+					print(self.black_player + _(" entra in fase ") + str(self.black_phase + 1) + _(" tempo fase ") + FormatTime(self.clock_config["phases"][self.black_phase]["black_time"]))
+					self.black_remaining = self.clock_config["phases"][self.black_phase]["black_time"]
+		self.active_color = "black" if self.active_color == "white" else "white"
+
+def LoadEcoDatabaseWithFEN(filename="eco.db"):
+    eco_entries = []
+    db_path = config.resource_path(os.path.join("resources", filename))
+    if not os.path.exists(db_path):
+        print(_("File {filename} non trovato.").format(filename=db_path))
+        return eco_entries
+    try:
+        with open(db_path, "r", encoding="utf-8") as f: content = f.read()
+    except Exception as e:
+        print(_("Errore durante la lettura di {filename}: {error}").format(filename=db_path, error=e))
+        return eco_entries
+    content = re.sub(r'\{[^}]*\}', '', content, flags=re.DOTALL)
+    stream = io.StringIO(content); game_count = 0; skipped_count = 0
+    while True:
+        stream_pos = stream.tell()
+        try:
+            headers = chess.pgn.read_headers(stream)
+            if headers is None: break
+            stream.seek(stream_pos); game = chess.pgn.read_game(stream); game_count += 1
+            if game is None:
+                skipped_count += 1
+                while True:
+                    line = stream.readline()
+                    if not line: break
+                    if line.strip(): stream.seek(stream.tell() - len(line.encode('utf-8'))); break
+                continue
+            eco_code = game.headers.get("ECO", ""); opening = game.headers.get("Opening", ""); variation = game.headers.get("Variation", "")
+            moves = []; node = game; last_valid_node = game; parse_error = False
+            while node.variations:
+                next_node = node.variations[0]; move = next_node.move
+                try: san = node.board().san(move); moves.append(san)
+                except: parse_error = True; break
+                node = next_node; last_valid_node = node
+            if not parse_error and moves:
+                final_fen = last_valid_node.board().board_fen(); ply_count = len(moves)
+                eco_entries.append({"eco": eco_code, "opening": opening, "variation": variation, "moves": moves, "fen": final_fen, "ply": ply_count})
+            elif parse_error: skipped_count += 1
+        except:
+            skipped_count += 1
+            while True:
+                line = stream.readline()
+                if not line: break
+                if line.strip().startswith('['): stream.seek(stream.tell() - len(line.encode('utf-8'))); break
+    if eco_entries: print(_("Caricate {num_entries} linee di apertura ECO.").format(num_entries=len(eco_entries)))
+    return eco_entries
+
+def format_pv_descriptively(board, pv):
+	if not pv: return ""
+	temp_board = board.copy(); output_lines = []
+	i = 0
+	while i < len(pv):
+		move_num = temp_board.fullmove_number
+		if temp_board.turn == chess.WHITE:
+			white_move = pv[i]
+			white_desc = DescribeMove(white_move, temp_board)
+			line_str = "  {num}. {desc}".format(num=move_num, desc=white_desc)
+			temp_board.push(white_move)
+			i += 1
+			if i < len(pv):
+				black_move = pv[i]
+				black_desc = DescribeMove(black_move, temp_board)
+				line_str += ", {desc}".format(desc=black_desc)
+				temp_board.push(black_move)
+				i += 1
+			output_lines.append(line_str)
+		else:
+			black_move = pv[i]
+			black_desc = DescribeMove(black_move, temp_board)
+			line_str = "  {num}... {desc}".format(num=move_num, desc=black_desc)
+			output_lines.append(line_str)
+			temp_board.push(black_move)
+			i += 1
+	return "\n".join(output_lines)
+
+def DetectOpeningByFEN(current_board, eco_db_with_fen):
+    current_fen = current_board.board_fen(); current_ply = current_board.ply()
+    possible_matches = [e for e in eco_db_with_fen if e["fen"] == current_fen]
+    if not possible_matches: return None
+    exact_ply_matches = [m for m in possible_matches if m["ply"] == current_ply]
+    if exact_ply_matches: return max(exact_ply_matches, key=lambda x: len(x["moves"]))
+    return None
+
+def FormatTime(seconds):
+    total = int(seconds); h = total // 3600; m = (total % 3600) // 60; s = total % 60
+    parts = []
+    if h: parts.append(_("{num} ora").format(num=h) if h==1 else _("{num} ore").format(num=h))
+    if m: parts.append(_("{num} minuto").format(num=m) if m==1 else _("{num} minuti").format(num=m))
+    if s: parts.append(_("{num} secondo").format(num=s) if s==1 else _("{num} secondi").format(num=s))
+    return ", ".join(parts) if parts else _("0 secondi")
+
+def ParseTime(prompt):
+	from GBUtils import dgt
+	t=dgt(prompt,kind="s")
+	try:
+		h,m,s=map(int,t.split(":")); return h*3600+m*60+s
+	except Exception as e:
+		print(_("Formato orario non valido. Atteso hh:mm:ss. Errore:"),e); return 0
+
+def SecondsToHMS(seconds):
+    h = int(seconds // 3600); m = int((seconds % 3600) // 60); s = int(seconds % 60)
+    return "{:02d}:{:02d}:{:02d}".format(h, m, s)
+
+def FormatClock(seconds):
+	total = int(seconds); hours = total // 3600; minutes = (total % 3600) // 60; secs = total % 60
+	return "{hours:02d}:{minutes:02d}:{secs:02d}".format(hours=hours, minutes=minutes, secs=secs)
+
+def seconds_to_mmss(seconds):
+	m = int(seconds // 60); s = int(seconds % 60)
+	return _("{minutes:02d} minuti e {seconds:02d} secondi!").format(minutes=m, seconds=s)
+
+def parse_mmss_to_seconds(time_str):
+	try:
+		minutes, seconds = map(int, time_str.split(":"))
+		return minutes * 60 + seconds
+	except Exception as e:
+		print(_("Formato orario non valido. Atteso mm:ss. Errore:"), e); return 0

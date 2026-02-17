@@ -18,5 +18,6 @@ def SaveDB(db):
         os.makedirs(os.path.dirname(config.DB_FILE), exist_ok=True)
         with open(config.DB_FILE, "w") as f:
             json.dump(db, f, indent=4)
+        # print(f"[DEBUG] DB salvato in: {config.DB_FILE}") # Scommentare se serve debug
     except IOError as e:
         print(f"Errore nel salvataggio del DB: {e}")
