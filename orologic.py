@@ -1,4 +1,4 @@
-# OROLOGIC - Data di concepimento: 14/02/2025 by Gabriele Battaglia & AIs
+# OROLOGIC - DEV - Data di concepimento: 14/02/2025 by Gabriele Battaglia & AIs
 import sys,os,time,json,threading,datetime,chess,webbrowser,chess.pgn,re, pyperclip, io, chess.engine, random, zipfile, requests, copy, traceback
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt,menu,Acusticator, key, Donazione, polipo
@@ -36,8 +36,8 @@ def percorso_salvataggio(relative_path):
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 #QC
 BIRTH_DATE=datetime.datetime(2025,2,14,10,16)
-VERSION="4.10.66"
-RELEASE_DATE=datetime.datetime(2025,9,18,19,17)
+VERSION="4.11.82"
+RELEASE_DATE=datetime.datetime(2025,9,18,19,16)
 PROGRAMMER="Gabriele Battaglia & AIs"
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 ENGINE_NAME = "Nessuno" 
@@ -1017,6 +1017,7 @@ def AnalisiAutomatica(pgn_game):
 	analysis_results = []
 	imprecision_stats = { "Svarione": {'w': 0, 'b': 0}, "Errore": {'w': 0, 'b': 0}, "Inesattezza": {'w': 0, 'b': 0}, "Mossa Buona": {'w': 0, 'b': 0}, "Mossa Geniale": {'w': 0, 'b': 0} }
 	cpl_data = {'w': [], 'b': []}
+	analysis_after = None
 
 	for i, node in enumerate(mainline_nodes):
 		if key(attesa=0.002) == '\x1b':
@@ -1048,7 +1049,11 @@ def AnalisiAutomatica(pgn_game):
 		print(f"\r{' ' * 79}\rPLY {ply}/{total_plys} {san_str:<12} | Tempo: {time_str}", end="")
 
 		multipv_needed = max(3, num_varianti)
-		analysis_before = analyze_position_deep(parent_board, limit, multipv_needed)
+		if analysis_after:
+			analysis_before = analysis_after
+		else:
+			# Esegui l'analisi "prima" solo per la primissima mossa del ciclo
+			analysis_before = analyze_position_deep(parent_board, limit, multipv_needed)
 		if not analysis_before:
 			continue
 		best_alternative = analysis_before[0]
@@ -2001,10 +2006,82 @@ def format_pv_descriptively(board, pv):
 		
 	return "\n".join(output_lines)
 
+def _stampa_albero_pgn(node, analysis_data_map, summary_lines, white_name, black_name, num_varianti, indent_level=0):
+    """
+    Funzione ricorsiva corretta per stampare l'albero PGN.
+    Stampa la mossa corrente, poi subito dopo tutte le variazioni (mainline + varianti),
+    mantenendo la struttura gerarchica e l'indentazione.
+    """
+    if node.move:
+        indent = "\t" * indent_level
+        board_before = node.parent.board()
+        turn = board_before.turn
+        player_name = white_name if turn == chess.WHITE else black_name
+        analysis_info = analysis_data_map.get(node)
+        
+        move_san = DescribeMove(node.move, board_before)
+        move_num_str = f"{board_before.fullmove_number}."
+        if turn == chess.BLACK:
+            move_num_str += ".. "
+
+        if analysis_info:
+            eval_str = ""
+            eval_obj = analysis_info.get('eval_after_move')
+            if eval_obj:
+                white_score = eval_obj.white()
+                if white_score.is_mate():
+                    eval_str = f"(M{white_score.mate()}) "
+                else:
+                    cp = white_score.score()
+                    if cp is not None:
+                        eval_str = f"({cp/100:+.2f}) "
+            
+            summary_lines.append(f"{indent}{move_num_str} {eval_str}{player_name} gioca: {move_san}: {analysis_info['classification']}")
+            
+            original_comment = node.comment
+            if original_comment:
+                cleaned_comment = re.sub(r'\{OAA:.*?\}', '', original_comment, flags=re.DOTALL).strip()
+                if cleaned_comment:
+                    summary_lines.append(f"{indent}\t[Commento originale]: {cleaned_comment}")
+
+            if analysis_info['classification'] in ["Svarione", "Errore", "Inesattezza"]:
+                alternatives = analysis_info.get('alternatives_info')
+                if alternatives:
+                    summary_lines.append(f"{indent}\t(OAA: Meglio era:")
+                    for idx, line_info in enumerate(alternatives[:num_varianti]):
+                        pv, score_obj = line_info.get('pv'), line_info.get('score')
+                        if not pv or not score_obj: 
+                            continue
+                        score_pov = score_obj.pov(turn)
+                        val_str = f"Matto in {abs(score_pov.mate())}" if score_pov.is_mate() else f"{score_pov.score(mate_score=30000)/100:+.2f}" if score_pov.score(mate_score=30000) is not None else "N/A"
+                        line_label = "Bestline" if idx == 0 else f"Linea {idx+1}"
+                        summary_lines.append(f"{indent}\t\t{line_label} (Val: {val_str}):")
+                        descriptive_line = format_pv_descriptively(board_before, pv)
+                        summary_lines.append(descriptive_line.replace("\t\t\t", f"{indent}\t\t\t"))
+                    summary_lines.append(f"{indent}\t)")
+
+        else:
+            # Nodo variante senza dati OAA
+            summary_lines.append(f"{indent}{move_num_str} {player_name} gioca: {move_san}")
+            if node.comment:
+                summary_lines.append(f"{indent}\t[Commento]: {node.comment.strip()}")
+
+    # Ora stampiamo immediatamente tutte le variazioni (inclusa mainline)
+    for i, variation in enumerate(node.variations):
+        if i == 0:
+            # Mainline - stessa indentazione, ma figli +1
+            _stampa_albero_pgn(variation, analysis_data_map, summary_lines, white_name, black_name, num_varianti, indent_level + 1)
+        else:
+            # Variante laterale - intestazione + indentazione incrementata
+            variant_header_indent = "\t" * indent_level
+            summary_lines.append(f"\n{variant_header_indent}\tVariante {i + 1} (")
+            _stampa_albero_pgn(variation, analysis_data_map, summary_lines, white_name, black_name, num_varianti, indent_level + 1)
+            summary_lines.append(f"{variant_header_indent}\t) /Variante {i + 1}")
+
 def genera_sommario_analitico_txt(pgn_game, base_filename, analysis_results, imprecision_stats, cpl_data, eco_entry, mosse_da_saltare, num_varianti):
 	"""
-	Genera un file di testo descrittivo potenziato: gestisce MultiPV,
-	preserva i commenti originali e formatta le linee in modo verboso.
+	Genera un file di testo descrittivo potenziato.
+	Ora naviga l'albero del PGN per mostrare mainline e varianti.
 	"""
 	summary_lines = []
 	headers = pgn_game.headers
@@ -2076,78 +2153,13 @@ def genera_sommario_analitico_txt(pgn_game, base_filename, analysis_results, imp
 	summary_lines.append("-"*56)
 	summary_lines.append("="*56)
 
-	summary_lines.append(_("--- Analisi Mossa per Mossa ---"))
-	for result in analysis_results:
-		node = result['node']
-		board_before = node.parent.board()
-		turn = board_before.turn
-		move_san = DescribeMove(node.move, board_before)
-		
-		move_num_str = f"{board_before.fullmove_number}."
-		if board_before.turn == chess.BLACK:
-			move_num_str += ".. "
-		
-		player_name = white_name if board_before.turn == chess.WHITE else black_name
-		eval_str = ""
-		eval_obj = result.get('eval_after_move')
-		if eval_obj:
-			# Usiamo la prospettiva del Bianco per coerenza (positivo = vantaggio Bianco)
-			white_score = eval_obj.white()
-			if white_score.is_mate():
-				# Formato per il matto: (M4) per matto in 4, (M-2) se stiamo subendo matto in 2
-				eval_str = f"(M{white_score.mate()}) "
-			else:
-				cp = white_score.score()
-				if cp is not None:
-					# Formato per i centipedoni: (+1.23) o (-0.54)
-					eval_str = f"({cp/100:+.2f}) "
-		summary_lines.append(f"{move_num_str} {eval_str}{player_name} gioca: {move_san}: {result['classification']}")
-		original_comment = node.comment
-		if original_comment:
-			cleaned_comment = re.sub(r'\{OAA:.*?\}', '', original_comment, flags=re.DOTALL).strip()
-			cleaned_comment = re.sub(r'\s+', ' ', cleaned_comment).strip()
-			if cleaned_comment:
-				summary_lines.append(f"\t[Commento originale]: {cleaned_comment}")
-		if result['classification'] in ["Svarione", "Errore", "Inesattezza"]:
-			alternatives = result.get('alternatives_info')
-			if not alternatives:
-				continue
-			
-			best_line_info = alternatives[0]
-			other_lines_info = alternatives[1:]
-			best_score_obj = best_line_info.get('score')
-			best_pv = best_line_info.get('pv')
-
-			if not best_score_obj or not best_pv:
-				continue
-
-			if best_score_obj.pov(turn).is_mate():
-				mate_in = abs(best_score_obj.pov(turn).mate())
-				summary_lines.append(f"\t(OAA: Migliore era Matto in {mate_in}:")
-			else:
-				loss_str = f"{result['centipawn_loss']/100:.2f}"
-				summary_lines.append(f"\t(OAA: Perdita: {loss_str}. Meglio era:")
-
-			summary_lines.append("\t\tBestline:") # Aggiunge l'etichetta
-			descriptive_line = format_pv_descriptively(board_before, best_pv)
-			summary_lines.append(descriptive_line)
-			other_lines_info = alternatives[1:]
-			lines_to_show = other_lines_info[:num_varianti - 1]
-			for i, other_line in enumerate(lines_to_show):
-				score_obj = other_line.get('score')
-				pv = other_line.get('pv')
-				if score_obj and pv:
-					score_pov = score_obj.pov(turn)
-					if score_pov.is_mate():
-						val_str = f"Matto in {abs(score_pov.mate())}"
-					else:
-						cp = score_pov.score(mate_score=30000)
-						val_str = f"{cp/100:+.2f}" if cp is not None else "N/A"
-					
-					summary_lines.append(f"\t\tLinea {i+2} (Val: {val_str}):")
-					descriptive_other_line = format_pv_descriptively(board_before, pv)
-					summary_lines.append(descriptive_other_line)			
-			summary_lines.append("\t)")
+	summary_lines.append(_("\n--- Analisi Mossa per Mossa ---"))
+	analysis_data_map = {result['node']: result for result in analysis_results}
+	summary_lines.append("Mainline (")
+	# Singola chiamata alla nuova funzione ricorsiva, partendo dal nodo radice.
+	_stampa_albero_pgn(pgn_game, analysis_data_map, summary_lines, white_name, black_name, num_varianti, indent_level=1)
+	summary_lines.append(") /Mainline")
+	summary_lines.append("\n" + "="*56)
 	result = headers.get("Result", "*")
 	white = headers.get("White", "Il Bianco")
 	black = headers.get("Black", "Il Nero")
@@ -2161,7 +2173,6 @@ def genera_sommario_analitico_txt(pgn_game, base_filename, analysis_results, imp
 	if winner and white_clock and black_clock:
 		winner_clock = white_clock if winner == white else black_clock
 		loser_clock = black_clock if loser == black else white_clock
-		# Controlliamo se la vittoria è per tempo scaduto
 		if loser_clock == "00:00:00":
 			summary_lines.append(f"{winner} vince per tempo esaurito dell'avversario con ancora {winner_clock} sull'orologio.")
 		else:
