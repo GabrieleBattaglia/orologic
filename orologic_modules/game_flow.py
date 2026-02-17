@@ -6,6 +6,8 @@ import chess
 import chess.pgn
 import datetime
 import copy
+import pyperclip
+import io
 from GBUtils import dgt, Acusticator, key, polipo, menu
 from . import config
 from . import board_utils
@@ -18,12 +20,7 @@ from . import version
 # Inizializzazione localizzazione
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 
-# Recupero volume
-try:
-	db = storage.LoadDB()
-	volume = db.get("volume", 1.0)
-except:
-	volume = 1.0
+# Volume ora gestito via config.VOLUME
 
 def clock_thread(game_state):
 	last_time = time.time()
@@ -38,35 +35,31 @@ def clock_thread(game_state):
 				game_state.white_remaining -= elapsed
 				for alarm in game_state.clock_config.get("alarms", []):
 					if alarm not in triggered_alarms_white and abs(game_state.white_remaining - alarm) < elapsed:
-						print(_("\nAllarme: tempo del bianco raggiunto {time}").format(time=clock.seconds_to_mmss(alarm)), end="")
-						Acusticator(["c4", 0.2, -0.75, volume])
+						print(_("\nAllarme: tempo del bianco raggiunto {time}").format(time=board_utils.seconds_to_mmss(alarm)), end="")
+						Acusticator(["c4", 0.2, -0.75, config.VOLUME])
 						triggered_alarms_white.add(alarm)
 			else:
 				game_state.black_remaining -= elapsed
 				for alarm in game_state.clock_config.get("alarms", []):
 					if alarm not in triggered_alarms_black and abs(game_state.black_remaining - alarm) < elapsed:
-						print(_("\nAllarme: tempo del nero raggiunto {time}").format(time=clock.seconds_to_mmss(alarm)), end="")
-						Acusticator(["c4", 0.2, 0.75, volume])
+						print(_("\nAllarme: tempo del nero raggiunto {time}").format(time=board_utils.seconds_to_mmss(alarm)), end="")
+						Acusticator(["c4", 0.2, 0.75, config.VOLUME])
 						triggered_alarms_black.add(alarm)
 		if game_state.white_remaining <= 0 or game_state.black_remaining <= 0:
-			Acusticator(["e4", 0.2, -0.5, volume, "d4", 0.2, 0, volume, "c4", 0.2, 0.5, volume], kind=1, adsr=[10, 0, 90, 10])
+			Acusticator(["e4", 0.2, -0.5, config.VOLUME, "d4", 0.2, 0, config.VOLUME, "c4", 0.2, 0.5, config.VOLUME], kind=1, adsr=[10, 0, 90, 10])
 			game_state.game_over = True
 			print(_("Bandierina caduta!"))
 			if game_state.white_remaining <= 0:
 				game_state.pgn_game.headers["Result"] = "0-1"  # Nero vince
 				print(_("Tempo del Bianco scaduto. {player} vince.").format(player=game_state.black_player))
-				Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
+				Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
 			else:
 				game_state.pgn_game.headers["Result"] = "1-0"  # Bianco vince
 				print(_("Tempo del Nero scaduto. {player} vince.").format(player=game_state.white_player))
-				Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
+				Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
 		time.sleep(0.1)
 
 def RiprendiPartita(dati_partita):
-	"""
-	Ricostruisce lo stato di una partita dal dizionario dei dati caricati
-	e avvia il loop di gioco per continuarla.
-	"""
 	print(_("Ricostruzione dello stato della partita..."))
 	game_state = board_utils.GameState(dati_partita["clock_config"])
 	game_state.board = board_utils.CustomBoard(dati_partita["board_fen"])
@@ -84,14 +77,12 @@ def RiprendiPartita(dati_partita):
 		pgn_io = io.StringIO(dati_partita["pgn_string"])
 		game_state.pgn_game = chess.pgn.read_game(pgn_io)
 		if game_state.pgn_game is None:
-			# Fallback se il PGN ├¿ corrotto o vuoto
 			print(_("Attenzione: PGN non valido nel file di salvataggio. Ne creo uno nuovo."))
 			game_state.pgn_game = chess.pgn.Game.from_board(game_state.board)
 		else:
-			# Assicura che il puntatore al nodo corrente sia sull'ultima mossa
 			game_state.pgn_node = game_state.pgn_game.end()
 	except Exception as e:
-		print(_("Errore nella lettura del PGN salvato: {error}. La partita riprender├á senza cronologia PGN.").format(error=e))
+		print(_("Errore nella lettura del PGN salvato: {error}. La partita riprendera' senza cronologia PGN.").format(error=e))
 		game_state.pgn_game = chess.pgn.Game.from_board(game_state.board)
 	game_state.paused = True
 	threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
@@ -99,15 +90,14 @@ def RiprendiPartita(dati_partita):
 	autosave_is_on = db.get("autosave_enabled", False)
 	eco_database = board_utils.LoadEcoDatabaseWithFEN("eco.db")
 	print("\n" + "--- Riepilogo Partita ---")
-	print(_("Bianco: {player} - Tempo: {time}").format(player=game_state.white_player, time=clock.FormatTime(game_state.white_remaining)))
-	print(_("Nero: {player} - Tempo: {time}").format(player=game_state.black_player, time=clock.FormatTime(game_state.black_remaining)))
+	print(_("Bianco: {player} - Tempo: {time}").format(player=game_state.white_player, time=board_utils.FormatTime(game_state.white_remaining)))
+	print(_("Nero: {player} - Tempo: {time}").format(player=game_state.black_player, time=board_utils.FormatTime(game_state.black_remaining)))
 	if game_state.move_history:
 		last_move_san = game_state.move_history[-1]
-		# Determina il numero della mossa e chi l'ha fatta
-		if game_state.active_color == "black": # La mossa precedente era del bianco
+		if game_state.active_color == "black":
 			move_num = (len(game_state.move_history) + 1) // 2
 			last_move_str = "{num}. {san}".format(num=move_num, san=last_move_san)
-		else: # La mossa precedente era del nero
+		else:
 			move_num = len(game_state.move_history) // 2
 			last_move_str = "{num}... {san}".format(num=move_num, san=last_move_san)
 		print(_("Ultima mossa: {move}").format(move=last_move_str))
@@ -119,13 +109,8 @@ def RiprendiPartita(dati_partita):
 	return
 
 def EseguiAutosave(game_state):
-	"""
-	Salva lo stato corrente della partita su un file JSON di autosave.
-	Questa funzione viene chiamata dopo ogni mossa se l'opzione ├¿ attiva.
-	"""
 	AUTOSAVE_FILENAME = "autosave.json"
 	full_path = config.percorso_salvataggio(os.path.join("settings", AUTOSAVE_FILENAME))
-	# Creiamo un dizionario con tutti i dati necessari per la ripresa
 	dati_partita = {
 		"board_fen": game_state.board.fen(),
 		"clock_config": game_state.clock_config,
@@ -148,11 +133,6 @@ def EseguiAutosave(game_state):
 		print(_("\n[Errore durante il salvataggio automatico: {error}]").format(error=e))
 
 def _loop_principale_partita(game_state, eco_database, autosave_is_on):
-	"""
-	Contiene il ciclo di gioco principale. Gestisce l'input dell'utente,
-	le mosse e i comandi fino alla fine della partita.
-	Questo loop viene usato sia per le partite nuove che per quelle riprese.
-	"""
 	last_eco_msg = ""
 	last_valid_eco_entry = None
 	paused_time_start=None
@@ -168,59 +148,58 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 		if game_state.paused:
 			prompt="["+prompt.strip()+"] "
 		user_input=dgt(prompt,kind="s")
-		# --- Gestione comandi speciali ---
 		if user_input.startswith("/"):
-			Acusticator(["c5", 0.07, -1, volume,"d5", 0.07, -.75, volume,"e5", 0.07, -.5, volume,"f5", 0.07, -.25, volume,"g5", 0.07, 0, volume,"a5", 0.07, .25, volume,"b5", 0.07, .5, volume,"c6", 0.07, .75, volume], kind=3, adsr=[0, 0, 100, 100])
+			Acusticator(["c5", 0.07, -1, config.VOLUME,"d5", 0.07, -.75, config.VOLUME,"e5", 0.07, -.5, config.VOLUME,"f5", 0.07, -.25, config.VOLUME,"g5", 0.07, 0, config.VOLUME,"a5", 0.07, .25, config.VOLUME,"b5", 0.07, .5, config.VOLUME,"c6", 0.07, .75, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
 			base_column = user_input[1:2].strip()
 			ui.read_diagonal(game_state, base_column, True)
 		elif user_input.startswith("\\"):
-			Acusticator(["c5", 0.07, 1, volume,"d5", 0.07, 0.75, volume,"e5", 0.07, 0.5, volume,"f5", 0.07, 0.25, volume,"g5", 0.07, 0, volume,"a5", 0.07, -0.25, volume,"b5", 0.07, -0.5, volume,"c6", 0.07, -0.75, volume], kind=3, adsr=[0, 0, 100, 100])
+			Acusticator(["c5", 0.07, 1, config.VOLUME,"d5", 0.07, 0.75, config.VOLUME,"e5", 0.07, 0.5, config.VOLUME,"f5", 0.07, 0.25, config.VOLUME,"g5", 0.07, 0, config.VOLUME,"a5", 0.07, -0.25, config.VOLUME,"b5", 0.07, -0.5, config.VOLUME,"c6", 0.07, -0.75, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
 			base_column = user_input[1:2].strip()
 			ui.read_diagonal(game_state, base_column, False)
 		elif user_input.startswith("-"):
 			param = user_input[1:].strip()
 			if len(param) == 1 and param.isalpha():
-				Acusticator(["c5", 0.07, 0, volume, "d5", 0.07, 0, volume, "e5", 0.07, 0, volume, "f5", 0.07, 0, volume, "g5", 0.07, 0, volume, "a5", 0.07, 0, volume, "b5", 0.07, 0, volume, "c6", 0.07, 0, volume], kind=3, adsr=[0, 0, 100, 100])
+				Acusticator(["c5", 0.07, 0, config.VOLUME, "d5", 0.07, 0, config.VOLUME, "e5", 0.07, 0, config.VOLUME, "f5", 0.07, 0, config.VOLUME, "g5", 0.07, 0, config.VOLUME, "a5", 0.07, 0, config.VOLUME, "b5", 0.07, 0, config.VOLUME, "c6", 0.07, 0, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
 				ui.read_file(game_state, param)
 			elif len(param) == 1 and param.isdigit():
 				rank_number = int(param)
 				if 1 <= rank_number <= 8:
-					Acusticator(["g5", 0.07, -1, volume,"g5", 0.07, -.75, volume,"g5", 0.07, -.5, volume,"g5", 0.07, -.25, volume,"g5", 0.07, 0, volume,"g5", 0.07, .25, volume,"g5", 0.07, .5, volume,"g5", 0.07, .75, volume], kind=3, adsr=[0, 0, 100, 100])
+					Acusticator(["g5", 0.07, -1, config.VOLUME,"g5", 0.07, -.75, config.VOLUME,"g5", 0.07, -.5, config.VOLUME,"g5", 0.07, -.25, config.VOLUME,"g5", 0.07, 0, config.VOLUME,"g5", 0.07, .25, config.VOLUME,"g5", 0.07, .5, config.VOLUME,"g5", 0.07, .75, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
 					ui.read_rank(game_state, rank_number)
 				else:
 					print(_("Traversa non valida."))
 			elif len(param) == 2 and param[0].isalpha() and param[1].isdigit():
-				Acusticator(["d#4", .7, 0, volume], kind=1, adsr=[0, 0, 100, 100])
+				Acusticator(["d#4", .7, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
 				ui.read_square(game_state, param)
 			else:
 				print(_("Comando dash non riconosciuto."))
 		elif user_input.startswith(","):
-			Acusticator(["a3", .06, -1, volume, "c4", .06, -0.5, volume, "d#4", .06, 0.5, volume, "f4", .06, 1, volume], kind=3, adsr=[20, 5, 70, 25])
+			Acusticator(["a3", .06, -1, config.VOLUME, "c4", .06, -0.5, config.VOLUME, "d#4", .06, 0.5, config.VOLUME, "f4", .06, 1, config.VOLUME], kind=3, adsr=[20, 5, 70, 25])
 			ui.report_piece_positions(game_state, user_input[1:2])
 		elif user_input.startswith("."):
 			u=user_input.strip()
 			cmd=u.rstrip(".").lower()
 			if cmd==".?":
-				Acusticator([440.0, 0.3, 0, 0.5, 880.0, 0.3, 0, 0.5], kind=1, adsr=[10, 0, 100, 20])
-				menu(config.DOT_COMMANDS,show_only=True,p=_("Comandi disponibili:"))
+				Acusticator([440.0, 0.3, 0, config.VOLUME, 880.0, 0.3, 0, config.VOLUME], kind=1, adsr=[10, 0, 100, 20])
+				menu(config.DOT_COMMANDS,show_only=True,p=_("Comandi disponibili:"), ordered=False)
 			elif cmd==".1":
-				Acusticator(['a6', 0.14, -1, volume], kind=1, adsr=[0, 0, 100, 100])
+				Acusticator(['a6', 0.14, -1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
 				ui.report_white_time(game_state)
 			elif cmd==".2":
-				Acusticator(['b6', 0.14, 1, volume], kind=1, adsr=[0, 0, 100, 100])
+				Acusticator(['b6', 0.14, 1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
 				ui.report_black_time(game_state)
 			elif	cmd==".3":
-				Acusticator(['e7', 0.14, 0, volume], kind=1, adsr=[0, 0, 100, 100])
+				Acusticator(['e7', 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
 				ui.report_white_time(game_state)
 				ui.report_black_time(game_state)
 			elif cmd==".4":
-				Acusticator(['f7', 0.14, 0, volume], kind=1, adsr=[0, 0, 100, 100])
+				Acusticator(['f7', 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
 				diff=abs(game_state.white_remaining-game_state.black_remaining)
 				adv=_("bianco") if game_state.white_remaining>game_state.black_remaining else _("nero")
-				print(_("{player} in vantaggio di ").format(player=adv)+clock.FormatTime(diff))
+				print(_("{player} in vantaggio di ").format(player=adv)+board_utils.FormatTime(diff))
 			elif cmd==".5":
 				if game_state.paused:
-					Acusticator(['d4', 0.54, 0, volume], kind=1, adsr=[0, 0, 100, 100])
+					Acusticator(['d4', 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
 					pause_duration = time.time() - paused_time_start if paused_time_start else 0
 					hours = int(pause_duration // 3600)
 					minutes = int((pause_duration % 3600) // 60)
@@ -233,11 +212,11 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 						ms_str=_('{ms} ms').format(ms=ms) if ms else ''
 					)))
 				else:
-					Acusticator(['f4', 0.54, 0, volume], kind=1, adsr=[0, 0, 100, 100])
+					Acusticator(['f4', 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
 					player = game_state.white_player if game_state.active_color=="white" else game_state.black_player
 					print(_("Orologio di {player} in moto").format(player=player))
 			elif cmd==".m":
-				Acusticator(["c4", 0.1, -1, volume, "e4", 0.1, -0.3, volume, "g4", 0.1, 0.3, volume, "c5", 0.1, 1, volume], kind=1, adsr=[2, 8, 80, 10])
+				Acusticator(["c4", 0.1, -1, config.VOLUME, "e4", 0.1, -0.3, config.VOLUME, "g4", 0.1, 0.3, config.VOLUME, "c5", 0.1, 1, config.VOLUME], kind=1, adsr=[2, 8, 80, 10])
 				white_material,black_material=board_utils.CalculateMaterial(game_state.board)
 				print(_("Materiale: {white_player} {white_mat}, {black_player} {black_mat}").format(white_player=game_state.white_player, white_mat=white_material, black_player=game_state.black_player, black_mat=black_material))
 			elif cmd==".p":
@@ -245,27 +224,24 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 				if game_state.paused:
 					paused_time_start=time.time()
 					print(_("Orologi in pausa"))
-					Acusticator(["c5", 0.1, 1, volume, "g4", 0.1, 0.3, volume, "e4", 0.1, -0.3, volume, "c4", 0.1, -1, volume], kind=1, adsr=[2, 8, 80, 10])
+					Acusticator(["c5", 0.1, 1, config.VOLUME, "g4", 0.1, 0.3, config.VOLUME, "e4", 0.1, -0.3, config.VOLUME, "c4", 0.1, -1, config.VOLUME], kind=1, adsr=[2, 8, 80, 10])
 				else:
 					pause_duration=time.time()-paused_time_start if paused_time_start else 0
-					Acusticator(["c4", 0.1, -1, volume, "e4", 0.1, -0.3, volume, "g4", 0.1, 0.3, volume, "c5", 0.1, 1, volume], kind=1, adsr=[2, 8, 80, 10])
-					print(_("Pausa durata ")+clock.FormatTime(pause_duration))
+					Acusticator(["c4", 0.1, -1, config.VOLUME, "e4", 0.1, -0.3, config.VOLUME, "g4", 0.1, 0.3, config.VOLUME, "c5", 0.1, 1, config.VOLUME], kind=1, adsr=[2, 8, 80, 10])
+					print(_("Pausa durata ")+board_utils.FormatTime(pause_duration))
 			elif cmd==".q":
 				if game_state.paused and game_state.move_history:
-					Acusticator(["c5", 0.1, 1, volume, "g4", 0.1, 0.3, volume, "e4", 0.1, -0.3, volume, "c4", 0.1, -1, volume], kind=1, adsr=[2, 8, 80, 10])
+					Acusticator(["c5", 0.1, 1, config.VOLUME, "g4", 0.1, 0.3, config.VOLUME, "e4", 0.1, -0.3, config.VOLUME, "c4", 0.1, -1, config.VOLUME], kind=1, adsr=[2, 8, 80, 10])
 					undone_move_san = game_state.move_history.pop()
 					game_state.board.pop()
-					# Aggiorna il PGN: riportiamo il puntatore al nodo padre
 					current_node = game_state.pgn_node
 					parent = current_node.parent
 					if current_node in parent.variations:
 						parent.variations.remove(current_node)
 					game_state.pgn_node = parent
-					# Salva la mossa annullata (in formato SAN) in una lista
 					if not hasattr(game_state, "cancelled_san_moves"):
 						game_state.cancelled_san_moves = []
 					game_state.cancelled_san_moves.insert(0, undone_move_san)
-					# Rollback dell'incremento applicato (rimuove solo l'incremento)
 					if game_state.active_color == "black":
 						game_state.white_remaining -= game_state.clock_config["phases"][game_state.white_phase]["white_inc"]
 						game_state.active_color = "white"
@@ -278,25 +254,25 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 					try:
 						adjust=float(cmd[3:])
 						if cmd.startswith(".b+"):
-							Acusticator(["d4", 0.15, -.5, volume, "f4", 0.15, -.5, volume, "a4", 0.15, -.5, volume, "c5", 0.15, -.5, volume], kind=1, adsr=[15, 0, 90, 5])
+							Acusticator(["d4", 0.15, -.5, config.VOLUME, "f4", 0.15, -.5, config.VOLUME, "a4", 0.15, -.5, config.VOLUME, "c5", 0.15, -.5, config.VOLUME], kind=1, adsr=[15, 0, 90, 5])
 							game_state.white_remaining+=adjust
 						elif cmd.startswith(".b-"):
-							Acusticator(["c5", 0.15, -.5, volume, "a4", 0.15, -.5, volume, "f4", 0.15, -.5, volume, "d4", 0.15, -.5, volume], kind=1, adsr=[15, 0, 90, 5])
+							Acusticator(["c5", 0.15, -.5, config.VOLUME, "a4", 0.15, -.5, config.VOLUME, "f4", 0.15, -.5, config.VOLUME, "d4", 0.15, -.5, config.VOLUME], kind=1, adsr=[15, 0, 90, 5])
 							game_state.white_remaining-=adjust
 						elif cmd.startswith(".n+"):
-							Acusticator(["d4", 0.15, .5, volume, "f4", 0.15, .5, volume, "a4", 0.15, .5, volume, "c5", 0.15, .5, volume], kind=1, adsr=[15, 0, 90, 5])
+							Acusticator(["d4", 0.15, .5, config.VOLUME, "f4", 0.15, .5, config.VOLUME, "a4", 0.15, .5, config.VOLUME, "c5", 0.15, .5, config.VOLUME], kind=1, adsr=[15, 0, 90, 5])
 							game_state.black_remaining+=adjust
 						elif cmd.startswith(".n-"):
-							Acusticator(["c5", 0.15, .5, volume, "a4", 0.15, .5, volume, "f4", 0.15, .5, volume, "d4", 0.15, .5, volume], kind=1, adsr=[15, 0, 90, 5])
+							Acusticator(["c5", 0.15, .5, config.VOLUME, "a4", 0.15, .5, config.VOLUME, "f4", 0.15, .5, config.VOLUME, "d4", 0.15, .5, config.VOLUME], kind=1, adsr=[15, 0, 90, 5])
 							game_state.black_remaining-=adjust
 						print(_("Nuovo tempo bianco: {white_time}, nero: {black_time}").format(white_time=clock.FormatTime(game_state.white_remaining), black_time=clock.FormatTime(game_state.black_remaining)))
 					except:
 						print(_("Comando non valido."))
 			elif cmd==".s":
-				Acusticator(["c4", 0.2, -1, volume, "g4", 0.2, -0.3, volume, "c5", 0.2, 0.3, volume, "e5", 0.2, 1, volume, "g5", 0.4, 0, volume], kind=1, adsr=[10, 5, 80, 5])
+				Acusticator(["c4", 0.2, -1, config.VOLUME, "g4", 0.2, -0.3, config.VOLUME, "c5", 0.2, 0.3, config.VOLUME, "e5", 0.2, 1, config.VOLUME, "g5", 0.4, 0, config.VOLUME], kind=1, adsr=[10, 5, 80, 5])
 				print(game_state.board)
 			elif cmd==".l":
-				Acusticator([900.0, 0.1, 0, volume, 440.0, 0.3, 0, volume], kind=1, adsr=[1, 0, 80, 19])
+				Acusticator([900.0, 0.1, 0, config.VOLUME, 440.0, 0.3, 0, config.VOLUME], kind=1, adsr=[1, 0, 80, 19])
 				summary = ui.GenerateMoveSummary(game_state)
 				if summary:
 					print(_("\nLista mosse giocate:\n"))
@@ -305,7 +281,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 				else:
 					print(_("Nessuna mossa ancora giocata."))
 			elif cmd in [".1-0",".0-1",".1/2",".*"]:
-				Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
+				Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
 				if cmd==".1-0":
 					result="1-0"
 				elif cmd==".0-1":
@@ -319,66 +295,48 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 				game_state.game_over=True
 			elif cmd.startswith(".c"):
 				new_comment = cmd[2:].strip()
-				if game_state.move_history:
-					if game_state.pgn_node.comment:
-						game_state.pgn_node.comment += "\n" + new_comment
+				if new_comment:
+					if game_state.move_history:
+						if game_state.pgn_node.comment:
+							game_state.pgn_node.comment += "\n" + new_comment
+						else:
+							game_state.pgn_node.comment = new_comment
+						Acusticator(["f5", 0.1, 0, config.VOLUME,"p",0.04,0,0,"c5", 0.02, 0, config.VOLUME], kind=1, adsr=[3,7,88,2])
+						print(_("Commento registrato per la mossa: ") + game_state.move_history[-1])
 					else:
-						game_state.pgn_node.comment = new_comment
-					Acusticator(["f5", 0.1, 0, volume,"p",0.04,0,0,"c5", 0.02, 0, volume], kind=1, adsr=[3,7,88,2])
-					print(_("Commento registrato per la mossa: ") + game_state.move_history[-1])
-				else:
-					print(_("Nessuna mossa da commentare."))
+						print(_("Nessuna mossa da commentare."))
 			else:
-				Acusticator(["e3", 1, 0, volume,"a2", 1, 0, volume], kind=3, adsr=[1,7,100,92])
+				Acusticator(["e3", 1, 0, config.VOLUME,"a2", 1, 0, config.VOLUME], kind=3, adsr=[1,7,100,92])
 				print(_("Comando non riconosciuto."))
-		# --- Gestione mosse ---
 		else:
 			if game_state.paused:
-				print(_("Non ├¿ possibile inserire nuove mosse mentre il tempo ├¿ in pausa. Riavvia il tempo con .p"))
-				Acusticator(["b3",.2,0,volume],kind=2)
+				print(_("Non e' possibile inserire nuove mosse mentre il tempo e' in pausa. Riavvia il tempo con .p"))
+				Acusticator(["b3",.2,0,config.VOLUME],kind=2)
 				continue
-
-			# --- INIZIO MODIFICA ---
-			raw_input = board_utils.NormalizeMove(user_input) # Normalizza prima di cercare il suffisso
+			raw_input = board_utils.NormalizeMove(user_input)
 			annotation_suffix = None
-			move_san_only = raw_input # Default: input ├¿ solo la mossa
-
-			# Cerca un suffisso di annotazione
+			move_san_only = raw_input
 			match = config.ANNOTATION_SUFFIX_PATTERN.search(raw_input)
 			if match:
 				annotation_suffix = match.group(1)
-				move_san_only = raw_input[:-len(annotation_suffix)].strip() # Rimuovi suffisso e spazi extra
-
-			# Prova a parsare solo la parte della mossa
+				move_san_only = raw_input[:-len(annotation_suffix)].strip()
 			try:
 				move = game_state.board.parse_san(move_san_only)
-				# --- FINE MODIFICA ---
-
 				board_copy=game_state.board.copy()
-				# --- MODIFICA: Passa l'annotazione a DescribeMove ---
-				description=ui.DescribeMove(move, board_copy, annotation=annotation_suffix)
+				description=board_utils.DescribeMove(move, board_copy, annotation=annotation_suffix)
 				game_state.descriptive_move_history.append(description)
-				Acusticator([1000.0, 0.01, 0, volume], kind=1, adsr=[0, 0, 100, 0])
+				Acusticator([1000.0, 0.01, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0])
 				if game_state.active_color=="white":
 					print(game_state.white_player+": "+description)
 				else:
 					print(game_state.black_player+": "+description)
-
-				# Ottieni la SAN base per la history (senza suffissi)
 				san_move_base = game_state.board.san(move)
-				# Rimuovi eventuali !, ? generati automaticamente da board.san() se non voluti
 				san_move_base = san_move_base.replace("!","").replace("?","")
-
 				game_state.board.push(move)
-				game_state.move_history.append(san_move_base) # Usa SAN base per la history semplice
-
-				# Aggiungi la nuova mossa come mainline al PGN
+				game_state.move_history.append(san_move_base)
 				new_node = game_state.pgn_node.add_variation(move)
-
-				# --- INIZIO MODIFICA: Aggiungi NAG/Commento al PGN ---
 				if annotation_suffix:
 					if annotation_suffix == "=":
-						# Aggiungi un commento standard per la proposta di patta
 						existing_comment = new_node.comment or ""
 						if existing_comment:
 							new_node.comment = existing_comment + _(" {Proposta di patta}")
@@ -387,9 +345,6 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 					elif annotation_suffix in config.NAG_MAP:
 						nag_value = config.NAG_MAP[annotation_suffix][0]
 						new_node.nags.add(nag_value)
-				# --- FINE MODIFICA ---
-
-				# Se esistono mosse annullate, aggiungi un commento al nuovo nodo
 				if hasattr(game_state, "cancelled_san_moves") and game_state.cancelled_san_moves:
 					undo_comment = _("Mosse annullate: ") + " ".join(game_state.cancelled_san_moves)
 					existing_comment = new_node.comment or ""
@@ -397,10 +352,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 						new_node.comment = existing_comment + " " + undo_comment
 					else:
 						new_node.comment = undo_comment
-					# Svuota la lista per le prossime operazioni
 					del game_state.cancelled_san_moves
-
-				# Aggiorna il puntatore PGN al nuovo nodo
 				game_state.pgn_node = new_node
 				if eco_database:
 					current_board = game_state.board
@@ -413,54 +365,54 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 							new_eco_msg += " ({variation})".format(variation=eco_entry['variation'])
 					if new_eco_msg and new_eco_msg != last_eco_msg:
 						print(_("Apertura rilevata: ") + new_eco_msg)
-						Acusticator(["f7", 0.018, 0, volume])
+						Acusticator(["f7", 0.018, 0, config.VOLUME])
 						last_eco_msg = new_eco_msg
 						last_valid_eco_entry = current_entry_this_turn
 					elif not new_eco_msg and last_eco_msg:
 						last_eco_msg = ""
 				if game_state.board.is_checkmate():
 					game_state.game_over = True
-					result = "1-0" if game_state.active_color == "white" else "0-1" # Nota: il turno ├¿ gi├á cambiato qui
+					result = "1-0" if game_state.active_color == "white" else "0-1"
 					game_state.pgn_game.headers["Result"] = result
 					winner = game_state.black_player if result == "0-1" else game_state.white_player
 					print(_("Scacco matto! Vince {winner}.").format(winner=winner))
-					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
+					Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.is_stalemate():
 					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
 					print(_("Patta per stallo!"))
-					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
+					Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.is_insufficient_material():
 					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
 					print(_("Patta per materiale insufficiente!"))
-					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
+					Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.is_seventyfive_moves():
 					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
 					print(_("Patta per la regola delle 75 mosse!"))
-					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
+					Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.is_fivefold_repetition():
 					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
 					print(_("Patta per ripetizione della posizione (5 volte)!"))
-					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
+					Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.can_claim_fifty_moves():
-					game_state.game_over = True # Consideriamo la richiesta automatica per semplicit├á
+					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
 					print(_("Patta per la regola delle 50 mosse!"))
-					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
+					Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
 					break
 				elif game_state.board.can_claim_threefold_repetition():
-					game_state.game_over = True # Consideriamo la richiesta automatica per semplicit├á
+					game_state.game_over = True
 					game_state.pgn_game.headers["Result"] = "1/2-1/2"
 					print(_("Patta per triplice ripetizione della posizione!"))
-					Acusticator(["c5", 0.1, -0.5, volume, "e5", 0.1, 0, volume, "g5", 0.1, 0.5, volume, "c6", 0.2, 0, volume], kind=1, adsr=[2, 8, 90, 0])
+					Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
 					break
 				if game_state.active_color=="white":
 					game_state.white_remaining+=game_state.clock_config["phases"][game_state.white_phase]["white_inc"]
@@ -469,35 +421,24 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 				game_state.switch_turn()
 				if autosave_is_on:
 					EseguiAutosave(game_state)
-					Acusticator(["f3", 0.012, 0, volume], sync=True)
+					Acusticator(["f3", 0.012, 0, config.VOLUME], sync=True)
 			except Exception as e:
-				illegal_result=ui.verbose_legal_moves_for_san(game_state.board,move_san_only) # Usa move_san_only qui
-				Acusticator([600.0, 0.6, 0, volume], adsr=[5, 0, 35, 90])
+				illegal_result=ui.verbose_legal_moves_for_san(game_state.board,move_san_only)
+				Acusticator([600.0, 0.6, 0, config.VOLUME], adsr=[5, 0, 35, 90])
 				print(_("Mossa '{move}' illegale o non riconosciuta ({error}). Sulla casa indicata sono possibili:\n{alternatives}").format(move=move_san_only, error=e, alternatives=illegal_result))
 	return last_valid_eco_entry
 
 def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
-	game_state.pgn_game.headers["WhiteClock"] = clock.FormatClock(game_state.white_remaining)
-	game_state.pgn_game.headers["BlackClock"] = clock.FormatClock(game_state.black_remaining)
+	game_state.pgn_game.headers["WhiteClock"] = board_utils.FormatClock(game_state.white_remaining)
+	game_state.pgn_game.headers["BlackClock"] = board_utils.FormatClock(game_state.black_remaining)
 	print(_("Partita terminata."))
 	if last_valid_eco_entry:
 		game_state.pgn_game.headers["ECO"] = last_valid_eco_entry["eco"]
 		game_state.pgn_game.headers["Opening"] = last_valid_eco_entry["opening"]
 		if last_valid_eco_entry["variation"]:
 			game_state.pgn_game.headers["Variation"] = last_valid_eco_entry["variation"]
-		else:
-			if "Variation" in game_state.pgn_game.headers:
-				del game_state.pgn_game.headers["Variation"]
-	else:
-		if "ECO" in game_state.pgn_game.headers:
-			del game_state.pgn_game.headers["ECO"]
-		if "Opening" in game_state.pgn_game.headers:
-			del game_state.pgn_game.headers["Opening"]
-		if "Variation" in game_state.pgn_game.headers:
-			del game_state.pgn_game.headers["Variation"]
-
 	pgn_str=str(game_state.pgn_game)
-	pgn_str = board_utils.format_pgn_comments(pgn_str) # Formatta commenti per leggibilit├á
+	pgn_str = board_utils.format_pgn_comments(pgn_str)
 	base_filename = "{white}-{black}-{result}-{timestamp}.pgn".format(white=game_state.pgn_game.headers.get("White"), black=game_state.pgn_game.headers.get("Black"), result=game_state.pgn_game.headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
 	sanitized_name = config.sanitize_filename(base_filename)
 	full_path = config.percorso_salvataggio(os.path.join("pgn", sanitized_name))
@@ -519,37 +460,37 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
 		except Exception as e:
 			print(_("\n[Attenzione: impossibile eliminare il file di autosave: {error}]").format(error=e))
 	if len(game_state.move_history) >= 8:
-		if ui.enter_escape(_("Vuoi analizzare la partita? (INVIO per s├¼, ESC per no): ")):
+		if ui.enter_escape(_("Vuoi analizzare la partita? (INVIO per si', ESC per no): ")):
 			db = storage.LoadDB()
 			engine_config = db.get("engine_config", {})
 			if not engine_config or not engine_config.get("engine_path"):
-				print(_("Motore non configurato. Ritorno al men├╣."))
+				print(_("Motore non configurato. Ritorno al menu'."))
 				return
 			if engine.ENGINE is None and not engine.InitEngine():
 				print(_("Impossibile inizializzare il motore. Analisi annullata."))
 				return
 			engine.cache_analysis.clear()
-			if ui.enter_escape(_("Desideri l'analisi automatica? (INVIO per s├¼, ESC per manuale): ")):
+			if ui.enter_escape(_("Desideri l'analisi automatica? (INVIO per si', ESC per manuale): ")):
 				engine.AnalisiAutomatica(copy.deepcopy(game_state.pgn_game))
 			else:
 				engine.AnalyzeGame(game_state.pgn_game)
 		else:
-			Acusticator([880.0, 0.2, 0, volume, 440.0, 0.2, 0, volume], kind=1, adsr=[25, 0, 50, 25])
+			Acusticator([880.0, 0.2, 0, config.VOLUME, 440.0, 0.2, 0, config.VOLUME], kind=1, adsr=[25, 0, 50, 25])
 	return
 
 def StartGame(clock_config):
 	print(_("\nAvvio partita\n"))
 	game_mode_choice = ''
 	while game_mode_choice not in ['s', 'f']:
-		game_mode_choice = key(_("Scegli la modalit├á: [S]tandard o [F]ischer Random 960? (S/F) ")).lower()
-	Acusticator(["c4", 0.05, 0, volume, "e4", 0.05, 0, volume, "g4", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+		game_mode_choice = key(_("Scegli la modalita': [S]tandard o [F]ischer Random 960? (S/F) ")).lower()
+	Acusticator(["c4", 0.05, 0, config.VOLUME, "e4", 0.05, 0, config.VOLUME, "g4", 0.05, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 5])
 	is_fischer_random = (game_mode_choice == 'f')
 	starting_board = None
 	starting_fen = None
 	if is_fischer_random:
 		starting_board, starting_fen = ui.setup_fischer_random_board()
-		if starting_board is None: # L'utente ha annullato
-			return # Esce dalla funzione StartGame e torna al men├╣
+		if starting_board is None:
+			return
 	db = storage.LoadDB()
 	autosave_is_on = db.get("autosave_enabled", False)
 	default_pgn = db.get("default_pgn", {})
@@ -562,29 +503,29 @@ def StartGame(clock_config):
 	round_default = default_pgn.get("Round", "Round 1")
 	eco_database = board_utils.LoadEcoDatabaseWithFEN("eco.db")
 	white_player = dgt(_("Nome del bianco [{default}]: ").format(default=white_default), kind="s", default=white_default).strip().title()
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME, "g5", 0.05, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 5])
 	if white_player == "":
 		white_player = white_default
 	black_player = dgt(_("Nome del nero [{default}]: ").format(default=black_default), kind="s", default=black_default).strip().title()
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME, "g5", 0.05, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 5])
 	if black_player == "":
 		black_player = black_default
 	white_elo = dgt(_("Elo del bianco [{default}]: ").format(default=white_elo_default), kind="s", default=white_elo_default)
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME, "g5", 0.05, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 5])
 	if white_elo.strip() == "":
 		white_elo = white_elo_default
 	black_elo = dgt(_("Elo del nero [{default}]: ").format(default=black_elo_default), kind="s", default=black_elo_default)
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME, "g5", 0.05, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 5])
 	if black_elo.strip() == "":
 		black_elo = black_elo_default
 	event = dgt(_("Evento [{default}]: ").format(default=event_default), kind="s", default=event_default)
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME, "g5", 0.05, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 5])
 	if event.strip() == "":
 		event = event_default
 	site = dgt(_("Sede [{default}]: ").format(default=site_default), kind="s", default=site_default)
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME, "g5", 0.05, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 5])
 	round_ = dgt(_("Round [{default}]: ").format(default=round_default), kind="s", default=round_default)
-	Acusticator(["c5", 0.05, 0, volume, "e5", 0.05, 0, volume, "g5", 0.05, 0, volume], kind=1, adsr=[0, 0, 100, 5])
+	Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME, "g5", 0.05, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 5])
 	db["default_pgn"] = {
 		"Event": event,
 		"Site": site,
@@ -596,14 +537,13 @@ def StartGame(clock_config):
 	}
 	storage.SaveDB(db)
 	key(_("Premi un tasto qualsiasi per iniziare la partita quando sei pronto..."),attesa=7200)
-	Acusticator(["c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c6", .07, 0, volume, "p", .93, 0, .5, "c7", .5, 0, volume], kind=1, sync=True)
+	Acusticator(["c6", .07, 0, config.VOLUME, "p", .93, 0, .5, "c6", .07, 0, config.VOLUME, "p", .93, 0, .5, "c6", .07, 0, config.VOLUME, "p", .93, 0, .5, "c7", .5, 0, config.VOLUME], kind=1, sync=True)
 	game_state=board_utils.GameState(clock_config)
 	if is_fischer_random:
 		game_state.board = starting_board
 		game_state.pgn_game.headers["Variant"] = "Chess960"
 		game_state.pgn_game.headers["FEN"] = starting_fen
-		game_state.pgn_game.setup(game_state.board) # Sincronizza il PGN con la scacchiera custom
-	# Se la partita ├¿ standard, non c'├¿ bisogno di fare nulla, game_state si inizializza gi├á correttamente.
+		game_state.pgn_game.setup(game_state.board)
 	game_state.white_player=white_player
 	game_state.black_player=black_player
 	game_state.pgn_game.headers["White"]=white_player

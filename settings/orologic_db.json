@@ -1,27 +1,6 @@
 {
     "clocks": [
         {
-            "name": "Primavera",
-            "same_time": true,
-            "phases": [
-                {
-                    "white_time": 2700,
-                    "black_time": 2700,
-                    "white_inc": 30,
-                    "black_inc": 30,
-                    "moves": 0
-                }
-            ],
-            "alarms": [
-                1350,
-                600,
-                300,
-                150,
-                60
-            ],
-            "note": "Torneo ASCId di primavera 2025"
-        },
-        {
             "name": "Estascacchi",
             "same_time": true,
             "phases": [
@@ -83,19 +62,38 @@
                 120
             ],
             "note": ""
+        },
+        {
+            "name": "Primavera",
+            "same_time": true,
+            "phases": [
+                {
+                    "white_time": 2700,
+                    "black_time": 2700,
+                    "white_inc": 15,
+                    "black_inc": 15,
+                    "moves": 0
+                }
+            ],
+            "alarms": [
+                1800,
+                900,
+                300
+            ],
+            "note": "Orologio a 45 min con 15 secondi di incremento."
         }
     ],
     "default_pgn": {
-        "Event": "Open d'Aurec 33B",
-        "Site": "Jitsi",
-        "Round": "4",
-        "White": "Mereu, Alessia",
-        "Black": "Bendre, Nilesh",
+        "Event": "test",
+        "Site": "test",
+        "Round": "-",
+        "White": "Testb",
+        "Black": "Testn",
         "WhiteElo": "1400",
         "BlackElo": "1400"
     },
-    "volume": 0.35,
-    "launch_count": 281,
+    "volume": 0.07,
+    "launch_count": 332,
     "localization": {
         "pieces": {
             "pawn": {
@@ -174,5 +172,6 @@
         "wdl_switch": true
     },
     "autosave_enabled": false,
-    "menu_numerati": false
+    "menu_numerati": false,
+    "engine_path": "C:\\Users\\Utente\\AppData\\Local\\Orologic\\Engine\\stockfish\\stockfish-windows-x86-64-avx2.exe"
 }
