@@ -447,6 +447,7 @@ def verbose_legal_moves_for_san(board,san_str):
 	return "\n".join([_("{i}. {desc}").format(i=i+1, desc=DescribeMove(m, board.copy())) for i, m in enumerate(legal_moves)])
 
 def Impostazioni(db):
+    from . import engine
     print(_("\nModifica impostazioni varie di Orologic\n"))
     autosave_enabled = db.get("autosave_enabled", False)
     if key(_("Salvataggio automatico: [{status}]. Premi Invio per cambiare: ").format(status=_("Attivo") if autosave_enabled else _("Non attivo"))).strip() == "":
@@ -454,6 +455,35 @@ def Impostazioni(db):
     menu_numerati = db.get("menu_numerati", False)
     if key(_("Stile menu: [{status}]. Premi Invio per cambiare: ").format(status=_("Numeri") if menu_numerati else _("Parole"))).strip() == "":
         db["menu_numerati"] = not menu_numerati
+    
+    # Impostazioni Analisi Default
+    cur_time = db.get("default_analysis_time", 1.0)
+    new_time = dgt(_("Tempo analisi default (sec) [{cur}]: ").format(cur=cur_time), kind="f", fmin=0.1, fmax=300, default=cur_time)
+    Acusticator(["f7", .09, 0, config.VOLUME, "d4", .07, 0, config.VOLUME])
+    if new_time != cur_time:
+        db["default_analysis_time"] = new_time
+        engine.SetAnalysisTime(new_time)
+
+    cur_pv = db.get("default_multipv", 3)
+    new_pv = dgt(_("Linee analisi default (multipv) [{cur}]: ").format(cur=cur_pv), kind="i", imin=1, imax=20, default=cur_pv)
+    Acusticator(["f7", .09, 0, config.VOLUME, "d4", .07, 0, config.VOLUME])
+    if new_pv != cur_pv:
+        db["default_multipv"] = new_pv
+        engine.SetMultipv(new_pv)
+
+    # Impostazioni Soglie Analisi
+    thresholds = db.get("analysis_thresholds", {"inesattezza": 50, "errore": 100, "svarione": 250})
+    print(_("\nSoglie Analisi Attuali: Inesattezza {i}cp, Errore {e}cp, Svarione {s}cp").format(i=thresholds["inesattezza"], e=thresholds["errore"], s=thresholds["svarione"]))
+    if enter_escape(_("Vuoi modificare le soglie di analisi? (INVIO per modificare, ESC per mantenere): ")):
+        print(_("Inserisci le nuove soglie in centipawn (cp)."))
+        t_ines = dgt(_("Soglia Inesattezza [{cur}]: ").format(cur=thresholds["inesattezza"]), kind="i", imin=10, imax=200, default=thresholds["inesattezza"])
+        t_err = dgt(_("Soglia Errore [{cur}]: ").format(cur=thresholds["errore"]), kind="i", imin=t_ines + 1, imax=500, default=thresholds["errore"])
+        t_svar = dgt(_("Soglia Svarione [{cur}]: ").format(cur=thresholds["svarione"]), kind="i", imin=t_err + 1, imax=2000, default=thresholds["svarione"])
+        
+        db["analysis_thresholds"] = {"inesattezza": t_ines, "errore": t_err, "svarione": t_svar}
+        print(_("Soglie analisi aggiornate."))
+        Acusticator(["f7", .09, 0, config.VOLUME, "d4", .07, 0, config.VOLUME])
+
     storage.SaveDB(db)
     print(_("Impostazioni aggiornate"))
 

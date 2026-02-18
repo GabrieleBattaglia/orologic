@@ -4,6 +4,7 @@ import json
 import chess
 import re
 from GBUtils import polipo
+from . import version
 
 def resource_path(relative_path):
     try: base_path = sys._MEIPASS
@@ -19,8 +20,8 @@ def percorso_salvataggio(relative_path):
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
-VERSION = "4.11.83"
-PROGRAMMER = "Gabriele Battaglia & AIs"
+VERSION = version.VERSION
+PROGRAMMER = version.PROGRAMMER
 DB_FILE = percorso_salvataggio(os.path.join("settings", "orologic_db.json"))
 
 # Caricamento Volume

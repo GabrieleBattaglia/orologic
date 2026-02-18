@@ -307,25 +307,35 @@ def ParseTime(prompt):
 	from GBUtils import dgt
 	t=dgt(prompt,kind="s")
 	try:
-		h,m,s=map(int,t.split(":")); return h*3600+m*60+s
-	except Exception as e:
-		print(_("Formato orario non valido. Atteso hh:mm:ss. Errore:"),e); return 0
+		parts = t.split(":")
+		if len(parts) != 3: return -1
+		h,m,s=map(int,parts)
+		if h < 0 or m < 0 or s < 0 or m > 59 or s > 59: return -1
+		return h*3600+m*60+s
+	except:
+		return -1
 
 def SecondsToHMS(seconds):
+    if seconds < 0: return "00:00:00"
     h = int(seconds // 3600); m = int((seconds % 3600) // 60); s = int(seconds % 60)
     return "{:02d}:{:02d}:{:02d}".format(h, m, s)
 
 def FormatClock(seconds):
+	if seconds < 0: return "00:00:00"
 	total = int(seconds); hours = total // 3600; minutes = (total % 3600) // 60; secs = total % 60
 	return "{hours:02d}:{minutes:02d}:{secs:02d}".format(hours=hours, minutes=minutes, secs=secs)
 
 def seconds_to_mmss(seconds):
+	if seconds < 0: return _("00 minuti e 00 secondi!")
 	m = int(seconds // 60); s = int(seconds % 60)
 	return _("{minutes:02d} minuti e {seconds:02d} secondi!").format(minutes=m, seconds=s)
 
 def parse_mmss_to_seconds(time_str):
 	try:
-		minutes, seconds = map(int, time_str.split(":"))
+		parts = time_str.split(":")
+		if len(parts) != 2: return -1
+		minutes, seconds = map(int, parts)
+		if minutes < 0 or seconds < 0 or seconds > 59: return -1
 		return minutes * 60 + seconds
-	except Exception as e:
-		print(_("Formato orario non valido. Atteso mm:ss. Errore:"), e); return 0
+	except:
+		return -1
