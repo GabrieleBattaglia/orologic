@@ -1,0 +1,60 @@
+# Ti scrivo alcune note per dare quel tocco di perfezione a questa analisi automatica e renderla spettacolare. I miei commenti saranno preceduti dal #
+
+Riepilogo Analisi Orologic V.4.11.111
+# Sostituisci Analisi Orologic  con Orologic Analisi Automatica [OAA] 
+# Aggiungi data e ora.
+========================================
+# Elimina tutti i separatori, d'hanno fastidio ai lettori di schermo come NVDA.
+...
+# Aggiungi, che le prime x mosse non sono state analizzate in quanto riconosciute come apertura.
+Dettaglio Analisi (Albero Varianti):
+1. d4 [Teoria]
+# Vorrei tutte le mosse in formato verboso invece che SAN.
+1... Nf6 [Teoria]
+2. Nf3 [Teoria]
+2... g6 [Teoria]
+3. c4 [Teoria]
+3... Bg7 [Mossa Buona] (+0.33)
+  {OAA: Mossa Buona. Perdita: +0.00}
+# Che significa buona, perdita  +0? Non ne capisco il senso. Se si riferisce alla mossa 3... avrebbe senso scritta così:
+# 3... Bg7 [OAA: Mossa Buona] (+0.33) Ma la parola "perdita è non sense, secondo me.
+4. Nc3 [Mossa Buona] (+0.33)
+  {OAA: Mossa Buona. Perdita: +0.00}
+# idem.
+4... O-O [Mossa Normale] (+0.59)
+  {OAA: Mossa Normale. Perdita: +0.25}
+# Qui la confusione aumenta: riporta normale con un + 0.59 e perdita con +0.25? Che significa?
+5. Bf4 [Inesattezza] (+0.03)
+  {OAA: Inesattezza. Perdita: +0.55}
+# Credo di aver capito: i valori sono assoluti e sempre riferiti al bianco ma in questo caso ha molto più semplici riferiti al colore, credo che chess.engine abbia un parametro che gli dica se fornire valutazioni assolute o relative. Qui dovresti usare quelle riferite al colore che ha appena mosso.
+    (Variante 1):
+      5. e4
+        {OAA: Alt: +0.58}
+        5... d6
+        6. h3
+        6... e5
+        7. d5
+        7... Nh5
+        8. g3
+        8... Na6
+        9. Be2
+        9... f5
+        10. exf5
+        10... gxf5
+        11. Bg5
+        11... Nf6
+        12. Qc2
+        12... c6
+        13. g4
+        13... h6
+        14. Bh4
+        14... cxd5
+        15. cxd5
+        15... Nb4
+5... d6 [Mossa Buona] (+0.14)
+  {OAA: Mossa Buona. Perdita: +0.10}
+...
+25... Rxa3 [Mossa Buona] (-8.54)
+  {OAA: Mossa Buona. Perdita: +0.00}
+# Qui la partita si conclude e manca assolutamente l'idnicazione del giocatore che ha vinto, ad es. Vince il bianco
+# E magari: Durata analisi hh:mm:ss.

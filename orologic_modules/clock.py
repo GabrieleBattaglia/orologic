@@ -29,7 +29,7 @@ class ClockConfig:
 
 def CreateClock():
 	print(_("\nCreazione orologi\n"))
-	name=dgt(_("Nome dell'orologio: "),kind="s")
+	name=dgt(_("Nome dell'orologio: "),kind="s", smin=1)
 	Acusticator(["f7", .09, 0, config.VOLUME,"d4", .07, 0, config.VOLUME],sync=True)
 	db=storage.LoadDB()
 	if any(c["name"]==name for c in db.get("clocks", [])):
@@ -37,30 +37,37 @@ def CreateClock():
 	same=dgt(_("Bianco e Nero partono con lo stesso tempo? (Invio per si', 'n' per no): "),kind="s")
 	Acusticator(["f7", .09, 0, config.VOLUME,"d4", .07, 0, config.VOLUME])
 	same_time=True if same=="" else False
-	phases=[]; phase_count=0
+	phases=[]; phase_count=0; valid_data=True
 	while phase_count<4:
 		phase={}
 		if same_time:
 			total_seconds=board_utils.ParseTime(_("Tempo (hh:mm:ss) per fase {num}: ").format(num=phase_count+1))
-			inc=dgt(_("Incremento in secondi per fase {num}: ").format(num=phase_count+1),kind="i")
+			inc=dgt(_("Incremento in secondi per fase {num}: ").format(num=phase_count+1),kind="i",imin=0)
+			if total_seconds == -1: valid_data=False
 			phase["white_time"]=phase["black_time"]=total_seconds; phase["white_inc"]=phase["black_inc"]=inc
 		else:
 			total_seconds_w=board_utils.ParseTime(_("Tempo per il bianco (hh:mm:ss) fase {num}: ").format(num=phase_count+1))
-			inc_w=dgt(_("Incremento per il bianco fase {num}: ").format(num=phase_count+1),kind="i")
+			inc_w=dgt(_("Incremento per il bianco fase {num}: ").format(num=phase_count+1),kind="i",imin=0)
 			total_seconds_b=board_utils.ParseTime(_("Tempo per il nero (hh:mm:ss) fase {num}: ").format(num=phase_count+1))
-			inc_b=dgt(_("Incremento per il nero fase {num}: ").format(num=phase_count+1),kind="i")
+			inc_b=dgt(_("Incremento per il nero fase {num}: ").format(num=phase_count+1),kind="i",imin=0)
+			if total_seconds_w == -1 or total_seconds_b == -1: valid_data=False
 			phase["white_time"]=total_seconds_w; phase["black_time"]=total_seconds_b; phase["white_inc"]=inc_w; phase["black_inc"]=inc_b
 		Acusticator(["f7", .09, 0, config.VOLUME,"d4", .07, 0, config.VOLUME])
-		moves=dgt(_("Numero di mosse per fase {num} (0 per terminare): ").format(num=phase_count+1),kind="i")
+		moves=dgt(_("Numero di mosse per fase {num} (0 per terminare): ").format(num=phase_count+1),kind="i",imin=0)
 		phase["moves"]=moves; phases.append(phase)
 		if moves==0: break
 		phase_count+=1
-	alarms=[]; num_alarms=dgt(_("Numero di allarmi da inserire (max 5, 0 per nessuno): "),kind="i",imax=5,default=0)
+	alarms=[]; num_alarms=dgt(_("Numero di allarmi da inserire (max 5, 0 per nessuno): "),kind="i",imax=5,imin=0,default=0)
 	for i in range(num_alarms):
 		alarm_input = dgt(_("Inserisci il tempo (mm:ss) per l'allarme {num}: ").format(num=i+1), kind="s")
-		alarms.append(board_utils.parse_mmss_to_seconds(alarm_input))
+		sec = board_utils.parse_mmss_to_seconds(alarm_input)
+		if sec == -1: valid_data=False
+		alarms.append(sec)
 		Acusticator(["f7", .09, 0, config.VOLUME,"d4", .07, 0, config.VOLUME])
 	note=dgt(_("Inserisci una nota per l'orologio (opzionale): "),kind="s",default="")
+	if not valid_data:
+		print(_("\nErrore: uno o piu' orari inseriti non sono validi (formato errato o minuti/secondi > 59)."))
+		print(_("L'orologio non e' stato creato.")); Acusticator(["a3",1,0,config.VOLUME],kind=2); return
 	Acusticator(["f7", .09, 0, config.VOLUME,"d5", .07, 0, config.VOLUME,"p",.1,0,0,"d5", .07, 0, config.VOLUME,"f7", .09, 0, config.VOLUME])
 	new_clock=ClockConfig(name,same_time,phases,alarms,note)
 	if "clocks" not in db: db["clocks"] = []
@@ -78,7 +85,8 @@ def ViewClocks():
 		fasi = "".join([" F{n}:{t}+{i}".format(n=j+1, t=board_utils.SecondsToHMS(p["white_time"]), i=p['white_inc']) for j, p in enumerate(c["phases"])])
 		details = "{indicator}{phases}. Allarmi: ({num})".format(indicator=indicatore, phases=fasi, num=len(c.get("alarms", [])))
 		choices[c["name"]] = details + (f"\n  {c['note']}" if c.get('note') else "")
-	menu(choices, show=True, keyslist=True, numbered=STILE_MENU_NUMERICO)
+	menu(choices, show_only=True, numbered=STILE_MENU_NUMERICO)
+	key(_("\nPremi un tasto per tornare al menu..."))
 	Acusticator(["f7", .013, 0, config.VOLUME])
 
 def SelectClock(db=None):
