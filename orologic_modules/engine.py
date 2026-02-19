@@ -54,6 +54,7 @@ def SearchForEngine():
 
 def InitEngine():
 	global ENGINE, ENGINE_NAME, analysis_time, multipv
+	CloseEngine() # Chiudiamo sempre eventuali istanze precedenti per evitare processi orfani
 	db = storage.LoadDB()
 	
 	# Caricamento parametri analisi globali
@@ -962,6 +963,79 @@ def AnalisiAutomatica(pgn_game):
 		
 	except Exception as e:
 		print(_("Errore durante il salvataggio: {e}").format(e=e))
-	
+
 	print(_("Ritorno al menu principale."))
 	Acusticator(["c5", 0.1, 0, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.4, 0, config.VOLUME], kind=1)
+
+def EditEngineConfig(initial_path=None, initial_executable=None):
+	CloseEngine() # Importante: rilascia il file exe se in uso
+	print(_("\nImposta configurazione del motore scacchistico\n"))
+	db = storage.LoadDB()
+	engine_config = db.get("engine_config", {})
+	if engine_config:
+		print(_("Configurazione attuale del motore:"))
+		for key, val in engine_config.items():
+			print("  {key}: {val}".format(key=key, val=val))
+	else:
+		print(_("Nessuna configurazione trovata."))
+
+	default_path = initial_path if initial_path else ""
+	path = dgt(_("Inserisci il percorso dove e' salvato il motore UCI [{default}]: ").format(default=default_path), kind="s", smin=3, smax=256, default=default_path)
+	Acusticator(["g6", 0.025, -.75, config.VOLUME,"c5", 0.025, -75, config.VOLUME],kind=3)
+
+	default_exe = initial_executable if initial_executable else ""
+	executable = dgt(_("Inserisci il nome dell'eseguibile del motore [{default}]: ").format(default=default_exe), kind="s", smin=5, smax=64, default=default_exe)
+	
+	full_engine_path = os.path.join(path, executable)
+	
+	if not os.path.isfile(full_engine_path):
+		print(_("Il file specificato non esiste. Verifica il percorso e il nome dell'eseguibile."))
+		return
+
+	app_path = percorso_salvataggio('')
+	app_drive = os.path.splitdrive(app_path)[0]
+	engine_drive = os.path.splitdrive(full_engine_path)[0]
+	
+	path_to_save = ""
+	is_relative = False
+	
+	if app_drive.lower() == engine_drive.lower() and app_drive != "":
+		try:
+			path_to_save = os.path.relpath(full_engine_path, app_path)
+			is_relative = True
+			print(_("Info: il motore si trova sullo stesso drive, verra' salvato un percorso relativo per la portabilita'."))
+		except ValueError:
+			path_to_save = full_engine_path
+			is_relative = False
+	else:
+		path_to_save = full_engine_path
+		is_relative = False
+		print(_("Info: il motore si trova su un drive diverso, verra' salvato un percorso assoluto (configurazione non portatile)."))	
+	
+	hash_size = dgt(_("Inserisci la dimensione della hash table (min: 1, max: 4096 MB): "), kind="i", imin=1, imax=4096, default=128)
+	Acusticator(["g6", 0.025, -.25, config.VOLUME,"c5", 0.025, -.25, config.VOLUME],kind=3)
+	
+	max_cores = os.cpu_count() or 1
+	num_cores = dgt(_("Inserisci il numero di core da utilizzare (min: 1, max: {max_cores}): ").format(max_cores=max_cores), kind="i", imin=1, imax=max_cores, default=min(4, max_cores))
+	Acusticator(["g6", 0.025, 0, config.VOLUME,"c5", 0.025, 0, config.VOLUME],kind=3)
+	
+	skill_level = dgt(_("Inserisci il livello di skill (min: 0, max: 20): "), kind="i", imin=0, imax=20, default=20)
+	Acusticator(["g6", 0.025, .25, config.VOLUME,"c5", 0.025, .25, config.VOLUME],kind=3)
+	
+	move_overhead = dgt(_("Inserisci il move overhead in millisecondi (min: 0, max: 500): "), kind="i", imin=0, imax=500, default=0)
+	Acusticator(["g6", 0.025, .5, config.VOLUME,"c5", 0.025, .5, config.VOLUME],kind=3)
+	
+	engine_config = {
+		"engine_path": path_to_save,
+		"engine_is_relative": is_relative,
+		"hash_size": hash_size,
+		"num_cores": num_cores,
+		"skill_level": skill_level,
+		"move_overhead": move_overhead
+	}
+	db["engine_config"] = engine_config
+	storage.SaveDB(db)
+	print(_("Configurazione del motore salvata."))
+	InitEngine()
+	Acusticator(["a6", 0.5, 1, config.VOLUME],kind=3, adsr=[.001,0,100,99.9])
+	return
