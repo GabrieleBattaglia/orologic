@@ -409,15 +409,15 @@ def AnalyzeGame(pgn_game):
 					for i, info in enumerate(analysis, start=1):
 						pv = info.get("pv", [])
 						score = info.get("score").pov(current_node.board().turn)
-						eval_str = "M{m}".format(m=abs(score.mate())) if score.is_mate() else "{cp:+.2f}".format(cp=score.score()/100) if score.score() is not None else "N/A"
+						eval_str = _("M{m}").format(m=abs(score.mate())) if score.is_mate() else "{cp:+.2f}".format(cp=score.score()/100) if score.score() is not None else _("N/A")
 						print(_("Linea {i} ({score}):").format(i=i, score=eval_str))
 						print(board_utils.format_pv_descriptively(current_node.board(), pv))
 					
 					if analysis[0].get("pv"):
 						bm_san = current_node.board().san(analysis[0]["pv"][0])
 						score = analysis[0].get("score").pov(current_node.board().turn)
-						eval_str = "M{m}".format(m=abs(score.mate())) if score.is_mate() else "{cp:+.2f}".format(cp=score.score()/100) if score.score() is not None else "N/A"
-						extra_prompt = " BM: {score} {san} ".format(score=eval_str, san=bm_san)
+						eval_str = _("M{m}").format(m=abs(score.mate())) if score.is_mate() else "{cp:+.2f}".format(cp=score.score()/100) if score.score() is not None else _("N/A")
+						extra_prompt = _(" BM: {score} {san} ").format(score=eval_str, san=bm_san)
 				else:
 					Acusticator(["a#3", 0.15, 0.5, config.VOLUME], kind=2, adsr=[5, 20, 0, 75]); print(_("\nImpossibile calcolare la bestline.")); extra_prompt = _(" BM: N/A ")
 			else: print(_("\nMotore non inizializzato.")); Acusticator(["a#3", 0.15, 0.5, config.VOLUME], kind=2, adsr=[5, 20, 0, 75])
@@ -444,7 +444,7 @@ def AnalyzeGame(pgn_game):
 		elif cmd == "x": # Commento BM
 			bm = CalculateBest(current_node.board(), as_san=True)
 			if bm:
-				current_node.comment = (current_node.comment or "").strip() + f" {{BM: {bm[0]}}}"
+				current_node.comment = (current_node.comment or "").strip() + _(" {{BM: {bm}}}").format(bm=bm[0])
 				saved = True; print(_("\nCommento aggiunto.")); Acusticator(["a5", 0.1, 0, config.VOLUME], kind=1, adsr=[2,5,90,5])
 		elif cmd == "c": # Commento manuale
 			Acusticator(["d6", 0.012, 0, config.VOLUME, "p", 0.15, 0, 0, "a6", 0.012, 0, config.VOLUME], kind=1, adsr=[0.01,0,100,0.01])
@@ -454,24 +454,25 @@ def AnalyzeGame(pgn_game):
 			score = CalculateEvaluation(current_node.board())
 			if score:
 				ev = score.white().score(mate_score=30000)
-				current_node.comment = (current_node.comment or "").strip() + f" {{Val: {ev/100:+.2f}}}"
+				current_node.comment = (current_node.comment or "").strip() + _(" {{Val: {ev:+.2f}}}").format(ev=ev/100)
 				saved = True; print(_("\nValutazione commentata.")); Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1, adsr=[2,5,90,5])
 		elif cmd == "r": # Valutazione prompt
 			score = CalculateEvaluation(current_node.board())
 			if score:
 				ev = score.white().score(mate_score=30000)
-				extra_prompt = f" CP: {ev/100:+.2f} "; Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1, adsr=[2,5,90,5])
+				extra_prompt = _(" CP: {ev:+.2f} ").format(ev=ev/100); Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1, adsr=[2,5,90,5])
 		elif cmd == "t": # WDL prompt
 			wdl = CalculateWDL(current_node.board())
-			if wdl: extra_prompt = f" W:{wdl[0]}% D:{wdl[1]}% L:{wdl[2]}% "; Acusticator(["g#5", 0.03, 0, config.VOLUME], kind=1)
+			if wdl: extra_prompt = _(" W:{w:.1f}% D:{d:.1f}% L:{l:.1f}% ").format(w=wdl[0], d=wdl[1], l=wdl[2]); Acusticator(["g#5", 0.03, 0, config.VOLUME], kind=1)
 		elif cmd == "y": # Materiale prompt
-			w, b = CalculateMaterial(current_node.board()); extra_prompt = f" Mtrl: {w}/{b} "; Acusticator(["g#5", 0.03, 0, config.VOLUME], kind=1)
+			w, b = CalculateMaterial(current_node.board()); extra_prompt = _(" Mtrl: {w}/{b} ").format(w=w, b=b); Acusticator(["g#5", 0.03, 0, config.VOLUME], kind=1)
 		elif cmd == "u": # Scacchiera
 			print("\n" + str(board_utils.CustomBoard(current_node.board().fen()))); Acusticator(["d6", 0.03, 0, config.VOLUME], kind=1)
 		elif cmd == "i": # Tempo
 			new_t = dgt(_("\nTempo analisi (s): "), kind="f", default=analysis_time); SetAnalysisTime(new_t)
 		elif cmd == "o": # Linee
 			new_m = dgt(_("\nLinee analisi: "), kind="i", default=multipv); SetMultipv(new_m)
+
 		elif cmd == "b": # Toggle commenti
 			comment_auto_read = not comment_auto_read
 			if comment_auto_read: Acusticator(["g5", 0.025, 0, config.VOLUME, "p", 0.04, 0, 0, "b6", 0.035, 0, config.VOLUME], kind=1); print(_("\nLettura automatica abilitata."))
@@ -508,7 +509,7 @@ def analyze_position_deep(board, limit, multipv_count=3):
 		return results
 	except: return None
 
-def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, indent_level=0):
+def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, classification_labels, indent_level=0):
 	"""
 	Funzione ricorsiva per stampare l'albero delle varianti nel file TXT.
 	Output verboso, accessibile e con valutazioni ASSOLUTE (dal punto di vista del Bianco).
@@ -533,7 +534,7 @@ def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, indent_le
 		# Usa score.white() per avere sempre la valutazione dal punto di vista del bianco
 		white_score = eval_val.white()
 		if white_score.is_mate(): 
-			eval_str = f"M{white_score.mate()}" # Mate positivo = vince bianco, negativo = vince nero
+			eval_str = _("M{m}").format(m=white_score.mate()) # Mate positivo = vince bianco, negativo = vince nero
 		else: 
 			cp_val = white_score.score(mate_score=30000)
 			if cp_val is not None: 
@@ -546,14 +547,16 @@ def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, indent_le
 	
 	line_content = f"{move_num}{dot} {move_desc}"
 	
-	if classif: line_content += f" [{classif}]"
+	if classif: 
+		label = classification_labels.get(classif, classif)
+		line_content += f" [{label}]"
 	
 	details = []
-	if eval_str: details.append(f"Val: {eval_str}")
-	if cpl > 0: details.append(f"CPL: {cpl/100:.2f}")
+	if eval_str: details.append(_("Val: {v}").format(v=eval_str))
+	if cpl > 0: details.append(_("CPL: {c:.2f}").format(c=cpl/100))
 	
 	if details:
-		line_content += f" ({', '.join(details)})"
+		line_content += " ({0})".format(', '.join(details))
 	
 	lines.append(f"{prefix}{line_content}")
 	
@@ -562,13 +565,13 @@ def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, indent_le
 	if raw_comment:
 		clean_comment = re.sub(r'\[OAA:.*?\]', '', raw_comment).strip()
 		if clean_comment:
-			lines.append(f"{prefix}  Note: {clean_comment}")
+			lines.append(_("{p}  Note: {c}").format(p=prefix, c=clean_comment))
 
 	# --- GESTIONE VARIANTI ALTERNATIVE ---
 	if len(node.variations) > 1:
 		for i, variation in enumerate(node.variations[1:], start=1):
 			var_prefix = " " * ((indent_level + 1) * 2)
-			lines.append(f"{var_prefix}(Variante {i}):")
+			lines.append(_("{p}(Variante {i}):").format(p=var_prefix, i=i))
 			
 			var_move_desc = board_utils.DescribeMove(variation.move, node.board())
 			var_move_num = node.board().fullmove_number
@@ -581,26 +584,35 @@ def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, indent_le
 			
 			lines.append(f"{var_prefix}  {var_move_num}{var_dot} {var_move_desc}{var_info}")
 			
-			_stampa_albero_pgn(variation, data_map, lines, w_name, b_name, num_var, indent_level + 2)
+			_stampa_albero_pgn(variation, data_map, lines, w_name, b_name, num_var, classification_labels, indent_level + 2)
 
 	# --- CONTINUAZIONE MAINLINE ---
-	_stampa_albero_pgn(main_move_node, data_map, lines, w_name, b_name, num_var, indent_level)
+	_stampa_albero_pgn(main_move_node, data_map, lines, w_name, b_name, num_var, classification_labels, indent_level)
 
 def genera_sommario_analitico_txt(pgn_game, base_f, results, stats, cpl_d, eco, skip, n_var, duration, engine_metadata=None):
+	classification_labels = {
+		"Svarione": _("Svarione"),
+		"Errore": _("Errore"),
+		"Inesattezza": _("Inesattezza"),
+		"Mossa Buona": _("Mossa Buona"),
+		"Mossa Geniale": _("Mossa Geniale"),
+		"Mossa Normale": _("Mossa Normale"),
+		"Teoria": _("Teoria")
+	}
 	now_str = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	lines = [
-		f"Orologic Analisi Automatica [OAA] V.{version.VERSION}",
-		f"Generato il: {now_str}",
+		_("Orologic Analisi Automatica [OAA] V.{v}").format(v=version.VERSION),
+		_("Generato il: {d}").format(d=now_str),
 		""
 	]
 
 	if engine_metadata:
-		lines.append("Motore utilizzato:")
-		lines.append(f"  Nome: {engine_metadata.get('name', 'N/A')}")
-		lines.append(f"  Autore: {engine_metadata.get('author', 'N/A')}")
+		lines.append(_("Motore utilizzato:"))
+		lines.append(_("  Nome: {n}").format(n=engine_metadata.get('name', _('N/A'))))
+		lines.append(_("  Autore: {a}").format(a=engine_metadata.get('author', _('N/A'))))
 		if 'options' in engine_metadata:
 			opts = engine_metadata['options']
-			lines.append(f"  Configurazione: Hash={opts.get('Hash', '?')}MB, Threads={opts.get('Threads', '?')}, Livello={opts.get('Skill Level', '?')}")
+			lines.append(_("  Configurazione: Hash={h}MB, Threads={t}, Livello={s}").format(h=opts.get('Hash', '?'), t=opts.get('Threads', '?'), s=opts.get('Skill Level', '?')))
 		lines.append("")
 	
 	# Dati Partita (Tutti gli headers)
@@ -609,46 +621,46 @@ def genera_sommario_analitico_txt(pgn_game, base_f, results, stats, cpl_d, eco, 
 	
 	# Risultato esplicito (per accessibilità rapida)
 	res = pgn_game.headers.get("Result", "*")
-	if res == "1-0": lines.append("Esito: Vince il Bianco")
-	elif res == "0-1": lines.append("Esito: Vince il Nero")
-	elif res == "1/2-1/2": lines.append("Esito: Patta")
+	if res == "1-0": lines.append(_("Esito: Vince il Bianco"))
+	elif res == "0-1": lines.append(_("Esito: Vince il Nero"))
+	elif res == "1/2-1/2": lines.append(_("Esito: Patta"))
 	
 	lines.append("")
 	
 	# Info Analisi
 	if skip > 0:
-		lines.append(f"Nota: Le prime {skip} semimosse (apertura) sono state escluse dall'analisi.")
-	lines.append(f"Durata Analisi: {int(duration // 60)}m {int(duration % 60)}s")
+		lines.append(_("Nota: Le prime {s} semimosse (apertura) sono state escluse dall'analisi.").format(s=skip))
+	lines.append(_("Durata Analisi: {m}m {s}s").format(m=int(duration // 60), s=int(duration % 60)))
 	
 	lines.append("")
-	lines.append("Statistiche:")
-	w_n = pgn_game.headers.get("White", "White")
-	b_n = pgn_game.headers.get("Black", "Black")
+	lines.append(_("Statistiche:"))
+	w_n = pgn_game.headers.get("White", _("Bianco"))
+	b_n = pgn_game.headers.get("Black", _("Nero"))
 	
 	def calc_avg(l): return sum(l)/len(l) if l else 0
 	
-	lines.append(f"Precisione (ACPL - piu' basso e' meglio):")
+	lines.append(_("Precisione (ACPL - piu' basso e' meglio):"))
 	lines.append(f"  {w_n}: {calc_avg(cpl_d['w']):.2f}")
 	lines.append(f"  {b_n}: {calc_avg(cpl_d['b']):.2f}")
 	
-	lines.append("Errori commessi:")
+	lines.append(_("Errori commessi:"))
 	for t in ["Mossa Geniale", "Mossa Buona", "Inesattezza", "Errore", "Svarione"]:
 		s = stats.get(t, {'w':0, 'b':0})
 		if s['w'] > 0 or s['b'] > 0:
-			lines.append(f"  {t}: {w_n}={s['w']}, {b_n}={s['b']}")
+			lines.append(_("  {t}: {w_name}={w_val}, {b_name}={b_val}").format(t=classification_labels[t], w_name=w_n, w_val=s['w'], b_name=b_n, b_val=s['b']))
 	
 	lines.append("")
-	lines.append("Dettaglio Analisi:")
+	lines.append(_("Dettaglio Analisi:"))
 	
 	# Mappa i risultati
 	data_map = {r['node']: r for r in results if 'node' in r}
 	
 	# Stampa Albero
-	_stampa_albero_pgn(pgn_game, data_map, lines, w_n, b_n, n_var)
+	_stampa_albero_pgn(pgn_game, data_map, lines, w_n, b_n, n_var, classification_labels)
 	
 	# Footer
 	lines.append("")
-	lines.append(f"Fine Analisi Orologic V.{version.VERSION}")
+	lines.append(_("Fine Analisi Orologic V.{v}").format(v=version.VERSION))
 	
 	# Salvataggio
 	f_p = percorso_salvataggio(os.path.join("txt", config.sanitize_filename(base_f) + ".txt"))
@@ -671,14 +683,14 @@ def AnalisiAutomatica(pgn_game):
 		return
 	
 	def _format_score(score_obj, pov_color):
-		if not score_obj: return "N/A"
+		if not score_obj: return _("N/A")
 		pov_score = score_obj.pov(pov_color)
 		if pov_score.is_mate():
-			return f"M{abs(pov_score.mate())}"
+			return _("M{m}").format(m=abs(pov_score.mate()))
 		else:
 			# La valutazione e' sempre dal punto di vista del bianco, quindi la adattiamo
 			cp = score_obj.white().score(mate_score=30000)
-			if cp is None: return "N/A"
+			if cp is None: return _("N/A")
 			final_cp = cp if pov_color == chess.WHITE else -cp
 			return f"{final_cp/100:+.2f}"
 
@@ -745,9 +757,6 @@ def AnalisiAutomatica(pgn_game):
 		engine_metadata['name'] = ENGINE.id.get('name', _('Sconosciuto'))
 		engine_metadata['author'] = ENGINE.id.get('author', _('Sconosciuto'))
 		
-		# Recupera opzioni attive (simulazione, non c'è accesso diretto facile alle options in simpleengine, usiamo DB)
-		# ENGINE.options è accessibile solo se il motore le espone, ma SimpleEngine a volte lo nasconde.
-		# Usiamo i dati di configurazione che abbiamo usato per lanciarlo.
 		cfg = db.get("engine_config", {})
 		engine_metadata['options'] = {
 			'Hash': cfg.get('hash_size', '?'),
@@ -766,6 +775,15 @@ def AnalisiAutomatica(pgn_game):
 	mainline_nodes = list(pgn_game.mainline())
 	
 	analysis_results = []
+	classification_labels = {
+		"Svarione": _("Svarione"),
+		"Errore": _("Errore"),
+		"Inesattezza": _("Inesattezza"),
+		"Mossa Buona": _("Mossa Buona"),
+		"Mossa Geniale": _("Mossa Geniale"),
+		"Mossa Normale": _("Mossa Normale"),
+		"Teoria": _("Teoria")
+	}
 	imprecision_stats = { "Svarione": {'w': 0, 'b': 0}, "Errore": {'w': 0, 'b': 0}, "Inesattezza": {'w': 0, 'b': 0}, "Mossa Buona": {'w': 0, 'b': 0}, "Mossa Geniale": {'w': 0, 'b': 0}, "Mossa Normale": {'w':0, 'b':0} }
 	cpl_data = {'w': [], 'b': []}
 
@@ -780,7 +798,7 @@ def AnalisiAutomatica(pgn_game):
 		if ply <= mosse_da_saltare:
 			analysis_results.append({
 				'node': node,
-				'classification': _("Teoria"),
+				'classification': "Teoria",
 				'centipawn_loss': 0,
 				'alternatives_info': [],
 				'eval_after_move': None
@@ -797,19 +815,17 @@ def AnalisiAutomatica(pgn_game):
 		san_str = san if ply % 2!= 0 else f"...{san}"
 		elapsed_time = time.time() - start_time
 		time_str = f"{int(elapsed_time // 60):02d}:{int(elapsed_time % 60):02d}"
-		print(f"\r{' ' * 79}\rPLY {ply}/{total_plys} {san_str:<12} | Tempo: {time_str}", end="")
+		print(_("\rPLY {ply}/{total} {san:<12} | Tempo: {t}").format(ply=ply, total=total_plys, san=san_str, t=time_str), end="")
 
 		multipv_needed = max(3, num_varianti)
 		
 		# 1. Analisi "BEFORE" (sulla posizione di partenza, per trovare la best move e alternative)
-		# Ricalcoliamo SEMPRE per avere garanzia di multipv corretto e coerenza con i parametri
 		analysis_before = analyze_position_deep(parent_board, limit, multipv_needed)
 		
 		if not analysis_before: continue
 		best_alternative = analysis_before[0]
 
 		# 2. Analisi "AFTER" (valutazione precisa della mossa giocata)
-		# Usiamo multipv=1 perche' ci serve solo lo score di questa posizione specifica
 		analysis_after = analyze_position_deep(current_board, limit, multipv_count=1)
 		
 		if not analysis_after: continue
@@ -823,8 +839,6 @@ def AnalisiAutomatica(pgn_game):
 
 		# 3. Confronto e Classificazione
 		if node.move.uci() == best_alternative_move.uci():
-			# Mossa giocata = Mossa migliore
-			# Usiamo lo score dell'analisi BEFORE che è più accurata (multipv) per il report
 			eval_after_move = best_alternative['score']
 			
 			if len(analysis_before) > 1:
@@ -840,15 +854,10 @@ def AnalisiAutomatica(pgn_game):
 			else:
 				classification = "Mossa Buona"
 		else:
-			# Mossa giocata != Mossa migliore
-			# Qui dobbiamo usare eval_after_move calcolato appositamente per la mossa giocata
-			# (che è analysis_after[0]['score'])
-			
 			best_pov_score = best_alternative['score'].pov(turn)
 			played_pov_score = eval_after_move.pov(turn)
 
 			if best_pov_score.is_mate() and best_pov_score.mate() > 0:
-				# Mate mancato
 				classification = "Svarione"
 				centipawn_loss = 5000 
 			else:
@@ -876,41 +885,25 @@ def AnalisiAutomatica(pgn_game):
 
 		if eval_after_move.pov(turn).is_mate():
 			mate_val = abs(eval_after_move.pov(turn).mate())
-			comment_str = f"[OAA: {classification}. Matto in {mate_val}]"
+			comment_str = _("[OAA: {cl}. Matto in {m}]").format(cl=classification_labels[classification], m=mate_val)
 			
-			# SE MATTO: Aggiungi sempre la linea come variante esplicita per visualizzazione
-			# Se non e' gia' stata aggiunta come alternativa (perche' errore), la aggiungiamo ora.
-			# Le alternative vengono aggiunte solo se classification in [Svarione, Errore, Inesattezza].
-			# Quindi se e' Mossa Buona/Geniale/Normale (cioe' ho giocato bene il matto), la aggiungiamo qui.
 			if classification not in ["Svarione", "Errore", "Inesattezza"]:
 				pv = analysis_after[0].get('pv')
 				if pv:
-					# Aggiungiamo variante alla mossa corrente per mostrare il seguito
-					# Nota: node.add_variation aggiunge un fratello alla mossa successiva del gioco.
-					# Se il gioco finisce qui, e' perfetto. Se continua, mostra l'alternativa calcolata.
-					# Se la mossa PV[0] e' uguale alla mossa successiva della partita, allora e' la mainline.
-					# Ma qui stiamo analizzando 'analysis_after', quindi siamo gia' DOPO la mossa.
-					# Quindi pv[0] e' la RISPOSTA dell'avversario.
-					
-					# Controlliamo se la partita continua con la stessa mossa
 					next_game_move = None
 					if node.variations:
 						next_game_move = node.variations[0].move
 					
 					first_pv_move = pv[0]
 					
-					# Se non c'e' seguito nella partita O se il seguito e' diverso, aggiungi variante
-					# Se il seguito e' uguale, potremmo voler annotare i nodi successivi, ma e' complesso.
-					# Per OAA, aggiungiamo la variante "teorica" del motore per chiarezza.
-					
 					if not next_game_move or next_game_move != first_pv_move:
 						var_node = node.add_variation(first_pv_move)
 						if len(pv) > 1: var_node.add_line(pv[1:])
 						
-						var_node.comment = f"[OAA: Segue Matto in {mate_val}]"
+						var_node.comment = _("[OAA: Segue Matto in {m}]").format(m=mate_val)
 						
 		else:
-			comment_str = f"[OAA: {classification}. Perdita: {centipawn_loss/100:+.2f}]"
+			comment_str = _("[OAA: {cl}. Perdita: {cpl:+.2f}]").format(cl=classification_labels[classification], cpl=centipawn_loss/100)
 		
 		node.comment = (node.comment.strip() + " " + comment_str).strip() if node.comment else comment_str
 		
@@ -933,10 +926,10 @@ def AnalisiAutomatica(pgn_game):
 
 						if score_obj and score_obj.pov(turn).is_mate():
 							mate_in = abs(score_obj.pov(turn).mate())
-							commento_variante = f"[OAA: Alt: Matto in {mate_in}]"
+							commento_variante = _("[OAA: Alt: Matto in {m}]").format(m=mate_in)
 						else:
 							var_score_str = _format_score(score_obj, turn)
-							commento_variante = f"[OAA: Alt: {var_score_str}]"
+							commento_variante = _("[OAA: Alt: {s}]").format(s=var_score_str)
 
 						var_node.comment = commento_variante
 						if len(pv) > 1: var_node.add_line(pv[1:])
@@ -950,12 +943,12 @@ def AnalisiAutomatica(pgn_game):
 			})
 
 	print(f"\n\n{'='*40}\n" + _("Analisi automatica completata.") + f"\n{'='*40}")
-	pgn_game.headers["Annotator"] = f'Orologic V{version.VERSION} (Auto)'
+	pgn_game.headers["Annotator"] = _("Orologic V{v} (Auto)").format(v=version.VERSION)
 	duration = time.time() - start_time
 	
 	try:
 		pgn_string_formatted = board_utils.format_pgn_comments(str(pgn_game))
-		base_name = f'{pgn_game.headers.get("White", "B")}_vs_{pgn_game.headers.get("Black", "N")}_auto_{datetime.datetime.now().strftime("%Y%m%d")}'
+		base_name = _("{w}_vs_{b}_auto_{d}").format(w=pgn_game.headers.get("White", "B"), b=pgn_game.headers.get("Black", "N"), d=datetime.datetime.now().strftime("%Y%m%d"))
 		sanitized_pgn_name = config.sanitize_filename(base_name) + ".pgn"
 		full_pgn_path = percorso_salvataggio(os.path.join("pgn", sanitized_pgn_name))
 		with open(full_pgn_path, "w", encoding="utf-8-sig") as f:
