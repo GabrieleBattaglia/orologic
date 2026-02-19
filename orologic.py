@@ -6,7 +6,7 @@ import chess
 import copy
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt, menu, Acusticator, key, Donazione, polipo
-from orologic_modules import config, storage, ui, clock, engine, game_flow, version, board_utils
+from orologic_modules import config, storage, ui, clock, engine, game_flow, version, board_utils, stockfish_installer
 
 # Inizializzazione localizzazione
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
@@ -87,9 +87,12 @@ def Main():
         elif scelta == "motore":
             Acusticator(["e7",.02,0,config.VOLUME,"a6",.02,0,config.VOLUME,"e7",.02,0,config.VOLUME,"a6",.02,0,config.VOLUME,"e7",.02,0,config.VOLUME,"a6",.02,0,config.VOLUME])
             print(_("\nAzioni per il motore scacchistico:"))
-            scelta_azione = key(_("Vuoi [c] cercare un motore nel tuo pc, o [m] per modificare manualmente la configurazione? (c/m): ")).lower().strip()
+            scelta_azione = key(_("Vuoi [c] cercare un motore nel tuo pc, [s] scaricare Stockfish, o [m] per modificare manualmente la configurazione? (c/s/m): ")).lower().strip()
             if scelta_azione == 'c':
                 p, e, _u = engine.SearchForEngine()
+                if p and e: engine.EditEngineConfig(initial_path=p, initial_executable=e)
+            elif scelta_azione == 's':
+                p, e = stockfish_installer.DownloadAndInstallEngine()
                 if p and e: engine.EditEngineConfig(initial_path=p, initial_executable=e)
             elif scelta_azione == 'm': engine.EditEngineConfig()
             
