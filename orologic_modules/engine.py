@@ -972,8 +972,6 @@ def AnalisiAutomatica(pgn_game):
 		with open(full_pgn_path, "w", encoding="utf-8-sig") as f:
 			f.write(pgn_string_formatted)
 		print(_("PGN analizzato salvato come: {path}").format(path=full_pgn_path))
-		try: pyperclip.copy(pgn_string_formatted); print(_("PGN copiato negli appunti.")); 
-		except: pass
 		
 		# Genera TXT con durata
 		genera_sommario_analitico_txt(pgn_game, sanitized_pgn_name.replace('.pgn',''), analysis_results, imprecision_stats, cpl_data, last_valid_eco_entry, mosse_da_saltare, num_varianti, duration, engine_metadata)
