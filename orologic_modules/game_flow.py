@@ -422,10 +422,10 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 				if autosave_is_on:
 					EseguiAutosave(game_state)
 					Acusticator(["f3", 0.012, 0, config.VOLUME], sync=True)
-			except Exception as e:
+			except Exception:
 				illegal_result=ui.verbose_legal_moves_for_san(game_state.board,move_san_only)
 				Acusticator([600.0, 0.6, 0, config.VOLUME], adsr=[5, 0, 35, 90])
-				print(_("Mossa '{move}' illegale o non riconosciuta ({error}). Sulla casa indicata sono possibili:\n{alternatives}").format(move=move_san_only, error=e, alternatives=illegal_result))
+				print(_("Mossa '{move}' non valida. Alternative:\n{alternatives}").format(move=move_san_only, alternatives=illegal_result))
 	return last_valid_eco_entry
 
 def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):

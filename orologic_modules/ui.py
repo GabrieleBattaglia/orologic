@@ -117,7 +117,10 @@ def EditLocalization():
 	print(_("\n--- Personalizzazione Lingua ---\n"))
 	print(_("Per ogni voce, inserisci il nuovo testo o premi INVIO per mantenere il valore attuale."))
 	db = storage.LoadDB()
-	l10n_config = db.get("localization", get_default_localization())
+	# Carica i default e sovrascrivili con le personalizzazioni utente esistenti
+	# Questo garantisce che le nuove chiavi (es. 'analysis') siano presenti anche se il DB è vecchio
+	l10n_config = recursive_merge(get_default_localization(), db.get("localization", {}))
+	
 	items_to_edit = [
 		("pieces", "pawn", ("name", _("Nome per 'Pedone'"))),
 		("pieces", "knight", ("name", _("Nome per 'Cavallo'"))),
@@ -155,32 +158,50 @@ def EditLocalization():
 		("analysis", "book", _("Termine per 'Teoria'"))
 	]
 	num_items = len(items_to_edit)
-	notes = ['c3', 'd3', 'e3', 'f3', 'g3', 'a3', 'b3', 'c4', 'd4', 'e4', 'f4', 'g4', 'a4', 'b4', 'c5', 'd5', 'e5', 'f5', 'g5', 'a5', 'b5', 'c6', 'd6', 'e6', 'f6', 'g6', 'a6', 'b6', 'c7']
+	# Calcolo dinamico frequenze
+	start_freq = 130.81 
+	end_freq = 2093.00
+	pitches = []
+	for k in range(num_items):
+		p = start_freq * ((end_freq / start_freq) ** (k / (num_items - 1))) if num_items > 1 else start_freq
+		pitches.append(p)
+	
 	for i, item in enumerate(items_to_edit):
 		cat, key_item, details = item
-		pitch = notes[i % len(notes)]
+		current_pitch = pitches[i]
 		pan = -1 + (2 * i / (num_items -1)) if num_items > 1 else 0 
+		
 		if isinstance(details, tuple):
 			sub_key, prompt_text = details
 			current_val = l10n_config[cat][key_item][sub_key]
 			new_val = dgt("{prompt} [{current}]: ".format(prompt=prompt_text, current=current_val), kind="s", default=current_val)
 			l10n_config[cat][key_item][sub_key] = new_val.strip()
+			
 			if cat == "pieces":
+				# Suono di conferma per il nome del pezzo
+				Acusticator([current_pitch, 0.08, pan, config.VOLUME], kind=1, adsr=[2, 5, 80, 10])
+				
 				current_gender = l10n_config[cat][key_item]['gender']
 				gender_prompt = _("  Genere per '{new_val}' (m/f/n) [{current_gender}]: ").format(new_val=new_val, current_gender=current_gender)
 				while True:
 					new_gender = dgt(gender_prompt, kind="s", default=current_gender).lower()
 					if new_gender in ['m', 'f', 'n']:
 						l10n_config[cat][key_item]['gender'] = new_gender
+						# Suono di conferma per il genere
+						Acusticator([current_pitch * 1.2, 0.08, pan, config.VOLUME], kind=1, adsr=[2, 5, 80, 10])
 						break
 					else:
 						print(_("Input non valido. Inserisci 'm' (maschile), 'f' (femminile) o 'n' (neutro)."))
+			else:
+				# Suono di conferma standard (aggettivi)
+				Acusticator([current_pitch, 0.08, pan, config.VOLUME], kind=1, adsr=[2, 5, 80, 10])
 		else: 
 			prompt_text = details
 			current_val = l10n_config[cat][key_item]
 			new_val = dgt("{prompt} [{current}]: ".format(prompt=prompt_text, current=current_val), kind="s", default=current_val)
 			l10n_config[cat][key_item] = new_val.strip()
-		Acusticator([pitch, 0.08, pan, config.VOLUME], kind=1, adsr=[2, 5, 80, 10])
+			# Suono di conferma standard
+			Acusticator([current_pitch, 0.08, pan, config.VOLUME], kind=1, adsr=[2, 5, 80, 10])
 	Acusticator(['c7', 0.05, 0, config.VOLUME,'e7', 0.05, 0, config.VOLUME,'g7', 0.15, 0, config.VOLUME], kind=1, adsr=[2, 5, 90, 5])
 	db["localization"] = l10n_config
 	storage.SaveDB(db)
@@ -356,13 +377,13 @@ def report_white_time(game_state):
 	initial_white = game_state.clock_config["phases"][game_state.white_phase]["white_time"]
 	elapsed_white = initial_white - game_state.white_remaining
 	perc_white = (elapsed_white / initial_white * 100) if initial_white > 0 else 0
-	print(_("Tempo bianco: ") + clock.FormatTime(game_state.white_remaining) + " ({perc:.0f}%)".format(perc=perc_white))
+	print(_("Tempo bianco: ") + board_utils.FormatTime(game_state.white_remaining) + " ({perc:.0f}%)".format(perc=perc_white))
 
 def report_black_time(game_state):
 	initial_black = game_state.clock_config["phases"][game_state.black_phase]["black_time"]
 	elapsed_black = initial_black - game_state.black_remaining
 	perc_black = (elapsed_black / initial_black * 100) if initial_black > 0 else 0
-	print(_("Tempo nero: ") + clock.FormatTime(game_state.black_remaining) + " ({perc:.0f}%)".format(perc=perc_black))
+	print(_("Tempo nero: ") + board_utils.FormatTime(game_state.black_remaining) + " ({perc:.0f}%)".format(perc=perc_black))
 
 def save_text_summary(game_state, descriptive_moves, eco_entry):
 	headers = game_state.pgn_game.headers
@@ -432,7 +453,7 @@ def GenerateMoveSummary(game_state):
 		white_san = game_state.move_history[i]
 		try:
 			white_move = board_copy.parse_san(white_san)
-			white_desc = DescribeMove(white_move, board_copy)
+			white_desc = board_utils.DescribeMove(white_move, board_copy)
 			board_copy.push(white_move)
 		except: white_desc = "Err"
 		black_desc = ""
@@ -440,7 +461,7 @@ def GenerateMoveSummary(game_state):
 			black_san = game_state.move_history[i + 1]
 			try:
 				black_move = board_copy.parse_san(black_san)
-				black_desc = DescribeMove(black_move, board_copy)
+				black_desc = board_utils.DescribeMove(black_move, board_copy)
 				board_copy.push(black_move)
 			except: black_desc = "Err"
 		summary.append(f"{i//2 + 1}. {white_desc}" + (f", {black_desc}" if black_desc else ""))

@@ -87,13 +87,13 @@
         "Event": "-",
         "Site": "-",
         "Round": "-",
-        "White": "Testb",
-        "Black": "Testn",
+        "White": "Bianco",
+        "Black": "Nero",
         "WhiteElo": "0",
         "BlackElo": "0"
     },
     "volume": 0.35,
-    "launch_count": 360,
+    "launch_count": 367,
     "localization": {
         "pieces": {
             "pawn": {
@@ -121,16 +121,6 @@
                 "gender": "m"
             }
         },
-        "columns": {
-            "a": "ancona",
-            "b": "bologna",
-            "c": "como",
-            "d": "domodossola",
-            "e": "empoli",
-            "f": "firenze",
-            "g": "genova",
-            "h": "hotel"
-        },
         "adjectives": {
             "white": {
                 "m": "bianco",
@@ -141,25 +131,47 @@
                 "f": "nera"
             }
         },
+        "columns": {
+            "a": "ancona",
+            "b": "bologna",
+            "c": "como",
+            "d": "domodossola",
+            "e": "empoli",
+            "f": "firenze",
+            "g": "genova",
+            "h": "hotel"
+        },
         "moves": {
-            "capture": "prende",
-            "capture_on": "in",
-            "move_to": "in",
-            "en_passant": "al varco",
             "short_castle": "arrocco corto",
             "long_castle": "arrocco lungo",
-            "promotes_to": "promuove a",
+            "capture": "prende",
+            "capture_on": "in",
+            "move": "va in",
+            "move_to": "in",
             "check": "scacco!",
-            "checkmate": "Matto!"
+            "mate": "scacco matto",
+            "checkmate": "Matto!",
+            "promotion": "promuove a",
+            "promotes_to": "promuove a",
+            "en_passant": "al varco"
         },
         "annotations": {
-            "=": "proposta di patta",
-            "?": "mossa debole",
             "!": "mossa forte",
-            "??": "mossa pessima",
+            "?": "mossa debole",
             "!!": "mossa geniale!",
+            "??": "mossa pessima",
+            "!?": "mossa dubbia",
             "?!": "mossa dubbia",
-            "!?": "mossa dubbia"
+            "=": "proposta di patta"
+        },
+        "analysis": {
+            "blunder": "Svarione",
+            "mistake": "Errore",
+            "inaccuracy": "Inesattezza",
+            "good": "Buona",
+            "brilliant": "Geniale",
+            "normal": "Ok",
+            "book": "Teoria"
         }
     },
     "engine_config": {
@@ -174,5 +186,5 @@
     "menu_numerati": false,
     "engine_path": "C:\\Users\\Utente\\AppData\\Local\\Orologic\\Engine\\stockfish\\stockfish-windows-x86-64-avx2.exe",
     "default_analysis_time": 2.0,
-    "default_multipv": 1
+    "default_multipv": 2
 }
