@@ -60,19 +60,40 @@
                 300
             ],
             "note": "Orologio a 45 min con 15 secondi di incremento."
+        },
+        {
+            "name": "ASCID-Sociale11",
+            "same_time": true,
+            "phases": [
+                {
+                    "white_time": 3600,
+                    "black_time": 3600,
+                    "white_inc": 0,
+                    "black_inc": 0,
+                    "moves": 0
+                }
+            ],
+            "alarms": [
+                1800,
+                900,
+                300,
+                120,
+                45
+            ],
+            "note": "Un'ora secca. Creato per il sociale ASCID, 11\u00b0 edizione."
         }
     ],
     "default_pgn": {
-        "Event": "test",
-        "Site": "test",
+        "Event": "-",
+        "Site": "-",
         "Round": "-",
         "White": "Testb",
         "Black": "Testn",
-        "WhiteElo": "1400",
-        "BlackElo": "1400"
+        "WhiteElo": "0",
+        "BlackElo": "0"
     },
-    "volume": 0.07,
-    "launch_count": 357,
+    "volume": 0.35,
+    "launch_count": 360,
     "localization": {
         "pieces": {
             "pawn": {
@@ -144,8 +165,8 @@
     "engine_config": {
         "engine_path": "engine\\stockfish\\stockfish-windows-x86-64-avx2.exe",
         "engine_is_relative": true,
-        "hash_size": 2048,
-        "num_cores": 12,
+        "hash_size": 4096,
+        "num_cores": 32,
         "skill_level": 20,
         "move_overhead": 0
     },
