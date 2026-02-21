@@ -5,7 +5,6 @@ import chess
 import random
 import re
 import datetime
-import pyperclip
 from GBUtils import polipo, key, dgt, menu, Acusticator
 from . import config
 from . import board_utils
@@ -69,6 +68,15 @@ def get_default_localization():
             "??": _("mossa molto debole"),
             "!?": _("mossa interessante"),
             "?!": _("mossa dubbia")
+        },
+        "analysis": {
+            "blunder": _("Svarione"),
+            "mistake": _("Errore"),
+            "inaccuracy": _("Inesattezza"),
+            "good": _("Buona"),
+            "brilliant": _("Geniale"),
+            "normal": _("Ok"),
+            "book": _("Teoria")
         }
     }
 
@@ -137,7 +145,14 @@ def EditLocalization():
 		("moves", "long_castle", _("Testo per 'arrocco lungo'")),
 		("moves", "promotes_to", _("Testo per la promozione (es. 'e promuove a')")),
 		("moves", "check", _("Testo per 'scacco'")),
-		("moves", "checkmate", _("Testo per 'scacco matto!'"))
+		("moves", "checkmate", _("Testo per 'scacco matto!'")),
+		("analysis", "blunder", _("Termine per 'Svarione'")),
+		("analysis", "mistake", _("Termine per 'Errore'")),
+		("analysis", "inaccuracy", _("Termine per 'Inesattezza'")),
+		("analysis", "good", _("Termine per 'Mossa Buona'")),
+		("analysis", "brilliant", _("Termine per 'Mossa Geniale'")),
+		("analysis", "normal", _("Termine per 'Mossa Normale'")),
+		("analysis", "book", _("Termine per 'Teoria'"))
 	]
 	num_items = len(items_to_edit)
 	notes = ['c3', 'd3', 'e3', 'f3', 'g3', 'a3', 'b3', 'c4', 'd4', 'e4', 'f4', 'g4', 'a4', 'b4', 'c5', 'd5', 'e5', 'f5', 'g5', 'a5', 'b5', 'c6', 'd6', 'e6', 'f6', 'g6', 'a6', 'b6', 'c7']
@@ -444,7 +459,7 @@ def verbose_legal_moves_for_san(board,san_str):
 		try: dest_square=chess.parse_square(s[-2:]); legal_moves=[m for m in board.legal_moves if m.to_square==dest_square and (m.promotion==promotion if promotion else True)]
 		except: return _("Destinazione non riconosciuta.")
 	if not legal_moves: return _("Nessuna mossa legale trovata.")
-	return "\n".join([_("{i}. {desc}").format(i=i+1, desc=DescribeMove(m, board.copy())) for i, m in enumerate(legal_moves)])
+	return "\n".join([_("{i}. {desc}").format(i=i+1, desc=board_utils.DescribeMove(m, board.copy())) for i, m in enumerate(legal_moves)])
 
 def Impostazioni(db):
     from . import engine

@@ -491,7 +491,10 @@ def AnalyzeGame(pgn_game):
 			print("\n" + board_utils.DescribeMove(current_node.move, current_node.parent.board()))
 	
 	if saved:
-		try: pyperclip.copy(str(pgn_game)); print(_("PGN aggiornato negli appunti."))
+		try: 
+			formatted_pgn = board_utils.format_pgn_comments(str(pgn_game))
+			pyperclip.copy(formatted_pgn)
+			print(_("PGN aggiornato negli appunti."))
 		except: pass
 
 def analyze_position_deep(board, limit, multipv_count=3):
@@ -535,7 +538,7 @@ def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, classific
 		# Usa score.white() per avere sempre la valutazione dal punto di vista del bianco
 		white_score = eval_val.white()
 		if white_score.is_mate(): 
-			eval_str = _("M{m}").format(m=white_score.mate()) # Mate positivo = vince bianco, negativo = vince nero
+			eval_str = _("Matto in {m}").format(m=white_score.mate()) # Mate positivo = vince bianco, negativo = vince nero
 		else: 
 			cp_val = white_score.score(mate_score=30000)
 			if cp_val is not None: 
@@ -548,16 +551,16 @@ def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, classific
 	
 	line_content = f"{move_num}{dot} {move_desc}"
 	
-	if classif: 
-		label = classification_labels.get(classif, classif)
-		line_content += f" [{label}]"
-	
 	details = []
 	if eval_str: details.append(_("Val: {v}").format(v=eval_str))
 	if cpl > 0: details.append(_("CPL: {c:.2f}").format(c=cpl/100))
 	
 	if details:
 		line_content += " ({0})".format(', '.join(details))
+
+	if classif: 
+		label = classification_labels.get(classif, classif)
+		line_content += f" [{label}]"
 	
 	lines.append(f"{prefix}{line_content}")
 	
@@ -591,14 +594,15 @@ def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, classific
 	_stampa_albero_pgn(main_move_node, data_map, lines, w_name, b_name, num_var, classification_labels, indent_level)
 
 def genera_sommario_analitico_txt(pgn_game, base_f, results, stats, cpl_d, eco, skip, n_var, duration, engine_metadata=None):
+	l10n_analysis = ui.L10N.get("analysis", {})
 	classification_labels = {
-		"Svarione": _("Svarione"),
-		"Errore": _("Errore"),
-		"Inesattezza": _("Inesattezza"),
-		"Mossa Buona": _("Mossa Buona"),
-		"Mossa Geniale": _("Mossa Geniale"),
-		"Mossa Normale": _("Mossa Normale"),
-		"Teoria": _("Teoria")
+		"Svarione": l10n_analysis.get("blunder", _("Svarione")),
+		"Errore": l10n_analysis.get("mistake", _("Errore")),
+		"Inesattezza": l10n_analysis.get("inaccuracy", _("Inesattezza")),
+		"Mossa Buona": l10n_analysis.get("good", _("Mossa Buona")),
+		"Mossa Geniale": l10n_analysis.get("brilliant", _("Mossa Geniale")),
+		"Mossa Normale": l10n_analysis.get("normal", _("Mossa Normale")),
+		"Teoria": l10n_analysis.get("book", _("Teoria"))
 	}
 	now_str = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	lines = [
@@ -666,9 +670,12 @@ def genera_sommario_analitico_txt(pgn_game, base_f, results, stats, cpl_d, eco, 
 	# Salvataggio
 	f_p = percorso_salvataggio(os.path.join("txt", config.sanitize_filename(base_f) + ".txt"))
 	try:
-		with open(f_p, "w", encoding="utf-8") as f: f.write("\n".join(lines))
+		full_text = "\n".join(lines)
+		with open(f_p, "w", encoding="utf-8") as f: f.write(full_text)
 		print(_("Riepilogo testuale salvato in: {p}").format(p=f_p))
-		try: pyperclip.copy(f_p)
+		try: 
+			pyperclip.copy(full_text)
+			print(_("Riepilogo copiato negli appunti."))
 		except: pass
 	except Exception as e:
 		print(_("Errore salvataggio TXT: {e}").format(e=e))
@@ -707,7 +714,7 @@ def AnalisiAutomatica(pgn_game):
 	# Parametri fissi per ora
 	soglia_mossa_buona = 20
 	soglia_mossa_geniale_gap = 180
-	num_varianti = 1
+	num_varianti = dgt(_("Varianti [{v}]: ").format(v=multipv), kind="i", imin=1, imax=10, default=multipv)
 
 	print(_("\nImpostazione dei parametri di analisi:"))
 	analysis_mode_map = {
@@ -729,6 +736,8 @@ def AnalisiAutomatica(pgn_game):
 	else:
 		print(_("Scelta non valida. Analisi annullata."))
 		return
+
+	truncate_length = dgt(_("Tronca varianti a (0=intere) [0]: "), kind="i", imin=0, imax=50, default=0)
 
 	mosse_da_saltare = 0
 	last_valid_eco_entry = None
@@ -776,14 +785,15 @@ def AnalisiAutomatica(pgn_game):
 	mainline_nodes = list(pgn_game.mainline())
 	
 	analysis_results = []
+	l10n_analysis = ui.L10N.get("analysis", {})
 	classification_labels = {
-		"Svarione": _("Svarione"),
-		"Errore": _("Errore"),
-		"Inesattezza": _("Inesattezza"),
-		"Mossa Buona": _("Mossa Buona"),
-		"Mossa Geniale": _("Mossa Geniale"),
-		"Mossa Normale": _("Mossa Normale"),
-		"Teoria": _("Teoria")
+		"Svarione": l10n_analysis.get("blunder", _("Svarione")),
+		"Errore": l10n_analysis.get("mistake", _("Errore")),
+		"Inesattezza": l10n_analysis.get("inaccuracy", _("Inesattezza")),
+		"Mossa Buona": l10n_analysis.get("good", _("Mossa Buona")),
+		"Mossa Geniale": l10n_analysis.get("brilliant", _("Mossa Geniale")),
+		"Mossa Normale": l10n_analysis.get("normal", _("Mossa Normale")),
+		"Teoria": l10n_analysis.get("book", _("Teoria"))
 	}
 	imprecision_stats = { "Svarione": {'w': 0, 'b': 0}, "Errore": {'w': 0, 'b': 0}, "Inesattezza": {'w': 0, 'b': 0}, "Mossa Buona": {'w': 0, 'b': 0}, "Mossa Geniale": {'w': 0, 'b': 0}, "Mossa Normale": {'w':0, 'b':0} }
 	cpl_data = {'w': [], 'b': []}
@@ -824,12 +834,19 @@ def AnalisiAutomatica(pgn_game):
 		analysis_before = analyze_position_deep(parent_board, limit, multipv_needed)
 		
 		if not analysis_before: continue
+		if truncate_length > 0:
+			for info in analysis_before:
+				if 'pv' in info: info['pv'] = info['pv'][:truncate_length]
+
 		best_alternative = analysis_before[0]
 
 		# 2. Analisi "AFTER" (valutazione precisa della mossa giocata)
 		analysis_after = analyze_position_deep(current_board, limit, multipv_count=1)
 		
 		if not analysis_after: continue
+		if truncate_length > 0:
+			for info in analysis_after:
+				if 'pv' in info: info['pv'] = info['pv'][:truncate_length]
 
 		eval_after_move = analysis_after[0]['score']
 		best_alternative_move = best_alternative['move']
