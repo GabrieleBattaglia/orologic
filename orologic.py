@@ -7,6 +7,7 @@ import copy
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt, menu, Acusticator, key, Donazione, polipo
 from orologic_modules import config, storage, ui, clock, engine, game_flow, version, board_utils, stockfish_installer
+from orologic_modules.easyfish import easyfish_app
 
 # Inizializzazione localizzazione
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
@@ -83,6 +84,10 @@ def Main():
         elif scelta == "crea":
             Acusticator([1000.0, 0.05, -1, config.VOLUME, "p", 0.05, 0, 0, 900.0, 0.05, 1, config.VOLUME], kind=1, adsr=[0, 0, 100, 0])
             clock.CreateClock()
+            
+        elif scelta == "easyfish":
+            Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0.5, config.VOLUME], kind=1)
+            easyfish_app.run()
             
         elif scelta == "motore":
             Acusticator(["e7",.02,0,config.VOLUME,"a6",.02,0,config.VOLUME,"e7",.02,0,config.VOLUME,"a6",.02,0,config.VOLUME,"e7",.02,0,config.VOLUME,"a6",.02,0,config.VOLUME])
