@@ -9,7 +9,83 @@ import re
 import io
 import sys
 import copy
+import math
+import numpy as np
 from . import config
+
+def calculate_win_probability(score_obj, turn):
+	"""
+	Calcola la probabilità di vittoria (0.0 - 1.0) dal punto di vista di chi deve muovere (turn).
+	Usa wdl(model='lichess') se disponibile, altrimenti sigmoide sui CP.
+	"""
+	try:
+		# WDL dal punto di vista del giocatore di turno
+		w = score_obj.pov(turn).wdl(model="lichess").expectation()
+		return w
+	except:
+		# Fallback: Sigmoide sui CP (dal punto di vista del giocatore)
+		cp = score_obj.pov(turn).score(mate_score=10000)
+		if cp is None: return 0.5
+		# Formula sigmoide inversa: 50 + 50 * ... (restituisce %, divido per 100)
+		return 0.5 + 0.5 * (2 / (1 + math.exp(-0.00368208 * cp)) - 1)
+
+def calculate_move_accuracy(w_before, w_after):
+	"""
+	Calcola accuratezza mossa (0-100) basata su Delta W (perdita di probabilità).
+	w_before: Probabilità vittoria PRIMA della mossa (dal punto di vista di chi muove).
+	w_after: Probabilità vittoria DOPO la mossa (dal punto di vista di chi HA mosso).
+	"""
+	delta_w = max(0.0, w_before - w_after)
+	# Formula: Accuracy% = 103.1668 * exp(-0.04354 * delta_w * 100) - 3.1669
+	# Nota: delta_w * 100 perché la formula originale usa scala % per l'esponente?
+	# Dal documento: "Se delta W cresce, il punteggio crolla".
+	# Se Delta W è [0, 1], exp(-0.04 * 0.2) ~ 1.
+	# Assumo che delta_w nella formula debba essere in scala 0-100 (punti percentuali).
+	acc = 103.1668 * math.exp(-0.04354 * delta_w * 100) - 3.1669
+	return max(0.0, min(100.0, acc))
+
+def calculate_game_accuracy_numpy(accuracies):
+	"""
+	Calcola Game Accuracy usando numpy:
+	1. Finestre scorrevoli per volatilità (sigma).
+	2. Media ponderata su sigma.
+	3. Media armonica.
+	4. Media tra le due.
+	"""
+	if not accuracies: return 0.0
+	acc_array = np.array(accuracies)
+	n = len(acc_array)
+	
+	# Finestre scorrevoli
+	window_size = max(3, int(n / 10))
+	sigmas = []
+	for i in range(n):
+		start = max(0, i - window_size)
+		end = min(n, i + window_size + 1)
+		window = acc_array[start:end]
+		if len(window) > 1:
+			sigma = np.std(window)
+		else:
+			sigma = 1.0
+		sigmas.append(sigma if sigma > 0 else 1.0)
+	
+	sigmas = np.array(sigmas)
+	
+	# Media Ponderata
+	weighted_mean = np.average(acc_array, weights=sigmas)
+	
+	# Media Armonica
+	# Aggiungo epsilon per evitare divisione per zero se accuracy è 0
+	harmonic_mean = len(acc_array) / np.sum(1.0 / (acc_array + 1e-9))
+	
+	return (weighted_mean + harmonic_mean) / 2
+
+def estimate_elo_poly(accuracy):
+	"""
+	Stima ELO con polinomio di 3° grado.
+	"""
+	acc = accuracy
+	return 2.05 + 12.9 * acc - 0.256 * (acc ** 2) + 0.00401 * (acc ** 3)
 from . import storage
 from . import ui
 from . import board_utils
@@ -593,7 +669,7 @@ def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, classific
 	# --- CONTINUAZIONE MAINLINE ---
 	_stampa_albero_pgn(main_move_node, data_map, lines, w_name, b_name, num_var, classification_labels, indent_level)
 
-def genera_sommario_analitico_txt(pgn_game, base_f, results, stats, cpl_d, eco, skip, n_var, duration, engine_metadata=None):
+def genera_sommario_analitico_txt(pgn_game, base_f, results, stats, cpl_d, eco, skip, n_var, duration, engine_metadata=None, accuracies=None):
 	l10n_analysis = ui.L10N.get("analysis", {})
 	classification_labels = {
 		"Svarione": l10n_analysis.get("blunder", _("Svarione")),
@@ -648,6 +724,15 @@ def genera_sommario_analitico_txt(pgn_game, base_f, results, stats, cpl_d, eco, 
 	lines.append(f"  {w_n}: {calc_avg(cpl_d['w']):.2f}")
 	lines.append(f"  {b_n}: {calc_avg(cpl_d['b']):.2f}")
 	
+	if accuracies:
+		acc_w = calculate_game_accuracy_numpy(accuracies['w'])
+		acc_b = calculate_game_accuracy_numpy(accuracies['b'])
+		elo_w = estimate_elo_poly(acc_w)
+		elo_b = estimate_elo_poly(acc_b)
+		lines.append(_("Precisione Stimata (0-100%):"))
+		lines.append(f"  {w_n}: {acc_w:.1f}% (ELO Stimato: {int(elo_w)})")
+		lines.append(f"  {b_n}: {acc_b:.1f}% (ELO Stimato: {int(elo_b)})")
+
 	lines.append(_("Errori commessi:"))
 	for t in ["Mossa Geniale", "Mossa Buona", "Inesattezza", "Errore", "Svarione"]:
 		s = stats.get(t, {'w':0, 'b':0})
@@ -797,6 +882,7 @@ def AnalisiAutomatica(pgn_game):
 	}
 	imprecision_stats = { "Svarione": {'w': 0, 'b': 0}, "Errore": {'w': 0, 'b': 0}, "Inesattezza": {'w': 0, 'b': 0}, "Mossa Buona": {'w': 0, 'b': 0}, "Mossa Geniale": {'w': 0, 'b': 0}, "Mossa Normale": {'w':0, 'b':0} }
 	cpl_data = {'w': [], 'b': []}
+	accuracies = {'w': [], 'b': []}
 
 	# NOTA: Rimosso analysis_after per forzare ricalcolo preciso
 	for i, node in enumerate(mainline_nodes):
@@ -812,8 +898,10 @@ def AnalisiAutomatica(pgn_game):
 				'classification': "Teoria",
 				'centipawn_loss': 0,
 				'alternatives_info': [],
-				'eval_after_move': None
+				'eval_after_move': None,
+				'accuracy': 100.0 # Teoria = 100%
 			})
+			accuracies['w' if ply % 2 != 0 else 'b'].append(100.0)
 			continue
 
 		parent_board = node.parent.board()
@@ -849,6 +937,14 @@ def AnalisiAutomatica(pgn_game):
 				if 'pv' in info: info['pv'] = info['pv'][:truncate_length]
 
 		eval_after_move = analysis_after[0]['score']
+		
+		# Calcolo Precisione
+		try:
+			w_before = calculate_win_probability(analysis_before[0]['score'], turn)
+			w_after = calculate_win_probability(analysis_after[0]['score'], turn)
+			move_acc = calculate_move_accuracy(w_before, w_after)
+			accuracies[color_key].append(move_acc)
+		except: move_acc = 0.0
 		best_alternative_move = best_alternative['move']
 		centipawn_loss = 0
 		classification = ""
@@ -974,7 +1070,7 @@ def AnalisiAutomatica(pgn_game):
 		print(_("PGN analizzato salvato come: {path}").format(path=full_pgn_path))
 		
 		# Genera TXT con durata
-		genera_sommario_analitico_txt(pgn_game, sanitized_pgn_name.replace('.pgn',''), analysis_results, imprecision_stats, cpl_data, last_valid_eco_entry, mosse_da_saltare, num_varianti, duration, engine_metadata)
+		genera_sommario_analitico_txt(pgn_game, sanitized_pgn_name.replace('.pgn',''), analysis_results, imprecision_stats, cpl_data, last_valid_eco_entry, mosse_da_saltare, num_varianti, duration, engine_metadata, accuracies)
 		
 	except Exception as e:
 		print(_("Errore durante il salvataggio: {e}").format(e=e))
