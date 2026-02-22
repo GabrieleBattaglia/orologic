@@ -161,6 +161,7 @@ DOT_COMMANDS={
 MENU_CHOICES={
     "analizza":_("Modalita' analisi partita"),
     "crea":_("Nuovo orologio"),
+    "easyfish":_("Easyfish (Interfaccia Accessibile)"),
     "elimina":_("Elimina orologio"),
     "gioca":_("Inizia partita"),
     "manuale":_("Guida app"),
