@@ -7,12 +7,8 @@ except ImportError:
     # Fallback for standalone testing or if import fails
     def _(text): return text
 
-# Version info
-VER="0.22.0, Feb 22nd, 2026"  # Updated version for refactoring start
-
 # File paths
 CONFIG_FILE = "easyfish.json"
-PGN_FILE_PATH = "Easyfish games collection.pgn"
 
 # Defaults
 DEFAULT_EVENT=_("Divertimento con Easyfish")
@@ -77,7 +73,7 @@ SYMBOLS_TO_NAME={
     'p':_('Pedone nero')}
 
 # Menus
-MNMAIN={'.q':_("Esci dall'applicazione"),
+MNMAIN={'.':_("Esci dall'applicazione"),
         '.?':_("Mostra questo menu"),
         '_[comment]':_("Aggiungi un commento alla mossa corrente"),
         '.a#':_("Analizza la posizione per # secondi"),
@@ -92,8 +88,6 @@ MNMAIN={'.q':_("Esci dall'applicazione"),
         '.l#':_("Vedi Linea/e di Analisi"),
         '.n':_("Nuova partita da zero"),
         '.pt':_("Imposta i Tag PGN per la partita corrente"),
-        '.snl':_("Imposta il numero di linee di analisi"),
-        '.ssf':_("Mostra il file delle impostazioni"),
         ',[piece]':_("Nome di un pezzo per localizzarlo"),
         '-[piecesquare]':_("Pezzo e casa per vederne le mosse"),
         '-[column]':_("Colonna da A a H per vedere i pezzi presenti"),
@@ -110,5 +104,18 @@ MNEXPLORER={'a':_("Vai alla mossa precedente"),
             'c':_("Mostra di nuovo il commento"),
             's':_("Esegui analisi"),
             'r':_("Imposta i secondi per l'analisi"),
+            't':_("Imposta numero di linee di analisi"),
             '?':_("Vedi questo aiuto"),
-            '[esc]':_("Torna al menu principale")}
+            '.':_("Torna al menu principale")}
+
+MNEDITOR={'.':_("Fine editing e salva posizione"),
+          '.t':_("Cambia il turno (Bianco/Nero)"),
+          '.c':_("Imposta diritti di arrocco (es. KQkq)"),
+          '.e':_("Imposta casa en passant (es. e3)"),
+          '.n':_("Imposta numero mossa"),
+          '.h':_("Imposta orologio semimosse (halfmove)"),
+          '.s':_("Mostra la scacchiera corrente"),
+          '.?':_("Mostra questo menu"),
+          'Ke4':_("Sposta il Re in e4 (stessa cosa per il nero k)"),
+          'Pe4':_("Piazza un pedone in e4"),
+          'e4':_("Svuota la casa e4 (se non contiene un Re)")}
