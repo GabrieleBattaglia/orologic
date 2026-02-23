@@ -2,6 +2,13 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+6.1.0
+	+ Modalità "Arbitra": Rinominata la voce "Gioca" in "Arbitra" nel menu principale.
+	+ Gestione Bandierina Caduta: Quando scade il tempo, l'applicazione non termina immediatamente ma chiede se continuare senza orologio (per gestione amichevole/didattica).
+	+ Ripristinati comandi orologio: I comandi .b+, .b-, .n+, .n- (aggiungi/togli tempo) sono nuovamente disponibili in pausa.
+	= Migliorato il feedback sonoro in caso di errore nella creazione orologio (suono meno aggressivo).
+	= Aggiunto comando ".*" (risultato sconosciuto) nei suggerimenti di fine partita.
+	= Aggiornamenti minori e fix in Easyfish (Board Editor, PGN handling).
 6.0.0
 	+ Integrazione completa del progetto Easyfish (interfaccia accessibile per l'analisi scacchistica) come modulo interno di Orologic.
 	+ Nuova voce di menu "Easyfish" nel menu principale.
@@ -158,7 +165,7 @@ ChangeLog:
 3.5.2
 	+ Aiuto su mosse illegali
 	= Corretto un piccolo errore di visualizzazione nell'età di Orologic 
-	= Risolto un problema per cui non si poteva cancellare un orologio salvato.
+	= Risolto un problema per cui non si salvavano gli allarmi.
 3.4.9
 	+ aggiunti remaining tag nel pgn
 	+ non vengono accettate mosse se l'orologio è in pausa

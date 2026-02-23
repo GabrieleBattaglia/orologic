@@ -30,7 +30,7 @@ def clock_thread(game_state):
 		current_time = time.time()
 		elapsed = current_time - last_time
 		last_time = current_time
-		if not game_state.paused:
+		if not game_state.paused and not game_state.ignore_clock:
 			if game_state.active_color == "white":
 				game_state.white_remaining -= elapsed
 				for alarm in game_state.clock_config.get("alarms", []):
@@ -45,17 +45,17 @@ def clock_thread(game_state):
 						print(_("\nAllarme: tempo del nero raggiunto {time}").format(time=board_utils.seconds_to_mmss(alarm)), end="")
 						Acusticator(["c4", 0.2, 0.75, config.VOLUME])
 						triggered_alarms_black.add(alarm)
-		if game_state.white_remaining <= 0 or game_state.black_remaining <= 0:
-			Acusticator(["e4", 0.2, -0.5, config.VOLUME, "d4", 0.2, 0, config.VOLUME, "c4", 0.2, 0.5, config.VOLUME], kind=1, adsr=[10, 0, 90, 10])
-			game_state.game_over = True
-			print(_("Bandierina caduta!"))
-			if game_state.white_remaining <= 0:
-				game_state.pgn_game.headers["Result"] = "0-1"  # Nero vince
-				print(_("Tempo del Bianco scaduto. {player} vince.").format(player=game_state.black_player))
-				Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
-			else:
-				game_state.pgn_game.headers["Result"] = "1-0"  # Bianco vince
-				print(_("Tempo del Nero scaduto. {player} vince.").format(player=game_state.white_player))
+		
+		if not game_state.ignore_clock and (game_state.white_remaining <= 0 or game_state.black_remaining <= 0):
+			if not game_state.flag_fallen:
+				Acusticator(["e4", 0.2, -0.5, config.VOLUME, "d4", 0.2, 0, config.VOLUME, "c4", 0.2, 0.5, config.VOLUME], kind=1, adsr=[10, 0, 90, 10])
+				game_state.flag_fallen = True
+				game_state.paused = True
+				print(_("\nBandierina caduta! Premi INVIO per gestire l'evento..."))
+				if game_state.white_remaining <= 0:
+					print(_("Tempo del Bianco scaduto."))
+				else:
+					print(_("Tempo del Nero scaduto."))
 				Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
 		time.sleep(0.1)
 
@@ -137,6 +137,32 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 	last_valid_eco_entry = None
 	paused_time_start=None
 	while not game_state.game_over:
+		
+		# --- GESTIONE BANDIERINA CADUTA (Thread-Safe ish) ---
+		if game_state.flag_fallen and not game_state.ignore_clock:
+			# Il clock_thread ha settato il flag. Ora chiediamo all'utente.
+			print(_("\nTempo scaduto!"))
+			print(_("Premere INVIO per continuare la partita senza orologio, oppure ESC per terminare e assegnare la vittoria."))
+			# Usiamo key per un input secco
+			choice = key(">>> ")
+			if choice == '\x1b': # ESC
+				game_state.game_over = True
+				# Assegna risultato
+				if game_state.white_remaining <= 0:
+					game_state.pgn_game.headers["Result"] = "0-1"
+					print(_("Vince il Nero per tempo."))
+				else:
+					game_state.pgn_game.headers["Result"] = "1-0"
+					print(_("Vince il Bianco per tempo."))
+				break # Esce dal loop
+			else:
+				# Continua
+				game_state.ignore_clock = True
+				game_state.paused = False # Sblocca (ma il tempo non scenderà più grazie a ignore_clock nel thread)
+				print(_("Partita continuata senza limiti di tempo. Usa i comandi .1-0, .0-1, .1/2, .* per terminare."))
+				game_state.flag_fallen = False # Reset flag per non rientrare qui
+				continue # Riavvia il loop per stampare il prompt corretto
+
 		if not game_state.move_history:
 			prompt=_("\nInizio, mossa 0. ")
 		elif len(game_state.move_history)%2==1:
@@ -145,9 +171,18 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 		else:
 			full_move=(len(game_state.move_history))//2
 			prompt="{num}... {last_move} ".format(num=full_move, last_move=game_state.move_history[-1])
+		
 		if game_state.paused:
 			prompt="["+prompt.strip()+"] "
+		elif game_state.ignore_clock:
+			prompt="(NoClock) " + prompt.strip() + " "
+			
 		user_input=dgt(prompt,kind="s")
+		
+		# Rilevamento bandierina immediato dopo input (nel caso sia caduta mentre scrivevo)
+		if game_state.flag_fallen and not game_state.ignore_clock:
+			continue # Torna su a gestire il flag
+
 		if user_input.startswith("/"):
 			Acusticator(["c5", 0.07, -1, config.VOLUME,"d5", 0.07, -.75, config.VOLUME,"e5", 0.07, -.5, config.VOLUME,"f5", 0.07, -.25, config.VOLUME,"g5", 0.07, 0, config.VOLUME,"a5", 0.07, .25, config.VOLUME,"b5", 0.07, .5, config.VOLUME,"c6", 0.07, .75, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
 			base_column = user_input[1:2].strip()
@@ -179,6 +214,13 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 		elif user_input.startswith("."):
 			u=user_input.strip()
 			cmd=u.rstrip(".").lower()
+			
+			# Comandi inibiti se ignore_clock è True
+			clock_commands = [".1", ".2", ".3", ".4", ".5", ".p", ".b+", ".b-", ".n+", ".n-"]
+			if game_state.ignore_clock and any(cmd.startswith(c) for c in clock_commands):
+				print(_("Comando non disponibile: orologio disabilitato."))
+				continue
+
 			if cmd==".?":
 				Acusticator([440.0, 0.3, 0, config.VOLUME, 880.0, 0.3, 0, config.VOLUME], kind=1, adsr=[10, 0, 100, 20])
 				menu(config.DOT_COMMANDS,show_only=True,p=_("Comandi disponibili:"), ordered=False)
@@ -265,7 +307,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 						elif cmd.startswith(".n-"):
 							Acusticator(["c5", 0.15, .5, config.VOLUME, "a4", 0.15, .5, config.VOLUME, "f4", 0.15, .5, config.VOLUME, "d4", 0.15, .5, config.VOLUME], kind=1, adsr=[15, 0, 90, 5])
 							game_state.black_remaining-=adjust
-						print(_("Nuovo tempo bianco: {white_time}, nero: {black_time}").format(white_time=clock.FormatTime(game_state.white_remaining), black_time=clock.FormatTime(game_state.black_remaining)))
+						print(_("Nuovo tempo bianco: {white_time}, nero: {black_time}").format(white_time=board_utils.FormatTime(game_state.white_remaining), black_time=board_utils.FormatTime(game_state.black_remaining)))
 					except:
 						print(_("Comando non valido."))
 			elif cmd==".s":
