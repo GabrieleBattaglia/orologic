@@ -236,6 +236,22 @@ def ExplorerMode(game, engine, analysis_time_default=2):
             if node.parent:
                 node = node.parent
                 current_board = SyncBoardToNode(node)
+        elif command == 'b':
+            current_board = SyncBoardToNode(node)
+            print(current_board)
+        elif command == 'u':
+            # UNDO/CUT - Elimina mossa corrente e figli
+            if node.parent:
+                parent = node.parent
+                if node in parent.variations:
+                    parent.variations.remove(node)
+                    node = parent
+                    current_board = SyncBoardToNode(node)
+                    print(_("Mossa/Variante eliminata. Tornati indietro."))
+                else:
+                    print(_("Errore: Impossibile trovare la mossa nella lista varianti del padre."))
+            else:
+                print(_("Impossibile eliminare l'inizio della partita."))
         elif command == 'c':
             if node.comment: print(node.comment)
         elif command == 's':
