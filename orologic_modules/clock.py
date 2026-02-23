@@ -67,7 +67,7 @@ def CreateClock():
 	note=dgt(_("Inserisci una nota per l'orologio (opzionale): "),kind="s",default="")
 	if not valid_data:
 		print(_("\nErrore: uno o piu' orari inseriti non sono validi (formato errato o minuti/secondi > 59)."))
-		print(_("L'orologio non e' stato creato.")); Acusticator(["a3",1,0,config.VOLUME],kind=2); return
+		print(_("L'orologio non e' stato creato.")); Acusticator(["a3", 0.5, 0, config.VOLUME], kind=2, adsr=[10, 10, 80, 20]); return
 	Acusticator(["f7", .09, 0, config.VOLUME,"d5", .07, 0, config.VOLUME,"p",.1,0,0,"d5", .07, 0, config.VOLUME,"f7", .09, 0, config.VOLUME])
 	new_clock=ClockConfig(name,same_time,phases,alarms,note)
 	if "clocks" not in db: db["clocks"] = []

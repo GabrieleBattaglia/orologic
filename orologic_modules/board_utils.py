@@ -191,6 +191,8 @@ class GameState:
 		self.pgn_node = self.pgn_game
 		self.white_player = ""
 		self.black_player = ""
+		self.ignore_clock = False
+		self.flag_fallen = False
 
 	def switch_turn(self):
 		if self.active_color == "white":
