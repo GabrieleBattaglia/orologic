@@ -22,20 +22,33 @@ from ..config import _
 from .engine_handler import ShowStats
 from .interaction import ExplorerMode, BoardEditor
 
-def GetDynamicPrompt(board):
-    """Genera il prompt basandosi sul turno e sul numero di mossa."""
+def GetDynamicPrompt(board, node):
+    """Genera il prompt basandosi sul turno, numero di mossa e livello variante."""
     n = board.fullmove_number
+    
+    # Calcolo livello variante
+    variant_level = 0
+    temp_node = node
+    while temp_node.parent:
+        if len(temp_node.parent.variations) > 1:
+            variant_level += 1
+        temp_node = temp_node.parent
+    
+    prefix = ""
+    if variant_level > 0:
+        prefix = f"[Var.{variant_level}] "
+    
     if not board.move_stack:
-        return _("INIZIO {n}. ").format(n=n)
+        return _("{p}INIZIO {n}. ").format(p=prefix, n=n)
     
     last_move = board.pop()
     last_san = board.san(last_move)
     board.push(last_move)
     
     if board.turn == chess.WHITE:
-        return f"{n-1}... {last_san}: "
+        return f"{prefix}{n-1}... {last_san}: "
     else:
-        return f"{n}. {last_san}: "
+        return f"{prefix}{n}. {last_san}: "
 
 def run():
     print(_("\nBenvenuto in Easyfish, la tua interfaccia testuale con il motore scacchistico.\n\tBuon divertimento!"))
@@ -61,7 +74,7 @@ def run():
     fen_from_clip = ""
 
     while True:
-        prompt = GetDynamicPrompt(board)
+        prompt = GetDynamicPrompt(board, node)
         key_command = dgt(prompt=prompt, kind="s", smin=1, smax=8192).strip()
         
         if not key_command:
@@ -76,12 +89,83 @@ def run():
             cmd = key_command.lower()
             cmd_clean = ''.join([char for char in cmd if not char.isdigit()])
             
-            if cmd == ".": # ESCI
+            if cmd == ".": # ESCI o RISALI
+                # Logica di risalita variante
+                is_variant = False
+                temp = node
+                while temp.parent:
+                    if len(temp.parent.variations) > 1:
+                        is_variant = True
+                        break
+                    temp = temp.parent
+                
+                if is_variant and node.parent:
+                     current_node_in_chain = node
+                     while current_node_in_chain.parent:
+                         parent = current_node_in_chain.parent
+                         if len(parent.variations) > 1:
+                             node = parent
+                             board.pop()
+                             print(_("Chiusa variante. Ritorno al nodo padre."))
+                             break
+                         
+                         current_node_in_chain = parent
+                         board.pop()
+                         node = parent
+                     
+                     continue
+
                 if len(board.move_stack) > 0 or board.fen() != chess.STARTING_FEN:
                      print(_("Salvataggio partita in corso..."))
                      SaveGameToFile(game)
                 break
             
+            elif cmd == ".v":
+                # Segnalazione visuale per l'utente
+                print(_("Pronto per nuova variante. Inserisci una mossa diversa per creare un nuovo ramo."))
+                
+            elif cmd == ".vm":
+                # Promuovi Variante a Mainline
+                if node.parent and len(node.parent.variations) > 1:
+                    parent = node.parent
+                    vars_list = parent.variations
+                    
+                    # Trova l'indice del nodo corrente
+                    try:
+                        current_idx = vars_list.index(node)
+                        if current_idx > 0:
+                            # Scambia con l'indice 0 (Mainline)
+                            vars_list[0], vars_list[current_idx] = vars_list[current_idx], vars_list[0]
+                            print(_("Variante promossa a linea principale!"))
+                        else:
+                            print(_("Questa linea è già la principale."))
+                    except ValueError:
+                        print(_("Errore: nodo non trovato nelle varianti."))
+                else:
+                    print(_("Non sei in una variante o non ci sono alternative da promuovere."))
+
+            elif cmd == ".k":
+                target_move = number_command
+                print(_("Salto alla mossa {n} (Mainline)...").format(n=target_move))
+                
+                board.reset()
+                if "FEN" in game.headers: board.set_fen(game.headers["FEN"])
+                node = game
+                
+                current_move_num = 1
+                for move in game.mainline_moves():
+                    if board.turn == chess.WHITE:
+                        if current_move_num == target_move: break
+                    
+                    board.push(move)
+                    node = node.variations[0]
+                    
+                    if board.turn == chess.BLACK: pass
+                    else: current_move_num += 1
+                
+                game_state.board = board
+                print(board)
+
             elif cmd == ".?":
                 menu(d=MNMAIN, show_only=True)
             
@@ -231,15 +315,11 @@ def run():
         else:
             move_san = NormalizeMove(key_command)
             move = None
-            
-            # --- LOGICA ROBUSTA PER INTERPRETAZIONE MOSSA ---
-            # 1. Tentativo Standard (come scritto)
             try:
                 move = board.parse_san(move_san)
             except ValueError:
                 pass
             
-            # 2. Tentativo Cattura Pedone senza 'x' (es. ed5 -> exd5)
             if not move and len(move_san) == 3 and move_san[0].islower() and move_san[1].islower() and move_san[2].isdigit():
                 try:
                     move_capture = move_san[0] + 'x' + move_san[1:]
@@ -247,14 +327,11 @@ def run():
                 except ValueError:
                     pass
             
-            # 3. Tentativo Smart 'b' -> Alfiere (es. bc4 -> Bc4 o bxc4)
             if not move and move_san and move_san[0] == 'b':
-                # Prova Alfiere maiuscolo
                 try:
                     move = board.parse_san('B' + move_san[1:])
                 except ValueError:
-                    # Se fallisce, prova Alfiere che cattura (es. bc4 -> Bxc4)
-                     if len(move_san) == 3: # es. bc4
+                     if len(move_san) == 3:
                         try:
                             move = board.parse_san('Bx' + move_san[1:])
                         except ValueError:
@@ -263,7 +340,19 @@ def run():
             if move:
                 print(DescribeMove(move, board))
                 board.push(move)
-                node = node.add_main_variation(move)
+                
+                existing_variation = None
+                for variant in node.variations:
+                    if variant.move == move:
+                        existing_variation = variant
+                        break
+                
+                if existing_variation:
+                    node = existing_variation
+                else:
+                    if node.variations:
+                        print(_("Nuova variante creata."))
+                    node = node.add_variation(move)
             else:
                 color = _("Bianco") if board.turn == chess.WHITE else _("Nero")
                 print(_("{k}: mossa illegale per il {c}.").format(k=key_command, c=color))
