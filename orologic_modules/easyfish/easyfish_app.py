@@ -3,28 +3,42 @@ import chess.engine
 import pyperclip
 import os
 import sys
-from GBUtils import dgt, menu
+from GBUtils import dgt, menu, Acusticator
 from .constants import (
-    VER, PGN_FILE_PATH, MNMAIN, SYMBOLS_TO_NAME, COLUMN_TO_NATO
+    MNMAIN, SYMBOLS_TO_NAME, COLUMN_TO_NATO
 )
-from .board import CustomBoard
+# DRY: Uso le utility di Orologic
+from ..board_utils import CustomBoard, DescribeMove, GameState, NormalizeMove
+from .. import ui as orologic_ui
 from .utils import (
-    CalculateMaterial, SquaresListToString, InfoSquare, ExploreColumnsOrRows,
-    GetPiecesPosition, GetPieceMoves
-    # MoveToString rimosso, usiamo quella di Orologic
+    CalculateMaterial, SquaresListToString
 )
 from .pgn_handler import (
-    LoadGamesFromPGN, NewGame, PastePGNFromClipboard, CopyPGNToClipboard,
-    AppendGameToPGN, AddingPGNTAGS
+    InitNewPGN, PastePGNFromClipboard, CopyPGNToClipboard,
+    SaveGameToFile, AddingPGNTAGS
 )
 from .. import engine as orologic_engine
 from ..config import _ 
-from ..board_utils import DescribeMove # Import da Orologic
 from .engine_handler import ShowStats
 from .interaction import ExplorerMode, BoardEditor
 
+def GetDynamicPrompt(board):
+    """Genera il prompt basandosi sul turno e sul numero di mossa."""
+    n = board.fullmove_number
+    if not board.move_stack:
+        return _("INIZIO {n}. ").format(n=n)
+    
+    last_move = board.pop()
+    last_san = board.san(last_move)
+    board.push(last_move)
+    
+    if board.turn == chess.WHITE:
+        return f"{n-1}... {last_san}: "
+    else:
+        return f"{n}. {last_san}: "
+
 def run():
-    print(_("Ciao, sono Easyfish {ver}, qui Gabriele Battaglia (IZ4APU).\n\tSono pronto ad aiutarti. Buon divertimento!").format(ver=VER))
+    print(_("\nBenvenuto in Easyfish, la tua interfaccia testuale con il motore scacchistico.\n\tBuon divertimento!"))
 
     # Init Engine
     if not orologic_engine.ENGINE:
@@ -33,23 +47,22 @@ def run():
     
     engine = orologic_engine.ENGINE
     
-    # Load Games
-    existing_games = LoadGamesFromPGN(PGN_FILE_PATH)
-    print(_("Caricate {n} partite esistenti nel database PGN.").format(n=len(existing_games)))
-    
     # New Game
-    game, node = NewGame()
-    board = CustomBoard()
+    board = CustomBoard() 
+    game, node = InitNewPGN(board)
+    
+    # DRY: GameState
+    fake_clock = {"phases": [{"white_time": 0, "black_time": 0, "white_inc": 0, "black_inc": 0, "moves": 0}]}
+    game_state = GameState(fake_clock)
+    game_state.board = board
     
     # State
-    analysis_time = 2
     info = {}
-    multipv = 3
-    prompt = _("MOSSA 1.: ") # Tradotto
     fen_from_clip = ""
 
     while True:
-        key_command = dgt(prompt=prompt, kind="s", smin=1, smax=8192)
+        prompt = GetDynamicPrompt(board)
+        key_command = dgt(prompt=prompt, kind="s", smin=1, smax=8192).strip()
         
         if not key_command:
             continue
@@ -63,15 +76,19 @@ def run():
             cmd = key_command.lower()
             cmd_clean = ''.join([char for char in cmd if not char.isdigit()])
             
-            if cmd == ".q":
+            if cmd == ".": # ESCI
+                if len(board.move_stack) > 0 or board.fen() != chess.STARTING_FEN:
+                     print(_("Salvataggio partita in corso..."))
+                     SaveGameToFile(game)
                 break
             
             elif cmd == ".?":
-                menu(d=MNMAIN, show=True)
+                menu(d=MNMAIN, show_only=True)
             
             elif cmd == ".e":
                 print(_("Accesso alla modalità esplorazione..."))
                 ExplorerMode(game, engine)
+                pass
                 
             elif cmd == ".b":
                 print(board)
@@ -90,12 +107,18 @@ def run():
                 print(_("Incolla una nuova posizione PGN dagli appunti..."))
                 loaded_game = PastePGNFromClipboard()
                 if loaded_game:
-                    AppendGameToPGN(PGN_FILE_PATH, game, board)
+                    print(_("ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova."))
+                    SaveGameToFile(game)
                     game = loaded_game
                     node = game 
                     board = CustomBoard()
-                    prompt = "START 1.: "
-                    print(_("Partita caricata con successo."))
+                    if "FEN" in game.headers:
+                         board.set_fen(game.headers["FEN"])
+                    for move in game.mainline_moves():
+                        board.push(move)
+                    node = game.end()
+                    game_state.board = board
+                    print(_("Nuova partita caricata."))
                     print(board)
                 else:
                     print(_("PGN non valido o appunti vuoti."))
@@ -109,54 +132,39 @@ def run():
                 if not fen_from_clip:
                     print(_("Spiacente, appunti vuoti. Copia prima un FEN valido."))
                 else:
-                    print(_("Incolla una nuova posizione FEN dagli appunti...\n\tVerifica FEN..."))
+                    print(_("Incolla una nuova posizione FEN dagli appunti..."))
                     try:
                         tmp_board = board.copy()
                         tmp_board.set_fen(fen_from_clip)
-                        print(_("FEN valido."))
-                        AppendGameToPGN(PGN_FILE_PATH, game, board)
-                        print(_("Partita corrente salvata."))
-                        
-                        existing_games = LoadGamesFromPGN(PGN_FILE_PATH)
-                        print(_("Caricate {n} partite esistenti nel database PGN.").format(n=len(existing_games)))
-                        
+                        print(_("FEN valido. ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova da questa posizione."))
+                        SaveGameToFile(game)
                         board = CustomBoard()
                         board.set_fen(fen_from_clip)
-                        
-                        game, node = NewGame()
-                        game.setup(board) 
-                        
-                        prompt = "START 1.: "
+                        game, node = InitNewPGN(board)
+                        game_state.board = board
                         print(board)
                     except ValueError:
                         print(_("Stringa FEN non valida."))
                         
             elif cmd == ".n":
+                print(_("Nuova partita. La corrente verrà salvata."))
+                SaveGameToFile(game)
                 print(_("Nuova scacchiera pronta. Si parte!"))
-                AppendGameToPGN(PGN_FILE_PATH, game, board)
-                print(_("Vecchia partita salvata."))
-                existing_games = LoadGamesFromPGN(PGN_FILE_PATH)
-                print(_("Caricate {n} partite esistenti nel database PGN.").format(n=len(existing_games)))
-                game, node = NewGame()
                 board = CustomBoard()
-                prompt = "START 1.: "
+                game, node = InitNewPGN(board)
+                game_state.board = board
                 
             elif cmd == ".be":
-                AppendGameToPGN(PGN_FILE_PATH, game, board)
-                existing_games = LoadGamesFromPGN(PGN_FILE_PATH)
-                game, node = NewGame()
-                board = CustomBoard()
-                fen = BoardEditor()
-                board.set_fen(fen)
-                game.setup(board)
-                prompt = "START 1.: "
-                
-            elif cmd == ".ssf":
-                os.startfile(".") 
-                
-            elif cmd == ".snl":
-                multipv = dgt(prompt=_("Imposta numero di linee di analisi, attuale {m}: ").format(m=multipv), kind="i", imin=1, imax=256, default=3)
-                print(multipv, _("impostato."))
+                print(_("Accesso all'editor. ATTENZIONE: Al termine dell'editing, la partita corrente verrà salvata e ne inizierà una nuova dalla posizione impostata."))
+                new_fen = BoardEditor(starting_fen=board.fen())
+                if new_fen:
+                    SaveGameToFile(game)
+                    board = CustomBoard()
+                    board.set_fen(new_fen)
+                    game, node = InitNewPGN(board)
+                    game_state.board = board
+                    print(_("Nuova partita avviata dalla posizione editata."))
+                    print(board)
                 
             elif cmd_clean == ".a":
                 if not engine:
@@ -166,7 +174,8 @@ def run():
                     print(_("Analisi posizione corrente per {s} secondi.").format(s=sec))
                     limit = chess.engine.Limit(time=sec)
                     try:
-                        info = engine.analyse(board, limit, multipv=multipv)
+                        info_result = engine.analyse(board, limit, multipv=orologic_engine.multipv)
+                        info = info_result 
                         if isinstance(info, list):
                              ShowStats(board, info[0])
                         elif isinstance(info, dict):
@@ -178,97 +187,83 @@ def run():
                 if info: 
                     idx = number_command - 1 if number_command > 0 else 0
                     if idx < 0: idx = 0
-                    
                     current_info_list = info if isinstance(info, list) else [info]
-                    
                     if idx >= len(current_info_list):
                         print(_("Ci sono solo {n} linee di analisi disponibili").format(n=len(current_info_list)))
                         idx = len(current_info_list) - 1
-                    
                     if idx == 0:
                         print(_("Migliore:"))
                     else:
                         print(_("{n}° scelta:").format(n=idx+1))
-                    
                     ShowStats(board, current_info_list[idx])
-
                 else:
                     print(_("Prima devi eseguire l'analisi con il comando .a"))
             
             else:
                 print(_("Spiacente, {cmd} non è un comando valido.\nDigita '.?' per il menu.").format(cmd=cmd))
 
-        elif key_command.startswith(","):
-            if len(key_command) > 1 and key_command[1] in SYMBOLS_TO_NAME:
-                algebric = GetPiecesPosition(board, key_command[1])
-                found = SYMBOLS_TO_NAME[key_command[1]]
-                found += ": " + SquaresListToString(board, algebric)
-                print(found)
-            else:
-                print(_("{p} non è un nome di pezzo valido").format(p=key_command[1] if len(key_command)>1 else ''))
-
         elif key_command.startswith("-"):
-            cmd = key_command.lower()
-            if len(cmd) == 3:
-                square = cmd[-2:]
-                if square[0] in "abcdefgh" and square[1] in "12345678":
-                    print(InfoSquare(board, chess.parse_square(square)))
-                else:
-                    print(_("Casa non valida"))
-            elif len(cmd) == 2:
-                if cmd[1] in "abcdefgh":
-                    found_occupied_square = SquaresListToString(board, ExploreColumnsOrRows(board, ord(cmd[1])-97, vertical=True), True, True)
-                    print(_("Pezzi sulla colonna {c}: {s}").format(c=COLUMN_TO_NATO[cmd[1]], s=found_occupied_square))
-                elif cmd[1] in "12345678":
-                    found_occupied_square = SquaresListToString(board, ExploreColumnsOrRows(board, int(cmd[1])-1, vertical=False), True, True)
-                    print(_("Pezzi sulla traversa {r}: {s}").format(r=cmd[1], s=found_occupied_square))
-            elif len(cmd) == 4:
-                square = cmd[-2:]
-                piece = key_command[1].upper()
-                
-                if square[0] in "abcdefgh" and square[1] in "12345678" and piece in SYMBOLS_TO_NAME:
-                     lm = False if board.piece_at(chess.parse_square(square)) else True
-                     oos = False
-                     legal_move_str = GetPieceMoves(board, piece, square, legal_moves=lm, occupied_only_square=oos)
-                     print(_("Mosse di {p} da {c} {r}: {m}").format(p=SYMBOLS_TO_NAME[piece][6:].capitalize(), c=COLUMN_TO_NATO[square[0]], r=square[1], m=legal_move_str))
-                else:
-                    print(_("Nome pezzo o casa non validi"))
-            else:
-                print(_("comando di esplorazione non valido"))
+            param = key_command[1:].strip()
+            from .. import config as o_config
+            if len(param) == 1 and param.isalpha(): # Colonna
+                Acusticator(["c5", 0.07, 0, o_config.VOLUME, "d5", 0.07, 0, o_config.VOLUME, "e5", 0.07, 0, o_config.VOLUME, "f5", 0.07, 0, o_config.VOLUME, "g5", 0.07, 0, o_config.VOLUME, "a5", 0.07, 0, o_config.VOLUME, "b5", 0.07, 0, o_config.VOLUME, "c6", 0.07, 0, o_config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
+                orologic_ui.read_file(game_state, param)
+            elif len(param) == 1 and param.isdigit(): # Traversa
+                rank_number = int(param)
+                if 1 <= rank_number <= 8:
+                    Acusticator(["g5", 0.07, -1, o_config.VOLUME,"g5", 0.07, -.75, o_config.VOLUME,"g5", 0.07, -.5, o_config.VOLUME,"g5", 0.07, -.25, o_config.VOLUME,"g5", 0.07, 0, o_config.VOLUME,"g5", 0.07, .25, o_config.VOLUME,"g5", 0.07, .5, o_config.VOLUME,"g5", 0.07, .75, o_config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
+                    orologic_ui.read_rank(game_state, rank_number)
+                else: print(_("Traversa non valida."))
+            elif len(param) == 2 and param[0].isalpha() and param[1].isdigit(): # Casa
+                Acusticator(["d#4", .7, 0, o_config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+                orologic_ui.read_square(game_state, param)
+            else: print(_("Comando esplorazione non riconosciuto."))
+
+        elif key_command.startswith(","):
+            from .. import config as o_config
+            Acusticator(["a3", .06, -1, o_config.VOLUME, "c4", .06, -0.5, o_config.VOLUME, "d#4", .06, 0.5, o_config.VOLUME, "f4", .06, 1, o_config.VOLUME], kind=3, adsr=[20, 5, 70, 25])
+            orologic_ui.report_piece_positions(game_state, key_command[1:2])
 
         elif key_command.startswith("_"):
             node.comment = key_command[1:]
             print(_("Commento registrato."))
 
         else:
-            move_input = key_command
-            if move_input.lower() in ('o-o', 'oo', '00'): move_input = "O-O"
-            elif move_input.lower() in ('o-o-o', 'ooo', '000'): move_input = "O-O-O"
-            elif move_input[0].lower() in "rnqk": 
-                move_input = move_input[0].upper() + move_input[1:]
+            move_san = NormalizeMove(key_command)
+            move = None
             
+            # --- LOGICA ROBUSTA PER INTERPRETAZIONE MOSSA ---
+            # 1. Tentativo Standard (come scritto)
             try:
-                move = board.parse_san(move_input)
-                # DRY: Usa DescribeMove di Orologic
+                move = board.parse_san(move_san)
+            except ValueError:
+                pass
+            
+            # 2. Tentativo Cattura Pedone senza 'x' (es. ed5 -> exd5)
+            if not move and len(move_san) == 3 and move_san[0].islower() and move_san[1].islower() and move_san[2].isdigit():
+                try:
+                    move_capture = move_san[0] + 'x' + move_san[1:]
+                    move = board.parse_san(move_capture)
+                except ValueError:
+                    pass
+            
+            # 3. Tentativo Smart 'b' -> Alfiere (es. bc4 -> Bc4 o bxc4)
+            if not move and move_san and move_san[0] == 'b':
+                # Prova Alfiere maiuscolo
+                try:
+                    move = board.parse_san('B' + move_san[1:])
+                except ValueError:
+                    # Se fallisce, prova Alfiere che cattura (es. bc4 -> Bxc4)
+                     if len(move_san) == 3: # es. bc4
+                        try:
+                            move = board.parse_san('Bx' + move_san[1:])
+                        except ValueError:
+                            pass
+
+            if move:
                 print(DescribeMove(move, board))
-                
                 board.push(move)
                 node = node.add_main_variation(move)
-                
-                if board.turn:
-                     temp_move = board.pop()
-                     last_san = board.san(temp_move)
-                     board.push(temp_move)
-                     prompt = f"{board.fullmove_number}... {last_san}: "
-                else:
-                     temp_move = board.pop()
-                     last_san = board.san(temp_move)
-                     board.push(temp_move)
-                     prompt = f"{board.fullmove_number}. {last_san}: "
-
-            except ValueError:
-                print(_("{k}: mossa illegale.").format(k=key_command))
-
-    AppendGameToPGN(PGN_FILE_PATH, game, board)
-    updated_games = LoadGamesFromPGN(PGN_FILE_PATH)
-    print(_("{n} partite nel database PGN in {p}.\n\tChiusura modalità Easyfish...").format(n=len(updated_games), p=PGN_FILE_PATH))
+            else:
+                color = _("Bianco") if board.turn == chess.WHITE else _("Nero")
+                print(_("{k}: mossa illegale per il {c}.").format(k=key_command, c=color))
