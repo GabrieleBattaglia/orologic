@@ -22,6 +22,7 @@ from .. import engine as orologic_engine
 from ..config import _ 
 from .engine_handler import ShowStats
 from .interaction import ExplorerMode, BoardEditor
+from . import game_mode
 
 def GetDynamicPrompt(board, node):
     """Genera il prompt basandosi sul turno, numero di mossa e livello variante."""
@@ -207,6 +208,14 @@ def run():
                 print(_("Accesso alla modalità esplorazione..."))
                 ExplorerMode(game, engine)
                 pass
+
+            elif cmd == ".g":
+                # Avvio partita contro il motore
+                final_node = game_mode.StartEngineGame(node, engine)
+                # Sincronizza stato al ritorno
+                node = final_node
+                board = node.board() # Ricrea board dallo stato finale
+                game_state.board = board
                 
             elif cmd == ".b":
                 print(board)

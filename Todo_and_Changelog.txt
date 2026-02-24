@@ -2,6 +2,15 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+6.2.0
+	+ [Easyfish] Nuova Modalità Gioco (.g): Permette di giocare contro il motore a partire dalla posizione corrente.
+	  - Gestione completa del tempo (Orologio partita, tempo fisso per mossa, o senza tempo).
+	  - Supporto per incremento.
+	  - Il motore rispetta i limiti di tempo impostati.
+	  - Comandi in partita: .1/.2 (info tempo), .a (analisi), .v (suggerimento variante), . (abbandona).
+	  - Integrazione fluida: la partita aggiorna la posizione corrente in Easyfish.
+	+ [Easyfish] Refactoring Analisi: Centralizzata la logica di analisi e formattazione in `analysis_utils.py` per coerenza tra Explorer e Game Mode.
+	+ [Easyfish] Miglioramenti vari all'interfaccia e alla gestione degli errori.
 6.1.1
 	+ [Easyfish] Board Editor: Aggiunto comando '--' per svuotare la scacchiera (solo Re).
 	+ [Easyfish] Comando .k: Fixato e potenziato il salto mossa. Supporta .k# (Bianco), .k#+ (Bianco), .k#- (Nero). Se non specificato, chiede interattivamente numero e colore. Rimosso output FEN ridondante.
