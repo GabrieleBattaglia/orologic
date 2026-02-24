@@ -154,7 +154,7 @@ def format_pgn_comments(pgn_str):
 
 class CustomBoard(chess.Board):
     def __str__(self):
-        res = f"FEN: {self.fen()}\n"
+        res = ""
         w, b = CalculateMaterial(self)
         rs = range(8, 0, -1) if self.turn == chess.WHITE else range(1, 9)
         fs = range(8) if self.turn == chess.WHITE else range(7, -1, -1)

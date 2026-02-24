@@ -29,13 +29,20 @@ def BoardEditor(starting_fen=None):
         tmp_board.set_piece_at(chess.E1, chess.Piece(chess.KING, chess.WHITE))
         tmp_board.set_piece_at(chess.E8, chess.Piece(chess.KING, chess.BLACK))
 
-    print(_("Comandi principali: Pe4 per piazzare, e4 per svuotare, .? per il menu, . per salvare ed uscire."))
+    print(_("Comandi principali: Pe4 per piazzare, e4 per svuotare, -- per tutto vuoto, .? per menu."))
     
     while True:
         prompt = InsertedCounter(tmp_board)
         wherewho = dgt(prompt=prompt, kind="s", smin=1, smax=10).strip()
         
         # Gestione Comandi
+        if wherewho == "--":
+            tmp_board.clear()
+            tmp_board.set_piece_at(chess.E1, chess.Piece(chess.KING, chess.WHITE))
+            tmp_board.set_piece_at(chess.E8, chess.Piece(chess.KING, chess.BLACK))
+            print(_("Scacchiera svuotata. Re posizionati in case di partenza."))
+            continue
+
         if wherewho.startswith("."):
             if wherewho == ".":
                 if tmp_board.is_valid():
@@ -142,6 +149,7 @@ def ExplorerMode(game, engine, analysis_time_default=2):
     initial_board = game.board() 
     analysis_time = analysis_time_default
     local_multipv = orologic_engine.multipv
+    var_index = 0
 
     def SyncBoardToNode(node):
         board = initial_board.copy()
@@ -177,12 +185,13 @@ def ExplorerMode(game, engine, analysis_time_default=2):
         
         current_move = node.san() if node.move else _("inizio")
         
-        if node.variations:
-            next_move = node.variations[0].san()
-            variant_count = len(node.variations)
+        variant_count = len(node.variations)
+        if var_index >= variant_count: var_index = 0
+        
+        if variant_count > 0:
+            next_move = node.variations[var_index].san()
         else:
             next_move = game.headers.get("Result", _("fine"))
-            variant_count = 0
             
         if node.comment: print(node.comment)
             
@@ -194,7 +203,7 @@ def ExplorerMode(game, engine, analysis_time_default=2):
             
         level_prefix = f"Lvl{level}" if level > 0 else _("Principale")
         prompt = f"\n[{level_prefix}] {parent_move or ''} ({current_move}) {next_move}"
-        if variant_count > 1: prompt += f" V{variant_count}"
+        if variant_count > 1: prompt += f" [V{var_index+1}/{variant_count}]"
         
         command = key(prompt=prompt)
         
@@ -202,33 +211,36 @@ def ExplorerMode(game, engine, analysis_time_default=2):
             if node.parent:
                 node = node.parent
                 current_board = SyncBoardToNode(node)
+                var_index = 0
             else: print(_("Nessuna mossa precedente"))
         elif command == '?': menu(d=MNEXPLORER, show_only=True)
         elif command == 'd':
-            if node.variations:
-                if variant_count > 1:
-                    var_index = 0
-                    while True:
-                        var_prompt = f"\nVariante {var_index+1}/{variant_count}: {node.variations[var_index].san()}"
-                        var_command = key(prompt=var_prompt)
-                        if var_command == 'x' and var_index < variant_count - 1: var_index += 1
-                        elif var_command == 'w' and var_index > 0: var_index -= 1
-                        elif var_command == 'd':
-                            node = node.variations[var_index]
-                            current_board = SyncBoardToNode(node)
-                            break
-                        elif var_command == '.': break
-                else:
-                    node = node.variations[0]
-                    current_board.push(node.move)
+            if variant_count > 0:
+                node = node.variations[var_index]
+                # Ottimizzazione: invece di ricalcolare tutto, pushiamo solo se sincronizzati
+                # Ma per sicurezza usiamo sync
+                current_board = SyncBoardToNode(node)
+                var_index = 0
             else: print(_("fine della partita"))
+        elif command == 'x': # Next Variant
+            if variant_count > 1:
+                var_index = (var_index + 1) % variant_count
+                print(f"Variante {var_index+1}: {node.variations[var_index].san()}")
+            else: print(_("Nessuna variante alternativa."))
+        elif command == 'w': # Prev Variant
+            if variant_count > 1:
+                var_index = (var_index - 1 + variant_count) % variant_count
+                print(f"Variante {var_index+1}: {node.variations[var_index].san()}")
+            else: print(_("Nessuna variante alternativa."))
         elif command == 'q':
             node = game
             current_board = SyncBoardToNode(node)
+            var_index = 0
         elif command == 'e':
             while node.variations:
                 node = node.variations[0]
                 current_board.push(node.move)
+            var_index = 0
         elif command == 'z':
             while node.parent and node.parent.variations[0] != node:
                 node = node.parent
@@ -236,6 +248,7 @@ def ExplorerMode(game, engine, analysis_time_default=2):
             if node.parent:
                 node = node.parent
                 current_board = SyncBoardToNode(node)
+            var_index = 0
         elif command == 'b':
             current_board = SyncBoardToNode(node)
             print(current_board)
@@ -248,6 +261,7 @@ def ExplorerMode(game, engine, analysis_time_default=2):
                     node = parent
                     current_board = SyncBoardToNode(node)
                     print(_("Mossa/Variante eliminata. Tornati indietro."))
+                    var_index = 0
                 else:
                     print(_("Errore: Impossibile trovare la mossa nella lista varianti del padre."))
             else:
