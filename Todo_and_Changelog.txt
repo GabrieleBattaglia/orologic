@@ -2,6 +2,11 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+6.1.1
+	+ [Easyfish] Board Editor: Aggiunto comando '--' per svuotare la scacchiera (solo Re).
+	+ [Easyfish] Comando .k: Fixato e potenziato il salto mossa. Supporta .k# (Bianco), .k#+ (Bianco), .k#- (Nero). Se non specificato, chiede interattivamente numero e colore. Rimosso output FEN ridondante.
+	+ [Easyfish] Explorer (.e): Navigazione varianti fluida. I comandi 'w' (precedente) e 'x' (successiva) funzionano ora direttamente nel menu principale dell'esploratore, eliminando sottomenu modali.
+	= Fixato un problema con i percorsi dei file di configurazione (settings/) che venivano creati nella directory di lavoro corrente invece che nella root del progetto.
 6.1.0
 	+ Modalità "Arbitra": Rinominata la voce "Gioca" in "Arbitra" nel menu principale.
 	+ Gestione Bandierina Caduta: Quando scade il tempo, l'applicazione non termina immediatamente ma chiede se continuare senza orologio (per gestione amichevole/didattica).

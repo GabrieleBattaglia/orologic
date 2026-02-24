@@ -114,6 +114,7 @@ MNEXPLORER={'a':_("Vai alla mossa precedente"),
             '.':_("Torna al menu principale")}
 
 MNEDITOR={'.':_("Fine editing e salva posizione"),
+          '--':_("Svuota la scacchiera (lascia solo i Re)"),
           '.t':_("Cambia il turno (Bianco/Nero)"),
           '.c':_("Imposta diritti di arrocco (es. KQkq)"),
           '.e':_("Imposta casa en passant (es. e3)"),

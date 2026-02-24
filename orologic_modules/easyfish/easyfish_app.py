@@ -3,6 +3,7 @@ import chess.engine
 import pyperclip
 import os
 import sys
+import re
 from GBUtils import dgt, menu, Acusticator
 from .constants import (
     MNMAIN, SYMBOLS_TO_NAME, COLUMN_TO_NATO
@@ -82,8 +83,6 @@ def run():
 
         number_command_str = ''.join([char for char in key_command if char.isdigit()])
         number_command = int(number_command_str) if number_command_str else 0
-        if number_command < 1: number_command = 1
-        elif number_command > 600: number_command = 600
 
         if key_command.startswith("."):
             cmd = key_command.lower()
@@ -144,24 +143,59 @@ def run():
                 else:
                     print(_("Non sei in una variante o non ci sono alternative da promuovere."))
 
-            elif cmd == ".k":
-                target_move = number_command
-                print(_("Salto alla mossa {n} (Mainline)...").format(n=target_move))
+            elif cmd_clean in [".k", ".k+", ".k-"]:
+                target_move = 0
+                is_black = False
+                
+                # Parsing regex
+                match = re.search(r"^\.k(\d+)([+-]?)$", key_command.lower())
+                if match:
+                    target_move = int(match.group(1))
+                    is_black = (match.group(2) == "-")
+                
+                # Se non parsato o 0, chiedi interattivamente
+                if target_move <= 0:
+                     try:
+                         target_move = dgt(prompt=_("Numero mossa: "), kind="i", imin=1, imax=600, default=1)
+                         turn_choice = dgt(prompt=_("B per Bianco, N per Nero: "), kind="s", default="B").strip().upper()
+                         is_black = (turn_choice == "N")
+                     except: 
+                         target_move = 1
+                         is_black = False
+                
+                color_str = _("Nero") if is_black else _("Bianco")
+                print(_("Salto alla mossa {n} ({c})...").format(n=target_move, c=color_str))
                 
                 board.reset()
                 if "FEN" in game.headers: board.set_fen(game.headers["FEN"])
                 node = game
                 
-                current_move_num = 1
-                for move in game.mainline_moves():
-                    if board.turn == chess.WHITE:
-                        if current_move_num == target_move: break
-                    
-                    board.push(move)
-                    node = node.variations[0]
-                    
-                    if board.turn == chess.BLACK: pass
-                    else: current_move_num += 1
+                found = False
+                # Gestione caso speciale: Inizio Partita (se corrisponde alla richiesta)
+                if target_move == board.fullmove_number and board.turn == (chess.BLACK if is_black else chess.WHITE):
+                    found = True
+                else:
+                    for move in game.mainline_moves():
+                        current_turn_is_black = (board.turn == chess.BLACK)
+                        
+                        if board.fullmove_number == target_move:
+                            if is_black == current_turn_is_black:
+                                found = True
+                                break
+                        
+                        board.push(move)
+                        if node.variations:
+                            node = node.variations[0]
+                        else:
+                            # Fine partita raggiunta
+                            break
+                            
+                    # Check finale se la richiesta corrisponde all'ultima posizione raggiunta (es. ultima mossa nera giocata -> siamo al bianco successivo, ma loop finito)
+                    if not found and board.fullmove_number == target_move and (board.turn == chess.BLACK) == is_black:
+                        found = True
+
+                if not found:
+                    print(_("Mossa {n} {c} non raggiunta (fine partita).").format(n=target_move, c=color_str))
                 
                 game_state.board = board
                 print(board)
