@@ -6,7 +6,9 @@ import threading
 from GBUtils import dgt, key, menu, Acusticator
 from ..config import _
 from .. import engine as orologic_engine
+from .. import storage
 from ..board_utils import DescribeMove, FormatTime, NormalizeMove, CustomBoard
+from .constants import MNGAME
 from . import analysis_utils
 
 class EasyfishGameState:
@@ -20,7 +22,8 @@ class EasyfishGameState:
         self.flag_fallen = False
         self.paused = False
         self.human_color = None
-        self.engine_has_clock = True # Se False, non tracciamo il tempo del motore
+        self.engine_has_clock = True
+        self.ignore_clock = False
 
 def clock_thread(game_state):
     """Thread che gestisce il decremento del tempo e la bandierina."""
@@ -31,7 +34,7 @@ def clock_thread(game_state):
         elapsed = current_time - last_time
         last_time = current_time
         
-        if not game_state.paused:
+        if not game_state.paused and not game_state.ignore_clock:
             if game_state.active_color == chess.WHITE:
                 # Decrementa solo se white ha un clock (sempre vero per l'umano se bianco, o per motore se game mode)
                 # Ma qui semplifichiamo: i tempi ci sono sempre, al massimo sono infiniti o ignorati per il motore
@@ -87,42 +90,51 @@ def StartEngineGame(game_node, engine_instance):
 
     print(_("\n--- Nuova Partita contro il Motore ---"))
     
-    # 1. Configurazione Tempo Utente
-    user_time = ParseTimeInput(_("Tuo tempo"))
-    if user_time is None: return game_node
-    user_inc = dgt(_("Tuo incremento (sec): "), kind="i", default=0)
-    
-    # 2. Configurazione Tempo Motore
     engine_mode = menu({
-        "1": _("Partita (Simmetrico)"),
-        "2": _("Tempo per mossa fisso"),
+        "1": _("Partita a tempo"),
+        "2": _("Tempo per mossa motore"),
         "3": _("Senza tempo (Amichevole)")
-    }, p=_("Modalita' tempo motore: "), numbered=True)
+    }, p=_("Modalita' di gioco: "), numbered=True)
     
+    user_time = 0
+    user_inc = 0
     engine_time = 0
     engine_inc = 0
     engine_limit_type = "game"
     engine_has_clock = True
+    ignore_clock = False
     
     if engine_mode == "1":
+        user_time = ParseTimeInput(_("Tuo tempo partita"))
+        if user_time is None: return game_node
+        user_inc = dgt(_("Tuo incremento (sec): "), kind="i", default=0)
+        
         c = dgt(_("Usare stesso tempo per il motore? (s/n): "), kind="s", default="s").lower()
         if c == "s":
             engine_time = user_time
             engine_inc = user_inc
         else:
-            engine_time = ParseTimeInput(_("Tempo motore"))
+            engine_time = ParseTimeInput(_("Tempo partita motore"))
+            if engine_time is None: return game_node
             engine_inc = dgt(_("Incremento motore (sec): "), kind="i", default=0)
+            
     elif engine_mode == "2":
         engine_limit_type = "move"
+        engine_has_clock = False
+        user_time = ParseTimeInput(_("Tuo tempo partita"))
+        if user_time is None: return game_node
+        user_inc = dgt(_("Tuo incremento (sec): "), kind="i", default=0)
         engine_time = dgt(_("Secondi per mossa motore: "), kind="f", default=2.0)
-        engine_has_clock = False
+        
     elif engine_mode == "3":
-        engine_limit_type = "depth"
-        engine_time = 1.0 
+        ignore_clock = True
+        engine_limit_type = "move"
         engine_has_clock = False
+        engine_time = dgt(_("Secondi riflessione motore: "), kind="f", default=2.0)
 
     # Setup GameState
     game_state = EasyfishGameState()
+    game_state.ignore_clock = ignore_clock
     board = game_node.board()
     game_state.active_color = board.turn
     game_state.human_color = board.turn # L'utente gioca chi ha il turno
@@ -140,6 +152,18 @@ def StartEngineGame(game_node, engine_instance):
         game_state.white_time = float(engine_time) if engine_has_clock else 0
         game_state.white_inc = float(engine_inc) if engine_has_clock else 0
         print(_("Giochi col NERO."))
+
+    try:
+        db = storage.LoadDB()
+        current_skill = db.get("engine_config", {}).get("skill_level", 20)
+        print(_("Livello forza motore (Skill Level): {s}").format(s=current_skill))
+        
+        # Forza attivazione WDL dal motore per l'analisi e gioco
+        try:
+            engine_instance.configure({"UCI_ShowWDL": True})
+        except: pass
+    except Exception as e:
+        print(_("Errore lettura skill level: {e}").format(e=e))
 
     # Avvio Thread Orologio
     t = threading.Thread(target=clock_thread, args=(game_state,), daemon=True)
@@ -184,11 +208,31 @@ def StartEngineGame(game_node, engine_instance):
                         res = "0-1" if game_state.human_color == chess.WHITE else "1-0"
                         if current_node.root(): current_node.root().headers["Result"] = res
                         break
-                    elif cmd == ".1": print(_("Tempo Bianco: {t}").format(t=FormatTime(game_state.white_time)))
-                    elif cmd == ".2": print(_("Tempo Nero: {t}").format(t=FormatTime(game_state.black_time)))
+                    elif cmd == ".1":
+                        if getattr(game_state, 'ignore_clock', False): print(_("Orologi disattivati."))
+                        else: print(_("Tempo Bianco: {t}").format(t=FormatTime(game_state.white_time)))
+                    elif cmd == ".2":
+                        if getattr(game_state, 'ignore_clock', False): print(_("Orologi disattivati."))
+                        else: print(_("Tempo Nero: {t}").format(t=FormatTime(game_state.black_time)))
                     elif cmd == ".a":
-                         lines = analysis_utils.RunAnalysis(board, engine_instance, orologic_engine.analysis_time, orologic_engine.multipv)
+                         lines = analysis_utils.RunAnalysis(board, engine_instance, orologic_engine.analysis_time, 1)
                          for l in lines: print(l)
+                    elif cmd == ".b":
+                         print(CustomBoard(board.fen()))
+                    elif cmd == ".?":
+                         menu(MNGAME, show_only=True)
+                    elif cmd.startswith(".s") and len(cmd) > 2 and cmd[2:].isdigit():
+                         try:
+                             new_skill = int(cmd[2:])
+                             if 1 <= new_skill <= 20:
+                                 engine_instance.configure({"Skill Level": new_skill})
+                                 Acusticator(["g5", 0.05, 0, 0.5], kind=1)
+                                 print(_("Livello di forza del motore impostato a {n}.").format(n=new_skill))
+                             else:
+                                 Acusticator([400.0, 0.2, 0, 0.5], kind=1)
+                                 print(_("Il livello deve essere compreso tra 1 e 20."))
+                         except Exception as e:
+                             print(_("Errore durante l'impostazione del livello: {e}").format(e=e))
                     elif cmd == ".v":
                         try:
                             res = orologic_engine.CalculateBest(board, bestmove=False, as_san=False)

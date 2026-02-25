@@ -126,3 +126,13 @@ MNEDITOR={'.':_("Fine editing e salva posizione"),
           'Ke4':_("Sposta il Re in e4 (stessa cosa per il nero k)"),
           'Pe4':_("Piazza un pedone in e4"),
           'e4':_("Svuota la casa e4 (se non contiene un Re)")}
+
+MNGAME={'.':_("Abbandona la partita"),
+        '.1':_("Mostra il tempo del Bianco"),
+        '.2':_("Mostra il tempo del Nero"),
+        '.a':_("Visualizza analisi posizione (CP, BestLine, WDL)"),
+        '.b':_("Mostra la scacchiera"),
+        '.u':_("Annulla ultima semimossa (Undo)"),
+        '.v':_("Aggiunge variante suggerita dal motore all'albero"),
+        '.s#':_("Imposta il livello di forza del motore da 1 a 20 (es. .s10)"),
+        '.?':_("Mostra questo menu")}
