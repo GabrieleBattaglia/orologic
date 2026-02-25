@@ -32,13 +32,11 @@ def GetDynamicPrompt(board, node):
     variant_level = 0
     temp_node = node
     while temp_node.parent:
-        if len(temp_node.parent.variations) > 1:
+        if temp_node.parent.variations[0] != temp_node:
             variant_level += 1
         temp_node = temp_node.parent
     
-    prefix = ""
-    if variant_level > 0:
-        prefix = f"[Var.{variant_level}] "
+    prefix = f"Lvl{variant_level} "
     
     if not board.move_stack:
         return _("{p}INIZIO {n}. ").format(p=prefix, n=n)
@@ -74,6 +72,7 @@ def run():
     # State
     info = {}
     fen_from_clip = ""
+    is_modified = False
 
     while True:
         prompt = GetDynamicPrompt(board, node)
@@ -94,28 +93,24 @@ def run():
                 is_variant = False
                 temp = node
                 while temp.parent:
-                    if len(temp.parent.variations) > 1:
+                    if temp.parent.variations[0] != temp:
                         is_variant = True
                         break
                     temp = temp.parent
                 
                 if is_variant and node.parent:
-                     current_node_in_chain = node
-                     while current_node_in_chain.parent:
-                         parent = current_node_in_chain.parent
-                         if len(parent.variations) > 1:
-                             node = parent
-                             board.pop()
-                             print(_("Chiusa variante. Ritorno al nodo padre."))
-                             break
-                         
-                         current_node_in_chain = parent
-                         board.pop()
-                         node = parent
-                     
-                     continue
+                    temp_node = node
+                    while temp_node.parent and temp_node.parent.variations[0] == temp_node:
+                        board.pop()
+                        temp_node = temp_node.parent
+                    if temp_node.parent:
+                        board.pop()
+                        temp_node = temp_node.parent
+                    node = temp_node
+                    print(_("Chiusa variante. Ritorno al nodo padre."))
+                    continue
 
-                if len(board.move_stack) > 0 or board.fen() != chess.STARTING_FEN:
+                if is_modified and (len(board.move_stack) > 0 or board.fen() != chess.STARTING_FEN):
                      print(_("Salvataggio partita in corso..."))
                      SaveGameToFile(game)
                 break
@@ -136,6 +131,7 @@ def run():
                         if current_idx > 0:
                             # Scambia con l'indice 0 (Mainline)
                             vars_list[0], vars_list[current_idx] = vars_list[current_idx], vars_list[0]
+                            is_modified = True
                             print(_("Variante promossa a linea principale!"))
                         else:
                             print(_("Questa linea è già la principale."))
@@ -206,8 +202,8 @@ def run():
             
             elif cmd == ".e":
                 print(_("Accesso alla modalità esplorazione..."))
-                ExplorerMode(game, engine)
-                pass
+                mod_in_exp = ExplorerMode(game, engine)
+                if mod_in_exp: is_modified = True
 
             elif cmd == ".g":
                 # Avvio partita contro il motore
@@ -216,6 +212,7 @@ def run():
                 node = final_node
                 board = node.board() # Ricrea board dallo stato finale
                 game_state.board = board
+                is_modified = True
                 
             elif cmd == ".b":
                 print(board)
@@ -226,6 +223,7 @@ def run():
                 
             elif cmd == ".pt":
                 AddingPGNTAGS(game)
+                is_modified = True
                 
             elif cmd == ".gp":
                 CopyPGNToClipboard(game)
@@ -235,7 +233,7 @@ def run():
                 loaded_game = PastePGNFromClipboard()
                 if loaded_game:
                     print(_("ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova."))
-                    SaveGameToFile(game)
+                    if is_modified: SaveGameToFile(game)
                     game = loaded_game
                     node = game 
                     board = CustomBoard()
@@ -245,6 +243,7 @@ def run():
                         board.push(move)
                     node = game.end()
                     game_state.board = board
+                    is_modified = False
                     print(_("Nuova partita caricata."))
                     print(board)
                 else:
@@ -264,32 +263,35 @@ def run():
                         tmp_board = board.copy()
                         tmp_board.set_fen(fen_from_clip)
                         print(_("FEN valido. ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova da questa posizione."))
-                        SaveGameToFile(game)
+                        if is_modified: SaveGameToFile(game)
                         board = CustomBoard()
                         board.set_fen(fen_from_clip)
                         game, node = InitNewPGN(board)
                         game_state.board = board
+                        is_modified = False
                         print(board)
                     except ValueError:
                         print(_("Stringa FEN non valida."))
                         
             elif cmd == ".n":
                 print(_("Nuova partita. La corrente verrà salvata."))
-                SaveGameToFile(game)
+                if is_modified: SaveGameToFile(game)
                 print(_("Nuova scacchiera pronta. Si parte!"))
                 board = CustomBoard()
                 game, node = InitNewPGN(board)
                 game_state.board = board
+                is_modified = False
                 
             elif cmd == ".be":
                 print(_("Accesso all'editor. ATTENZIONE: Al termine dell'editing, la partita corrente verrà salvata e ne inizierà una nuova dalla posizione impostata."))
                 new_fen = BoardEditor(starting_fen=board.fen())
                 if new_fen:
-                    SaveGameToFile(game)
+                    if is_modified: SaveGameToFile(game)
                     board = CustomBoard()
                     board.set_fen(new_fen)
                     game, node = InitNewPGN(board)
                     game_state.board = board
+                    is_modified = False
                     print(_("Nuova partita avviata dalla posizione editata."))
                     print(board)
                 
@@ -353,6 +355,7 @@ def run():
 
         elif key_command.startswith("_"):
             node.comment = key_command[1:]
+            is_modified = True
             print(_("Commento registrato."))
 
         else:
@@ -396,6 +399,7 @@ def run():
                     if node.variations:
                         print(_("Nuova variante creata."))
                     node = node.add_variation(move)
+                    is_modified = True
             else:
                 color = _("Bianco") if board.turn == chess.WHITE else _("Nero")
                 print(_("{k}: mossa illegale per il {c}.").format(k=key_command, c=color))

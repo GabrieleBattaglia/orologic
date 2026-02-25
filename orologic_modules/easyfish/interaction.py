@@ -177,32 +177,60 @@ def ExplorerMode(game, engine, analysis_time_default=2):
         return san_moves
 
     current_board = SyncBoardToNode(node)
+    is_modified = False
     
     while True:
-        if node.parent:
-            parent_move = node.parent.san() if node.parent.move else None
-        else: parent_move = None
-        
-        current_move = node.san() if node.move else _("inizio")
-        
         variant_count = len(node.variations)
         if var_index >= variant_count: var_index = 0
         
-        if variant_count > 0:
-            next_move = node.variations[var_index].san()
-        else:
-            next_move = game.headers.get("Result", _("fine"))
-            
         if node.comment: print(node.comment)
+
+        p_node = node.parent
+        if p_node and p_node.move:
+            b_parent = p_node.parent.board()
+            if b_parent.turn == chess.WHITE:
+                parent_str = f"{b_parent.fullmove_number}. {p_node.san()}"
+            else:
+                parent_str = f"{b_parent.fullmove_number}...{p_node.san()}"
+        else:
+            parent_str = ""
+
+        if node.move:
+            b_curr = node.parent.board()
+            if b_curr.turn == chess.WHITE:
+                current_str = f"{b_curr.fullmove_number}. {node.san()}"
+            else:
+                if p_node and p_node.move and p_node.parent.board().turn == chess.WHITE:
+                    current_str = f"{node.san()}"
+                else:
+                    current_str = f"{b_curr.fullmove_number}...{node.san()}"
+        else:
+            current_str = _("inizio")
+
+        if variant_count > 0:
+            v_node = node.variations[var_index]
+            b_next = current_board
+            if b_next.turn == chess.WHITE:
+                next_str = f"{b_next.fullmove_number}. {v_node.san()}"
+            else:
+                if node.move and node.parent.board().turn == chess.WHITE:
+                    next_str = f"{v_node.san()}"
+                else:
+                    next_str = f"{b_next.fullmove_number}...{v_node.san()}"
+        else:
+            next_str = game.headers.get("Result", _("fine"))
             
         level = 0
         temp_node = node
         while temp_node.parent:
-            if len(temp_node.parent.variations) > 1: level += 1
+            if temp_node.parent.variations[0] != temp_node:
+                level += 1
             temp_node = temp_node.parent
             
-        level_prefix = f"Lvl{level}" if level > 0 else _("Principale")
-        prompt = f"\n[{level_prefix}] {parent_move or ''} ({current_move}) {next_move}"
+        prompt = f"\nLvl{level}"
+        if parent_str:
+            prompt += f" {parent_str}"
+        prompt += f" ({current_str}) {next_str}"
         if variant_count > 1: prompt += f" [V{var_index+1}/{variant_count}]"
         
         command = key(prompt=prompt)
@@ -242,13 +270,14 @@ def ExplorerMode(game, engine, analysis_time_default=2):
                 current_board.push(node.move)
             var_index = 0
         elif command == 'z':
-            while node.parent and node.parent.variations[0] != node:
-                node = node.parent
+            temp_node = node
+            while temp_node.parent and temp_node.parent.variations[0] == temp_node:
+                temp_node = temp_node.parent
+            if temp_node.parent:
+                parent_node = temp_node.parent
+                var_index = parent_node.variations.index(temp_node)
+                node = parent_node
                 current_board = SyncBoardToNode(node)
-            if node.parent:
-                node = node.parent
-                current_board = SyncBoardToNode(node)
-            var_index = 0
         elif command == 'b':
             current_board = SyncBoardToNode(node)
             print(current_board)
@@ -260,6 +289,7 @@ def ExplorerMode(game, engine, analysis_time_default=2):
                     parent.variations.remove(node)
                     node = parent
                     current_board = SyncBoardToNode(node)
+                    is_modified = True
                     print(_("Mossa/Variante eliminata. Tornati indietro."))
                     var_index = 0
                 else:
@@ -293,4 +323,4 @@ def ExplorerMode(game, engine, analysis_time_default=2):
             print(_("Linee impostate a {n}").format(n=local_multipv))
         elif command == '.':
             print()
-            return
+            return is_modified

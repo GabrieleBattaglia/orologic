@@ -2,6 +2,11 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+6.2.2
+	+ [Easyfish] L'Esploratore mostra ora dinamicamente nel prompt il livello della variante (es. Lvl0 per la mainline, Lvl1, ecc.), supporta correttamente la numerazione delle mosse ed i puntini di sospensione per il nero.
+	= [Easyfish] Fixato il comando 'z' in Explorer che ora risale in modo sicuro e preciso al nodo padre della variante attuale.
+	= [Easyfish] Il comando di uscita '.' in Easyfish non si limita più a chiudere la partita dalla mossa 1, ma esce sempre se impartito dalla Mainline (Lvl0).
+	= [Easyfish] Introdotto flag 'is_modified' per limitare i salvataggi automatici in file '.pgn' solo a partite effettivamente modificate dall'utente.
 6.2.1
 	= [Easyfish] Migliorata logica di avvio partita contro il motore: ora chiede prima la modalità e omette richieste di tempo inutili.
 	= [Easyfish] Disattivati orologi (.1, .2) in modalità Amichevole (Senza tempo).
