@@ -11,13 +11,13 @@ except ImportError:
 CONFIG_FILE = "easyfish.json"
 
 # Defaults
-DEFAULT_EVENT=_("Divertimento con Easyfish")
+DEFAULT_EVENT=_("Orologic's Game")
 DEFAULT_SITE=os.getenv('COMPUTERNAME')+"'s PC"
 DEFAULT_ROUND="-"
 DEFAULT_WHITE_SURENAME=_("Bianco")
-DEFAULT_WHITE_FIRSTNAME="Gabe"
+DEFAULT_WHITE_FIRSTNAME=""
 DEFAULT_BLACK_SURENAME=_("Nero")
-DEFAULT_BLACK_FIRSTNAME="Ginny"
+DEFAULT_BLACK_FIRSTNAME=""
 
 # Chess conversion maps
 COLUMN_TO_NATO = {

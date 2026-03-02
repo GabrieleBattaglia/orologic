@@ -285,7 +285,9 @@ def ExplorerMode(game, engine, analysis_time_default=2):
                 current_board = SyncBoardToNode(node)
         elif command == 'b':
             current_board = SyncBoardToNode(node)
-            print(current_board)
+            cb = CustomBoard()
+            cb.set_fen(current_board.fen())
+            print(cb)
         elif command == 'u':
             # UNDO/CUT - Elimina mossa corrente e figli
             if node.parent:
@@ -328,4 +330,4 @@ def ExplorerMode(game, engine, analysis_time_default=2):
             print(_("Linee impostate a {n}").format(n=local_multipv))
         elif command == '.':
             print()
-            return is_modified
+            return is_modified, node

@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 4.6.7)</h1>
+<h1>Guida Utente di Orologic (Versione 6.2.7)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -150,6 +150,15 @@ margin: 1em 0;
     <li>Se la partita ha almeno 4 semimosse, ti offre di analizzarla immediatamente.</li>
 </ol>
 
+<h5>2.1.5.1 Orologic Analisi Automatica (OAA)</h5>
+<p>Al termine della partita, potrai lanciare l'Analisi Automatica (OAA). Orologic sfrutterà il motore per esaminare ogni tua singola mossa, calcolando parametri avanzati come:</p>
+<ul>
+    <li><strong>Precisione (Game Accuracy):</strong> Un valore percentuale che riflette quanto le tue mosse si siano avvicinate alla perfezione suggerita dal motore (es. 95% = eccellente).</li>
+    <li><strong>Rating Elo Stimato:</strong> Basato sulle performance della singola partita analizzata.</li>
+    <li><strong>Errori e Imprecisioni:</strong> Un conteggio di quante sviste gravi, imprecisioni o mosse brillanti sono state giocate.</li>
+</ul>
+<p>Al termine dell'analisi, OAA genererà un report testuale completo (salvato nella cartella e apribile a schermo) con la cronaca della partita mossa per mossa e i consigli del motore.</p>
+
 <h3>2.2. Analizza una Partita (analizza)</h3>
 <p>Questa potente modalità ti permette di rivedere una partita, aggiungere commenti e ottenere analisi da un motore scacchistico.</p>
 <p>Per iniziare, seleziona <code>analizza</code>; il programma caricherà un PGN dai tuoi appunti. Una volta in modalità analisi, usa i comandi a singola lettera. Premi <code>?</code> in qualsiasi momento per vedere la lista completa.</p>
@@ -177,20 +186,54 @@ margin: 1em 0;
     </tbody>
 </table>
 
-<h4>2.2.3. Modalità Ispezione Smart</h4>
+<h4>2.2.1. Modalità Ispezione Smart</h4>
 <p>Dopo aver usato il comando <code>e</code>, puoi scegliere di ispezionare una linea in "Modalità Smart", navigandola mossa per mossa. I comandi sono: <code>d</code> (avanti), <code>s</code> (indietro), <code>r</code> (rivaluta), <code>.</code> (esci).</p>
 
-<h3>2.3. Configurazione</h3>
+<h3>2.3. Easyfish (Interfaccia a riga di comando per Stockfish)</h3>
+<p>Easyfish è un modulo speciale accessibile dal menu principale. Offre un'interfaccia a riga di comando fluida e diretta per studiare, creare varianti e persino giocare in modo flessibile. I comandi speciali sono tutti preceduti dal punto (<code>.</code>).</p>
+
+<h4>2.3.1. Iniziare e Gestire la Partita</h4>
+<ul>
+    <li><code>.n</code>: Azzera la scacchiera e inizia una nuova partita vuota.</li>
+    <li><code>.pg</code> o <code>.fg</code>: Incolla una partita PGN (o un codice FEN) precedentemente copiata nei tuoi appunti, per iniziare a lavorarci.</li>
+    <li><code>.pt</code>: Permette di impostare o modificare i tag della partita (Evento, Giocatori, Luogo, Risultato).</li>
+    <li>Qualsiasi mossa in formato SAN (es. <code>e4</code>, <code>Nf3</code>) viene aggiunta all'albero della partita. Se inserisci una mossa che devia dalla linea principale, Easyfish ti chiederà se vuoi sovrascrivere o creare una variante.</li>
+</ul>
+
+<h4>2.3.2. Editor della Scacchiera (.be)</h4>
+<p>Usa <code>.be</code> per entrare in modalità editor, utile per ricreare posizioni prese da libri. Da qui puoi piazzare pezzi (es. <code>Pe4</code> piazza un pedone in e4), svuotarli (es. <code>e4</code>) o usare comandi speciali come:</p>
+<ul>
+    <li><code>.v</code>: Svuota l'intera scacchiera, lasciando solo i due Re.</li>
+    <li><code>.i</code>: Ripristina tutti i pezzi alla posizione iniziale standard.</li>
+    <li><code>.t</code>: Cambia il tratto (turno al Bianco o al Nero).</li>
+    <li><code>.</code>: Esce dall'editor e salva la nuova posizione.</li>
+</ul>
+
+<h4>2.3.3. Giocare contro il Motore (.g)</h4>
+<p>Digita <code>.g</code> da qualsiasi posizione per iniziare una partita interattiva contro Stockfish. Orologic ti chiederà con quale colore vuoi giocare e con quale modalità di tempo (partita classica, tempo fisso a mossa o modalità "amichevole" senza limiti).</p>
+<p>Durante la partita valgono tutti i controlli (matto, stallo, ripetizioni) e puoi impartire istruzioni extra, come <code>.s#</code> (es. <code>.s15</code>) per modificare il livello di difficoltà del motore da 1 a 20 al volo.</p>
+
+<h4>2.3.4. Modalità Esploratore (.e)</h4>
+<p>Il comando <code>.e</code> apre l'Esploratore di Varianti. Un ambiente ottimizzato per navigare PGN complessi. Il prompt cambierà per indicarti il livello della variante (es. <code>Lvl0</code> per la linea principale, <code>Lvl1</code>, <code>Lvl2</code>).</p>
+<ul>
+    <li><code>a</code> / <code>d</code>: Vai indietro / avanti nella linea.</li>
+    <li><code>w</code> / <code>x</code>: Scori in alto o in basso tra le ramificazioni (se ti trovi su una mossa con molteplici scelte).</li>
+    <li><code>z</code>: Esci dalla variante attuale e risali di livello, tornando alla deviazione padre. (Funziona da Lvl1 in su).</li>
+    <li><code>u</code>: Elimina ("taglia") il ramo in cui ti trovi, ripulendo l'albero.</li>
+    <li><code>s</code>: Richiedi al motore un'analisi istantanea della posizione.</li>
+</ul>
+
+<h3>2.4. Configurazione</h3>
 <p>Orologic è altamente personalizzabile.</p>
 
-<h4>2.3.1. Gestione Orologi (crea, vedi, elimina)</h4>
+<h4>2.4.1. Gestione Orologi (crea, vedi, elimina)</h4>
 <ul>
     <li><strong>crea:</strong> Ti guida nella creazione di un nuovo orologio, con fasi multiple, tempo base, incremento e allarmi sonori.</li>
     <li><strong>vedi:</strong> Mostra una lista di tutti i tuoi orologi salvati.</li>
     <li><strong>elimina:</strong> Ti permette di cancellare un orologio che non usi più.</li>
 </ul>
 
-<h4>2.3.2. Configurazione Motore Scacchistico (motore)</h4>
+<h4>2.4.2. Configurazione Motore Scacchistico (motore)</h4>
 <p>Questo passaggio è cruciale per usare le funzioni di analisi. Orologic ti aiuterà nel processo:</p>
 <ol>
     <li><strong>Controllo Configurazione:</strong> Orologic cerca prima una configurazione salvata.</li>
@@ -199,23 +242,23 @@ margin: 1em 0;
     <li><strong>Configurazione Manuale:</strong> In ogni momento, puoi inserire manualmente il percorso e i parametri del motore (Hash, Cores, Skill Level).</li>
 </ol>
 
-<h4>2.3.3. Personalizzazione Lingua e Nomi (nomi)</h4>
+<h4>2.4.3. Personalizzazione Lingua e Nomi (nomi)</h4>
 <p>Questa opzione ti permette di personalizzare il linguaggio descrittivo usato dal programma: puoi cambiare i nomi dei pezzi (es. da "cavallo" a "destriero"), i nomi delle colonne (es. da "Ancona" ad "Apple") e i verbi usati per descrivere le mosse.</p>
 
-<h4>2.3.4. Impostazioni Generali (impostazioni)</h4>
+<h4>2.4.4. Impostazioni Generali (impostazioni)</h4>
 <p>Questa nuova sezione ti permette di configurare due comportamenti chiave del programma:</p>
 <ul>
     <li><strong>Salvataggio Automatico:</strong> Puoi attivare o disattivare il salvataggio automatico del PGN dopo ogni mossa durante una partita. Questo previene la perdita di dati in caso di problemi.</li>
     <li><strong>Stile Menu:</strong> Puoi scegliere se navigare nei menu usando le parole chiave (default) o i numeri.</li>
 </ul>
 
-<h4>2.3.5. Regolazione Volume Audio (volume)</h4>
+<h4>2.4.5. Regolazione Volume Audio (volume)</h4>
 <p>Questa opzione ti permette di impostare il volume degli effetti sonori da 0 (muto) a 100 (massimo).</p>
 
-<h3>2.4. Apri Manuale (manuale)</h3>
+<h3>2.5. Apri Manuale (manuale)</h3>
 <p>Questo comando apre questa guida nel tuo browser web predefinito.</p>
 
-<h3>2.5. Esci dall'Applicazione (.)</h3>
+<h3>2.6. Esci dall'Applicazione (.)</h3>
 <p>Digitando <code>.</code> e premendo Invio dal menu principale chiuderà Orologic.</p>
 
 ---
@@ -224,7 +267,7 @@ margin: 1em 0;
 <p>Per aiuto, segnalazioni di bug, suggerimenti, o se sei interessato a diventare un traduttore o beta tester, per favore contatta l'autore:</p>
 <ul>
     <li><strong>Gabriele Battaglia</strong></li>
-    <li>Email: <code>iz4apu@libero.it</code></li>
+    <li>Email: <code>gabriele.battaglia@gmail.com</code></li>
 </ul>
 
 <h2>4. Ringraziamenti</h2>
@@ -240,7 +283,7 @@ margin: 1em 0;
 <h2>5. Sostieni il Progetto</h2>
 <p>Se ti piace Orologic o lo trovi utile, per favore considera di sostenere il suo sviluppo con una donazione. Il tuo supporto aiuta a coprire i costi e incoraggia futuri aggiornamenti e nuove funzionalità.</p>
 <p>Puoi fare una donazione tramite PayPal a:</p>
-<p><strong><code>iz4apu@libero.it</code></strong></p>
+<p><strong><code>gabriele.battaglia@gmail.com</code></strong></p>
 <p>Grazie per la tua generosità!</p>
 </body>
 </html>

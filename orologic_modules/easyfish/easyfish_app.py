@@ -50,6 +50,31 @@ def GetDynamicPrompt(board, node):
     else:
         return f"{prefix}{n}. {last_san}: "
 
+def CheckGameOver(board, node=None):
+    """Controlla se la partita è finita (matto, patta) e stampa l'esito."""
+    if board.is_game_over(claim_draw=True):
+        if board.is_checkmate():
+            res = "1-0" if board.turn == chess.BLACK else "0-1"
+            if node and node.root(): node.root().headers["Result"] = res
+            print(_("Scacco matto!"))
+            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+        elif board.is_stalemate():
+            if node and node.root(): node.root().headers["Result"] = "1/2-1/2"
+            print(_("Patta per stallo!"))
+            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+        elif board.is_insufficient_material():
+            if node and node.root(): node.root().headers["Result"] = "1/2-1/2"
+            print(_("Patta per materiale insufficiente!"))
+            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+        elif board.is_seventyfive_moves() or board.can_claim_fifty_moves():
+            if node and node.root(): node.root().headers["Result"] = "1/2-1/2"
+            print(_("Patta per la regola delle 50/75 mosse!"))
+            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+        elif board.is_fivefold_repetition() or board.can_claim_threefold_repetition():
+            if node and node.root(): node.root().headers["Result"] = "1/2-1/2"
+            print(_("Patta per ripetizione della posizione!"))
+            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+
 def run():
     print(_("\nBenvenuto in Easyfish, la tua interfaccia testuale con il motore scacchistico.\n\tBuon divertimento!"))
 
@@ -73,8 +98,14 @@ def run():
     info = {}
     fen_from_clip = ""
     is_modified = False
+    last_checked_state = None
 
     while True:
+        current_state = (board.fen(), len(board.move_stack))
+        if current_state != last_checked_state:
+            CheckGameOver(board, node)
+            last_checked_state = current_state
+            
         prompt = GetDynamicPrompt(board, node)
         key_command = dgt(prompt=prompt, kind="s", smin=1, smax=8192).strip()
         
@@ -202,7 +233,10 @@ def run():
             
             elif cmd == ".e":
                 print(_("Accesso alla modalità esplorazione..."))
-                mod_in_exp = ExplorerMode(game, engine)
+                mod_in_exp, final_node = ExplorerMode(game, engine)
+                node = final_node
+                board = node.board()
+                game_state.board = board
                 if mod_in_exp: is_modified = True
 
             elif cmd == ".g":
@@ -397,8 +431,21 @@ def run():
                     node = existing_variation
                 else:
                     if node.variations:
-                        print(_("Nuova variante creata."))
-                    node = node.add_variation(move)
+                        # Divergenza: chiediamo cosa fare
+                        from ..ui import enter_escape
+                        print(_("Mossa diversa trovata."))
+                        scelta = enter_escape(_("Sovrascrivi linea (Invio) o Aggiungi Variante (Esc)? "))
+                        if scelta:
+                            # Invio -> Sovrascrivi (cancella le altre e tieni questa come principale)
+                            node.variations.clear()
+                            node = node.add_variation(move)
+                            print(_("Linea sovrascritta."))
+                        else:
+                            # Esc -> Aggiungi variante
+                            node = node.add_variation(move)
+                            print(_("Nuova variante creata."))
+                    else:
+                        node = node.add_variation(move)
                     is_modified = True
             else:
                 color = _("Bianco") if board.turn == chess.WHITE else _("Nero")
