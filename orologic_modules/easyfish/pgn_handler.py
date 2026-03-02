@@ -56,8 +56,8 @@ def InitNewPGN(board=None, tags=None):
         for k, v in tags.items():
             game.headers[k] = v
     else:
-        game.headers["White"] = DEFAULT_WHITE_SURENAME+", "+DEFAULT_WHITE_FIRSTNAME
-        game.headers["Black"] = DEFAULT_BLACK_SURENAME+", "+DEFAULT_BLACK_FIRSTNAME
+        game.headers["White"] = DEFAULT_WHITE_SURENAME
+        game.headers["Black"] = DEFAULT_BLACK_SURENAME
         
     game.headers["Result"] = "*"
     
@@ -78,10 +78,10 @@ def AddingPGNTAGS(game):
     current_round = game.headers.get("Round", DEFAULT_ROUND)
     round_number = dgt(prompt=_("Round [{d}]: ").format(d=current_round), kind="s", smin=1, smax=5, default=current_round)
     
-    current_white = game.headers.get("White", DEFAULT_WHITE_SURENAME+", "+DEFAULT_WHITE_FIRSTNAME)
+    current_white = game.headers.get("White", DEFAULT_WHITE_SURENAME)
     white_player = dgt(prompt=_("Giocatore Bianco [{d}]: ").format(d=current_white), kind="s", smin=2, smax=64, default=current_white).title()
     
-    current_black = game.headers.get("Black", DEFAULT_BLACK_SURENAME+", "+DEFAULT_BLACK_FIRSTNAME)
+    current_black = game.headers.get("Black", DEFAULT_BLACK_SURENAME)
     black_player = dgt(prompt=_("Giocatore Nero [{d}]: ").format(d=current_black), kind="s", smin=2, smax=64, default=current_black).title()
     
     result_prompt=_("Risultato: [W]Bianco, [B]Nero, [D]Patta, [U]Sconosciuto.")
@@ -98,7 +98,8 @@ def AddingPGNTAGS(game):
     
     game.headers["Event"] = event
     game.headers["Site"] = site
-    game.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
+    if "Date" not in game.headers or game.headers["Date"] == "????.??.??":
+        game.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
     game.headers["Round"] = round_number
     game.headers["White"] = white_player
     game.headers["Black"] = black_player
@@ -109,8 +110,9 @@ def AddingPGNTAGS(game):
 
 def SaveGameToFile(game):
     """Salva la partita corrente su un file PGN singolo nella cartella pgn/."""
-    # Aggiorna data salvataggio
-    game.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
+    # Aggiorna data salvataggio solo se assente
+    if "Date" not in game.headers or game.headers["Date"] == "????.??.??":
+        game.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
     
     pgn_io = io.StringIO()
     exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)

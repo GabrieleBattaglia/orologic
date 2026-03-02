@@ -175,7 +175,33 @@ def StartEngineGame(game_node, engine_instance):
     current_node = game_node
     
     try:
-        while not game_state.game_over and not board.is_game_over():
+        while not game_state.game_over:
+            # --- CONTROLLI FINE PARTITA ---
+            if board.is_game_over(claim_draw=True):
+                game_state.game_over = True
+                if board.is_checkmate():
+                    res = "1-0" if board.turn == chess.BLACK else "0-1"
+                    if current_node.root(): current_node.root().headers["Result"] = res
+                    print(_("Scacco matto!"))
+                    Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                elif board.is_stalemate():
+                    if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                    print(_("Patta per stallo!"))
+                    Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                elif board.is_insufficient_material():
+                    if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                    print(_("Patta per materiale insufficiente!"))
+                    Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                elif board.is_seventyfive_moves() or board.can_claim_fifty_moves():
+                    if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                    print(_("Patta per la regola delle 50/75 mosse!"))
+                    Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                elif board.is_fivefold_repetition() or board.can_claim_threefold_repetition():
+                    if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                    print(_("Patta per ripetizione della posizione!"))
+                    Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                break
+
             if game_state.flag_fallen:
                 print(_("Tempo scaduto! Partita terminata."))
                 game_state.game_over = True
@@ -283,6 +309,51 @@ def StartEngineGame(game_node, engine_instance):
                         game_state.active_color = board.turn
                         Acusticator([1000.0, 0.05, 0, 0.5], kind=1)
                         print(DescribeMove(move, current_node.parent.board()))
+                        
+                        # Controlli fine partita
+                        if board.is_checkmate():
+                            game_state.game_over = True
+                            res = "1-0" if game_state.active_color == chess.BLACK else "0-1"
+                            if current_node.root(): current_node.root().headers["Result"] = res
+                            print(_("Scacco matto!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.is_stalemate():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per stallo!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.is_insufficient_material():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per materiale insufficiente!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.is_seventyfive_moves():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per la regola delle 75 mosse!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.is_fivefold_repetition():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per ripetizione della posizione (5 volte)!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.can_claim_fifty_moves():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per la regola delle 50 mosse!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.can_claim_threefold_repetition():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per triplice ripetizione della posizione!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
                     else:
                         Acusticator([400.0, 0.2, 0, 0.5], kind=1)
                         print(_("Mossa illegale."))
@@ -323,6 +394,51 @@ def StartEngineGame(game_node, engine_instance):
                         game_state.active_color = board.turn
                         Acusticator([1000.0, 0.05, 0, 0.5], kind=1)
                         print(DescribeMove(result.move, current_node.parent.board()))
+                        
+                        # Controlli fine partita
+                        if board.is_checkmate():
+                            game_state.game_over = True
+                            res = "1-0" if game_state.active_color == chess.BLACK else "0-1"
+                            if current_node.root(): current_node.root().headers["Result"] = res
+                            print(_("Scacco matto!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.is_stalemate():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per stallo!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.is_insufficient_material():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per materiale insufficiente!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.is_seventyfive_moves():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per la regola delle 75 mosse!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.is_fivefold_repetition():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per ripetizione della posizione (5 volte)!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.can_claim_fifty_moves():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per la regola delle 50 mosse!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
+                        elif board.can_claim_threefold_repetition():
+                            game_state.game_over = True
+                            if current_node.root(): current_node.root().headers["Result"] = "1/2-1/2"
+                            print(_("Patta per triplice ripetizione della posizione!"))
+                            Acusticator(["c5", 0.1, -0.5, 0.5, "e5", 0.1, 0, 0.5, "g5", 0.1, 0.5, 0.5, "c6", 0.2, 0, 0.5], kind=1, adsr=[2, 8, 90, 0])
+                            break
                     else:
                         print(_("Il motore abbandona o stallo."))
                         game_state.game_over = True
