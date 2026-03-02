@@ -137,8 +137,11 @@ def StartEngineGame(game_node, engine_instance):
     game_state.ignore_clock = ignore_clock
     board = game_node.board()
     game_state.active_color = board.turn
-    game_state.human_color = board.turn # L'utente gioca chi ha il turno
     game_state.engine_has_clock = engine_has_clock
+    
+    # Scelta del colore
+    color_choice = dgt(prompt=_("Con quale colore vuoi giocare? (B/N)? > "), kind="s", default="B").strip().lower()
+    game_state.human_color = chess.BLACK if color_choice == 'n' else chess.WHITE
     
     if game_state.human_color == chess.WHITE:
         game_state.white_time = float(user_time)
