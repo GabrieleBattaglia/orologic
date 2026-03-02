@@ -29,22 +29,27 @@ def BoardEditor(starting_fen=None):
         tmp_board.set_piece_at(chess.E1, chess.Piece(chess.KING, chess.WHITE))
         tmp_board.set_piece_at(chess.E8, chess.Piece(chess.KING, chess.BLACK))
 
-    print(_("Comandi principali: Pe4 per piazzare, e4 per svuotare, -- per tutto vuoto, .? per menu."))
-    
+    print(_("Comandi principali: Pe4 per piazzare, e4 per svuotare, .v per svuotare tutto, .i per posizione iniziale, .? per menu."))
+
     while True:
         prompt = InsertedCounter(tmp_board)
         wherewho = dgt(prompt=prompt, kind="s", smin=1, smax=10).strip()
-        
-        # Gestione Comandi
-        if wherewho == "--":
-            tmp_board.clear()
-            tmp_board.set_piece_at(chess.E1, chess.Piece(chess.KING, chess.WHITE))
-            tmp_board.set_piece_at(chess.E8, chess.Piece(chess.KING, chess.BLACK))
-            print(_("Scacchiera svuotata. Re posizionati in case di partenza."))
-            continue
 
+        # Gestione Comandi
         if wherewho.startswith("."):
-            if wherewho == ".":
+            if wherewho == ".v":
+                tmp_board.clear()
+                tmp_board.set_piece_at(chess.E1, chess.Piece(chess.KING, chess.WHITE))
+                tmp_board.set_piece_at(chess.E8, chess.Piece(chess.KING, chess.BLACK))
+                print(_("Scacchiera svuotata. Re posizionati in case di partenza."))
+                continue
+
+            elif wherewho == ".i":
+                tmp_board.reset()
+                print(_("Scacchiera reimpostata alla posizione iniziale standard."))
+                continue
+
+            elif wherewho == ".":
                 if tmp_board.is_valid():
                     break
                 else:
