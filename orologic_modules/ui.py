@@ -413,6 +413,7 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
 	full_text = header_text + move_list_text + footer_text
 	base_filename = config.sanitize_filename("{white}-{black}-{result}-{timestamp}".format(white=headers.get('White', _('Bianco')), black=headers.get('Black', _('Nero')), result=headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))) + ".txt"
 	full_path = config.percorso_salvataggio(os.path.join("txt", base_filename))
+	os.makedirs(os.path.dirname(full_path), exist_ok=True)
 	try:
 		with open(full_path, "w", encoding="utf-8") as f: f.write(full_text)
 		print(_("Riepilogo partita salvato come {filename}.").format(filename=full_path))

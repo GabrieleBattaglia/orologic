@@ -111,6 +111,7 @@ def RiprendiPartita(dati_partita):
 def EseguiAutosave(game_state):
 	AUTOSAVE_FILENAME = "autosave.json"
 	full_path = config.percorso_salvataggio(os.path.join("settings", AUTOSAVE_FILENAME))
+	os.makedirs(os.path.dirname(full_path), exist_ok=True)
 	dati_partita = {
 		"board_fen": game_state.board.fen(),
 		"clock_config": game_state.clock_config,

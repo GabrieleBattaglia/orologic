@@ -754,6 +754,7 @@ def genera_sommario_analitico_txt(pgn_game, base_f, results, stats, cpl_d, eco, 
 	
 	# Salvataggio
 	f_p = percorso_salvataggio(os.path.join("txt", config.sanitize_filename(base_f) + ".txt"))
+	os.makedirs(os.path.dirname(f_p), exist_ok=True)
 	try:
 		full_text = "\n".join(lines)
 		with open(f_p, "w", encoding="utf-8") as f: f.write(full_text)
@@ -1065,6 +1066,7 @@ def AnalisiAutomatica(pgn_game):
 		base_name = _("{w}_vs_{b}_auto_{d}").format(w=pgn_game.headers.get("White", "B"), b=pgn_game.headers.get("Black", "N"), d=datetime.datetime.now().strftime("%Y%m%d"))
 		sanitized_pgn_name = config.sanitize_filename(base_name) + ".pgn"
 		full_pgn_path = percorso_salvataggio(os.path.join("pgn", sanitized_pgn_name))
+		os.makedirs(os.path.dirname(full_pgn_path), exist_ok=True)
 		with open(full_pgn_path, "w", encoding="utf-8-sig") as f:
 			f.write(pgn_string_formatted)
 		print(_("PGN analizzato salvato come: {path}").format(path=full_pgn_path))
