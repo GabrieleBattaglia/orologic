@@ -484,6 +484,7 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
 	base_filename = "{white}-{black}-{result}-{timestamp}.pgn".format(white=game_state.pgn_game.headers.get("White"), black=game_state.pgn_game.headers.get("Black"), result=game_state.pgn_game.headers.get('Result', '*'), timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
 	sanitized_name = config.sanitize_filename(base_filename)
 	full_path = config.percorso_salvataggio(os.path.join("pgn", sanitized_name))
+	os.makedirs(os.path.dirname(full_path), exist_ok=True)
 	with open(full_path, "w", encoding="utf-8") as f:
 		f.write(pgn_str)
 	print(_("PGN salvato come ")+full_path+".")

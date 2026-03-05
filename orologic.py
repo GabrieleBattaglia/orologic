@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", message="urllib3 .* doesn't match a supported version!")
+
 import sys
 import os
 import time
@@ -13,7 +16,7 @@ from orologic_modules.easyfish import easyfish_app
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 
 def OpenManual():
-    manual_path = config.resource_path(os.path.join("resources", "manuale_it.txt" if lingua_rilevata == "it" else "manual_en.txt"))
+    manual_path = config.resource_path(os.path.join("resources", "readme.htm"))
     if os.path.exists(manual_path):
         try:
             if sys.platform == "win32": os.startfile(manual_path)
