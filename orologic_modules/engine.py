@@ -665,6 +665,10 @@ def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, classific
 			lines.append(f"{var_prefix}  {var_move_num}{var_dot} {var_move_desc}{var_info}")
 			
 			_stampa_albero_pgn(variation, data_map, lines, w_name, b_name, num_var, classification_labels, indent_level + 2)
+		
+		# Stella: Se torniamo alla mainline (indentazione 0), aggiungiamo un avviso per l'accessibilità
+		if indent_level == 0:
+			lines.append(_("Linea principale:"))
 
 	# --- CONTINUAZIONE MAINLINE ---
 	_stampa_albero_pgn(main_move_node, data_map, lines, w_name, b_name, num_var, classification_labels, indent_level)
