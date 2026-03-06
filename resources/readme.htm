@@ -209,6 +209,25 @@ margin: 1em 0;
     <li><code>.</code>: Esce dall'editor e salva la nuova posizione.</li>
 </ul>
 
+<h5>Esempio pratico: impostare un finale specifico</h5>
+<p>Immaginiamo di voler studiare un finale di Re, Alfiere e Cavallo contro Re e di voler impostare questa posizione: Re Nero in d7, Re Bianco in g1, Alfiere Bianco in h7 e Cavallo Bianco in a2, con il tratto al Nero per poi giocare contro il motore.</p>
+<ol>
+    <li>Dal menu principale di Orologic, entra in <code>easyfish</code>.</li>
+    <li>Digita <code>.be</code> e premi Invio per aprire l'editor.</li>
+    <li>Digita <code>.v</code> per svuotare la scacchiera (rimarranno solo i Re).</li>
+    <li>Posiziona i pezzi digitando in sequenza (seguiti da Invio):
+        <ul>
+            <li><code>kd7</code> (Re Nero in d7)</li>
+            <li><code>Kg1</code> (Re Bianco in g1)</li>
+            <li><code>Bh7</code> (Alfiere Bianco in h7)</li>
+            <li><code>Na2</code> (Cavallo Bianco in a2)</li>
+        </ul>
+    </li>
+    <li>Digita <code>.t</code> per assegnare il turno al Nero.</li>
+    <li>Digita <code>.</code> per uscire dall'editor e confermare la posizione.</li>
+    <li>Ora digita <code>.g</code> per avviare la partita contro il motore. Scegli di giocare con il Bianco: Stockfish guiderà il Re Nero e tu potrai allenarti a dare scacco matto!</li>
+</ol>
+
 <h4>2.3.3. Giocare contro il Motore (.g)</h4>
 <p>Digita <code>.g</code> da qualsiasi posizione per iniziare una partita interattiva contro Stockfish. Orologic ti chiederà con quale colore vuoi giocare e con quale modalità di tempo (partita classica, tempo fisso a mossa o modalità "amichevole" senza limiti).</p>
 <p>Durante la partita valgono tutti i controlli (matto, stallo, ripetizioni) e puoi impartire istruzioni extra, come <code>.s#</code> (es. <code>.s15</code>) per modificare il livello di difficoltà del motore da 1 a 20 al volo.</p>
