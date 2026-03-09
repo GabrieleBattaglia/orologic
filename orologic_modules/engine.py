@@ -8,7 +8,6 @@ import pyperclip
 import re
 import io
 import sys
-import copy
 import math
 import numpy as np
 from . import config
@@ -22,7 +21,7 @@ def calculate_win_probability(score_obj, turn):
 		# WDL dal punto di vista del giocatore di turno
 		w = score_obj.pov(turn).wdl(model="lichess").expectation()
 		return w
-	except:
+	except Exception:
 		# Fallback: Sigmoide sui CP (dal punto di vista del giocatore)
 		cp = score_obj.pov(turn).score(mate_score=10000)
 		if cp is None: return 0.5
@@ -187,7 +186,7 @@ def CalculateEvaluation(board):
 		analysis_result = cache_analysis[fen]
 		if not analysis_result: return None
 		return analysis_result[0].get("score")
-	except: return None
+	except Exception: return None
 
 def CalculateBest(board, bestmove=True, as_san=False):
 	Acusticator(["e5",.008,-1,config.VOLUME]) 
@@ -246,7 +245,7 @@ def CalculateBest(board, bestmove=True, as_san=False):
 				Acusticator(["g5",.008,1,config.VOLUME]) 
 				return best_line[0]
 			else: return best_line
-	except: return None
+	except Exception: return None
 
 def CalculateWDL(board):
 	if ENGINE is None: return None
@@ -260,7 +259,7 @@ def CalculateWDL(board):
 		if score and hasattr(score, "wdl"):
 			wdl = score.wdl()
 			return (wdl[0]/10, wdl[1]/10, wdl[2]/10)
-	except: pass
+	except Exception: pass
 	return None
 
 def SmartInspection(analysis_lines, board):
@@ -353,7 +352,7 @@ def LoadPGNFromClipboard():
 		partite = {i+1: f"{g.headers.get('White')} vs {g.headers.get('Black')}" for i, g in enumerate(games)}
 		c = menu(partite, p=_("Scegli partita: "), show=True, numbered=True)
 		return games[int(c)-1] if c else None
-	except: return None
+	except Exception: return None
 
 def AnalyzeGame(pgn_game):
 	print(_("\nModalita' analisi.\nHeaders della partita:\n"))
@@ -587,7 +586,7 @@ def analyze_position_deep(board, limit, multipv_count=3):
 				results.append({"rank": i + 1, "move": pv[0], "score": score, "pv": pv})
 		oaa_analysis_cache[cache_key] = results
 		return results
-	except: return None
+	except Exception: return None
 
 def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, classification_labels, indent_level=0):
 	"""
@@ -701,8 +700,8 @@ def genera_sommario_analitico_txt(pgn_game, base_f, results, stats, cpl_d, eco, 
 		lines.append("")
 	
 	# Dati Partita (Tutti gli headers)
-	for key, val in pgn_game.headers.items():
-		lines.append(f"{key}: {val}")
+	for h_key, val in pgn_game.headers.items():
+		lines.append(f"{h_key}: {val}")
 	
 	# Risultato esplicito (per accessibilità rapida)
 	res = pgn_game.headers.get("Result", "*")

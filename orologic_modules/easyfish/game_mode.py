@@ -3,7 +3,7 @@ import chess.engine
 import chess.pgn
 import time
 import threading
-from GBUtils import dgt, key, menu, Acusticator
+from GBUtils import dgt, menu, Acusticator
 from ..config import _
 from .. import engine as orologic_engine
 from .. import storage

@@ -1,18 +1,16 @@
 import chess
 import chess.engine
 import pyperclip
-import os
-import sys
 import re
 from GBUtils import dgt, menu, Acusticator
 from .constants import (
-    MNMAIN, SYMBOLS_TO_NAME, COLUMN_TO_NATO
+    MNMAIN
 )
 # DRY: Uso le utility di Orologic
 from ..board_utils import CustomBoard, DescribeMove, GameState, NormalizeMove
 from .. import ui as orologic_ui
 from .utils import (
-    CalculateMaterial, SquaresListToString
+    CalculateMaterial
 )
 from .pgn_handler import (
     InitNewPGN, PastePGNFromClipboard, CopyPGNToClipboard,

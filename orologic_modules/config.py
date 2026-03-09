@@ -1,7 +1,6 @@
 import sys
 import os
 import json
-import chess
 import re
 from GBUtils import polipo
 from . import version
@@ -28,7 +27,7 @@ DB_FILE = percorso_salvataggio(os.path.join("settings", "orologic_db.json"))
 try:
     with open(DB_FILE, "r", encoding="utf-8") as f:
         _db_data = json.load(f); VOLUME = _db_data.get("volume", 1.0)
-except: VOLUME = 1.0
+except Exception: VOLUME = 1.0
 
 PIECE_VALUES={'R':5,'r':5,'N':3,'n':3,'B':3,'b':3,'Q':9,'q':9,'P':1,'p':1,'K':0,'k':0}
 
@@ -101,7 +100,7 @@ def LoadLocalization():
         with open(DB_FILE, "r", encoding="utf-8") as f:
             db = json.load(f); user_l10n = db.get("localization", {})
             if user_l10n: l10n = recursive_merge(l10n, user_l10n)
-    except: pass
+    except Exception: pass
     return l10n
 
 L10N = LoadLocalization()

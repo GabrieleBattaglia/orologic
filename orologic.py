@@ -5,11 +5,10 @@ import sys
 import os
 import time
 import datetime
-import chess
 import copy
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt, menu, Acusticator, key, Donazione, polipo, update_checker, perform_update, enter_escape
-from orologic_modules import config, storage, ui, clock, engine, game_flow, version, board_utils, stockfish_installer
+from orologic_modules import config, storage, ui, clock, engine, game_flow, version, stockfish_installer
 from orologic_modules.easyfish import easyfish_app
 
 # Inizializzazione localizzazione

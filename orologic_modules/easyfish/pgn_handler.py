@@ -4,18 +4,16 @@ import os
 import io
 import pyperclip
 import datetime
-from GBUtils import dgt, key, Acusticator
+from GBUtils import dgt, key
 from ..config import _, sanitize_filename, percorso_salvataggio
 from ..board_utils import format_pgn_comments
 from .constants import (
     DEFAULT_EVENT, DEFAULT_SITE, DEFAULT_ROUND, 
-    DEFAULT_WHITE_SURENAME, DEFAULT_WHITE_FIRSTNAME, 
-    DEFAULT_BLACK_SURENAME, DEFAULT_BLACK_FIRSTNAME
+    DEFAULT_WHITE_SURENAME, DEFAULT_BLACK_SURENAME
 )
 
 def CopyPGNToClipboard(game):
     """Copia la partita corrente negli appunti in formato PGN."""
-    pgn_io = io.StringIO()
     exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
     game.accept(exporter)
     pgn_string = str(exporter)
@@ -114,7 +112,6 @@ def SaveGameToFile(game):
     if "Date" not in game.headers or game.headers["Date"] == "????.??.??":
         game.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
     
-    pgn_io = io.StringIO()
     exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
     game.accept(exporter)
     pgn_str = str(exporter)
