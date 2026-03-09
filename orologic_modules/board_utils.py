@@ -1,6 +1,5 @@
 import chess
 import chess.pgn
-import copy
 import re
 import os
 import io
@@ -79,10 +78,10 @@ def DescribeMove(move, board, annotation=None):
 			else:
 				if is_capture: san_base = "{from_file}{capture}{to_sq}{promo}".format(from_file=from_sq_str[0], capture=capture_char, to_sq=to_sq_str, promo=promo_str)
 				else: san_base = "{to_sq}{promo}".format(to_sq=to_sq_str, promo=promo_str)
-		except:
+		except Exception:
 			try:
 				san_base = board.san(move).replace("!","").replace("?","")
-			except:
+			except Exception:
 				san_base = _("Mossa da {from_sq} a {to_sq}").format(from_sq=chess.square_name(move.from_square), to_sq=chess.square_name(move.to_square))
 		
 		pattern = re.compile(r'^([RNBQK])?([a-h1-8]{1,2})?(x)?([a-h][1-8])(=([RNBQ]))?$')
@@ -246,13 +245,13 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
             while node.variations:
                 next_node = node.variations[0]; move = next_node.move
                 try: san = node.board().san(move); moves.append(san)
-                except: parse_error = True; break
+                except Exception: parse_error = True; break
                 node = next_node; last_valid_node = node
             if not parse_error and moves:
                 final_fen = last_valid_node.board().board_fen(); ply_count = len(moves)
                 eco_entries.append({"eco": eco_code, "opening": opening, "variation": variation, "moves": moves, "fen": final_fen, "ply": ply_count})
             elif parse_error: skipped_count += 1
-        except:
+        except Exception:
             skipped_count += 1
             while True:
                 line = stream.readline()
@@ -314,7 +313,7 @@ def ParseTime(prompt):
 		h,m,s=map(int,parts)
 		if h < 0 or m < 0 or s < 0 or m > 59 or s > 59: return -1
 		return h*3600+m*60+s
-	except:
+	except Exception:
 		return -1
 
 def SecondsToHMS(seconds):
@@ -339,5 +338,5 @@ def parse_mmss_to_seconds(time_str):
 		minutes, seconds = map(int, parts)
 		if minutes < 0 or seconds < 0 or seconds > 59: return -1
 		return minutes * 60 + seconds
-	except:
+	except Exception:
 		return -1

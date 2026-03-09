@@ -1,14 +1,11 @@
 import os
 import json
-import sys
 import chess
 import random
-import re
 import datetime
-from GBUtils import polipo, key, dgt, menu, Acusticator
+from GBUtils import polipo, key, dgt, Acusticator
 from . import config
 from . import board_utils
-from . import clock
 from . import storage
 from . import version
 
@@ -81,11 +78,11 @@ def get_default_localization():
     }
 
 def recursive_merge(base_dict, user_dict):
-    for key, value in user_dict.items():
-        if key in base_dict and isinstance(base_dict[key], dict) and isinstance(value, dict):
-            recursive_merge(base_dict[key], value)
+    for k, value in user_dict.items():
+        if k in base_dict and isinstance(base_dict[k], dict) and isinstance(value, dict):
+            recursive_merge(base_dict[k], value)
         else:
-            base_dict[key] = value
+            base_dict[k] = value
     return base_dict
 
 def LoadLocalization():
@@ -103,14 +100,14 @@ def LoadLocalization():
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(default, f, indent=4, ensure_ascii=False)
-        except: pass
+        except Exception: pass
         merged = default
     try:
         db = storage.LoadDB()
         user_l10n = db.get("localization", {})
         if user_l10n:
              merged = recursive_merge(merged, user_l10n)
-    except: pass
+    except Exception: pass
     return merged
 
 def EditLocalization():
@@ -445,7 +442,7 @@ def setup_fischer_random_board():
                 Acusticator(["c5", 0.1, -0.8, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.2, 0.8, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
                 print(_("Posizione valida! Numero Chess960: {number}").format(number=board_to_return.chess960_pos()))
                 return board_to_return, fen_to_try
-            except: Acusticator(["a3", .3, 0, config.VOLUME], kind=2); continue
+            except Exception: Acusticator(["a3", .3, 0, config.VOLUME], kind=2); continue
 
 def GenerateMoveSummary(game_state):
 	summary = []
@@ -456,7 +453,7 @@ def GenerateMoveSummary(game_state):
 			white_move = board_copy.parse_san(white_san)
 			white_desc = board_utils.DescribeMove(white_move, board_copy)
 			board_copy.push(white_move)
-		except: white_desc = "Err"
+		except Exception: white_desc = "Err"
 		black_desc = ""
 		if i + 1 < len(game_state.move_history):
 			black_san = game_state.move_history[i + 1]
@@ -464,7 +461,7 @@ def GenerateMoveSummary(game_state):
 				black_move = board_copy.parse_san(black_san)
 				black_desc = board_utils.DescribeMove(black_move, board_copy)
 				board_copy.push(black_move)
-			except: black_desc = "Err"
+			except Exception: black_desc = "Err"
 		summary.append(f"{i//2 + 1}. {white_desc}" + (f", {black_desc}" if black_desc else ""))
 	return summary
 
