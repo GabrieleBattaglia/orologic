@@ -21,6 +21,7 @@ from ..config import _
 from .engine_handler import ShowStats
 from .interaction import ExplorerMode, BoardEditor
 from . import game_mode
+from .image_exporter import image_settings_menu, export_board_pdf
 
 def GetDynamicPrompt(board, node):
     """Genera il prompt basandosi sul turno, numero di mossa e livello variante."""
@@ -185,7 +186,7 @@ def run():
                          target_move = dgt(prompt=_("Numero mossa: "), kind="i", imin=1, imax=600, default=1)
                          turn_choice = dgt(prompt=_("B per Bianco, N per Nero: "), kind="s", default="B").strip().upper()
                          is_black = (turn_choice == "N")
-                     except: 
+                     except Exception: 
                          target_move = 1
                          is_black = False
                 
@@ -259,6 +260,12 @@ def run():
                 
             elif cmd == ".gp":
                 CopyPGNToClipboard(game)
+                
+            elif cmd == ".i":
+                export_board_pdf(board, node)
+                
+            elif cmd == ".ii":
+                image_settings_menu()
                 
             elif cmd == ".pg":
                 print(_("Incolla una nuova posizione PGN dagli appunti..."))

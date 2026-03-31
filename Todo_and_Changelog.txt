@@ -1,7 +1,18 @@
 TodoList & ChangeLog.
 TodoList:
+6.4.1
+	+ [Easyfish] Esportazione PDF: Aggiunta lista mosse/FEN e orientamento dinamico.
+6.4.0
+	+ [Easyfish] Aggiunta l'esportazione PDF.
+	+ [Engine] Attivazione NNUE.
 
 ChangeLog:
+6.4.1
+	+ [Easyfish] Esportazione PDF (.i): Ora la scacchiera viene orientata dal punto di vista del giocatore di turno. Aggiunta la lista delle mosse (o il FEN se non ci sono mosse) sotto al commento nel PDF.
+	= [Refactoring] Risolti avvisi Ruff (bare except e import inutilizzati) in Easyfish.
+6.4.0
+	+ [Easyfish] Aggiunta l'esportazione PDF.
+	+ [Engine] Attivazione NNUE.
 6.3.3
 	= [Refactoring] Pulizia globale del codice tramite Ruff: risolti shadowing di variabili, rimossi import inutilizzati e corretti bare except in Exception.
 	+ [Config] Aggiunta configurazione Ruff (`pyproject.toml`) ottimizzata per l'accessibilità con display Braille (lunghezza riga 240, tolleranza su istruzioni multiple).
