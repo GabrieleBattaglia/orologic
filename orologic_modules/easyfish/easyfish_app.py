@@ -22,6 +22,7 @@ from .engine_handler import ShowStats
 from .interaction import ExplorerMode, BoardEditor
 from . import game_mode
 from .image_exporter import image_settings_menu, export_board_pdf
+from .drawing import drawing_menu, verbalize_drawings
 
 def GetDynamicPrompt(board, node):
     """Genera il prompt basandosi sul turno, numero di mossa e livello variante."""
@@ -103,6 +104,9 @@ def run():
         current_state = (board.fen(), len(board.move_stack))
         if current_state != last_checked_state:
             CheckGameOver(board, node)
+            drawings_text = verbalize_drawings(node)
+            if drawings_text:
+                print(drawings_text)
             last_checked_state = current_state
             
         prompt = GetDynamicPrompt(board, node)
@@ -249,6 +253,10 @@ def run():
                 
             elif cmd == ".b":
                 print(board)
+                
+            elif cmd == ".d":
+                if drawing_menu(game, node):
+                    is_modified = True
                 
             elif cmd == ".bm":
                 white, black = CalculateMaterial(board)

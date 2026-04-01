@@ -1,5 +1,7 @@
 TodoList & ChangeLog.
 TodoList:
+6.5.0
+	+ [Easyfish] Aggiunta gestione forme grafiche (frecce e cerchi) sulla scacchiera e nel PDF.
 6.4.1
 	+ [Easyfish] Esportazione PDF: Aggiunta lista mosse/FEN e orientamento dinamico.
 6.4.0
@@ -7,6 +9,13 @@ TodoList:
 	+ [Engine] Attivazione NNUE.
 
 ChangeLog:
+6.5.0
+	+ [Easyfish] Nuovo comando '.d' (Disegna): Permette di aggiungere, listare e cancellare frecce e cerchi colorati (Verde, Rosso, Blu, Giallo) associati alla mossa corrente.
+	+ [PGN] Le forme disegnate vengono salvate nei commenti PGN nel formato standard `[%cal ...]` e `[%csl ...]`, garantendo piena compatibilità con altri software scacchistici.
+	+ [PDF] L'esportazione `.i` ora include correttamente le frecce ed i cerchi salvati sulla mossa.
+	= [PDF] Fix trasparenza frecce: le grafiche ora vengono renderizzate con il 50% di trasparenza e posizionate *sotto* i pezzi per non coprirli.
+	= [PDF] Fix colore: il giallo standard di python-chess è stato sovrascritto con un vero giallo (`#e6e600`) al posto dell'arancione.
+	= [PDF] Fix rendering Cavallo Nero: sistemata la regex di colorazione per applicare correttamente i bordi scelti dall'utente anche ai cavalli neri (che usavano stili CSS inline e colori specifici).
 6.4.1
 	+ [Easyfish] Esportazione PDF (.i): Ora la scacchiera viene orientata dal punto di vista del giocatore di turno. Aggiunta la lista delle mosse (o il FEN se non ci sono mosse) sotto al commento nel PDF.
 	= [Refactoring] Risolti avvisi Ruff (bare except e import inutilizzati) in Easyfish.
