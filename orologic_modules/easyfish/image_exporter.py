@@ -14,6 +14,7 @@ from GBUtils import dgt, Acusticator
 from .. import config
 from .. import storage
 from ..config import _
+from .drawing import get_drawings_from_node
 
 class DrawingFlowable(Flowable):
     def __init__(self, drawing, width, height, scale=1.0):
@@ -167,11 +168,25 @@ def export_board_pdf(board, node=None):
 
     svg_size = settings["size"]
     
+    svg_arrows = []
+    if node:
+        arrows_pgn, circles_pgn = get_drawings_from_node(node)
+        for d in arrows_pgn + circles_pgn:
+            try:
+                svg_arrows.append(chess.svg.Arrow.from_pgn(d))
+            except Exception:
+                pass
+    
     svg_data = chess.svg.board(
         board=board, size=svg_size, fill=square_fills,
+        arrows=svg_arrows,
         colors={
             "margin": mrg, "coord": crd, "inner border": ib, "outer border": ob,
-            "square light lastmove": lml, "square dark lastmove": lmd, "check": chk
+            "square light lastmove": lml, "square dark lastmove": lmd, "check": chk,
+            "arrow green": "#15781B80",
+            "arrow red": "#88202080",
+            "arrow blue": "#00308880",
+            "arrow yellow": "#e6e60080"
         },
         borders=True, orientation=board.turn
     )
@@ -181,14 +196,15 @@ def export_board_pdf(board, node=None):
     svg_data = re.sub(r'(<text [^>]*?class="coord"[^>]*?)>', f'\\1 fill="{crd}" style="fill:{crd};">', svg_data)
     
     # 2. Funzioni mirate per colorare i pezzi senza distruggere i dettagli interni
-# 2. Funzioni mirate per colorare i pezzi senza distruggere i dettagli interni
     def colorize_white(match):
         """Sostituisce i colori standard del pezzo bianco con quelli scelti dall'utente."""
         text = match.group(0)
         # Sostituisce il corpo (che di default è bianco)
         text = text.replace('fill="#fff"', f'fill="{pw}"').replace('fill="#ffffff"', f'fill="{pw}"')
+        text = text.replace('fill:#ffffff', f'fill:{pw}').replace('fill:#fff', f'fill:{pw}')
         # Sostituisce i bordi e dettagli (che di default sono neri)
         text = text.replace('stroke="#000"', f'stroke="{pws}"').replace('stroke="#000000"', f'stroke="{pws}"')
+        text = text.replace('stroke:#000000', f'stroke:{pws}').replace('stroke:#000', f'stroke:{pws}')
         return text
 
     def colorize_black(match):
@@ -196,14 +212,21 @@ def export_board_pdf(board, node=None):
         text = match.group(0)
         # Sostituisce il corpo (che di default è nero)
         text = text.replace('fill="#000"', f'fill="{pb}"').replace('fill="#000000"', f'fill="{pb}"')
+        text = text.replace('fill:#000000', f'fill:{pb}').replace('fill:#000', f'fill:{pb}')
         
         # IL FIX È QUI: Sostituisce i bordi ESTERNI (che di default sono neri)
         text = text.replace('stroke="#000"', f'stroke="{pbs}"').replace('stroke="#000000"', f'stroke="{pbs}"')
+        text = text.replace('stroke:#000000', f'stroke:{pbs}').replace('stroke:#000', f'stroke:{pbs}')
         
         # Sostituisce le rifiniture INTERNE (che di default sono bianche)
         text = text.replace('stroke="#fff"', f'stroke="{pbs}"').replace('stroke="#ffffff"', f'stroke="{pbs}"')
-        # Per sicurezza, se ci fossero riempimenti bianchi nei pezzi neri
+        text = text.replace('stroke:#ffffff', f'stroke:{pbs}').replace('stroke:#fff', f'stroke:{pbs}')
         text = text.replace('fill="#fff"', f'fill="{pbs}"').replace('fill="#ffffff"', f'fill="{pbs}"')
+        text = text.replace('fill:#ffffff', f'fill:{pbs}').replace('fill:#fff', f'fill:{pbs}')
+        
+        # Gestione speciale per i cavalli neri (hanno dettagli grigio #ececec di default)
+        text = text.replace('stroke="#ececec"', f'stroke="{pbs}"').replace('stroke:#ececec', f'stroke:{pbs}')
+        text = text.replace('fill="#ececec"', f'fill="{pbs}"').replace('fill:#ececec', f'fill:{pbs}')
         
         text = text.replace('currentColor', pb) 
         return text
@@ -216,7 +239,17 @@ def export_board_pdf(board, node=None):
     # 3. Impostazione Spessore Bordo (Stroke Width) sui pezzi
     svg_data = svg_data.replace('stroke-width="1.5"', f'stroke-width="{psw}"')
 
-    # 4. Bordi e Margini 
+    # 4. Fix Frecce: le spostiamo "SOTTO" i pezzi per evitare che li coprano,
+    # visto che la libreria svglib spesso ignora o gestisce male la trasparenza (opacity).
+    arrow_pattern = re.compile(r'(<line[^>]*class="arrow"[^>]*>|<polygon[^>]*class="arrow"[^>]*>|<circle[^>]*class="arrow"[^>]*>)')
+    arrows_str = "".join(arrow_pattern.findall(svg_data))
+    if arrows_str:
+        svg_data = arrow_pattern.sub('', svg_data) # Rimuove le frecce dal fondo
+        insert_pos = svg_data.find('<use href=')   # Trova il primo pezzo
+        if insert_pos == -1: insert_pos = svg_data.find('</svg>')
+        svg_data = svg_data[:insert_pos] + arrows_str + svg_data[insert_pos:]
+
+    # 5. Bordi e Margini 
     svg_data = re.sub(r'class="square light"', f'class="square light" fill="{sl}"', svg_data)
     svg_data = re.sub(r'class="square dark"', f'class="square dark" fill="{sd}"', svg_data)
     svg_data = svg_data.replace('class="margin"', f'class="margin" fill="{mrg}"')
