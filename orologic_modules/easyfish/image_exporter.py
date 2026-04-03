@@ -48,11 +48,11 @@ def get_image_settings():
     # Se le impostazioni non esistono nel DB, usiamo questi nuovi valori di default
     settings = db.get("image_settings", {
         "square_light": [94, 85, 71],        # Case chiare (crema/beige)
-        "square_dark": [36, 25, 20],         # Case scure (marrone scuro)
+        "square_dark": [41, 30, 25],         # Case scure (marrone scuro)
         "pieces_white": [96, 96, 94],        # Pezzi bianchi (bianco sporco)
         "pieces_white_stroke": [0, 21, 14],  # Bordo pezzi bianchi (verde scuro)
         "pieces_black": [3, 3, 3],           # Pezzi neri (grigio scurissimo/nero)
-        "pieces_black_stroke": [100, 100, 90],# Bordo pezzi neri (giallino/avorio)
+        "pieces_black_stroke": [100, 85, 6], # Bordo pezzi neri (giallino/avorio)
         "margin": [12, 12, 20],              # Sfondo coordinate (blu notte)
         "coord": [98, 98, 34],               # Testo coordinate (giallo)
         "inner_border": [100, 100, 0],       # Bordo interno scacchiera (giallo acceso)

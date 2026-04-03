@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 6.2.7)</h1>
+<h1>Guida Utente di Orologic (Versione 6.5.1)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -240,6 +240,21 @@ margin: 1em 0;
     <li><code>z</code>: Esci dalla variante attuale e risali di livello, tornando alla deviazione padre. (Funziona da Lvl1 in su).</li>
     <li><code>u</code>: Elimina ("taglia") il ramo in cui ti trovi, ripulendo l'albero.</li>
     <li><code>s</code>: Richiedi al motore un'analisi istantanea della posizione.</li>
+</ul>
+
+<h4>2.3.5. Menu Disegno (.d)</h4>
+<p>Il comando <code>.d</code> apre un sottomenu dedicato all'inserimento di annotazioni grafiche (frecce e cerchi colorati) sulla scacchiera. Queste annotazioni vengono associate in modo permanente alla mossa corrente all'interno del file PGN, e verranno stampate fedelmente se esporti la scacchiera in PDF.</p>
+<ul>
+    <li><strong>A - Aggiungi una forma:</strong> Ti permette di tracciare una freccia o un cerchio. Il programma ti chiederà prima le coordinate e poi il colore.
+        <ul>
+            <li><em>Esempio Freccia:</em> Inserisci <code>e2.e4</code> per indicare la casa di partenza e quella di arrivo separate da un punto. Poi scegli il colore (es. <code>V</code> per Verde, <code>R</code> per Rosso, <code>B</code> per Blu, <code>G</code> per Giallo). Risultato: una freccia verde che punta da e2 a e4.</li>
+            <li><em>Esempio Cerchio:</em> Inserisci una singola casa, ad esempio <code>f7</code>. Poi scegli il colore (es. <code>R</code> per Rosso). Risultato: un cerchio rosso che evidenzia la casa f7.</li>
+        </ul>
+    </li>
+    <li><strong>L - Lista:</strong> Elenca in modo discorsivo (es. "Freccia da empoli 2 ad empoli 4 verde") tutte le forme attualmente presenti sulla mossa in cui ti trovi.</li>
+    <li><strong>C - Cancella:</strong> Rimuove istantaneamente tutti i disegni associati esclusivamente alla mossa corrente.</li>
+    <li><strong>P - Pulisci tutto:</strong> Scorre l'intera partita ed elimina qualsiasi disegno presente in qualsiasi mossa del PGN. Ti verrà chiesta conferma prima di procedere.</li>
+    <li><strong>. - Esci:</strong> Torna al menu principale di Easyfish.</li>
 </ul>
 
 <h3>2.4. Configurazione</h3>
