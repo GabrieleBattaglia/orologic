@@ -5,6 +5,23 @@ import urllib.error
 import webbrowser
 from GBUtils import menu, enter_escape
 from . import storage
+from .config import percorso_salvataggio
+
+SECRETS_FILE = percorso_salvataggio(os.path.join("settings", "secrets.json"))
+
+def load_secrets():
+    try:
+        with open(SECRETS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_secrets(secrets):
+    try:
+        with open(SECRETS_FILE, "w", encoding="utf-8") as f:
+            json.dump(secrets, f, indent=4)
+    except Exception as e:
+        print(f"Errore salvataggio segreti: {e}")
 
 def _(testo):
     """
@@ -60,9 +77,10 @@ def menu_login(db):
         profile = fetch_profile_info(token)
         if profile:
             username = profile.get("username", "Sconosciuto")
-            db["lichess_token"] = token
-            db["lichess_username"] = username
-            storage.SaveDB(db)
+            secrets = load_secrets()
+            secrets["lichess_token"] = token
+            secrets["lichess_username"] = username
+            save_secrets(secrets)
             print(_("Token valido! Benvenuto, {username}!").format(username=username))
             # Ritorniamo il profile per aggiornare l'interfaccia subito
             return profile
@@ -75,12 +93,13 @@ def menu_login(db):
 def menu_logout(db):
     """Gestisce il logout rimuovendo il token."""
     print(_("\n--- Logout da Lichess ---"))
-    if "lichess_token" in db:
+    secrets = load_secrets()
+    if "lichess_token" in secrets:
         if enter_escape(_("Sei sicuro di voler effettuare il logout e cancellare il token salvato? (Invio = Si, Esc = No): ")):
-            del db["lichess_token"]
-            if "lichess_username" in db:
-                del db["lichess_username"]
-            storage.SaveDB(db)
+            del secrets["lichess_token"]
+            if "lichess_username" in secrets:
+                del secrets["lichess_username"]
+            save_secrets(secrets)
             print(_("Logout effettuato con successo. Token rimosso."))
             return True
         else:
@@ -104,24 +123,26 @@ def menu_gioca(db):
 def run():
     """Entry point principale di Orolichess integrato in orologic."""
     db = storage.LoadDB()
+    secrets = load_secrets()
     
     # Fetch iniziale del profilo per ottenere Elo aggiornato se già loggati
     rating_info = ""
-    token = db.get("lichess_token")
+    token = secrets.get("lichess_token")
     if token:
         print(_("Connessione a Lichess in corso..."))
         profile = fetch_profile_info(token)
         if profile:
-            username = profile.get("username", db.get("lichess_username", "Utente"))
-            db["lichess_username"] = username
+            username = profile.get("username", secrets.get("lichess_username", "Utente"))
+            secrets["lichess_username"] = username
             rating_info = format_ratings(profile.get("perfs", {}))
-            storage.SaveDB(db)
+            save_secrets(secrets)
     
     while True:
         # Costruiamo il menu dinamicamente in base allo stato del login
         MENU_CHOICES = {}
         
-        is_logged = "lichess_token" in db
+        secrets = load_secrets()
+        is_logged = "lichess_token" in secrets
         
         if is_logged:
             MENU_CHOICES["logout"] = _("Logout (Rimuovi token)")
@@ -137,7 +158,7 @@ def run():
         })
         
         if is_logged:
-            username = db.get("lichess_username", "Utente")
+            username = secrets.get("lichess_username", "Utente")
             print(_("\n--- OROLICHESS --- CONNESSO COME: {username}{rating} ---").format(username=username, rating=rating_info))
         else:
             print(_("\n--- OROLICHESS --- DISCONNESSO (Seleziona Login per iniziare) ---"))
