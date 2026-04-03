@@ -8,7 +8,7 @@ import datetime
 import copy
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt, menu, Acusticator, key, Donazione, polipo, update_checker, perform_update, enter_escape
-from orologic_modules import config, storage, ui, clock, engine, game_flow, version, stockfish_installer
+from orologic_modules import config, storage, ui, clock, engine, game_flow, version, stockfish_installer, lichess_app
 from orologic_modules.easyfish import easyfish_app
 
 # Inizializzazione localizzazione
@@ -108,6 +108,10 @@ def Main():
         elif scelta == "easyfish":
             Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0.5, config.VOLUME], kind=1)
             easyfish_app.run()
+            
+        elif scelta == "lichess":
+            Acusticator(["g4", 0.1, 0, config.VOLUME, "c5", 0.2, 0, config.VOLUME], kind=1)
+            lichess_app.run()
             
         elif scelta == "motore":
             Acusticator(["e7",.02,0,config.VOLUME,"a6",.02,0,config.VOLUME,"e7",.02,0,config.VOLUME,"a6",.02,0,config.VOLUME,"e7",.02,0,config.VOLUME,"a6",.02,0,config.VOLUME])
