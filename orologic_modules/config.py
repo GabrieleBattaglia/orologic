@@ -165,6 +165,7 @@ MENU_CHOICES={
     "analizza":_("Modalita' analisi partita"),
     "crea":_("Nuovo orologio"),
     "easyfish":_("Easyfish (Interfaccia Accessibile)"),
+    "lichess":_("Orolichess (Integrazione Lichess)"),
     "elimina":_("Elimina orologio"),
     "arbitra":_("Inizia partita (Arbitraggio)"),
     "manuale":_("Guida app"),
