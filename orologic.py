@@ -63,16 +63,21 @@ def Main():
         api_url = "https://api.github.com/repos/GabrieleBattaglia/orologic/releases/latest"
         print(_("Ricerca aggiornamenti in corso..."))
         has_update, new_ver, dl_url, changelog = update_checker(version.VERSION, api_url)
-        if has_update and dl_url:
-            print(_("\n*** AGGIORNAMENTO DISPONIBILE ***"))
-            print(_("E' disponibile la nuova versione {new_ver}! (Attuale: {curr_ver})").format(new_ver=new_ver, curr_ver=version.VERSION))
-            if enter_escape(_("Desideri scaricare e installare l'aggiornamento ora? (INVIO per si', ESC per ignorare): ")):
-                print(_("Download dell'aggiornamento in corso. Attendere prego..."))
-                if perform_update(dl_url, "orologic"):
-                    print(_("Aggiornamento pronto. Orologic si chiudera' per l'installazione..."))
-                    sys.exit(0)
-                else:
-                    print(_("Si e' verificato un errore durante la preparazione dell'aggiornamento."))
+        if has_update:
+            if dl_url:
+                print(_("\n*** AGGIORNAMENTO DISPONIBILE ***"))
+                print(_("E' disponibile la nuova versione {new_ver}! (Attuale: {curr_ver})").format(new_ver=new_ver, curr_ver=version.VERSION))
+                if enter_escape(_("Desideri scaricare e installare l'aggiornamento ora? (INVIO per si', ESC per ignorare): ")):
+                    print(_("Download dell'aggiornamento in corso. Attendere prego..."))
+                    if perform_update(dl_url, "orologic"):
+                        print(_("Aggiornamento pronto. Orologic si chiudera' per l'installazione..."))
+                        sys.exit(0)
+                    else:
+                        print(_("Si e' verificato un errore durante la preparazione dell'aggiornamento."))
+            else:
+                print(_("\n*** AGGIORNAMENTO DISPONIBILE ***"))
+                print(_("E' disponibile la nuova versione {new_ver}, ma i file di installazione non sono ancora pronti per il download.").format(new_ver=new_ver))
+                print(_("Riprova piu' tardi."))
         else:
             print(_("Hai gia' l'ultima versione disponibile ({ver})!").format(ver=version.VERSION))
             
