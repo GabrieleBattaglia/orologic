@@ -174,8 +174,142 @@ def menu_profilo(db):
     
     enter_escape(_("\nPremi Invio per tornare al menu Lichess..."))
 
+def fetch_perf_info(username, perf):
+    """Recupera le statistiche dettagliate di una variante."""
+    req = urllib.request.Request(f"https://lichess.org/api/user/{username}/perf/{perf}")
+    try:
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                return json.loads(response.read().decode('utf-8'))
+    except Exception:
+        pass
+    return None
+
+def format_iso_date(iso_str):
+    """Formatta una stringa ISO 8601 di Lichess."""
+    if not iso_str: return _("Sconosciuto")
+    import datetime
+    try:
+        # Rimuove millisecondi e Z per la compatibilità con le vecchie versioni di Python
+        iso_str = iso_str.split('.')[0].replace('Z', '')
+        dt = datetime.datetime.fromisoformat(iso_str)
+        return dt.strftime('%d/%m/%Y %H:%M')
+    except Exception:
+        return iso_str
+
 def menu_statistiche(db):
-    print(_("\n[WIP] Qui verra' mostrata un'analisi approfondita delle statistiche utente."))
+    secrets = load_secrets()
+    token = secrets.get("lichess_token")
+    username = secrets.get("lichess_username")
+    
+    if not token or not username:
+        print(_("\nDevi prima effettuare il login per vedere le statistiche."))
+        return
+
+    print(_("\nRecupero dati utente in corso..."))
+    profile = fetch_profile_info(token)
+    if not profile:
+        print(_("Impossibile recuperare il profilo. Controlla la tua connessione."))
+        return
+        
+    perfs = profile.get("perfs", {})
+    if not perfs:
+        print(_("Nessuna statistica disponibile."))
+        return
+        
+    valid_modes = {}
+    for mode, data in perfs.items():
+        if isinstance(data, dict) and data.get("games", 0) > 0:
+            valid_modes[mode] = _("{m} (Partite: {g})").format(m=mode.capitalize(), g=data["games"])
+            
+    if not valid_modes:
+        print(_("\nNon hai ancora giocato nessuna partita."))
+        return
+        
+    while True:
+        # Ricostruiamo il menu iterativamente per permettere di tornare indietro
+        scelte_mod = dict(valid_modes)
+        scelte_mod["."] = _("Torna al menu Lichess")
+        
+        scelta = menu(scelte_mod, show=True, keyslist=True, p=_("\nScegli una modalita' per le statistiche: "), numbered=db.get("menu_numerati", False))
+        
+        if scelta == ".":
+            break
+            
+        print(_("\nRecupero statistiche dettagliate per {m}...").format(m=scelta.capitalize()))
+        perf_data = fetch_perf_info(username, scelta)
+        if not perf_data or "stat" not in perf_data:
+            print(_("Impossibile recuperare le statistiche per questa modalita'."))
+            continue
+            
+        stat = perf_data["stat"]
+        perf = perf_data.get("perf", {})
+        
+        print(_("\n=================================="))
+        print(_("     STATISTICHE: {m}").format(m=scelta.upper()))
+        print(_("=================================="))
+        
+        glicko = perf.get("glicko", {})
+        print(_("Elo Attuale: {r} (Deviazione: {d})").format(r=glicko.get("rating", "N/A"), d=glicko.get("deviation", "N/A")))
+        print(_("Progressione (ultime 12 partite): {p}").format(p=perf.get("progress", 0)))
+        percentile = perf_data.get("percentile")
+        if percentile is not None:
+            print(_("Percentile: {p}% (Sei migliore del {p}% dei giocatori)").format(p=percentile))
+            
+        count = stat.get("count", {})
+        total = count.get("all", 0)
+        rated = count.get("rated", 0)
+        wins = count.get("win", 0)
+        losses = count.get("loss", 0)
+        draws = count.get("draw", 0)
+        
+        print(_("\n[Risultati su {t} partite ({r} classificate)]").format(t=total, r=rated))
+        if total > 0:
+            p_win = (wins / total) * 100
+            p_loss = (losses / total) * 100
+            p_draw = (draws / total) * 100
+            print(_("Vittorie: {w} ({p:.2f}%)").format(w=wins, p=p_win))
+            print(_("Sconfitte: {l} ({p:.2f}%)").format(l=losses, p=p_loss))
+            print(_("Patte: {d} ({p:.2f}%)").format(d=draws, p=p_draw))
+        else:
+            print(_("Vittorie: {w}\nSconfitte: {l}\nPatte: {d}").format(w=wins, l=losses, d=draws))
+            
+        berserk = count.get("berserk", 0)
+        if berserk > 0 and total > 0:
+            p_berserk = (berserk / total) * 100
+            print(_("Volte in cui sei andato Berserk: {b} ({p:.2f}%)").format(b=berserk, p=p_berserk))
+            
+        opAvg = count.get("opAvg")
+        if opAvg is not None:
+            print(_("Elo medio avversari: {avg}").format(avg=opAvg))
+        
+        disconnects = count.get("disconnects", 0)
+        if disconnects > 0:
+            print(_("Disconnessioni: {d}").format(d=disconnects))
+            
+        highest = stat.get("highest", {})
+        lowest = stat.get("lowest", {})
+        if highest.get("int") or lowest.get("int"):
+            print(_("\n[Record Elo]"))
+            if highest.get("int"):
+                print(_("Piu' alto: {r} (il {d})").format(r=highest["int"], d=format_iso_date(highest.get("at"))))
+            if lowest.get("int"):
+                print(_("Piu' basso: {r} (il {d})").format(r=lowest["int"], d=format_iso_date(lowest.get("at"))))
+                
+        streaks = stat.get("resultStreak", {})
+        win_streak = streaks.get("win", {}).get("max", {}).get("v", 0)
+        loss_streak = streaks.get("loss", {}).get("max", {}).get("v", 0)
+        if win_streak > 0 or loss_streak > 0:
+            print(_("\n[Serie]"))
+            print(_("Vittorie consecutive piu' lunga: {w}").format(w=win_streak))
+            print(_("Sconfitte consecutive piu' lunga: {l}").format(l=loss_streak))
+            
+        time_seconds = count.get("seconds", 0)
+        if time_seconds > 0:
+            print(_("\nTempo speso in questa modalita': {t}").format(t=format_playtime(time_seconds)))
+            
+        print(_("=================================="))
+        enter_escape(_("\nPremi Invio per continuare..."))
 
 def menu_amici(db):
     print(_("\n[WIP] Interfaccia per la gestione amici e messaggistica."))
