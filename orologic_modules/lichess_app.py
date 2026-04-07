@@ -108,8 +108,77 @@ def menu_logout(db):
         print(_("Non sei attualmente loggato (nessun token presente)."))
     return False
 
+def format_timestamp(ts):
+    import datetime
+    if not ts: return _("Sconosciuto")
+    return datetime.datetime.fromtimestamp(ts/1000).strftime('%d/%m/%Y %H:%M')
+
+def format_playtime(seconds):
+    if not seconds: return _("0 secondi")
+    days = seconds // 86400
+    hours = (seconds % 86400) // 3600
+    minutes = (seconds % 3600) // 60
+    parts = []
+    if days > 0:
+        parts.append(_("{n} giorni").format(n=days) if days != 1 else _("1 giorno"))
+    if hours > 0:
+        parts.append(_("{n} ore").format(n=hours) if hours != 1 else _("1 ora"))
+    if minutes > 0:
+        parts.append(_("{n} minuti").format(n=minutes) if minutes != 1 else _("1 minuto"))
+    return ", ".join(parts) if parts else _("< 1 minuto")
+
 def menu_profilo(db):
-    print(_("\n[WIP] Qui verra' mostrato il profilo utente e il rating (se il login e' effettuato)."))
+    secrets = load_secrets()
+    token = secrets.get("lichess_token")
+    if not token:
+        print(_("\nDevi prima effettuare il login per vedere il tuo profilo."))
+        return
+
+    print(_("\nRecupero dati del profilo in corso..."))
+    profile = fetch_profile_info(token)
+    if not profile:
+        print(_("Impossibile recuperare il profilo. Controlla la tua connessione o il token."))
+        return
+    
+    print(_("\n=================================="))
+    print(_("         PROFILO LICHESS"))
+    print(_("=================================="))
+    print(_("Username: {u}").format(u=profile.get("username", "Sconosciuto")))
+    
+    prof_data = profile.get("profile", {})
+    bio = prof_data.get("bio")
+    if bio:
+        print(_("Biografia: {b}").format(b=bio))
+    fide = prof_data.get("fideRating")
+    if fide:
+        print(_("Elo FIDE: {f}").format(f=fide))
+    
+    print(_("\n[Statistiche Generali]"))
+    print(_("Data iscrizione: {d}").format(d=format_timestamp(profile.get("createdAt"))))
+    print(_("Ultimo accesso: {d}").format(d=format_timestamp(profile.get("seenAt"))))
+    if "playTime" in profile:
+        total_seconds = profile["playTime"].get("total", 0)
+        print(_("Tempo totale di gioco: {t}").format(t=format_playtime(total_seconds)))
+    
+    print(_("\n[Punteggi Elo]"))
+    perfs = profile.get("perfs", {})
+    if not perfs:
+        print(_("Nessun punteggio disponibile."))
+    else:
+        for mode, data in perfs.items():
+            if isinstance(data, dict) and "rating" in data:
+                games = data.get("games", 0)
+                if games > 0:
+                    print(_(" - {m}: {r} (Partite: {g})").format(m=mode.capitalize(), r=data["rating"], g=games))
+    print(_("=================================="))
+    
+    enter_escape(_("\nPremi Invio per tornare al menu Lichess..."))
+
+def menu_statistiche(db):
+    print(_("\n[WIP] Qui verra' mostrata un'analisi approfondita delle statistiche utente."))
+
+def menu_amici(db):
+    print(_("\n[WIP] Interfaccia per la gestione amici e messaggistica."))
 
 def menu_puzzle(db):
     print(_("\n[WIP] Qui si interfaccerà con l'API dei puzzle di Lichess."))
@@ -151,6 +220,8 @@ def run():
             
         MENU_CHOICES.update({
             "profilo": _("Profilo Lichess"),
+            "statistiche": _("Statistiche utente"),
+            "amici": _("Gestione Amici"),
             "puzzle": _("Risolvi puzzle"),
             "guarda": _("Guarda una partita"),
             "gioca": _("Gioca una partita"),
@@ -177,6 +248,10 @@ def run():
                 rating_info = ""
         elif scelta == "profilo":
             menu_profilo(db)
+        elif scelta == "statistiche":
+            menu_statistiche(db)
+        elif scelta == "amici":
+            menu_amici(db)
         elif scelta == "puzzle":
             menu_puzzle(db)
         elif scelta == "guarda":
