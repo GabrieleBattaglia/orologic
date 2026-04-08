@@ -3,8 +3,9 @@ import json
 import urllib.request
 import urllib.error
 import webbrowser
-from GBUtils import menu, enter_escape
-from . import storage
+import chess
+from GBUtils import menu, enter_escape, Acusticator, dgt
+from . import storage, board_utils, config, ui
 from .config import percorso_salvataggio
 
 SECRETS_FILE = percorso_salvataggio(os.path.join("settings", "secrets.json"))
@@ -67,7 +68,7 @@ def menu_login(db):
     input(_("Premi Invio per aprire il browser e generare il tuo token su Lichess..."))
     try:
         webbrowser.open("https://lichess.org/account/oauth/token")
-    except Exception as e:
+    except Exception:
         print(_("Impossibile aprire il browser automaticamente. Vai manualmente su: https://lichess.org/account/oauth/token"))
     
     token = input(_("\nIncolla qui il tuo Personal API Token (oppure premi Invio per annullare): ")).strip()
@@ -220,7 +221,7 @@ def menu_statistiche(db):
     valid_modes = {}
     for mode, data in perfs.items():
         if isinstance(data, dict) and data.get("games", 0) > 0:
-            valid_modes[mode] = _("{m} (Partite: {g})").format(m=mode.capitalize(), g=data["games"])
+            valid_modes[mode] = _("Partite: {g}").format(g=data["games"])
             
     if not valid_modes:
         print(_("\nNon hai ancora giocato nessuna partita."))
@@ -311,11 +312,555 @@ def menu_statistiche(db):
         print(_("=================================="))
         enter_escape(_("\nPremi Invio per continuare..."))
 
+def fetch_following(token):
+    req = urllib.request.Request("https://lichess.org/api/rel/following")
+    req.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                lines = response.read().decode('utf-8').strip().split('\n')
+                users = []
+                for line in lines:
+                    if line.strip():
+                        try:
+                            users.append(json.loads(line))
+                        except Exception:
+                            pass
+                return users
+    except Exception as e:
+        print(_("Errore durante il recupero dei seguiti: {e}").format(e=e))
+    return []
+
+def follow_user(token, username):
+    req = urllib.request.Request(f"https://lichess.org/api/rel/follow/{username}", method="POST")
+    req.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                print(_("Ora segui {u}!").format(u=username))
+                return True
+    except urllib.error.HTTPError as e:
+        print(_("Errore HTTP: {c} (Assicurati di avere il permesso follow:write)").format(c=e.code))
+    except Exception as e:
+        print(_("Errore di connessione: {e}").format(e=e))
+    return False
+
+def unfollow_user(token, username):
+    req = urllib.request.Request(f"https://lichess.org/api/rel/unfollow/{username}", method="POST")
+    req.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                print(_("Non segui piu' {u}.").format(u=username))
+                return True
+    except urllib.error.HTTPError as e:
+        print(_("Errore HTTP: {c}").format(c=e.code))
+    except Exception as e:
+        print(_("Errore di connessione: {e}").format(e=e))
+    return False
+
+def send_message(token, username, text):
+    import urllib.parse
+    req = urllib.request.Request(f"https://lichess.org/inbox/{username}", method="POST")
+    req.add_header("Authorization", f"Bearer {token}")
+    data = urllib.parse.urlencode({'text': text}).encode('utf-8')
+    try:
+        with urllib.request.urlopen(req, data=data) as response:
+            if response.status == 200:
+                print(_("Messaggio inviato a {u} con successo!").format(u=username))
+                return True
+    except urllib.error.HTTPError as e:
+        print(_("Errore HTTP: {c} (L'utente potrebbe non accettare messaggi o ti manca il permesso msg:write)").format(c=e.code))
+    except Exception as e:
+        print(_("Errore di connessione: {e}").format(e=e))
+    return False
+
 def menu_amici(db):
-    print(_("\n[WIP] Interfaccia per la gestione amici e messaggistica."))
+    secrets = load_secrets()
+    token = secrets.get("lichess_token")
+    if not token:
+        print(_("\nDevi prima effettuare il login per gestire gli amici."))
+        return
+
+    while True:
+        print(_("\n=================================="))
+        print(_("          GESTIONE AMICI"))
+        print(_("=================================="))
+        
+        scelte_amici = {
+            "vedi": _("Vedi persone che segui"),
+            "segui": _("Segui un nuovo giocatore"),
+            "smetti": _("Smetti di seguire un giocatore"),
+            "messaggio": _("Invia un messaggio privato"),
+            ".": _("Torna al menu Lichess")
+        }
+        
+        scelta = menu(scelte_amici, show=True, keyslist=True, p=_("\nScegli un'azione: "), numbered=db.get("menu_numerati", False))
+        
+        if scelta == ".":
+            break
+        elif scelta == "vedi":
+            print(_("\nRecupero lista dei giocatori seguiti..."))
+            following = fetch_following(token)
+            if not following:
+                print(_("Non stai seguendo nessuno o e' impossibile recuperare la lista."))
+            else:
+                print(_("\nStai seguendo {n} giocatori:").format(n=len(following)))
+                for u in following:
+                    username = u.get('username', 'Sconosciuto')
+                    title = u.get('title', '')
+                    title_str = f"[{title}] " if title else ""
+                    online = _("ONLINE") if u.get('online') else _("Offline")
+                    print(_(" - {t}{u} ({o})").format(t=title_str, u=username, o=online))
+            enter_escape(_("\nPremi Invio per continuare..."))
+            
+        elif scelta == "segui":
+            username = input(_("\nInserisci l'username del giocatore da seguire: ")).strip()
+            if username:
+                follow_user(token, username)
+            enter_escape(_("\nPremi Invio per continuare..."))
+            
+        elif scelta == "smetti":
+            username = input(_("\nInserisci l'username del giocatore da smettere di seguire: ")).strip()
+            if username:
+                unfollow_user(token, username)
+            enter_escape(_("\nPremi Invio per continuare..."))
+            
+        elif scelta == "messaggio":
+            username = input(_("\nInserisci l'username del destinatario: ")).strip()
+            if not username:
+                continue
+            testo = input(_("Inserisci il messaggio: ")).strip()
+            if not testo:
+                print(_("Messaggio annullato."))
+            else:
+                send_message(token, username, testo)
+            enter_escape(_("\nPremi Invio per continuare..."))
+
+class DummyGameState:
+    def __init__(self, board):
+        self.board = board
+        self.white_player = _("Bianco")
+        self.black_player = _("Nero")
+
+def report_all_pieces(game_state, color):
+    cols_dict = config.L10N.get('columns', {})
+    
+    board = game_state.board
+    pieces_map = {chess.PAWN: [], chess.KNIGHT: [], chess.BISHOP: [], chess.ROOK: [], chess.QUEEN: [], chess.KING: []}
+    
+    for sq in chess.SQUARES:
+        piece = board.piece_at(sq)
+        if piece and piece.color == color:
+            pieces_map[piece.piece_type].append(sq)
+            
+    color_str = _("Bianco") if color == chess.WHITE else _("Nero")
+    print(_("\n--- Riepilogo pezzi {c} ---").format(c=color_str))
+    
+    found_any = False
+    for p_type in [chess.KING, chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT, chess.PAWN]:
+        squares = pieces_map[p_type]
+        if squares:
+            found_any = True
+            piece_type_key = chess.PIECE_NAMES[p_type].lower()
+            full_name = config.L10N['pieces'][piece_type_key]['name']
+            
+            positions = []
+            for sq in squares:
+                file_letter = chess.square_name(sq)[0]
+                rank = chess.square_name(sq)[1]
+                descriptive_file = cols_dict.get(file_letter, file_letter)
+                positions.append("{f} {r}".format(f=descriptive_file, r=rank))
+            
+            print("{p}: {pos}".format(p=full_name.capitalize(), pos=", ".join(positions)))
+            
+    if not found_any:
+        print(_("Nessun pezzo rimasto!"))
+
+def describe_board(board, last_move_san=None):
+    turn = _("Tocca al Bianco muovere.") if board.turn == chess.WHITE else _("Tocca al Nero muovere.")
+    
+    castling = []
+    if board.has_kingside_castling_rights(chess.WHITE): castling.append(_("Corto Bianco"))
+    if board.has_queenside_castling_rights(chess.WHITE): castling.append(_("Lungo Bianco"))
+    if board.has_kingside_castling_rights(chess.BLACK): castling.append(_("Corto Nero"))
+    if board.has_queenside_castling_rights(chess.BLACK): castling.append(_("Lungo Nero"))
+    castling_str = _("Diritti di arrocco: {c}").format(c=", ".join(castling)) if castling else _("Nessun diritto di arrocco.")
+    
+    ep_str = ""
+    if board.ep_square:
+        ep_sq = chess.square_name(board.ep_square)
+        ep_str = _("Presa en passant possibile in {sq}.").format(sq=ep_sq)
+        
+    last_str = _("Ultima mossa giocata: {m}").format(m=last_move_san) if last_move_san else ""
+    
+    return "\n".join(filter(None, [turn, castling_str, ep_str, last_str]))
+
+def handle_exploration_command(user_input, game_state):
+    if user_input.startswith("/"):
+        Acusticator(["c5", 0.07, -1, config.VOLUME,"d5", 0.07, -.75, config.VOLUME,"e5", 0.07, -.5, config.VOLUME,"f5", 0.07, -.25, config.VOLUME,"g5", 0.07, 0, config.VOLUME,"a5", 0.07, .25, config.VOLUME,"b5", 0.07, .5, config.VOLUME,"c6", 0.07, .75, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
+        base_column = user_input[1:2].strip()
+        ui.read_diagonal(game_state, base_column, True)
+        return True
+    elif user_input.startswith("\\"):
+        Acusticator(["c5", 0.07, 1, config.VOLUME,"d5", 0.07, 0.75, config.VOLUME,"e5", 0.07, 0.5, config.VOLUME,"f5", 0.07, 0.25, config.VOLUME,"g5", 0.07, 0, config.VOLUME,"a5", 0.07, -0.25, config.VOLUME,"b5", 0.07, -0.5, config.VOLUME,"c6", 0.07, -0.75, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
+        base_column = user_input[1:2].strip()
+        ui.read_diagonal(game_state, base_column, False)
+        return True
+    elif user_input.startswith("-"):
+        param = user_input[1:].strip()
+        if not param:
+            Acusticator(["c5", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+            report_all_pieces(game_state, chess.WHITE)
+            return True
+        elif len(param) == 1 and param.isalpha():
+            Acusticator(["c5", 0.07, 0, config.VOLUME, "d5", 0.07, 0, config.VOLUME, "e5", 0.07, 0, config.VOLUME, "f5", 0.07, 0, config.VOLUME, "g5", 0.07, 0, config.VOLUME, "a5", 0.07, 0, config.VOLUME, "b5", 0.07, 0, config.VOLUME, "c6", 0.07, 0, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
+            ui.read_file(game_state, param)
+        elif len(param) == 1 and param.isdigit():
+            rank_number = int(param)
+            if 1 <= rank_number <= 8:
+                Acusticator(["g5", 0.07, -1, config.VOLUME,"g5", 0.07, -.75, config.VOLUME,"g5", 0.07, -.5, config.VOLUME,"g5", 0.07, -.25, config.VOLUME,"g5", 0.07, 0, config.VOLUME,"g5", 0.07, .25, config.VOLUME,"g5", 0.07, .5, config.VOLUME,"g5", 0.07, .75, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
+                ui.read_rank(game_state, rank_number)
+            else:
+                print(_("Traversa non valida."))
+        elif len(param) == 2 and param[0].isalpha() and param[1].isdigit():
+            Acusticator(["d#4", .7, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+            ui.read_square(game_state, param)
+        else:
+            print(_("Comando dash non riconosciuto."))
+        return True
+    elif user_input == "+":
+        Acusticator(["c4", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+        report_all_pieces(game_state, chess.BLACK)
+        return True
+    elif user_input.startswith(","):
+        Acusticator(["a3", .06, -1, config.VOLUME, "c4", .06, -0.5, config.VOLUME, "d#4", .06, 0.5, config.VOLUME, "f4", .06, 1, config.VOLUME], kind=3, adsr=[20, 5, 70, 25])
+        ui.report_piece_positions(game_state, user_input[1:2])
+        return True
+    elif user_input == ".b":
+        Acusticator(["c4", 0.2, -1, config.VOLUME, "g4", 0.2, -0.3, config.VOLUME, "c5", 0.2, 0.3, config.VOLUME, "e5", 0.2, 1, config.VOLUME, "g5", 0.4, 0, config.VOLUME], kind=1, adsr=[10, 5, 80, 5])
+        print(game_state.board)
+        return True
+    elif user_input == ".?":
+        Acusticator([440.0, 0.3, 0, config.VOLUME, 880.0, 0.3, 0, config.VOLUME], kind=1, adsr=[10, 0, 100, 20])
+        commands = {
+            "-": _("Riepilogo dei pezzi Bianchi"),
+            "+": _("Riepilogo dei pezzi Neri"),
+            "-[a-h]": _("Esplora colonna"),
+            "-[1-8]": _("Esplora traversa"),
+            "-[casa]": _("Dettagli su una casa (es. -e4)"),
+            "/[a-h]": _("Diagonale ascendente destra"),
+            "\\[a-h]": _("Diagonale ascendente sinistra"),
+            ",[P,N,B,R,Q,K]": _("Posizioni di un pezzo specifico"),
+            ".b": _("Mostra la scacchiera grafica"),
+            ".": _("Arrenditi o esci dal puzzle")
+        }
+        menu(commands, show_only=True, p=_("Comandi di esplorazione disponibili:"), ordered=False)
+        return True
+    return False
+
+def fetch_puzzle(token=None, daily=False, difficulty=None, angle=None):
+    url = "https://lichess.org/api/puzzle/daily" if daily else "https://lichess.org/api/puzzle/next"
+    if difficulty or angle:
+        params = []
+        if difficulty: params.append(f"difficulty={difficulty}")
+        if angle: params.append(f"angle={angle}")
+        if params: url += "?" + "&".join(params)
+        
+    req = urllib.request.Request(url)
+    if token and not daily:
+        req.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                return json.loads(response.read().decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        print(_("Errore HTTP durante il recupero del puzzle: {c}").format(c=e.code))
+    except Exception as e:
+        print(_("Errore di connessione: {e}").format(e=e))
+    return None
+
+def calcola_difficolta(user_elo, puzzle_elo_richiesto):
+    diff = puzzle_elo_richiesto - user_elo
+    if diff <= -400: return "easiest"
+    if diff <= -150: return "easier"
+    if diff <= 150: return "normal"
+    if diff <= 400: return "harder"
+    return "hardest"
+
+def get_puzzle_themes():
+    return {
+        "advancedPawn": _("Pedone avanzato"),
+        "advantage": _("Vantaggio"),
+        "attraction": _("Attrazione"),
+        "backRankMate": _("Matto del corridoio"),
+        "bishopEndgame": _("Finale di Alfieri"),
+        "castling": _("Arrocco"),
+        "capturingDefender": _("Cattura del difensore"),
+        "clearance": _("Sgombero"),
+        "crushing": _("Schiacciante"),
+        "deflection": _("Deviazione"),
+        "discoveredAttack": _("Attacco di scoperta"),
+        "doubleCheck": _("Scacco doppio"),
+        "endgame": _("Finale"),
+        "enPassant": _("Presa in Passant"),
+        "equality": _("Parita'"),
+        "exposedKing": _("Re esposto"),
+        "fork": _("Forchetta/Attacco doppio"),
+        "hangingPiece": _("Pezzo in presa"),
+        "interference": _("Interferenza"),
+        "intermezzo": _("Mossa intermedia (Zwischenzug)"),
+        "kingsideAttack": _("Attacco sull'ala di Re"),
+        "knightEndgame": _("Finale di Cavalli"),
+        "long": _("Lungo (3 mosse)"),
+        "master": _("Partite di Maestri"),
+        "mate": _("Scacco matto"),
+        "mateIn1": _("Matto in 1"),
+        "mateIn2": _("Matto in 2"),
+        "mateIn3": _("Matto in 3"),
+        "mateIn4": _("Matto in 4"),
+        "mateIn5": _("Matto in 5+"),
+        "middlegame": _("Medio gioco"),
+        "oneMove": _("Una mossa"),
+        "opening": _("Apertura"),
+        "pawnEndgame": _("Finale di Pedoni"),
+        "pin": _("Inchiodatura"),
+        "promotion": _("Promozione"),
+        "queenEndgame": _("Finale di Donne"),
+        "queenRookEndgame": _("Finale Donna e Torre"),
+        "queensideAttack": _("Attacco sull'ala di Donna"),
+        "quietMove": _("Mossa silenziosa"),
+        "rookEndgame": _("Finale di Torri"),
+        "sacrifice": _("Sacrificio"),
+        "short": _("Corto (2 mosse)"),
+        "skewer": _("Infilata"),
+        "smotheredMate": _("Matto affogato"),
+        "trappedPiece": _("Pezzo intrappolato"),
+        "underPromotion": _("Sottopromozione"),
+        "veryLong": _("Molto lungo (4+ mosse)"),
+        "zugzwang": _("Zugzwang"),
+        "vuoto": _("Casuale (Nessun filtro)")
+    }
+
+def get_last_moves_san(board, num=5):
+    if not board.move_stack:
+        return ""
+    moves = board.move_stack[-num:]
+    temp_board = board.copy()
+    for _ in range(len(moves)):
+        temp_board.pop()
+    parts = []
+    for m in moves:
+        san = temp_board.san(m)
+        if temp_board.turn == chess.WHITE:
+            parts.append(f"{temp_board.fullmove_number}. {san}")
+        else:
+            if not parts:
+                parts.append(f"{temp_board.fullmove_number}... {san}")
+            else:
+                parts.append(san)
+        temp_board.push(m)
+    return " ".join(parts)
 
 def menu_puzzle(db):
-    print(_("\n[WIP] Qui si interfaccerà con l'API dei puzzle di Lichess."))
+    secrets = load_secrets()
+    token = secrets.get("lichess_token")
+    
+    while True:
+        print(_("\n=================================="))
+        print(_("             PUZZLE LICHESS"))
+        print(_("=================================="))
+        
+        scelte_puzzle = {
+            "giorno": _("Puzzle del Giorno"),
+            "nuovo": _("Risolvi un nuovo puzzle"),
+            ".": _("Torna al menu Lichess")
+        }
+        
+        scelta = menu(scelte_puzzle, show=True, keyslist=True, p=_("\nScegli un'opzione: "), numbered=db.get("menu_numerati", False))
+        
+        if scelta == ".":
+            break
+            
+        difficulty = None
+        angle = None
+        if scelta == "nuovo":
+            # Calcolo Elo Puzzle dell'utente
+            user_puzzle_elo = 1500
+            if token:
+                profile = fetch_profile_info(token)
+                if profile and "perfs" in profile and "puzzle" in profile["perfs"]:
+                    user_puzzle_elo = profile["perfs"]["puzzle"].get("rating", 1500)
+            
+            print(_("\nIl tuo punteggio puzzle stimato e': {elo}").format(elo=user_puzzle_elo))
+            scelta_elo = dgt(_("A quale Elo vuoi esercitarti? (es. 1800, oppure invio per mantenere il tuo): ")).strip()
+            
+            if scelta_elo.isdigit():
+                target_elo = int(scelta_elo)
+                difficulty = calcola_difficolta(user_puzzle_elo, target_elo)
+                print(_("Lichess adattera' la ricerca alla difficolta': {d}").format(d=difficulty))
+            
+            themes = get_puzzle_themes()
+            print(_("\nScegli la categoria di puzzle:"))
+            angle_scelto = menu(themes, show=False, keyslist=True, p=_("Seleziona il tema: "))
+            if angle_scelto != "vuoto":
+                angle = angle_scelto
+            
+        print(_("\nRecupero puzzle in corso..."))
+        puzzle_data = fetch_puzzle(token, daily=(scelta == "giorno"), difficulty=difficulty, angle=angle)
+        
+        if not puzzle_data or "puzzle" not in puzzle_data:
+            print(_("Impossibile caricare il puzzle."))
+            continue
+            
+        puz = puzzle_data["puzzle"]
+        game_info = puzzle_data.get("game", {})
+        
+        print(_("\n--- Puzzle {id} ---").format(id=puz.get("id")))
+        print(_("Difficolta' (Rating Lichess): {r}").format(r=puz.get("rating")))
+        print(_("Tema: {t}").format(t=", ".join(puz.get("themes", []))))
+        
+        import io
+        import chess.pgn
+        
+        last_move_san = None
+        board = board_utils.CustomBoard()
+        
+        if "pgn" in game_info and "initialPly" in puz:
+            try:
+                pgn_game = chess.pgn.read_game(io.StringIO(game_info["pgn"]))
+                node = pgn_game
+                ply = 0
+                initial_ply = puz["initialPly"]
+                
+                board = board_utils.CustomBoard()
+                moves_to_push = []
+                while node.variations and ply < initial_ply:
+                    node = node.variations[0]
+                    moves_to_push.append(node.move)
+                    ply += 1
+                
+                for m in moves_to_push:
+                    board.push(m)
+                
+                if node.move and node.parent:
+                    last_move_san = board_utils.DescribeMove(node.move, node.parent.board())
+            except Exception as e:
+                print(_("Errore nel parsing del PGN: {e}").format(e=e))
+                # Fallback
+                if puz.get("fen"):
+                    board = board_utils.CustomBoard(puz["fen"])
+                    last_move_san = puz.get("lastMove")
+        elif puz.get("fen"):
+            board = board_utils.CustomBoard(puz["fen"])
+            last_move_san = puz.get("lastMove")
+            
+        game_state = DummyGameState(board)
+        
+        print("\n" + describe_board(board, last_move_san))
+        report_all_pieces(game_state, not board.turn)
+        report_all_pieces(game_state, board.turn)
+        Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME, "g5", 0.05, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 5])
+        
+        print(_("\nSuggerimento: digita . per uscire, .? per l'aiuto sulle esplorazioni"))
+        
+        soluzione = puz.get("solution", [])
+        mossa_idx = 0
+        risolto = False
+        import time
+        start_time = time.time()
+        
+        while mossa_idx < len(soluzione):
+            mossa_corretta_uci = soluzione[mossa_idx]
+            mossa_corretta_move = chess.Move.from_uci(mossa_corretta_uci)
+            
+            last_5 = get_last_moves_san(board, 5)
+            prompt_text = f"\n{last_5}\n> " if last_5 else "\n> "
+            user_input = dgt(prompt_text).strip().lower()
+            if not user_input: continue
+            
+            if handle_exploration_command(user_input, game_state):
+                if user_input != ".b" and user_input != ".?":
+                    continue
+            
+            if user_input == "." or user_input == "s":
+                if user_input == ".":
+                    if enter_escape(_("Vuoi vedere la soluzione del puzzle? (Invio = Si', Esc = No): ")):
+                        user_input = "s"
+                    else:
+                        print(_("Puzzle interrotto."))
+                        end_time = time.time()
+                        elapsed = int(end_time - start_time)
+                        mins = elapsed // 60
+                        secs = elapsed % 60
+                        time_str = f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
+                        print(_("Tempo impiegato: {t}").format(t=time_str))
+                        break
+                        
+                if user_input == "s":
+                    print(_("\n--- Soluzione del Puzzle ---"))
+                    temp_board = board.copy()
+                    for i in range(mossa_idx, len(soluzione)):
+                        sol_move = chess.Move.from_uci(soluzione[i])
+                        desc = board_utils.DescribeMove(sol_move, temp_board)
+                        if i % 2 == mossa_idx % 2:
+                            print(_("Il tuo tratto: {m}").format(m=desc))
+                        else:
+                            print(_("L'avversario risponde con: {m}").format(m=desc))
+                        temp_board.push(sol_move)
+                    end_time = time.time()
+                    elapsed = int(end_time - start_time)
+                    mins = elapsed // 60
+                    secs = elapsed % 60
+                    time_str = f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
+                    print(_("Tempo impiegato: {t}").format(t=time_str))
+                break
+                
+            if user_input.startswith(".") or user_input.startswith("/") or user_input.startswith("\\") or user_input.startswith("-") or user_input.startswith(",") or user_input == "+":
+                continue
+                
+            try:
+                raw_input = board_utils.NormalizeMove(user_input)
+                move = board.parse_san(raw_input)
+            except ValueError:
+                try:
+                    move = board.parse_uci(raw_input)
+                except ValueError:
+                    Acusticator([600.0, 0.6, 0, config.VOLUME], adsr=[5, 0, 35, 90])
+                    print(_("Mossa non valida. Digita . per uscire, .? per l'aiuto sulle esplorazioni"))
+                    continue
+                    
+            if move == mossa_corretta_move:
+                Acusticator([1000.0, 0.01, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0])
+                desc_move = board_utils.DescribeMove(move, board)
+                print(_("Corretto! Hai giocato: {m}").format(m=desc_move))
+                board.push(move)
+                mossa_idx += 1
+                
+                if mossa_idx < len(soluzione):
+                    avv_uci = soluzione[mossa_idx]
+                    avv_move = chess.Move.from_uci(avv_uci)
+                    desc_avv = board_utils.DescribeMove(avv_move, board)
+                    print(_("L'avversario risponde con: {m}").format(m=desc_avv))
+                    board.push(avv_move)
+                    mossa_idx += 1
+                    Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME, "g5", 0.05, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 5])
+                else:
+                    risolto = True
+            else:
+                Acusticator(["a3", 0.15, 0, config.VOLUME], kind=2, adsr=[5, 20, 0, 75])
+                print(_("Mossa errata, riprova."))
+                
+        if risolto:
+            Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
+            print(_("\nCongratulazioni! Hai risolto il puzzle!"))
+            end_time = time.time()
+            elapsed = int(end_time - start_time)
+            mins = elapsed // 60
+            secs = elapsed % 60
+            time_str = f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
+            print(_("Tempo impiegato: {t}").format(t=time_str))
+            enter_escape(_("Premi Invio per continuare..."))
 
 def menu_guarda(db):
     print(_("\n[WIP] Qui si potra' seguire una partita in corso o caricare il PGN di una passata."))
@@ -330,6 +875,7 @@ def run():
     
     # Fetch iniziale del profilo per ottenere Elo aggiornato se già loggati
     rating_info = ""
+    puzzle_games = None
     token = secrets.get("lichess_token")
     if token:
         print(_("Connessione a Lichess in corso..."))
@@ -338,6 +884,8 @@ def run():
             username = profile.get("username", secrets.get("lichess_username", "Utente"))
             secrets["lichess_username"] = username
             rating_info = format_ratings(profile.get("perfs", {}))
+            if "perfs" in profile and "puzzle" in profile["perfs"]:
+                puzzle_games = profile["perfs"]["puzzle"].get("games")
             save_secrets(secrets)
     
     while True:
@@ -352,11 +900,15 @@ def run():
         else:
             MENU_CHOICES["login"] = _("Login (Imposta API Token)")
             
+        testo_puzzle = _("Risolvi puzzle")
+        if puzzle_games is not None:
+            testo_puzzle += _(" (Partite: {p})").format(p=puzzle_games)
+            
         MENU_CHOICES.update({
             "profilo": _("Profilo Lichess"),
             "statistiche": _("Statistiche utente"),
             "amici": _("Gestione Amici"),
-            "puzzle": _("Risolvi puzzle"),
+            "puzzle": testo_puzzle,
             "guarda": _("Guarda una partita"),
             "gioca": _("Gioca una partita"),
             ".": _("Ritorna a Orologic (Esci)")
