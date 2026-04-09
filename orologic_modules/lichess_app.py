@@ -4,8 +4,9 @@ import urllib.request
 import urllib.error
 import webbrowser
 import chess
+import time
 from GBUtils import menu, enter_escape, Acusticator, dgt
-from . import storage, board_utils, config, ui
+from . import storage, board_utils, config, ui, lichess_spectator
 from .config import percorso_salvataggio
 
 SECRETS_FILE = percorso_salvataggio(os.path.join("settings", "secrets.json"))
@@ -771,7 +772,6 @@ def menu_puzzle(db):
         mossa_idx = 0
         risolto = False
         result_sent = False
-        import time
         start_time = time.time()
         
         while mossa_idx < len(soluzione):
@@ -878,8 +878,101 @@ def menu_puzzle(db):
             print(_("Tempo impiegato: {t}").format(t=time_str))
             enter_escape(_("Premi Invio per continuare..."))
 
+def fetch_user_profile(username, token=None):
+    req = urllib.request.Request(f"https://lichess.org/api/user/{username}")
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                return json.loads(response.read().decode('utf-8'))
+    except Exception:
+        pass
+    return None
+
 def menu_guarda(db):
-    print(_("\n[WIP] Qui si potra' seguire una partita in corso o caricare il PGN di una passata."))
+    secrets = load_secrets()
+    token = secrets.get("lichess_token")
+    
+    while True:
+        print(_("\n=================================="))
+        print(_("          GUARDA PARTITA"))
+        print(_("=================================="))
+        scelte = {
+            "id": _("Inserisci ID o URL Partita"),
+            "giocatore": _("Inserisci Nome Utente Lichess"),
+            "amico": _("Scegli un Amico"),
+            "tv": _("Lichess TV (Migliori in corso)"),
+            ".": _("Torna al menu Lichess")
+        }
+        
+        scelta = menu(scelte, show=True, keyslist=True, p=_("\nScegli un'opzione: "), numbered=db.get("menu_numerati", False))
+        
+        if scelta == ".":
+            break
+            
+        elif scelta == "id":
+            val = dgt(_("\nID o URL della partita: ")).strip()
+            if not val: continue
+            if "lichess.org/" in val:
+                val = val.split("lichess.org/")[-1].split("/")[0][:8]
+            lichess_spectator.spectate_game(val, token)
+            
+        elif scelta == "giocatore":
+            val = dgt(_("\nNome Utente: ")).strip()
+            if not val: continue
+            print(_("Controllo se l'utente e' in gioco..."))
+            profile = fetch_user_profile(val, token)
+            if profile and "playing" in profile:
+                game_url = profile["playing"]
+                game_id = game_url.split("/")[-1][:8]
+                lichess_spectator.spectate_game(game_id, token)
+            elif profile:
+                print(_("L'utente non ha partite in corso in questo momento."))
+            else:
+                print(_("Utente non trovato o errore di connessione."))
+                
+        elif scelta == "amico":
+            if not token:
+                print(_("Devi aver fatto il login per vedere gli amici."))
+                continue
+            print(_("Recupero lista degli amici in corso..."))
+            following = fetch_following(token)
+            playing_friends = [f for f in following if "playing" in f]
+            if not playing_friends:
+                print(_("Nessun amico sta giocando in questo momento."))
+                continue
+                
+            scelte_amici = {f["id"]: f["username"] for f in playing_friends}
+            scelte_amici["."] = _("Indietro")
+            amico_scelto = menu(scelte_amici, show=True, keyslist=True, p=_("\nScegli un amico da guardare: "))
+            if amico_scelto != ".":
+                f_obj = next(f for f in playing_friends if f["id"] == amico_scelto)
+                game_url = f_obj["playing"]
+                game_id = game_url.split("/")[-1][:8]
+                lichess_spectator.spectate_game(game_id, token)
+                
+        elif scelta == "tv":
+            print(_("Recupero canali TV in corso..."))
+            req = urllib.request.Request("https://lichess.org/api/tv/channels")
+            try:
+                with urllib.request.urlopen(req) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+            except Exception as e:
+                print(_("Errore recupero TV: {e}").format(e=e))
+                continue
+            
+            scelte_tv = {}
+            for k, v in data.items():
+                user_name = v.get("user", {}).get("name", "Anonimo")
+                rating = v.get("rating", "?")
+                scelte_tv[k] = f"{k.capitalize()} ({user_name} - Elo: {rating})"
+            scelte_tv["."] = _("Indietro")
+            
+            canale_scelto = menu(scelte_tv, show=True, keyslist=True, p=_("\nScegli canale: "), numbered=db.get("menu_numerati", False))
+            if canale_scelto != ".":
+                game_id = data[canale_scelto]["gameId"]
+                lichess_spectator.spectate_game(game_id, token)
 
 def menu_gioca(db):
     print(_("\n[WIP] Interfaccia per avviare una nuova partita su Lichess o accettare sfide."))
