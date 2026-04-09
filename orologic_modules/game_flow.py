@@ -194,7 +194,10 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 			ui.read_diagonal(game_state, base_column, False)
 		elif user_input.startswith("-"):
 			param = user_input[1:].strip()
-			if len(param) == 1 and param.isalpha():
+			if not param:
+				Acusticator(["c5", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+				ui.report_all_pieces(game_state, chess.WHITE)
+			elif len(param) == 1 and param.isalpha():
 				Acusticator(["c5", 0.07, 0, config.VOLUME, "d5", 0.07, 0, config.VOLUME, "e5", 0.07, 0, config.VOLUME, "f5", 0.07, 0, config.VOLUME, "g5", 0.07, 0, config.VOLUME, "a5", 0.07, 0, config.VOLUME, "b5", 0.07, 0, config.VOLUME, "c6", 0.07, 0, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
 				ui.read_file(game_state, param)
 			elif len(param) == 1 and param.isdigit():
@@ -209,6 +212,9 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 				ui.read_square(game_state, param)
 			else:
 				print(_("Comando dash non riconosciuto."))
+		elif user_input == "+":
+			Acusticator(["c4", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+			ui.report_all_pieces(game_state, chess.BLACK)
 		elif user_input.startswith(","):
 			Acusticator(["a3", .06, -1, config.VOLUME, "c4", .06, -0.5, config.VOLUME, "d#4", .06, 0.5, config.VOLUME, "f4", .06, 1, config.VOLUME], kind=3, adsr=[20, 5, 70, 25])
 			ui.report_piece_positions(game_state, user_input[1:2])
@@ -309,7 +315,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 							Acusticator(["c5", 0.15, .5, config.VOLUME, "a4", 0.15, .5, config.VOLUME, "f4", 0.15, .5, config.VOLUME, "d4", 0.15, .5, config.VOLUME], kind=1, adsr=[15, 0, 90, 5])
 							game_state.black_remaining-=adjust
 						print(_("Nuovo tempo bianco: {white_time}, nero: {black_time}").format(white_time=board_utils.FormatTime(game_state.white_remaining), black_time=board_utils.FormatTime(game_state.black_remaining)))
-					except:
+					except Exception:
 						print(_("Comando non valido."))
 			elif cmd==".s":
 				Acusticator(["c4", 0.2, -1, config.VOLUME, "g4", 0.2, -0.3, config.VOLUME, "c5", 0.2, 0.3, config.VOLUME, "e5", 0.2, 1, config.VOLUME, "g5", 0.4, 0, config.VOLUME], kind=1, adsr=[10, 5, 80, 5])

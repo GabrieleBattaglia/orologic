@@ -51,20 +51,20 @@ PROMOTION_PATTERN_WITH_SUFFIX = re.compile(r"(=[RNBQ])([!?=]{1,2})?$")
 def get_default_localization():
 	return {
 		"pieces": {
-			"pawn": {"name": "pedone", "gender": "m"},
-			"knight": {"name": "cavallo", "gender": "m"},
-			"bishop": {"name": "alfiere", "gender": "m"},
-			"rook": {"name": "torre", "gender": "f"},
-			"queen": {"name": "donna", "gender": "f"},
-			"king": {"name": "Re", "gender": "m"}
+			"pawn": {"name": "pedone", "pname": "pedoni", "gender": "m"},
+			"knight": {"name": "cavallo", "pname": "cavalli", "gender": "m"},
+			"bishop": {"name": "alfiere", "pname": "alfieri", "gender": "m"},
+			"rook": {"name": "torre", "pname": "torri", "gender": "f"},
+			"queen": {"name": "donna", "pname": "donne", "gender": "f"},
+			"king": {"name": "Re", "pname": "Re", "gender": "m"}
 		},
 		"columns": {
 			"a": "Ancona", "b": "Bologna", "c": "Como", "d": "Domodossola",
 			"e": "Empoli", "f": "Firenze", "g": "Genova", "h": "Hotel"
 		},
 		"adjectives": {
-			"white": {"m": "bianco", "f": "bianca"},
-			"black": {"m": "nero", "f": "nera"}
+			"white": {"m": "bianco", "f": "bianca", "mp": "bianchi", "fp": "bianche"},
+			"black": {"m": "nero", "f": "nera", "mp": "neri", "fp": "nere"}
 		},
 		"moves": {
 			"capture": "prende",

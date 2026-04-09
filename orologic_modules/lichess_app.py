@@ -237,6 +237,21 @@ def menu_statistiche(db):
         if scelta == ".":
             break
             
+        if scelta == "puzzle":
+            print(_("\n=================================="))
+            print(_("     STATISTICHE: PUZZLE"))
+            print(_("=================================="))
+            puzzle_perf = perfs.get("puzzle", {})
+            print(_("Elo Attuale: {r}").format(r=puzzle_perf.get("rating", "N/A")))
+            print(_("Puzzle giocati: {g}").format(g=puzzle_perf.get("games", 0)))
+            if "prov" in puzzle_perf and puzzle_perf["prov"]:
+                print(_("Stato: Provvisorio"))
+            print(_("Progressione (recente): {p}").format(p=puzzle_perf.get("prog", 0)))
+            print(_("\nNota: Le statistiche avanzate (es. Win/Loss/Streak) per i puzzle non sono esposte dall'API di base di Lichess."))
+            print(_("=================================="))
+            enter_escape(_("\nPremi Invio per continuare..."))
+            continue
+            
         print(_("\nRecupero statistiche dettagliate per {m}...").format(m=scelta.capitalize()))
         perf_data = fetch_perf_info(username, scelta)
         if not perf_data or "stat" not in perf_data:
@@ -443,40 +458,6 @@ class DummyGameState:
         self.white_player = _("Bianco")
         self.black_player = _("Nero")
 
-def report_all_pieces(game_state, color):
-    cols_dict = config.L10N.get('columns', {})
-    
-    board = game_state.board
-    pieces_map = {chess.PAWN: [], chess.KNIGHT: [], chess.BISHOP: [], chess.ROOK: [], chess.QUEEN: [], chess.KING: []}
-    
-    for sq in chess.SQUARES:
-        piece = board.piece_at(sq)
-        if piece and piece.color == color:
-            pieces_map[piece.piece_type].append(sq)
-            
-    color_str = _("Bianco") if color == chess.WHITE else _("Nero")
-    print(_("\n--- Riepilogo pezzi {c} ---").format(c=color_str))
-    
-    found_any = False
-    for p_type in [chess.KING, chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT, chess.PAWN]:
-        squares = pieces_map[p_type]
-        if squares:
-            found_any = True
-            piece_type_key = chess.PIECE_NAMES[p_type].lower()
-            full_name = config.L10N['pieces'][piece_type_key]['name']
-            
-            positions = []
-            for sq in squares:
-                file_letter = chess.square_name(sq)[0]
-                rank = chess.square_name(sq)[1]
-                descriptive_file = cols_dict.get(file_letter, file_letter)
-                positions.append("{f} {r}".format(f=descriptive_file, r=rank))
-            
-            print("{p}: {pos}".format(p=full_name.capitalize(), pos=", ".join(positions)))
-            
-    if not found_any:
-        print(_("Nessun pezzo rimasto!"))
-
 def describe_board(board, last_move_san=None):
     turn = _("Tocca al Bianco muovere.") if board.turn == chess.WHITE else _("Tocca al Nero muovere.")
     
@@ -511,7 +492,7 @@ def handle_exploration_command(user_input, game_state):
         param = user_input[1:].strip()
         if not param:
             Acusticator(["c5", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            report_all_pieces(game_state, chess.WHITE)
+            ui.report_all_pieces(game_state, chess.WHITE)
             return True
         elif len(param) == 1 and param.isalpha():
             Acusticator(["c5", 0.07, 0, config.VOLUME, "d5", 0.07, 0, config.VOLUME, "e5", 0.07, 0, config.VOLUME, "f5", 0.07, 0, config.VOLUME, "g5", 0.07, 0, config.VOLUME, "a5", 0.07, 0, config.VOLUME, "b5", 0.07, 0, config.VOLUME, "c6", 0.07, 0, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
@@ -531,13 +512,13 @@ def handle_exploration_command(user_input, game_state):
         return True
     elif user_input == "+":
         Acusticator(["c4", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-        report_all_pieces(game_state, chess.BLACK)
+        ui.report_all_pieces(game_state, chess.BLACK)
         return True
     elif user_input.startswith(","):
         Acusticator(["a3", .06, -1, config.VOLUME, "c4", .06, -0.5, config.VOLUME, "d#4", .06, 0.5, config.VOLUME, "f4", .06, 1, config.VOLUME], kind=3, adsr=[20, 5, 70, 25])
         ui.report_piece_positions(game_state, user_input[1:2])
         return True
-    elif user_input == ".b":
+    elif user_input.lower() == ".b":
         Acusticator(["c4", 0.2, -1, config.VOLUME, "g4", 0.2, -0.3, config.VOLUME, "c5", 0.2, 0.3, config.VOLUME, "e5", 0.2, 1, config.VOLUME, "g5", 0.4, 0, config.VOLUME], kind=1, adsr=[10, 5, 80, 5])
         print(game_state.board)
         return True
@@ -579,6 +560,28 @@ def fetch_puzzle(token=None, daily=False, difficulty=None, angle=None):
     except Exception as e:
         print(_("Errore di connessione: {e}").format(e=e))
     return None
+
+def send_puzzle_result(token, puzzle_id, win):
+    if not token or not puzzle_id:
+        return
+    url = "https://lichess.org/api/puzzle/batch/mix"
+    req = urllib.request.Request(url, method="POST")
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Content-Type", "application/json")
+    data = json.dumps({
+        "solutions": [
+            {
+                "id": puzzle_id,
+                "win": win,
+                "rated": True
+            }
+        ]
+    }).encode("utf-8")
+    try:
+        with urllib.request.urlopen(req, data=data):
+            pass
+    except Exception:
+        pass
 
 def calcola_difficolta(user_elo, puzzle_elo_richiesto):
     diff = puzzle_elo_richiesto - user_elo
@@ -735,7 +738,7 @@ def menu_puzzle(db):
                 
                 board = board_utils.CustomBoard()
                 moves_to_push = []
-                while node.variations and ply < initial_ply:
+                while node.variations and ply <= initial_ply:
                     node = node.variations[0]
                     moves_to_push.append(node.move)
                     ply += 1
@@ -758,8 +761,8 @@ def menu_puzzle(db):
         game_state = DummyGameState(board)
         
         print("\n" + describe_board(board, last_move_san))
-        report_all_pieces(game_state, not board.turn)
-        report_all_pieces(game_state, board.turn)
+        ui.report_all_pieces(game_state, not board.turn)
+        ui.report_all_pieces(game_state, board.turn)
         Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME, "g5", 0.05, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 5])
         
         print(_("\nSuggerimento: digita . per uscire, .? per l'aiuto sulle esplorazioni"))
@@ -767,6 +770,7 @@ def menu_puzzle(db):
         soluzione = puz.get("solution", [])
         mossa_idx = 0
         risolto = False
+        result_sent = False
         import time
         start_time = time.time()
         
@@ -775,20 +779,23 @@ def menu_puzzle(db):
             mossa_corretta_move = chess.Move.from_uci(mossa_corretta_uci)
             
             last_5 = get_last_moves_san(board, 5)
-            prompt_text = f"\n{last_5}\n> " if last_5 else "\n> "
-            user_input = dgt(prompt_text).strip().lower()
+            prompt_text = f"\n{last_5} > " if last_5 else "\n> "
+            user_input = dgt(prompt_text).strip()
             if not user_input: continue
             
             if handle_exploration_command(user_input, game_state):
-                if user_input != ".b" and user_input != ".?":
+                if user_input.lower() != ".b" and user_input != ".?":
                     continue
             
-            if user_input == "." or user_input == "s":
+            if user_input == "." or user_input.lower() == "s":
                 if user_input == ".":
                     if enter_escape(_("Vuoi vedere la soluzione del puzzle? (Invio = Si', Esc = No): ")):
                         user_input = "s"
                     else:
                         print(_("Puzzle interrotto."))
+                        if not result_sent:
+                            send_puzzle_result(token, puz.get("id"), win=False)
+                            result_sent = True
                         end_time = time.time()
                         elapsed = int(end_time - start_time)
                         mins = elapsed // 60
@@ -798,6 +805,9 @@ def menu_puzzle(db):
                         break
                         
                 if user_input == "s":
+                    if not result_sent:
+                        send_puzzle_result(token, puz.get("id"), win=False)
+                        result_sent = True
                     print(_("\n--- Soluzione del Puzzle ---"))
                     temp_board = board.copy()
                     for i in range(mossa_idx, len(soluzione)):
@@ -848,10 +858,16 @@ def menu_puzzle(db):
                 else:
                     risolto = True
             else:
+                if not result_sent:
+                    send_puzzle_result(token, puz.get("id"), win=False)
+                    result_sent = True
                 Acusticator(["a3", 0.15, 0, config.VOLUME], kind=2, adsr=[5, 20, 0, 75])
                 print(_("Mossa errata, riprova."))
                 
         if risolto:
+            if not result_sent:
+                send_puzzle_result(token, puz.get("id"), win=True)
+                result_sent = True
             Acusticator(["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME], kind=1, adsr=[2, 8, 90, 0])
             print(_("\nCongratulazioni! Hai risolto il puzzle!"))
             end_time = time.time()
