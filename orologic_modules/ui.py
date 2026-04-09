@@ -30,16 +30,16 @@ def enter_escape(prompt=""):
 def get_default_localization():
     return {
         "pieces": {
-            "pawn": {"name": _("pedone"), "gender": "m"},
-            "knight": {"name": _("cavallo"), "gender": "m"},
-            "bishop": {"name": _("alfiere"), "gender": "m"},
-            "rook": {"name": _("torre"), "gender": "f"},
-            "queen": {"name": _("regina"), "gender": "f"},
-            "king": {"name": _("re"), "gender": "m"}
+            "pawn": {"name": _("pedone"), "pname": _("pedoni"), "gender": "m"},
+            "knight": {"name": _("cavallo"), "pname": _("cavalli"), "gender": "m"},
+            "bishop": {"name": _("alfiere"), "pname": _("alfieri"), "gender": "m"},
+            "rook": {"name": _("torre"), "pname": _("torri"), "gender": "f"},
+            "queen": {"name": _("regina"), "pname": _("regine"), "gender": "f"},
+            "king": {"name": _("re"), "pname": _("re"), "gender": "m"}
         },
         "adjectives": {
-            "white": {"m": _("bianco"), "f": _("bianca")},
-            "black": {"m": _("nero"), "f": _("nera")}
+            "white": {"m": _("bianco"), "f": _("bianca"), "mp": _("bianchi"), "fp": _("bianche")},
+            "black": {"m": _("nero"), "f": _("nera"), "mp": _("neri"), "fp": _("nere")}
         },
         "columns": {
             "a": "a", "b": "b", "c": "c", "d": "d", "e": "e", "f": "f", "g": "g", "h": "h"
@@ -180,15 +180,17 @@ def EditLocalization():
 		
 		if isinstance(details, tuple):
 			sub_key, prompt_text = details
-			current_val = l10n_config[cat][key_item][sub_key]
+			current_val = l10n_config.get(cat, {}).get(key_item, {}).get(sub_key, "")
 			new_val = dgt("{prompt} [{current}]: ".format(prompt=prompt_text, current=current_val), kind="s", default=current_val)
+			if cat not in l10n_config: l10n_config[cat] = {}
+			if key_item not in l10n_config[cat]: l10n_config[cat][key_item] = {}
 			l10n_config[cat][key_item][sub_key] = new_val.strip()
 			
 			if cat == "pieces":
 				# Suono di conferma per il nome del pezzo
 				Acusticator([current_pitch, 0.08, pan, config.VOLUME], kind=1, adsr=[2, 5, 80, 10])
 				
-				current_gender = l10n_config[cat][key_item]['gender']
+				current_gender = l10n_config[cat][key_item].get('gender', 'm')
 				gender_prompt = _("  Genere per '{new_val}' (m/f/n) [{current_gender}]: ").format(new_val=new_val, current_gender=current_gender)
 				while True:
 					new_gender = dgt(gender_prompt, kind="s", default=current_gender).lower()
@@ -204,8 +206,9 @@ def EditLocalization():
 				Acusticator([current_pitch, 0.08, pan, config.VOLUME], kind=1, adsr=[2, 5, 80, 10])
 		else: 
 			prompt_text = details
-			current_val = l10n_config[cat][key_item]
+			current_val = l10n_config.get(cat, {}).get(key_item, "")
 			new_val = dgt("{prompt} [{current}]: ".format(prompt=prompt_text, current=current_val), kind="s", default=current_val)
+			if cat not in l10n_config: l10n_config[cat] = {}
 			l10n_config[cat][key_item] = new_val.strip()
 			# Suono di conferma standard
 			Acusticator([current_pitch, 0.08, pan, config.VOLUME], kind=1, adsr=[2, 5, 80, 10])
