@@ -120,11 +120,17 @@ def EditLocalization():
 	
 	items_to_edit = [
 		("pieces", "pawn", ("name", _("Nome per 'Pedone'"))),
+		("pieces", "pawn", ("pname", _("Nome PLURALE per 'Pedone'"))),
 		("pieces", "knight", ("name", _("Nome per 'Cavallo'"))),
+		("pieces", "knight", ("pname", _("Nome PLURALE per 'Cavallo'"))),
 		("pieces", "bishop", ("name", _("Nome per 'Alfiere'"))),
+		("pieces", "bishop", ("pname", _("Nome PLURALE per 'Alfiere'"))),
 		("pieces", "rook", ("name", _("Nome per 'Torre'"))),
+		("pieces", "rook", ("pname", _("Nome PLURALE per 'Torre'"))),
 		("pieces", "queen", ("name", _("Nome per 'Donna'"))),
+		("pieces", "queen", ("pname", _("Nome PLURALE per 'Donna'"))),
 		("pieces", "king", ("name", _("Nome per 'Re'"))),
+		("pieces", "king", ("pname", _("Nome PLURALE per 'Re'"))),
 		("columns", "a", _("Nome per colonna 'a' (Ancona)")),
 		("columns", "b", _("Nome per colonna 'b' (Bologna)")),
 		("columns", "c", _("Nome per colonna 'c' (Como)")),
@@ -135,8 +141,12 @@ def EditLocalization():
 		("columns", "h", _("Nome per colonna 'h' (Hotel)")),
 		("adjectives", "white", ("m", _("Aggettivo 'bianco' (maschile)"))),
 		("adjectives", "white", ("f", _("Aggettivo 'bianco' (femminile)"))),
+		("adjectives", "white", ("mp", _("Aggettivo 'bianco' (maschile plurale)"))),
+		("adjectives", "white", ("fp", _("Aggettivo 'bianco' (femminile plurale)"))),
 		("adjectives", "black", ("m", _("Aggettivo 'nero' (maschile)"))),
 		("adjectives", "black", ("f", _("Aggettivo 'nero' (femminile)"))),
+		("adjectives", "black", ("mp", _("Aggettivo 'nero' (maschile plurale)"))),
+		("adjectives", "black", ("fp", _("Aggettivo 'nero' (femminile plurale)"))),
 		("moves", "capture", _("Verbo per la cattura (es. 'prende')")),
 		("moves", "capture_on", _("Preposizione per la casa di cattura (es. 'in')")),
 		("moves", "move_to", _("Preposizione per la casa di destinazione (es. 'in')")),
@@ -206,12 +216,52 @@ def EditLocalization():
 	L10N = LoadLocalization() 
 	print(_("\nImpostazioni di lingua salvate con successo!"))
 
-def get_color_adjective(piece_color, gender):
+def report_all_pieces(game_state, color):
+    cols_dict = L10N.get('columns', {})
+    board = game_state.board
+    pieces_map = {chess.PAWN: [], chess.KNIGHT: [], chess.BISHOP: [], chess.ROOK: [], chess.QUEEN: [], chess.KING: []}
+    
+    for sq in chess.SQUARES:
+        piece = board.piece_at(sq)
+        if piece and piece.color == color:
+            pieces_map[piece.piece_type].append(sq)
+            
+    color_str = get_color_adjective(color, gender='m', plural=True)
+    print(_("\n--- Riepilogo pezzi {c} ---").format(c=color_str.capitalize()))
+    
+    found_any = False
+    for p_type in [chess.KING, chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT, chess.PAWN]:
+        squares = pieces_map[p_type]
+        if squares:
+            found_any = True
+            piece_type_key = chess.PIECE_NAMES[p_type].lower()
+            piece_info = L10N['pieces'].get(piece_type_key, {})
+            # Usa il nome plurale se ci sono più pezzi dello stesso tipo, altrimenti il singolare
+            name_key = 'pname' if len(squares) > 1 else 'name'
+            display_name = piece_info.get(name_key, piece_info.get('name', chess.PIECE_NAMES[p_type]))
+            
+            positions = []
+            for sq in squares:
+                file_letter = chess.square_name(sq)[0]
+                rank = chess.square_name(sq)[1]
+                descriptive_file = cols_dict.get(file_letter, file_letter)
+                positions.append("{f} {r}".format(f=descriptive_file, r=rank))
+            
+            print("{p}: {pos}".format(p=display_name.capitalize(), pos=", ".join(positions)))
+            
+    if not found_any:
+        print(_("Nessun pezzo rimasto!"))
+
+def get_color_adjective(piece_color, gender, plural=False):
     white_adj = L10N.get('adjectives', {}).get('white', {})
     black_adj = L10N.get('adjectives', {}).get('black', {})
     if piece_color == chess.WHITE:
+        if plural:
+            return white_adj.get('fp', _('bianche')) if gender == 'f' else white_adj.get('mp', _('bianchi'))
         return white_adj.get('f', _('bianca')) if gender == 'f' else white_adj.get('m', _('bianco'))
     else:
+        if plural:
+            return black_adj.get('fp', _('nere')) if gender == 'f' else black_adj.get('mp', _('neri'))
         return black_adj.get('f', _('nera')) if gender == 'f' else black_adj.get('m', _('nero'))
 
 def extended_piece_description(piece):
@@ -476,7 +526,7 @@ def verbose_legal_moves_for_san(board,san_str):
 			promo_char=parts[1].strip().upper()
 			promotion = {"Q":chess.QUEEN, "R":chess.ROOK, "B":chess.BISHOP, "N":chess.KNIGHT}.get(promo_char)
 		try: dest_square=chess.parse_square(s[-2:]); legal_moves=[m for m in board.legal_moves if m.to_square==dest_square and (m.promotion==promotion if promotion else True)]
-		except: return _("Destinazione non riconosciuta.")
+		except Exception: return _("Destinazione non riconosciuta.")
 	if not legal_moves: return _("Nessuna mossa legale trovata.")
 	return "\n".join([_("{i}. {desc}").format(i=i+1, desc=board_utils.DescribeMove(m, board.copy())) for i, m in enumerate(legal_moves)])
 
