@@ -1,4 +1,8 @@
-import msvcrt, sys, time, queue, threading
+import msvcrt
+import sys
+import time
+import queue
+import threading
 
 def bg_thread(q):
     time.sleep(3)

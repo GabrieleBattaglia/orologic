@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 6.5.1)</h1>
+<h1>Guida Utente di Orologic (Versione 7.1.0 - 10 aprile 2026 - 15:56)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -268,13 +268,26 @@ margin: 1em 0;
 </ul>
 
 <h4>2.4.2. Configurazione Motore Scacchistico (motore)</h4>
-<p>Questo passaggio è cruciale per usare le funzioni di analisi. Orologic ti aiuterà nel processo:</p>
+<p>Questo passaggio è fondamentale per abilitare le funzioni di analisi. Orologic ti guiderà nella configurazione iniziale, ma è importante capire come renderlo portatile e cosa significano i parametri tecnici.</p>
+
+<h5>2.4.2.1. Portabilità: Usare la cartella 'engine'</h5>
+<p>Se desideri utilizzare Orologic da una chiavetta USB e cambiare spesso computer, puoi evitare di riconfigurare il percorso del motore ogni volta seguendo questi passi:</p>
 <ol>
-    <li><strong>Controllo Configurazione:</strong> Orologic cerca prima una configurazione salvata.</li>
-    <li><strong>Scansione Automatica:</strong> Se non la trova, esegue una scansione completa del tuo computer per trovare motori UCI compatibili (come Stockfish) e ti presenta una lista da cui scegliere.</li>
-    <li><strong>Download Automatico:</strong> Se non viene trovato alcun motore, Orologic ti chiederà il permesso di scaricare e installare automaticamente l'ultima versione di Stockfish per te.</li>
-    <li><strong>Configurazione Manuale:</strong> In ogni momento, puoi inserire manualmente il percorso e i parametri del motore (Hash, Cores, Skill Level).</li>
+    <li>Crea una cartella chiamata <code>engine</code> nella stessa cartella dove si trova il file <code>orologic.py</code> (o l'eseguibile).</li>
+    <li>Copia il file del tuo motore (es: <code>stockfish.exe</code>) all'interno di questa cartella <code>engine</code>.</li>
+    <li>Quando Orologic ti chiede il percorso (path), scrivi semplicemente <code>engine</code>.</li>
+    <li>Quando ti chiede il nome dell'eseguibile, scrivi il nome esatto del file (es: <code>stockfish.exe</code>).</li>
 </ol>
+<p>In questo modo, Orologic creerà un percorso relativo che funzionerà ovunque tu sposti la cartella del programma.</p>
+
+<h5>2.4.2.2. Spiegazione dei Parametri UCI</h5>
+<p>Durante la configurazione, ti verranno chiesti alcuni valori. Ecco una guida per impostarli correttamente:</p>
+<ul>
+    <li><strong>Hash (Memoria):</strong> Indica quanta RAM dedicare al motore per memorizzare le posizioni analizzate. Valori comuni sono 128 o 256 MB. Più memoria permette analisi più veloci su tempi lunghi.</li>
+    <li><strong>Threads (Cores):</strong> Indica quanti nuclei del processore deve usare il motore. Orologic rileva il massimo disponibile; usarli tutti rende l'analisi velocissima ma può scaldare il PC o rallentare altre app.</li>
+    <li><strong>Skill Level (0-20):</strong> Regola la forza del motore. <code>20</code> è la forza massima (invincibile), mentre valori bassi simulano errori umani, rendendo la sfida più equilibrata.</li>
+    <li><strong>Move Overhead (ms):</strong> È un margine di sicurezza per il tempo. Serve a compensare i ritardi di comunicazione tra Orologic e il motore. Impostarlo a <code>500</code> garantisce che il motore non perda mai per il tempo a causa di rallentamenti del sistema (lag).</li>
+</ul>
 
 <h4>2.4.3. Personalizzazione Lingua e Nomi (nomi)</h4>
 <p>Questa opzione ti permette di personalizzare il linguaggio descrittivo usato dal programma: puoi cambiare i nomi dei pezzi (es. da "cavallo" a "destriero"), i nomi delle colonne (es. da "Ancona" ad "Apple") e i verbi usati per descrivere le mosse.</p>
