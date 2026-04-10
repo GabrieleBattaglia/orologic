@@ -1,4 +1,4 @@
-import msvcrt, sys
+import msvcrt
 print('Type something, ESC to exit.')
 while True:
     if msvcrt.kbhit():

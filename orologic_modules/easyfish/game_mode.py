@@ -253,15 +253,36 @@ def StartEngineGame(game_node, engine_instance):
                     elif cmd.startswith(".s") and len(cmd) > 2 and cmd[2:].isdigit():
                          try:
                              new_skill = int(cmd[2:])
-                             if 1 <= new_skill <= 20:
+                             if 0 <= new_skill <= 20:
+                                 # Disattiva limitazione Elo per usare Skill Level
+                                 try: engine_instance.configure({"UCI_LimitStrength": False})
+                                 except: pass 
                                  engine_instance.configure({"Skill Level": new_skill})
                                  Acusticator(["g5", 0.05, 0, 0.5], kind=1)
-                                 print(_("Livello di forza del motore impostato a {n}.").format(n=new_skill))
+                                 print(_("Livello di forza del motore impostato a {n} (Skill Level).").format(n=new_skill))
                              else:
                                  Acusticator([400.0, 0.2, 0, 0.5], kind=1)
-                                 print(_("Il livello deve essere compreso tra 1 e 20."))
+                                 print(_("Il livello deve essere compreso tra 0 e 20."))
                          except Exception as e:
                              print(_("Errore durante l'impostazione del livello: {e}").format(e=e))
+                    elif cmd.startswith(".e") and len(cmd) > 2 and cmd[2:].isdigit():
+                         try:
+                             new_elo = int(cmd[2:])
+                             # Attiva limitazione Elo senza limiti hardcoded
+                             try:
+                                 engine_instance.configure({"UCI_LimitStrength": True})
+                                 engine_instance.configure({"UCI_Elo": new_elo})
+                                 Acusticator(["b5", 0.05, 0, 0.5], kind=1)
+                                 # Feedback dal motore (se disponibile)
+                                 actual_elo = engine_instance.options.get("UCI_Elo")
+                                 if actual_elo:
+                                     print(_("Forza del motore impostata a Rating Elo: {n}.").format(n=actual_elo.default if hasattr(actual_elo, 'default') else new_elo))
+                                 else:
+                                     print(_("Forza del motore impostata a Rating Elo: {n}.").format(n=new_elo))
+                             except:
+                                 print(_("Il motore non supporta la configurazione diretta dell'Elo."))
+                         except Exception as e:
+                             print(_("Errore durante l'impostazione dell'Elo: {e}").format(e=e))
                     elif cmd == ".v":
                         try:
                             res = orologic_engine.CalculateBest(board, bestmove=False, as_san=False)

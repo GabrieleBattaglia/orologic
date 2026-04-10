@@ -139,4 +139,5 @@ MNGAME={'.':_("Abbandona la partita"),
         '.u':_("Annulla ultima semimossa (Undo)"),
         '.v':_("Aggiunge variante suggerita dal motore all'albero"),
         '.s#':_("Imposta il livello di forza del motore da 1 a 20 (es. .s10)"),
+        '.e#':_("Imposta la forza del motore tramite Rating Elo (es. .e1200)"),
         '.?':_("Mostra questo menu")}

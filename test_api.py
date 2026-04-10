@@ -1,4 +1,5 @@
-import urllib.request, json, time
+import urllib.request
+import json
 try:
     req = urllib.request.Request('https://lichess.org/api/tv/channels')
     with urllib.request.urlopen(req) as resp:
