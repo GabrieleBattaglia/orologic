@@ -8,7 +8,7 @@ import datetime
 import copy
 from dateutil.relativedelta import relativedelta
 from GBUtils import dgt, menu, Acusticator, key, Donazione, polipo, update_checker, perform_update, enter_escape
-from orologic_modules import config, storage, ui, clock, engine, game_flow, version, stockfish_installer, lichess_app
+from orologic_modules import config, storage, ui, clock, engine, game_flow, version, stockfish_installer, lichess_app, cleaner
 from orologic_modules.easyfish import easyfish_app
 
 # Inizializzazione localizzazione
@@ -57,6 +57,9 @@ def Main():
     storage.SaveDB(db)
     
     SchermataIniziale()
+    
+    # Pulizia vecchi file
+    cleaner.check_and_clean_old_files(days=365)
     
     # Auto-Updater
     if getattr(sys, 'frozen', False):
