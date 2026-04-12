@@ -1,6 +1,4 @@
 import warnings
-warnings.filterwarnings("ignore", message="urllib3 .* doesn't match a supported version!")
-
 import sys
 import os
 import time
@@ -10,6 +8,8 @@ from dateutil.relativedelta import relativedelta
 from GBUtils import dgt, menu, Acusticator, key, Donazione, polipo, update_checker, perform_update, enter_escape
 from orologic_modules import config, storage, ui, clock, engine, game_flow, version, stockfish_installer, lichess_app, cleaner
 from orologic_modules.easyfish import easyfish_app
+
+warnings.filterwarnings("ignore", message="urllib3 .* doesn't match a supported version!")
 
 # Inizializzazione localizzazione
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
