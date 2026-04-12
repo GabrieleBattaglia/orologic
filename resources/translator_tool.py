@@ -43,15 +43,19 @@ def translate_po_file(po_file_path, target_lang):
         placeholders = placeholder_regex.findall(original)
         protected_text = original
         for i, ph in enumerate(placeholders):
-            protected_text = protected_text.replace(ph, f"[[{i}]]")
+            protected_text = protected_text.replace(ph, f"VAR{i}QQ")
         
         try:
             # 2. Traduzione
             translated_text = translator.translate(protected_text)
             
+            if translated_text is None:
+                print(f"\nAvviso: Traduzione vuota per '{original}'.")
+                translated_text = ""
+            
             # 3. Ripristino segnaposto
             for i, ph in enumerate(placeholders):
-                translated_text = translated_text.replace(f"[[{i}]]", ph)
+                translated_text = translated_text.replace(f"VAR{i}QQ", ph)
             
             entry.msgstr = translated_text
             count += 1
@@ -63,7 +67,8 @@ def translate_po_file(po_file_path, target_lang):
                 
         except Exception as e:
             print(f"\nErrore durante la traduzione di '{original}': {e}")
-            break
+            entry.msgstr = "" # Previene crash di polib
+            continue
 
     # Salvataggio
     po.save()
