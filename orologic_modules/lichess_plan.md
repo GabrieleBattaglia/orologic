@@ -26,7 +26,8 @@ Orolichess è un modulo nativo per `orologic` che permette agli utenti di interf
 - [x] FASE 5: Gestione Amici (Aggiunta/Rimozione seguiti, messaggistica).
 - [x] FASE 6: Visualizzazione e interazione con i Puzzle.
 - [x] FASE 7: Guarda una partita (streaming o caricamento PGN).
-- [ ] FASE 8: Gioca una partita (interfaccia di gioco da terminale/audio).
+- [x] FASE 8: Gioca una partita (interfaccia di gioco da terminale/audio, premoves, orologi, claim, chat, PGN).
+- [ ] FASE 9: Tornei (partecipazione, visualizzazione classifiche e sfide di torneo).
 
 ## Dettagli Implementativi
 ### Login
