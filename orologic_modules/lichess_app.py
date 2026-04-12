@@ -143,35 +143,8 @@ def menu_profilo(db):
         return
     
     print(_("\n=================================="))
-    print(_("         PROFILO LICHESS"))
-    print(_("=================================="))
-    print(_("Username: {u}").format(u=profile.get("username", "Sconosciuto")))
-    
-    prof_data = profile.get("profile", {})
-    bio = prof_data.get("bio")
-    if bio:
-        print(_("Biografia: {b}").format(b=bio))
-    fide = prof_data.get("fideRating")
-    if fide:
-        print(_("Elo FIDE: {f}").format(f=fide))
-    
-    print(_("\n[Statistiche Generali]"))
-    print(_("Data iscrizione: {d}").format(d=format_timestamp(profile.get("createdAt"))))
-    print(_("Ultimo accesso: {d}").format(d=format_timestamp(profile.get("seenAt"))))
-    if "playTime" in profile:
-        total_seconds = profile["playTime"].get("total", 0)
-        print(_("Tempo totale di gioco: {t}").format(t=format_playtime(total_seconds)))
-    
-    print(_("\n[Punteggi Elo]"))
-    perfs = profile.get("perfs", {})
-    if not perfs:
-        print(_("Nessun punteggio disponibile."))
-    else:
-        for mode, data in perfs.items():
-            if isinstance(data, dict) and "rating" in data:
-                games = data.get("games", 0)
-                if games > 0:
-                    print(_(" - {m}: {r} (Partite: {g})").format(m=mode.capitalize(), r=data["rating"], g=games))
+    from . import lichess_profiler
+    print(lichess_profiler.format_profile(profile))
     print(_("=================================="))
     
     enter_escape(_("\nPremi Invio per tornare al menu Lichess..."))
@@ -1405,6 +1378,7 @@ def run():
             "statistiche": _("Statistiche utente"),
             "amici": _("Gestione Amici"),
             "puzzle": testo_puzzle,
+            "cerca": _("Cerca e Profila Giocatore"),
             "guarda": _("Guarda una partita"),
             "gioca": _("Gioca una partita"),
             ".": _("Ritorna a Orologic (Esci)")
@@ -1436,6 +1410,9 @@ def run():
             menu_amici(db)
         elif scelta == "puzzle":
             menu_puzzle(db)
+        elif scelta == "cerca":
+            from . import lichess_profiler
+            lichess_profiler.run_profiler(secrets)
         elif scelta == "guarda":
             menu_guarda(db)
         elif scelta == "gioca":
