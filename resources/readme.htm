@@ -71,13 +71,34 @@ margin: 1em 0;
 <h3>1.2. Navigare nei Menu: Lo Stile di Orologic</h3>
 <p>Orologic utilizza un sistema di selezione dei menu unico ed efficiente. Quando ti viene presentata una lista di scelte, puoi digitare le prime lettere dell'opzione desiderata per filtrarle. Se la tua digitazione restringe le scelte a una singola opzione, questa viene selezionata automaticamente. In alternativa, la nuova **modalità numerata** (configurabile nelle impostazioni) ti permette di selezionare le opzioni digitando il numero corrispondente.</p>
 
----
+<h3>1.3. Interazione con lo Screen Reader e la Console</h3>
+<p>Orologic viene eseguito in una finestra di console (terminale), un ambiente che differisce significativamente dalle classiche finestre di Windows. Per un'esperienza ottimale con NVDA o JAWS, è fondamentale seguire queste linee guida:</p>
+
+<div class="note">
+    <p><strong>Regola d'Oro:</strong> In console, il punto di inserimento è sempre fisso in fondo, dopo l'ultimo output generato. Al contrario delle normali finestre, non bisogna utilizzare le frecce direzionali (specialmente quelle verticali), il tasto Tab o Shift+Tab per navigare, né il tasto Spazio a meno che non si stia effettivamente scrivendo del testo.</p>
+</div>
+
+<ul>
+    <li><strong>Gestione della Finestra:</strong> Assicurati che la finestra di Orologic sia sempre ingrandita per evitare troncamenti del testo. Puoi farlo premendo <code>Alt+Spazio</code>, scendendo con le frecce fino a "Ingrandisci" e premendo Invio, oppure configurando le proprietà del file <code>orologic.exe</code> affinché venga eseguito "Ingrandito".</li>
+    <li><strong>Input e Risposta:</strong> L'interazione è semplice: si scrive il comando, si preme Invio (o tasti come Esc per annullare) e si ascolta la risposta vocale o sonora.</li>
+    <li><strong>Navigazione e Rilettura (Tastierino Numerico):</strong> Per rileggere ciò che è apparso a schermo, è fondamentale usare il Tastierino Numerico (TN) con il tasto <code>NumLock disattivato</code>. Utilizza le seguenti coppie di tasti:
+        <ul>
+            <li><code>7</code> e <code>9</code> per navigare tra le righe.</li>
+            <li><code>4</code> e <code>6</code> per navigare tra le parole.</li>
+            <li><code>1</code> e <code>3</code> per navigare tra i singoli caratteri.</li>
+        </ul>
+    </li>
+    <li><strong>Correzione degli Errori:</strong> Se commetti un errore di digitazione in un campo e hai già premuto Invio, non tentare di tornare indietro con la freccia su per correggere; in modalità console questo comportamento non è previsto. Prosegui e correggi l'errore nel passaggio successivo o alla prossima occasione.</li>
+    <li><strong>Manutenzione di NVDA:</strong> Dopo sessioni di utilizzo molto lunghe, potresti notare un rallentamento nella risposta dello screen reader. Un trucco efficace per "ravvivarlo" è riavviarlo rapidamente premendo <code>Insert+Q</code>, selezionando "Riavvia" e premendo Invio.</li>
+</ul>
+
+<hr>
 
 <h2>2. Opzioni del Menu Principale</h2>
 <p>All'avvio di Orologic, vieni accolto da una schermata di benvenuto. Digitando <code>?</code> e premendo Invio verranno mostrate le opzioni del menu principale. Ecco una descrizione di ciascuna di esse.</p>
 
-<h3>2.1. Gioca una Partita (gioca)</h3>
-<p>Questa è la funzione principale per giocare una partita a tempo contro un avversario.</p>
+<h3>2.1. Arbitra una Partita (arbitra)</h3>
+<p>Questa è la funzione principale per utilizzare Orologic come orologio da scacchi fisico per una partita giocata dal vivo su una scacchiera reale.</p>
 
 <h4>2.1.1. Avviare una Partita</h4>
 <ol>
@@ -157,9 +178,33 @@ margin: 1em 0;
     <li><strong>Rating Elo Stimato:</strong> Basato sulle performance della singola partita analizzata.</li>
     <li><strong>Errori e Imprecisioni:</strong> Un conteggio di quante sviste gravi, imprecisioni o mosse brillanti sono state giocate.</li>
 </ul>
-<p>Al termine dell'analisi, OAA genererà un report testuale completo (salvato nella cartella e apribile a schermo) con la cronaca della partita mossa per mossa e i consigli del motore.</p>
+<p>Al termine dell'analisi, OAA genererà un report testuale completo (salvato nella cartella e apribile a schermo) con la cronaca della partita mossa per mossa e i consigli del motore. </p>
 
-<h3>2.2. Analizza una Partita (analizza)</h3>
+<h3>2.2. Orolichess: Integrazione Lichess (lichess)</h3>
+<p>Orolichess ti permette di connettere Orologic al tuo account Lichess per giocare online, gestire il tuo profilo e risolvere puzzle, il tutto tramite l'interfaccia accessibile del programma.</p>
+
+<h4>2.2.1. Primo Accesso e Token</h4>
+<p>Per utilizzare Orolichess, dovrai inserire il tuo <strong>Token API Personalizzato</strong> di Lichess. Il programma ti fornirà il link per generarlo; assicurati di concedere i permessi necessari per leggere il profilo, giocare partite ed accedere alla chat.</p>
+
+<h4>2.2.2. Funzionalità Principali</h4>
+<ul>
+    <li><strong>Profilo e Statistiche:</strong> Visualizza il tuo rating nelle varie cadenze (Blitz, Rapid, Classical, ecc.) e i tuoi progressi.</li>
+    <li><strong>Puzzle:</strong> Risolvi i puzzle di Lichess. Orologic ti presenterà la posizione e dovrai trovare la mossa corretta.</li>
+    <li><strong>Amici:</strong> Vedi chi dei tuoi amici è online e cosa sta facendo.</li>
+    <li><strong>Gioca Online:</strong> Puoi sfidare i Bot di Lichess, i tuoi amici, o cercare una partita contro avversari casuali (Seek) definendo tempo e variante.</li>
+    <li><strong>Osserva (Spectate):</strong> Guarda le partite in corso dei Grandi Maestri o dei tuoi amici, con la possibilità di ispezionare la scacchiera e ascoltare i tempi in tempo reale.</li>
+</ul>
+
+<h4>2.2.3. Comandi Durante il Gioco Online</h4>
+<p>Durante una partita su Lichess, valgono quasi tutti i comandi della modalità Arbitraggio (<code>.1</code>, <code>.2</code>, ecc.), con l'aggiunta di:</p>
+<ul>
+    <li><code>_[testo]</code>: Invia un messaggio in chat all'avversario (es. <code>_Buona partita</code>).</li>
+    <li><code>draw</code> / <code>resign</code> / <code>takeback</code>: Proponi patta, abbandona o chiedi di annullare l'ultima mossa.</li>
+    <li><code>claim</code>: Reclama la vittoria se l'avversario abbandona la connessione.</li>
+    <li><strong>Premoves:</strong> Se inserisci una mossa valida mentre tocca all'avversario, questa verrà memorizzata come "premove" e giocata istantaneamente appena il turno passerà a te.</li>
+</ul>
+
+<h3>2.3. Analizza una Partita (analizza)</h3>
 <p>Questa potente modalità ti permette di rivedere una partita, aggiungere commenti e ottenere analisi da un motore scacchistico.</p>
 <p>Per iniziare, seleziona <code>analizza</code>; il programma caricherà un PGN dai tuoi appunti. Una volta in modalità analisi, usa i comandi a singola lettera. Premi <code>?</code> in qualsiasi momento per vedere la lista completa.</p>
 

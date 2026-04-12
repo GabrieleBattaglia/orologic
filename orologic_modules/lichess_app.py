@@ -6,7 +6,7 @@ import webbrowser
 import chess
 import time
 from GBUtils import menu, enter_escape, Acusticator, dgt
-from . import storage, board_utils, config, ui, lichess_spectator
+from . import storage, board_utils, config, ui, lichess_board
 from .config import percorso_salvataggio
 
 SECRETS_FILE = percorso_salvataggio(os.path.join("settings", "secrets.json"))
@@ -916,7 +916,7 @@ def menu_guarda(db):
             if not val: continue
             if "lichess.org/" in val:
                 val = val.split("lichess.org/")[-1].split("/")[0][:8]
-            lichess_spectator.spectate_game(val, token)
+            lichess_board.spectate_game(val, token)
             
         elif scelta == "giocatore":
             val = dgt(_("\nNome Utente: ")).strip()
@@ -926,7 +926,7 @@ def menu_guarda(db):
             if profile and "playing" in profile:
                 game_url = profile["playing"]
                 game_id = game_url.split("/")[-1][:8]
-                lichess_spectator.spectate_game(game_id, token)
+                lichess_board.spectate_game(game_id, token)
             elif profile:
                 print(_("L'utente non ha partite in corso in questo momento."))
             else:
@@ -950,7 +950,7 @@ def menu_guarda(db):
                 f_obj = next(f for f in playing_friends if f["id"] == amico_scelto)
                 game_url = f_obj["playing"]
                 game_id = game_url.split("/")[-1][:8]
-                lichess_spectator.spectate_game(game_id, token)
+                lichess_board.spectate_game(game_id, token)
                 
         elif scelta == "tv":
             print(_("Recupero canali TV in corso..."))
@@ -972,10 +972,397 @@ def menu_guarda(db):
             canale_scelto = menu(scelte_tv, show=True, keyslist=True, p=_("\nScegli canale: "), numbered=db.get("menu_numerati", False))
             if canale_scelto != ".":
                 game_id = data[canale_scelto]["gameId"]
-                lichess_spectator.spectate_game(game_id, token)
+                lichess_board.spectate_game(game_id, token)
+
+def get_active_games(token):
+    req = urllib.request.Request("https://lichess.org/api/account/playing")
+    req.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode('utf-8'))
+                return data.get("nowPlaying", [])
+    except Exception:
+        pass
+    return []
+
+def get_incoming_challenges(token):
+    req = urllib.request.Request("https://lichess.org/api/challenge")
+    req.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode('utf-8'))
+                return data.get("in", [])
+    except Exception:
+        pass
+    return []
+
+def accept_challenge(token, challenge_id):
+    req = urllib.request.Request(f"https://lichess.org/api/challenge/{challenge_id}/accept", method="POST")
+    req.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(req) as response:
+            return response.status == 200
+    except Exception:
+        return False
+
+def decline_challenge(token, challenge_id):
+    req = urllib.request.Request(f"https://lichess.org/api/challenge/{challenge_id}/decline", method="POST")
+    req.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(req) as response:
+            return response.status == 200
+    except Exception:
+        return False
+
+def get_game_params(for_seek=False, for_bot=False):
+    limit = None
+    inc = None
+    days = None
+    while True:
+        tempo = dgt(_("Tempo di gioco (minuti+incremento, es. 5+3, oppure invio per Corrispondenza): ")).strip()
+        if not tempo:
+            days_str = dgt(_("Giorni per mossa (es. 1, 2, 3... o invio per 1): ")).strip()
+            days = int(days_str) if days_str.isdigit() else 1
+            break
+        if "+" in tempo:
+            parts = tempo.split('+')
+            if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+                limit = int(parts[0]) * 60
+                inc = int(parts[1])
+                break
+        print(_("Formato non valido. Usa minuti+secondi, ad esempio 10+0 o 5+3."))
+        
+    if enter_escape(_("\nVuoi giocare una partita Standard? (Invio = Si', Esc = No): ")):
+        variant = "standard"
+    else:
+        variant_scelte = {
+            "chess960": "Chess960",
+            "crazyhouse": "Crazyhouse",
+            "antichess": "Antichess",
+            "atomic": "Atomic",
+            "horde": "Horde",
+            "kingOfTheHill": "King of the Hill",
+            "racingKings": "Racing Kings",
+            "threeCheck": "Three-check"
+        }
+        variant = menu(variant_scelte, show=True, keyslist=True, p=_("Scegli la variante: "))
+    
+    rated = False
+    if not for_bot:
+        rated = enter_escape(_("\nPartita classificata (Rated)? (Invio = Si', Esc = No): "))
+        
+    color_scelte = {
+        "white": _("Bianco"),
+        "black": _("Nero"),
+        "random": _("Casuale")
+    }
+    color = menu(color_scelte, show=True, keyslist=True, p=_("Scegli il colore: "))
+    
+    rating_range = ""
+    if for_seek and rated:
+        print(_("\nRange Elo avversario (es. 1500-1800). Lascia vuoto per qualsiasi avversario."))
+        rating_range = dgt(_("Range Elo: ")).strip()
+        
+    return {
+        "clock_limit": limit,
+        "clock_increment": inc,
+        "days": days,
+        "variant": variant,
+        "rated": rated,
+        "color": color,
+        "rating_range": rating_range
+    }
+
+def challenge_ai(token, level, params_dict):
+    import urllib.parse
+    req = urllib.request.Request("https://lichess.org/api/challenge/ai", method="POST")
+    req.add_header("Authorization", f"Bearer {token}")
+    payload = {
+        "level": level,
+        "color": params_dict["color"],
+        "variant": params_dict["variant"]
+    }
+    if params_dict["clock_limit"] is not None:
+        payload["clock.limit"] = params_dict["clock_limit"]
+        payload["clock.increment"] = params_dict["clock_increment"]
+    else:
+        payload["days"] = params_dict.get("days", 1)
+        
+    data = urllib.parse.urlencode(payload).encode('utf-8')
+    try:
+        with urllib.request.urlopen(req, data=data) as response:
+            if response.status == 201:
+                return json.loads(response.read().decode('utf-8'))
+    except Exception as e:
+        print(_("Errore durante la creazione della partita: {e}").format(e=e))
+    return None
+
+def challenge_user(token, username, params_dict):
+    import urllib.parse
+    req = urllib.request.Request(f"https://lichess.org/api/challenge/{username}", method="POST")
+    req.add_header("Authorization", f"Bearer {token}")
+    payload = {
+        "color": params_dict["color"],
+        "variant": params_dict["variant"],
+        "rated": "true" if params_dict["rated"] else "false"
+    }
+    if params_dict["clock_limit"] is not None:
+        payload["clock.limit"] = params_dict["clock_limit"]
+        payload["clock.increment"] = params_dict["clock_increment"]
+    else:
+        payload["days"] = params_dict.get("days", 1)
+        
+    data = urllib.parse.urlencode(payload).encode('utf-8')
+    try:
+        with urllib.request.urlopen(req, data=data) as response:
+            if response.status == 200:
+                return json.loads(response.read().decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        err = json.loads(e.read().decode('utf-8'))
+        print(_("Errore Lichess: {err}").format(err=err.get('error', e.code)))
+    except Exception as e:
+        print(_("Errore di connessione: {e}").format(e=e))
+    return None
+
+def seek_game(token, params_dict):
+    import urllib.parse
+    import threading
+    import time
+    import msvcrt
+    import sys
+    
+    req = urllib.request.Request("https://lichess.org/api/board/seek", method="POST")
+    req.add_header("Authorization", f"Bearer {token}")
+    payload = {
+        "color": params_dict["color"],
+        "variant": params_dict["variant"],
+        "rated": "true" if params_dict["rated"] else "false"
+    }
+    if params_dict["clock_limit"] is not None:
+        payload["time"] = params_dict["clock_limit"] // 60
+        payload["increment"] = params_dict["clock_increment"]
+    else:
+        payload["days"] = params_dict.get("days", 1)
+        
+    if params_dict.get("rating_range"):
+        payload["ratingRange"] = params_dict["rating_range"]
+        
+    data = urllib.parse.urlencode(payload).encode('utf-8')
+    
+    stop_seek = threading.Event()
+    
+    def do_seek():
+        while not stop_seek.is_set():
+            try:
+                with urllib.request.urlopen(req, data=data) as response:
+                    for line in response:
+                        if stop_seek.is_set():
+                            break
+            except Exception:
+                pass
+            if not stop_seek.is_set():
+                time.sleep(1)
+            
+    t = threading.Thread(target=do_seek, daemon=True)
+    t.start()
+    
+    print(_("\nRicerca avversario in corso... (Premi ESC per annullare)"))
+    
+    game_found = False
+    game_id = None
+    
+    start_time = time.time()
+    last_poll = start_time
+    last_print = start_time
+    
+    initial_games = {g["gameId"] for g in get_active_games(token)}
+    
+    while t.is_alive() or not stop_seek.is_set():
+        if msvcrt.kbhit():
+            if msvcrt.getwch() == '\x1b':
+                stop_seek.set()
+                sys.stdout.write('\r' + ' ' * 79 + '\r')
+                print(_("Ricerca annullata."))
+                return None
+                
+        now = time.time()
+        
+        # 30 seconds feedback
+        if now - last_print >= 30:
+            elapsed = int(now - start_time)
+            mins = elapsed // 60
+            secs = elapsed % 60
+            sys.stdout.write('\r' + ' ' * 79 + '\r')
+            sys.stdout.write(_("Ricerca avversario in corso da {m:02d}:{s:02d}... (Premi ESC per annullare)").format(m=mins, s=secs))
+            sys.stdout.flush()
+            last_print = now
+            
+        # 5 seconds poll
+        if now - last_poll > 5:
+            current_games = get_active_games(token)
+            for g in current_games:
+                if g["gameId"] not in initial_games:
+                    game_found = True
+                    game_id = g["gameId"]
+                    stop_seek.set()
+                    break
+            last_poll = now
+            
+        if game_found:
+            break
+        time.sleep(0.1)
+        
+    if game_found:
+        sys.stdout.write('\n')
+        Acusticator(["c5", 0.1, 0, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0, config.VOLUME, "c6", 0.2, 0, config.VOLUME, "e6", 0.4, 0, config.VOLUME], kind=1, adsr=[10, 10, 80, 20])
+        print(_("Avversario trovato!"))
+        return game_id
+    else:
+        sys.stdout.write('\r' + ' ' * 79 + '\r')
+        print(_("Ricerca terminata o interrotta."))
+        return None
 
 def menu_gioca(db):
-    print(_("\n[WIP] Interfaccia per avviare una nuova partita su Lichess o accettare sfide."))
+    secrets = load_secrets()
+    token = secrets.get("lichess_token")
+    if not token:
+        print(_("\nDevi prima effettuare il login per giocare."))
+        return
+
+    while True:
+        print(_("\n=================================="))
+        print(_("          GIOCA PARTITA"))
+        print(_("=================================="))
+        
+        scelte = {
+            "cerca": _("Cerca avversario casuale (Seek)"),
+            "bot": _("Gioca contro il computer"),
+            "amico": _("Sfida un amico"),
+            "accetta": _("Accetta sfide in attesa"),
+            "riprendi": _("Riprendi partita in corso"),
+            ".": _("Torna al menu Lichess")
+        }
+        
+        scelta = menu(scelte, show=True, keyslist=True, p=_("\nScegli un'opzione: "), numbered=db.get("menu_numerati", False))
+        
+        if scelta == ".":
+            break
+            
+        elif scelta == "cerca":
+            print(_("\nImpostazioni per la ricerca dell'avversario:"))
+            params = get_game_params(for_seek=True, for_bot=False)
+            game_id = seek_game(token, params)
+            if game_id:
+                lichess_board.play_game(game_id, token, secrets.get("lichess_username"))
+            
+        elif scelta == "bot":
+            level_str = dgt(_("Livello di Stockfish (da 1 a 8, predefinito 3): ")).strip()
+            level = int(level_str) if level_str.isdigit() and 1 <= int(level_str) <= 8 else 3
+            print(_("\nImpostazioni della partita:"))
+            params = get_game_params(for_seek=False, for_bot=True)
+            
+            print(_("\nAvvio partita in corso..."))
+            game_info = challenge_ai(token, level, params)
+            if game_info:
+                print(_("Partita avviata! ID: {id}").format(id=game_info['id']))
+                lichess_board.play_game(game_info['id'], token, secrets.get("lichess_username"))
+                
+        elif scelta == "amico":
+            print(_("Recupero lista degli amici online..."))
+            following = fetch_following(token)
+            online_friends = [f for f in following if f.get("online")]
+            if not online_friends:
+                print(_("Nessun amico e' online in questo momento."))
+                continue
+                
+            scelte_amici = {f["id"]: f["username"] for f in online_friends}
+            scelte_amici["."] = _("Annulla")
+            amico_scelto = menu(scelte_amici, show=True, keyslist=True, p=_("\nScegli un amico da sfidare: "), numbered=db.get("menu_numerati", False))
+            if amico_scelto == ".":
+                continue
+                
+            print(_("\nImpostazioni della sfida:"))
+            params = get_game_params(for_seek=False, for_bot=False)
+            
+            print(_("\nInvio sfida in corso..."))
+            resp = challenge_user(token, amico_scelto, params)
+            if resp and 'challenge' in resp:
+                challenge_id = resp['challenge']['id']
+                print(_("Sfida inviata! In attesa che l'avversario accetti..."))
+                
+                import time
+                timeout = 60
+                start_time = time.time()
+                game_started = False
+                while time.time() - start_time < timeout:
+                    print(_("In attesa... ({t}s rimanenti)").format(t=int(timeout - (time.time() - start_time))), end='\r')
+                    active = get_active_games(token)
+                    for game in active:
+                        if game.get("gameId") == challenge_id:
+                            print(_("\nSfida accettata!"))
+                            lichess_board.play_game(challenge_id, token, secrets.get("lichess_username"))
+                            game_started = True
+                            break
+                    if game_started:
+                        break
+                    time.sleep(5)
+                
+                if not game_started:
+                    print(_("\nL'avversario non ha accettato la sfida in tempo."))
+                    try:
+                        req = urllib.request.Request(f"https://lichess.org/api/challenge/{challenge_id}/cancel", method="POST")
+                        req.add_header("Authorization", f"Bearer {token}")
+                        urllib.request.urlopen(req)
+                    except Exception:
+                        pass
+                
+        elif scelta == "accetta":
+            print(_("Controllo sfide in entrata..."))
+            challenges = get_incoming_challenges(token)
+            if not challenges:
+                print(_("Non hai sfide in attesa."))
+                continue
+                
+            for c in challenges:
+                c_id = c['id']
+                challenger = c['challenger']['name']
+                variant = c['variant']['name']
+                speed = c['speed']
+                rated = _("Classificata") if c['rated'] else _("Amichevole")
+                print(_("\nSfida da {u} ({v}, {s}, {r})").format(u=challenger, v=variant, s=speed, r=rated))
+                
+                if enter_escape(_("Vuoi accettare questa sfida? (Invio = Si', Esc = No): ")):
+                    print(_("Accetto la sfida..."))
+                    if accept_challenge(token, c_id):
+                        print(_("Sfida accettata!"))
+                        lichess_board.play_game(c_id, token, secrets.get("lichess_username"))
+                        break
+                    else:
+                        print(_("Impossibile accettare la sfida (potrebbe essere stata annullata)."))
+                else:
+                    print(_("Rifiuto la sfida..."))
+                    decline_challenge(token, c_id)
+                    
+        elif scelta == "riprendi":
+            print(_("Cerco partite in corso..."))
+            games = get_active_games(token)
+            if not games:
+                print(_("Non hai partite attive."))
+                continue
+                
+            scelte_games = {}
+            for g in games:
+                opp = g.get("opponent", {}).get("username", "Anonimo")
+                color = _("Bianco") if g.get("color") == "white" else _("Nero")
+                scelte_games[g["gameId"]] = _("Contro {o} (Sei il {c})").format(o=opp, c=color)
+            scelte_games["."] = _("Annulla")
+            
+            game_scelto = menu(scelte_games, show=True, keyslist=True, p=_("\nScegli la partita da riprendere: "), numbered=db.get("menu_numerati", False))
+            if game_scelto != ".":
+                lichess_board.play_game(game_scelto, token, secrets.get("lichess_username"))
+
 
 def run():
     """Entry point principale di Orolichess integrato in orologic."""
