@@ -12,6 +12,12 @@ TodoList:
 	+ [Engine] Attivazione NNUE.
 
 ChangeLog:
+7.2.0 (12 aprile 2026 - 11:18)
+	+ [Lichess] Integrazione Completa Gioco Online: Aggiunta modalità per giocare partite live contro utenti o bot, con supporto per premoves, sincronizzazione orologio real-time e chat integrata.
+	+ [Lichess] Gestione Abbandono: Aggiunto sistema intelligente per rilevare l'abbandono dell'avversario (`opponentGone`) e comando `claim` per reclamare vittoria.
+	+ [Lichess] Salvataggio PGN: Interrogazione nativa API Lichess per salvare i PGN ufficiali a fine partita con precisione assoluta.
+	= [Doc] Aggiunta guida all'ottimizzazione NVDA per la console in readme.htm e riscrittura voci menu Lichess.
+
 7.1.0 (10 aprile 2026 - 15:56)
 	+ [Easyfish] Nuovo comando '.e#' (Elo): Permette di impostare la forza del motore tramite Rating Elo diretto (es. .e1200). Il sistema gestisce automaticamente l'attivazione di `UCI_LimitStrength` e interroga il motore per confermare il valore accettato.
 	= [Easyfish] Aggiornato il comando '.s#' (Skill Level): Ora disattiva automaticamente la limitazione Elo per tornare alla modalità di forza classica (0-20).
