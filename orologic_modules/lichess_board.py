@@ -470,19 +470,46 @@ def async_play_loop(q, game_state):
     buf = []
     
     def get_prompt():
+        wt = getattr(game_state, 'white_time', 0)
+        bt = getattr(game_state, 'black_time', 0)
+        if getattr(game_state, 'started', False) and getattr(game_state, 'last_clock_sync', None):
+            elapsed = time.time() - game_state.last_clock_sync
+            if game_state.board.turn == chess.WHITE:
+                wt = max(0, wt - elapsed)
+            else:
+                bt = max(0, bt - elapsed)
+                
+        def fmt(sec):
+            sec = max(0, int(sec))
+            m, s = divmod(sec, 60)
+            h, m = divmod(m, 60)
+            if h > 0: return f"{h}:{m:02d}:{s:02d}"
+            return f"{m:02d}:{s:02d}"
+            
+        clock_str = f"{fmt(wt)} {fmt(bt)} " if getattr(game_state, 'started', False) else ""
+        
         p = ""
         if not game_state.move_history:
-            p = _("\nInizio, mossa 0.>")
+            p = clock_str + _("Inizio, mossa 0. ")
         elif len(game_state.move_history) % 2 == 1:
-            p = "\n{num}. {last_move}>".format(num=(len(game_state.move_history)+1)//2, last_move=game_state.move_history[-1])
+            p = "{c}{num}. {last_move} ".format(c=clock_str, num=(len(game_state.move_history)+1)//2, last_move=game_state.move_history[-1])
         else:
-            p = "\n{num}... {last_move}>".format(num=len(game_state.move_history)//2, last_move=game_state.move_history[-1])
+            p = "{c}{num}... {last_move} ".format(c=clock_str, num=len(game_state.move_history)//2, last_move=game_state.move_history[-1])
         
         if hasattr(game_state, 'premove') and game_state.premove:
-            p = p.rstrip(">") + f" [{game_state.premove}]>"
+            p = p.rstrip() + f" [{game_state.premove}] "
             
         if hasattr(game_state, 'opponent_gone') and game_state.opponent_gone:
-            p = p.rstrip(">") + " [CLAIM]>"
+            claim_in = getattr(game_state, 'claim_win_in_seconds', 0)
+            if claim_in and claim_in > 0:
+                elapsed_gone = int(time.time() - getattr(game_state, 'opponent_gone_time', time.time()))
+                rem = max(0, claim_in - elapsed_gone)
+                if rem > 0:
+                    p = p.rstrip() + f" [CLAIM IN {rem}s] "
+                else:
+                    p = p.rstrip() + " [CLAIM] "
+            else:
+                p = p.rstrip() + " [CLAIM] "
             
         return p
 
@@ -491,9 +518,13 @@ def async_play_loop(q, game_state):
         sys.stdout.write(get_prompt() + "".join(buf))
         sys.stdout.flush()
 
+    last_refresh = time.time()
     refresh_line()
 
     while True:
+        if time.time() - last_refresh >= 1.0:
+            refresh_line()
+            last_refresh = time.time()
         try:
             msg = q.get_nowait()
             if msg.get("type") == "eof":
@@ -638,7 +669,8 @@ def async_play_loop(q, game_state):
                 claim_in = msg.get("claimWinInSeconds")
                 game_state.opponent_gone = gone
                 game_state.claim_win_in_seconds = claim_in
-                if gone and not game_state.opponent_gone_announced:
+                game_state.opponent_gone_time = time.time()
+                if gone and not getattr(game_state, 'opponent_gone_announced', False):
                     sys.stdout.write("\r" + " " * 79 + "\r")
                     sys.stdout.write(_("L'avversario ha lasciato la partita. Puoi reclamare la vittoria (comando: claim).\n"))
                     Acusticator([400.0, 0.2, 0, config.VOLUME, 300.0, 0.2, 0, config.VOLUME], kind=1)
@@ -684,6 +716,70 @@ def async_play_loop(q, game_state):
                 
         time.sleep(0.02)
 
+def show_post_game_report(game_id, token):
+    print(_("\n--- Recupero Report Partita da Lichess (Attendi...) ---"))
+    time.sleep(2)
+    req = urllib.request.Request(f"https://lichess.org/game/export/{game_id}?evals=true&clocks=false")
+    req.add_header("Accept", "application/json")
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
+        try:
+            req_an = urllib.request.Request(f"https://lichess.org/api/game/{game_id}/analyze", method="POST")
+            req_an.add_header("Authorization", f"Bearer {token}")
+            urllib.request.urlopen(req_an)
+        except Exception:
+            pass
+
+    data = None
+    for _ in range(4):
+        try:
+            with urllib.request.urlopen(req) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+            
+            w = data.get("players", {}).get("white", {})
+            b = data.get("players", {}).get("black", {})
+            if "analysis" in w or "analysis" in b:
+                break
+        except Exception:
+            pass
+        time.sleep(1.5)
+
+    if not data:
+        print(_("Impossibile recuperare il report della partita."))
+        return
+
+    w = data.get("players", {}).get("white", {})
+    b = data.get("players", {}).get("black", {})
+
+    print(_("\n[Risultato Elo]"))
+    rated = data.get("rated", False)
+    if rated:
+        def format_elo(p):
+            name = p.get("user", {}).get("name", _("Anonimo"))
+            rating = p.get("rating", "?")
+            diff = p.get("ratingDiff")
+            diff_str = f"+{diff}" if diff and diff > 0 else str(diff) if diff else "0"
+            return f"{name}: {rating} ({diff_str})"
+        print(_("Bianco ({b})").format(b=format_elo(w)))
+        print(_("Nero ({n})").format(n=format_elo(b)))
+    else:
+        print(_("Partita amichevole (nessuna variazione Elo)."))
+
+    print(_("\n[Analisi Computer]"))
+    def format_analysis(p):
+        an = p.get("analysis")
+        if not an: return _("Nessuna analisi disponibile.")
+        return _("Inesattezze: {i}, Errori: {m}, Svarioni: {b}, ACPL: {a}").format(
+            i=an.get("inaccuracy", 0), m=an.get("mistake", 0), b=an.get("blunder", 0), a=an.get("acpl", 0)
+        )
+    w_name = w.get("user", {}).get("name", _("Bianco"))
+    b_name = b.get("user", {}).get("name", _("Nero"))
+    print(_("{u} (Bianco): {a}").format(u=w_name, a=format_analysis(w)))
+    print(_("{u} (Nero): {a}").format(u=b_name, a=format_analysis(b)))
+
+    from GBUtils import enter_escape
+    enter_escape(_("\nPremi Invio per continuare..."))
+
 def play_game(game_id, token, username):
     req = urllib.request.Request(f"https://lichess.org/api/board/game/stream/{game_id}")
     req.add_header("Authorization", f"Bearer {token}")
@@ -704,6 +800,7 @@ def play_game(game_id, token, username):
         user_input = async_play_loop(q, game_state)
         
         if user_input is None:
+            show_post_game_report(game_id, token)
             break
             
         user_input = user_input.strip()

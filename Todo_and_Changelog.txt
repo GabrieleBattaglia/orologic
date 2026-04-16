@@ -12,6 +12,21 @@ TodoList:
 	+ [Engine] Attivazione NNUE.
 
 ChangeLog:
+7.2.6 (15 aprile 2026 - 17:40)
+	+ [Arbitraggio] Aggiunti i comandi di esplorazione scacchiera (`/`, `\`, `-`, `,`, `.s`) al menu di aiuto `.?` durante la partita.
+	+ [Arbitraggio] Risolto crash quando si inseriva un comando di esplorazione vuoto (es. solo `\`); ora mostra l'aiuto in caso di input errato.
+	+ [Docs] Aggiunto 'Luca Davanzo' tra i ringraziamenti del manuale.
+
+7.2.5 (13 aprile 2026 - 12:00)
+	+ [UI] Uniformata la modalità Menu a Numeri in tutte le schede (es: Lichess, Motore).
+	+ [Lichess] Risolto problema di visibilità delle notifiche post-partita (es: abbandoni).
+	+ [Analisi] Migliorato output del log testuale (OAA), eliminando artefatti a fine ramo principale e aggiungendo un riepilogo del risultato a fine file.
+	+ [Docs] Aggiunto 'limaoscar' tra i ringraziamenti del manuale.
+
+7.2.2 (13 aprile 2026 - 10:00)
+	+ [Lichess] Migliorato il prompt di gioco: ora sovrascrive la riga con `\r`, visualizza un orologio compatto (es. `38:42 35:11`) aggiornato ogni secondo e mostra un countdown dinamico per il claim di vittoria (`[CLAIM IN s]`). Rimosso il simbolo `>` per risparmiare spazio sui display Braille.
+	+ [Lichess] Report di fine partita: Aggiunta la visualizzazione automatica di un report a fine partita classificata (sezione Lichess), che mostra variazioni Elo, ed eventuali dati di analisi del motore di Lichess se disponibili (Inesattezze, Errori, Svarioni, ACPL).
+
 7.2.1 (12 aprile 2026 - 12:35)
 	+ [I10N] Supporto Linguistico Esteso: Aggiunte traduzioni complete per Portoghese (Brasile), Spagnolo e Francese tramite `translator_tool`.
 	+ [I10N] Gestione Repository: Aggiornato `.gitignore` per includere i file binari delle traduzioni (`.mo`) e il template (`.pot`).

@@ -666,7 +666,7 @@ def _stampa_albero_pgn(node, data_map, lines, w_name, b_name, num_var, classific
 			_stampa_albero_pgn(variation, data_map, lines, w_name, b_name, num_var, classification_labels, indent_level + 2)
 		
 		# Stella: Se torniamo alla mainline (indentazione 0), aggiungiamo un avviso per l'accessibilità
-		if indent_level == 0:
+		if indent_level == 0 and main_move_node.variations:
 			lines.append(_("Linea principale:"))
 
 	# --- CONTINUAZIONE MAINLINE ---
@@ -705,9 +705,11 @@ def genera_sommario_analitico_txt(pgn_game, base_f, results, stats, cpl_d, eco, 
 	
 	# Risultato esplicito (per accessibilità rapida)
 	res = pgn_game.headers.get("Result", "*")
-	if res == "1-0": lines.append(_("Esito: Vince il Bianco"))
-	elif res == "0-1": lines.append(_("Esito: Vince il Nero"))
-	elif res == "1/2-1/2": lines.append(_("Esito: Patta"))
+	esito_str = _("Sconosciuto")
+	if res == "1-0": esito_str = _("Vince il Bianco")
+	elif res == "0-1": esito_str = _("Vince il Nero")
+	elif res == "1/2-1/2": esito_str = _("Patta")
+	lines.append(_("Esito: {e}").format(e=esito_str))
 	
 	lines.append("")
 	
@@ -753,6 +755,10 @@ def genera_sommario_analitico_txt(pgn_game, base_f, results, stats, cpl_d, eco, 
 	
 	# Footer
 	lines.append("")
+	lines.append(_("--- Riepilogo Partita ---"))
+	lines.append(_("Esito Finale: {e}").format(e=esito_str))
+	if accuracies:
+		lines.append(_("Precisione: {w} ({a_w:.1f}%) vs {b} ({a_b:.1f}%)").format(w=w_n, a_w=acc_w, b=b_n, a_b=acc_b))
 	lines.append(_("Fine Analisi Orologic V.{v}").format(v=version.VERSION))
 	
 	# Salvataggio
@@ -811,7 +817,7 @@ def AnalisiAutomatica(pgn_game):
 		"p": _("Profondita' fissa (ply)"),
 		"n": _("Numero di nodi per mossa")
 	}
-	analysis_mode = menu(analysis_mode_map, show=True, keyslist=True, ntf=_("Scelta non valida: "))
+	analysis_mode = menu(analysis_mode_map, show=True, keyslist=True, ntf=_("Scelta non valida: "), numbered=db.get("menu_numerati", False))
 	limit = None
 	if analysis_mode == 't':
 		value = dgt(_("Inserisci i secondi per mossa: [INVIO per 1] "), kind="f", fmin=0.1, fmax=60, default=1)

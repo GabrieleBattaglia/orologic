@@ -679,7 +679,7 @@ def menu_puzzle(db):
             
             themes = get_puzzle_themes()
             print(_("\nScegli la categoria di puzzle:"))
-            angle_scelto = menu(themes, show=False, keyslist=True, p=_("Seleziona il tema: "))
+            angle_scelto = menu(themes, show=False, keyslist=True, p=_("Seleziona il tema: "), numbered=db.get("menu_numerati", False))
             if angle_scelto != "vuoto":
                 angle = angle_scelto
             
@@ -918,7 +918,7 @@ def menu_guarda(db):
                 
             scelte_amici = {f["id"]: f["username"] for f in playing_friends}
             scelte_amici["."] = _("Indietro")
-            amico_scelto = menu(scelte_amici, show=True, keyslist=True, p=_("\nScegli un amico da guardare: "))
+            amico_scelto = menu(scelte_amici, show=True, keyslist=True, p=_("\nScegli un amico da guardare: "), numbered=db.get("menu_numerati", False))
             if amico_scelto != ".":
                 f_obj = next(f for f in playing_friends if f["id"] == amico_scelto)
                 game_url = f_obj["playing"]
@@ -1020,18 +1020,25 @@ def get_game_params(for_seek=False, for_bot=False):
             "racingKings": "Racing Kings",
             "threeCheck": "Three-check"
         }
-        variant = menu(variant_scelte, show=True, keyslist=True, p=_("Scegli la variante: "))
+        variant = menu(variant_scelte, show=True, keyslist=True, p=_("Scegli la variante: "), numbered=db.get("menu_numerati", False))
     
     rated = False
     if not for_bot:
         rated = enter_escape(_("\nPartita classificata (Rated)? (Invio = Si', Esc = No): "))
         
     color_scelte = {
-        "white": _("Bianco"),
-        "black": _("Nero"),
-        "random": _("Casuale")
+        "1": _("Bianco"),
+        "2": _("Nero"),
+        "3": _("Casuale")
     }
-    color = menu(color_scelte, show=True, keyslist=True, p=_("Scegli il colore: "))
+    color_key = menu(color_scelte, show=True, keyslist=True, p=_("Scegli il colore: "))
+    
+    color_map = {
+        "1": "white",
+        "2": "black",
+        "3": "random"
+    }
+    color = color_map.get(color_key, "random")
     
     rating_range = ""
     if for_seek and rated:

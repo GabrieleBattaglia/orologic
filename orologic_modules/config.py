@@ -156,8 +156,14 @@ DOT_COMMANDS={
 	".b-":_("Sottrae tempo al bianco (in pausa)"),
 	".n+":_("Aggiunge tempo al nero (in pausa)"),
 	".n-":_("Sottrae tempo al nero (in pausa)"),
-	".s":_("Scacchiera"),
+	".s":_("Scacchiera testuale"),
 	".c":_("Commento mossa"),
+	"-":_("Riepilogo dei pezzi Bianchi"),
+	"+":_("Riepilogo dei pezzi Neri"),
+	"/[col]":_("Esplora diagonale alto-destra"),
+	"\\[col]":_("Esplora diagonale alto-sinistra"),
+	"-[col|trv|casa]":_("Esplora colonna, traversa o casa"),
+	",[P,N,B,R,Q,K]":_("Posizioni di un pezzo specifico"),
 	".?":_("Aiuto")
 }
 
