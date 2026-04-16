@@ -184,6 +184,9 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 		if game_state.flag_fallen and not game_state.ignore_clock:
 			continue # Torna su a gestire il flag
 
+		if user_input == "/" or user_input == "\\" or user_input == ",":
+			user_input = ".?"
+
 		if user_input.startswith("/"):
 			Acusticator(["c5", 0.07, -1, config.VOLUME,"d5", 0.07, -.75, config.VOLUME,"e5", 0.07, -.5, config.VOLUME,"f5", 0.07, -.25, config.VOLUME,"g5", 0.07, 0, config.VOLUME,"a5", 0.07, .25, config.VOLUME,"b5", 0.07, .5, config.VOLUME,"c6", 0.07, .75, config.VOLUME], kind=3, adsr=[0, 0, 100, 100])
 			base_column = user_input[1:2].strip()
