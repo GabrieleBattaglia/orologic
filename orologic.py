@@ -2,6 +2,7 @@ import warnings
 import sys
 import os
 import time
+import json
 import datetime
 import copy
 from dateutil.relativedelta import relativedelta
@@ -87,6 +88,23 @@ def Main():
     # Inizializzazione Motore (se configurato)
     engine.InitEngine()
     
+    # Controllo salvataggio automatico (Ripristino)
+    autosave_file_path = config.percorso_salvataggio(os.path.join("settings", "autosave.json"))
+    if db.get("autosave_enabled", False) and os.path.exists(autosave_file_path):
+        print(_("\n*** RIPRISTINO PARTITA ***"))
+        if enter_escape(_("E' stata rilevata una partita di arbitraggio in sospeso. Desideri riprenderla? (INVIO per si', ESC per no): ")):
+            try:
+                with open(autosave_file_path, "r", encoding="utf-8") as f:
+                    dati_partita = json.load(f)
+                game_flow.RiprendiPartita(dati_partita)
+            except Exception as e:
+                print(_("Impossibile ripristinare la partita: {e}").format(e=e))
+                try: os.remove(autosave_file_path)
+                except: pass
+        else:
+            try: os.remove(autosave_file_path)
+            except: pass
+            
     # Loop Principale
     while True:
         scelta = menu(config.MENU_CHOICES, show=True, keyslist=True, p=_("\nScegli un'azione: "), numbered=db.get("menu_numerati", False))

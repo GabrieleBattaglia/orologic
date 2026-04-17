@@ -483,6 +483,10 @@ def async_play_loop(q, game_state):
             sec = max(0, int(sec))
             m, s = divmod(sec, 60)
             h, m = divmod(m, 60)
+            d, h = divmod(h, 24)
+            if d > 0:
+                d_str = _("{d}g").format(d=d)
+                return f"{d_str} {h:02d}:{m:02d}:{s:02d}"
             if h > 0: return f"{h}:{m:02d}:{s:02d}"
             return f"{m:02d}:{s:02d}"
             

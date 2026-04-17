@@ -50,8 +50,8 @@ def format_ratings(perfs):
     if not perfs:
         return ""
     ratings = []
-    # Mostriamo Rapid, Blitz e Classical se l'utente ha giocato almeno una partita
-    for mode in ["rapid", "blitz", "classical"]:
+    # Mostriamo Rapid, Blitz, Classical e Correspondence se l'utente ha giocato almeno una partita
+    for mode in ["rapid", "blitz", "classical", "correspondence"]:
         if mode in perfs and "rating" in perfs[mode]:
             games = perfs[mode].get("games", 0)
             if games > 0:
@@ -393,15 +393,22 @@ def menu_amici(db):
             following = fetch_following(token)
             if not following:
                 print(_("Non stai seguendo nessuno o e' impossibile recuperare la lista."))
+                enter_escape(_("\nPremi Invio per continuare..."))
             else:
-                print(_("\nStai seguendo {n} giocatori:").format(n=len(following)))
+                amici_menu = {}
                 for u in following:
                     username = u.get('username', 'Sconosciuto')
                     title = u.get('title', '')
                     title_str = f"[{title}] " if title else ""
                     online = _("ONLINE") if u.get('online') else _("Offline")
-                    print(_(" - {t}{u} ({o})").format(t=title_str, u=username, o=online))
-            enter_escape(_("\nPremi Invio per continuare..."))
+                    amici_menu[username] = _("{t}{u} ({o})").format(t=title_str, u=username, o=online)
+                amici_menu["."] = _("Indietro")
+                
+                scelta_amico = menu(amici_menu, show=True, keyslist=True, p=_("\nScegli un amico da visualizzare: "), numbered=db.get("menu_numerati", False))
+                if scelta_amico != ".":
+                    from . import lichess_profiler
+                    secrets = load_secrets()
+                    lichess_profiler.show_profile(scelta_amico, token)
             
         elif scelta == "segui":
             username = input(_("\nInserisci l'username del giocatore da seguire: ")).strip()
@@ -1250,15 +1257,18 @@ def menu_gioca(db):
                 lichess_board.play_game(game_info['id'], token, secrets.get("lichess_username"))
                 
         elif scelta == "amico":
-            print(_("Recupero lista degli amici online..."))
+            print(_("Recupero lista degli amici..."))
             following = fetch_following(token)
-            online_friends = [f for f in following if f.get("online")]
-            if not online_friends:
-                print(_("Nessun amico e' online in questo momento."))
+            if not following:
+                print(_("Non stai seguendo nessun amico. Usa il Profilatore per cercare e seguire altri giocatori."))
                 continue
                 
-            scelte_amici = {f["id"]: f["username"] for f in online_friends}
+            scelte_amici = {}
+            for f in following:
+                online = _("ONLINE") if f.get("online") else _("Offline")
+                scelte_amici[f["id"]] = _("{u} ({o})").format(u=f["username"], o=online)
             scelte_amici["."] = _("Annulla")
+            
             amico_scelto = menu(scelte_amici, show=True, keyslist=True, p=_("\nScegli un amico da sfidare: "), numbered=db.get("menu_numerati", False))
             if amico_scelto == ".":
                 continue
@@ -1277,20 +1287,30 @@ def menu_gioca(db):
                 start_time = time.time()
                 game_started = False
                 while time.time() - start_time < timeout:
-                    print(_("In attesa... ({t}s rimanenti)").format(t=int(timeout - (time.time() - start_time))), end='\r')
+                    print(_("In attesa... ({t}s rimanenti) - Premi CTRL+C o ESC per annullare").format(t=int(timeout - (time.time() - start_time))), end='\r')
+                    
+                    import msvcrt
+                    if msvcrt.kbhit():
+                        c = msvcrt.getwch()
+                        if c == '\x1b' or c == '\x03': # ESC or CTRL+C
+                            print()
+                            break
+                            
                     active = get_active_games(token)
                     for game in active:
                         if game.get("gameId") == challenge_id:
                             print(_("\nSfida accettata!"))
+                            from . import lichess_board
                             lichess_board.play_game(challenge_id, token, secrets.get("lichess_username"))
                             game_started = True
                             break
                     if game_started:
                         break
-                    time.sleep(5)
+                    time.sleep(2)
                 
                 if not game_started:
-                    print(_("\nL'avversario non ha accettato la sfida in tempo."))
+                    print(_("\nL'avversario non ha accettato la sfida in tempo (oppure e' offline)."))
+                    print(_("Nota: La sfida potrebbe rimanere valida su Lichess se era per corrispondenza."))
                     try:
                         req = urllib.request.Request(f"https://lichess.org/api/challenge/{challenge_id}/cancel", method="POST")
                         req.add_header("Authorization", f"Bearer {token}")
@@ -1371,8 +1391,15 @@ def run():
         secrets = load_secrets()
         is_logged = "lichess_token" in secrets
         
+        active_games = []
         if is_logged:
             MENU_CHOICES["logout"] = _("Logout (Rimuovi token)")
+            active_games = get_active_games(token)
+            if active_games:
+                if len(active_games) == 1:
+                    MENU_CHOICES["riprendi"] = _("Riprendi partita in sospeso (1 attiva)")
+                else:
+                    MENU_CHOICES["riprendi"] = _("Riprendi partita in sospeso ({n} attive)").format(n=len(active_games))
         else:
             MENU_CHOICES["login"] = _("Login (Imposta API Token)")
             
@@ -1402,6 +1429,21 @@ def run():
         if scelta == ".":
             print(_("Uscita da Orolichess in corso. Ritorno a orologic..."))
             break
+        elif scelta == "riprendi":
+            scelte_games = {}
+            for g in active_games:
+                opp = g.get("opponent", {}).get("username", "Anonimo")
+                color = _("Bianco") if g.get("color") == "white" else _("Nero")
+                my_turn = g.get("isMyTurn", False)
+                # Notare che `isMyTurn` viene fornito dall'API playing
+                turn_str = _("Tocca a TE!") if my_turn else _("In attesa dell'avversario")
+                scelte_games[g["gameId"]] = _("Contro {o} (Sei il {c}) - {t}").format(o=opp, c=color, t=turn_str)
+            scelte_games["."] = _("Annulla")
+            
+            game_scelto = menu(scelte_games, show=True, keyslist=True, p=_("\nScegli la partita da riprendere: "), numbered=db.get("menu_numerati", False))
+            if game_scelto != ".":
+                from . import lichess_board
+                lichess_board.play_game(game_scelto, token, secrets.get("lichess_username"))
         elif scelta == "login":
             new_profile = menu_login(db)
             if new_profile:
