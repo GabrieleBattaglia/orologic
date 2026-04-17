@@ -1,17 +1,15 @@
 TodoList & ChangeLog.
 TodoList:
-6.5.1
-	+ [L10N] Aggiornamento stringhe di traduzione e compilazione catalogo in lingua portoghese (Brasiliano).
-	+ [Doc] Aggiornato il manuale utente includendo la nuova sezione sul menu disegno frecce e cerchi in Easyfish.
-6.5.0
-	+ [Easyfish] Aggiunta gestione forme grafiche (frecce e cerchi) sulla scacchiera e nel PDF.
-6.4.1
-	+ [Easyfish] Esportazione PDF: Aggiunta lista mosse/FEN e orientamento dinamico.
-6.4.0
-	+ [Easyfish] Aggiunta l'esportazione PDF.
-	+ [Engine] Attivazione NNUE.
 
 ChangeLog:
+7.3.0 (17 aprile 2026 - 08:15)
+	+ [Arbitraggio] Implementato il ripristino automatico dell'arbitraggio in caso di crash o chiusura accidentale (richiede Salvataggio Automatico attivo nelle Impostazioni). All'avvio, Orologic rileva i dati in sospeso e chiede se si desidera continuare la partita.
+	+ [Lichess] Gestione gioco per corrispondenza e ripresa partite in sospeso dal menu principale.
+	+ [Lichess] Possibilita' di sfidare amici offline (per partite a scacchiera aperta/corrispondenza).
+	+ [Lichess] Aggiunto Elo 'Correspondence' al profilo e login.
+	+ [Lichess] Profilatore: il menu ora ha 'Sfida' e mostra dinamicamente 'Segui/Smetti di seguire'.
+	+ [Lichess] Menu Amici: la lista seguiti ora e' interattiva e permette di selezionare un giocatore per visualizzarne il profilo.
+
 7.2.6 (15 aprile 2026 - 17:40)
 	+ [Arbitraggio] Aggiunti i comandi di esplorazione scacchiera (`/`, `\`, `-`, `,`, `.s`) al menu di aiuto `.?` durante la partita.
 	+ [Arbitraggio] Risolto crash quando si inseriva un comando di esplorazione vuoto (es. solo `\`); ora mostra l'aiuto in caso di input errato.

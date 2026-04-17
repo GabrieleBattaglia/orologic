@@ -152,8 +152,10 @@ def show_profile(username, token):
         with urllib.request.urlopen(req) as resp:
             profile = json.loads(resp.read().decode("utf-8"))
             print("\n" + format_profile(profile))
+            return profile
     except Exception as e:
         print(_("Errore durante il caricamento del profilo: {e}").format(e=e))
+        return None
 
 def send_message(username, token):
     if not token:
@@ -385,31 +387,77 @@ def show_player_menu(username, secrets):
     db = storage.LoadDB()
     token = secrets.get("lichess_token")
     
-    # Mostra sùbito il profilo
-    show_profile(username, token)
+    # Mostra sùbito il profilo e ottieni i dati (incluso se lo seguiamo)
+    profile = show_profile(username, token)
     
     while True:
+        # Se profile non è disponibile, assumiamo False per following
+        is_following = profile.get("following", False) if profile else False
+        
         choices = {
             "profilo": _("Leggi profilo dettagliato"),
             "messaggio": _("Invia un messaggio"),
-            "segui": _("Segui giocatore"),
-            "smetti": _("Smetti di seguire"),
-            "scarica": _("Cerca e scarica partite"),
-            ".": _("Torna indietro")
+            "sfida": _("Sfida a una partita"),
+            "scarica": _("Cerca e scarica partite")
         }
+        
+        if is_following:
+            choices["smetti"] = _("Smetti di seguire")
+        else:
+            choices["segui"] = _("Segui giocatore")
+            
+        choices["."] = _("Torna indietro")
         
         scelta = menu(choices, show=True, keyslist=True, p=_("\nAzioni per {u}: ").format(u=username), numbered=db.get("menu_numerati", False))
         
         if scelta == ".":
             break
         elif scelta == "profilo":
-            show_profile(username, token)
+            profile = show_profile(username, token)
         elif scelta == "messaggio":
             send_message(username, token)
+        elif scelta == "sfida":
+            from . import lichess_app
+            print(_("\nImpostazioni della sfida:"))
+            params = lichess_app.get_game_params(for_seek=False, for_bot=False)
+            print(_("\nInvio sfida in corso..."))
+            resp = lichess_app.challenge_user(token, username, params)
+            if resp and 'challenge' in resp:
+                challenge_id = resp['challenge']['id']
+                print(_("Sfida inviata! In attesa che l'avversario accetti..."))
+                import time
+                timeout = 60
+                start_time = time.time()
+                game_started = False
+                while time.time() - start_time < timeout:
+                    print(_("In attesa... ({t}s rimanenti)").format(t=int(timeout - (time.time() - start_time))), end='\r')
+                    active = lichess_app.get_active_games(token)
+                    for game in active:
+                        if game.get("gameId") == challenge_id:
+                            print(_("\nSfida accettata!"))
+                            from . import lichess_board
+                            lichess_board.play_game(challenge_id, token, secrets.get("lichess_username"))
+                            game_started = True
+                            break
+                    if game_started:
+                        break
+                    time.sleep(5)
+                
+                if not game_started:
+                    print(_("\nL'avversario non ha accettato la sfida in tempo (oppure e' offline)."))
+                    try:
+                        import urllib.request
+                        req = urllib.request.Request(f"https://lichess.org/api/challenge/{challenge_id}/cancel", method="POST")
+                        req.add_header("Authorization", f"Bearer {token}")
+                        urllib.request.urlopen(req)
+                    except Exception:
+                        pass
         elif scelta == "segui":
             follow_player(username, token, follow=True)
+            if profile: profile["following"] = True
         elif scelta == "smetti":
             follow_player(username, token, follow=False)
+            if profile: profile["following"] = False
         elif scelta == "scarica":
             download_games(username, token)
 
