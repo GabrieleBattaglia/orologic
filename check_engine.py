@@ -14,7 +14,8 @@ if os.path.exists(engine_dir):
             if file.lower().startswith("stockfish") and file.lower().endswith(".exe"):
                 path = os.path.join(root, file)
                 break
-        if path: break
+        if path:
+            break
 
 if not path:
     print(f"Errore: Motore non trovato in {engine_dir}")

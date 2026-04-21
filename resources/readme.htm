@@ -284,7 +284,11 @@ margin: 1em 0;
 
 <h4>2.3.3. Giocare contro il Motore (.g)</h4>
 <p>Digita <code>.g</code> da qualsiasi posizione per iniziare una partita interattiva contro Stockfish. Orologic ti chiederà con quale colore vuoi giocare e con quale modalità di tempo (partita classica, tempo fisso a mossa o modalità "amichevole" senza limiti).</p>
-<p>Durante la partita valgono tutti i controlli (matto, stallo, ripetizioni) e puoi impartire istruzioni extra, come <code>.s#</code> (es. <code>.s15</code>) per modificare il livello di difficoltà del motore da 1 a 20 al volo.</p>
+<p>Durante la partita valgono tutti i controlli (matto, stallo, ripetizioni) e puoi impartire istruzioni extra:</p>
+<ul>
+    <li><code>.s#</code> (es. <code>.s15</code>): modifica il livello di difficoltà (Skill Level) del motore da 0 a 20 al volo.</li>
+    <li><code>.e#</code> (es. <code>.e1200</code>): imposta la forza del motore indicando direttamente un punteggio Elo. Orologic verificherà se il motore supporta questa funzione e applicherà il limite (ogni motore ha un suo range minimo/massimo, ad esempio Stockfish 16 parte da 1320 Elo).</li>
+</ul>
 
 <h4>2.3.4. Modalità Esploratore (.e)</h4>
 <p>Il comando <code>.e</code> apre l'Esploratore di Varianti. Un ambiente ottimizzato per navigare PGN complessi. Il prompt cambierà per indicarti il livello della variante (es. <code>Lvl0</code> per la linea principale, <code>Lvl1</code>, <code>Lvl2</code>).</p>

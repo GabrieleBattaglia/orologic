@@ -2,6 +2,7 @@ import json
 import os
 from . import config
 
+
 def LoadDB():
     """Carica il database (impostazioni e orologi)."""
     if not os.path.exists(config.DB_FILE):
@@ -11,6 +12,7 @@ def LoadDB():
             return json.load(f)
     except (json.JSONDecodeError, IOError):
         return {"clocks": [], "menu_numerati": False}
+
 
 def SaveDB(db):
     """Salva il database su file JSON."""
