@@ -2,6 +2,11 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+7.3.1 (20 aprile 2026 - 09:51)
+	+ [Motore] Aggiunto invito automatico alla configurazione del motore scacchistico (scaricamento/ricerca/manuale) quando si tenta di avviare l'analisi, Easyfish o il report a fine arbitraggio e il motore non risulta ancora impostato.
+	+ [Easyfish] Risolto problema nel comando `.e#` (Elo): ora supporta gli spazi (es. `.e 1500`), mostra il valore corretto nel messaggio di conferma e indica il range minimo/massimo se il motore rifiuta il valore.
+	+ [Docs] Aggiornato il manuale (`readme.htm`) includendo la spiegazione del comando `.e#` in Easyfish.
+
 7.3.0 (17 aprile 2026 - 08:15)
 	+ [Arbitraggio] Implementato il ripristino automatico dell'arbitraggio in caso di crash o chiusura accidentale (richiede Salvataggio Automatico attivo nelle Impostazioni). All'avvio, Orologic rileva i dati in sospeso e chiede se si desidera continuare la partita.
 	+ [Lichess] Gestione gioco per corrispondenza e ripresa partite in sospeso dal menu principale.
