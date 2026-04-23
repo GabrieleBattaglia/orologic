@@ -466,7 +466,9 @@ def export_board_pdf(board, node=None):
             Spacer(1, 1 * cm),
         ]
         if user_comment:
-            story.extend([Paragraph(user_comment, comment_style), Spacer(1, 0.5 * cm)])
+            # Sostituisce eventuali literal '\n' o reali ritorni a capo con i tag <br/> richiesti da ReportLab
+            formatted_comment = user_comment.replace("\\n", "<br/>").replace("\n", "<br/>")
+            story.extend([Paragraph(formatted_comment, comment_style), Spacer(1, 0.5 * cm)])
         story.extend([Paragraph(moves_text, comment_style), Spacer(1, 1 * cm)])
         story.append(Paragraph(footer_text, footer_style))
         doc.build(story)
