@@ -124,20 +124,20 @@ def format_profile(profile):
     t = count.get("all", 0)
     w = count.get("win", 0)
     d = count.get("draw", 0)
-    l = count.get("loss", 0)
+    loss = count.get("loss", 0)
     if t > 0:
         pw = (w / t) * 100
         pd = (d / t) * 100
-        pl = (l / t) * 100
+        pl = (loss / t) * 100
         p.append(
             _(
                 "Partite totali: {t} (Vinte: {w} [{pw:.1f}%], Patte: {d} [{pd:.1f}%], Perse: {l} [{pl:.1f}%])"
-            ).format(t=t, w=w, pw=pw, d=d, pd=pd, l=l, pl=pl)
+            ).format(t=t, w=w, pw=pw, d=d, pd=pd, l=loss, pl=pl)
         )
     else:
         p.append(
             _("Partite totali: {t} (Vinte: {w}, Patte: {d}, Perse: {l})").format(
-                t=t, w=w, d=d, l=l
+                t=t, w=w, d=d, l=loss
             )
         )
 

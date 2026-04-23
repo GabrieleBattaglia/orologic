@@ -1330,8 +1330,8 @@ def genera_sommario_analitico_txt(
     w_n = pgn_game.headers.get("White", _("Bianco"))
     b_n = pgn_game.headers.get("Black", _("Nero"))
 
-    def calc_avg(l):
-        return sum(l) / len(l) if l else 0
+    def calc_avg(val_list):
+        return sum(val_list) / len(val_list) if val_list else 0
 
     lines.append(_("Precisione (ACPL - piu' basso e' meglio):"))
     lines.append(f"  {w_n}: {calc_avg(cpl_d['w']):.2f}")

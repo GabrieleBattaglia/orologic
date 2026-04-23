@@ -40,12 +40,12 @@ def InsertedCounter(board):
     return p1
 
 
-def SquaresListToString(board, l, report_piece=False, occupied_only=False):
+def SquaresListToString(board, sq_list, report_piece=False, occupied_only=False):
     """Converte una lista di case in una stringa leggibile."""
     from .constants import COLUMN_TO_NATO, CHESSPIECE_TO_NAME
 
     result = ""
-    for j in l:
+    for j in sq_list:
         is_piece = board.piece_at(chess.parse_square(j))
         if is_piece:
             color = _("Bianco") if is_piece.color == chess.WHITE else _("Nero")

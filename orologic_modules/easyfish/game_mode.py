@@ -438,11 +438,11 @@ def StartEngineGame(game_node, engine_instance):
                                 )
                             )
                     elif cmd == ".a":
-                        lines = analysis_utils.RunAnalysis(
+                        lines = analysis_utils.get_lines_from_engine(
                             board, engine_instance, orologic_engine.analysis_time, 1
                         )
-                        for l in lines:
-                            print(l)
+                        for line in lines:
+                            print(line)
                     elif cmd == ".b":
                         print(CustomBoard(board.fen()))
                     elif cmd == ".?":
