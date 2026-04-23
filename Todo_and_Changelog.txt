@@ -2,6 +2,10 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+7.3.3 (23 aprile 2026 - 10:30)
+	+ [Easyfish] Esportazione PDF: risolto l'errore di limite caratteri aumentando il buffer massimo (smax) per il commento, per permettere l'inserimento di testi lunghi senza generare eccezioni.
+	+ [Motore] Chiusura applicazione: intercettato e gestito l'errore "engine event loop dead" che si verificava quando si tentava di chiudere un'istanza di python-chess gia' terminata.
+
 7.3.2 (23 aprile 2026 - 10:00)
 	+ [Easyfish] Risolto problema di chiusura del Board Editor: l'errore "STATUS_TOO_MANY_WHITE_KINGS" per posizione illegale e' stato rimosso e sostituito con la corretta verifica delle regole di validita' della scacchiera con python-chess, fornendo spiegazioni chiare all'utente.
 	+ [Easyfish] Esportazione PDF: rimosso il limite di 1500 caratteri per il commento e aggiunto il supporto per andare a capo utilizzando \n nel testo inserito.
