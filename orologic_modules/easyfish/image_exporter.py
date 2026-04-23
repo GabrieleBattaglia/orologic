@@ -237,9 +237,8 @@ def export_board_pdf(board, node=None):
 
     Acusticator(["a5", 0.05, 0, config.VOLUME])
     user_comment = dgt(
-        prompt=_("\nInserisci un commento per il PDF (max 1500 car.): "),
+        prompt=_("\nInserisci un commento per il PDF: "),
         kind="s",
-        smax=1500,
         default="",
     ).strip()
 
