@@ -2,6 +2,9 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+7.3.4 (24 aprile 2026 - 10:00)
+	+ [Updater] Risolto bug critico nell'aggiornamento automatico (GBUtils perform_update): la procedura di copia falliva a causa del case-sensitivity del nome dell'eseguibile e per la presenza di cartelle nidificate nell'archivio ZIP della release. Ora l'aggiornamento avviene correttamente e l'archivio ZIP della release e' pacchettizzato senza directory root intermedie.
+
 7.3.3 (23 aprile 2026 - 10:30)
 	+ [Easyfish] Esportazione PDF: risolto l'errore di limite caratteri aumentando il buffer massimo (smax) per il commento, per permettere l'inserimento di testi lunghi senza generare eccezioni.
 	+ [Motore] Chiusura applicazione: intercettato e gestito l'errore "engine event loop dead" che si verificava quando si tentava di chiudere un'istanza di python-chess gia' terminata.
