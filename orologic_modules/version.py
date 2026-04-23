@@ -2,6 +2,6 @@ import datetime
 
 # QC
 BIRTH_DATE = datetime.datetime(2025, 2, 14, 10, 16)
-VERSION = "7.3.2"
-RELEASE_DATE = datetime.datetime(2026, 4, 23, 10, 0)
+VERSION = "7.3.3"
+RELEASE_DATE = datetime.datetime(2026, 4, 23, 10, 30)
 PROGRAMMER = "Gabriele Battaglia & AIs"

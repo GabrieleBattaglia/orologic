@@ -212,7 +212,10 @@ def InitEngine():
 def CloseEngine():
     global ENGINE
     if ENGINE:
-        ENGINE.quit()
+        try:
+            ENGINE.quit()
+        except Exception:
+            pass
         ENGINE = None
 
 

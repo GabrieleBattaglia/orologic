@@ -239,6 +239,7 @@ def export_board_pdf(board, node=None):
     user_comment = dgt(
         prompt=_("\nInserisci un commento per il PDF: "),
         kind="s",
+        smax=100000,
         default="",
     ).strip()
 
