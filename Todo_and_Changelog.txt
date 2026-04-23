@@ -2,6 +2,10 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+7.3.2 (23 aprile 2026 - 10:00)
+	+ [Easyfish] Risolto problema di chiusura del Board Editor: l'errore "STATUS_TOO_MANY_WHITE_KINGS" per posizione illegale e' stato rimosso e sostituito con la corretta verifica delle regole di validita' della scacchiera con python-chess, fornendo spiegazioni chiare all'utente.
+	+ [Linter] Correzioni E741 (Variabili ambigue) nel codice.
+
 7.3.1 (20 aprile 2026 - 09:51)
 	+ [Motore] Aggiunto invito automatico alla configurazione del motore scacchistico (scaricamento/ricerca/manuale) quando si tenta di avviare l'analisi, Easyfish o il report a fine arbitraggio e il motore non risulta ancora impostato.
 	+ [Easyfish] Risolto problema nel comando `.e#` (Elo): ora supporta gli spazi (es. `.e 1500`), mostra il valore corretto nel messaggio di conferma e indica il range minimo/massimo se il motore rifiuta il valore.

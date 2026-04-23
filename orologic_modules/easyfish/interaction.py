@@ -66,18 +66,27 @@ def BoardEditor(starting_fen=None):
                         print(_("- Manca il Re nero."))
                     if status & chess.STATUS_TOO_MANY_KINGS:
                         print(_("- Troppi Re sulla scacchiera."))
-                    if status & chess.STATUS_TOO_MANY_WHITE_KINGS:
-                        print(_("- Troppi Re bianchi."))
-                    if status & chess.STATUS_TOO_MANY_BLACK_KINGS:
-                        print(_("- Troppi Re neri."))
-                    if status & chess.STATUS_PAWNS_ON_FIRST_LAST_RANK:
+                    if status & chess.STATUS_TOO_MANY_WHITE_PIECES:
+                        print(_("- Troppi pezzi bianchi."))
+                    if status & chess.STATUS_TOO_MANY_BLACK_PIECES:
+                        print(_("- Troppi pezzi neri."))
+                    if status & chess.STATUS_TOO_MANY_WHITE_PAWNS:
+                        print(_("- Troppi pedoni bianchi."))
+                    if status & chess.STATUS_TOO_MANY_BLACK_PAWNS:
+                        print(_("- Troppi pedoni neri."))
+                    if status & chess.STATUS_PAWNS_ON_BACKRANK:
                         print(_("- Pedoni in prima o ottava traversa."))
                     if status & chess.STATUS_OPPOSITE_CHECK:
                         print(_("- Il giocatore che non ha il turno è sotto scacco."))
-                    if status & chess.STATUS_TOO_MANY_CHECKS:
+                    if status & chess.STATUS_TOO_MANY_CHECKERS:
                         print(_("- Troppi scacchi simultanei."))
                     if status & chess.STATUS_IMPOSSIBLE_CHECK:
                         print(_("- Posizione di scacco impossibile."))
+                    if status & chess.STATUS_BAD_CASTLING_RIGHTS:
+                        print(_("- Diritti di arrocco non validi."))
+                    if status & chess.STATUS_INVALID_EP_SQUARE:
+                        print(_("- Casa en passant non valida."))
+                    print(_("\nCorreggi la posizione per poter uscire o usa '.i' / '.v' per resettare."))
                     continue
 
             elif wherewho == ".?":

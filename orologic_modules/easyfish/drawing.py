@@ -205,8 +205,8 @@ def drawing_menu(game, node):
                 print(_("Nessun disegno presente in questa mossa."))
             else:
                 lines = verbalize_drawings(node).split(", ")
-                for l in lines:
-                    print(l)
+                for line in lines:
+                    print(line)
 
         elif choice == "C":
             set_drawings_to_node(node, [], [])
