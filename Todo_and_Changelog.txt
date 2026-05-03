@@ -2,6 +2,18 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+7.3.6 (03 maggio 2026 - 16:05)
+	+ [Easyfish] Risolto errore di scope `F823 Local variable referenced before assignment` nel gioco contro il motore, causato da un import locale che mascherava la funzione menu globale.
+
+7.3.5 (03 maggio 2026 - 11:58)
+	+ [L10N] Aggiornate le traduzioni in Inglese, Portoghese (Brasile), Spagnolo e Francese per coprire le nuove funzionalita' di Lichess, Easyfish e gioco per corrispondenza.
+	+ [L10N] Corretti i placeholder di formattazione nei file di lingua per evitare crash di compilazione.
+
+7.3.4 (24 aprile 2026 - 10:00)
+	+ [Easyfish] Risolto bug sulla scelta del colore in partite contro il motore (.g): l'input dipendente dalla lingua (es. "b" o "p" in portoghese) e' stato sostituito con un menu numerico robusto (1 per Bianco, 2 per Nero).
+	+ [Easyfish] Aggiunti i comandi di gestione orologio (`.3`, `.4`, `.5`) e di riepilogo mosse giocate (`.l`) durante le partite contro il motore, uniformando l'esperienza con la modalita' Arbitraggio.
+	+ [Easyfish] Fixato il menu di aiuto `.?` in partita: risolto un problema di importazione che impediva la corretta localizzazione in portoghese e altre lingue delle voci di menu (MNGAME e MNEXPLORER).
+
 7.3.4 (24 aprile 2026 - 10:00)
 	+ [Updater] Risolto bug critico nell'aggiornamento automatico (GBUtils perform_update): la procedura di copia falliva a causa del case-sensitivity del nome dell'eseguibile e per la presenza di cartelle nidificate nell'archivio ZIP della release. Ora l'aggiornamento avviene correttamente e l'archivio ZIP della release e' pacchettizzato senza directory root intermedie.
 
