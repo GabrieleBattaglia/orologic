@@ -200,12 +200,16 @@ def StartEngineGame(game_node, engine_instance):
     game_state.engine_has_clock = engine_has_clock
 
     # Scelta del colore
-    color_choice = (
-        dgt(prompt=_("Con quale colore vuoi giocare? (B/N)? > "), kind="s", default="B")
-        .strip()
-        .lower()
-    )
-    game_state.human_color = chess.BLACK if color_choice == "n" else chess.WHITE
+    color_scelte = {
+        "1": _("Bianco"),
+        "2": _("Nero"),
+    }
+    color_choice = menu(color_scelte, show=True, keyslist=True, p=_("Con quale colore vuoi giocare?: "))
+    
+    if not color_choice: # Se preme ESC o annulla, default Bianco
+        color_choice = "1"
+        
+    game_state.human_color = chess.BLACK if color_choice == "2" else chess.WHITE
 
     if game_state.human_color == chess.WHITE:
         game_state.white_time = float(user_time)
@@ -437,6 +441,56 @@ def StartEngineGame(game_node, engine_instance):
                                     t=FormatTime(game_state.black_time)
                                 )
                             )
+                    elif cmd == ".3":
+                        if getattr(game_state, "ignore_clock", False):
+                            print(_("Orologi disattivati."))
+                        else:
+                            print(_("Tempo Bianco: {t}").format(t=FormatTime(game_state.white_time)))
+                            print(_("Tempo Nero: {t}").format(t=FormatTime(game_state.black_time)))
+                    elif cmd == ".4":
+                        if getattr(game_state, "ignore_clock", False):
+                            print(_("Orologi disattivati."))
+                        else:
+                            diff = abs(game_state.white_time - game_state.black_time)
+                            adv = _("bianco") if game_state.white_time > game_state.black_time else _("nero")
+                            print(_("{player} in vantaggio di ").format(player=adv) + FormatTime(diff))
+                    elif cmd == ".5":
+                        if getattr(game_state, "ignore_clock", False):
+                            print(_("Orologi disattivati."))
+                        else:
+                            pause_duration = time.time() - game_state.paused_time_start if getattr(game_state, "paused", False) else 0
+                            if pause_duration > 0:
+                                hours = int(pause_duration // 3600)
+                                minutes = int((pause_duration % 3600) // 60)
+                                seconds = int(pause_duration % 60)
+                                ms = int((pause_duration - int(pause_duration)) * 1000)
+                                h_str = _("{h} ore, ").format(h=hours) if hours else ""
+                                m_str = _("{m} minuti, ").format(m=minutes) if minutes or hours else ""
+                                s_str = _("{s} secondi e ").format(s=seconds) if seconds or minutes or hours else ""
+                                ms_str = _("{ms} ms").format(ms=ms) if ms else ""
+                                duration = f"{h_str}{m_str}{s_str}{ms_str}"
+                                print(_("Tempo in pausa da: {duration}").format(duration=duration))
+                            else:
+                                player = _("Bianco") if game_state.active_color == chess.WHITE else _("Nero")
+                                print(_("Orologio del {player} in moto").format(player=player))
+                    elif cmd == ".l":
+                        Acusticator([900.0, 0.1, 0, 0.5, 440.0, 0.3, 0, 0.5], kind=1, adsr=[1, 0, 80, 19])
+                        dummy_state = type('obj', (object,), {})()
+                        dummy_state.move_history = []
+                        node = current_node.root()
+                        # Ricostruiamo la history seguendo la variazione principale
+                        while node != current_node and node.variations:
+                            move = node.variations[0].move
+                            dummy_state.move_history.append(node.board().san(move))
+                            node = node.variations[0]
+                        from .. import ui
+                        summary = ui.GenerateMoveSummary(dummy_state)
+                        if summary:
+                            print(_("\nLista mosse giocate:\n"))
+                            for line in summary:
+                                print(line)
+                        else:
+                            print(_("Nessuna mossa ancora giocata."))
                     elif cmd == ".a":
                         lines = analysis_utils.get_lines_from_engine(
                             board, engine_instance, orologic_engine.analysis_time, 1

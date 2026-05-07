@@ -3,7 +3,7 @@ import chess
 
 # Import translator function
 try:
-    from ...config import _
+    from ..config import _
 except ImportError:
     # Fallback for standalone testing or if import fails
     def _(text):
@@ -157,6 +157,10 @@ MNGAME = {
     ".": _("Abbandona la partita"),
     ".1": _("Mostra il tempo del Bianco"),
     ".2": _("Mostra il tempo del Nero"),
+    ".3": _("Mostra entrambe gli orologi"),
+    ".4": _("Confronta i tempi rimanenti e indica il vantaggio"),
+    ".5": _("Stato orologi/pausa"),
+    ".l": _("Visualizza la lista mosse giocate"),
     ".a": _("Visualizza analisi posizione (CP, BestLine, WDL)"),
     ".b": _("Mostra la scacchiera"),
     ".u": _("Annulla ultima semimossa (Undo)"),
