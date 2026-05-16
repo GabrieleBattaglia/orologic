@@ -235,7 +235,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
             )
             # Usiamo key per un input secco
             choice = key(">>> ")
-            if choice == "\x1b":  # ESC
+            if choice in ("\x1b", "esc"):  # ESC
                 game_state.game_over = True
                 # Assegna risultato
                 if game_state.white_remaining <= 0:

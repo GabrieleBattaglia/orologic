@@ -61,9 +61,9 @@ def search_player():
         prompt_text = f"> {term}"
         c = key(prompt=prompt_text)
 
-        if c == "\x1b":  # ESC
+        if c in ("\x1b", "esc"):  # ESC
             return None
-        elif c in ("\r", "\n"):  # Invio
+        elif c in ("\r", "\n", "enter"):  # Invio
             if term.startswith("="):
                 exact = term[1:].strip()
                 if exact:
@@ -92,9 +92,9 @@ def search_player():
                     "\nIl termine inserito '{t}' non corrisponde esattamente a un suggerimento. Affina la ricerca o usa '=' per forzare."
                 ).format(t=term)
             )
-        elif c in ("\b", "\x08"):  # Backspace
+        elif c in ("\b", "\x08", "backspace"):  # Backspace
             term = term[:-1]
-        elif c and c.isprintable():  # Caratteri normali
+        elif c and len(c) == 1 and c.isprintable():  # Caratteri normali
             term += c
 
 

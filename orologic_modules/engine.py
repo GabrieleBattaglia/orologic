@@ -1599,7 +1599,7 @@ def AnalisiAutomatica(pgn_game):
 
     # NOTA: Rimosso analysis_after per forzare ricalcolo preciso
     for i, node in enumerate(mainline_nodes):
-        if key(attesa=0.002) == "\x1b":
+        if key(attesa=0.002) in ("\x1b", "esc"):
             Acusticator(["c3", 0.3, 0.5, config.VOLUME], kind=2)
             print(_("\nAnalisi interrotta dall'utente."))
             break

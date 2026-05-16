@@ -21,10 +21,12 @@ L10N = {}
 def enter_escape(prompt=""):
     """Ritorna vero su invio, falso su escape."""
     while True:
-        k = key(prompt).strip()
-        if k == "":
+        k = key(prompt)
+        if k in ("\r", "\n", "enter"):
+            print()
             return True
-        elif k == "\x1b":
+        elif k in ("\x1b", "esc"):
+            print()
             return False
         print(_("Conferma con invio o annulla con escape"))
 
