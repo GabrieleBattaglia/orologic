@@ -17,12 +17,29 @@ from .pgn_handler import (
     AddingPGNTAGS,
 )
 from .. import engine as orologic_engine
+from .. import config
 from ..config import _
 from .engine_handler import ShowStats
 from .interaction import ExplorerMode, BoardEditor
 from . import game_mode
 from .image_exporter import image_settings_menu, export_board_pdf
 from .drawing import drawing_menu, verbalize_drawings
+from .sharing_window import PygameBoardWindow
+import builtins
+
+_orig_print = builtins.print
+show_output_on_board = False
+sharing_window = None
+
+def custom_print(*args, **kwargs):
+    _orig_print(*args, **kwargs)
+    sep = kwargs.get('sep', ' ')
+    text = sep.join(str(arg) for arg in args)
+    if not text.strip():
+        return
+    global sharing_window, show_output_on_board
+    if show_output_on_board and sharing_window and sharing_window.is_active():
+        sharing_window.update_text(text)
 
 
 def GetDynamicPrompt(board, node):
@@ -189,6 +206,8 @@ def CheckGameOver(board, node=None):
 
 
 def run():
+    global sharing_window, show_output_on_board
+    builtins.print = custom_print
     print(
         _(
             "\nBenvenuto in Easyfish, la tua interfaccia testuale con il motore scacchistico.\n\tBuon divertimento!"
@@ -240,8 +259,34 @@ def run():
     fen_from_clip = ""
     is_modified = False
     last_checked_state = None
+    sharing_window = None
 
     while True:
+        if sharing_window and not sharing_window.is_active():
+            Acusticator(
+                [
+                    "c6",
+                    0.05,
+                    0,
+                    config.VOLUME,
+                    "g5",
+                    0.05,
+                    0,
+                    config.VOLUME,
+                    "e5",
+                    0.05,
+                    0,
+                    config.VOLUME,
+                    "c5",
+                    0.1,
+                    0,
+                    config.VOLUME,
+                ],
+                kind=1,
+            )
+            print(_("\nFinestra di condivisione scacchiera chiusa."))
+            sharing_window = None
+
         current_state = (board.fen(), len(board.move_stack))
         if current_state != last_checked_state:
             CheckGameOver(board, node)
@@ -249,6 +294,8 @@ def run():
             if drawings_text:
                 print(drawings_text)
             last_checked_state = current_state
+            if sharing_window and sharing_window.is_active():
+                sharing_window.update_board(board, node)
 
         prompt = GetDynamicPrompt(board, node)
         key_command = dgt(prompt=prompt, kind="s", smin=1, smax=8192).strip()
@@ -292,6 +339,8 @@ def run():
                 ):
                     print(_("Salvataggio partita in corso..."))
                     SaveGameToFile(game)
+                if sharing_window:
+                    sharing_window.stop()
                 break
 
             elif cmd == ".v":
@@ -421,7 +470,7 @@ def run():
 
             elif cmd == ".e":
                 print(_("Accesso alla modalità esplorazione..."))
-                mod_in_exp, final_node = ExplorerMode(game, engine)
+                mod_in_exp, final_node = ExplorerMode(game, engine, sharing_window=sharing_window)
                 node = final_node
                 board = node.board()
                 game_state.board = board
@@ -430,7 +479,7 @@ def run():
 
             elif cmd == ".g":
                 # Avvio partita contro il motore
-                final_node = game_mode.StartEngineGame(node, engine)
+                final_node = game_mode.StartEngineGame(node, engine, sharing_window=sharing_window)
                 # Sincronizza stato al ritorno
                 node = final_node
                 board = node.board()  # Ricrea board dallo stato finale
@@ -443,6 +492,8 @@ def run():
             elif cmd == ".d":
                 if drawing_menu(game, node):
                     is_modified = True
+                    if sharing_window and sharing_window.is_active():
+                        sharing_window.trigger_update()
 
             elif cmd == ".bm":
                 white, black = CalculateMaterial(board)
@@ -464,6 +515,96 @@ def run():
 
             elif cmd == ".ii":
                 image_settings_menu()
+                if sharing_window and sharing_window.is_active():
+                    sharing_window.trigger_update()
+
+            elif cmd == ".cs":
+                if sharing_window is None or not sharing_window.is_active():
+                    print(_("\nAttivazione condivisione scacchiera (finestra grafica per didattica)..."))
+                    print(_("ISTRUZIONI:"))
+                    print(_("- Puoi condividere la nuova finestra su Meet, Zoom o Teams."))
+                    print(_("- Per continuare ad inserire comandi, ricordati di riportare il focus (cliccare) su questa finestra di testo della console."))
+                    Acusticator(
+                        [
+                            "c5",
+                            0.1,
+                            0,
+                            config.VOLUME,
+                            "e5",
+                            0.1,
+                            0,
+                            config.VOLUME,
+                            "g5",
+                            0.1,
+                            0,
+                            config.VOLUME,
+                            "c6",
+                            0.2,
+                            0,
+                            config.VOLUME,
+                        ],
+                        kind=1,
+                    )
+                    sharing_window = PygameBoardWindow(config.VERSION)
+                    sharing_window.start(board, node)
+                else:
+                    Acusticator(
+                        [
+                            "c6",
+                            0.1,
+                            0,
+                            config.VOLUME,
+                            "g5",
+                            0.1,
+                            0,
+                            config.VOLUME,
+                            "e5",
+                            0.1,
+                            0,
+                            config.VOLUME,
+                            "c5",
+                            0.2,
+                            0,
+                            config.VOLUME,
+                        ],
+                        kind=1,
+                    )
+                    sharing_window.stop()
+                    sharing_window = None
+                    print(_("\nCondivisione scacchiera disattivata."))
+
+            elif cmd in [".csb", ".csn", ".cst"]:
+                if sharing_window is None or not sharing_window.is_active():
+                    print(_("Errore: devi prima avviare la condivisione con il comando .cs"))
+                else:
+                    if cmd == ".csb":
+                        sharing_window.set_orientation("white")
+                        print(_("Orientamento scacchiera condivisa impostato: Bianco (fisso)."))
+                    elif cmd == ".csn":
+                        sharing_window.set_orientation("black")
+                        print(_("Orientamento scacchiera condivisa impostato: Nero (fisso)."))
+                    elif cmd == ".cst":
+                        sharing_window.set_orientation("turn")
+                        print(_("Orientamento scacchiera condivisa impostato: in base al turno (dinamico)."))
+
+            elif cmd_clean == ".cso":
+                parts = key_command.strip().split()
+                if len(parts) > 1:
+                    val = parts[1].lower()
+                    if val == "on":
+                        show_output_on_board = True
+                    elif val == "off":
+                        show_output_on_board = False
+                    else:
+                        print(_("Opzione non valida. Usa: .cso on | .cso off"))
+                        continue
+                else:
+                    show_output_on_board = not show_output_on_board
+                status_str = _("attivata") if show_output_on_board else _("disattivata")
+                print(_("Visualizzazione dell'output di testo sotto la scacchiera {status}.").format(status=status_str))
+                Acusticator(["c5", 0.08, 0, config.VOLUME, "g5", 0.08, 0, config.VOLUME])
+                if sharing_window and sharing_window.is_active():
+                    sharing_window.set_show_text_mode(show_output_on_board)
 
             elif cmd == ".pg":
                 print(_("Incolla una nuova posizione PGN dagli appunti..."))
@@ -536,7 +677,7 @@ def run():
                         "Accesso all'editor. ATTENZIONE: Al termine dell'editing, la partita corrente verrà salvata e ne inizierà una nuova dalla posizione impostata."
                     )
                 )
-                new_fen = BoardEditor(starting_fen=board.fen())
+                new_fen = BoardEditor(starting_fen=board.fen(), sharing_window=sharing_window)
                 if new_fen:
                     if is_modified:
                         SaveGameToFile(game)
@@ -805,3 +946,4 @@ def run():
                 print(
                     _("{k}: mossa illegale per il {c}.").format(k=key_command, c=color)
                 )
+    builtins.print = _orig_print
