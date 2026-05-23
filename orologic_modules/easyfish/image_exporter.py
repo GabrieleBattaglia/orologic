@@ -215,45 +215,8 @@ def image_settings_menu():
     )
 
 
-def export_board_pdf(board, node=None):
+def generate_custom_svg(board, node=None, orientation=None):
     settings = get_image_settings()
-    now = datetime.datetime.now()
-
-    Acusticator(["g5", 0.05, 0, config.VOLUME])
-    user_filename = dgt(
-        prompt=_("\nInserisci un nome per il file (max 50 car.): "),
-        kind="s",
-        smax=50,
-        default="",
-    ).strip()
-
-    timestamp_str = now.strftime("%Y%m%d_%H%M%S")
-    if not user_filename:
-        base_name = board.fen().replace("/", "-")
-        filename_pdf = f"board_{base_name}_{timestamp_str}.pdf"
-    else:
-        clean_user_name = config.sanitize_filename(user_filename)
-        filename_pdf = f"{clean_user_name}_{timestamp_str}.pdf"
-
-    Acusticator(["a5", 0.05, 0, config.VOLUME])
-    user_comment = dgt(
-        prompt=_("\nInserisci un commento per il PDF: "),
-        kind="s",
-        smax=100000,
-        default="",
-    ).strip()
-
-    footer_text = _("Generata con Orologic v.{v}, {a}, il {d}").format(
-        v=config.VERSION,
-        a=config.version.PROGRAMMER,
-        d=now.strftime("%d/%m/%Y %H:%M:%S"),
-    )
-
-    img_dir = config.percorso_salvataggio("images")
-    if not os.path.exists(img_dir):
-        os.makedirs(img_dir, exist_ok=True)
-    full_path = os.path.join(img_dir, filename_pdf)
-
     # Preleviamo tutti i colori
     sl = rgb_from_percent(*settings["square_light"])
     sd = rgb_from_percent(*settings["square_dark"])
@@ -313,7 +276,7 @@ def export_board_pdf(board, node=None):
             "arrow yellow": "#e6e60080",
         },
         borders=True,
-        orientation=board.turn,
+        orientation=orientation if orientation is not None else board.turn,
     )
 
     # --- NUOVA MANOVRA CHIRURGICA ---
@@ -427,6 +390,51 @@ def export_board_pdf(board, node=None):
     svg_data = svg_data.replace(
         'class="outer-border"', f'class="outer-border" stroke="{ob}"'
     )
+
+    return svg_data
+
+
+def export_board_pdf(board, node=None):
+    settings = get_image_settings()
+    now = datetime.datetime.now()
+
+    Acusticator(["g5", 0.05, 0, config.VOLUME])
+    user_filename = dgt(
+        prompt=_("\nInserisci un nome per il file (max 50 car.): "),
+        kind="s",
+        smax=50,
+        default="",
+    ).strip()
+
+    timestamp_str = now.strftime("%Y%m%d_%H%M%S")
+    if not user_filename:
+        base_name = board.fen().replace("/", "-")
+        filename_pdf = f"board_{base_name}_{timestamp_str}.pdf"
+    else:
+        clean_user_name = config.sanitize_filename(user_filename)
+        filename_pdf = f"{clean_user_name}_{timestamp_str}.pdf"
+
+    Acusticator(["a5", 0.05, 0, config.VOLUME])
+    user_comment = dgt(
+        prompt=_("\nInserisci un commento per il PDF: "),
+        kind="s",
+        smax=100000,
+        default="",
+    ).strip()
+
+    footer_text = _("Generata con Orologic v.{v}, {a}, il {d}").format(
+        v=config.VERSION,
+        a=config.version.PROGRAMMER,
+        d=now.strftime("%d/%m/%Y %H:%M:%S"),
+    )
+
+    img_dir = config.percorso_salvataggio("images")
+    if not os.path.exists(img_dir):
+        os.makedirs(img_dir, exist_ok=True)
+    full_path = os.path.join(img_dir, filename_pdf)
+
+    svg_data = generate_custom_svg(board, node)
+    svg_size = settings["size"]
 
     try:
         drawing = svg2rlg(io.BytesIO(svg_data.encode("utf-8")))

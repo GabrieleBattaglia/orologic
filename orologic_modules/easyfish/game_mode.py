@@ -130,11 +130,13 @@ def ParseTimeInput(prompt_text):
             print(_("Formato non valido."))
 
 
-def StartEngineGame(game_node, engine_instance):
+def StartEngineGame(game_node, engine_instance, sharing_window=None):
     """
     Avvia una partita contro il motore a partire dalla posizione corrente di game_node.
     Utilizza un thread separato per la gestione dell'orologio.
     """
+    if sharing_window and sharing_window.is_active():
+        sharing_window.update_board(game_node.board(), game_node)
     if not engine_instance:
         print(_("Motore non disponibile. Configuralo nelle impostazioni."))
         return game_node
@@ -595,6 +597,8 @@ def StartEngineGame(game_node, engine_instance):
                             current_node = temp_node
                             board = current_node.board()
                             game_state.active_color = board.turn
+                            if sharing_window and sharing_window.is_active():
+                                sharing_window.update_board(board, current_node)
                             Acusticator(["c4", 0.1, -1, 0.5, "e4", 0.1, 0, 0.5], kind=1)
                             print(
                                 _("Annullate {n} semimosse. Tocca a te.").format(
@@ -614,6 +618,8 @@ def StartEngineGame(game_node, engine_instance):
                         new_node = current_node.add_main_variation(move)
                         current_node = new_node
                         board.push(move)
+                        if sharing_window and sharing_window.is_active():
+                            sharing_window.update_board(board, current_node)
 
                         if game_state.human_color == chess.WHITE:
                             game_state.white_time += game_state.white_inc
@@ -861,6 +867,8 @@ def StartEngineGame(game_node, engine_instance):
                         new_node = current_node.add_main_variation(result.move)
                         current_node = new_node
                         board.push(result.move)
+                        if sharing_window and sharing_window.is_active():
+                            sharing_window.update_board(board, current_node)
 
                         game_state.active_color = board.turn
                         Acusticator([1000.0, 0.05, 0, 0.5], kind=1)

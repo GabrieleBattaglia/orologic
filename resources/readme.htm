@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 7.2.0 - 12 aprile 2026 - 11:18)</h1>
+<h1>Guida Utente di Orologic (Versione 7.4.0 - 23 maggio 2026 - 14:03)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -315,6 +315,18 @@ margin: 1em 0;
     <li><strong>. - Esci:</strong> Torna al menu principale di Easyfish.</li>
 </ul>
 
+<h4>2.3.6. Condivisione Scacchiera Didattica (.cs, .csb, .csn, .cst, .cso)</h4>
+<p>Questa funzionalità permette di aprire una finestra grafica separata con il rendering in tempo reale della scacchiera corrente. È ideale per la didattica a distanza, consentendo di condividere la finestra tramite piattaforme come Zoom, Microsoft Teams o Google Meet.</p>
+<ul>
+    <li><code>.cs</code>: Attiva o disattiva la finestra di condivisione grafica. All'avvio, la finestra viene aperta e massimizzata automaticamente a schermo intero. La scacchiera si posiziona al centro e si adatta a qualsiasi ridimensionamento.</li>
+    <li><code>.csb</code>: Blocca l'orientamento della scacchiera dal lato del Bianco.</li>
+    <li><code>.csn</code>: Blocca l'orientamento della scacchiera dal lato del Nero.</li>
+    <li><code>.cst</code>: Ripristina l'orientamento dinamico che segue il turno del giocatore corrente (impostazione predefinita all'avvio della condivisione).</li>
+    <li><code>.cso</code>: Attiva o disattiva un box di testo nella parte inferiore della finestra condivisa. Quando è attivo, l'ultimo output testuale di Orologic (mosse, analisi del motore o commenti inseriti con il comando <code>_</code>) viene stampato direttamente sotto la scacchiera con andamento a capo automatico.</li>
+</ul>
+<h5>Esempio di caso d'uso</h5>
+<p>Sei un istruttore non vedente e stai spiegando una partita a un allievo vedente. Attivi la condivisione dello schermo di Zoom selezionando la finestra grafica creata da Orologic con <code>.cs</code>. Quando digiti una mossa o inserisci un commento (es. <code>_Questa mossa controlla il centro</code>), l'allievo vedrà la scacchiera aggiornarsi in tempo reale, vedrà le frecce colorate che disegni con <code>.d</code>, e potrà leggere il tuo commento direttamente sotto la scacchiera grazie a <code>.cso on</code>.</p>
+
 <h3>2.4. Configurazione</h3>
 <p>Orologic è altamente personalizzabile.</p>
 
@@ -384,6 +396,7 @@ margin: 1em 0;
     <li>Lucia Micocci per aver scovato un bug insidioso dell'auto-updater;</li>
     <li>Maurizio Soppelsa per il miglioramento della parte testuale della funzione OAA;</li>
     <li>Marcos Schlosser per la versione portoghese e per aver proposto il salvataggio automatico;</li>
+    <li>Romana Trapletti, per essere stata l'ispiratrice della funzione di condivisione della scacchiera;</li>
 </ul>
 
 <h2>5. Sostieni il Progetto</h2>

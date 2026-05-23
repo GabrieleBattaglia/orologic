@@ -8,7 +8,7 @@ from ..config import _
 from .. import engine as orologic_engine
 
 
-def BoardEditor(starting_fen=None):
+def BoardEditor(starting_fen=None, sharing_window=None):
     """Editor della scacchiera con gestione intelligente dei Re e menu a comandi.
     Se starting_fen è fornito, l'editor inizia da quella posizione.
     """
@@ -37,6 +37,8 @@ def BoardEditor(starting_fen=None):
     )
 
     while True:
+        if sharing_window and sharing_window.is_active():
+            sharing_window.update_board(tmp_board)
         prompt = InsertedCounter(tmp_board)
         wherewho = dgt(prompt=prompt, kind="s", smin=1, smax=10).strip()
 
@@ -192,7 +194,7 @@ def BoardEditor(starting_fen=None):
     return tmp_board.fen()
 
 
-def ExplorerMode(game, engine, analysis_time_default=2):
+def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
     """Modalità esplorazione per navigare nella partita."""
     node = game
     # Fondamentale: usiamo la scacchiera del PGN come base per la sincronizzazione
@@ -232,6 +234,8 @@ def ExplorerMode(game, engine, analysis_time_default=2):
     is_modified = False
 
     while True:
+        if sharing_window and sharing_window.is_active():
+            sharing_window.update_board(current_board, node)
         variant_count = len(node.variations)
         if var_index >= variant_count:
             var_index = 0
