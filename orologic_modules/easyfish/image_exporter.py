@@ -215,7 +215,7 @@ def image_settings_menu():
     )
 
 
-def generate_custom_svg(board, node=None, orientation=None):
+def generate_custom_svg(board, node=None, orientation=None, override_size=None):
     settings = get_image_settings()
     # Preleviamo tutti i colori
     sl = rgb_from_percent(*settings["square_light"])
@@ -246,7 +246,7 @@ def generate_custom_svg(board, node=None, orientation=None):
         color = sl if (chess.square_file(sq) + chess.square_rank(sq)) % 2 != 0 else sd
         square_fills[sq] = color
 
-    svg_size = settings["size"]
+    svg_size = override_size if override_size is not None else settings["size"]
 
     svg_arrows = []
     if node:

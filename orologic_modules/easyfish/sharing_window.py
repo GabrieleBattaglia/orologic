@@ -191,14 +191,17 @@ class PygameBoardWindow:
         else:
             orientation = board_to_render.turn
         try:
-            svg_data = generate_custom_svg(board_to_render, node_to_render, orientation=orientation)
-            flattened_svg = flatten_svg(svg_data)
-            f = io.BytesIO(flattened_svg.encode('utf-8'))
-            surf = pygame.image.load(f, "board.svg")
-            reserved_height = 140 if show_text else 0
+            reserved_height = min(int(height * 0.15), 140) if show_text else 0
             size = min(width, height - reserved_height)
             if size < 100:
                 size = 100
+            svg_data = generate_custom_svg(
+                board_to_render, node_to_render,
+                orientation=orientation, override_size=size
+            )
+            flattened_svg = flatten_svg(svg_data)
+            f = io.BytesIO(flattened_svg.encode('utf-8'))
+            surf = pygame.image.load(f, "board.svg")
             if surf.get_width() != size or surf.get_height() != size:
                 surf = pygame.transform.smoothscale(surf, (size, size))
             x_offset = (width - size) // 2
@@ -207,17 +210,21 @@ class PygameBoardWindow:
                 y_offset = 0
             screen.fill((30, 30, 30))
             screen.blit(surf, (x_offset, y_offset))
-            if show_text:
-                rect = pygame.Rect(15, height - reserved_height + 10, width - 30, reserved_height - 20)
+            if show_text and reserved_height > 30:
+                padding = max(4, reserved_height // 14)
+                rect = pygame.Rect(padding, height - reserved_height + padding, width - padding * 2, reserved_height - padding * 2)
                 pygame.draw.rect(screen, (15, 15, 15), rect)
                 pygame.draw.rect(screen, (90, 85, 71), rect, 2)
-                font = pygame.font.Font(None, 24)
-                lines = wrap_text(text_val, font, rect.width - 24)
-                y_start = rect.y + 12
-                for line in lines[:4]:
+                font_size = max(16, min(24, reserved_height // 5))
+                font = pygame.font.Font(None, font_size)
+                line_spacing = font_size + 2
+                lines = wrap_text(text_val, font, rect.width - padding * 4)
+                max_lines = max(1, (rect.height - padding * 2) // line_spacing)
+                y_start = rect.y + padding
+                for line in lines[:max_lines]:
                     text_surf = font.render(line, True, (240, 235, 220))
-                    screen.blit(text_surf, (rect.x + 12, y_start))
-                    y_start += 26
+                    screen.blit(text_surf, (rect.x + padding * 2, y_start))
+                    y_start += line_spacing
             pygame.display.flip()
         except Exception:
             pass
