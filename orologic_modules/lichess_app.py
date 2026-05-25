@@ -488,9 +488,7 @@ def menu_amici(db):
 
         scelte_amici = {
             "vedi": _("Vedi persone che segui"),
-            "segui": _("Segui un nuovo giocatore"),
-            "smetti": _("Smetti di seguire un giocatore"),
-            "messaggio": _("Invia un messaggio privato"),
+            "cerca": _("Cerca e segui nuovo giocatore"),
             ".": _("Torna al menu Lichess"),
         }
 
@@ -513,54 +511,32 @@ def menu_amici(db):
                 )
                 enter_escape(_("\nPremi Invio per continuare..."))
             else:
+                sorted_following = sorted(
+                    following,
+                    key=lambda x: (1 if x.get("online") else 0, x.get("username", "").lower()),
+                    reverse=True
+                )
                 amici_menu = {}
-                for u in following:
+                for u in sorted_following:
                     username = u.get("username", "Sconosciuto")
                     title = u.get("title", "")
                     title_str = f"[{title}] " if title else ""
                     online = _("ONLINE") if u.get("online") else _("Offline")
-                    amici_menu[username] = _("{t}{u} ({o})").format(
-                        t=title_str, u=username, o=online
-                    )
+                    amici_menu[username] = f"{title_str}{online}"
                 amici_menu["."] = _("Indietro")
 
                 scelta_amico = menu(
                     amici_menu,
                     show=True,
                     keyslist=True,
-                    p=_("\nScegli un amico da visualizzare: "),
+                    p=_("\nScegli un amico per visualizzare le azioni: "),
                     numbered=db.get("menu_numerati", False),
                 )
                 if scelta_amico != ".":
-                    secrets = load_secrets()
-                    lichess_profiler.show_profile(scelta_amico, token)
+                    lichess_profiler.show_player_menu(scelta_amico, secrets)
 
-        elif scelta == "segui":
-            username = input(
-                _("\nInserisci l'username del giocatore da seguire: ")
-            ).strip()
-            if username:
-                follow_user(token, username)
-            enter_escape(_("\nPremi Invio per continuare..."))
-
-        elif scelta == "smetti":
-            username = input(
-                _("\nInserisci l'username del giocatore da smettere di seguire: ")
-            ).strip()
-            if username:
-                unfollow_user(token, username)
-            enter_escape(_("\nPremi Invio per continuare..."))
-
-        elif scelta == "messaggio":
-            username = input(_("\nInserisci l'username del destinatario: ")).strip()
-            if not username:
-                continue
-            testo = input(_("Inserisci il messaggio: ")).strip()
-            if not testo:
-                print(_("Messaggio annullato."))
-            else:
-                send_message(token, username, testo)
-            enter_escape(_("\nPremi Invio per continuare..."))
+        elif scelta == "cerca":
+            lichess_profiler.run_profiler(secrets)
 
 
 class DummyGameState:
@@ -1335,6 +1311,63 @@ def fetch_user_profile(username, token=None):
     return None
 
 
+def watch_player(username, token):
+    import sys
+    import msvcrt
+    print(_("Controllo se l'utente e' in gioco..."))
+    profile = fetch_user_profile(username, token)
+    if profile:
+        if "playing" in profile:
+            game_url = profile["playing"]
+            game_id = game_url.split("/")[-1][:8]
+            lichess_board.spectate_game(game_id, token)
+            return True
+        else:
+            print(_("L'utente non ha partite in corso in questo momento."))
+            if enter_escape(_("Desideri attendere l'inizio di una partita? (Invio = Si', Esc = No): ")):
+                start_time = time.time()
+                timeout = 30 * 60  # 30 minuti
+                polling_interval = 10  # 10 secondi
+                
+                print(_("\nIn attesa che {u} inizi a giocare... (Premi ESC o digita . per annullare)").format(u=username))
+                
+                while time.time() - start_time < timeout:
+                    elapsed = time.time() - start_time
+                    remaining = int(timeout - elapsed)
+                    rem_min = remaining // 60
+                    rem_sec = remaining % 60
+                    
+                    sys.stdout.write(_("\rAttesa in corso... Tempo residuo: {m:02d}:{s:02d}").format(m=rem_min, s=rem_sec))
+                    sys.stdout.flush()
+                    
+                    interrupted = False
+                    for _idx in range(polling_interval * 10):
+                        if msvcrt.kbhit():
+                            c = msvcrt.getwch()
+                            if c in ("\x1b", "."):
+                                interrupted = True
+                                break
+                        time.sleep(0.1)
+                    
+                    if interrupted:
+                        print(_("\nAttesa annullata."))
+                        return False
+                    
+                    profile = fetch_user_profile(username, token)
+                    if profile and "playing" in profile:
+                        game_url = profile["playing"]
+                        game_id = game_url.split("/")[-1][:8]
+                        sys.stdout.write("\n")
+                        print(_("Partita iniziata! Connessione in corso..."))
+                        lichess_board.spectate_game(game_id, token)
+                        return True
+                
+                print(_("\nTempo massimo di attesa (30 minuti) superato. Ritorno al menu."))
+    else:
+        print(_("Utente non trovato o errore di connessione."))
+    return False
+
+
 def menu_guarda(db):
     secrets = load_secrets()
     token = secrets.get("lichess_token")
@@ -1366,24 +1399,20 @@ def menu_guarda(db):
             val = dgt(_("\nID o URL della partita: ")).strip()
             if not val:
                 continue
-            if "lichess.org/" in val:
+            if "lichess.org/@/" in val:
+                username = val.split("lichess.org/@/")[-1].split("/")[0]
+                watch_player(username, token)
+            elif "lichess.org/" in val:
                 val = val.split("lichess.org/")[-1].split("/")[0][:8]
-            lichess_board.spectate_game(val, token)
+                lichess_board.spectate_game(val, token)
+            else:
+                lichess_board.spectate_game(val, token)
 
         elif scelta == "giocatore":
             val = dgt(_("\nNome Utente: ")).strip()
             if not val:
                 continue
-            print(_("Controllo se l'utente e' in gioco..."))
-            profile = fetch_user_profile(val, token)
-            if profile and "playing" in profile:
-                game_url = profile["playing"]
-                game_id = game_url.split("/")[-1][:8]
-                lichess_board.spectate_game(game_id, token)
-            elif profile:
-                print(_("L'utente non ha partite in corso in questo momento."))
-            else:
-                print(_("Utente non trovato o errore di connessione."))
+            watch_player(val, token)
 
         elif scelta == "amico":
             if not token:
@@ -1391,13 +1420,32 @@ def menu_guarda(db):
                 continue
             print(_("Recupero lista degli amici in corso..."))
             following = fetch_following(token)
-            playing_friends = [f for f in following if "playing" in f]
-            if not playing_friends:
-                print(_("Nessun amico sta giocando in questo momento."))
+            if not following:
+                print(_("Non stai seguendo nessuno o e' impossibile recuperare la lista."))
+                enter_escape(_("\nPremi Invio per continuare..."))
                 continue
 
-            scelte_amici = {f["id"]: f["username"] for f in playing_friends}
+            sorted_friends = sorted(
+                following,
+                key=lambda x: (1 if "playing" in x else 0, 1 if x.get("online") else 0),
+                reverse=True
+            )
+
+            scelte_amici = {}
+            for f in sorted_friends:
+                username = f.get("username", f.get("id"))
+                title = f.get("title", "")
+                title_str = f"[{title}] " if title else ""
+                status = ""
+                if "playing" in f:
+                    status = _("IN GIOCO")
+                elif f.get("online"):
+                    status = _("ONLINE")
+                else:
+                    status = _("Offline")
+                scelte_amici[username] = f"{title_str}{status}"
             scelte_amici["."] = _("Indietro")
+
             amico_scelto = menu(
                 scelte_amici,
                 show=True,
@@ -1406,10 +1454,13 @@ def menu_guarda(db):
                 numbered=db.get("menu_numerati", False),
             )
             if amico_scelto != ".":
-                f_obj = next(f for f in playing_friends if f["id"] == amico_scelto)
-                game_url = f_obj["playing"]
-                game_id = game_url.split("/")[-1][:8]
-                lichess_board.spectate_game(game_id, token)
+                f_obj = next(f for f in following if f.get("username", f.get("id")) == amico_scelto)
+                if "playing" in f_obj:
+                    game_url = f_obj["playing"]
+                    game_id = game_url.split("/")[-1][:8]
+                    lichess_board.spectate_game(game_id, token)
+                else:
+                    watch_player(amico_scelto, token)
 
         elif scelta == "tv":
             print(_("Recupero canali TV in corso..."))
@@ -2004,6 +2055,7 @@ def run():
         is_logged = "lichess_token" in secrets
 
         active_games = []
+        num_challenges = 0
         if is_logged:
             MENU_CHOICES["logout"] = _("Logout (Rimuovi token)")
             active_games = get_active_games(token)
@@ -2016,6 +2068,13 @@ def run():
                     MENU_CHOICES["riprendi"] = _(
                         "Riprendi partita in sospeso ({n} attive)"
                     ).format(n=len(active_games))
+            
+            # Controllo sfide in sospeso
+            try:
+                challenges = get_incoming_challenges(token)
+                num_challenges = len(challenges) if challenges else 0
+            except Exception:
+                num_challenges = 0
         else:
             MENU_CHOICES["login"] = _("Login (Imposta API Token)")
 
@@ -2032,9 +2091,15 @@ def run():
                 "cerca": _("Cerca e Profila Giocatore"),
                 "guarda": _("Guarda una partita"),
                 "gioca": _("Gioca una partita"),
-                ".": _("Ritorna a Orologic (Esci)"),
             }
         )
+
+        if is_logged:
+            MENU_CHOICES["messaggi"] = _("Casella Postale (Apri Lichess Inbox)")
+            if num_challenges > 0:
+                MENU_CHOICES["sfide"] = _("Sfide in attesa ({n})").format(n=num_challenges)
+
+        MENU_CHOICES["."] = _("Ritorna a Orologic (Esci)")
 
         if is_logged:
             username = secrets.get("lichess_username", "Utente")
@@ -2106,6 +2171,54 @@ def run():
             menu_guarda(db)
         elif scelta == "gioca":
             menu_gioca(db)
+        elif scelta == "messaggi":
+            print(_("Apertura della casella postale nel browser..."))
+            try:
+                webbrowser.open("https://lichess.org/inbox")
+            except Exception as e:
+                print(_("Impossibile aprire il browser: {e}").format(e=e))
+        elif scelta == "sfide":
+            print(_("Controllo sfide in entrata..."))
+            try:
+                challenges = get_incoming_challenges(token)
+            except Exception:
+                challenges = []
+            
+            if not challenges:
+                print(_("Non hai sfide in attesa."))
+                continue
+
+            for c in challenges:
+                c_id = c["id"]
+                challenger = c["challenger"]["name"]
+                variant = c["variant"]["name"]
+                speed = c["speed"]
+                rated = _("Classificata") if c["rated"] else _("Amichevole")
+                print(
+                    _("\nSfida da {u} ({v}, {s}, {r})").format(
+                        u=challenger, v=variant, s=speed, r=rated
+                    )
+                )
+
+                if enter_escape(
+                    _("Vuoi accettare questa sfida? (Invio = Si', Esc = No): ")
+                ):
+                    print(_("Accetto la sfida..."))
+                    if accept_challenge(token, c_id):
+                        print(_("Sfida accettata!"))
+                        lichess_board.play_game(
+                            c_id, token, secrets.get("lichess_username")
+                        )
+                        break
+                    else:
+                        print(
+                            _(
+                                "Impossibile accettare la sfida (potrebbe essere stata annullata)."
+                            )
+                        )
+                else:
+                    print(_("Rifiuto la sfida..."))
+                    decline_challenge(token, c_id)
 
 
 if __name__ == "__main__":
