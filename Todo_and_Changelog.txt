@@ -2,6 +2,14 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+7.4.2 (25 maggio 2026 - 22:45)
+	+ [Lichess] Risolto l'errore di streaming (404) quando si inserivano URL TV o profilo dei giocatori (es. con /@/) estraendo correttamente l'username e interrogando l'API ufficiale.
+	+ [Lichess] Implementata la funzione di attesa (max 30 minuti) all'inizio di una partita per un amico o nickname specificato, con visualizzazione del tempo residuo (\r) e possibilità di interrompere premendo ESC o `.`.
+	+ [Lichess] Ottimizzato e semplificato il menu "Gestione Amici", rimuovendo voci ridondanti e integrando la lista amici direttamente con il menu azioni del profilatore per inviare messaggi, sfidare, scaricare partite e smettere di seguire.
+	+ [Lichess] Ordinata e riformattata la lista amici per mostrare solo lo stato dell'utente senza ripetizioni (`- (Username) -- Stato`), mostrando prima gli utenti in gioco, poi quelli online e infine quelli offline.
+	+ [Lichess] Aggiunto il controllo automatico delle sfide ricevute all'avvio e ad ogni visualizzazione del menu principale di Lichess, indicando dinamicamente il numero di sfide con l'opzione `Sfide in attesa ({n})` per accettarle/rifiutarle.
+	+ [Lichess] Aggiunta l'opzione `Casella Postale` per aprire direttamente l'inbox di Lichess nel browser predefinito per visualizzare, rispondere o eliminare messaggi non gestibili tramite API pubbliche.
+
 7.4.1 (25 maggio 2026 - 14:26)
 	+ [Easyfish] Ottimizzata la scacchiera condivisa (.cs): ora occupa la massima area disponibile nella finestra. L'area testo (.cso) e' proporzionale all'altezza della finestra (max 15%) anziche' fissa a 140px. L'SVG viene generato alla dimensione di rendering per massima nitidezza.
 7.4.0 (23 maggio 2026 - 14:03)
