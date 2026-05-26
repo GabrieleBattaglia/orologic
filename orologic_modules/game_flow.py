@@ -1,11 +1,10 @@
 import time
 import threading
 import json
-import os
 import chess
 import chess.pgn
+import os
 import datetime
-import copy
 import pyperclip
 import io
 from GBUtils import dgt, Acusticator, key, polipo, menu
@@ -1428,7 +1427,7 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
             if ui.enter_escape(
                 _("Desideri l'analisi automatica? (INVIO per si', ESC per manuale): ")
             ):
-                engine.AnalisiAutomatica(copy.deepcopy(game_state.pgn_game))
+                engine.AnalisiAutomatica(board_utils.CopyPgnGame(game_state.pgn_game))
             else:
                 engine.AnalyzeGame(game_state.pgn_game)
         else:
