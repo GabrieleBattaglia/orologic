@@ -199,7 +199,10 @@ def Main():
             )
 
     # Inizializzazione Motore (se configurato)
-    engine.InitEngine()
+    if engine.InitEngine():
+        from orologic_modules import stockfish_installer
+
+        stockfish_installer.CheckForStockfishUpdatesSilent()
 
     # Controllo salvataggio automatico (Ripristino)
     autosave_file_path = config.percorso_salvataggio(

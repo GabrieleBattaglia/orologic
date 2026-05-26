@@ -7,7 +7,7 @@ import time
 import sys
 import chess
 
-from GBUtils import Acusticator
+from GBUtils import Acusticator, dgt
 from . import board_utils, config, ui
 
 
@@ -28,6 +28,7 @@ class SpectatorGameState:
         self.started = False
         self.is_live = False
         self.move_history = []
+        self.refresh_interval = 1
 
     def get_clocks(self):
         w_time = self.white_time
@@ -361,6 +362,16 @@ def _spectate_worker(req, q, stop_event):
                     elif "fen" in d and "lm" not in d:
                         q.put(f"Start:{d['fen']}")
 
+                    if "clock" in d and isinstance(d["clock"], dict):
+                        limit = d["clock"].get("limit")
+                        if limit is not None:
+                            q.put(f"ClockInit:{limit}")
+
+                    wc = d.get("wc")
+                    bc = d.get("bc")
+                    if wc is not None or bc is not None:
+                        q.put(f"Clocks:{wc}|{bc}")
+
                     if "lm" in d:
                         wc = d.get("wc", "None")
                         bc = d.get("bc", "None")
@@ -379,15 +390,42 @@ def async_spectator_loop(q, game_state):
     buf = []
 
     def get_prompt():
+        wt = getattr(game_state, "white_time", 0)
+        bt = getattr(game_state, "black_time", 0)
+        if getattr(game_state, "started", False) and getattr(
+            game_state, "last_clock_sync", None
+        ):
+            elapsed = time.time() - game_state.last_clock_sync
+            if game_state.board.turn == chess.WHITE:
+                wt = max(0, wt - elapsed)
+            else:
+                bt = max(0, bt - elapsed)
+
+        def fmt(sec):
+            sec = max(0, int(sec))
+            m, s = divmod(sec, 60)
+            h, m = divmod(m, 60)
+            d, h = divmod(h, 24)
+            if d > 0:
+                d_str = _("{d}g").format(d=d)
+                return f"{d_str} {h:02d}:{m:02d}:{s:02d}"
+            if h > 0:
+                return f"{h}:{m:02d}:{s:02d}"
+            return f"{m:02d}:{s:02d}"
+
+        clock_str = (
+            f"{fmt(wt)} {fmt(bt)} " if getattr(game_state, "started", False) else ""
+        )
+
         if not game_state.move_history:
-            return _("\nInizio, mossa 0.>")
+            return "\n" + clock_str + _("Inizio, mossa 0.>")
         elif len(game_state.move_history) % 2 == 1:
-            return "\n{num}. {last_move}>".format(
+            return "\n" + clock_str + "{num}. {last_move}>".format(
                 num=(len(game_state.move_history) + 1) // 2,
                 last_move=game_state.move_history[-1],
             )
         else:
-            return "\n{num}... {last_move}>".format(
+            return "\n" + clock_str + "{num}... {last_move}>".format(
                 num=len(game_state.move_history) // 2,
                 last_move=game_state.move_history[-1],
             )
@@ -397,9 +435,14 @@ def async_spectator_loop(q, game_state):
         sys.stdout.write(get_prompt() + "".join(buf))
         sys.stdout.flush()
 
+    last_refresh = time.time()
     refresh_line()
 
     while True:
+        refresh_interval = getattr(game_state, "refresh_interval", 1)
+        if refresh_interval > 0 and time.time() - last_refresh >= refresh_interval:
+            refresh_line()
+            last_refresh = time.time()
         try:
             msg = q.get_nowait()
             if msg == "EOF":
@@ -414,6 +457,20 @@ def async_spectator_loop(q, game_state):
                     + "\n"
                 )
                 return None
+            elif msg.startswith("ClockInit:"):
+                limit = int(float(msg[10:]))
+                game_state.white_time = limit
+                game_state.black_time = limit
+                game_state.last_clock_sync = time.time()
+            elif msg.startswith("Clocks:"):
+                parts = msg[7:].split("|")
+                if len(parts) == 2:
+                    wc, bc = parts
+                    if wc not in ("None", "null", ""):
+                        game_state.white_time = int(float(wc))
+                    if bc not in ("None", "null", ""):
+                        game_state.black_time = int(float(bc))
+                    game_state.last_clock_sync = time.time()
             elif msg.startswith("Move:"):
                 uci_move, wc, bc = msg[5:].split("|")
                 move = game_state.board.parse_uci(uci_move)
@@ -433,6 +490,9 @@ def async_spectator_loop(q, game_state):
                     game_state.white_time = int(float(wc))
                 if bc != "None":
                     game_state.black_time = int(float(bc))
+                game_state.last_clock_sync = time.time()
+                if not game_state.started:
+                    game_state.started = True
 
                 if game_state.is_live:
                     sys.stdout.write("\r" + " " * 79 + "\r")
@@ -466,6 +526,7 @@ def async_spectator_loop(q, game_state):
                     game_state.board.set_fen(fen)
                 if not game_state.started:
                     game_state.started = True
+                game_state.last_clock_sync = time.time()
             elif msg.startswith("Players:"):
                 w, wr, b, br = msg[8:].split("|")
                 new_w = f"{w} ({wr})"
@@ -531,7 +592,10 @@ def async_spectator_loop(q, game_state):
                     kind=1,
                     adsr=[2, 8, 90, 0],
                 )
-                save_lichess_game(game_state, winner)
+                if len(game_state.move_history) > 10:
+                    save_lichess_game(game_state, winner)
+                else:
+                    sys.stdout.write("\n" + _("Partita terminata con 5 o meno mosse. Salto il salvataggio.") + "\n")
                 refresh_line()
         except queue.Empty:
             if not game_state.is_live and game_state.started:
@@ -657,6 +721,17 @@ def spectate_game(game_id, token=None):
                 else game_state.black_player
             )
             print(_("\nOrologio di {player} in moto").format(player=player))
+        elif cmd == ".6":
+            sec = dgt(
+                _("\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "),
+                kind="i",
+                imin=0,
+                imax=120,
+                default=game_state.refresh_interval,
+            )
+            game_state.refresh_interval = sec
+            print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec))
+            continue
         elif cmd == ".m":
             Acusticator(
                 [
@@ -737,6 +812,7 @@ def spectate_game(game_id, token=None):
             print(_(".3 : Tempo di entrambi"))
             print(_(".4 : Confronto tempi"))
             print(_(".5 : A chi tocca muovere"))
+            print(_(".6 : Modifica timing aggiornamento orologio"))
             print(_(".m : Materiale in gioco"))
             print(_(".l : Lista mosse"))
             print(_(".b : Mostra scacchiera"))
@@ -763,6 +839,7 @@ class GamePlayState:
         self.opponent_gone = False
         self.opponent_gone_announced = False
         self.claim_win_in_seconds = None
+        self.refresh_interval = 1
 
     def get_clocks(self):
         w_time = self.white_time
@@ -885,7 +962,8 @@ def async_play_loop(q, game_state):
     refresh_line()
 
     while True:
-        if time.time() - last_refresh >= 1.0:
+        refresh_interval = getattr(game_state, "refresh_interval", 1)
+        if refresh_interval > 0 and time.time() - last_refresh >= refresh_interval:
             refresh_line()
             last_refresh = time.time()
         try:
@@ -1085,7 +1163,10 @@ def async_play_loop(q, game_state):
                         kind=1,
                         adsr=[2, 8, 90, 0],
                     )
-                    save_lichess_game(game_state, winner)
+                    if len(game_state.move_history) > 10:
+                        save_lichess_game(game_state, winner)
+                    else:
+                        sys.stdout.write("\n" + _("Partita terminata con 5 o meno mosse. Salto il salvataggio.") + "\n")
                     return None
 
                 # Evaluate premove
@@ -1205,7 +1286,15 @@ def show_post_game_report(game_id, token):
             pass
 
     data = None
-    for i in range(4):
+    max_attempts = 30
+    print(_("Attesa dell'analisi del computer (Premi ESC per saltare)..."))
+
+    for i in range(max_attempts):
+        if msvcrt.kbhit():
+            c = msvcrt.getwch()
+            if c == "\x1b":  # ESC
+                print(_("\nAttesa analisi annullata dall'utente."))
+                break
         try:
             with urllib.request.urlopen(req) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
@@ -1216,7 +1305,10 @@ def show_post_game_report(game_id, token):
                 break
         except Exception:
             pass
-        time.sleep(1.5)
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        time.sleep(2.0)
+    sys.stdout.write("\n")
 
     if not data:
         print(_("Impossibile recuperare il report della partita."))
@@ -1289,7 +1381,10 @@ def play_game(game_id, token, username):
         user_input = async_play_loop(q, game_state)
 
         if user_input is None:
-            show_post_game_report(game_id, token)
+            if len(game_state.move_history) > 10:
+                show_post_game_report(game_id, token)
+            else:
+                print(_("\nPartita terminata con 5 o meno mosse. Salto l'analisi."))
             break
 
         user_input = user_input.strip()
@@ -1400,6 +1495,17 @@ def play_game(game_id, token, username):
                 else game_state.black_player
             )
             print(_("\nOrologio di {player} in moto").format(player=player))
+        elif cmd == ".6":
+            sec = dgt(
+                _("\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "),
+                kind="i",
+                imin=0,
+                imax=120,
+                default=game_state.refresh_interval,
+            )
+            game_state.refresh_interval = sec
+            print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec))
+            continue
         elif cmd == ".m":
             Acusticator(
                 [
@@ -1480,6 +1586,7 @@ def play_game(game_id, token, username):
             print(_(".3 : Tempo di entrambi"))
             print(_(".4 : Confronto tempi"))
             print(_(".5 : A chi tocca muovere"))
+            print(_(".6 : Modifica timing aggiornamento orologio"))
             print(_(".m : Materiale in gioco"))
             print(_(".l : Lista mosse"))
             print(_(".b : Mostra scacchiera"))
