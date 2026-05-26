@@ -2,6 +2,17 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+7.5.1 (26 maggio 2026 - 19:10)
+	+ [Lichess] Esteso il supporto per il refresh automatico degli orologi e il comando `.6` alla modalità spettatore ("Guarda partita").
+
+7.5.0 (26 maggio 2026 - 18:50)
+	+ [Motore] Implementato il controllo silenzioso all'avvio per la disponibilità di nuove versioni di Stockfish su GitHub, con richiesta di aggiornamento automatico e mantenimento dei parametri di configurazione esistenti.
+	+ [Lichess] Aggiunto il comando `.6` in partita per configurare l'intervallo di aggiornamento automatico degli orologi (0-120 secondi, dove 0 disattiva il refresh automatico).
+
+7.4.3 (26 maggio 2026 - 16:40)
+	+ [Lichess] Ottimizzato il polling di attesa dell'analisi computerizzata a fine partita, portandolo a 60 secondi con possibilità di interruzione tramite ESC.
+	+ [Lichess] Evitato il salvataggio PGN (in locale e negli appunti) e la richiesta/visualizzazione dell'analisi per le partite che terminano con 5 o meno mosse (10 semimosse).
+
 7.4.2 (25 maggio 2026 - 22:45)
 	+ [Lichess] Risolto l'errore di streaming (404) quando si inserivano URL TV o profilo dei giocatori (es. con /@/) estraendo correttamente l'username e interrogando l'API ufficiale.
 	+ [Lichess] Implementata la funzione di attesa (max 30 minuti) all'inizio di una partita per un amico o nickname specificato, con visualizzazione del tempo residuo (\r) e possibilità di interrompere premendo ESC o `.`.
