@@ -185,6 +185,7 @@ DOT_COMMANDS = {
     ".3": _("Mostra entrambe gli orologi"),
     ".4": _("Confronta i tempi rimanenti e indica il vantaggio"),
     ".5": _("Stato orologi/pausa"),
+    ".6": _("Modifica timing aggiornamento orologio"),
     ".l": _("Visualizza la lista mosse giocate"),
     ".m": _("Mostra il valore del materiale ancora in gioco"),
     ".p": _("Pausa/Ripresa"),

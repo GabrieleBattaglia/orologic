@@ -294,6 +294,7 @@ class GameState:
         self.black_player = ""
         self.ignore_clock = False
         self.flag_fallen = False
+        self.refresh_interval = 0
 
     def switch_turn(self):
         if self.active_color == "white":

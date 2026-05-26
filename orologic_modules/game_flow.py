@@ -219,6 +219,57 @@ def EseguiAutosave(game_state):
         )
 
 
+def async_arbitration_input(game_state, get_prompt):
+    import sys
+    import msvcrt
+    import time
+    buf = []
+
+    def refresh_line():
+        sys.stdout.write("\r" + " " * 79 + "\r")
+        sys.stdout.write(get_prompt() + "".join(buf))
+        sys.stdout.flush()
+
+    last_refresh = time.time()
+    refresh_line()
+
+    while True:
+        if game_state.flag_fallen and not game_state.ignore_clock:
+            return None
+
+        refresh_interval = getattr(game_state, "refresh_interval", 0)
+        if refresh_interval > 0 and time.time() - last_refresh >= refresh_interval:
+            refresh_line()
+            last_refresh = time.time()
+
+        if msvcrt.kbhit():
+            c = msvcrt.getwch()
+            if c in ("\x00", "\xe0"):
+                msvcrt.getwch()
+                continue
+
+            if c == "\r" or c == "\n":
+                sys.stdout.write("\n")
+                return "".join(buf)
+            elif c == "\b":
+                if buf:
+                    buf.pop()
+                    sys.stdout.write("\b \b")
+                    sys.stdout.flush()
+            elif c == "\x03":
+                sys.stdout.write("\n")
+                return "."
+            elif c == "\x1b":
+                sys.stdout.write("\n")
+                return "."
+            elif c.isprintable():
+                buf.append(c)
+                sys.stdout.write(c)
+                sys.stdout.flush()
+
+        time.sleep(0.02)
+
+
 def _loop_principale_partita(game_state, eco_database, autosave_is_on):
     last_eco_msg = ""
     last_valid_eco_entry = None
@@ -257,25 +308,52 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 game_state.flag_fallen = False  # Reset flag per non rientrare qui
                 continue  # Riavvia il loop per stampare il prompt corretto
 
-        if not game_state.move_history:
-            prompt = _("\nInizio, mossa 0. ")
-        elif len(game_state.move_history) % 2 == 1:
-            full_move = (len(game_state.move_history) + 1) // 2
-            prompt = "{num}. {last_move} ".format(
-                num=full_move, last_move=game_state.move_history[-1]
-            )
-        else:
-            full_move = (len(game_state.move_history)) // 2
-            prompt = "{num}... {last_move} ".format(
-                num=full_move, last_move=game_state.move_history[-1]
-            )
+        def get_prompt():
+            if not game_state.move_history:
+                prompt_text = _("Inizio, mossa 0. ")
+            elif len(game_state.move_history) % 2 == 1:
+                full_move = (len(game_state.move_history) + 1) // 2
+                prompt_text = "{num}. {last_move} ".format(
+                    num=full_move, last_move=game_state.move_history[-1]
+                )
+            else:
+                full_move = (len(game_state.move_history)) // 2
+                prompt_text = "{num}... {last_move} ".format(
+                    num=full_move, last_move=game_state.move_history[-1]
+                )
 
-        if game_state.paused:
-            prompt = "[" + prompt.strip() + "] "
-        elif game_state.ignore_clock:
-            prompt = "(NoClock) " + prompt.strip() + " "
+            if game_state.paused:
+                prompt_text = "[" + prompt_text.strip() + "] "
+            elif game_state.ignore_clock:
+                prompt_text = "(NoClock) " + prompt_text.strip() + " "
 
-        user_input = dgt(prompt, kind="s")
+            # Build clock string
+            clock_str = ""
+            refresh_interval = getattr(game_state, "refresh_interval", 0)
+            if refresh_interval > 0 and not game_state.ignore_clock:
+                wt = max(0.0, game_state.white_remaining)
+                bt = max(0.0, game_state.black_remaining)
+
+                def fmt(sec):
+                    sec = max(0, int(sec))
+                    m, s = divmod(sec, 60)
+                    h, m = divmod(m, 60)
+                    d, h = divmod(h, 24)
+                    if d > 0:
+                        d_str = _("{d}g").format(d=d)
+                        return f"{d_str} {h:02d}:{m:02d}:{s:02d}"
+                    if h > 0:
+                        return f"{h}:{m:02d}:{s:02d}"
+                    return f"{m:02d}:{s:02d}"
+
+                clock_str = f"{fmt(wt)} {fmt(bt)} "
+
+            prefix = "\n" if not game_state.move_history else ""
+            return prefix + clock_str + prompt_text
+
+        user_input = async_arbitration_input(game_state, get_prompt)
+        if user_input is None:
+            continue
 
         # Rilevamento bandierina immediato dopo input (nel caso sia caduta mentre scrivevo)
         if game_state.flag_fallen and not game_state.ignore_clock:
@@ -502,6 +580,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 ".3",
                 ".4",
                 ".5",
+                ".6",
                 ".p",
                 ".b+",
                 ".b-",
@@ -592,6 +671,17 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         else game_state.black_player
                     )
                     print(_("Orologio di {player} in moto").format(player=player))
+            elif cmd == ".6":
+                sec = dgt(
+                    _("\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "),
+                    kind="i",
+                    imin=0,
+                    imax=120,
+                    default=game_state.refresh_interval,
+                )
+                game_state.refresh_interval = sec
+                print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec))
+                continue
             elif cmd == ".m":
                 Acusticator(
                     [

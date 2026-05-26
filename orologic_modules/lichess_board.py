@@ -413,8 +413,11 @@ def async_spectator_loop(q, game_state):
                 return f"{h}:{m:02d}:{s:02d}"
             return f"{m:02d}:{s:02d}"
 
+        refresh_interval = getattr(game_state, "refresh_interval", 1)
         clock_str = (
-            f"{fmt(wt)} {fmt(bt)} " if getattr(game_state, "started", False) else ""
+            f"{fmt(wt)} {fmt(bt)} "
+            if (getattr(game_state, "started", False) and refresh_interval > 0)
+            else ""
         )
 
         if not game_state.move_history:
@@ -914,8 +917,11 @@ def async_play_loop(q, game_state):
                 return f"{h}:{m:02d}:{s:02d}"
             return f"{m:02d}:{s:02d}"
 
+        refresh_interval = getattr(game_state, "refresh_interval", 1)
         clock_str = (
-            f"{fmt(wt)} {fmt(bt)} " if getattr(game_state, "started", False) else ""
+            f"{fmt(wt)} {fmt(bt)} "
+            if (getattr(game_state, "started", False) and refresh_interval > 0)
+            else ""
         )
 
         p = ""
