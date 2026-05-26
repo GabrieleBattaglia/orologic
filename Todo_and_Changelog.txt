@@ -2,6 +2,9 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+7.5.2 (26 maggio 2026 - 22:58)
+	+ [Core] Risolto un bug latente di RecursionError (ricorsione infinita) in copy.deepcopy su partite lunghe (>85 mosse) durante l'analisi automatica, sostituendo deepcopy con una copia sicura del PGN tramite serializzazione/deserializzazione.
+
 7.5.1 (26 maggio 2026 - 19:10)
 	+ [Lichess] Esteso il supporto per il refresh automatico degli orologi e il comando `.6` alla modalità spettatore ("Guarda partita").
 	+ [Arbitraggio] Implementato il refresh automatico a tempo degli orologi e il comando `.6` in modalità Arbitraggio, con valore di default a 0 (disattivo).

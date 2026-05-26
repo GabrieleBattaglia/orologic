@@ -4,7 +4,7 @@ import os
 import time
 import json
 import datetime
-import copy
+
 from dateutil.relativedelta import relativedelta
 from GBUtils import (
     dgt,
@@ -18,6 +18,7 @@ from GBUtils import (
     enter_escape,
 )
 from orologic_modules import (
+    board_utils,
     config,
     storage,
     ui,
@@ -327,7 +328,7 @@ def Main():
                         "Desideri l'analisi automatica? (INVIO per si', ESC per manuale): "
                     )
                 ):
-                    engine.AnalisiAutomatica(copy.deepcopy(pgn_da_analizzare))
+                    engine.AnalisiAutomatica(board_utils.CopyPgnGame(pgn_da_analizzare))
                 else:
                     engine.AnalyzeGame(pgn_da_analizzare)
 

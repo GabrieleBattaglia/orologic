@@ -272,6 +272,13 @@ class CustomBoard(chess.Board):
         return nb
 
 
+def CopyPgnGame(pgn_game):
+    """Copia sicura di un oggetto chess.pgn.Game via serializzazione PGN.
+    Evita copy.deepcopy che causa RecursionError su partite lunghe
+    a causa dei riferimenti circolari parent/child nell'albero PGN."""
+    return chess.pgn.read_game(io.StringIO(str(pgn_game)))
+
+
 class GameState:
     def __init__(self, clock_config):
         self.board = CustomBoard()
