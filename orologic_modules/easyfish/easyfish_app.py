@@ -7,7 +7,6 @@ from .constants import MNMAIN
 
 # DRY: Uso le utility di Orologic
 from ..board_utils import CustomBoard, DescribeMove, GameState, NormalizeMove
-from .. import ui as orologic_ui
 from .utils import CalculateMaterial
 from .pgn_handler import (
     InitNewPGN,
@@ -485,6 +484,16 @@ def run():
                 board = node.board()  # Ricrea board dallo stato finale
                 game_state.board = board
                 is_modified = True
+                from GBUtils import enter_escape
+                print(_("\nSuggerimento: puoi esplorare e analizzare la partita appena conclusa."))
+                if enter_escape(_("Vuoi analizzare la partita? (INVIO per si', ESC per no): ")):
+                    print(_("Accesso alla modalità esplorazione..."))
+                    mod_in_exp, final_node = ExplorerMode(game, engine, sharing_window=sharing_window)
+                    node = final_node
+                    board = node.board()
+                    game_state.board = board
+                    if mod_in_exp:
+                        is_modified = True
 
             elif cmd == ".b":
                 print(board)
@@ -738,146 +747,15 @@ def run():
                     ).format(cmd=cmd)
                 )
 
-        elif key_command.startswith("-"):
-            param = key_command[1:].strip()
-            from .. import config as o_config
-
-            if not param:
-                Acusticator(
-                    ["c5", 0.07, 0, o_config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                )
-                orologic_ui.report_all_pieces(game_state, chess.WHITE)
-            elif len(param) == 1 and param.isalpha():  # Colonna
-                Acusticator(
-                    [
-                        "c5",
-                        0.07,
-                        0,
-                        o_config.VOLUME,
-                        "d5",
-                        0.07,
-                        0,
-                        o_config.VOLUME,
-                        "e5",
-                        0.07,
-                        0,
-                        o_config.VOLUME,
-                        "f5",
-                        0.07,
-                        0,
-                        o_config.VOLUME,
-                        "g5",
-                        0.07,
-                        0,
-                        o_config.VOLUME,
-                        "a5",
-                        0.07,
-                        0,
-                        o_config.VOLUME,
-                        "b5",
-                        0.07,
-                        0,
-                        o_config.VOLUME,
-                        "c6",
-                        0.07,
-                        0,
-                        o_config.VOLUME,
-                    ],
-                    kind=3,
-                    adsr=[0, 0, 100, 100],
-                )
-                orologic_ui.read_file(game_state, param)
-            elif len(param) == 1 and param.isdigit():  # Traversa
-                rank_number = int(param)
-                if 1 <= rank_number <= 8:
-                    Acusticator(
-                        [
-                            "g5",
-                            0.07,
-                            -1,
-                            o_config.VOLUME,
-                            "g5",
-                            0.07,
-                            -0.75,
-                            o_config.VOLUME,
-                            "g5",
-                            0.07,
-                            -0.5,
-                            o_config.VOLUME,
-                            "g5",
-                            0.07,
-                            -0.25,
-                            o_config.VOLUME,
-                            "g5",
-                            0.07,
-                            0,
-                            o_config.VOLUME,
-                            "g5",
-                            0.07,
-                            0.25,
-                            o_config.VOLUME,
-                            "g5",
-                            0.07,
-                            0.5,
-                            o_config.VOLUME,
-                            "g5",
-                            0.07,
-                            0.75,
-                            o_config.VOLUME,
-                        ],
-                        kind=3,
-                        adsr=[0, 0, 100, 100],
-                    )
-                    orologic_ui.read_rank(game_state, rank_number)
-                else:
-                    print(_("Traversa non valida."))
-            elif len(param) == 2 and param[0].isalpha() and param[1].isdigit():  # Casa
-                Acusticator(
-                    ["d#4", 0.7, 0, o_config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                )
-                orologic_ui.read_square(game_state, param)
-            else:
-                print(_("Comando esplorazione non riconosciuto."))
-
-        elif key_command == "+":
-            from .. import config as o_config
-
-            Acusticator(["c4", 0.07, 0, o_config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            orologic_ui.report_all_pieces(game_state, chess.BLACK)
-
-        elif key_command.startswith(","):
-            from .. import config as o_config
-
-            Acusticator(
-                [
-                    "a3",
-                    0.06,
-                    -1,
-                    o_config.VOLUME,
-                    "c4",
-                    0.06,
-                    -0.5,
-                    o_config.VOLUME,
-                    "d#4",
-                    0.06,
-                    0.5,
-                    o_config.VOLUME,
-                    "f4",
-                    0.06,
-                    1,
-                    o_config.VOLUME,
-                ],
-                kind=3,
-                adsr=[20, 5, 70, 25],
-            )
-            orologic_ui.report_piece_positions(game_state, key_command[1:2])
-
         elif key_command.startswith("_"):
             node.comment = key_command[1:]
             is_modified = True
             print(_("Commento registrato."))
 
         else:
+            from ..lichess_board import handle_exploration_command
+            if handle_exploration_command(key_command, game_state):
+                continue
             move_san = NormalizeMove(key_command)
             move = None
             try:
