@@ -245,7 +245,7 @@ margin: 1em 0;
 <p>Dopo aver usato il comando <code>e</code>, puoi scegliere di ispezionare una linea in "Modalità Smart", navigandola mossa per mossa. I comandi sono: <code>d</code> (avanti), <code>s</code> (indietro), <code>r</code> (rivaluta), <code>.</code> (esci).</p>
 
 <h3>2.3. Easyfish (Interfaccia a riga di comando per Stockfish)</h3>
-<p>Easyfish è un modulo speciale accessibile dal menu principale. Offre un'interfaccia a riga di comando fluida e diretta per studiare, creare varianti e persino giocare in modo flessibile. I comandi speciali sono tutti preceduti dal punto (<code>.</code>).</p>
+<p>Easyfish è un modulo speciale accessibile dal menu principale. Offre un'interfaccia a riga di comando fluida e diretta per studiare, creare varianti e persino giocare in modo flessibile. I comandi speciali sono tutti preceduti dal punto (<code>.</code>). Inoltre, in tutte le modalità di Easyfish (nel menu principale, durante la partita contro il motore e nell'esploratore) sono pienamente supportati i <strong>comandi di ispezione della scacchiera</strong> descritti nella sezione 2.1.4 (<code>/[col]</code>, <code>\[col]</code>, <code>-[col|trv|casa]</code> e <code>,[Pezzo]</code>).</p>
 
 <h4>2.3.1. Iniziare e Gestire la Partita</h4>
 <ul>
@@ -290,6 +290,7 @@ margin: 1em 0;
     <li><code>.s#</code> (es. <code>.s15</code>): modifica il livello di difficoltà (Skill Level) del motore da 0 a 20 al volo.</li>
     <li><code>.e#</code> (es. <code>.e1200</code>): imposta la forza del motore indicando direttamente un punteggio Elo. Orologic verificherà se il motore supporta questa funzione e applicherà il limite (ogni motore ha un suo range minimo/massimo, ad esempio Stockfish 16 parte da 1320 Elo).</li>
 </ul>
+<p>Al termine della partita contro il motore, Orologic annuncerà il risultato e ti chiederà direttamente se desideri analizzare la partita, permettendoti di avviarne subito l'esplorazione (<code>.e</code>) in modo del tutto coerente con quanto avviene a fine arbitraggio.</p>
 
 <h4>2.3.4. Modalità Esploratore (.e)</h4>
 <p>Il comando <code>.e</code> apre l'Esploratore di Varianti. Un ambiente ottimizzato per navigare PGN complessi. Il prompt cambierà per indicarti il livello della variante (es. <code>Lvl0</code> per la linea principale, <code>Lvl1</code>, <code>Lvl2</code>).</p>

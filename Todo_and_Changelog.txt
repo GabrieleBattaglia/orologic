@@ -2,6 +2,11 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+7.5.3 (28 maggio 2026 - 15:10)
+	+ [Easyfish] Implementato il suggerimento e la possibilità di avviare l'analisi (tramite enter_escape) direttamente al termine di una partita contro il motore (Issue #15).
+	+ [Easyfish] Abilitati tutti i comandi di ispezione scacchiera (/, \, -, +, ,) in Modalità Gioco contro il motore e in modalità Esploratore, riutilizzando in modo DRY la funzione nativa di Orologic (Issue #14).
+	+ [Easyfish] Abilitati i comandi di ispezione diagonale (/ e \) anche nel menu principale di Easyfish.
+
 7.5.2 (26 maggio 2026 - 22:58)
 	+ [Core] Risolto un bug latente di RecursionError (ricorsione infinita) in copy.deepcopy su partite lunghe (>85 mosse) durante l'analisi automatica, sostituendo deepcopy con una copia sicura del PGN tramite serializzazione/deserializzazione.
 
