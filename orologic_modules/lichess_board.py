@@ -54,7 +54,7 @@ def save_lichess_game(game_state, result_str="*"):
     # Se abbiamo un game_id, proviamo a scaricare il PGN completo e ufficiale da Lichess
     if hasattr(game_state, "game_id") and game_state.game_id:
         try:
-            url = f"https://lichess.org/game/export/{game_state.game_id}?clocks=false&evals=false"
+            url = f"https://lichess.org/game/export/{game_state.game_id}?clocks=false&evals=true&literate=true"
             req = urllib.request.Request(url)
             if hasattr(game_state, "token") and game_state.token:
                 req.add_header("Authorization", f"Bearer {game_state.token}")
@@ -1169,10 +1169,7 @@ def async_play_loop(q, game_state):
                         kind=1,
                         adsr=[2, 8, 90, 0],
                     )
-                    if len(game_state.move_history) > 10:
-                        save_lichess_game(game_state, winner)
-                    else:
-                        sys.stdout.write("\n" + _("Partita terminata con 5 o meno mosse. Salto il salvataggio.") + "\n")
+                    game_state.winner = winner
                     return None
 
                 # Evaluate premove
@@ -1295,11 +1292,13 @@ def show_post_game_report(game_id, token):
     max_attempts = 30
     print(_("Attesa dell'analisi del computer (Premi ESC per saltare)..."))
 
+    percentage = 0
     for i in range(max_attempts):
         if msvcrt.kbhit():
             c = msvcrt.getwch()
             if c == "\x1b":  # ESC
-                print(_("\nAttesa analisi annullata dall'utente."))
+                sys.stdout.write("\n")
+                print(_("Attesa analisi annullata dall'utente."))
                 break
         try:
             with urllib.request.urlopen(req) as resp:
@@ -1307,14 +1306,27 @@ def show_post_game_report(game_id, token):
 
             w = data.get("players", {}).get("white", {})
             b = data.get("players", {}).get("black", {})
+
+            total_plies = len(data.get("moves", "").split())
+            analyzed_plies = len(data.get("analysis", []))
+            if total_plies > 0:
+                percentage = min(100, int((analyzed_plies / total_plies) * 100))
+            else:
+                percentage = 0
+
+            sys.stdout.write(_("\rAvanzamento: {p}%").format(p=percentage))
+            sys.stdout.flush()
+
             if "analysis" in w or "analysis" in b:
+                sys.stdout.write(_("\rAvanzamento: 100%\n"))
+                sys.stdout.flush()
                 break
         except Exception:
-            pass
-        sys.stdout.write(".")
-        sys.stdout.flush()
+            sys.stdout.write(_("\rAvanzamento: {p}%").format(p=percentage))
+            sys.stdout.flush()
         time.sleep(2.0)
-    sys.stdout.write("\n")
+    else:
+        sys.stdout.write("\n")
 
     if not data:
         print(_("Impossibile recuperare il report della partita."))
@@ -1389,8 +1401,9 @@ def play_game(game_id, token, username):
         if user_input is None:
             if len(game_state.move_history) > 10:
                 show_post_game_report(game_id, token)
+                save_lichess_game(game_state, getattr(game_state, "winner", "*"))
             else:
-                print(_("\nPartita terminata con 5 o meno mosse. Salto l'analisi."))
+                print(_("\nPartita terminata con 5 o meno mosse. Salto l'analisi e il salvataggio."))
             break
 
         user_input = user_input.strip()

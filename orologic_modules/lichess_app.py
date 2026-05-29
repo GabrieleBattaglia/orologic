@@ -2086,6 +2086,7 @@ def run():
             {
                 "profilo": _("Profilo Lichess"),
                 "statistiche": _("Statistiche utente"),
+                "storia": _("Storia Elo e Sonificazione"),
                 "amici": _("Gestione Amici"),
                 "puzzle": testo_puzzle,
                 "cerca": _("Cerca e Profila Giocatore"),
@@ -2161,6 +2162,13 @@ def run():
             menu_profilo(db)
         elif scelta == "statistiche":
             menu_statistiche(db)
+        elif scelta == "storia":
+            if is_logged:
+                from . import lichess_stats
+                lichess_stats.run_stats(secrets.get("lichess_username"), secrets)
+            else:
+                print(_("\nDevi prima effettuare il login per vedere la storia Elo."))
+                enter_escape(_("\nPremi Invio per continuare..."))
         elif scelta == "amici":
             menu_amici(db)
         elif scelta == "puzzle":

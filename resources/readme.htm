@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 7.4.0 - 23 maggio 2026 - 14:03)</h1>
+<h1>Guida Utente di Orologic (Versione 8.1.0 - 29 maggio 2026 - 09:18)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -212,6 +212,22 @@ margin: 1em 0;
     <li><code>draw</code> / <code>resign</code> / <code>takeback</code>: Proponi patta, abbandona o chiedi di annullare l'ultima mossa.</li>
     <li><code>claim</code>: Reclama la vittoria se l'avversario abbandona la connessione.</li>
     <li><strong>Premoves:</strong> Se inserisci una mossa valida mentre tocca all'avversario, questa verrà memorizzata come "premove" e giocata istantaneamente appena il turno passerà a te.</li>
+</ul>
+
+<h4>2.2.4. Storia Elo e Sonificazione (storia)</h4>
+<p>Questa nuova funzionalità (disponibile dal menu principale di Orolichess per l'utente loggato, e dal sottomenu del Profilatore per qualsiasi altro giocatore cercato) ti permette di analizzare nel dettaglio l'evoluzione dell'Elo del giocatore nel tempo e di ascoltarla tramite sonificazione acustica.</p>
+<ul>
+    <li><strong>Varianti supportate:</strong> Consente di selezionare una qualsiasi variante in cui il giocatore possiede uno storico (es. Classical, Blitz, Rapid, Correspondence, Puzzle).</li>
+    <li><strong>Statistiche Avanzate:</strong> Calcola per l'intero periodo selezionato (ed anche diviso in quattro quartili di tempo Q1, Q2, Q3, Q4 con le loro durate in anni, mesi e giorni):
+        <ul>
+            <li><strong>Minimo / Massimo / Media:</strong> I valori minimi, massimi e medi raggiunti.</li>
+            <li><strong>Coefficiente di Variazione (CV%):</strong> Misura la dispersione relativa dei punteggi per valutarne la stabilità (più è basso, più il rendimento è stato costante).</li>
+            <li><strong>Tendenza:</strong> Calcola la pendenza della retta di regressione lineare per capire se l'Elo è in fase di crescita o calo.</li>
+            <li><strong>Moda:</strong> Il valore di Elo che ricorre più frequentemente.</li>
+        </ul>
+    </li>
+    <li><strong>Selezione Periodo:</strong> È possibile restringere l'analisi impostando un valore iniziale e un valore finale tramite l'elenco numerato dei punti storici, oppure reimpostare tutto il periodo.</li>
+    <li><strong>Sonificazione acustica:</strong> Converte la serie temporale dei punteggi Elo in suoni ad altezza variabile per poter "ascoltare" l'andamento della propria forza di gioco. Chiede se si vuole abilitare il portamento (glissando continuo tra i valori) e la durata complessiva dell'audio. La sonificazione rispetta il volume generale di Orologic e garantisce un volume minimo di sicurezza (0.2) anche se l'applicazione è silenziata.</li>
 </ul>
 
 <h3>2.3. Analizza una Partita (analizza)</h3>
