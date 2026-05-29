@@ -2,6 +2,15 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+8.1.0 (29 maggio 2026 - 09:18)
+	+ [Lichess] Risolto il problema del download delle partite analizzate (Issue #17): l'URL di esportazione include ora la valutazione ed i commenti analitici completi (`evals=true&literate=true`).
+	+ [Lichess] Spostata la memorizzazione del PGN dopo l'analisi di fine partita, assicurando che le valutazioni vengano salvate sul file locale e copiate negli appunti.
+	+ [Lichess] Sostituito il polling a punti con una percentuale di avanzamento dinamico durante l'attesa del report dell'analisi di Lichess.
+	+ [Lichess] Introdotto il nuovo modulo `lichess_stats` per visualizzare la storia completa dell'Elo e la sonificazione per qualsiasi giocatore.
+	+ [Lichess] Implementato il calcolo delle statistiche avanzate (Globale e per Quartili temporali): Minimo, Massimo, Media, Coefficiente di Variazione (CV), Tendenza e Moda.
+	+ [Lichess] Aggiunto il calcolo della durata del periodo totale e dei singoli quartili espressa in anni, mesi, giorni, ore, minuti.
+	+ [Lichess] Gestione dinamica del volume di sonificazione, con controllo per impostare un volume minimo di 0.2 se l'impostazione globale di Orologic è pari a 0.
+
 8.0.0 (29 maggio 2026 - 08:15)
 	+ [Core] Fusa la suite Memoboard (allenamento alla cieca per cavalli, diagonali, colori e sfide miste) all'interno di Orologic come modulo interno.
 	+ [Core] Condivisione delle impostazioni di localizzazione, del volume globale e dello spelling delle colonne (config.L10N).

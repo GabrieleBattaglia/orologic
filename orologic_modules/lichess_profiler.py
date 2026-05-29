@@ -539,6 +539,7 @@ def show_player_menu(username, secrets):
             "messaggio": _("Invia un messaggio"),
             "sfida": _("Sfida a una partita"),
             "scarica": _("Cerca e scarica partite"),
+            "storia": _("Storia Elo e Sonificazione"),
         }
 
         if is_following:
@@ -626,6 +627,9 @@ def show_player_menu(username, secrets):
                 profile["following"] = False
         elif scelta == "scarica":
             download_games(username, token)
+        elif scelta == "storia":
+            from . import lichess_stats
+            lichess_stats.run_stats(username, secrets)
 
 
 def run_profiler(secrets):
