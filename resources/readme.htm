@@ -329,20 +329,38 @@ margin: 1em 0;
 <h5>Esempio di caso d'uso</h5>
 <p>Sei un istruttore non vedente e stai spiegando una partita a un allievo vedente. Attivi la condivisione dello schermo di Zoom selezionando la finestra grafica creata da Orologic con <code>.cs</code>. Quando digiti una mossa o inserisci un commento (es. <code>_Questa mossa controlla il centro</code>), l'allievo vedrà la scacchiera aggiornarsi in tempo reale, vedrà le frecce colorate che disegni con <code>.d</code>, e potrà leggere il tuo commento direttamente sotto la scacchiera grazie a <code>.cso on</code>.</p>
 
-<h3>2.4. Configurazione</h3>
+<h3>2.4. Memoboard (Allenamento alla cieca) (memoboard)</h3>
+<p>Memoboard ti aiuta a familiarizzare con la scacchiera allenandoti a visualizzarla senza guardarla. Lo scopo è sviluppare una rapida visualizzazione mentale delle 64 case, fondamentale per il gioco alla cieca e per l'analisi profonda delle partite.</p>
+
+<h4>2.4.1. Funzionamento dei Punteggi (Punti al Minuto)</h4>
+<p>Per stimolare il miglioramento, Memoboard calcola un punteggio basato su velocità e precisione. Ogni domanda parte con un valore massimo di 15.000 punti, decrescendo di 1 punto per ogni millisecondo impiegato per rispondere. Una risposta esatta aggiunge i punti restanti al totale, mentre una risposta errata non assegna punti.</p>
+<p>La classifica viene ordinata per <strong>Punti al Minuto</strong> (efficienza), calcolati dividendo il punteggio totale per il tempo impiegato in secondi (moltiplicato per 60). Questo premia la precisione e la rapidità di esecuzione rispetto a sessioni lunghe e lente.</p>
+
+<h4>2.4.2. Esercizi Disponibili</h4>
+<ul>
+    <li><strong>Esercizio con i cavalli (knights):</strong> Determina se due case sono a distanza di un salto di cavallo (es. a1 e b3). Rispondi con INVIO per Sì o ESC per No.</li>
+    <li><strong>Esercizio con le diagonali (bishops):</strong> Determina se due case appartengono alla stessa diagonale (es. a1 e h7). Rispondi con INVIO per Sì o ESC per No.</li>
+    <li><strong>Esercizio con i colori (colors):</strong> Determina se una casa è bianca o nera. Rispondi con INVIO per Bianco o ESC per Nero.</li>
+    <li><strong>Sfida Mista (mixed):</strong> Affronta la prova definitiva composta da una serie fissa di 100 domande miste scelte casualmente tra i tre tipi di esercizio precedenti.</li>
+</ul>
+
+<h4>2.4.3. Classifiche (chart)</h4>
+<p>Il comando <code>chart</code> visualizza una classifica dettagliata degli utenti registrati per ciascun esercizio, con indicazione di punti totali, accuratezza (Win%), punti al minuto e data del record. I punteggi vengono salvati nel file <code>memoboard_scores.json</code> nella cartella <code>settings</code> di Orologic.</p>
+
+<h3>2.5. Configurazione</h3>
 <p>Orologic è altamente personalizzabile.</p>
 
-<h4>2.4.1. Gestione Orologi (crea, vedi, elimina)</h4>
+<h4>2.5.1. Gestione Orologi (crea, vedi, elimina)</h4>
 <ul>
     <li><strong>crea:</strong> Ti guida nella creazione di un nuovo orologio, con fasi multiple, tempo base, incremento e allarmi sonori.</li>
     <li><strong>vedi:</strong> Mostra una lista di tutti i tuoi orologi salvati.</li>
     <li><strong>elimina:</strong> Ti permette di cancellare un orologio che non usi più.</li>
 </ul>
 
-<h4>2.4.2. Configurazione Motore Scacchistico (motore)</h4>
+<h4>2.5.2. Configurazione Motore Scacchistico (motore)</h4>
 <p>Questo passaggio è fondamentale per abilitare le funzioni di analisi. Orologic ti guiderà nella configurazione iniziale, ma è importante capire come renderlo portatile e cosa significano i parametri tecnici.</p>
 
-<h5>2.4.2.1. Portabilità: Usare la cartella 'engine'</h5>
+<h5>2.5.2.1. Portabilità: Usare la cartella 'engine'</h5>
 <p>Se desideri utilizzare Orologic da una chiavetta USB e cambiare spesso computer, puoi evitare di riconfigurare il percorso del motore ogni volta seguendo questi passi:</p>
 <ol>
     <li>Crea una cartella chiamata <code>engine</code> nella stessa cartella dove si trova il file <code>orologic.py</code> (o l'eseguibile).</li>
@@ -352,7 +370,7 @@ margin: 1em 0;
 </ol>
 <p>In questo modo, Orologic creerà un percorso relativo che funzionerà ovunque tu sposti la cartella del programma.</p>
 
-<h5>2.4.2.2. Spiegazione dei Parametri UCI</h5>
+<h5>2.5.2.2. Spiegazione dei Parametri UCI</h5>
 <p>Durante la configurazione, ti verranno chiesti alcuni valori. Ecco una guida per impostarli correttamente:</p>
 <ul>
     <li><strong>Hash (Memoria):</strong> Indica quanta RAM dedicare al motore per memorizzare le posizioni analizzate. Valori comuni sono 128 o 256 MB. Più memoria permette analisi più veloci su tempi lunghi.</li>
@@ -361,23 +379,23 @@ margin: 1em 0;
     <li><strong>Move Overhead (ms):</strong> È un margine di sicurezza per il tempo. Serve a compensare i ritardi di comunicazione tra Orologic e il motore. Impostarlo a <code>500</code> garantisce che il motore non perda mai per il tempo a causa di rallentamenti del sistema (lag).</li>
 </ul>
 
-<h4>2.4.3. Personalizzazione Lingua e Nomi (nomi)</h4>
+<h4>2.5.3. Personalizzazione Lingua e Nomi (nomi)</h4>
 <p>Questa opzione ti permette di personalizzare il linguaggio descrittivo usato dal programma: puoi cambiare i nomi dei pezzi (es. da "cavallo" a "destriero"), i nomi delle colonne (es. da "Ancona" ad "Apple") e i verbi usati per descrivere le mosse.</p>
 
-<h4>2.4.4. Impostazioni Generali (impostazioni)</h4>
+<h4>2.5.4. Impostazioni Generali (impostazioni)</h4>
 <p>Questa nuova sezione ti permette di configurare due comportamenti chiave del programma:</p>
 <ul>
     <li><strong>Salvataggio Automatico:</strong> Puoi attivare o disattivare il salvataggio automatico del PGN dopo ogni mossa durante una partita. Questo previene la perdita di dati in caso di problemi.</li>
     <li><strong>Stile Menu:</strong> Puoi scegliere se navigare nei menu usando le parole chiave (default) o i numeri.</li>
 </ul>
 
-<h4>2.4.5. Regolazione Volume Audio (volume)</h4>
+<h4>2.5.5. Regolazione Volume Audio (volume)</h4>
 <p>Questa opzione ti permette di impostare il volume degli effetti sonori da 0 (muto) a 100 (massimo).</p>
 
-<h3>2.5. Apri Manuale (manuale)</h3>
+<h3>2.6. Apri Manuale (manuale)</h3>
 <p>Questo comando apre questa guida nel tuo browser web predefinito.</p>
 
-<h3>2.6. Esci dall'Applicazione (.)</h3>
+<h3>2.7. Esci dall'Applicazione (.)</h3>
 <p>Digitando <code>.</code> e premendo Invio dal menu principale chiuderà Orologic.</p>
 
 ---

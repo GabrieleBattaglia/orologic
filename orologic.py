@@ -28,6 +28,7 @@ from orologic_modules import (
     version,
     lichess_app,
     cleaner,
+    memoboard_app,
 )
 from orologic_modules.easyfish import easyfish_app
 
@@ -364,6 +365,12 @@ def Main():
                 ["g4", 0.1, 0, config.VOLUME, "c5", 0.2, 0, config.VOLUME], kind=1
             )
             lichess_app.run()
+
+        elif scelta == "memoboard":
+            Acusticator(
+                ["g4", 0.08, 0, config.VOLUME, "b4", 0.08, 0, config.VOLUME, "d5", 0.1, 0, config.VOLUME], kind=1
+            )
+            memoboard_app.main()
 
         elif scelta == "motore":
             Acusticator(
