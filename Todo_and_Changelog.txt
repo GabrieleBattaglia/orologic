@@ -2,6 +2,13 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+8.2.0 (31 maggio 2026 - 08:52)
+	+ [Easyfish] Ottimizzato il posizionamento multiplo dei pezzi nel Board Editor (Issue #21): ora è possibile specificare una lista di case separate da virgole (es. `ra8,h8` per posizionare le torri nere o `a8,h8` per svuotare le case).
+	+ [Easyfish] Aumentata la lunghezza massima dell'input (`smax`) nel Board Editor a 100 caratteri per permettere l'inserimento di coordinate multiple lunghe.
+	+ [Easyfish] Riorganizzato il prompt riassuntivo del Board Editor (Issue #18 e #20): i pezzi vengono elencati in ordine di importanza (`Q R B N P`) nel formato `PEZZO=bianco/nero` (es. `Q=1/0`, `R=2/2`), sostituendo l'ambiguo separatore `-`.
+	+ [Easyfish] Omessi i Re (`K`/`k`) dal prompt del Board Editor perché obbligatori (Issue #19).
+	+ [Docs] Aggiornato il manuale utente (`readme.htm`) per spiegare la nuova modalità di inserimento multiplo e l'interpretazione del prompt del Board Editor.
+
 8.1.0 (29 maggio 2026 - 09:18)
 	+ [Lichess] Risolto il problema del download delle partite analizzate (Issue #17): l'URL di esportazione include ora la valutazione ed i commenti analitici completi (`evals=true&literate=true`).
 	+ [Lichess] Spostata la memorizzazione del PGN dopo l'analisi di fine partita, assicurando che le valutazioni vengano salvate sul file locale e copiate negli appunti.
