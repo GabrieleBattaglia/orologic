@@ -19,18 +19,18 @@ def CalculateMaterial(board):
 
 
 def InsertedCounter(board):
-    """Conta i pezzi presenti sulla scacchiera nell'ordine FEN: R N B Q K P p r n b q k."""
-    order = "RNBQKPprnbqk"
+    """Conta i pezzi presenti sulla scacchiera nell'ordine di importanza: Q R B N P."""
+    order = ["q", "r", "b", "n", "p"]
     p_parts = []
 
     white_material, black_material = CalculateMaterial(board)
 
-    for sym in order:
-        piece_type = chess.PIECE_SYMBOLS.index(sym.lower())
-        color = chess.WHITE if sym.isupper() else chess.BLACK
-        count = len(board.pieces(piece_type, color))
-        if count > 0:
-            p_parts.append(f"{sym}-{count}")
+    for piece_char in order:
+        piece_type = chess.PIECE_SYMBOLS.index(piece_char)
+        white_count = len(board.pieces(piece_type, chess.WHITE))
+        black_count = len(board.pieces(piece_type, chess.BLACK))
+        if white_count > 0 or black_count > 0:
+            p_parts.append(f"{piece_char.upper()}={white_count}/{black_count}")
 
     p_string = ", ".join(p_parts)
     if p_string:
@@ -38,6 +38,7 @@ def InsertedCounter(board):
 
     p1 = f"[{white_material}/{black_material}]: {p_string}> "
     return p1
+
 
 
 def SquaresListToString(board, sq_list, report_piece=False, occupied_only=False):

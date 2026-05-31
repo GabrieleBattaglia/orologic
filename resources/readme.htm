@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 8.1.0 - 29 maggio 2026 - 09:18)</h1>
+<h1>Guida Utente di Orologic (Versione 8.2.0 - 31 maggio 2026 - 08:52)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -272,12 +272,27 @@ margin: 1em 0;
 </ul>
 
 <h4>2.3.2. Editor della Scacchiera (.be)</h4>
-<p>Usa <code>.be</code> per entrare in modalità editor, utile per ricreare posizioni prese da libri. Da qui puoi piazzare pezzi (es. <code>Pe4</code> piazza un pedone in e4), svuotarli (es. <code>e4</code>) o usare comandi speciali come:</p>
+<p>Usa <code>.be</code> per entrare in modalità editor, utile per ricreare posizioni specifiche. Da qui puoi piazzare pezzi (es. <code>Pe4</code> piazza un pedone bianco in e4, mentre <code>pe4</code> piazza un pedone nero), svuotare case (es. <code>e4</code>) o usare comandi speciali come:</p>
 <ul>
     <li><code>.v</code>: Svuota l'intera scacchiera, lasciando solo i due Re.</li>
     <li><code>.i</code>: Ripristina tutti i pezzi alla posizione iniziale standard.</li>
     <li><code>.t</code>: Cambia il tratto (turno al Bianco o al Nero).</li>
     <li><code>.</code>: Esce dall'editor e salva la nuova posizione.</li>
+</ul>
+
+<h5>2.3.2.1. Inserimento Multiplo dei Pezzi</h5>
+<p>Per velocizzare l'inserimento, è possibile specificare una lista di case separate da virgole:</p>
+<ul>
+    <li><strong>Piazzare più pezzi dello stesso tipo:</strong> Inserisci la lettera del pezzo (maiuscolo per il Bianco, minuscolo per il Nero) seguita dalle case separate da virgola (es. <code>ra8,h8</code> posiziona due torri nere in a8 e h8; <code>Pa2,b2,c2,d2,e2,f2,g2,h2</code> posiziona tutti e otto i pedoni bianchi sulla seconda traversa). Questa sintassi non è valida per i Re, in quanto pezzi unici obbligatori.</li>
+    <li><strong>Svuotare più case contemporaneamente:</strong> Inserisci la lista delle case separate da virgola senza alcuna lettera del pezzo davanti (es. <code>a8,h8</code> svuota le case a8 e h8).</li>
+</ul>
+
+<h5>2.3.2.2. Interpretazione del Prompt dell'Editor</h5>
+<p>Durante l'editing, il prompt visualizza in tempo reale un riepilogo compatto dei pezzi presenti sulla scacchiera:</p>
+<ul>
+    <li><strong>Materiale:</strong> All'inizio del prompt viene riportato il bilancio totale del materiale nel formato <code>[materiale_bianco/materiale_nero]</code> basato sui classici valori dei pezzi.</li>
+    <li><strong>Riepilogo Pezzi:</strong> Segue l'elenco dei pezzi presenti visualizzati in ordine decrescente di importanza da sinistra a destra: Donna (<code>Q</code>), Torre (<code>R</code>), Alfiere (<code>B</code>), Cavallo (<code>N</code>), Pedone (<code>P</code>). I Re (<code>K</code>) non sono mostrati nel riepilogo poiché sono obbligatori per legge.</li>
+    <li><strong>Formato Conteggio:</strong> Ogni pezzo viene visualizzato nel formato <code>PEZZO=bianco/nero</code> (es. <code>Q=1/0</code> indica che c'è solo una donna bianca sulla scacchiera; <code>R=2/2</code> indica che sono presenti 2 torri bianche e 2 nere). I tipi di pezzi non presenti sulla scacchiera non compaiono nel riepilogo.</li>
 </ul>
 
 <h5>Esempio pratico: impostare un finale specifico</h5>
@@ -360,8 +375,8 @@ margin: 1em 0;
     <li><strong>Sfida Mista (mixed):</strong> Affronta la prova definitiva composta da una serie fissa di 100 domande miste scelte casualmente tra i tre tipi di esercizio precedenti.</li>
 </ul>
 
-<h4>2.4.3. Classifiche (chart)</h4>
-<p>Il comando <code>chart</code> visualizza una classifica dettagliata degli utenti registrati per ciascun esercizio, con indicazione di punti totali, accuratezza (Win%), punti al minuto e data del record. I punteggi vengono salvati nel file <code>memoboard_scores.json</code> nella cartella <code>settings</code> di Orologic.</p>
+<h4>2.4.3. Classifiche</h4>
+<p>Il comando <code>classifiche</code> visualizza una classifica dettagliata degli utenti registrati per ciascun esercizio, con indicazione di punti totali, accuratezza (Win%), punti al minuto e data del record. I punteggi vengono salvati nel file <code>memoboard_scores.json</code> nella cartella <code>settings</code> di Orologic.</p>
 
 <h3>2.5. Configurazione</h3>
 <p>Orologic è altamente personalizzabile.</p>

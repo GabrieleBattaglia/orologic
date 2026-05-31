@@ -40,7 +40,7 @@ def BoardEditor(starting_fen=None, sharing_window=None):
         if sharing_window and sharing_window.is_active():
             sharing_window.update_board(tmp_board)
         prompt = InsertedCounter(tmp_board)
-        wherewho = dgt(prompt=prompt, kind="s", smin=1, smax=10).strip()
+        wherewho = dgt(prompt=prompt, kind="s", smin=1, smax=100).strip()
 
         # Gestione Comandi
         if wherewho.startswith("."):
@@ -151,41 +151,67 @@ def BoardEditor(starting_fen=None, sharing_window=None):
                 tmp_board.halfmove_clock = h
 
             continue
-
         # Gestione Inserimento Pezzi / Svuotamento Case
         try:
-            if len(wherewho) == 2:
-                square_str = wherewho.lower()
-                piece_name = None
-            elif len(wherewho) == 3:
-                piece_name = wherewho[0]
-                square_str = wherewho[1:].lower()
-            else:
-                print(_("Formato non valido. Usa Pe4 o e4."))
+            parts = [p.strip() for p in wherewho.split(",")]
+            if not parts or parts[0] == "":
+                print(_("Input non riconosciuto."))
                 continue
 
-            square = chess.parse_square(square_str)
-            existing_piece = tmp_board.piece_at(square)
-
-            if piece_name is None:
-                if existing_piece and existing_piece.piece_type == chess.KING:
-                    print(_("Non puoi rimuovere il Re. Spostalo usando Ke4 o ke4."))
-                else:
-                    tmp_board.remove_piece_at(square)
+            first_part = parts[0]
+            if len(first_part) == 2:
+                piece_name = None
+                first_square_str = first_part.lower()
+            elif len(first_part) == 3:
+                piece_name = first_part[0]
+                first_square_str = first_part[1:].lower()
             else:
-                if piece_name.upper() == "K":
-                    color = chess.WHITE if piece_name.isupper() else chess.BLACK
-                    old_sq = tmp_board.king(color)
-                    if old_sq is not None:
-                        tmp_board.remove_piece_at(old_sq)
-                    tmp_board.set_piece_at(square, chess.Piece(chess.KING, color))
-                else:
+                print(_("Formato non valido. Usa Pe4 o e4 o Pe4,f4."))
+                continue
+
+            # Se ci sono più parti, e il pezzo è un Re (K o k), non è consentito
+            if len(parts) > 1 and piece_name and piece_name.upper() == "K":
+                print(_("I Re sono unici, non puoi specificare più case contemporaneamente."))
+                continue
+
+            squares_to_process = []
+            squares_to_process.append((first_square_str, piece_name))
+
+            valid = True
+            for part in parts[1:]:
+                part = part.lower()
+                if len(part) != 2:
+                    print(_("Formato casa '{part}' non valido.").format(part=part))
+                    valid = False
+                    break
+                squares_to_process.append((part, piece_name))
+
+            if not valid:
+                continue
+
+            for sq_str, p_name in squares_to_process:
+                square = chess.parse_square(sq_str)
+                existing_piece = tmp_board.piece_at(square)
+
+                if p_name is None:
                     if existing_piece and existing_piece.piece_type == chess.KING:
-                        print(_("Casa occupata dal Re. Sposta prima il Re."))
+                        print(_("Non puoi rimuovere il Re. Spostalo usando Ke4 o ke4."))
                     else:
-                        color = chess.WHITE if piece_name.isupper() else chess.BLACK
-                        p_type = chess.PIECE_SYMBOLS.index(piece_name.lower())
-                        tmp_board.set_piece_at(square, chess.Piece(p_type, color))
+                        tmp_board.remove_piece_at(square)
+                else:
+                    if p_name.upper() == "K":
+                        color = chess.WHITE if p_name.isupper() else chess.BLACK
+                        old_sq = tmp_board.king(color)
+                        if old_sq is not None:
+                            tmp_board.remove_piece_at(old_sq)
+                        tmp_board.set_piece_at(square, chess.Piece(chess.KING, color))
+                    else:
+                        if existing_piece and existing_piece.piece_type == chess.KING:
+                            print(_("Casa occupata dal Re. Sposta prima il Re in {sq}.").format(sq=sq_str))
+                        else:
+                            color = chess.WHITE if p_name.isupper() else chess.BLACK
+                            p_type = chess.PIECE_SYMBOLS.index(p_name.lower())
+                            tmp_board.set_piece_at(square, chess.Piece(p_type, color))
 
         except (ValueError, IndexError):
             print(_("Input non riconosciuto."))

@@ -1281,12 +1281,12 @@ def show_post_game_report(game_id, token):
         req.add_header("Authorization", f"Bearer {token}")
         try:
             req_an = urllib.request.Request(
-                f"https://lichess.org/api/game/{game_id}/analyze", method="POST"
+                f"https://lichess.org/{game_id}/request-analysis", method="POST"
             )
             req_an.add_header("Authorization", f"Bearer {token}")
             urllib.request.urlopen(req_an)
-        except Exception:
-            pass
+        except Exception as e:
+            print(_("Avviso: impossibile richiedere l'analisi server: {e}").format(e=e))
 
     data = None
     max_attempts = 30
