@@ -1279,66 +1279,18 @@ def show_post_game_report(game_id, token):
     req.add_header("Accept", "application/json")
     if token:
         req.add_header("Authorization", f"Bearer {token}")
-        try:
-            req_an = urllib.request.Request(
-                f"https://lichess.org/{game_id}/request-analysis", method="POST"
-            )
-            req_an.add_header("Authorization", f"Bearer {token}")
-            urllib.request.urlopen(req_an)
-        except Exception as e:
-            print(_("Avviso: impossibile richiedere l'analisi server: {e}").format(e=e))
-
-    data = None
-    max_attempts = 30
-    print(_("Attesa dell'analisi del computer (Premi ESC per saltare)..."))
-
-    percentage = 0
-    for i in range(max_attempts):
-        if msvcrt.kbhit():
-            c = msvcrt.getwch()
-            if c == "\x1b":  # ESC
-                sys.stdout.write("\n")
-                print(_("Attesa analisi annullata dall'utente."))
-                break
-        try:
-            with urllib.request.urlopen(req) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-
-            w = data.get("players", {}).get("white", {})
-            b = data.get("players", {}).get("black", {})
-
-            total_plies = len(data.get("moves", "").split())
-            analyzed_plies = len(data.get("analysis", []))
-            if total_plies > 0:
-                percentage = min(100, int((analyzed_plies / total_plies) * 100))
-            else:
-                percentage = 0
-
-            sys.stdout.write(_("\rAvanzamento: {p}%").format(p=percentage))
-            sys.stdout.flush()
-
-            if "analysis" in w or "analysis" in b:
-                sys.stdout.write(_("\rAvanzamento: 100%\n"))
-                sys.stdout.flush()
-                break
-        except Exception:
-            sys.stdout.write(_("\rAvanzamento: {p}%").format(p=percentage))
-            sys.stdout.flush()
-        time.sleep(2.0)
-    else:
-        sys.stdout.write("\n")
-
-    if not data:
-        print(_("Impossibile recuperare il report della partita."))
+    try:
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except Exception as e:
+        print(_("Impossibile recuperare il report della partita: {e}").format(e=e))
         return
 
     w = data.get("players", {}).get("white", {})
     b = data.get("players", {}).get("black", {})
-
     print(_("\n[Risultato Elo]"))
     rated = data.get("rated", False)
     if rated:
-
         def format_elo(p):
             name = p.get("user", {}).get("name", _("Anonimo"))
             rating = p.get("rating", "?")
@@ -1351,26 +1303,7 @@ def show_post_game_report(game_id, token):
     else:
         print(_("Partita amichevole (nessuna variazione Elo)."))
 
-    print(_("\n[Analisi Computer]"))
-
-    def format_analysis(p):
-        an = p.get("analysis")
-        if not an:
-            return _("Nessuna analisi disponibile.")
-        return _("Inesattezze: {i}, Errori: {m}, Svarioni: {b}, ACPL: {a}").format(
-            i=an.get("inaccuracy", 0),
-            m=an.get("mistake", 0),
-            b=an.get("blunder", 0),
-            a=an.get("acpl", 0),
-        )
-
-    w_name = w.get("user", {}).get("name", _("Bianco"))
-    b_name = b.get("user", {}).get("name", _("Nero"))
-    print(_("{u} (Bianco): {a}").format(u=w_name, a=format_analysis(w)))
-    print(_("{u} (Nero): {a}").format(u=b_name, a=format_analysis(b)))
-
     from GBUtils import enter_escape
-
     enter_escape(_("\nPremi Invio per continuare..."))
 
 
