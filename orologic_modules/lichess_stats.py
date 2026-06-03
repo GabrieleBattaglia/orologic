@@ -125,6 +125,30 @@ def formatta_stats_quartile(title, stats):
     return f"{line1}\n{line2}"
 
 
+def calcola_dea(ratings, emin, emax):
+    pri = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    pridiv = len(pri)
+    eran = emax - emin
+    dea = ""
+    for j in ratings:
+        w = (j - emin) * (pridiv - 1) / eran if eran > 0 else 0.0
+        dea += pri[round(w)]
+    return dea
+
+
+def print_wrapped_dea(label, dea_str):
+    if len(dea_str) < 73:
+        print(f"{label}: {dea_str}")
+    else:
+        indent = " " * (len(label) + 2)
+        for i in range(0, len(dea_str), 72):
+            part = dea_str[i : i + 72]
+            if i == 0:
+                print(f"{label}: {part}")
+            else:
+                print(f"{indent}{part}")
+
+
 def run_stats(username, secrets):
     print(_("\nRecupero storia Elo per {u} in corso...").format(u=username))
     history_data = fetch_rating_history(username)
@@ -229,6 +253,7 @@ def run_stats(username, secrets):
                 "2": _("Scegli valore temporale finale"),
                 "3": _("Tutto il periodo"),
                 "4": _("Ascolta sonificazione"),
+                "5": _("Leggi stringa DEA tradotta"),
                 ".": _("Torna indietro"),
             }
 
@@ -337,6 +362,49 @@ def run_stats(username, secrets):
 
                 print(_("Riproduzione sonificazione in corso..."))
                 sonify(ratings_subset, duration, ptm=ptm, vol=sonify_vol)
+            elif scelta == "5":
+                ratings_subset = [item["rating"] for item in selected_pts]
+                if not ratings_subset:
+                    print(_("Nessun dato Elo disponibile per il periodo selezionato."))
+                    continue
+
+                emin_global = min(ratings_subset)
+                emax_global = max(ratings_subset)
+
+                span_days = (selected_pts[-1]["dt"] - selected_pts[0]["dt"]).days
+                usa_quartili = False
+                if len(ratings_subset) >= 20:
+                    usa_quartili = True
+                elif len(ratings_subset) >= 8 and span_days >= 60:
+                    usa_quartili = True
+
+                print(_("\nElaborazione stringa DEA in corso..."))
+
+                if usa_quartili:
+                    q1, q2, q3, q4 = dividi_in_quartili(selected_pts)
+                    r1 = [item["rating"] for item in q1]
+                    r2 = [item["rating"] for item in q2]
+                    r3 = [item["rating"] for item in q3]
+                    r4 = [item["rating"] for item in q4]
+
+                    dea_q1 = calcola_dea(r1, emin_global, emax_global) if r1 else ""
+                    dea_q2 = calcola_dea(r2, emin_global, emax_global) if r2 else ""
+                    dea_q3 = calcola_dea(r3, emin_global, emax_global) if r3 else ""
+                    dea_q4 = calcola_dea(r4, emin_global, emax_global) if r4 else ""
+
+                    if dea_q1:
+                        print_wrapped_dea("DEA-Q1", dea_q1)
+                    if dea_q2:
+                        print_wrapped_dea("DEA-Q2", dea_q2)
+                    if dea_q3:
+                        print_wrapped_dea("DEA-Q3", dea_q3)
+                    if dea_q4:
+                        print_wrapped_dea("DEA-Q4", dea_q4)
+                else:
+                    dea_unica = calcola_dea(ratings_subset, emin_global, emax_global)
+                    print_wrapped_dea("DEA", dea_unica)
+
+                enter_escape(_("\nPremi Invio per continuare..."))
 
         if choix_menu_abort:
             break
