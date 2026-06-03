@@ -1270,7 +1270,7 @@ def async_play_loop(q, game_state):
         time.sleep(0.02)
 
 
-def show_post_game_report(game_id, token):
+def show_post_game_report(game_id, token, username):
     print(_("\n--- Recupero Report Partita da Lichess (Attendi...) ---"))
     time.sleep(2)
     req = urllib.request.Request(
@@ -1300,6 +1300,67 @@ def show_post_game_report(game_id, token):
 
         print(_("Bianco ({b})").format(b=format_elo(w)))
         print(_("Nero ({n})").format(n=format_elo(b)))
+
+        white_user = w.get("user", {}).get("name", "")
+        black_user = b.get("user", {}).get("name", "")
+        my_player = None
+        if white_user.lower() == username.lower():
+            my_player = w
+        elif black_user.lower() == username.lower():
+            my_player = b
+
+        if my_player:
+            rating = my_player.get("rating")
+            diff = my_player.get("ratingDiff")
+            if rating is not None and diff is not None:
+                nelo = rating + diff
+                from .lichess_stats import fetch_rating_history
+                history_data = fetch_rating_history(username)
+                if history_data:
+                    perf_name = data.get("perf")
+                    if not perf_name:
+                        perf_name = data.get("speed")
+
+                    if perf_name:
+                        selected_item = next(
+                            (
+                                item
+                                for item in history_data
+                                if item.get("name", "").lower() == perf_name.lower()
+                            ),
+                            None,
+                        )
+                        if selected_item:
+                            points = selected_item.get("points", [])
+                            elo_list = [pt[3] for pt in points]
+
+                            if elo_list and elo_list[-1] == nelo:
+                                elo = elo_list[:-1]
+                            else:
+                                elo = elo_list
+
+                            if elo:
+                                import statistics
+                                celo = elo.count(nelo)
+                                if celo == 0:
+                                    print(_("\nL'Elo {nelo} non è mai stato registrato prima in questa lista.").format(nelo=nelo))
+                                else:
+                                    print(_("\nL'elo inserito, {nelo}, compare altre {celo} volte, in questa lista.").format(nelo=nelo, celo=celo))
+
+                                omed = statistics.mean(elo)
+                                elorange = max(elo) - min(elo)
+                                if len(elo) > 2 and elorange > 0:
+                                    pos_pct = (nelo - min(elo)) * 100 / elorange
+                                    print(_("Minimo / Valore inserito (posizionamento) / Massimo:\n\t{min_elo} / {nelo}=({pct:.3f}%) / {max_elo}.").format(
+                                        min_elo=min(elo), nelo=nelo, pct=pos_pct, max_elo=max(elo)
+                                    ))
+
+                                elo_after = elo + [nelo]
+                                print(_("Nuovo ELO aggiunto."))
+                                nmed = statistics.mean(elo_after)
+                                print(_("Variazione della media, prima / dopo / differenza:\n\t{omed:.3f} / {nmed:.3f} / {diff:.3f}").format(
+                                    omed=omed, nmed=nmed, diff=nmed - omed
+                                ))
     else:
         print(_("Partita amichevole (nessuna variazione Elo)."))
 
@@ -1333,7 +1394,7 @@ def play_game(game_id, token, username):
 
         if user_input is None:
             if len(game_state.move_history) > 10:
-                show_post_game_report(game_id, token)
+                show_post_game_report(game_id, token, username)
                 save_lichess_game(game_state, getattr(game_state, "winner", "*"))
             else:
                 print(_("\nPartita terminata con 5 o meno mosse. Salto l'analisi e il salvataggio."))
