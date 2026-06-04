@@ -213,6 +213,7 @@ MENU_CHOICES = {
     "memoboard": _("Memoboard (Allenamento alla cieca)"),
     "elimina": _("Elimina orologio"),
     "arbitra": _("Inizia partita (Arbitraggio)"),
+    "tempo": _("Tempo (Orologio nudo e crudo)"),
     "manuale": _("Guida app"),
     "motore": _("Configurazione motore"),
     "nomi": _("Personalizzazione nomi"),
