@@ -6,7 +6,6 @@ import time
 import datetime
 import pyperclip
 import re
-import io
 import sys
 import math
 import numpy as np
@@ -488,35 +487,44 @@ def LoadPGNFromClipboard():
         text = pyperclip.paste()
         if not text.strip():
             return None
-        pgn_io = io.StringIO(text)
-        games = []
-        while True:
-            g = chess.pgn.read_game(pgn_io)
-            if not g:
-                break
-            games.append(g)
+
+        games, is_corrupted, is_corrected, err_msg, cleaned_text = board_utils.validate_and_clean_pgn(text)
+
+        if is_corrupted:
+            Acusticator(["d3", 0.5, 0, config.VOLUME], kind=3)
+            print(_("\n[Errore] PGN non valido:"))
+            print(err_msg)
+            return None
+
+        if is_corrected:
+            pyperclip.copy(cleaned_text)
+            print(_("\n[Info] Il PGN presentava lievi imperfezioni di layout ed e' stato corretto e aggiornato negli appunti."))
+            Acusticator(["c5", 0.1, 0, config.VOLUME, "e5", 0.1, 0, config.VOLUME], kind=1)
+
         if not games:
             return None
+
         if len(games) == 1:
-            return games[0]
+            return games[0], is_corrected
+
         partite = {
             i + 1: f"{g.headers.get('White')} vs {g.headers.get('Black')}"
             for i, g in enumerate(games)
         }
         c = menu(partite, p=_("Scegli partita: "), show=True, numbered=True)
-        return games[int(c) - 1] if c else None
+        return (games[int(c) - 1], is_corrected) if c else None
     except Exception:
         return None
 
 
-def AnalyzeGame(pgn_game):
+def AnalyzeGame(pgn_game, is_corrected=False):
     print(_("\nModalita' analisi.\nHeaders della partita:\n"))
     for k, v in pgn_game.headers.items():
         print(f"  {k}: {v}")
     current_node = pgn_game
     extra_prompt = ""
     comment_auto_read = True
-    saved = False
+    saved = is_corrected
     total_moves = len(list(pgn_game.mainline_moves()))
 
     while True:
@@ -779,11 +787,13 @@ def AnalyzeGame(pgn_game):
             )
             node_changed = current_node != previous_node
         elif cmd == "l":  # Carica
-            new = LoadPGNFromClipboard()
-            if new:
-                pgn_game = new
+            res = LoadPGNFromClipboard()
+            if res:
+                new_game, is_corrected = res
+                pgn_game = new_game
                 current_node = pgn_game
                 node_changed = False
+                saved = is_corrected
                 total_moves = len(list(pgn_game.mainline_moves()))
                 Acusticator(["c6", 0.15, 0, config.VOLUME], kind=1, adsr=[5, 10, 80, 5])
                 print(_("\nNuovo PGN caricato."))

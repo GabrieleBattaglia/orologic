@@ -617,8 +617,9 @@ def run():
 
             elif cmd == ".pg":
                 print(_("Incolla una nuova posizione PGN dagli appunti..."))
-                loaded_game = PastePGNFromClipboard()
-                if loaded_game:
+                res = PastePGNFromClipboard()
+                if res:
+                    loaded_game, is_corrected = res
                     print(
                         _(
                             "ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova."
@@ -635,7 +636,7 @@ def run():
                         board.push(move)
                     node = game.end()
                     game_state.board = board
-                    is_modified = False
+                    is_modified = is_corrected
                     print(_("Nuova partita caricata."))
                     print(board)
                 else:

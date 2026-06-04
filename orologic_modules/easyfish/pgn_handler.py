@@ -1,12 +1,11 @@
 import chess
 import chess.pgn
 import os
-import io
 import pyperclip
 import datetime
-from GBUtils import dgt, key
+from GBUtils import dgt, key, Acusticator
 from ..config import _, sanitize_filename, percorso_salvataggio
-from ..board_utils import format_pgn_comments
+from ..board_utils import format_pgn_comments, validate_and_clean_pgn
 from .constants import (
     DEFAULT_EVENT,
     DEFAULT_SITE,
@@ -29,12 +28,27 @@ def CopyPGNToClipboard(game):
 def PastePGNFromClipboard():
     """Incolla una partita dagli appunti in formato PGN."""
     pgn_string = pyperclip.paste()
-    if not pgn_string:
+    if not pgn_string.strip():
         return None
     try:
-        pgn_io = io.StringIO(pgn_string)
-        game = chess.pgn.read_game(pgn_io)
-        return game
+        games, is_corrupted, is_corrected, err_msg, cleaned_text = validate_and_clean_pgn(pgn_string)
+
+        if is_corrupted:
+            from ..config import VOLUME
+            Acusticator(["d3", 0.5, 0, VOLUME], kind=3)
+            print(_("\n[Errore] PGN non valido:"))
+            print(err_msg)
+            return None
+
+        if is_corrected:
+            pyperclip.copy(cleaned_text)
+            print(_("\n[Info] Il PGN presentava lievi imperfezioni di layout ed e' stato corretto e aggiornato negli appunti."))
+            from ..config import VOLUME
+            Acusticator(["c5", 0.1, 0, VOLUME, "e5", 0.1, 0, VOLUME], kind=1)
+
+        if not games:
+            return None
+        return games[0], is_corrected
     except Exception:
         return None
 

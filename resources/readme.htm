@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 8.2.0 - 31 maggio 2026 - 08:52)</h1>
+<h1>Guida Utente di Orologic (Versione 8.5.0 - 4 giugno 2026 - 09:06)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -215,19 +215,27 @@ margin: 1em 0;
 </ul>
 
 <h4>2.2.4. Storia Elo e Sonificazione (storia)</h4>
-<p>Questa nuova funzionalità (disponibile dal menu principale di Orolichess per l'utente loggato, e dal sottomenu del Profilatore per qualsiasi altro giocatore cercato) ti permette di analizzare nel dettaglio l'evoluzione dell'Elo del giocatore nel tempo e di ascoltarla tramite sonificazione acustica.</p>
+<p>Questa funzionalità (disponibile dal menu principale di Orolichess per l'utente loggato, e dal sottomenu del Profilatore per qualsiasi altro giocatore cercato) ti permette di analizzare nel dettaglio l'evoluzione dell'Elo del giocatore nel tempo e di ascoltarla tramite sonificazione acustica.</p>
 <ul>
     <li><strong>Varianti supportate:</strong> Consente di selezionare una qualsiasi variante in cui il giocatore possiede uno storico (es. Classical, Blitz, Rapid, Correspondence, Puzzle).</li>
     <li><strong>Statistiche Avanzate:</strong> Calcola per l'intero periodo selezionato (ed anche diviso in quattro quartili di tempo Q1, Q2, Q3, Q4 con le loro durate in anni, mesi e giorni):
         <ul>
             <li><strong>Minimo / Massimo / Media:</strong> I valori minimi, massimi e medi raggiunti.</li>
             <li><strong>Coefficiente di Variazione (CV%):</strong> Misura la dispersione relativa dei punteggi per valutarne la stabilità (più è basso, più il rendimento è stato costante).</li>
-            <li><strong>Tendenza:</strong> Calcola la pendenza della retta di regressione lineare per capire se l'Elo è in fase di crescita o calo.</li>
+            <li><strong>Tendenza (Trend):</strong> Calcola la pendenza della retta di regressione lineare per capire se l'Elo è in fase di crescita o calo.</li>
             <li><strong>Moda:</strong> Il valore di Elo che ricorre più frequentemente.</li>
         </ul>
     </li>
     <li><strong>Selezione Periodo:</strong> È possibile restringere l'analisi impostando un valore iniziale e un valore finale tramite l'elenco numerato dei punti storici, oppure reimpostare tutto il periodo.</li>
     <li><strong>Sonificazione acustica:</strong> Converte la serie temporale dei punteggi Elo in suoni ad altezza variabile per poter "ascoltare" l'andamento della propria forza di gioco. Chiede se si vuole abilitare il portamento (glissando continuo tra i valori) e la durata complessiva dell'audio. La sonificazione rispetta il volume generale di Orologic e garantisce un volume minimo di sicurezza (0.2) anche se l'applicazione è silenziata.</li>
+</ul>
+
+<h4>2.2.5. Statistiche Elo di Fine Partita e Variazione della Media</h4>
+<p>Al termine di ogni partita classificata giocata su Lichess (che sia durata più di 5 mosse), Orologic calcola e visualizza automaticamente un report dettagliato sull'impatto del nuovo Elo sul tuo storico personale. Il report analizza i seguenti aspetti:</p>
+<ul>
+    <li><strong>Posizionamento Storico:</strong> Mostra il posizionamento del nuovo Elo calcolato rispetto al minimo e al massimo storici mai registrati, indicando il posizionamento percentuale esatto (es. <code>Minimo / Valore inserito (posizionamento) / Massimo: 1450 / 1520=(45.321%) / 1600</code>). Una percentuale vicina al 100% indica che ti stai avvicinando al tuo record storico assoluto!</li>
+    <li><strong>Frequenza dell'Elo:</strong> Indica quante volte nel tuo storico hai già raggiunto esattamente quel preciso punteggio Elo (es. <code>L'elo inserito, 1520, compare altre 3 volte in questa lista</code>), per darti la percezione di quante volte hai navigato in quella specifica fascia di forza.</li>
+    <li><strong>Impatto sulla Media Storica:</strong> Calcola la media dei tuoi punteggi Elo storici prima della partita e dopo la partita, mostrando la variazione esatta (prima, dopo e la differenza). Questo ti permette di capire quanto la partita giocata stia spostando l'asticella della tua stabilità complessiva di rendimento a lungo termine.</li>
 </ul>
 
 <h3>2.3. Analizza una Partita (analizza)</h3>
@@ -257,13 +265,21 @@ margin: 1em 0;
     </tbody>
 </table>
 
-<h4>2.2.1. Modalità Ispezione Smart</h4>
+<h4>2.3.1. Modalità Ispezione Smart</h4>
 <p>Dopo aver usato il comando <code>e</code>, puoi scegliere di ispezionare una linea in "Modalità Smart", navigandola mossa per mossa. I comandi sono: <code>d</code> (avanti), <code>s</code> (indietro), <code>r</code> (rivaluta), <code>.</code> (esci).</p>
 
-<h3>2.3. Easyfish (Interfaccia a riga di comando per Stockfish)</h3>
+<h4>2.3.2. Validatore e Correttore Automatico del PGN dagli Appunti</h4>
+<p>Orologic integra un sistema intelligente di validazione e correzione dei file PGN copiati negli appunti. Questa funzione interviene ogni volta che si carica una partita dagli appunti (sia all'avvio della modalità <code>analizza</code>, sia inserendo il comando <code>l</code> durante l'analisi interattiva, sia importando una partita con <code>.pg</code> in Easyfish).</p>
+<p>Il sistema agisce su due livelli:</p>
+<ol>
+    <li><strong>Correzione Automatica del Layout (Auto-Correction):</strong> A volte i PGN copiati da siti web o altre applicazioni presentano lievi imperfezioni sintattiche (es. spazi all'interno dei tre puntini delle mosse del Nero come <code>14. .. Qg4</code> anziché <code>14... Qg4</code>, oppure parentesi graffe dei commenti formattate male). Orologic corregge silenziosamente queste imperfezioni, aggiorna gli appunti di sistema con il PGN ripulito e formattato secondo gli standard del programma, riproduce una notifica sonora ed imposta automaticamente lo stato della partita come <strong>modificata</strong>. In questo modo, uscendo dalla sessione, ti verrà proposto il salvataggio su disco così da conservare la versione corretta.</li>
+    <li><strong>Rilevamento ed Esposizione Errori Gravi (Corruption Check):</strong> Se il PGN copiato contiene errori gravi che renderebbero impossibile l'analisi o corromperebbero l'albero di gioco (es. mosse illegali per la posizione sulla scacchiera, turni invertiti, o testi non scacchistici incollati per errore come normali messaggi di chat), Orologic riproduce un avviso sonoro di errore, stampa una descrizione dettagliata del problema (indicando la partita e l'errore esatto riscontrato) ed <strong>interrompe immediatamente il caricamento</strong> per evitare analisi automatiche o ripristini su dati corrotti.</li>
+</ol>
+
+<h3>2.4. Easyfish (Interfaccia a riga di comando per Stockfish)</h3>
 <p>Easyfish è un modulo speciale accessibile dal menu principale. Offre un'interfaccia a riga di comando fluida e diretta per studiare, creare varianti e persino giocare in modo flessibile. I comandi speciali sono tutti preceduti dal punto (<code>.</code>). Inoltre, in tutte le modalità di Easyfish (nel menu principale, durante la partita contro il motore e nell'esploratore) sono pienamente supportati i <strong>comandi di ispezione della scacchiera</strong> descritti nella sezione 2.1.4 (<code>/[col]</code>, <code>\[col]</code>, <code>-[col|trv|casa]</code> e <code>,[Pezzo]</code>).</p>
 
-<h4>2.3.1. Iniziare e Gestire la Partita</h4>
+<h4>2.4.1. Iniziare e Gestire la Partita</h4>
 <ul>
     <li><code>.n</code>: Azzera la scacchiera e inizia una nuova partita vuota.</li>
     <li><code>.pg</code> o <code>.fg</code>: Incolla una partita PGN (o un codice FEN) precedentemente copiata nei tuoi appunti, per iniziare a lavorarci.</li>
@@ -271,7 +287,7 @@ margin: 1em 0;
     <li>Qualsiasi mossa in formato SAN (es. <code>e4</code>, <code>Nf3</code>) viene aggiunta all'albero della partita. Se inserisci una mossa che devia dalla linea principale, Easyfish ti chiederà se vuoi sovrascrivere o creare una variante.</li>
 </ul>
 
-<h4>2.3.2. Editor della Scacchiera (.be)</h4>
+<h4>2.4.2. Editor della Scacchiera (.be)</h4>
 <p>Usa <code>.be</code> per entrare in modalità editor, utile per ricreare posizioni specifiche. Da qui puoi piazzare pezzi (es. <code>Pe4</code> piazza un pedone bianco in e4, mentre <code>pe4</code> piazza un pedone nero), svuotare case (es. <code>e4</code>) o usare comandi speciali come:</p>
 <ul>
     <li><code>.v</code>: Svuota l'intera scacchiera, lasciando solo i due Re.</li>
@@ -280,14 +296,14 @@ margin: 1em 0;
     <li><code>.</code>: Esce dall'editor e salva la nuova posizione.</li>
 </ul>
 
-<h5>2.3.2.1. Inserimento Multiplo dei Pezzi</h5>
+<h5>2.4.2.1. Inserimento Multiplo dei Pezzi</h5>
 <p>Per velocizzare l'inserimento, è possibile specificare una lista di case separate da virgole:</p>
 <ul>
     <li><strong>Piazzare più pezzi dello stesso tipo:</strong> Inserisci la lettera del pezzo (maiuscolo per il Bianco, minuscolo per il Nero) seguita dalle case separate da virgola (es. <code>ra8,h8</code> posiziona due torri nere in a8 e h8; <code>Pa2,b2,c2,d2,e2,f2,g2,h2</code> posiziona tutti e otto i pedoni bianchi sulla seconda traversa). Questa sintassi non è valida per i Re, in quanto pezzi unici obbligatori.</li>
     <li><strong>Svuotare più case contemporaneamente:</strong> Inserisci la lista delle case separate da virgola senza alcuna lettera del pezzo davanti (es. <code>a8,h8</code> svuota le case a8 e h8).</li>
 </ul>
 
-<h5>2.3.2.2. Interpretazione del Prompt dell'Editor</h5>
+<h5>2.4.2.2. Interpretazione del Prompt dell'Editor</h5>
 <p>Durante l'editing, il prompt visualizza in tempo reale un riepilogo compatto dei pezzi presenti sulla scacchiera:</p>
 <ul>
     <li><strong>Materiale:</strong> All'inizio del prompt viene riportato il bilancio totale del materiale nel formato <code>[materiale_bianco/materiale_nero]</code> basato sui classici valori dei pezzi.</li>
@@ -314,7 +330,7 @@ margin: 1em 0;
     <li>Ora digita <code>.g</code> per avviare la partita contro il motore. Scegli di giocare con il Bianco: Stockfish guiderà il Re Nero e tu potrai allenarti a dare scacco matto!</li>
 </ol>
 
-<h4>2.3.3. Giocare contro il Motore (.g)</h4>
+<h4>2.4.3. Giocare contro il Motore (.g)</h4>
 <p>Digita <code>.g</code> da qualsiasi posizione per iniziare una partita interattiva contro Stockfish. Orologic ti chiederà con quale colore vuoi giocare e con quale modalità di tempo (partita classica, tempo fisso a mossa o modalità "amichevole" senza limiti).</p>
 <p>Durante la partita valgono tutti i controlli (matto, stallo, ripetizioni) e puoi impartire istruzioni extra:</p>
 <ul>
@@ -323,7 +339,7 @@ margin: 1em 0;
 </ul>
 <p>Al termine della partita contro il motore, Orologic annuncerà il risultato e ti chiederà direttamente se desideri analizzare la partita, permettendoti di avviarne subito l'esplorazione (<code>.e</code>) in modo del tutto coerente con quanto avviene a fine arbitraggio.</p>
 
-<h4>2.3.4. Modalità Esploratore (.e)</h4>
+<h4>2.4.4. Modalità Esploratore (.e)</h4>
 <p>Il comando <code>.e</code> apre l'Esploratore di Varianti. Un ambiente ottimizzato per navigare PGN complessi. Il prompt cambierà per indicarti il livello della variante (es. <code>Lvl0</code> per la linea principale, <code>Lvl1</code>, <code>Lvl2</code>).</p>
 <ul>
     <li><code>a</code> / <code>d</code>: Vai indietro / avanti nella linea.</li>
@@ -333,7 +349,7 @@ margin: 1em 0;
     <li><code>s</code>: Richiedi al motore un'analisi istantanea della posizione.</li>
 </ul>
 
-<h4>2.3.5. Menu Disegno (.d)</h4>
+<h4>2.4.5. Menu Disegno (.d)</h4>
 <p>Il comando <code>.d</code> apre un sottomenu dedicato all'inserimento di annotazioni grafiche (frecce e cerchi colorati) sulla scacchiera. Queste annotazioni vengono associate in modo permanente alla mossa corrente all'interno del file PGN, e verranno stampate fedelmente se esporti la scacchiera in PDF.</p>
 <ul>
     <li><strong>A - Aggiungi una forma:</strong> Ti permette di tracciare una freccia o un cerchio. Il programma ti chiederà prima le coordinate e poi il colore.
@@ -348,7 +364,7 @@ margin: 1em 0;
     <li><strong>. - Esci:</strong> Torna al menu principale di Easyfish.</li>
 </ul>
 
-<h4>2.3.6. Condivisione Scacchiera Didattica (.cs, .csb, .csn, .cst, .cso)</h4>
+<h4>2.4.6. Condivisione Scacchiera Didattica (.cs, .csb, .csn, .cst, .cso)</h4>
 <p>Questa funzionalità permette di aprire una finestra grafica separata con il rendering in tempo reale della scacchiera corrente. È ideale per la didattica a distanza, consentendo di condividere la finestra tramite piattaforme come Zoom, Microsoft Teams o Google Meet.</p>
 <ul>
     <li><code>.cs</code>: Attiva o disattiva la finestra di condivisione grafica. All'avvio, la finestra viene aperta e massimizzata automaticamente a schermo intero. La scacchiera si posiziona al centro e si adatta a qualsiasi ridimensionamento.</li>
@@ -360,14 +376,14 @@ margin: 1em 0;
 <h5>Esempio di caso d'uso</h5>
 <p>Sei un istruttore non vedente e stai spiegando una partita a un allievo vedente. Attivi la condivisione dello schermo di Zoom selezionando la finestra grafica creata da Orologic con <code>.cs</code>. Quando digiti una mossa o inserisci un commento (es. <code>_Questa mossa controlla il centro</code>), l'allievo vedrà la scacchiera aggiornarsi in tempo reale, vedrà le frecce colorate che disegni con <code>.d</code>, e potrà leggere il tuo commento direttamente sotto la scacchiera grazie a <code>.cso on</code>.</p>
 
-<h3>2.4. Memoboard (Allenamento alla cieca) (memoboard)</h3>
+<h3>2.5. Memoboard (Allenamento alla cieca) (memoboard)</h3>
 <p>Memoboard ti aiuta a familiarizzare con la scacchiera allenandoti a visualizzarla senza guardarla. Lo scopo è sviluppare una rapida visualizzazione mentale delle 64 case, fondamentale per il gioco alla cieca e per l'analisi profonda delle partite.</p>
 
-<h4>2.4.1. Funzionamento dei Punteggi (Punti al Minuto)</h4>
+<h4>2.5.1. Funzionamento dei Punteggi (Punti al Minuto)</h4>
 <p>Per stimolare il miglioramento, Memoboard calcola un punteggio basato su velocità e precisione. Ogni domanda parte con un valore massimo di 15.000 punti, decrescendo di 1 punto per ogni millisecondo impiegato per rispondere. Una risposta esatta aggiunge i punti restanti al totale, mentre una risposta errata non assegna punti.</p>
 <p>La classifica viene ordinata per <strong>Punti al Minuto</strong> (efficienza), calcolati dividendo il punteggio totale per il tempo impiegato in secondi (moltiplicato per 60). Questo premia la precisione e la rapidità di esecuzione rispetto a sessioni lunghe e lente.</p>
 
-<h4>2.4.2. Esercizi Disponibili</h4>
+<h4>2.5.2. Esercizi Disponibili</h4>
 <ul>
     <li><strong>Esercizio con i cavalli (knights):</strong> Determina se due case sono a distanza di un salto di cavallo (es. a1 e b3). Rispondi con INVIO per Sì o ESC per No.</li>
     <li><strong>Esercizio con le diagonali (bishops):</strong> Determina se due case appartengono alla stessa diagonale (es. a1 e h7). Rispondi con INVIO per Sì o ESC per No.</li>
@@ -375,23 +391,32 @@ margin: 1em 0;
     <li><strong>Sfida Mista (mixed):</strong> Affronta la prova definitiva composta da una serie fissa di 100 domande miste scelte casualmente tra i tre tipi di esercizio precedenti.</li>
 </ul>
 
-<h4>2.4.3. Classifiche</h4>
+<h4>2.5.3. Classifiche</h4>
 <p>Il comando <code>classifiche</code> visualizza una classifica dettagliata degli utenti registrati per ciascun esercizio, con indicazione di punti totali, accuratezza (Win%), punti al minuto e data del record. I punteggi vengono salvati nel file <code>memoboard_scores.json</code> nella cartella <code>settings</code> di Orologic.</p>
 
-<h3>2.5. Configurazione</h3>
+<h3>2.6. Tempo (Orologio nudo e crudo) (tempo)</h3>
+<p>Questa modalità è progettata per chi desidera utilizzare Orologic come un semplice orologio da scacchi fisico (timer di gioco) senza che il software registri le mosse, effettui controlli di legalità o richieda l'inserimento in notazione algebrica (SAN). È ideale per:</p>
+<ul>
+    <li>Partite veloci o amichevoli giocate su una scacchiera reale in cui non si vuole perdere tempo a digitare ogni mossa al terminale.</li>
+    <li>Timing di altre attività o sfide generiche a tempo tra due persone.</li>
+</ul>
+<p>All'avvio della modalità <code>tempo</code>, il programma ti chiederà di selezionare uno degli orologi configurati. Dopodiché, gli orologi si avvieranno e potrai controllarli utilizzando i comandi con il punto (<code>.</code>) per visualizzare il tempo rimanente (<code>.1</code>, <code>.2</code>, <code>.3</code>), mettere in pausa o riprendere il timer (<code>.p</code>), oppure regolare il tempo residuo per ciascun giocatore (<code>.b+</code>, <code>.b-</code>, <code>.n+</code>, <code>.n-</code>) se necessario.</p>
+<p>Al termine della sessione (premendo <code>.</code>), Orologic genererà e salverà un file di report testuale nella cartella <code>txt/</code> contenente il riepilogo dei tempi, il numero di mosse giocate (ossia quante volte è stato premuto l'orologio) e le statistiche complessive della sessione.</p>
+
+<h3>2.7. Configurazione</h3>
 <p>Orologic è altamente personalizzabile.</p>
 
-<h4>2.5.1. Gestione Orologi (crea, vedi, elimina)</h4>
+<h4>2.7.1. Gestione Orologi (crea, vedi, elimina)</h4>
 <ul>
     <li><strong>crea:</strong> Ti guida nella creazione di un nuovo orologio, con fasi multiple, tempo base, incremento e allarmi sonori.</li>
     <li><strong>vedi:</strong> Mostra una lista di tutti i tuoi orologi salvati.</li>
     <li><strong>elimina:</strong> Ti permette di cancellare un orologio che non usi più.</li>
 </ul>
 
-<h4>2.5.2. Configurazione Motore Scacchistico (motore)</h4>
+<h4>2.7.2. Configurazione Motore Scacchistico (motore)</h4>
 <p>Questo passaggio è fondamentale per abilitare le funzioni di analisi. Orologic ti guiderà nella configurazione iniziale, ma è importante capire come renderlo portatile e cosa significano i parametri tecnici.</p>
 
-<h5>2.5.2.1. Portabilità: Usare la cartella 'engine'</h5>
+<h5>2.7.2.1. Portabilità: Usare la cartella 'engine'</h5>
 <p>Se desideri utilizzare Orologic da una chiavetta USB e cambiare spesso computer, puoi evitare di riconfigurare il percorso del motore ogni volta seguendo questi passi:</p>
 <ol>
     <li>Crea una cartella chiamata <code>engine</code> nella stessa cartella dove si trova il file <code>orologic.py</code> (o l'eseguibile).</li>
@@ -401,7 +426,7 @@ margin: 1em 0;
 </ol>
 <p>In questo modo, Orologic creerà un percorso relativo che funzionerà ovunque tu sposti la cartella del programma.</p>
 
-<h5>2.5.2.2. Spiegazione dei Parametri UCI</h5>
+<h5>2.7.2.2. Spiegazione dei Parametri UCI</h5>
 <p>Durante la configurazione, ti verranno chiesti alcuni valori. Ecco una guida per impostarli correttamente:</p>
 <ul>
     <li><strong>Hash (Memoria):</strong> Indica quanta RAM dedicare al motore per memorizzare le posizioni analizzate. Valori comuni sono 128 o 256 MB. Più memoria permette analisi più veloci su tempi lunghi.</li>
@@ -410,23 +435,23 @@ margin: 1em 0;
     <li><strong>Move Overhead (ms):</strong> È un margine di sicurezza per il tempo. Serve a compensare i ritardi di comunicazione tra Orologic e il motore. Impostarlo a <code>500</code> garantisce che il motore non perda mai per il tempo a causa di rallentamenti del sistema (lag).</li>
 </ul>
 
-<h4>2.5.3. Personalizzazione Lingua e Nomi (nomi)</h4>
+<h4>2.7.3. Personalizzazione Lingua e Nomi (nomi)</h4>
 <p>Questa opzione ti permette di personalizzare il linguaggio descrittivo usato dal programma: puoi cambiare i nomi dei pezzi (es. da "cavallo" a "destriero"), i nomi delle colonne (es. da "Ancona" ad "Apple") e i verbi usati per descrivere le mosse.</p>
 
-<h4>2.5.4. Impostazioni Generali (impostazioni)</h4>
+<h4>2.7.4. Impostazioni Generali (impostazioni)</h4>
 <p>Questa nuova sezione ti permette di configurare due comportamenti chiave del programma:</p>
 <ul>
     <li><strong>Salvataggio Automatico:</strong> Puoi attivare o disattivare il salvataggio automatico del PGN dopo ogni mossa durante una partita. Questo previene la perdita di dati in caso di problemi.</li>
     <li><strong>Stile Menu:</strong> Puoi scegliere se navigare nei menu usando le parole chiave (default) o i numeri.</li>
 </ul>
 
-<h4>2.5.5. Regolazione Volume Audio (volume)</h4>
+<h4>2.7.5. Regolazione Volume Audio (volume)</h4>
 <p>Questa opzione ti permette di impostare il volume degli effetti sonori da 0 (muto) a 100 (massimo).</p>
 
-<h3>2.6. Apri Manuale (manuale)</h3>
+<h3>2.8. Apri Manuale (manuale)</h3>
 <p>Questo comando apre questa guida nel tuo browser web predefinito.</p>
 
-<h3>2.7. Esci dall'Applicazione (.)</h3>
+<h3>2.9. Esci dall'Applicazione (.)</h3>
 <p>Digitando <code>.</code> e premendo Invio dal menu principale chiuderà Orologic.</p>
 
 ---

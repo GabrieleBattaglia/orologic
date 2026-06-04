@@ -2,6 +2,23 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+8.5.0 (4 giugno 2026 - 09:06)
+	+ [Core] Implementato un validatore e correttore automatico di PGN negli appunti (validate_and_clean_pgn).
+	+ [Core] Correzione automatica di piccoli errori di layout PGN (es. spazi errati nei puntini delle mosse o formattazione parentesi dei commenti) direttamente all'importazione dagli appunti.
+	+ [Core] Segnalazione dettagliata in caso di errori di parsing gravi (es. mosse illegali, turni errati) con blocco dell'azione corrente per evitare analisi corrotte.
+	+ [Core] Sincronizzazione automatica dello stato di modifica (saved/is_modified) sia in modalità analisi che in Easyfish se il PGN incollato è stato recuperato/migliorato.
+
+8.4.0 (4 giugno 2026 - 07:42)
+	+ [Core] Implementazione della nuova modalità "Tempo" (Issue #24), un orologio nudo e crudo per sessioni di allenamento o partite non arbitrate.
+
+8.3.1 (3 giugno 2026 - 10:47)
+	+ [Lichess] Corrette le issue #22 e #23 relative alle statistiche Elo di fine partita.
+	+ [Lichess] Integrato il calcolo del posizionamento dell'Elo finale e la variazione della media Elo storica direttamente nel report post-partita.
+	+ [L10N] Aggiornate e allineate le traduzioni in inglese, spagnolo, francese e portoghese.
+
+8.3.0 (3 giugno 2026 - 08:01)
+	+ [Lichess] Aggiunta della funzione DEA (Dynamic Elo Analysis) per analizzare storicamente l'Elo del giocatore.
+
 8.2.1 (1 giugno 2026 - 11:27)
 	+ [Lichess] Semplificato il report di fine partita rimuovendo la richiesta di analisi server (che generava errore 403) e il relativo loop di polling.
 
