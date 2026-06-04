@@ -310,8 +310,9 @@ def Main():
                 adsr=[2, 8, 90, 0],
             )
             print(_("\nCaricamento partita dagli appunti..."))
-            pgn_da_analizzare = engine.LoadPGNFromClipboard()
-            if pgn_da_analizzare:
+            res = engine.LoadPGNFromClipboard()
+            if res:
+                pgn_da_analizzare, is_corrected = res
                 if engine.ENGINE is None and not engine.InitEngine():
                     if enter_escape(
                         _(
@@ -332,7 +333,7 @@ def Main():
                 ):
                     engine.AnalisiAutomatica(board_utils.CopyPgnGame(pgn_da_analizzare))
                 else:
-                    engine.AnalyzeGame(pgn_da_analizzare)
+                    engine.AnalyzeGame(pgn_da_analizzare, is_corrected=is_corrected)
 
         elif scelta == "crea":
             Acusticator(

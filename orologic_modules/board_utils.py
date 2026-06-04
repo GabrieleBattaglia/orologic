@@ -595,3 +595,60 @@ def parse_mmss_to_seconds(time_str):
         return minutes * 60 + seconds
     except Exception:
         return -1
+
+
+def validate_and_clean_pgn(pgn_text):
+    if not pgn_text or not pgn_text.strip():
+        return None, True, False, _("Il testo e' vuoto o non contiene dati."), ""
+
+    pgn_io = io.StringIO(pgn_text)
+    games = []
+    try:
+        while True:
+            game = chess.pgn.read_game(pgn_io)
+            if not game:
+                break
+            games.append(game)
+
+        if not games:
+            return None, True, False, _("Impossibile trovare un PGN o una partita nel testo."), ""
+
+        if len(games) == 1 and len(list(games[0].mainline_moves())) == 0 and "[" not in pgn_text:
+            return None, True, False, _("Il testo non contiene un PGN valido."), ""
+
+        all_errors = []
+        for idx, game in enumerate(games):
+            if game.errors:
+                errs = [str(err) for err in game.errors]
+                all_errors.append(_("Partita {idx}: ").format(idx=idx + 1) + ", ".join(errs))
+
+        if all_errors:
+            error_msg = _("Il PGN e' corrotto o contiene mosse non valide:\n") + "\n".join(all_errors)
+            return games, True, False, error_msg, ""
+
+        cleaned_games = []
+        for game in games:
+            exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
+            game.accept(exporter)
+            cleaned_games.append(format_pgn_comments(str(exporter)))
+
+        cleaned_text = "\n\n".join(cleaned_games).strip()
+
+        def normalize_pgn(text):
+            return " ".join(text.split())
+
+        orig_norm = normalize_pgn(pgn_text)
+        cleaned_norm = normalize_pgn(cleaned_text)
+        is_corrected = (orig_norm != cleaned_norm)
+
+        msg = (
+            _("Il PGN presentava lievi imperfezioni di layout ed e' stato corretto e aggiornato automaticamente.")
+            if is_corrected
+            else _("Il PGN e' perfettamente valido.")
+        )
+
+        return games, False, is_corrected, msg, cleaned_text
+
+    except Exception as e:
+        return None, True, False, _("Errore imprevisto durante l'analisi del PGN: {error}").format(error=e), ""
+
