@@ -29,6 +29,7 @@ from orologic_modules import (
     lichess_app,
     cleaner,
     memoboard_app,
+    tempo_app,
 )
 from orologic_modules.easyfish import easyfish_app
 
@@ -463,6 +464,34 @@ def Main():
             clock_config = clock.SelectClock(db)
             if clock_config:
                 game_flow.StartGame(clock_config)
+
+        elif scelta == "tempo":
+            Acusticator(
+                [
+                    "c4",
+                    0.2,
+                    -1,
+                    config.VOLUME,
+                    "e4",
+                    0.2,
+                    -0.3,
+                    config.VOLUME,
+                    "g4",
+                    0.2,
+                    0.3,
+                    config.VOLUME,
+                    "c5",
+                    0.4,
+                    1,
+                    config.VOLUME,
+                ],
+                kind=1,
+                adsr=[10, 5, 80, 5],
+            )
+            db = storage.LoadDB()
+            clock_config = clock.SelectClock(db)
+            if clock_config:
+                tempo_app.StartTempo(clock_config)
 
         elif scelta == "manuale":
             Acusticator(
