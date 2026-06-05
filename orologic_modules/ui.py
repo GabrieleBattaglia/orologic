@@ -1,7 +1,6 @@
 import os
 import json
 import chess
-import random
 import datetime
 from GBUtils import polipo, key, dgt, Acusticator
 from . import config
@@ -744,82 +743,10 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
 
 
 def setup_fischer_random_board():
-    print(_("\n--- Configurazione Fischer Random (Chess960) ---"))
-    while True:
-        prompt = _(
-            "\nInserisci la sequenza di 8 pezzi, '?' per una casuale, o '.' per annullare: "
-        )
-        user_input = dgt(prompt, kind="s").upper()
-        if user_input == "?":
-            pos_number = random.randint(0, 959)
-            board_to_return = board_utils.CustomBoard.from_chess960_pos(pos_number)
-            starting_fen = board_to_return.fen()
-            piece_sequence = "".join(
-                [board_to_return.piece_at(i).symbol().upper() for i in range(8)]
-            )
-            Acusticator(
-                [
-                    "c5",
-                    0.1,
-                    -0.8,
-                    config.VOLUME,
-                    "e5",
-                    0.1,
-                    0,
-                    config.VOLUME,
-                    "g5",
-                    0.2,
-                    0.8,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 90, 0],
-            )
-            print(
-                _("Posizione generata: {sequence} (Numero: {number})").format(
-                    sequence=piece_sequence, number=pos_number
-                )
-            )
-            return board_to_return, starting_fen
-        elif user_input == ".":
-            return None, None
-        elif len(user_input) != 8:
-            print(_("Errore: la sequenza deve contenere 8 caratteri."))
-            Acusticator(["b3", 0.2, 0, config.VOLUME], kind=2)
-            continue
-        else:
-            fen_to_try = "{sequence}/pppppppp/8/8/8/8/PPPPPPPP/{sequence_upper} w - - 0 1".format(
-                sequence=user_input.lower(), sequence_upper=user_input
-            )
-            try:
-                board_to_return = board_utils.CustomBoard(fen_to_try, chess960=True)
-                Acusticator(
-                    [
-                        "c5",
-                        0.1,
-                        -0.8,
-                        config.VOLUME,
-                        "e5",
-                        0.1,
-                        0,
-                        config.VOLUME,
-                        "g5",
-                        0.2,
-                        0.8,
-                        config.VOLUME,
-                    ],
-                    kind=1,
-                    adsr=[2, 8, 90, 0],
-                )
-                print(
-                    _("Posizione valida! Numero Chess960: {number}").format(
-                        number=board_to_return.chess960_pos()
-                    )
-                )
-                return board_to_return, fen_to_try
-            except Exception:
-                Acusticator(["a3", 0.3, 0, config.VOLUME], kind=2)
-                continue
+    """Wrapper per compatibilità: delega a chess960_utils e restituisce (board, fen)."""
+    from . import chess960_utils
+    board, fen, _pos = chess960_utils.setup_fischer_random_board_interactive()
+    return board, fen
 
 
 def GenerateMoveSummary(game_state):

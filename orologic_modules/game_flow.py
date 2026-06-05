@@ -15,6 +15,7 @@ from . import ui
 from . import engine
 from . import storage
 from . import version
+from . import chess960_utils
 
 # Inizializzazione localizzazione
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
@@ -1712,9 +1713,10 @@ def StartGame(clock_config):
     game_state = board_utils.GameState(clock_config)
     if is_fischer_random:
         game_state.board = starting_board
-        game_state.pgn_game.headers["Variant"] = "Chess960"
-        game_state.pgn_game.headers["FEN"] = starting_fen
-        game_state.pgn_game.setup(game_state.board)
+        chess960_utils.setup_pgn_headers_chess960(game_state.pgn_game, starting_board, starting_fen)
+        chess960_utils.configure_engine_for_chess960(engine.ENGINE, True)
+    else:
+        chess960_utils.configure_engine_for_chess960(engine.ENGINE, False)
     game_state.white_player = white_player
     game_state.black_player = black_player
     game_state.pgn_game.headers["White"] = white_player

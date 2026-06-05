@@ -23,6 +23,7 @@ from .interaction import ExplorerMode, BoardEditor
 from . import game_mode
 from .image_exporter import image_settings_menu, export_board_pdf
 from .drawing import drawing_menu, verbalize_drawings
+from .. import chess960_utils
 from .sharing_window import PygameBoardWindow
 import builtins
 
@@ -477,6 +478,25 @@ def run():
                     is_modified = True
 
             elif cmd == ".g":
+                from GBUtils import enter_escape
+                is_standard = enter_escape(_("Vuoi giocare alla variante standard (scacchi ortodossi)? (INVIO per si', ESC per no): "))
+                if not is_standard:
+                    fr_board, fr_fen, fr_num = chess960_utils.setup_fischer_random_board_interactive()
+                    if fr_board is not None:
+                        if is_modified:
+                            SaveGameToFile(game)
+                        board = fr_board
+                        game, node = InitNewPGN(board)
+                        chess960_utils.setup_pgn_headers_chess960(game, board, fr_fen)
+                        game_state.board = board
+                        is_modified = False
+                        chess960_utils.configure_engine_for_chess960(engine, True)
+                    else:
+                        print(_("Configurazione Fischer Random annullata."))
+                        continue
+                else:
+                    chess960_utils.configure_engine_for_chess960(engine, False)
+
                 # Avvio partita contro il motore
                 final_node = game_mode.StartEngineGame(node, engine, sharing_window=sharing_window)
                 # Sincronizza stato al ritorno

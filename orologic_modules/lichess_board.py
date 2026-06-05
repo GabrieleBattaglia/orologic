@@ -29,6 +29,8 @@ class SpectatorGameState:
         self.is_live = False
         self.move_history = []
         self.refresh_interval = 1
+        self.initial_fen = chess.STARTING_FEN
+        self.variant = "standard"
 
     def get_clocks(self):
         w_time = self.white_time
@@ -101,14 +103,18 @@ def save_lichess_game(game_state, result_str="*"):
     game.headers["Result"] = res_map.get(result_str, "*")
 
     # Se la posizione iniziale non è quella standard, impostiamo i tag FEN
-    if game_state.board.epd() != chess.Board().epd():
-        # Dobbiamo tornare alla posizione iniziale per il PGN se non è standard
-        # Ma game_state.board è quella attuale.
-        # Per semplicità in questo fallback, usiamo l'initial_fen se disponibile o assumiamo standard
-        pass
-
+    initial_fen = getattr(game_state, "initial_fen", chess.STARTING_FEN)
+    variant = getattr(game_state, "variant", "standard")
+    
+    if variant == "chess960":
+        game.headers["Variant"] = "Chess960"
+        
+    if initial_fen != chess.STARTING_FEN:
+        game.headers["SetUp"] = "1"
+        game.headers["FEN"] = initial_fen
+        
     node = game
-    temp_board = chess.Board()  # Qui servirebbe il FEN iniziale se non standard
+    temp_board = chess.Board(initial_fen, chess960=(variant == "chess960"))
     for san in game_state.move_history:
         try:
             move = temp_board.parse_san(san)
@@ -357,6 +363,10 @@ def _spectate_worker(req, q, stop_event):
                         b_rat = b.get("rating", "?")
                         q.put(f"Players:{w_name}|{w_rat}|{b_name}|{b_rat}")
 
+                    variant = d.get("variant", {}).get("key")
+                    if variant:
+                        q.put(f"Variant:{variant}")
+
                     if "initialFen" in d:
                         q.put(f"Start:{d['initialFen']}")
                     elif "fen" in d and "lm" not in d:
@@ -521,12 +531,19 @@ def async_spectator_loop(q, game_state):
                         adsr=[0, 0, 100, 5],
                     )
                     refresh_line()
+            elif msg.startswith("Variant:"):
+                variant_name = msg[8:]
+                game_state.variant = variant_name
+                if variant_name == "chess960":
+                    game_state.board.chess960 = True
             elif msg.startswith("Start:"):
                 fen = msg[6:]
                 if fen == "start":
                     game_state.board.reset()
+                    game_state.initial_fen = chess.STARTING_FEN
                 else:
                     game_state.board.set_fen(fen)
+                    game_state.initial_fen = fen
                 if not game_state.started:
                     game_state.started = True
                 game_state.last_clock_sync = time.time()
@@ -843,6 +860,8 @@ class GamePlayState:
         self.opponent_gone_announced = False
         self.claim_win_in_seconds = None
         self.refresh_interval = 1
+        self.initial_fen = chess.STARTING_FEN
+        self.variant = "standard"
 
     def get_clocks(self):
         w_time = self.white_time
@@ -1007,11 +1026,18 @@ def async_play_loop(q, game_state):
                 elif b.get("id") == game_state.my_username.lower():
                     game_state.my_color = chess.BLACK
 
+                variant = msg.get("variant", {}).get("key", "standard")
+                game_state.variant = variant
+                if variant == "chess960":
+                    game_state.board.chess960 = True
+
                 fen = msg.get("initialFen", "startpos")
                 if fen == "startpos":
                     game_state.board.reset()
+                    game_state.initial_fen = chess.STARTING_FEN
                 else:
                     game_state.board.set_fen(fen)
+                    game_state.initial_fen = fen
 
                 state = msg.get("state", {})
                 moves = state.get("moves", "").strip()

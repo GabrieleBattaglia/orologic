@@ -1,0 +1,44 @@
+PIANO DI TEST: IMPLEMENTAZIONE CHESS960 (FISCHER RANDOM) IN OROLOGIC
+=============================================================================
+Di seguito i passaggi per verificare che l'integrazione di Chess960 funzioni correttamente in tutte le modalita' di Orologic.
+
+1. TEST ARBITRAGGIO (Modalita' Locale)
+--------------------------------------
+[ ] Avvia Orologic e seleziona "Arbitraggio" dal menu principale.
+[ ] Alla richiesta della modalita', premi 'F' per scegliere Fischer Random.
+[ ] Quando ti viene chiesta la sequenza, premi '?' per generarne una casuale.
+[ ] Verifica che la sintesi vocale e il testo in console descrivano correttamente la disposizione dei pezzi (es: "Variante Fischer Random 960, numero XXX: A torre, B cavallo...").
+[ ] Simula un paio di mosse, incluso l'arrocco se possibile (ricorda che l'arrocco UCI in 960 e' Re su Torre, es. g1h1, ma il parser SAN di Orologic dovrebbe accettare "O-O" o "O-O-O" senza problemi).
+[ ] Concludi la partita e verifica che il PGN salvato contenga l'header '[Variant "Chess960"]' e l'header '[FEN "..."]' corrispondente alla posizione iniziale.
+
+2. TEST EASYFISH (Allenamento vs Motore)
+----------------------------------------
+[ ] Avvia Orologic e seleziona "Easyfish".
+[ ] Premi INVIO o ESC ai vari messaggi introduttivi, finche' non arrivi al prompt comandi di Easyfish.
+[ ] Digita il comando '.g' per avviare una partita contro il motore.
+[ ] Alla domanda "Vuoi giocare alla variante standard?", premi ESC (NO) per giocare a Chess960.
+[ ] Genera una posizione casuale con '?' o digitane una manualmente.
+[ ] Gioca alcune mosse contro Stockfish.
+[ ] IMPORTANTE: Cerca di arrivare a poter eseguire un arrocco. Effettua l'arrocco digitando "O-O" o "O-O-O". Verifica che Stockfish comprenda la mossa e risponda con una mossa legale, senza crash del motore.
+[ ] Abbandona o concludi la partita, salva il PGN e verifica che gli header 'Variant' e 'FEN' siano presenti e corretti.
+
+3. TEST LICHESS (Spettatore)
+----------------------------
+[ ] Vai su Lichess.org dal browser e trova una partita in corso (o su Lichess TV) della variante "Chess960". Copia l'ID della partita o il nome di un giocatore.
+[ ] In Orologic, entra nel menu Lichess -> Spettatore.
+[ ] Inserisci l'ID o il nome per osservare la partita 960.
+[ ] Verifica che la scacchiera iniziale venga mostrata correttamente, non come la scacchiera ortodossa.
+[ ] Osserva lo scorrere della partita: se i giocatori arroccano, Orologic non deve restituire errori di "mossa illegale".
+[ ] Se l'osservazione termina e si innesca il salvataggio di fallback, verifica il PGN salvato.
+
+4. TEST LICHESS (Partita Live)
+------------------------------
+[ ] Su Lichess.org crea una sfida (contro un amico o contro il computer di Lichess) impostando la variante "Chess960".
+[ ] In Orologic, entra nel menu Lichess -> Gioca live.
+[ ] Accetta la sfida e attendi l'avvio.
+[ ] Controlla che Orologic stampi a video la corretta posizione dei pezzi iniziali e non quella standard.
+[ ] Gioca ed esegui un arrocco: Orologic deve inviare a Lichess il comando corretto e non considerarlo illegale localmente.
+[ ] Concludi la partita e verifica che il PGN finale (che venga scaricato dalle API di Lichess o salvato in fallback locale) contenga gli header della variante corretti.
+
+NOTE:
+- Se l'arrocco fallisce, o se Stockfish si ferma in Easyfish, potrebbe esserci un disallineamento della scacchiera. In tal caso, segnala l'errore.
