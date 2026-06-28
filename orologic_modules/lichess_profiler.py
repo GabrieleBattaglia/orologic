@@ -539,6 +539,7 @@ def show_player_menu(username, secrets):
             "messaggio": _("Invia un messaggio"),
             "sfida": _("Sfida a una partita"),
             "scarica": _("Cerca e scarica partite"),
+            "ricerca_pgn": _("Copia URL partite e vai a Ricerca PGN"),
             "storia": _("Storia Elo e Sonificazione"),
         }
 
@@ -627,6 +628,14 @@ def show_player_menu(username, secrets):
                 profile["following"] = False
         elif scelta == "scarica":
             download_games(username, token)
+        elif scelta == "ricerca_pgn":
+            pgn_url = f"https://lichess.org/api/games/user/{username}"
+            import pyperclip
+            pyperclip.copy(pgn_url)
+            print(_("\nURL per il download del PGN di {u} copiato negli appunti!").format(u=username))
+            print(_("Passaggio a Ricerca PGN..."))
+            from . import pgn_search
+            pgn_search.run()
         elif scelta == "storia":
             from . import lichess_stats
             lichess_stats.run_stats(username, secrets)
