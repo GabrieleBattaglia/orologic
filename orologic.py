@@ -30,6 +30,7 @@ from orologic_modules import (
     cleaner,
     memoboard_app,
     tempo_app,
+    pgn_search,
 )
 from orologic_modules.easyfish import easyfish_app
 
@@ -404,6 +405,19 @@ def Main():
                 ]
             )
             engine.MenuMotore()
+
+        elif scelta == "ricerca":
+            Acusticator(
+                [
+                    "d5", 0.08, -0.5, config.VOLUME,
+                    "a5", 0.08, 0, config.VOLUME,
+                    "f#5", 0.08, 0.5, config.VOLUME,
+                    "d6", 0.12, 0, config.VOLUME,
+                ],
+                kind=1,
+                adsr=[2, 5, 90, 3],
+            )
+            pgn_search.run()
 
         elif scelta == "nomi":
             Acusticator(

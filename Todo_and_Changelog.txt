@@ -2,6 +2,17 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+8.7.0 (28 giugno 2026 - 17:15)
+	+ [Core] Nuova funzionalità "Ricerca PGN": caricamento di archivi PGN multi-partita da appunti (percorsi di file, URL Lichess o testo diretto).
+	+ [Core] Navigazione interattiva dell'albero delle aperture con tasti di scelta rapida WAXD (su, giù, risali, scendi).
+	+ [Core] Statistiche delle aperture dinamiche e intelligenti (assolute B/P/N o relative al giocatore selezionato/comune con i simboli +, =, -).
+	+ [Core] Integrazione del Pager partite (tasto 0) in ordine alfabetico con continuazione delle mosse.
+	* [Core] Salvataggio opzionale del PGN con le sole partite che soddisfano i filtri attivi.
+	+ [L10N] Allineate e aggiornate tutte le traduzioni per le lingue locali (en, es, fr, pt).
+
+8.6.0 (5 giugno 2026 - 16:20)
+	+ [Core] Implementazione completa della variante di gioco Chess960 (Fischer Random).
+
 8.5.0 (4 giugno 2026 - 09:06)
 	+ [Core] Implementato un validatore e correttore automatico di PGN negli appunti (validate_and_clean_pgn).
 	+ [Core] Correzione automatica di piccoli errori di layout PGN (es. spazi errati nei puntini delle mosse o formattazione parentesi dei commenti) direttamente all'importazione dagli appunti.

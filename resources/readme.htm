@@ -403,20 +403,83 @@ margin: 1em 0;
 <p>All'avvio della modalità <code>tempo</code>, il programma ti chiederà di selezionare uno degli orologi configurati. Dopodiché, gli orologi si avvieranno e potrai controllarli utilizzando i comandi con il punto (<code>.</code>) per visualizzare il tempo rimanente (<code>.1</code>, <code>.2</code>, <code>.3</code>), mettere in pausa o riprendere il timer (<code>.p</code>), oppure regolare il tempo residuo per ciascun giocatore (<code>.b+</code>, <code>.b-</code>, <code>.n+</code>, <code>.n-</code>) se necessario.</p>
 <p>Al termine della sessione (premendo <code>.</code>), Orologic genererà e salverà un file di report testuale nella cartella <code>txt/</code> contenente il riepilogo dei tempi, il numero di mosse giocate (ossia quante volte è stato premuto l'orologio) e le statistiche complessive della sessione.</p>
 
-<h3>2.7. Configurazione</h3>
+<h3>2.7. Ricerca PGN (ricerca)</h3>
+<p>La modalità <code>ricerca</code> è uno strumento avanzato di Orologic progettato per esplorare, filtrare e studiare archivi e database PGN contenenti centinaia o migliaia di partite. Consente di estrarre le statistiche sulle aperture, navigare l'albero delle mosse e passare direttamente all'analisi di una specifica partita.</p>
+
+<h4>2.7.1. Come caricare le partite</h4>
+<p>Orologic rileva automaticamente il tipo di archivio presente negli appunti del tuo sistema operativo. Prima di avviare il comando, copia negli appunti uno dei seguenti elementi:</p>
+<ol>
+    <li><strong>Un percorso di file locale:</strong> Copia il percorso completo di un file <code>.pgn</code> (es. <code>C:\scacchi\database.pgn</code>).</li>
+    <li><strong>Un URL internet:</strong> Copia il link di download di un database PGN (es. l'API di Lichess per scaricare le partite di un giocatore). Se usi la funzione Lichess Profiler in Orologic, puoi usare il menu rapido <em>"Copia URL PGN e vai a Ricerca PGN"</em> per automatizzare il tutto.</li>
+    <li><strong>Testo PGN diretto:</strong> Copia il testo PGN grezzo di una o più partite direttamente da un sito o visualizzatore.</li>
+</ol>
+<p>Dopo aver copiato, seleziona <code>ricerca</code> dal menu principale. L'applicazione inizierà a caricare le partite in memoria mostrando il progresso. In caso di caricamento da URL molto grandi (come i profili Lichess con decine di migliaia di partite), il programma mostrerà i megabyte scaricati ed il tempo trascorso. Puoi premere <strong>ESC</strong> in qualsiasi momento per interrompere il download e procedere con l'elaborazione dei soli dati parziali scaricati fino a quel momento (limite massimo di scaricamento fissato a 60 minuti).</p>
+<p><em>Nota:</em> Orologic escluderà automaticamente dal conteggio le partite irregolari (Chess960 o con impostazioni personalizzate/tag SetUp) per garantire che l'albero delle aperture parta dalla posizione iniziale standard.</p>
+
+<h4>2.7.2. Il Menu dei Filtri</h4>
+<p>Una volta completato il caricamento, ti troverai nel Menu dei Filtri interattivo. Qui puoi decidere di restringere il set di partite da esaminare impostando uno o più dei seguenti criteri:</p>
+<ul>
+    <li><strong>Giocatore Bianco / Giocatore Nero:</strong> Filtra per il nome di uno specifico giocatore che aveva i pezzi bianchi o neri.</li>
+    <li><strong>Giocatore (bianco o nero):</strong> Cerca il giocatore a prescindere dal colore dei pezzi.</li>
+    <li><strong>Risultato:</strong> Filtra per vittoria del Bianco (1-0), Vittoria del Nero (0-1) o Patta (1/2-1/2).</li>
+    <li><strong>ELO minimo / massimo:</strong> Esclude le partite giocate da giocatori al di fuori della fascia di punteggio indicata.</li>
+    <li><strong>Evento / Anno dal-al / Codice ECO:</strong> Filtra in base al torneo, al periodo temporale o all'apertura scacchistica specifica.</li>
+</ul>
+<p><strong>Comandi nel Menu dei Filtri:</strong></p>
+<ul>
+    <li>Per <strong>azzerare tutti i filtri</strong> e ricominciare da capo, premi il tasto <strong>ESC</strong> della tastiera. Vedrai a schermo il messaggio di conferma: <em>"Tutti i filtri sono stati rimossi (azzerati)."</em></li>
+    <li>Per <strong>procedere all'albero delle aperture</strong> con i filtri impostati, premi semplicemente <strong>INVIO</strong> senza scrivere nulla al prompt.</li>
+    <li>Per <strong>uscire</strong> e tornare al menu principale, digita il punto (<code>.</code>).</li>
+</ul>
+
+<h4>2.7.3. Navigazione dell'Albero delle Aperture</h4>
+<p>Quando procedi all'albero delle aperture, il programma mostra a schermo la lista delle mosse disponibili per il livello corrente. La navigazione è ottimizzata per l'accessibilità con lo screen reader (NVDA/JAWS) e le righe braille tramite la mappa di tasti della modalità editor di Easyfish:</p>
+<ul>
+    <li><strong>w (su) e x (giù):</strong> Scorrono verticalmente le mosse disponibili per la selezione (muovono il cursore all'interno dell'elenco).</li>
+    <li><strong>d (scendi):</strong> Entra nella mossa selezionata per scendere in profondità nell'albero (la mossa viene aggiunta al ramo).</li>
+    <li><strong>a (risali):</strong> Torna indietro di un livello, risalendo l'albero (rimuove l'ultima mossa dal ramo).</li>
+    <li><strong>Tasti numerici da 1 a 9:</strong> Selezionano ed entrano direttamente nella mossa corrispondente a quel numero nell'elenco stampato a schermo.</li>
+    <li><strong>t (ripeti):</strong> Stampa nuovamente a schermo la lista completa delle mosse del livello corrente.</li>
+    <li><strong>? (aiuto):</strong> Mostra la guida rapida dei comandi di navigazione.</li>
+    <li><strong>s (salva PGN):</strong> Esporta un file PGN contenente esclusivamente le partite che fanno parte del ramo in cui ti trovi attualmente (molto comodo per salvare sotto-archivi di varianti specifiche). Se non ci sono filtri attivi, l'applicazione ti avviserà prima di procedere.</li>
+    <li><strong>0 (sfoglia partite):</strong> Apre l'elenco delle partite del ramo (pager).</li>
+    <li><strong>punto (<code>.</code>):</strong> Torna indietro al Menu dei Filtri.</li>
+</ul>
+
+<p><strong>Breadcrumb e Statistiche nel Prompt:</strong></p>
+<p>Mentre navighi, il prompt in fondo si aggiorna sulla stessa riga (tramite ritorno carrello <code>\r</code>) per mantenere focalizzata la riga braille. Il prompt mostra il "breadcrumb" delle mosse (il nonno tra parentesi quadre, il padre tra parentesi acute ed il figlio corrente con i due punti) seguito dal numero di partite e dalle statistiche:</p>
+<ul>
+    <li><strong>Se analizzi un database globale (senza filtri giocatore):</strong> Mostra le statistiche assolute della scacchiera: <code>B:X% P:Y% N:Z%</code> (Vittorie del Bianco, Patte, Vittorie del Nero).
+        <br><em>Esempio:</em> <code>[1. e4] &lt;1... e5&gt; 2. Nf3: | 876 part. | B:52% P:30% N:18% | Azione:</code>
+    </li>
+    <li><strong>Se filtri per un giocatore (o se l'archivio contiene al 90% partite dello stesso giocatore):</strong> Orologic rileva automaticamente il giocatore e mostra il suo rendimento personale con i simboli scacchistici internazionali: <code>+X% =Y% -Z%</code> (Vittorie del giocatore <code>+</code>, Patte <code>=</code>, Sconfitte del giocatore <code>-</code>).
+        <br><em>Esempio:</em> <code>[1. e4] &lt;1... e5&gt; 2. Nf3: | 15 part. | +60% =13% -27% | Azione:</code>
+    </li>
+</ul>
+
+<h4>2.7.4. Sfogliare e Analizzare le Partite (tasto 0)</h4>
+<p>Premendo il tasto <strong>0</strong> all'interno del navigatore dell'albero, verrai indirizzato al Pager delle partite. Questo menu mostra l'elenco ordinato alfabeticamente di tutte le partite che raggiungono la posizione del ramo corrente. Ciascuna riga riporta i nomi dei giocatori, il risultato e le successive 5 mosse di continuazione giocate in quella specifica partita (es. <code>Bianco vs Nero (1) -- 1-0, 3. d4 Nf6 4. Bd3</code>).</p>
+<p>Per avviare l'analisi assistita di una partita:</p>
+<ol>
+    <li>Scrivi il nome di uno dei due giocatori (o parte di esso) al prompt del menu.</li>
+    <li>Seleziona la partita desiderata.</li>
+    <li>Orologic caricherà immediatamente la partita in modalità <strong>Analisi</strong> permettendoti di esplorarla mossa dopo mossa o di avviare l'analisi automatica con Stockfish.</li>
+</ol>
+
+<h3>2.8. Configurazione</h3>
 <p>Orologic è altamente personalizzabile.</p>
 
-<h4>2.7.1. Gestione Orologi (crea, vedi, elimina)</h4>
+<h4>2.8.1. Gestione Orologi (crea, vedi, elimina)</h4>
 <ul>
     <li><strong>crea:</strong> Ti guida nella creazione di un nuovo orologio, con fasi multiple, tempo base, incremento e allarmi sonori.</li>
     <li><strong>vedi:</strong> Mostra una lista di tutti i tuoi orologi salvati.</li>
     <li><strong>elimina:</strong> Ti permette di cancellare un orologio che non usi più.</li>
 </ul>
 
-<h4>2.7.2. Configurazione Motore Scacchistico (motore)</h4>
+<h4>2.8.2. Configurazione Motore Scacchistico (motore)</h4>
 <p>Questo passaggio è fondamentale per abilitare le funzioni di analisi. Orologic ti guiderà nella configurazione iniziale, ma è importante capire come renderlo portatile e cosa significano i parametri tecnici.</p>
 
-<h5>2.7.2.1. Portabilità: Usare la cartella 'engine'</h5>
+<h5>2.8.2.1. Portabilità: Usare la cartella 'engine'</h5>
 <p>Se desideri utilizzare Orologic da una chiavetta USB e cambiare spesso computer, puoi evitare di riconfigurare il percorso del motore ogni volta seguendo questi passi:</p>
 <ol>
     <li>Crea una cartella chiamata <code>engine</code> nella stessa cartella dove si trova il file <code>orologic.py</code> (o l'eseguibile).</li>
@@ -426,7 +489,7 @@ margin: 1em 0;
 </ol>
 <p>In questo modo, Orologic creerà un percorso relativo che funzionerà ovunque tu sposti la cartella del programma.</p>
 
-<h5>2.7.2.2. Spiegazione dei Parametri UCI</h5>
+<h5>2.8.2.2. Spiegazione dei Parametri UCI</h5>
 <p>Durante la configurazione, ti verranno chiesti alcuni valori. Ecco una guida per impostarli correttamente:</p>
 <ul>
     <li><strong>Hash (Memoria):</strong> Indica quanta RAM dedicare al motore per memorizzare le posizioni analizzate. Valori comuni sono 128 o 256 MB. Più memoria permette analisi più veloci su tempi lunghi.</li>
@@ -435,23 +498,23 @@ margin: 1em 0;
     <li><strong>Move Overhead (ms):</strong> È un margine di sicurezza per il tempo. Serve a compensare i ritardi di comunicazione tra Orologic e il motore. Impostarlo a <code>500</code> garantisce che il motore non perda mai per il tempo a causa di rallentamenti del sistema (lag).</li>
 </ul>
 
-<h4>2.7.3. Personalizzazione Lingua e Nomi (nomi)</h4>
+<h4>2.8.3. Personalizzazione Lingua e Nomi (nomi)</h4>
 <p>Questa opzione ti permette di personalizzare il linguaggio descrittivo usato dal programma: puoi cambiare i nomi dei pezzi (es. da "cavallo" a "destriero"), i nomi delle colonne (es. da "Ancona" ad "Apple") e i verbi usati per descrivere le mosse.</p>
 
-<h4>2.7.4. Impostazioni Generali (impostazioni)</h4>
+<h4>2.8.4. Impostazioni Generali (impostazioni)</h4>
 <p>Questa nuova sezione ti permette di configurare due comportamenti chiave del programma:</p>
 <ul>
     <li><strong>Salvataggio Automatico:</strong> Puoi attivare o disattivare il salvataggio automatico del PGN dopo ogni mossa durante una partita. Questo previene la perdita di dati in caso di problemi.</li>
     <li><strong>Stile Menu:</strong> Puoi scegliere se navigare nei menu usando le parole chiave (default) o i numeri.</li>
 </ul>
 
-<h4>2.7.5. Regolazione Volume Audio (volume)</h4>
+<h4>2.8.5. Regolazione Volume Audio (volume)</h4>
 <p>Questa opzione ti permette di impostare il volume degli effetti sonori da 0 (muto) a 100 (massimo).</p>
 
-<h3>2.8. Apri Manuale (manuale)</h3>
+<h3>2.9. Apri Manuale (manuale)</h3>
 <p>Questo comando apre questa guida nel tuo browser web predefinito.</p>
 
-<h3>2.9. Esci dall'Applicazione (.)</h3>
+<h3>2.10. Esci dall'Applicazione (.)</h3>
 <p>Digitando <code>.</code> e premendo Invio dal menu principale chiuderà Orologic.</p>
 
 ---

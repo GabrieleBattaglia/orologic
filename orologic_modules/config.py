@@ -217,6 +217,7 @@ MENU_CHOICES = {
     "manuale": _("Guida app"),
     "motore": _("Configurazione motore"),
     "nomi": _("Personalizzazione nomi"),
+    "ricerca": _("Ricerca PGN"),
     "impostazioni": _("Impostazioni varie"),
     "vedi": _("Vedi orologi"),
     "volume": _("Regolazione volume"),
