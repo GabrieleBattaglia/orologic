@@ -25,6 +25,7 @@ TEMPO_COMMANDS = {
     ".b-": _("Sottrae tempo al bianco (in pausa)"),
     ".n+": _("Aggiunge tempo al nero (in pausa)"),
     ".n-": _("Sottrae tempo al nero (in pausa)"),
+    ".q": _("Elimina l'ultimo input"),
     ".": _("Termina sessione e mostra il riepilogo"),
     ".?": _("Aiuto (mostra questa lista)"),
 }
@@ -43,6 +44,17 @@ def StartTempo(clock_config):
     game_state = board_utils.GameState(clock_config)
     game_state.white_player = _("Bianco")
     game_state.black_player = _("Nero")
+
+    nota_sessione = ""
+    while True:
+        nota_sessione = dgt(
+            _("Inserisci una nota per questa sessione (massimo 250 caratteri): "),
+            kind="s"
+        )
+        if len(nota_sessione) <= 250:
+            break
+        print(_("Errore: la nota non deve superare i 250 caratteri. Attualmente e' di {len_note} caratteri.").format(len_note=len(nota_sessione)))
+    game_state.session_note = nota_sessione
 
     key(
         _("Premi un tasto qualsiasi per iniziare quando sei pronto..."),
@@ -350,6 +362,41 @@ def _loop_tempo(game_state, clock_config):
                         adsr=[2, 8, 80, 10],
                     )
                     print(_("Pausa durata ") + board_utils.FormatTime(pause_duration))
+            elif cmd == ".q":
+                if not game_state.move_history:
+                    print(_("Nulla da eliminare."))
+                    Acusticator(["e3", 0.2, 0, config.VOLUME], kind=2)
+                else:
+                    # Rimuoviamo l'ultima mossa
+                    last_move = game_state.move_history.pop()
+                    # Revertiamo il turno e il tempo
+                    if game_state.active_color == "white":
+                        game_state.active_color = "black"
+                        game_state.black_moves = max(0, game_state.black_moves - 1)
+                        game_state.black_remaining -= game_state.clock_config["phases"][
+                            game_state.black_phase
+                        ]["black_inc"]
+                    else:
+                        game_state.active_color = "white"
+                        game_state.white_moves = max(0, game_state.white_moves - 1)
+                        game_state.white_remaining -= game_state.clock_config["phases"][
+                            game_state.white_phase
+                        ]["white_inc"]
+                    
+                    Acusticator(
+                        [
+                            "g4",
+                            0.1,
+                            0,
+                            config.VOLUME,
+                            "e4",
+                            0.1,
+                            0,
+                            config.VOLUME,
+                        ],
+                        kind=1,
+                    )
+                    print(_("Ultimo input '{move}' eliminato.").format(move=last_move))
             elif (
                 cmd.startswith(".b+")
                 or cmd.startswith(".b-")
@@ -588,6 +635,11 @@ def _salva_report_tempo(
         tc=clock.generate_time_control_string(clock_config)
     )
     file_content += "--------------------------------\n\n"
+
+    session_note = getattr(game_state, "session_note", "")
+    if session_note:
+        file_content += _("Nota: {note}\n").format(note=session_note)
+        file_content += "--------------------------------\n\n"
 
     file_content += _("Lista Mosse:\n")
     for i in range(0, len(game_state.move_history), 2):
