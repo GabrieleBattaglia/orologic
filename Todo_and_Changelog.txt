@@ -2,6 +2,24 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+8.8.3 (8 luglio 2026 - 12:51)
+	+ [Easyfish] Sostituito il prompt del tempo del motore con `enter_escape` (INVIO per no, ESC per sì).
+	+ [Easyfish] Migliorato il comando `.c` del Board Editor per abilitare l'inserimento in linea dei diritti d'arrocco (es. `.c Q` o `.c KQ`) come interruttori/toggle con feedback esplicativo.
+
+8.8.1 (7 luglio 2026 - 21:02)
+	+ [Core] Nelle statistiche di fine partita in modalità Lichess, abilitata la visualizzazione dei tempi mossa per entrambi i colori anziché solo per l'utente loggato.
+	* [Core] Modificato il salvataggio dei tempi mossa nei tag `%clk` del PGN: ora riporta il tempo effettivo impiegato per la mossa invece del tempo rimanente sull'orologio.
+
+8.8.0 (7 luglio 2026 - 13:09)
+	+ [Tempo] Aggiunto il comando `.q` per eliminare l'ultimo input e ripristinare il turno precedente e l'orologio (Issue #26).
+	+ [Tempo] Inserimento di una nota di sessione iniziale (max 250 caratteri) tramite `dgt()` salvata nel report testuale prima della lista mosse (Issue #26).
+	+ [Easyfish] Sostituito il menu di scelta del colore nel gioco contro il motore con una domanda tramite `enter_escape` (colore Bianco con INVIO, colore Nero con ESCAPE) (Issue #27).
+	+ [Easyfish] Riconoscimento intelligente e parsing del tempo e dell'incremento unificato (es. `20:00+15`, `400+5`) nel gioco contro il motore, eliminando la richiesta separata dell'incremento (Issue #28).
+	+ [Core] Tracciamento dei tempi spesi per ogni singola mossa in modalità Arbitraggio e Lichess (Issue #29).
+	+ [Core] Visualizzazione a fine partita delle statistiche avanzate dei tempi mossa: classifica delle mosse più lente, analisi e ripartizione in 4 quartili temporali, indicazione della mossa più lenta e più veloce (Issue #29).
+	+ [Core] Salvataggio opzionale dei tempi delle mosse come annotazioni `%clk` nel file PGN finale (Issue #29).
+	+ [Core] Supporto al ripristino dei tempi delle mosse e cronologia degli orologi tramite file di autosave (Issue #29).
+
 8.7.0 (28 giugno 2026 - 17:15)
 	+ [Core] Nuova funzionalità "Ricerca PGN": caricamento di archivi PGN multi-partita da appunti (percorsi di file, URL Lichess o testo diretto).
 	+ [Core] Navigazione interattiva dell'albero delle aperture con tasti di scelta rapida WAXD (su, giù, risali, scendi).

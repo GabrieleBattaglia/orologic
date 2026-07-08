@@ -123,6 +123,10 @@ def save_lichess_game(game_state, result_str="*"):
         except ValueError:
             break
 
+    # Before calling SaveGameToFile:
+    if getattr(game_state, "save_clock_times", False) and hasattr(game_state, "move_times"):
+        board_utils.AggiungiTempiPgn(game, game_state.move_times)
+
     try:
         pgn_handler.SaveGameToFile(game)
         print(
@@ -862,6 +866,8 @@ class GamePlayState:
         self.refresh_interval = 1
         self.initial_fen = chess.STARTING_FEN
         self.variant = "standard"
+        self.move_times = []
+        self.clocks_history = []
 
     def get_clocks(self):
         w_time = self.white_time
@@ -1042,6 +1048,9 @@ def async_play_loop(q, game_state):
                 state = msg.get("state", {})
                 moves = state.get("moves", "").strip()
                 if moves:
+                    num_existing_moves = len(moves.split(" "))
+                    game_state.move_times = [0.0] * num_existing_moves
+                    game_state.clocks_history = [0.0] * num_existing_moves
                     for uci_move in moves.split(" "):
                         move = game_state.board.parse_uci(uci_move)
                         game_state.move_history.append(game_state.board.san(move))
@@ -1083,6 +1092,26 @@ def async_play_loop(q, game_state):
                             if is_white_turn
                             else game_state.black_player
                         )
+
+                        # Calculate and store time_spent and clk_time before push
+                        if not hasattr(game_state, "move_times"):
+                            game_state.move_times = []
+                        if not hasattr(game_state, "clocks_history"):
+                            game_state.clocks_history = []
+
+                        if i == current_ply:
+                            if is_white_turn:
+                                time_spent = max(0.0, game_state.white_time - int(msg.get("wtime", 0)) / 1000.0)
+                                clk_time = int(msg.get("wtime", 0)) / 1000.0
+                            else:
+                                time_spent = max(0.0, game_state.black_time - int(msg.get("btime", 0)) / 1000.0)
+                                clk_time = int(msg.get("btime", 0)) / 1000.0
+                        else:
+                            time_spent = 0.0
+                            clk_time = int(msg.get("wtime", 0)) / 1000.0 if is_white_turn else int(msg.get("btime", 0)) / 1000.0
+
+                        game_state.move_times.append(time_spent)
+                        game_state.clocks_history.append(clk_time)
 
                         game_state.board.push(move)
                         game_state.move_history.append(san_move)
@@ -1420,6 +1449,11 @@ def play_game(game_id, token, username):
 
         if user_input is None:
             if len(game_state.move_history) > 10:
+                from GBUtils import enter_escape
+                if enter_escape(_("Vuoi vedere come hai usato il tempo a tua disposizione? (INVIO per si', ESC per no): ")):
+                    board_utils.AnalizzaEStampaStatisticheTempo(game_state, color_filter=None)
+                    if enter_escape(_("Desideri salvare i tempi mossa nel PGN? (INVIO per si', ESC per no): ")):
+                        game_state.save_clock_times = True
                 show_post_game_report(game_id, token, username)
                 save_lichess_game(game_state, getattr(game_state, "winner", "*"))
             else:

@@ -302,6 +302,8 @@ class GameState:
         self.ignore_clock = False
         self.flag_fallen = False
         self.refresh_interval = 0
+        self.move_times = []
+        self.clocks_history = []
 
     def switch_turn(self):
         if self.active_color == "white":
@@ -651,4 +653,160 @@ def validate_and_clean_pgn(pgn_text):
 
     except Exception as e:
         return None, True, False, _("Errore imprevisto durante l'analisi del PGN: {error}").format(error=e), ""
+
+
+def format_semimove(index, san):
+    num_mossa = (index // 2) + 1
+    if index % 2 == 0:
+        return f"{num_mossa}. {san}"
+    else:
+        return f"{num_mossa}... {san}"
+
+
+def format_time_italian(seconds):
+    seconds = int(round(seconds))
+    if seconds == 0:
+        return _("0 secondi")
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    
+    parts = []
+    if h > 0:
+        parts.append(_("{h} ore").format(h=h))
+    if m > 0:
+        parts.append(_("{m} minuti").format(m=m))
+    if s > 0:
+        parts.append(_("{s} secondi").format(s=s))
+    
+    if len(parts) == 3:
+        return f"{parts[0]}, {parts[1]} e {parts[2]}"
+    elif len(parts) == 2:
+        return f"{parts[0]} e {parts[1]}"
+    elif len(parts) == 1:
+        return parts[0]
+    return _("0 secondi")
+
+
+def get_quarters(total_len):
+    q = total_len // 4
+    rem = total_len % 4
+    sizes = [q + (1 if i < rem else 0) for i in range(4)]
+    
+    quarters = []
+    start = 0
+    for size in sizes:
+        quarters.append((start, start + size))
+        start += size
+    return quarters
+
+
+def format_pgn_clk(sec):
+    sec = max(0.0, sec)
+    hours = int(sec // 3600)
+    minutes = int((sec % 3600) // 60)
+    seconds = int(sec % 60)
+    if hours > 0:
+        return f"{hours}:{minutes:02d}:{seconds:02d}"
+    elif minutes > 0:
+        return f"{minutes}:{seconds:02d}"
+    else:
+        return f"{seconds}"
+
+
+def AggiungiTempiPgn(pgn_game, times_history):
+    node = pgn_game
+    ply = 0
+    while node.variations and ply < len(times_history):
+        next_node = node.variations[0]
+        spent_time = times_history[ply]
+        clk_str = f"[%clk {format_pgn_clk(spent_time)}]"
+        if next_node.comment:
+            if "[%clk" not in next_node.comment:
+                next_node.comment = clk_str + " " + next_node.comment
+        else:
+            next_node.comment = clk_str
+        node = next_node
+        ply += 1
+
+
+def AnalizzaEStampaStatisticheTempo(game_state, color_filter=None):
+    # game_state has move_history (SAN moves) and move_times (float seconds)
+    import chess
+    
+    colors_to_analyze = []
+    if color_filter is not None:
+        colors_to_analyze = [color_filter]
+    else:
+        colors_to_analyze = [chess.WHITE, chess.BLACK]
+        
+    for color in colors_to_analyze:
+        user_moves = []
+        for idx in range(len(game_state.move_history)):
+            is_white = (idx % 2 == 0)
+            if (is_white and color == chess.WHITE) or (not is_white and color == chess.BLACK):
+                if hasattr(game_state, "move_times") and idx < len(game_state.move_times):
+                    user_moves.append((idx, game_state.move_history[idx], game_state.move_times[idx]))
+                    
+        if not user_moves:
+            continue
+            
+        color_name = _("Bianco") if color == chess.WHITE else _("Nero")
+        if color_filter is None:
+            print(f"\n=== Statistiche Tempo: {color_name} ===")
+            
+        # 1. Classifica delle mosse in base al tempo usato
+        sorted_moves = sorted(user_moves, key=lambda x: x[2], reverse=True)
+        formatted_sorted = []
+        for idx, san, t in sorted_moves:
+            formatted_sorted.append(format_semimove(idx, san))
+            
+        print(_("Classifica delle mosse in base al tempo usato per ciascuna:"))
+        for i in range(0, len(formatted_sorted), 10):
+            chunk = formatted_sorted[i:i+10]
+            line = ", ".join(chunk)
+            if i + 10 >= len(formatted_sorted):
+                line += ";"
+            else:
+                line += ","
+            print(line)
+            
+        # 2. Suddivisione in quartili
+        total_time = sum(m[2] for m in user_moves)
+        quarters = get_quarters(len(user_moves))
+        
+        print(_("\nSuddivisione della partita in 4 fasi:"))
+        for q_idx, (start, end) in enumerate(quarters):
+            q_moves = user_moves[start:end]
+            if not q_moves:
+                print(f"Q{q_idx+1}: " + _("nessuna mossa."))
+                continue
+            
+            start_num = (q_moves[0][0] // 2) + 1
+            end_num = (q_moves[-1][0] // 2) + 1
+            
+            q_time = sum(m[2] for m in q_moves)
+            perc = (q_time / total_time * 100) if total_time > 0 else 0.0
+            
+            part1 = _("Q{num} da mossa {start_num} a mossa {end_num}: {time_str}, pari al {perc:.1f}").format(
+                num=q_idx+1,
+                start_num=start_num,
+                end_num=end_num,
+                time_str=format_time_italian(q_time),
+                perc=perc
+            )
+            print(part1 + "% " + _("del tempo;"))
+            
+        # 3. Lenta / Veloce
+        print("")
+        mostra_lenta = sorted_moves[0]
+        mostra_veloce = sorted_moves[-1]
+        print(_("La mossa piu' lenta e' la {move}, {time};").format(
+            move=format_semimove(mostra_lenta[0], mostra_lenta[1]),
+            time=format_time_italian(mostra_lenta[2])
+        ))
+        print(_("la piu' veloce e' la {move}, {time}.").format(
+            move=format_semimove(mostra_veloce[0], mostra_veloce[1]),
+            time=format_time_italian(mostra_veloce[2])
+        ))
+
 

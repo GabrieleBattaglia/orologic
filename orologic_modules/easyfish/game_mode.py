@@ -3,7 +3,7 @@ import chess.engine
 import chess.pgn
 import time
 import threading
-from GBUtils import dgt, menu, Acusticator
+from GBUtils import dgt, menu, Acusticator, enter_escape
 from ..config import _
 from .. import engine as orologic_engine
 from .. import storage
@@ -112,22 +112,40 @@ def clock_thread(game_state):
 
 
 def ParseTimeInput(prompt_text):
-    """Richiede input tempo in formato HH:MM:SS o sss."""
+    """Richiede input tempo in formato HH:MM:SS o sss con opzionale incremento +inc."""
     while True:
-        s = dgt(prompt=prompt_text + " (HH:MM:SS o sec): ", kind="s").strip()
+        s = dgt(prompt=prompt_text + " (es. 01:15:00+10, 20:00+15 o 400+5): ", kind="s").strip()
         if not s:
-            return None
+            return None, None
+        
+        inc = 0
+        if "+" in s:
+            parts_plus = s.split("+")
+            if len(parts_plus) == 2:
+                s = parts_plus[0].strip()
+                try:
+                    inc = int(parts_plus[1].strip())
+                except ValueError:
+                    print(_("Incremento non valido."))
+                    continue
+            else:
+                print(_("Formato incremento non valido."))
+                continue
+                
         try:
             if ":" in s:
                 parts = s.split(":")
                 if len(parts) == 3:
-                    return int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+                    t_sec = int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
                 elif len(parts) == 2:
-                    return int(parts[0]) * 60 + int(parts[1])
+                    t_sec = int(parts[0]) * 60 + int(parts[1])
+                else:
+                    raise ValueError
             else:
-                return int(s)
+                t_sec = int(s)
+            return t_sec, inc
         except ValueError:
-            print(_("Formato non valido."))
+            print(_("Formato tempo non valido."))
 
 
 def StartEngineGame(game_node, engine_instance, sharing_window=None):
@@ -162,30 +180,27 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     ignore_clock = False
 
     if engine_mode == "1":
-        user_time = ParseTimeInput(_("Tuo tempo partita"))
+        user_time, user_inc = ParseTimeInput(_("Tuo tempo partita"))
         if user_time is None:
             return game_node
-        user_inc = dgt(_("Tuo incremento (sec): "), kind="i", default=0)
 
-        c = dgt(
-            _("Usare stesso tempo per il motore? (s/n): "), kind="s", default="s"
-        ).lower()
-        if c == "s":
+        same_time = not enter_escape(
+            _("Usare stesso tempo per il motore? (INVIO per no, ESC per si'): ")
+        )
+        if same_time:
             engine_time = user_time
             engine_inc = user_inc
         else:
-            engine_time = ParseTimeInput(_("Tempo partita motore"))
+            engine_time, engine_inc = ParseTimeInput(_("Tempo partita motore"))
             if engine_time is None:
                 return game_node
-            engine_inc = dgt(_("Incremento motore (sec): "), kind="i", default=0)
 
     elif engine_mode == "2":
         engine_limit_type = "move"
         engine_has_clock = False
-        user_time = ParseTimeInput(_("Tuo tempo partita"))
+        user_time, user_inc = ParseTimeInput(_("Tuo tempo partita"))
         if user_time is None:
             return game_node
-        user_inc = dgt(_("Tuo incremento (sec): "), kind="i", default=0)
         engine_time = dgt(_("Secondi per mossa motore: "), kind="f", default=2.0)
 
     elif engine_mode == "3":
@@ -202,16 +217,8 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     game_state.engine_has_clock = engine_has_clock
 
     # Scelta del colore
-    color_scelte = {
-        "1": _("Bianco"),
-        "2": _("Nero"),
-    }
-    color_choice = menu(color_scelte, show=True, keyslist=True, p=_("Con quale colore vuoi giocare?: "))
-    
-    if not color_choice: # Se preme ESC o annulla, default Bianco
-        color_choice = "1"
-        
-    game_state.human_color = chess.BLACK if color_choice == "2" else chess.WHITE
+    is_white = enter_escape(_("Vuoi giocare col bianco (INVIO) o col nero (ESCAPE)?: "))
+    game_state.human_color = chess.WHITE if is_white else chess.BLACK
 
     if game_state.human_color == chess.WHITE:
         game_state.white_time = float(user_time)

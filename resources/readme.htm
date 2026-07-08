@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 8.5.0 - 4 giugno 2026 - 09:06)</h1>
+<h1>Guida Utente di Orologic (Versione 8.8.3 - 8 luglio 2026 - 12:51)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -189,6 +189,16 @@ margin: 1em 0;
 </ul>
 <p>Al termine dell'analisi, OAA genererà un report testuale completo (salvato nella cartella e apribile a schermo) con la cronaca della partita mossa per mossa e i consigli del motore. </p>
 
+
+<h5>2.1.5.2 Statistiche sull'uso del tempo ("Dove ho consumato il mio tempo?")</h5>
+<p>Al termine di una partita in modalità <strong>Arbitraggio</strong> o <strong>Lichess</strong>, se sono state giocate almeno 8 semimosse (4 mosse complete) per l'arbitraggio o più di 10 semimosse per Lichess, Orologic ti chiederà tramite la funzione <code>enter_escape</code> se desideri visualizzare un report sull'uso del tempo di riflessione per entrambi i colori.</p>
+<p>Se rispondi affermativamente, verranno stampate a schermo le seguenti informazioni analitiche:</p>
+<ul>
+    <li><strong>Classifica delle mosse:</strong> Una lista di tutte le mosse ordinate da quella su cui è stato speso più tempo a quella più rapida, formattate per comodità in righe da 10 mosse ciascuna.</li>
+    <li><strong>Suddivisione della partita in 4 fasi (Quartili):</strong> Le mosse della partita vengono suddivise in 4 quartili temporali. Per ciascun quartile viene mostrato il tempo cumulativo consumato e la relativa incidenza percentuale sul tempo totale di riflessione.</li>
+    <li><strong>Mossa più lenta e mossa più veloce:</strong> Identificazione immediata delle singole mosse estreme con il relativo tempo speso formulato in lingua italiana.</li>
+</ul>
+<p>Infine, ti verrà chiesto se desideri salvare i tempi di riflessione all'interno del file PGN. Rispondendo con INVIO, il file PGN conterrà le annotazioni del tempo effettivo impiegato (tag <code>%clk</code>) per ciascuna mossa, garantendo la compatibilità con i lettori PGN standard.</p>
 <h3>2.2. Orolichess: Integrazione Lichess (lichess)</h3>
 <p>Orolichess ti permette di connettere Orologic al tuo account Lichess per giocare online, gestire il tuo profilo e risolvere puzzle, il tutto tramite l'interfaccia accessibile del programma.</p>
 
@@ -293,6 +303,9 @@ margin: 1em 0;
     <li><code>.v</code>: Svuota l'intera scacchiera, lasciando solo i due Re.</li>
     <li><code>.i</code>: Ripristina tutti i pezzi alla posizione iniziale standard.</li>
     <li><code>.t</code>: Cambia il tratto (turno al Bianco o al Nero).</li>
+    <li><code>.c [KQkq]</code>: Imposta o modifica i diritti di arrocco. Può essere usato da solo (mostrando un prompt) o seguito direttamente dalle lettere dei diritti (es. <code>.c Q</code> o <code>.c KQ</code>). I diritti immessi fungono da interruttori (toggle) per attivare o disattivare i singoli diritti, stampando un feedback esplicativo. Il carattere <code>-</code> rimuove tutti i diritti.</li>
+    <li><code>.e [casa]</code>: Imposta o rimuove la casa di cattura en passant (es. <code>.e e3</code>).</li>
+    <li><code>.n [numero]</code>: Imposta il numero della mossa corrente (es. <code>.n 15</code>).</li>
     <li><code>.</code>: Esce dall'editor e salva la nuova posizione.</li>
 </ul>
 
@@ -331,7 +344,14 @@ margin: 1em 0;
 </ol>
 
 <h4>2.4.3. Giocare contro il Motore (.g)</h4>
-<p>Digita <code>.g</code> da qualsiasi posizione per iniziare una partita interattiva contro Stockfish. Orologic ti chiederà con quale colore vuoi giocare e con quale modalità di tempo (partita classica, tempo fisso a mossa o modalità "amichevole" senza limiti).</p>
+<p>Digita <code>.g</code> da qualsiasi posizione per iniziare una partita interattiva contro Stockfish. Orologic ti chiederà se desideri giocare con il bianco o con il nero tramite una comoda domanda gestita via <code>enter_escape</code> (tasto INVIO per giocare col Bianco, tasto ESCAPE per il Nero). Successivamente potrai impostare la modalità di tempo (partita classica, tempo fisso a mossa o modalità "amichevole" senza limiti).</p>
+<p>Quando viene richiesto il tempo di riflessione (sia per il giocatore che per il motore), il sistema accetta diversi formati intelligenti:</p>
+<ul>
+    <li>Formato standard orario (es. <code>02:00:00</code>).</li>
+    <li>Minuti e secondi separati da due punti (es. <code>15:30</code> per 15 minuti e 30 secondi).</li>
+    <li>Secondi totali espressi come intero (es. <code>75</code> che equivale a 1 minuto e 15 secondi).</li>
+</ul>
+<p>Inoltre, l'incremento di tempo può essere specificato direttamente assieme al tempo principale separandolo con il segno <code>+</code> (es. <code>01:15:00+10</code>, <code>20:00+15</code>, o <code>400+5</code>), eliminando così la necessità di una richiesta separata per l'incremento.</p>
 <p>Durante la partita valgono tutti i controlli (matto, stallo, ripetizioni) e puoi impartire istruzioni extra:</p>
 <ul>
     <li><code>.s#</code> (es. <code>.s15</code>): modifica il livello di difficoltà (Skill Level) del motore da 0 a 20 al volo.</li>
@@ -400,8 +420,10 @@ margin: 1em 0;
     <li>Partite veloci o amichevoli giocate su una scacchiera reale in cui non si vuole perdere tempo a digitare ogni mossa al terminale.</li>
     <li>Timing di altre attività o sfide generiche a tempo tra due persone.</li>
 </ul>
-<p>All'avvio della modalità <code>tempo</code>, il programma ti chiederà di selezionare uno degli orologi configurati. Dopodiché, gli orologi si avvieranno e potrai controllarli utilizzando i comandi con il punto (<code>.</code>) per visualizzare il tempo rimanente (<code>.1</code>, <code>.2</code>, <code>.3</code>), mettere in pausa o riprendere il timer (<code>.p</code>), oppure regolare il tempo residuo per ciascun giocatore (<code>.b+</code>, <code>.b-</code>, <code>.n+</code>, <code>.n-</code>) se necessario.</p>
-<p>Al termine della sessione (premendo <code>.</code>), Orologic genererà e salverà un file di report testuale nella cartella <code>txt/</code> contenente il riepilogo dei tempi, il numero di mosse giocate (ossia quante volte è stato premuto l'orologio) e le statistiche complessive della sessione.</p>
+<p>All'avvio della modalità <code>tempo</code>, il programma ti chiederà di selezionare uno degli orologi configurati. Subito dopo la selezione dell'orologio e prima del countdown iniziale, potrai inserire una <strong>nota testuale di sessione</strong> (tramite <code>dgt()</code>, con un limite massimo di 250 caratteri). Questa nota verrà registrata ed inserita all'inizio del file di report testuale salvato all'uscita.</p>
+<p>Dopodiché, gli orologi si avvieranno. Oltre ai normali comandi di ispezione e configurazione del tempo, in questa modalità è disponibile il comando speciale <strong><code>.q</code> (Annulla ultimo inserimento)</strong>. Il comando <code>.q</code> rimuove l'ultimo input memorizzato in cronologia, inverte il turno di gioco corretto e restituisce il tempo scalato comprensivo di eventuali incrementi accumulati. Il comando non può essere usato se la lista mosse è vuota.</p>
+<p>Potrai controllare la sessione utilizzando i comandi con il punto (<code>.</code>) per visualizzare il tempo rimanente (<code>.1</code>, <code>.2</code>, <code>.3</code>), mettere in pausa o riprendere il timer (<code>.p</code>), oppure regolare il tempo residuo per ciascun giocatore (<code>.b+</code>, <code>.b-</code>, <code>.n+</code>, <code>.n-</code>) se necessario.</p>
+<p>Al termine della sessione (premendo <code>.</code>), Orologic genererà e salverà un file di report testuale nella cartella <code>txt</code> con la data e l'ora correnti.</p>
 
 <h3>2.7. Ricerca PGN (ricerca)</h3>
 <p>La modalità <code>ricerca</code> è uno strumento avanzato di Orologic progettato per esplorare, filtrare e studiare archivi e database PGN contenenti centinaia o migliaia di partite. Consente di estrarre le statistiche sulle aperture, navigare l'albero delle mosse e passare direttamente all'analisi di una specifica partita.</p>

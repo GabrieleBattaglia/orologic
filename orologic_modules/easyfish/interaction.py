@@ -104,18 +104,49 @@ def BoardEditor(starting_fen=None, sharing_window=None):
                 color = _("Bianco") if tmp_board.turn == chess.WHITE else _("Nero")
                 print(_("Turno impostato al: {c}").format(c=color))
 
-            elif wherewho == ".c":
-                rights = dgt(
-                    prompt=_("Diritti arrocco (es. KQkq o -): "), kind="s", default=""
-                ).strip()
-                try:
-                    if rights == "-":
-                        tmp_board.castling_rights = 0
+            elif wherewho == ".c" or wherewho.startswith(".c "):
+                if wherewho.startswith(".c "):
+                    rights = wherewho[3:].strip()
+                else:
+                    rights = dgt(
+                        prompt=_("Modifica diritti arrocco (es. KQkq o -): "), kind="s", default=""
+                    ).strip()
+                
+                if not rights:
+                    continue
+
+                if rights == "-":
+                    tmp_board.castling_rights = 0
+                    print(_("Tutti i diritti di arrocco sono stati rimossi."))
+                else:
+                    invalid_chars = [c for c in rights if c not in "KQkq"]
+                    if invalid_chars:
+                        print(_("Formato non valido. Usa combinazioni di KQkq o -."))
                     else:
-                        tmp_board.set_castling_fen(rights)
-                    print(_("Diritti arrocco aggiornati."))
-                except ValueError:
-                    print(_("Formato non valido. Usa KQkq."))
+                        feedback = []
+                        for char in rights:
+                            if char == "K":
+                                tmp_board.castling_rights ^= chess.BB_H1
+                                has_it = bool(tmp_board.castling_rights & chess.BB_H1)
+                                status = _("attivo") if has_it else _("disattivato")
+                                feedback.append(_("Arrocco corto Bianco (K): {status}").format(status=status))
+                            elif char == "Q":
+                                tmp_board.castling_rights ^= chess.BB_A1
+                                has_it = bool(tmp_board.castling_rights & chess.BB_A1)
+                                status = _("attivo") if has_it else _("disattivato")
+                                feedback.append(_("Arrocco lungo Bianco (Q): {status}").format(status=status))
+                            elif char == "k":
+                                tmp_board.castling_rights ^= chess.BB_H8
+                                has_it = bool(tmp_board.castling_rights & chess.BB_H8)
+                                status = _("attivo") if has_it else _("disattivato")
+                                feedback.append(_("Arrocco corto Nero (k): {status}").format(status=status))
+                            elif char == "q":
+                                tmp_board.castling_rights ^= chess.BB_A8
+                                has_it = bool(tmp_board.castling_rights & chess.BB_A8)
+                                status = _("attivo") if has_it else _("disattivato")
+                                feedback.append(_("Arrocco lungo Nero (q): {status}").format(status=status))
+                        
+                        print("\n".join(feedback))
 
             elif wherewho == ".e":
                 sq_str = dgt(

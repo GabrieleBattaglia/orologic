@@ -7,7 +7,7 @@ import os
 import datetime
 import pyperclip
 import io
-from GBUtils import dgt, Acusticator, key, polipo, menu
+from GBUtils import dgt, Acusticator, key, polipo, menu, enter_escape
 from . import config
 from . import board_utils
 from . import clock
@@ -131,6 +131,8 @@ def RiprendiPartita(dati_partita):
     game_state.move_history = dati_partita["move_history"]
     game_state.white_player = dati_partita["white_player"]
     game_state.black_player = dati_partita["black_player"]
+    game_state.move_times = dati_partita.get("move_times", [0.0] * len(game_state.move_history))
+    game_state.clocks_history = dati_partita.get("clocks_history", [0.0] * len(game_state.move_history))
     try:
         pgn_io = io.StringIO(dati_partita["pgn_string"])
         game_state.pgn_game = chess.pgn.read_game(pgn_io)
@@ -209,6 +211,8 @@ def EseguiAutosave(game_state):
         "pgn_string": str(game_state.pgn_game),
         "white_player": game_state.white_player,
         "black_player": game_state.black_player,
+        "move_times": getattr(game_state, "move_times", []),
+        "clocks_history": getattr(game_state, "clocks_history", []),
     }
     try:
         with open(full_path, "w", encoding="utf-8") as f:
@@ -274,7 +278,13 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
     last_eco_msg = ""
     last_valid_eco_entry = None
     paused_time_start = None
+    current_turn_clock_before = None
     while not game_state.game_over:
+        if current_turn_clock_before is None:
+            if game_state.active_color == "white":
+                current_turn_clock_before = game_state.white_remaining
+            else:
+                current_turn_clock_before = game_state.black_remaining
         # --- GESTIONE BANDIERINA CADUTA (Thread-Safe ish) ---
         if game_state.flag_fallen and not game_state.ignore_clock:
             # Il clock_thread ha settato il flag. Ora chiediamo all'utente.
@@ -816,6 +826,11 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                             game_state.black_phase
                         ]["black_inc"]
                         game_state.active_color = "black"
+                    if hasattr(game_state, "move_times") and game_state.move_times:
+                        game_state.move_times.pop()
+                    if hasattr(game_state, "clocks_history") and game_state.clocks_history:
+                        game_state.clocks_history.pop()
+                    current_turn_clock_before = None
                     print(_("Ultima mossa annullata: ") + undone_move_san)
             elif (
                 cmd.startswith(".b+")
@@ -934,6 +949,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                                 ),
                             )
                         )
+                        current_turn_clock_before = None
                     except Exception:
                         print(_("Comando non valido."))
             elif cmd == ".s":
@@ -1084,6 +1100,21 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 san_move_base = san_move_base.replace("!", "").replace("?", "")
                 game_state.board.push(move)
                 game_state.move_history.append(san_move_base)
+                
+                # Calculate time spent on this move
+                if game_state.active_color == "white":
+                    time_after = game_state.white_remaining
+                else:
+                    time_after = game_state.black_remaining
+                
+                if current_turn_clock_before is not None:
+                    time_spent = max(0.0, current_turn_clock_before - time_after)
+                else:
+                    time_spent = 0.0
+                
+                if not hasattr(game_state, "move_times"):
+                    game_state.move_times = []
+                game_state.move_times.append(time_spent)
                 new_node = game_state.pgn_node.add_variation(move)
                 if annotation_suffix:
                     if annotation_suffix == "=":
@@ -1336,7 +1367,16 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                     game_state.black_remaining += game_state.clock_config["phases"][
                         game_state.black_phase
                     ]["black_inc"]
+                
+                if not hasattr(game_state, "clocks_history"):
+                    game_state.clocks_history = []
+                if game_state.active_color == "white":
+                    game_state.clocks_history.append(game_state.white_remaining)
+                else:
+                    game_state.clocks_history.append(game_state.black_remaining)
+
                 game_state.switch_turn()
+                current_turn_clock_before = None
                 if autosave_is_on:
                     EseguiAutosave(game_state)
                     Acusticator(["f3", 0.012, 0, config.VOLUME], sync=True)
@@ -1361,6 +1401,13 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
         game_state.black_remaining
     )
     print(_("Partita terminata."))
+    
+    if len(game_state.move_history) >= 8:
+        from GBUtils import enter_escape
+        if enter_escape(_("Vuoi vedere come hai usato il tempo a tua disposizione? (INVIO per si', ESC per no): ")):
+            board_utils.AnalizzaEStampaStatisticheTempo(game_state, color_filter=None)
+            if enter_escape(_("Desideri salvare i tempi mossa nel PGN? (INVIO per si', ESC per no): ")):
+                board_utils.AggiungiTempiPgn(game_state.pgn_game, getattr(game_state, "move_times", []))
     if last_valid_eco_entry:
         game_state.pgn_game.headers["ECO"] = last_valid_eco_entry["eco"]
         game_state.pgn_game.headers["Opening"] = last_valid_eco_entry["opening"]
@@ -1442,11 +1489,10 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
 
 def StartGame(clock_config):
     print(_("\nAvvio partita\n"))
-    game_mode_choice = ""
-    while game_mode_choice not in ["s", "f"]:
-        game_mode_choice = key(
-            _("Scegli la modalita': [S]tandard o [F]ischer Random 960? (S/F) ")
-        ).lower()
+    is_standard = enter_escape(
+        _("Vuoi giocare alla variante standard (scacchi ortodossi)? (INVIO per si', ESC per Fischer Random): ")
+    )
+    is_fischer_random = not is_standard
     Acusticator(
         [
             "c4",
@@ -1465,7 +1511,6 @@ def StartGame(clock_config):
         kind=1,
         adsr=[0, 0, 100, 5],
     )
-    is_fischer_random = game_mode_choice == "f"
     starting_board = None
     starting_fen = None
     if is_fischer_random:
