@@ -868,6 +868,7 @@ class GamePlayState:
         self.variant = "standard"
         self.move_times = []
         self.clocks_history = []
+        self.clock_increment = 0
 
     def get_clocks(self):
         w_time = self.white_time
@@ -1011,6 +1012,8 @@ def async_play_loop(q, game_state):
                 return None
             elif msg.get("type") == "gameFull":
                 game_state.game_id = msg.get("id")
+                clock_data = msg.get("clock", {})
+                game_state.clock_increment = int(clock_data.get("increment", 0))
                 w = msg.get("white", {})
                 b = msg.get("black", {})
 
@@ -1100,11 +1103,18 @@ def async_play_loop(q, game_state):
                             game_state.clocks_history = []
 
                         if i == current_ply:
+                            increment = getattr(game_state, "clock_increment", 0)
                             if is_white_turn:
-                                time_spent = max(0.0, game_state.white_time - int(msg.get("wtime", 0)) / 1000.0)
+                                time_spent = max(
+                                    0.0,
+                                    game_state.white_time - int(msg.get("wtime", 0)) / 1000.0 + increment
+                                )
                                 clk_time = int(msg.get("wtime", 0)) / 1000.0
                             else:
-                                time_spent = max(0.0, game_state.black_time - int(msg.get("btime", 0)) / 1000.0)
+                                time_spent = max(
+                                    0.0,
+                                    game_state.black_time - int(msg.get("btime", 0)) / 1000.0 + increment
+                                )
                                 clk_time = int(msg.get("btime", 0)) / 1000.0
                         else:
                             time_spent = 0.0
