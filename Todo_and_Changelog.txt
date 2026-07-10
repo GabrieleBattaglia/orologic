@@ -2,6 +2,9 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+8.8.5 (10 luglio 2026 - 12:46)
+	* [Core] Risolto un bug grave nel calcolo dei tempi delle mosse e delle statistiche durante le partite su Lichess: l'incremento di tempo applicato automaticamente dal server non veniva compensato, portando a sottostimare sistematicamente la durata delle mosse di un valore pari all'incremento stesso (o azzerandola in caso di mosse istantanee).
+
 8.8.4 (10 luglio 2026 - 10:17)
 	+ [Core] Ottimizzato il caricamento e il rilevamento delle aperture ECO: implementato caching in memoria del database, ottimizzato l'algoritmo di scorrimento delle mosse da quadratico a lineare, e velocizzata la ricerca delle posizioni tramite indicizzazione a dizionario EPD (Extended Position Description) ad accesso O(1).
 	* [Core] Risolto un bug latente nel seek dello stream del database che cercava per byte invece che per caratteri su StringIO, provocando potenziali skip in presenza di caratteri non-ASCII.
