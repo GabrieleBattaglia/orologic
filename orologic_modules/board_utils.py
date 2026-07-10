@@ -381,9 +381,16 @@ class GameState:
         self.active_color = "black" if self.active_color == "white" else "white"
 
 
+_eco_database_cache = {}
+
+
 def LoadEcoDatabaseWithFEN(filename="eco.db"):
-    eco_entries = []
+    global _eco_database_cache
     db_path = config.resource_path(os.path.join("resources", filename))
+    if db_path in _eco_database_cache:
+        return _eco_database_cache[db_path]
+
+    eco_entries = {}
     if not os.path.exists(db_path):
         print(_("File {filename} non trovato.").format(filename=db_path))
         return eco_entries
@@ -402,55 +409,43 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
     game_count = 0
     skipped_count = 0
     while True:
-        stream_pos = stream.tell()
         try:
-            headers = chess.pgn.read_headers(stream)
-            if headers is None:
-                break
-            stream.seek(stream_pos)
             game = chess.pgn.read_game(stream)
-            game_count += 1
             if game is None:
-                skipped_count += 1
-                while True:
-                    line = stream.readline()
-                    if not line:
-                        break
-                    if line.strip():
-                        stream.seek(stream.tell() - len(line.encode("utf-8")))
-                        break
-                continue
+                break
+            game_count += 1
             eco_code = game.headers.get("ECO", "")
             opening = game.headers.get("Opening", "")
             variation = game.headers.get("Variation", "")
             moves = []
             node = game
-            last_valid_node = game
             parse_error = False
+            board = game.board()
             while node.variations:
                 next_node = node.variations[0]
                 move = next_node.move
                 try:
-                    san = node.board().san(move)
+                    san = board.san(move)
                     moves.append(san)
+                    board.push(move)
                 except Exception:
                     parse_error = True
                     break
                 node = next_node
-                last_valid_node = node
             if not parse_error and moves:
-                final_fen = last_valid_node.board().board_fen()
+                final_epd = board.epd()
                 ply_count = len(moves)
-                eco_entries.append(
-                    {
-                        "eco": eco_code,
-                        "opening": opening,
-                        "variation": variation,
-                        "moves": moves,
-                        "fen": final_fen,
-                        "ply": ply_count,
-                    }
-                )
+                entry = {
+                    "eco": eco_code,
+                    "opening": opening,
+                    "variation": variation,
+                    "moves": moves,
+                    "fen": final_epd,
+                    "ply": ply_count,
+                }
+                if final_epd not in eco_entries:
+                    eco_entries[final_epd] = []
+                eco_entries[final_epd].append(entry)
             elif parse_error:
                 skipped_count += 1
         except Exception:
@@ -460,15 +455,18 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
                 if not line:
                     break
                 if line.strip().startswith("["):
-                    stream.seek(stream.tell() - len(line.encode("utf-8")))
+                    stream.seek(stream.tell() - len(line))
                     break
-    if eco_entries:
+    num_entries = sum(len(v) for v in eco_entries.values())
+    if num_entries:
         print(
             _("Caricate {num_entries} linee di apertura ECO.").format(
-                num_entries=len(eco_entries)
+                num_entries=num_entries
             )
         )
+    _eco_database_cache[db_path] = eco_entries
     return eco_entries
+
 
 
 def format_pv_descriptively(board, pv):
@@ -502,16 +500,18 @@ def format_pv_descriptively(board, pv):
     return "\n".join(output_lines)
 
 
-def DetectOpeningByFEN(current_board, eco_db_with_fen):
-    current_fen = current_board.board_fen()
-    current_ply = current_board.ply()
-    possible_matches = [e for e in eco_db_with_fen if e["fen"] == current_fen]
+def DetectOpeningByFEN(current_board, eco_db):
+    current_epd = current_board.epd()
+    if isinstance(eco_db, dict):
+        possible_matches = eco_db.get(current_epd, [])
+    else:
+        possible_matches = [
+            e for e in eco_db 
+            if e.get("fen") == current_epd
+        ]
     if not possible_matches:
         return None
-    exact_ply_matches = [m for m in possible_matches if m["ply"] == current_ply]
-    if exact_ply_matches:
-        return max(exact_ply_matches, key=lambda x: len(x["moves"]))
-    return None
+    return max(possible_matches, key=lambda x: len(x.get("moves", [])))
 
 
 def FormatTime(seconds):
