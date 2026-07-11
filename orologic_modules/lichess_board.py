@@ -1013,7 +1013,7 @@ def async_play_loop(q, game_state):
             elif msg.get("type") == "gameFull":
                 game_state.game_id = msg.get("id")
                 clock_data = msg.get("clock", {})
-                game_state.clock_increment = int(clock_data.get("increment", 0))
+                game_state.clock_increment = int(clock_data.get("increment", 0)) / 1000.0
                 w = msg.get("white", {})
                 b = msg.get("black", {})
 
@@ -1059,8 +1059,10 @@ def async_play_loop(q, game_state):
                         game_state.move_history.append(game_state.board.san(move))
                         game_state.board.push(move)
 
-                game_state.white_time = int(state.get("wtime", 0)) / 1000.0
-                game_state.black_time = int(state.get("btime", 0)) / 1000.0
+                if "wtime" in state and state.get("wtime") is not None:
+                    game_state.white_time = int(state.get("wtime")) / 1000.0
+                if "btime" in state and state.get("btime") is not None:
+                    game_state.black_time = int(state.get("btime")) / 1000.0
                 game_state.last_clock_sync = time.time()
 
                 sys.stdout.write("\r" + " " * 79 + "\r")
@@ -1178,8 +1180,10 @@ def async_play_loop(q, game_state):
                                 adsr=[0, 0, 100, 0],
                             )  # Extra beep for my turn
 
-                game_state.white_time = int(msg.get("wtime", 0)) / 1000.0
-                game_state.black_time = int(msg.get("btime", 0)) / 1000.0
+                if "wtime" in msg and msg.get("wtime") is not None:
+                    game_state.white_time = int(msg.get("wtime")) / 1000.0
+                if "btime" in msg and msg.get("btime") is not None:
+                    game_state.black_time = int(msg.get("btime")) / 1000.0
                 game_state.last_clock_sync = time.time()
 
                 status = msg.get("status", "started")
