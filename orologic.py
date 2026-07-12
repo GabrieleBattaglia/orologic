@@ -583,6 +583,6 @@ if __name__ == "__main__":
             "\nArrivederci da Orologic {v}.\nQuesta era la nostra {lc}a volta e ci siamo divertiti assieme per: {d}"
         ).format(v=version.VERSION, lc=l_count, d=durata)
     )
-    Donazione()
+    Donazione(lang=lingua_rilevata)
     key(prompt=_("\nPremi un tasto per uscire..."), attesa=300)
     sys.exit(0)
