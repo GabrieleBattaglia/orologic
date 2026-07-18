@@ -36,7 +36,9 @@ def FormatAnalysisInfo(board, info):
             # supporta sia wdl object che list
             w = wdl_pov.wins / 10 if hasattr(wdl_pov, "wins") else wdl_pov[0] / 10
             d = wdl_pov.draws / 10 if hasattr(wdl_pov, "draws") else wdl_pov[1] / 10
-            loss = wdl_pov.losses / 10 if hasattr(wdl_pov, "losses") else wdl_pov[2] / 10
+            loss = (
+                wdl_pov.losses / 10 if hasattr(wdl_pov, "losses") else wdl_pov[2] / 10
+            )
             wdl_str = " WDL:{:.0f}%-{:.0f}%-{:.0f}%".format(w, d, loss)
         except Exception:
             pass

@@ -371,7 +371,21 @@ def Main():
 
         elif scelta == "memoboard":
             Acusticator(
-                ["g4", 0.08, 0, config.VOLUME, "b4", 0.08, 0, config.VOLUME, "d5", 0.1, 0, config.VOLUME], kind=1
+                [
+                    "g4",
+                    0.08,
+                    0,
+                    config.VOLUME,
+                    "b4",
+                    0.08,
+                    0,
+                    config.VOLUME,
+                    "d5",
+                    0.1,
+                    0,
+                    config.VOLUME,
+                ],
+                kind=1,
             )
             memoboard_app.main()
 
@@ -409,10 +423,22 @@ def Main():
         elif scelta == "ricerca":
             Acusticator(
                 [
-                    "d5", 0.08, -0.5, config.VOLUME,
-                    "a5", 0.08, 0, config.VOLUME,
-                    "f#5", 0.08, 0.5, config.VOLUME,
-                    "d6", 0.12, 0, config.VOLUME,
+                    "d5",
+                    0.08,
+                    -0.5,
+                    config.VOLUME,
+                    "a5",
+                    0.08,
+                    0,
+                    config.VOLUME,
+                    "f#5",
+                    0.08,
+                    0.5,
+                    config.VOLUME,
+                    "d6",
+                    0.12,
+                    0,
+                    config.VOLUME,
                 ],
                 kind=1,
                 adsr=[2, 5, 90, 3],

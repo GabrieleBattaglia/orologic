@@ -105,14 +105,14 @@ def save_lichess_game(game_state, result_str="*"):
     # Se la posizione iniziale non è quella standard, impostiamo i tag FEN
     initial_fen = getattr(game_state, "initial_fen", chess.STARTING_FEN)
     variant = getattr(game_state, "variant", "standard")
-    
+
     if variant == "chess960":
         game.headers["Variant"] = "Chess960"
-        
+
     if initial_fen != chess.STARTING_FEN:
         game.headers["SetUp"] = "1"
         game.headers["FEN"] = initial_fen
-        
+
     node = game
     temp_board = chess.Board(initial_fen, chess960=(variant == "chess960"))
     for san in game_state.move_history:
@@ -124,7 +124,9 @@ def save_lichess_game(game_state, result_str="*"):
             break
 
     # Before calling SaveGameToFile:
-    if getattr(game_state, "save_clock_times", False) and hasattr(game_state, "move_times"):
+    if getattr(game_state, "save_clock_times", False) and hasattr(
+        game_state, "move_times"
+    ):
         board_utils.AggiungiTempiPgn(game, game_state.move_times)
 
     try:
@@ -437,14 +439,22 @@ def async_spectator_loop(q, game_state):
         if not game_state.move_history:
             return "\n" + clock_str + _("Inizio, mossa 0.>")
         elif len(game_state.move_history) % 2 == 1:
-            return "\n" + clock_str + "{num}. {last_move}>".format(
-                num=(len(game_state.move_history) + 1) // 2,
-                last_move=game_state.move_history[-1],
+            return (
+                "\n"
+                + clock_str
+                + "{num}. {last_move}>".format(
+                    num=(len(game_state.move_history) + 1) // 2,
+                    last_move=game_state.move_history[-1],
+                )
             )
         else:
-            return "\n" + clock_str + "{num}... {last_move}>".format(
-                num=len(game_state.move_history) // 2,
-                last_move=game_state.move_history[-1],
+            return (
+                "\n"
+                + clock_str
+                + "{num}... {last_move}>".format(
+                    num=len(game_state.move_history) // 2,
+                    last_move=game_state.move_history[-1],
+                )
             )
 
     def refresh_line():
@@ -619,7 +629,13 @@ def async_spectator_loop(q, game_state):
                 if len(game_state.move_history) > 10:
                     save_lichess_game(game_state, winner)
                 else:
-                    sys.stdout.write("\n" + _("Partita terminata con 5 o meno mosse. Salto il salvataggio.") + "\n")
+                    sys.stdout.write(
+                        "\n"
+                        + _(
+                            "Partita terminata con 5 o meno mosse. Salto il salvataggio."
+                        )
+                        + "\n"
+                    )
                 refresh_line()
         except queue.Empty:
             if not game_state.is_live and game_state.started:
@@ -747,14 +763,18 @@ def spectate_game(game_id, token=None):
             print(_("\nOrologio di {player} in moto").format(player=player))
         elif cmd == ".6":
             sec = dgt(
-                _("\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "),
+                _(
+                    "\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "
+                ),
                 kind="i",
                 imin=0,
                 imax=120,
                 default=game_state.refresh_interval,
             )
             game_state.refresh_interval = sec
-            print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec))
+            print(
+                _("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec)
+            )
             continue
         elif cmd == ".m":
             Acusticator(
@@ -977,11 +997,11 @@ def async_play_loop(q, game_state):
                 )
                 rem = max(0, claim_in - elapsed_gone)
                 if rem > 0:
-                    p = p.rstrip() + f" [CLAIM IN {rem}s] "
+                    p = p.rstrip() + _(" [RECLAMA TRA {rem}s] ").format(rem=rem)
                 else:
-                    p = p.rstrip() + " [CLAIM] "
+                    p = p.rstrip() + _(" [RECLAMA] ")
             else:
-                p = p.rstrip() + " [CLAIM] "
+                p = p.rstrip() + _(" [RECLAMA] ")
 
         return p
 
@@ -1013,18 +1033,20 @@ def async_play_loop(q, game_state):
             elif msg.get("type") == "gameFull":
                 game_state.game_id = msg.get("id")
                 clock_data = msg.get("clock", {})
-                game_state.clock_increment = int(clock_data.get("increment", 0)) / 1000.0
+                game_state.clock_increment = (
+                    int(clock_data.get("increment", 0)) / 1000.0
+                )
                 w = msg.get("white", {})
                 b = msg.get("black", {})
 
                 w_name = w.get("name", w.get("id", _("Anonimo")))
                 if "aiLevel" in w:
-                    w_name = f"Stockfish level {w['aiLevel']}"
+                    w_name = _("Stockfish livello {level}").format(level=w["aiLevel"])
                 w_rat = w.get("rating", "?")
 
                 b_name = b.get("name", b.get("id", _("Anonimo")))
                 if "aiLevel" in b:
-                    b_name = f"Stockfish level {b['aiLevel']}"
+                    b_name = _("Stockfish livello {level}").format(level=b["aiLevel"])
                 b_rat = b.get("rating", "?")
 
                 game_state.white_player = f"{w_name} ({w_rat})"
@@ -1109,18 +1131,26 @@ def async_play_loop(q, game_state):
                             if is_white_turn:
                                 time_spent = max(
                                     0.0,
-                                    game_state.white_time - int(msg.get("wtime", 0)) / 1000.0 + increment
+                                    game_state.white_time
+                                    - int(msg.get("wtime", 0)) / 1000.0
+                                    + increment,
                                 )
                                 clk_time = int(msg.get("wtime", 0)) / 1000.0
                             else:
                                 time_spent = max(
                                     0.0,
-                                    game_state.black_time - int(msg.get("btime", 0)) / 1000.0 + increment
+                                    game_state.black_time
+                                    - int(msg.get("btime", 0)) / 1000.0
+                                    + increment,
                                 )
                                 clk_time = int(msg.get("btime", 0)) / 1000.0
                         else:
                             time_spent = 0.0
-                            clk_time = int(msg.get("wtime", 0)) / 1000.0 if is_white_turn else int(msg.get("btime", 0)) / 1000.0
+                            clk_time = (
+                                int(msg.get("wtime", 0)) / 1000.0
+                                if is_white_turn
+                                else int(msg.get("btime", 0)) / 1000.0
+                            )
 
                         game_state.move_times.append(time_spent)
                         game_state.clocks_history.append(clk_time)
@@ -1266,7 +1296,7 @@ def async_play_loop(q, game_state):
 
                 refresh_line()
             elif msg.get("type") == "chatLine":
-                user = msg.get("username", "Sistema")
+                user = msg.get("username", _("Sistema"))
                 text = msg.get("text", "")
                 if user.lower() != game_state.my_username.lower() and user != "lichess":
                     sys.stdout.write("\r" + " " * 79 + "\r")
@@ -1360,6 +1390,7 @@ def show_post_game_report(game_id, token, username):
     print(_("\n[Risultato Elo]"))
     rated = data.get("rated", False)
     if rated:
+
         def format_elo(p):
             name = p.get("user", {}).get("name", _("Anonimo"))
             rating = p.get("rating", "?")
@@ -1384,6 +1415,7 @@ def show_post_game_report(game_id, token, username):
             if rating is not None and diff is not None:
                 nelo = rating + diff
                 from .lichess_stats import fetch_rating_history
+
                 history_data = fetch_rating_history(username)
                 if history_data:
                     perf_name = data.get("perf")
@@ -1410,30 +1442,49 @@ def show_post_game_report(game_id, token, username):
 
                             if elo:
                                 import statistics
+
                                 celo = elo.count(nelo)
                                 if celo == 0:
-                                    print(_("\nL'Elo {nelo} non è mai stato registrato prima in questa lista.").format(nelo=nelo))
+                                    print(
+                                        _(
+                                            "\nL'Elo {nelo} non è mai stato registrato prima in questa lista."
+                                        ).format(nelo=nelo)
+                                    )
                                 else:
-                                    print(_("\nL'elo inserito, {nelo}, compare altre {celo} volte, in questa lista.").format(nelo=nelo, celo=celo))
+                                    print(
+                                        _(
+                                            "\nL'elo inserito, {nelo}, compare altre {celo} volte, in questa lista."
+                                        ).format(nelo=nelo, celo=celo)
+                                    )
 
                                 omed = statistics.mean(elo)
                                 elorange = max(elo) - min(elo)
                                 if len(elo) > 2 and elorange > 0:
                                     pos_pct = (nelo - min(elo)) * 100 / elorange
-                                    print(_("Minimo / Valore inserito (posizionamento) / Massimo:\n\t{min_elo} / {nelo}=({pct:.3f}%) / {max_elo}.").format(
-                                        min_elo=min(elo), nelo=nelo, pct=pos_pct, max_elo=max(elo)
-                                    ))
+                                    print(
+                                        _(
+                                            "Minimo / Valore inserito (posizionamento) / Massimo:\n\t{min_elo} / {nelo}=({pct:.3f}%) / {max_elo}."
+                                        ).format(
+                                            min_elo=min(elo),
+                                            nelo=nelo,
+                                            pct=pos_pct,
+                                            max_elo=max(elo),
+                                        )
+                                    )
 
                                 elo_after = elo + [nelo]
                                 print(_("Nuovo ELO aggiunto."))
                                 nmed = statistics.mean(elo_after)
-                                print(_("Variazione della media, prima / dopo / differenza:\n\t{omed:.3f} / {nmed:.3f} / {diff:.3f}").format(
-                                    omed=omed, nmed=nmed, diff=nmed - omed
-                                ))
+                                print(
+                                    _(
+                                        "Variazione della media, prima / dopo / differenza:\n\t{omed:.3f} / {nmed:.3f} / {diff:.3f}"
+                                    ).format(omed=omed, nmed=nmed, diff=nmed - omed)
+                                )
     else:
         print(_("Partita amichevole (nessuna variazione Elo)."))
 
     from GBUtils import enter_escape
+
     enter_escape(_("\nPremi Invio per continuare..."))
 
 
@@ -1464,14 +1515,29 @@ def play_game(game_id, token, username):
         if user_input is None:
             if len(game_state.move_history) > 10:
                 from GBUtils import enter_escape
-                if enter_escape(_("Vuoi vedere come hai usato il tempo a tua disposizione? (INVIO per si', ESC per no): ")):
-                    board_utils.AnalizzaEStampaStatisticheTempo(game_state, color_filter=None)
-                    if enter_escape(_("Desideri salvare i tempi mossa nel PGN? (INVIO per si', ESC per no): ")):
+
+                if enter_escape(
+                    _(
+                        "Vuoi vedere come hai usato il tempo a tua disposizione? (INVIO per si', ESC per no): "
+                    )
+                ):
+                    board_utils.AnalizzaEStampaStatisticheTempo(
+                        game_state, color_filter=None
+                    )
+                    if enter_escape(
+                        _(
+                            "Desideri salvare i tempi mossa nel PGN? (INVIO per si', ESC per no): "
+                        )
+                    ):
                         game_state.save_clock_times = True
                 show_post_game_report(game_id, token, username)
                 save_lichess_game(game_state, getattr(game_state, "winner", "*"))
             else:
-                print(_("\nPartita terminata con 5 o meno mosse. Salto l'analisi e il salvataggio."))
+                print(
+                    _(
+                        "\nPartita terminata con 5 o meno mosse. Salto l'analisi e il salvataggio."
+                    )
+                )
             break
 
         user_input = user_input.strip()
@@ -1584,14 +1650,18 @@ def play_game(game_id, token, username):
             print(_("\nOrologio di {player} in moto").format(player=player))
         elif cmd == ".6":
             sec = dgt(
-                _("\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "),
+                _(
+                    "\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "
+                ),
                 kind="i",
                 imin=0,
                 imax=120,
                 default=game_state.refresh_interval,
             )
             game_state.refresh_interval = sec
-            print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec))
+            print(
+                _("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec)
+            )
             continue
         elif cmd == ".m":
             Acusticator(

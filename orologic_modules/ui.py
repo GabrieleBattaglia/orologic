@@ -745,6 +745,7 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
 def setup_fischer_random_board():
     """Wrapper per compatibilità: delega a chess960_utils e restituisce (board, fen)."""
     from . import chess960_utils
+
     board, fen, _pos = chess960_utils.setup_fischer_random_board_interactive()
     return board, fen
 

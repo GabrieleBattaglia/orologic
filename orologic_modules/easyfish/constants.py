@@ -105,7 +105,9 @@ MNMAIN = {
     ".gp": _("Partita in PGN. Copia negli appunti"),
     ".i": _("Salva immagine della scacchiera corrente in PDF"),
     ".ii": _("Impostazioni grafica immagine (colori, dimensioni, ecc.)"),
-    ".cs": _("Attiva/Disattiva condivisione scacchiera (finestra grafica per didattica)"),
+    ".cs": _(
+        "Attiva/Disattiva condivisione scacchiera (finestra grafica per didattica)"
+    ),
     ".csb": _("Fissa orientamento scacchiera condivisa sul Bianco"),
     ".csn": _("Fissa orientamento scacchiera condivisa sul Nero"),
     ".cst": _("Ripristina orientamento scacchiera condivisa in base al turno"),

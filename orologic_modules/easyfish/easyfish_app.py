@@ -31,9 +31,10 @@ _orig_print = builtins.print
 show_output_on_board = False
 sharing_window = None
 
+
 def custom_print(*args, **kwargs):
     _orig_print(*args, **kwargs)
-    sep = kwargs.get('sep', ' ')
+    sep = kwargs.get("sep", " ")
     text = sep.join(str(arg) for arg in args)
     if not text.strip():
         return
@@ -470,7 +471,9 @@ def run():
 
             elif cmd == ".e":
                 print(_("Accesso alla modalità esplorazione..."))
-                mod_in_exp, final_node = ExplorerMode(game, engine, sharing_window=sharing_window)
+                mod_in_exp, final_node = ExplorerMode(
+                    game, engine, sharing_window=sharing_window
+                )
                 node = final_node
                 board = node.board()
                 game_state.board = board
@@ -479,9 +482,16 @@ def run():
 
             elif cmd == ".g":
                 from GBUtils import enter_escape
-                is_standard = enter_escape(_("Vuoi giocare alla variante standard (scacchi ortodossi)? (INVIO per si', ESC per no): "))
+
+                is_standard = enter_escape(
+                    _(
+                        "Vuoi giocare alla variante standard (scacchi ortodossi)? (INVIO per si', ESC per no): "
+                    )
+                )
                 if not is_standard:
-                    fr_board, fr_fen, fr_num = chess960_utils.setup_fischer_random_board_interactive()
+                    fr_board, fr_fen, fr_num = (
+                        chess960_utils.setup_fischer_random_board_interactive()
+                    )
                     if fr_board is not None:
                         if is_modified:
                             SaveGameToFile(game)
@@ -498,17 +508,28 @@ def run():
                     chess960_utils.configure_engine_for_chess960(engine, False)
 
                 # Avvio partita contro il motore
-                final_node = game_mode.StartEngineGame(node, engine, sharing_window=sharing_window)
+                final_node = game_mode.StartEngineGame(
+                    node, engine, sharing_window=sharing_window
+                )
                 # Sincronizza stato al ritorno
                 node = final_node
                 board = node.board()  # Ricrea board dallo stato finale
                 game_state.board = board
                 is_modified = True
                 from GBUtils import enter_escape
-                print(_("\nSuggerimento: puoi esplorare e analizzare la partita appena conclusa."))
-                if enter_escape(_("Vuoi analizzare la partita? (INVIO per si', ESC per no): ")):
+
+                print(
+                    _(
+                        "\nSuggerimento: puoi esplorare e analizzare la partita appena conclusa."
+                    )
+                )
+                if enter_escape(
+                    _("Vuoi analizzare la partita? (INVIO per si', ESC per no): ")
+                ):
                     print(_("Accesso alla modalità esplorazione..."))
-                    mod_in_exp, final_node = ExplorerMode(game, engine, sharing_window=sharing_window)
+                    mod_in_exp, final_node = ExplorerMode(
+                        game, engine, sharing_window=sharing_window
+                    )
                     node = final_node
                     board = node.board()
                     game_state.board = board
@@ -549,10 +570,20 @@ def run():
 
             elif cmd == ".cs":
                 if sharing_window is None or not sharing_window.is_active():
-                    print(_("\nAttivazione condivisione scacchiera (finestra grafica per didattica)..."))
+                    print(
+                        _(
+                            "\nAttivazione condivisione scacchiera (finestra grafica per didattica)..."
+                        )
+                    )
                     print(_("ISTRUZIONI:"))
-                    print(_("- Puoi condividere la nuova finestra su Meet, Zoom o Teams."))
-                    print(_("- Per continuare ad inserire comandi, ricordati di riportare il focus (cliccare) su questa finestra di testo della console."))
+                    print(
+                        _("- Puoi condividere la nuova finestra su Meet, Zoom o Teams.")
+                    )
+                    print(
+                        _(
+                            "- Per continuare ad inserire comandi, ricordati di riportare il focus (cliccare) su questa finestra di testo della console."
+                        )
+                    )
                     Acusticator(
                         [
                             "c5",
@@ -604,17 +635,33 @@ def run():
 
             elif cmd in [".csb", ".csn", ".cst"]:
                 if sharing_window is None or not sharing_window.is_active():
-                    print(_("Errore: devi prima avviare la condivisione con il comando .cs"))
+                    print(
+                        _(
+                            "Errore: devi prima avviare la condivisione con il comando .cs"
+                        )
+                    )
                 else:
                     if cmd == ".csb":
                         sharing_window.set_orientation("white")
-                        print(_("Orientamento scacchiera condivisa impostato: Bianco (fisso)."))
+                        print(
+                            _(
+                                "Orientamento scacchiera condivisa impostato: Bianco (fisso)."
+                            )
+                        )
                     elif cmd == ".csn":
                         sharing_window.set_orientation("black")
-                        print(_("Orientamento scacchiera condivisa impostato: Nero (fisso)."))
+                        print(
+                            _(
+                                "Orientamento scacchiera condivisa impostato: Nero (fisso)."
+                            )
+                        )
                     elif cmd == ".cst":
                         sharing_window.set_orientation("turn")
-                        print(_("Orientamento scacchiera condivisa impostato: in base al turno (dinamico)."))
+                        print(
+                            _(
+                                "Orientamento scacchiera condivisa impostato: in base al turno (dinamico)."
+                            )
+                        )
 
             elif cmd_clean == ".cso":
                 parts = key_command.strip().split()
@@ -630,8 +677,14 @@ def run():
                 else:
                     show_output_on_board = not show_output_on_board
                 status_str = _("attivata") if show_output_on_board else _("disattivata")
-                print(_("Visualizzazione dell'output di testo sotto la scacchiera {status}.").format(status=status_str))
-                Acusticator(["c5", 0.08, 0, config.VOLUME, "g5", 0.08, 0, config.VOLUME])
+                print(
+                    _(
+                        "Visualizzazione dell'output di testo sotto la scacchiera {status}."
+                    ).format(status=status_str)
+                )
+                Acusticator(
+                    ["c5", 0.08, 0, config.VOLUME, "g5", 0.08, 0, config.VOLUME]
+                )
                 if sharing_window and sharing_window.is_active():
                     sharing_window.set_show_text_mode(show_output_on_board)
 
@@ -707,7 +760,9 @@ def run():
                         "Accesso all'editor. ATTENZIONE: Al termine dell'editing, la partita corrente verrà salvata e ne inizierà una nuova dalla posizione impostata."
                     )
                 )
-                new_fen = BoardEditor(starting_fen=board.fen(), sharing_window=sharing_window)
+                new_fen = BoardEditor(
+                    starting_fen=board.fen(), sharing_window=sharing_window
+                )
                 if new_fen:
                     if is_modified:
                         SaveGameToFile(game)
@@ -775,6 +830,7 @@ def run():
 
         else:
             from ..lichess_board import handle_exploration_command
+
             if handle_exploration_command(key_command, game_state):
                 continue
             move_san = NormalizeMove(key_command)

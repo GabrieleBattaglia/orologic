@@ -34,11 +34,13 @@ TEMPO_COMMANDS = {
 def StartTempo(clock_config):
     """Inizia la sessione Tempo con l'orologio selezionato."""
     print(_("\nAvvio modalita' Tempo\n"))
-    print(_(
-        "Questa modalita' permette di tenere traccia del tempo senza scacchiera.\n"
-        "Al prompt puoi inserire qualsiasi annotazione (o premere INVIO per inserire 'x' e passare il turno).\n"
-        "Premi '.' per terminare e salvare il report, o '.?' per la lista dei comandi.\n"
-    ))
+    print(
+        _(
+            "Questa modalita' permette di tenere traccia del tempo senza scacchiera.\n"
+            "Al prompt puoi inserire qualsiasi annotazione (o premere INVIO per inserire 'x' e passare il turno).\n"
+            "Premi '.' per terminare e salvare il report, o '.?' per la lista dei comandi.\n"
+        )
+    )
 
     # Inizializzazione dello stato di gioco (senza logiche scacchistiche)
     game_state = board_utils.GameState(clock_config)
@@ -49,11 +51,15 @@ def StartTempo(clock_config):
     while True:
         nota_sessione = dgt(
             _("Inserisci una nota per questa sessione (massimo 250 caratteri): "),
-            kind="s"
+            kind="s",
         )
         if len(nota_sessione) <= 250:
             break
-        print(_("Errore: la nota non deve superare i 250 caratteri. Attualmente e' di {len_note} caratteri.").format(len_note=len(nota_sessione)))
+        print(
+            _(
+                "Errore: la nota non deve superare i 250 caratteri. Attualmente e' di {len_note} caratteri."
+            ).format(len_note=len(nota_sessione))
+        )
     game_state.session_note = nota_sessione
 
     key(
@@ -297,14 +303,20 @@ def _loop_tempo(game_state, clock_config):
                     print(_("Orologio di {player} in moto").format(player=player))
             elif cmd == ".6":
                 sec = dgt(
-                    _("\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "),
+                    _(
+                        "\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "
+                    ),
                     kind="i",
                     imin=0,
                     imax=120,
                     default=game_state.refresh_interval,
                 )
                 game_state.refresh_interval = sec
-                print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec))
+                print(
+                    _("Intervallo di aggiornamento impostato a {s} secondi.").format(
+                        s=sec
+                    )
+                )
                 continue
             elif cmd == ".p":
                 game_state.paused = not game_state.paused
@@ -382,7 +394,7 @@ def _loop_tempo(game_state, clock_config):
                         game_state.white_remaining -= game_state.clock_config["phases"][
                             game_state.white_phase
                         ]["white_inc"]
-                    
+
                     Acusticator(
                         [
                             "g4",
@@ -538,9 +550,7 @@ def _loop_tempo(game_state, clock_config):
             # Se l'utente preme invio a vuoto, viene salvato "x"
             mossa_str = user_input if user_input != "" else "x"
 
-            Acusticator(
-                [1000.0, 0.01, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0]
-            )
+            Acusticator([1000.0, 0.01, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0])
 
             # Aggiungiamo alla cronologia temporanea
             game_state.move_history.append(mossa_str)
@@ -562,7 +572,7 @@ def _loop_tempo(game_state, clock_config):
     elapsed_real = end_time - start_time
 
     if paused_time_start is not None:
-        total_paused_time += (end_time - paused_time_start)
+        total_paused_time += end_time - paused_time_start
 
     tempo_gioco = elapsed_real - total_paused_time
     tempo_pausa = total_paused_time
@@ -650,9 +660,7 @@ def _salva_report_tempo(
             if i + 1 < len(game_state.move_history)
             else ""
         )
-        file_content += f"{num_mossa}. {w_move}" + (
-            f" {b_move}\n" if b_move else "\n"
-        )
+        file_content += f"{num_mossa}. {w_move}" + (f" {b_move}\n" if b_move else "\n")
 
     file_content += "\n--------------------------------\n"
     file_content += _("STATISTICHE FINALI:\n")

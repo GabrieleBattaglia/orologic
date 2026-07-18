@@ -7,10 +7,12 @@ zip_path = "Orologic.zip"
 print(f"Creating zip file '{zip_path}' from directory '{dist_dir}'...")
 
 if not os.path.exists(dist_dir):
-    print(f"Error: directory '{dist_dir}' does not exist. Make sure PyInstaller finished compiling.")
+    print(
+        f"Error: directory '{dist_dir}' does not exist. Make sure PyInstaller finished compiling."
+    )
     exit(1)
 
-with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
     file_count = 0
     for root, dirs, files in os.walk(dist_dir):
         for file in files:

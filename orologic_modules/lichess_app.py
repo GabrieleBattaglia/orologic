@@ -25,7 +25,7 @@ def save_secrets(secrets):
         with open(SECRETS_FILE, "w", encoding="utf-8") as f:
             json.dump(secrets, f, indent=4)
     except Exception as e:
-        print(f"Errore salvataggio segreti: {e}")
+        print(_("Errore salvataggio segreti: {e}").format(e=e))
 
 
 def _(testo):
@@ -61,9 +61,13 @@ def format_ratings(perfs):
         if mode in perfs and "rating" in perfs[mode]:
             games = perfs[mode].get("games", 0)
             if games > 0:
-                ratings.append(f"{mode.capitalize()}: {perfs[mode]['rating']}")
+                ratings.append(
+                    _("{mode}: {rating}").format(
+                        mode=_(mode.capitalize()), rating=perfs[mode]["rating"]
+                    )
+                )
     if ratings:
-        return " - Elo [" + ", ".join(ratings) + "]"
+        return _(" - Elo [{ratings}]").format(ratings=", ".join(ratings))
     return ""
 
 
@@ -97,7 +101,7 @@ def menu_login(db):
         print(_("Verifica del token in corso..."))
         profile = fetch_profile_info(token)
         if profile:
-            username = profile.get("username", "Sconosciuto")
+            username = profile.get("username", _("Sconosciuto"))
             secrets = load_secrets()
             secrets["lichess_token"] = token
             secrets["lichess_username"] = username
@@ -513,12 +517,15 @@ def menu_amici(db):
             else:
                 sorted_following = sorted(
                     following,
-                    key=lambda x: (1 if x.get("online") else 0, x.get("username", "").lower()),
-                    reverse=True
+                    key=lambda x: (
+                        1 if x.get("online") else 0,
+                        x.get("username", "").lower(),
+                    ),
+                    reverse=True,
                 )
                 amici_menu = {}
                 for u in sorted_following:
-                    username = u.get("username", "Sconosciuto")
+                    username = u.get("username", _("Sconosciuto"))
                     title = u.get("title", "")
                     title_str = f"[{title}] " if title else ""
                     online = _("ONLINE") if u.get("online") else _("Offline")
@@ -1314,6 +1321,7 @@ def fetch_user_profile(username, token=None):
 def watch_player(username, token):
     import sys
     import msvcrt
+
     print(_("Controllo se l'utente e' in gioco..."))
     profile = fetch_user_profile(username, token)
     if profile:
@@ -1324,22 +1332,34 @@ def watch_player(username, token):
             return True
         else:
             print(_("L'utente non ha partite in corso in questo momento."))
-            if enter_escape(_("Desideri attendere l'inizio di una partita? (Invio = Si', Esc = No): ")):
+            if enter_escape(
+                _(
+                    "Desideri attendere l'inizio di una partita? (Invio = Si', Esc = No): "
+                )
+            ):
                 start_time = time.time()
                 timeout = 30 * 60  # 30 minuti
                 polling_interval = 10  # 10 secondi
-                
-                print(_("\nIn attesa che {u} inizi a giocare... (Premi ESC o digita . per annullare)").format(u=username))
-                
+
+                print(
+                    _(
+                        "\nIn attesa che {u} inizi a giocare... (Premi ESC o digita . per annullare)"
+                    ).format(u=username)
+                )
+
                 while time.time() - start_time < timeout:
                     elapsed = time.time() - start_time
                     remaining = int(timeout - elapsed)
                     rem_min = remaining // 60
                     rem_sec = remaining % 60
-                    
-                    sys.stdout.write(_("\rAttesa in corso... Tempo residuo: {m:02d}:{s:02d}").format(m=rem_min, s=rem_sec))
+
+                    sys.stdout.write(
+                        _("\rAttesa in corso... Tempo residuo: {m:02d}:{s:02d}").format(
+                            m=rem_min, s=rem_sec
+                        )
+                    )
                     sys.stdout.flush()
-                    
+
                     interrupted = False
                     for _idx in range(polling_interval * 10):
                         if msvcrt.kbhit():
@@ -1348,11 +1368,11 @@ def watch_player(username, token):
                                 interrupted = True
                                 break
                         time.sleep(0.1)
-                    
+
                     if interrupted:
                         print(_("\nAttesa annullata."))
                         return False
-                    
+
                     profile = fetch_user_profile(username, token)
                     if profile and "playing" in profile:
                         game_url = profile["playing"]
@@ -1361,8 +1381,12 @@ def watch_player(username, token):
                         print(_("Partita iniziata! Connessione in corso..."))
                         lichess_board.spectate_game(game_id, token)
                         return True
-                
-                print(_("\nTempo massimo di attesa (30 minuti) superato. Ritorno al menu."))
+
+                print(
+                    _(
+                        "\nTempo massimo di attesa (30 minuti) superato. Ritorno al menu."
+                    )
+                )
     else:
         print(_("Utente non trovato o errore di connessione."))
     return False
@@ -1421,14 +1445,16 @@ def menu_guarda(db):
             print(_("Recupero lista degli amici in corso..."))
             following = fetch_following(token)
             if not following:
-                print(_("Non stai seguendo nessuno o e' impossibile recuperare la lista."))
+                print(
+                    _("Non stai seguendo nessuno o e' impossibile recuperare la lista.")
+                )
                 enter_escape(_("\nPremi Invio per continuare..."))
                 continue
 
             sorted_friends = sorted(
                 following,
                 key=lambda x: (1 if "playing" in x else 0, 1 if x.get("online") else 0),
-                reverse=True
+                reverse=True,
             )
 
             scelte_amici = {}
@@ -1454,7 +1480,11 @@ def menu_guarda(db):
                 numbered=db.get("menu_numerati", False),
             )
             if amico_scelto != ".":
-                f_obj = next(f for f in following if f.get("username", f.get("id")) == amico_scelto)
+                f_obj = next(
+                    f
+                    for f in following
+                    if f.get("username", f.get("id")) == amico_scelto
+                )
                 if "playing" in f_obj:
                     game_url = f_obj["playing"]
                     game_id = game_url.split("/")[-1][:8]
@@ -1474,9 +1504,11 @@ def menu_guarda(db):
 
             scelte_tv = {}
             for k, v in data.items():
-                user_name = v.get("user", {}).get("name", "Anonimo")
+                user_name = v.get("user", {}).get("name", _("Anonimo"))
                 rating = v.get("rating", "?")
-                scelte_tv[k] = f"{k.capitalize()} ({user_name} - Elo: {rating})"
+                scelte_tv[k] = _("{channel} ({user} - Elo: {rating})").format(
+                    channel=_(k.capitalize()), user=user_name, rating=rating
+                )
             scelte_tv["."] = _("Indietro")
 
             canale_scelto = menu(
@@ -1571,14 +1603,14 @@ def get_game_params(for_seek=False, for_bot=False):
         variant = "standard"
     else:
         variant_scelte = {
-            "chess960": "Chess960",
-            "crazyhouse": "Crazyhouse",
-            "antichess": "Antichess",
-            "atomic": "Atomic",
-            "horde": "Horde",
-            "kingOfTheHill": "King of the Hill",
-            "racingKings": "Racing Kings",
-            "threeCheck": "Three-check",
+            "chess960": _("Chess960"),
+            "crazyhouse": _("Crazyhouse"),
+            "antichess": _("Antichess"),
+            "atomic": _("Atomic"),
+            "horde": _("Horde"),
+            "kingOfTheHill": _("King of the Hill"),
+            "racingKings": _("Racing Kings"),
+            "threeCheck": _("Three-check"),
         }
         db = storage.LoadDB()
         variant = menu(
@@ -2005,7 +2037,7 @@ def menu_gioca(db):
 
             scelte_games = {}
             for g in games:
-                opp = g.get("opponent", {}).get("username", "Anonimo")
+                opp = g.get("opponent", {}).get("username", _("Anonimo"))
                 color = _("Bianco") if g.get("color") == "white" else _("Nero")
                 scelte_games[g["gameId"]] = _("Contro {o} (Sei il {c})").format(
                     o=opp, c=color
@@ -2039,7 +2071,7 @@ def run():
         profile = fetch_profile_info(token)
         if profile:
             username = profile.get(
-                "username", secrets.get("lichess_username", "Utente")
+                "username", secrets.get("lichess_username", _("Utente"))
             )
             secrets["lichess_username"] = username
             rating_info = format_ratings(profile.get("perfs", {}))
@@ -2068,7 +2100,7 @@ def run():
                     MENU_CHOICES["riprendi"] = _(
                         "Riprendi partita in sospeso ({n} attive)"
                     ).format(n=len(active_games))
-            
+
             # Controllo sfide in sospeso
             try:
                 challenges = get_incoming_challenges(token)
@@ -2098,12 +2130,14 @@ def run():
         if is_logged:
             MENU_CHOICES["messaggi"] = _("Casella Postale (Apri Lichess Inbox)")
             if num_challenges > 0:
-                MENU_CHOICES["sfide"] = _("Sfide in attesa ({n})").format(n=num_challenges)
+                MENU_CHOICES["sfide"] = _("Sfide in attesa ({n})").format(
+                    n=num_challenges
+                )
 
         MENU_CHOICES["."] = _("Ritorna a Orologic (Esci)")
 
         if is_logged:
-            username = secrets.get("lichess_username", "Utente")
+            username = secrets.get("lichess_username", _("Utente"))
             print(
                 _("\n--- OROLICHESS --- CONNESSO COME: {username}{rating} ---").format(
                     username=username, rating=rating_info
@@ -2128,7 +2162,7 @@ def run():
         elif scelta == "riprendi":
             scelte_games = {}
             for g in active_games:
-                opp = g.get("opponent", {}).get("username", "Anonimo")
+                opp = g.get("opponent", {}).get("username", _("Anonimo"))
                 color = _("Bianco") if g.get("color") == "white" else _("Nero")
                 my_turn = g.get("isMyTurn", False)
                 # Notare che `isMyTurn` viene fornito dall'API playing
@@ -2165,6 +2199,7 @@ def run():
         elif scelta == "storia":
             if is_logged:
                 from . import lichess_stats
+
                 lichess_stats.run_stats(secrets.get("lichess_username"), secrets)
             else:
                 print(_("\nDevi prima effettuare il login per vedere la storia Elo."))
@@ -2191,7 +2226,7 @@ def run():
                 challenges = get_incoming_challenges(token)
             except Exception:
                 challenges = []
-            
+
             if not challenges:
                 print(_("Non hai sfide in attesa."))
                 continue

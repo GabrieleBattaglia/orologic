@@ -152,18 +152,23 @@ def CheckForStockfishUpdatesSilent():
     try:
         from . import engine
         from . import storage
+
         if not engine.ENGINE or "stockfish" not in engine.ENGINE_NAME.lower():
             return
 
         # Ricaviamo la versione locale dal nome del motore
         local_name = engine.ENGINE_NAME
-        match = re.search(r'stockfish\s*([\d\.]+)', local_name, re.IGNORECASE)
-        local_ver_str = match.group(1) if match else "".join(re.findall(r'[\d\.]+', local_name))
+        match = re.search(r"stockfish\s*([\d\.]+)", local_name, re.IGNORECASE)
+        local_ver_str = (
+            match.group(1) if match else "".join(re.findall(r"[\d\.]+", local_name))
+        )
         if not local_ver_str:
             return
 
         # Interroghiamo le API di GitHub per l'ultima release
-        api_url = "https://api.github.com/repos/official-stockfish/Stockfish/releases/latest"
+        api_url = (
+            "https://api.github.com/repos/official-stockfish/Stockfish/releases/latest"
+        )
         response = requests.get(api_url, timeout=3.0)
         if response.status_code == 200:
             data = response.json()
@@ -171,12 +176,12 @@ def CheckForStockfishUpdatesSilent():
             if not tag_name:
                 return
 
-            remote_ver_str = "".join(re.findall(r'[\d\.]+', tag_name))
+            remote_ver_str = "".join(re.findall(r"[\d\.]+", tag_name))
             if not remote_ver_str:
                 return
 
             def parse_ver(v_str):
-                return tuple(int(x) for x in re.findall(r'\d+', v_str))
+                return tuple(int(x) for x in re.findall(r"\d+", v_str))
 
             if parse_ver(remote_ver_str) > parse_ver(local_ver_str):
                 # Trovato aggiornamento!
@@ -189,6 +194,7 @@ def CheckForStockfishUpdatesSilent():
 
                 if download_url:
                     from GBUtils import enter_escape
+
                     print(_("\n*** AGGIORNAMENTO MOTORE STOCKFISH DISPONIBILE ***"))
                     print(
                         _(
@@ -208,7 +214,9 @@ def CheckForStockfishUpdatesSilent():
                             full_path = os.path.join(p, e)
                             app_path = config.percorso_salvataggio("")
                             try:
-                                cfg["engine_path"] = os.path.relpath(full_path, app_path)
+                                cfg["engine_path"] = os.path.relpath(
+                                    full_path, app_path
+                                )
                                 cfg["engine_is_relative"] = True
                             except Exception:
                                 cfg["engine_path"] = full_path
@@ -218,7 +226,11 @@ def CheckForStockfishUpdatesSilent():
                             print(_("Aggiornamento completato con successo!"))
                             engine.InitEngine()
                         else:
-                            print(_("Errore durante l'aggiornamento. Ripristino vecchio motore..."))
+                            print(
+                                _(
+                                    "Errore durante l'aggiornamento. Ripristino vecchio motore..."
+                                )
+                            )
                             engine.InitEngine()
     except Exception:
         pass
