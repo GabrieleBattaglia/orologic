@@ -55,7 +55,7 @@ def calcola_statistiche(sub_history):
 
     # Varianza, Deviazione Standard e Coefficiente di Variazione
     var_val = sum((x - mean_val) ** 2 for x in ratings) / n
-    std_dev = var_val ** 0.5
+    std_dev = var_val**0.5
     cv_val = (std_dev / mean_val) * 100 if mean_val != 0 else 0.0
 
     # Tendenza (trend slope di regressione lineare)
@@ -64,9 +64,9 @@ def calcola_statistiche(sub_history):
         sum_x = sum(x)
         sum_y = sum(ratings)
         sum_xy = sum(x[i] * ratings[i] for i in range(n))
-        sum_x2 = sum(i ** 2 for i in range(n))
+        sum_x2 = sum(i**2 for i in range(n))
         num = n * sum_xy - sum_x * sum_y
-        den = n * sum_x2 - sum_x ** 2
+        den = n * sum_x2 - sum_x**2
         trend_val = num / den if den != 0 else 0.0
     else:
         trend_val = 0.0
@@ -110,18 +110,41 @@ def dividi_in_quartili(sub_history):
 
 def formatta_stats_globale(title, stats):
     if not stats:
-        return f"{title}: N/A"
-    line1 = f"{title} (N={stats['n']}): Min={stats['min']}, Max={stats['max']}, Media={stats['mean']:.2f}"
-    line2 = f"CV={stats['cv']:.2f}%, Tendenza={stats['trend']:.4f}, Moda={stats['mode']}"
+        return _("{title}: N/A").format(title=title)
+    line1 = _("{title} (N={n}): Min={min}, Max={max}, Media={mean:.2f}").format(
+        title=title,
+        n=stats["n"],
+        min=stats["min"],
+        max=stats["max"],
+        mean=stats["mean"],
+    )
+    line2 = _("CV={cv:.2f}%, Tendenza={trend:.4f}, Moda={mode}").format(
+        cv=stats["cv"], trend=stats["trend"], mode=stats["mode"]
+    )
     return f"{line1}\n{line2}"
 
 
 def formatta_stats_quartile(title, stats):
     if not stats:
-        return f"{title}: N/A"
+        return _("{title}: N/A").format(title=title)
     durata_str = calcola_durata_str(stats["start_dt"], stats["end_dt"])
-    line1 = f"{title} (N={stats['n']}) {stats['start_date']} - {stats['end_date']} (Durata: {durata_str})"
-    line2 = f"Min={stats['min']}, Max={stats['max']}, Media={stats['mean']:.2f}, CV={stats['cv']:.2f}%, Tendenza={stats['trend']:.4f}, Moda={stats['mode']}"
+    line1 = _("{title} (N={n}) {start} - {end} (Durata: {durata})").format(
+        title=title,
+        n=stats["n"],
+        start=stats["start_date"],
+        end=stats["end_date"],
+        durata=durata_str,
+    )
+    line2 = _(
+        "Min={min}, Max={max}, Media={mean:.2f}, CV={cv:.2f}%, Tendenza={trend:.4f}, Moda={mode}"
+    ).format(
+        min=stats["min"],
+        max=stats["max"],
+        mean=stats["mean"],
+        cv=stats["cv"],
+        trend=stats["trend"],
+        mode=stats["mode"],
+    )
     return f"{line1}\n{line2}"
 
 
@@ -163,7 +186,9 @@ def run_stats(username, secrets):
             name = item.get("name", "")
             points = item.get("points", [])
             if len(points) >= 1:
-                available_variants[name.lower()] = f"{name} ({len(points)} valori)"
+                available_variants[name.lower()] = _("{name} ({count} valori)").format(
+                    name=name, count=len(points)
+                )
 
         if not available_variants:
             print(_("Nessun dato storico Elo disponibile per questo giocatore."))
@@ -218,9 +243,7 @@ def run_stats(username, secrets):
             stats_q4 = calcola_statistiche(q4)
 
             print(
-                _("\n--- STATISTICHE ELO: {v} ---").format(
-                    v=selected_item.get("name")
-                )
+                _("\n--- STATISTICHE ELO: {v} ---").format(v=selected_item.get("name"))
             )
             print(
                 _("Periodo: {d1} - {d2} (valori {i1}-{i2} su {tot})").format(
@@ -291,11 +314,7 @@ def run_stats(username, secrets):
                         if 0 <= val_idx <= end_idx:
                             start_idx = val_idx
                         else:
-                            print(
-                                _(
-                                    "Indice non valido o superiore all'indice finale."
-                                )
-                            )
+                            print(_("Indice non valido o superiore all'indice finale."))
                 except ValueError:
                     print(_("Valore non valido."))
             elif scelta == "2":
@@ -323,9 +342,7 @@ def run_stats(username, secrets):
                             end_idx = val_idx
                         else:
                             print(
-                                _(
-                                    "Indice non valido o inferiore all'indice iniziale."
-                                )
+                                _("Indice non valido o inferiore all'indice iniziale.")
                             )
                 except ValueError:
                     print(_("Valore non valido."))
@@ -335,9 +352,7 @@ def run_stats(username, secrets):
             elif scelta == "4":
                 ratings_subset = [item["rating"] for item in selected_pts]
                 if len(ratings_subset) < 5:
-                    print(
-                        _("Per la sonificazione sono necessari almeno 5 valori Elo.")
-                    )
+                    print(_("Per la sonificazione sono necessari almeno 5 valori Elo."))
                     continue
 
                 ptm = enter_escape(

@@ -488,7 +488,9 @@ def LoadPGNFromClipboard():
         if not text.strip():
             return None
 
-        games, is_corrupted, is_corrected, err_msg, cleaned_text = board_utils.validate_and_clean_pgn(text)
+        games, is_corrupted, is_corrected, err_msg, cleaned_text = (
+            board_utils.validate_and_clean_pgn(text)
+        )
 
         if is_corrupted:
             Acusticator(["d3", 0.5, 0, config.VOLUME], kind=3)
@@ -498,8 +500,14 @@ def LoadPGNFromClipboard():
 
         if is_corrected:
             pyperclip.copy(cleaned_text)
-            print(_("\n[Info] Il PGN presentava lievi imperfezioni di layout ed e' stato corretto e aggiornato negli appunti."))
-            Acusticator(["c5", 0.1, 0, config.VOLUME, "e5", 0.1, 0, config.VOLUME], kind=1)
+            print(
+                _(
+                    "\n[Info] Il PGN presentava lievi imperfezioni di layout ed e' stato corretto e aggiornato negli appunti."
+                )
+            )
+            Acusticator(
+                ["c5", 0.1, 0, config.VOLUME, "e5", 0.1, 0, config.VOLUME], kind=1
+            )
 
         if not games:
             return None

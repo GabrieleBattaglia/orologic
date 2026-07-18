@@ -196,7 +196,11 @@ def format_profile(profile):
             games = perf_data.get("games", 0)
             if games > 0:
                 p.append(
-                    f"{perf_name.capitalize()}: {perf_data.get('rating', '?')} ({games} partite)"
+                    _("{perf_name}: {rating} ({games} partite)").format(
+                        perf_name=_(perf_name.capitalize()),
+                        rating=perf_data.get("rating", "?"),
+                        games=games,
+                    )
                 )
 
     return "\n".join(p)
@@ -399,13 +403,21 @@ def download_games(username, token):
                     matched += 1
 
                 if analyzed % 50 == 0:
-                    sys.stdout.write(f"\rAnalizzate: {analyzed}, {matched} trovate.")
+                    sys.stdout.write(
+                        _("\rAnalizzate: {analyzed}, {matched} trovate.").format(
+                            analyzed=analyzed, matched=matched
+                        )
+                    )
                     sys.stdout.flush()
 
     except Exception as e:
         print(_("\nErrore durante il download: {e}").format(e=e))
 
-    sys.stdout.write(f"\rAnalizzate: {analyzed}, {matched} trovate.\n")
+    sys.stdout.write(
+        _("\rAnalizzate: {analyzed}, {matched} trovate.\n").format(
+            analyzed=analyzed, matched=matched
+        )
+    )
 
     if matched == 0:
         print(_("Nessuna partita corrisponde ai criteri di ricerca."))
@@ -452,13 +464,13 @@ def choose_game_for_analysis(games_list):
                 g.get("players", {})
                 .get("white", {})
                 .get("user", {})
-                .get("name", "Anonimo")
+                .get("name", _("Anonimo"))
             )
             b = (
                 g.get("players", {})
                 .get("black", {})
                 .get("user", {})
-                .get("name", "Anonimo")
+                .get("name", _("Anonimo"))
             )
             res = ""
             if g.get("winner") == "white":
@@ -473,7 +485,9 @@ def choose_game_for_analysis(games_list):
                 g.get("createdAt", 0) / 1000
             ).strftime("%Y-%m-%d")
 
-            desc = f"{w} vs {b} ({res}) - ECO: {eco} - {date}"
+            desc = _("{w} vs {b} ({res}) - ECO: {eco} - {date}").format(
+                w=w, b=b, res=res, eco=eco, date=date
+            )
             choices[str(i + 1)] = desc
 
         if start_idx > 0:
@@ -631,13 +645,20 @@ def show_player_menu(username, secrets):
         elif scelta == "ricerca_pgn":
             pgn_url = f"https://lichess.org/api/games/user/{username}"
             import pyperclip
+
             pyperclip.copy(pgn_url)
-            print(_("\nURL per il download del PGN di {u} copiato negli appunti!").format(u=username))
+            print(
+                _("\nURL per il download del PGN di {u} copiato negli appunti!").format(
+                    u=username
+                )
+            )
             print(_("Passaggio a Ricerca PGN..."))
             from . import pgn_search
+
             pgn_search.run()
         elif scelta == "storia":
             from . import lichess_stats
+
             lichess_stats.run_stats(username, secrets)
 
 

@@ -40,7 +40,6 @@ def InsertedCounter(board):
     return p1
 
 
-
 def SquaresListToString(board, sq_list, report_piece=False, occupied_only=False):
     """Converte una lista di case in una stringa leggibile."""
     from .constants import COLUMN_TO_NATO, CHESSPIECE_TO_NAME

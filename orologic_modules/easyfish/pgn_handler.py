@@ -31,10 +31,13 @@ def PastePGNFromClipboard():
     if not pgn_string.strip():
         return None
     try:
-        games, is_corrupted, is_corrected, err_msg, cleaned_text = validate_and_clean_pgn(pgn_string)
+        games, is_corrupted, is_corrected, err_msg, cleaned_text = (
+            validate_and_clean_pgn(pgn_string)
+        )
 
         if is_corrupted:
             from ..config import VOLUME
+
             Acusticator(["d3", 0.5, 0, VOLUME], kind=3)
             print(_("\n[Errore] PGN non valido:"))
             print(err_msg)
@@ -42,8 +45,13 @@ def PastePGNFromClipboard():
 
         if is_corrected:
             pyperclip.copy(cleaned_text)
-            print(_("\n[Info] Il PGN presentava lievi imperfezioni di layout ed e' stato corretto e aggiornato negli appunti."))
+            print(
+                _(
+                    "\n[Info] Il PGN presentava lievi imperfezioni di layout ed e' stato corretto e aggiornato negli appunti."
+                )
+            )
             from ..config import VOLUME
+
             Acusticator(["c5", 0.1, 0, VOLUME, "e5", 0.1, 0, VOLUME], kind=1)
 
         if not games:

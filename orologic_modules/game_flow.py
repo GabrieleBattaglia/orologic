@@ -131,8 +131,12 @@ def RiprendiPartita(dati_partita):
     game_state.move_history = dati_partita["move_history"]
     game_state.white_player = dati_partita["white_player"]
     game_state.black_player = dati_partita["black_player"]
-    game_state.move_times = dati_partita.get("move_times", [0.0] * len(game_state.move_history))
-    game_state.clocks_history = dati_partita.get("clocks_history", [0.0] * len(game_state.move_history))
+    game_state.move_times = dati_partita.get(
+        "move_times", [0.0] * len(game_state.move_history)
+    )
+    game_state.clocks_history = dati_partita.get(
+        "clocks_history", [0.0] * len(game_state.move_history)
+    )
     try:
         pgn_io = io.StringIO(dati_partita["pgn_string"])
         game_state.pgn_game = chess.pgn.read_game(pgn_io)
@@ -227,6 +231,7 @@ def async_arbitration_input(game_state, get_prompt):
     import sys
     import msvcrt
     import time
+
     buf = []
 
     def refresh_line():
@@ -683,14 +688,20 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                     print(_("Orologio di {player} in moto").format(player=player))
             elif cmd == ".6":
                 sec = dgt(
-                    _("\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "),
+                    _(
+                        "\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "
+                    ),
                     kind="i",
                     imin=0,
                     imax=120,
                     default=game_state.refresh_interval,
                 )
                 game_state.refresh_interval = sec
-                print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec))
+                print(
+                    _("Intervallo di aggiornamento impostato a {s} secondi.").format(
+                        s=sec
+                    )
+                )
                 continue
             elif cmd == ".m":
                 Acusticator(
@@ -828,7 +839,10 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         game_state.active_color = "black"
                     if hasattr(game_state, "move_times") and game_state.move_times:
                         game_state.move_times.pop()
-                    if hasattr(game_state, "clocks_history") and game_state.clocks_history:
+                    if (
+                        hasattr(game_state, "clocks_history")
+                        and game_state.clocks_history
+                    ):
                         game_state.clocks_history.pop()
                     current_turn_clock_before = None
                     print(_("Ultima mossa annullata: ") + undone_move_san)
@@ -1100,18 +1114,18 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 san_move_base = san_move_base.replace("!", "").replace("?", "")
                 game_state.board.push(move)
                 game_state.move_history.append(san_move_base)
-                
+
                 # Calculate time spent on this move
                 if game_state.active_color == "white":
                     time_after = game_state.white_remaining
                 else:
                     time_after = game_state.black_remaining
-                
+
                 if current_turn_clock_before is not None:
                     time_spent = max(0.0, current_turn_clock_before - time_after)
                 else:
                     time_spent = 0.0
-                
+
                 if not hasattr(game_state, "move_times"):
                     game_state.move_times = []
                 game_state.move_times.append(time_spent)
@@ -1367,7 +1381,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                     game_state.black_remaining += game_state.clock_config["phases"][
                         game_state.black_phase
                     ]["black_inc"]
-                
+
                 if not hasattr(game_state, "clocks_history"):
                     game_state.clocks_history = []
                 if game_state.active_color == "white":
@@ -1401,13 +1415,24 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
         game_state.black_remaining
     )
     print(_("Partita terminata."))
-    
+
     if len(game_state.move_history) >= 8:
         from GBUtils import enter_escape
-        if enter_escape(_("Vuoi vedere come hai usato il tempo a tua disposizione? (INVIO per si', ESC per no): ")):
+
+        if enter_escape(
+            _(
+                "Vuoi vedere come hai usato il tempo a tua disposizione? (INVIO per si', ESC per no): "
+            )
+        ):
             board_utils.AnalizzaEStampaStatisticheTempo(game_state, color_filter=None)
-            if enter_escape(_("Desideri salvare i tempi mossa nel PGN? (INVIO per si', ESC per no): ")):
-                board_utils.AggiungiTempiPgn(game_state.pgn_game, getattr(game_state, "move_times", []))
+            if enter_escape(
+                _(
+                    "Desideri salvare i tempi mossa nel PGN? (INVIO per si', ESC per no): "
+                )
+            ):
+                board_utils.AggiungiTempiPgn(
+                    game_state.pgn_game, getattr(game_state, "move_times", [])
+                )
     if last_valid_eco_entry:
         game_state.pgn_game.headers["ECO"] = last_valid_eco_entry["eco"]
         game_state.pgn_game.headers["Opening"] = last_valid_eco_entry["opening"]
@@ -1490,7 +1515,9 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
 def StartGame(clock_config):
     print(_("\nAvvio partita\n"))
     is_standard = enter_escape(
-        _("Vuoi giocare alla variante standard (scacchi ortodossi)? (INVIO per si', ESC per Fischer Random): ")
+        _(
+            "Vuoi giocare alla variante standard (scacchi ortodossi)? (INVIO per si', ESC per Fischer Random): "
+        )
     )
     is_fischer_random = not is_standard
     Acusticator(
@@ -1758,7 +1785,9 @@ def StartGame(clock_config):
     game_state = board_utils.GameState(clock_config)
     if is_fischer_random:
         game_state.board = starting_board
-        chess960_utils.setup_pgn_headers_chess960(game_state.pgn_game, starting_board, starting_fen)
+        chess960_utils.setup_pgn_headers_chess960(
+            game_state.pgn_game, starting_board, starting_fen
+        )
         chess960_utils.configure_engine_for_chess960(engine.ENGINE, True)
     else:
         chess960_utils.configure_engine_for_chess960(engine.ENGINE, False)

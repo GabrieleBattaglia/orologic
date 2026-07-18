@@ -1,6 +1,7 @@
 """Modulo centralizzato per la gestione della variante Chess960 (Fischer Random).
 Espone funzioni per generare posizioni, configurare il motore e interagire con l'utente.
 """
+
 import random
 from GBUtils import dgt, Acusticator
 from . import board_utils
@@ -63,16 +64,12 @@ def describe_960_position(board, pos_number=None):
     col_letters = "abcdefgh"
     lines = []
     if pos_number is not None:
-        lines.append(
-            _("Variante Fischer Random 960, numero {n}:").format(n=pos_number)
-        )
+        lines.append(_("Variante Fischer Random 960, numero {n}:").format(n=pos_number))
     else:
         # Tenta di recuperare il numero dalla board
         try:
             num = board.chess960_pos()
-            lines.append(
-                _("Variante Fischer Random 960, numero {n}:").format(n=num)
-            )
+            lines.append(_("Variante Fischer Random 960, numero {n}:").format(n=num))
         except Exception:
             lines.append(_("Variante Fischer Random 960:"))
     # Descrizione pezzo per colonna (prima traversa, da A a H)
@@ -81,7 +78,9 @@ def describe_960_position(board, pos_number=None):
         piece = board.piece_at(i)
         if piece:
             piece_key = PIECE_SYMBOL_TO_KEY.get(piece.symbol().upper(), "")
-            piece_name = pieces_dict.get(piece_key, {}).get("name", piece.symbol().upper())
+            piece_name = pieces_dict.get(piece_key, {}).get(
+                "name", piece.symbol().upper()
+            )
         else:
             piece_name = "?"
         col_name = columns_dict.get(col, col).upper()
@@ -123,9 +122,18 @@ def setup_fischer_random_board_interactive():
             )
             Acusticator(
                 [
-                    "c5", 0.1, -0.8, config.VOLUME,
-                    "e5", 0.1, 0, config.VOLUME,
-                    "g5", 0.2, 0.8, config.VOLUME,
+                    "c5",
+                    0.1,
+                    -0.8,
+                    config.VOLUME,
+                    "e5",
+                    0.1,
+                    0,
+                    config.VOLUME,
+                    "g5",
+                    0.2,
+                    0.8,
+                    config.VOLUME,
                 ],
                 kind=1,
                 adsr=[2, 8, 90, 0],
@@ -151,9 +159,18 @@ def setup_fischer_random_board_interactive():
                 board = board_utils.CustomBoard(fen_to_try, chess960=True)
                 Acusticator(
                     [
-                        "c5", 0.1, -0.8, config.VOLUME,
-                        "e5", 0.1, 0, config.VOLUME,
-                        "g5", 0.2, 0.8, config.VOLUME,
+                        "c5",
+                        0.1,
+                        -0.8,
+                        config.VOLUME,
+                        "e5",
+                        0.1,
+                        0,
+                        config.VOLUME,
+                        "g5",
+                        0.2,
+                        0.8,
+                        config.VOLUME,
                     ],
                     kind=1,
                     adsr=[2, 8, 90, 0],

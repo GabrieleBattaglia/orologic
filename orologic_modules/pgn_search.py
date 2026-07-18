@@ -29,6 +29,7 @@ lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 # Entry point
 # ---------------------------------------------------------------------------
 
+
 def run():
     """Entry point principale, chiamato dal menu principale di Orologic."""
     print(_("\n=== Ricerca PGN ==="))
@@ -43,11 +44,13 @@ def run():
     # Validazione minima
     if totale < 20:
         print(
-            _("\nAttenzione: l'archivio contiene solo {n} partite (minimo consigliato: 20).").format(
-                n=totale
-            )
+            _(
+                "\nAttenzione: l'archivio contiene solo {n} partite (minimo consigliato: 20)."
+            ).format(n=totale)
         )
-        if not enter_escape(_("Desideri proseguire ugualmente? (INVIO per si', ESC per annullare): ")):
+        if not enter_escape(
+            _("Desideri proseguire ugualmente? (INVIO per si', ESC per annullare): ")
+        ):
             return
 
     # Estrai info headers da ogni partita
@@ -58,11 +61,13 @@ def run():
     giocatore_comune = _trova_giocatore_comune(info_list)
     if giocatore_comune:
         print(
-            _("\nRilevato giocatore principale: {player} (presente in >=90{pct} delle partite).").format(
-                player=giocatore_comune, pct="%"
-            )
+            _(
+                "\nRilevato giocatore principale: {player} (presente in >=90{pct} delle partite)."
+            ).format(player=giocatore_comune, pct="%")
         )
-        print(_("Le statistiche dell'albero saranno relative al suo punteggio (+ = -)."))
+        print(
+            _("Le statistiche dell'albero saranno relative al suo punteggio (+ = -).")
+        )
 
     # Loop filtri → albero
     while True:
@@ -70,12 +75,15 @@ def run():
         if indici_filtrati is None:
             # L'utente ha premuto '.' per uscire dai filtri
             break
-        _albero_aperture(games, info_list, indici_filtrati, filtri_attivi, totale, giocatore_comune)
+        _albero_aperture(
+            games, info_list, indici_filtrati, filtri_attivi, totale, giocatore_comune
+        )
 
 
 # ---------------------------------------------------------------------------
 # Caricamento archivio
 # ---------------------------------------------------------------------------
+
 
 def _carica_archivio():
     """Legge appunti, determina sorgente (file/url/testo), parsa partite.
@@ -119,7 +127,10 @@ def _carica_archivio():
             try:
                 from orologic_modules.config import percorso_salvataggio
                 import json
-                secrets_path = percorso_salvataggio(os.path.join("settings", "secrets.json"))
+
+                secrets_path = percorso_salvataggio(
+                    os.path.join("settings", "secrets.json")
+                )
                 if os.path.exists(secrets_path):
                     with open(secrets_path, "r", encoding="utf-8") as f:
                         secrets = json.load(f)
@@ -138,13 +149,18 @@ def _carica_archivio():
                 start_time = time.time()
                 while True:
                     # Controllo tasto ESC per interruzione manuale
-                    if os.name == 'nt':
+                    if os.name == "nt":
                         import msvcrt
+
                         if msvcrt.kbhit():
                             ch = msvcrt.getwch()
                             if ch == "\x1b":
                                 sys.stdout.write("\n")
-                                print(_("Scaricamento interrotto dall'utente. Elaborazione delle partite caricate finora..."))
+                                print(
+                                    _(
+                                        "Scaricamento interrotto dall'utente. Elaborazione delle partite caricate finora..."
+                                    )
+                                )
                                 break
 
                     chunk = resp.read(chunk_size)
@@ -152,17 +168,25 @@ def _carica_archivio():
                         break
                     data.append(chunk)
                     downloaded += len(chunk)
-                    
+
                     now = time.time()
                     elapsed = now - start_time
                     if elapsed > 3600.0:  # Timeout di 60 minuti (3600 secondi)
                         sys.stdout.write("\n")
-                        print(_("Tempo massimo di scaricamento (60 minuti) raggiunto. Elaborazione delle partite caricate finora..."))
+                        print(
+                            _(
+                                "Tempo massimo di scaricamento (60 minuti) raggiunto. Elaborazione delle partite caricate finora..."
+                            )
+                        )
                         break
-                    
+
                     if now - last_download_print >= 0.5:
                         mb = downloaded / (1024 * 1024)
-                        sys.stdout.write(_("\rScaricamento in corso: {mb:.2f} MB ({elapsed:.0f}s)...\r").format(mb=mb, elapsed=elapsed))
+                        sys.stdout.write(
+                            _(
+                                "\rScaricamento in corso: {mb:.2f} MB ({elapsed:.0f}s)...\r"
+                            ).format(mb=mb, elapsed=elapsed)
+                        )
                         sys.stdout.flush()
                         last_download_print = now
                 if downloaded > 0:
@@ -171,7 +195,11 @@ def _carica_archivio():
         except Exception as e:
             sys.stdout.write("\n")
             if isinstance(e, urllib.error.HTTPError):
-                print(_("Errore HTTP durante il download: {code} {reason}").format(code=e.code, reason=e.reason))
+                print(
+                    _("Errore HTTP durante il download: {code} {reason}").format(
+                        code=e.code, reason=e.reason
+                    )
+                )
             else:
                 print(_("Errore nel download: {e}").format(e=e))
             return None
@@ -220,14 +248,20 @@ def _carica_archivio():
 
         # Escludi varianti non standard (Setup/FEN personalizzato e Chess960)
         is_setup = game.headers.get("SetUp") == "1"
-        is_chess960 = game.headers.get("Variant", "").lower() in ("chess960", "fischerandom", "fischer random")
+        is_chess960 = game.headers.get("Variant", "").lower() in (
+            "chess960",
+            "fischerandom",
+            "fischer random",
+        )
 
         is_non_standard = False
         if is_setup:
             fen = game.headers.get("FEN", "").strip()
             if fen:
                 normalized_fen = " ".join(fen.split()[:4]).lower()
-                standard_normalized = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -".lower()
+                standard_normalized = (
+                    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -".lower()
+                )
                 if normalized_fen != standard_normalized:
                     is_non_standard = True
 
@@ -250,7 +284,9 @@ def _carica_archivio():
         print(_("Nessuna partita valida trovata nel PGN."))
         if excluded_count > 0:
             print(
-                _("{ex} partite sono state escluse perche' non iniziano dalla posizione standard.").format(ex=excluded_count)
+                _(
+                    "{ex} partite sono state escluse perche' non iniziano dalla posizione standard."
+                ).format(ex=excluded_count)
             )
         return None
 
@@ -270,6 +306,7 @@ def _carica_archivio():
 # ---------------------------------------------------------------------------
 # Estrazione info headers
 # ---------------------------------------------------------------------------
+
 
 def _estrai_info(games):
     """Estrae gli headers rilevanti da ogni partita.
@@ -300,23 +337,26 @@ def _estrai_info(games):
         except (ValueError, TypeError):
             pass
 
-        info_list.append({
-            "White": h.get("White", "?"),
-            "Black": h.get("Black", "?"),
-            "Result": h.get("Result", "*"),
-            "WhiteElo": w_elo,
-            "BlackElo": b_elo,
-            "Event": h.get("Event", "?"),
-            "Date": date_str,
-            "Year": year,
-            "ECO": h.get("ECO", ""),
-        })
+        info_list.append(
+            {
+                "White": h.get("White", "?"),
+                "Black": h.get("Black", "?"),
+                "Result": h.get("Result", "*"),
+                "WhiteElo": w_elo,
+                "BlackElo": b_elo,
+                "Event": h.get("Event", "?"),
+                "Date": date_str,
+                "Year": year,
+                "ECO": h.get("ECO", ""),
+            }
+        )
     return info_list
 
 
 # ---------------------------------------------------------------------------
 # Statistiche
 # ---------------------------------------------------------------------------
+
 
 def _calcola_wdl(info_list, indici):
     """Calcola percentuali vittoria bianco / patta / nero.
@@ -350,7 +390,11 @@ def _formato_statistiche(info_list, indici, filtri_attivi, giocatore_comune=None
     """Calcola le statistiche (assolute o relative al giocatore) e restituisce la stringa formattata."""
     ref_player = None
     if isinstance(filtri_attivi, dict):
-        ref_player = filtri_attivi.get("player") or filtri_attivi.get("white") or filtri_attivi.get("black")
+        ref_player = (
+            filtri_attivi.get("player")
+            or filtri_attivi.get("white")
+            or filtri_attivi.get("black")
+        )
 
     if not ref_player:
         ref_player = giocatore_comune
@@ -432,9 +476,11 @@ def _mostra_statistiche(totale, info_list):
     print(_("  Patte:           {n} ({p:.1f}%)").format(n=d_count, p=pd))
     print(_("  Vittorie Nero:   {n} ({p:.1f}%)").format(n=b_count, p=pb))
     if other > 0:
-        print(_("  Altre/ND:        {n} ({p:.1f}%)").format(
-            n=other, p=other / totale * 100
-        ))
+        print(
+            _("  Altre/ND:        {n} ({p:.1f}%)").format(
+                n=other, p=other / totale * 100
+            )
+        )
 
     # Conteggi univoci
     giocatori = set()
@@ -454,9 +500,11 @@ def _mostra_statistiche(totale, info_list):
     print(_("\nGiocatori univoci:     {n}").format(n=len(giocatori)))
     print(_("Eventi univoci:        {n}").format(n=len(eventi)))
     if anni:
-        print(_("Anni univoci:          {n} ({min} - {max})").format(
-            n=len(anni), min=min(anni), max=max(anni)
-        ))
+        print(
+            _("Anni univoci:          {n} ({min} - {max})").format(
+                n=len(anni), min=min(anni), max=max(anni)
+            )
+        )
     else:
         print(_("Anni univoci:          N/D"))
     print(_("Aperture ECO univoche: {n}").format(n=len(eco)))
@@ -492,6 +540,7 @@ def _trova_giocatore_comune(info_list):
 # Filtri
 # ---------------------------------------------------------------------------
 
+
 def _menu_filtri(games, info_list, totale):
     """Loop interattivo per impostare filtri.
 
@@ -501,6 +550,7 @@ def _menu_filtri(games, info_list, totale):
     """
     filtri = {}
     from orologic_modules import storage
+
     db = storage.LoadDB()
     stile_numerato = db.get("menu_numerati", False)
 
@@ -511,7 +561,9 @@ def _menu_filtri(games, info_list, totale):
 
         print(_("\n--- Filtri ---"))
         print(
-            _("Partite corrispondenti: {n} di {tot} ({pct:.2f}%)").format(n=n_filtrate, tot=totale, pct=pct)
+            _("Partite corrispondenti: {n} di {tot} ({pct:.2f}%)").format(
+                n=n_filtrate, tot=totale, pct=pct
+            )
         )
 
         # Costruisci menu filtri
@@ -534,18 +586,14 @@ def _menu_filtri(games, info_list, totale):
             "elo_max": _("ELO massimo: [{v}]").format(
                 v=filtri.get("elo_max", _("nessun limite"))
             ),
-            "evento": _("Evento: [{v}]").format(
-                v=filtri.get("event", _("qualsiasi"))
-            ),
+            "evento": _("Evento: [{v}]").format(v=filtri.get("event", _("qualsiasi"))),
             "anno_dal": _("Anno dal: [{v}]").format(
                 v=filtri.get("year_from", _("nessun limite"))
             ),
             "anno_al": _("Anno al: [{v}]").format(
                 v=filtri.get("year_to", _("nessun limite"))
             ),
-            "eco": _("Codice ECO: [{v}]").format(
-                v=filtri.get("eco", _("qualsiasi"))
-            ),
+            "eco": _("Codice ECO: [{v}]").format(v=filtri.get("eco", _("qualsiasi"))),
             ".": _("Torna al menu' principale (Esci)"),
         }
 
@@ -583,7 +631,11 @@ def _menu_filtri(games, info_list, totale):
                 del filtri["black"]
 
         elif scelta == "giocatore":
-            v = dgt(_("Nome giocatore (cerca in bianco E nero, vuoto=qualsiasi): "), kind="s", smin=0)
+            v = dgt(
+                _("Nome giocatore (cerca in bianco E nero, vuoto=qualsiasi): "),
+                kind="s",
+                smin=0,
+            )
             filtri["player"] = v if v else None
             if not v and "player" in filtri:
                 del filtri["player"]
@@ -595,7 +647,9 @@ def _menu_filtri(games, info_list, totale):
                 "1/2-1/2": _("Patta (1/2-1/2)"),
                 "qualsiasi": _("Qualsiasi risultato"),
             }
-            r = menu(r_voci, show=True, p=_("Scegli risultato: "), numbered=stile_numerato)
+            r = menu(
+                r_voci, show=True, p=_("Scegli risultato: "), numbered=stile_numerato
+            )
             if r and r != "." and r != "qualsiasi":
                 filtri["result"] = r
             else:
@@ -603,14 +657,26 @@ def _menu_filtri(games, info_list, totale):
                     del filtri["result"]
 
         elif scelta == "elo_min":
-            v = dgt(_("ELO minimo (0=nessun limite): "), kind="i", imin=0, imax=4000, default=0)
+            v = dgt(
+                _("ELO minimo (0=nessun limite): "),
+                kind="i",
+                imin=0,
+                imax=4000,
+                default=0,
+            )
             if v and v > 0:
                 filtri["elo_min"] = v
             elif "elo_min" in filtri:
                 del filtri["elo_min"]
 
         elif scelta == "elo_max":
-            v = dgt(_("ELO massimo (0=nessun limite): "), kind="i", imin=0, imax=4000, default=0)
+            v = dgt(
+                _("ELO massimo (0=nessun limite): "),
+                kind="i",
+                imin=0,
+                imax=4000,
+                default=0,
+            )
             if v and v > 0:
                 filtri["elo_max"] = v
             elif "elo_max" in filtri:
@@ -623,21 +689,31 @@ def _menu_filtri(games, info_list, totale):
                 del filtri["event"]
 
         elif scelta == "anno_dal":
-            v = dgt(_("Anno dal (0=nessun limite): "), kind="i", imin=0, imax=2100, default=0)
+            v = dgt(
+                _("Anno dal (0=nessun limite): "),
+                kind="i",
+                imin=0,
+                imax=2100,
+                default=0,
+            )
             if v and v > 0:
                 filtri["year_from"] = v
             elif "year_from" in filtri:
                 del filtri["year_from"]
 
         elif scelta == "anno_al":
-            v = dgt(_("Anno al (0=nessun limite): "), kind="i", imin=0, imax=2100, default=0)
+            v = dgt(
+                _("Anno al (0=nessun limite): "), kind="i", imin=0, imax=2100, default=0
+            )
             if v and v > 0:
                 filtri["year_to"] = v
             elif "year_to" in filtri:
                 del filtri["year_to"]
 
         elif scelta == "eco":
-            v = dgt(_("Codice ECO (es. 'B', 'B90', vuoto=qualsiasi): "), kind="s", smin=0)
+            v = dgt(
+                _("Codice ECO (es. 'B', 'B90', vuoto=qualsiasi): "), kind="s", smin=0
+            )
             filtri["eco"] = v.upper() if v else None
             if not v and "eco" in filtri:
                 del filtri["eco"]
@@ -665,7 +741,10 @@ def _applica_filtri(info_list, filtri):
         fp = filtri.get("player")
         if fp:
             fp_lower = fp.lower()
-            if fp_lower not in info["White"].lower() and fp_lower not in info["Black"].lower():
+            if (
+                fp_lower not in info["White"].lower()
+                and fp_lower not in info["Black"].lower()
+            ):
                 continue
 
         # Filtro risultato
@@ -727,6 +806,7 @@ def _applica_filtri(info_list, filtri):
 # ---------------------------------------------------------------------------
 # Albero delle aperture
 # ---------------------------------------------------------------------------
+
 
 def _formatta_sequenza_mosse(mosse):
     """Formatta una lista di mosse SAN in notazione scacchistica standard.
@@ -794,7 +874,14 @@ def _ottieni_scacchiera_ramo(ramo_mosse):
     return board
 
 
-def _albero_aperture(games, info_list, indici_filtrati, filtri_attivi, totale_archivio, giocatore_comune=None):
+def _albero_aperture(
+    games,
+    info_list,
+    indici_filtrati,
+    filtri_attivi,
+    totale_archivio,
+    giocatore_comune=None,
+):
     """Navigazione interattiva dell'albero delle aperture con tasti WASD-like."""
 
     indici_originali = indici_filtrati  # set filtrato immutabile
@@ -823,9 +910,7 @@ def _albero_aperture(games, info_list, indici_filtrati, filtri_attivi, totale_ar
 
         # Se c'è un solo ramo con una sola partita, vai direttamente all'analisi
         if len(rami) == 1 and len(rami[0][1]) == 1:
-            print(
-                _("\nUna sola partita rimasta nel ramo. Passaggio all'analisi...")
-            )
+            print(_("\nUna sola partita rimasta nel ramo. Passaggio all'analisi..."))
             _avvia_analisi(games[rami[0][1][0]])
             break
 
@@ -836,9 +921,13 @@ def _albero_aperture(games, info_list, indici_filtrati, filtri_attivi, totale_ar
         # Mostra la lista solo se richiesto (es: cambio livello, aiuto, repeat)
         if must_print_list:
             # Mostra ramo corrente e statistiche
-            _stampa_ramo_corrente(ramo_mosse, indici_correnti, info_list, filtri_attivi, giocatore_comune)
+            _stampa_ramo_corrente(
+                ramo_mosse, indici_correnti, info_list, filtri_attivi, giocatore_comune
+            )
             # Mostra rami disponibili
-            _stampa_lista_rami(rami, board_ramo, info_list, filtri_attivi, giocatore_comune)
+            _stampa_lista_rami(
+                rami, board_ramo, info_list, filtri_attivi, giocatore_comune
+            )
             must_print_list = False
 
         # Costruisci il breadcrumb compatto
@@ -846,7 +935,9 @@ def _albero_aperture(games, info_list, indici_filtrati, filtri_attivi, totale_ar
 
         # Calcola statistiche per il ramo potenziale selezionato
         n_part = len(rami[selezione][1])
-        stats_str = _formato_statistiche(info_list, rami[selezione][1], filtri_attivi, giocatore_comune)
+        stats_str = _formato_statistiche(
+            info_list, rami[selezione][1], filtri_attivi, giocatore_comune
+        )
 
         # Prompt con \r all'inizio e alla fine, con padding per pulire residui
         raw_prompt = f"{prompt_str} | {n_part} part. | {stats_str} | Azione: "
@@ -1003,7 +1094,9 @@ def _ricalcola_indici_ramo(games, indici_base, ramo_mosse):
     return _indici_partite_ramo(games, indici_base, ramo_mosse)
 
 
-def _stampa_ramo_corrente(ramo_mosse, indici, info_list, filtri_attivi, giocatore_comune=None):
+def _stampa_ramo_corrente(
+    ramo_mosse, indici, info_list, filtri_attivi, giocatore_comune=None
+):
     """Stampa il breadcrumb del ramo corrente con statistiche."""
     if not ramo_mosse:
         breadcrumb = _("(radice)")
@@ -1041,10 +1134,17 @@ def _stampa_lista_rami(rami, board, info_list, filtri_attivi, giocatore_comune=N
         except Exception:
             desc_mossa = mossa
 
-        stats_str = _formato_statistiche(info_list, idx_list, filtri_attivi, giocatore_comune)
+        stats_str = _formato_statistiche(
+            info_list, idx_list, filtri_attivi, giocatore_comune
+        )
         print(
             "  {num}. {mossa_verbose} ({mossa_san}) ({n} partite) = {pct:.1f}% | {stats}".format(
-                num=i + 1, mossa_verbose=desc_mossa, mossa_san=mossa, n=n, pct=pct, stats=stats_str
+                num=i + 1,
+                mossa_verbose=desc_mossa,
+                mossa_san=mossa,
+                n=n,
+                pct=pct,
+                stats=stats_str,
             )
         )
 
@@ -1067,6 +1167,7 @@ def _mostra_aiuto():
 # ---------------------------------------------------------------------------
 # Pager partite
 # ---------------------------------------------------------------------------
+
 
 def _sfoglia_partite(games, indici, ramo_mosse, info_list):
     """Mostra le partite del ramo corrente nel pager menu().
@@ -1160,6 +1261,7 @@ def _mosse_continuazione(game, ramo_mosse, max_mosse=5):
 # Salvataggio PGN filtrato
 # ---------------------------------------------------------------------------
 
+
 def _salva_pgn_filtrato(games, indici, filtri_attivi):
     """Salva su file le partite che passano i filtri correnti.
 
@@ -1168,8 +1270,10 @@ def _salva_pgn_filtrato(games, indici, filtri_attivi):
     """
     if not filtri_attivi:
         print(
-            _("\nAttenzione: non ci sono filtri attivi. "
-              "Il file salvato sarebbe una copia dell'archivio originale.")
+            _(
+                "\nAttenzione: non ci sono filtri attivi. "
+                "Il file salvato sarebbe una copia dell'archivio originale."
+            )
         )
         if not enter_escape(
             _("Desideri procedere ugualmente? (INVIO per si', ESC per annullare): ")
@@ -1207,9 +1311,7 @@ def _salva_pgn_filtrato(games, indici, filtri_attivi):
                 f.write(str(pgn_str))
                 f.write("\n\n")
 
-        print(
-            _("Salvate {n} partite in: {path}").format(n=len(indici), path=percorso)
-        )
+        print(_("Salvate {n} partite in: {path}").format(n=len(indici), path=percorso))
     except Exception as e:
         print(_("Errore nel salvataggio: {e}").format(e=e))
 
@@ -1217,6 +1319,7 @@ def _salva_pgn_filtrato(games, indici, filtri_attivi):
 # ---------------------------------------------------------------------------
 # Analisi
 # ---------------------------------------------------------------------------
+
 
 def _avvia_analisi(game):
     """Gestisce il passaggio di una partita all'analisi (automatica o manuale)."""

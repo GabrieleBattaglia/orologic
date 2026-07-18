@@ -114,10 +114,12 @@ def clock_thread(game_state):
 def ParseTimeInput(prompt_text):
     """Richiede input tempo in formato HH:MM:SS o sss con opzionale incremento +inc."""
     while True:
-        s = dgt(prompt=prompt_text + " (es. 01:15:00+10, 20:00+15 o 400+5): ", kind="s").strip()
+        s = dgt(
+            prompt=prompt_text + " (es. 01:15:00+10, 20:00+15 o 400+5): ", kind="s"
+        ).strip()
         if not s:
             return None, None
-        
+
         inc = 0
         if "+" in s:
             parts_plus = s.split("+")
@@ -131,7 +133,7 @@ def ParseTimeInput(prompt_text):
             else:
                 print(_("Formato incremento non valido."))
                 continue
-                
+
         try:
             if ":" in s:
                 parts = s.split(":")
@@ -424,7 +426,9 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                 class DummyState:
                     def __init__(self, board):
                         self.board = board
+
                 from ..lichess_board import handle_exploration_command
+
                 if handle_exploration_command(move_input, DummyState(board)):
                     continue
 
@@ -461,37 +465,80 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                         if getattr(game_state, "ignore_clock", False):
                             print(_("Orologi disattivati."))
                         else:
-                            print(_("Tempo Bianco: {t}").format(t=FormatTime(game_state.white_time)))
-                            print(_("Tempo Nero: {t}").format(t=FormatTime(game_state.black_time)))
+                            print(
+                                _("Tempo Bianco: {t}").format(
+                                    t=FormatTime(game_state.white_time)
+                                )
+                            )
+                            print(
+                                _("Tempo Nero: {t}").format(
+                                    t=FormatTime(game_state.black_time)
+                                )
+                            )
                     elif cmd == ".4":
                         if getattr(game_state, "ignore_clock", False):
                             print(_("Orologi disattivati."))
                         else:
                             diff = abs(game_state.white_time - game_state.black_time)
-                            adv = _("bianco") if game_state.white_time > game_state.black_time else _("nero")
-                            print(_("{player} in vantaggio di ").format(player=adv) + FormatTime(diff))
+                            adv = (
+                                _("bianco")
+                                if game_state.white_time > game_state.black_time
+                                else _("nero")
+                            )
+                            print(
+                                _("{player} in vantaggio di ").format(player=adv)
+                                + FormatTime(diff)
+                            )
                     elif cmd == ".5":
                         if getattr(game_state, "ignore_clock", False):
                             print(_("Orologi disattivati."))
                         else:
-                            pause_duration = time.time() - game_state.paused_time_start if getattr(game_state, "paused", False) else 0
+                            pause_duration = (
+                                time.time() - game_state.paused_time_start
+                                if getattr(game_state, "paused", False)
+                                else 0
+                            )
                             if pause_duration > 0:
                                 hours = int(pause_duration // 3600)
                                 minutes = int((pause_duration % 3600) // 60)
                                 seconds = int(pause_duration % 60)
                                 ms = int((pause_duration - int(pause_duration)) * 1000)
                                 h_str = _("{h} ore, ").format(h=hours) if hours else ""
-                                m_str = _("{m} minuti, ").format(m=minutes) if minutes or hours else ""
-                                s_str = _("{s} secondi e ").format(s=seconds) if seconds or minutes or hours else ""
+                                m_str = (
+                                    _("{m} minuti, ").format(m=minutes)
+                                    if minutes or hours
+                                    else ""
+                                )
+                                s_str = (
+                                    _("{s} secondi e ").format(s=seconds)
+                                    if seconds or minutes or hours
+                                    else ""
+                                )
                                 ms_str = _("{ms} ms").format(ms=ms) if ms else ""
                                 duration = f"{h_str}{m_str}{s_str}{ms_str}"
-                                print(_("Tempo in pausa da: {duration}").format(duration=duration))
+                                print(
+                                    _("Tempo in pausa da: {duration}").format(
+                                        duration=duration
+                                    )
+                                )
                             else:
-                                player = _("Bianco") if game_state.active_color == chess.WHITE else _("Nero")
-                                print(_("Orologio del {player} in moto").format(player=player))
+                                player = (
+                                    _("Bianco")
+                                    if game_state.active_color == chess.WHITE
+                                    else _("Nero")
+                                )
+                                print(
+                                    _("Orologio del {player} in moto").format(
+                                        player=player
+                                    )
+                                )
                     elif cmd == ".l":
-                        Acusticator([900.0, 0.1, 0, 0.5, 440.0, 0.3, 0, 0.5], kind=1, adsr=[1, 0, 80, 19])
-                        dummy_state = type('obj', (object,), {})()
+                        Acusticator(
+                            [900.0, 0.1, 0, 0.5, 440.0, 0.3, 0, 0.5],
+                            kind=1,
+                            adsr=[1, 0, 80, 19],
+                        )
+                        dummy_state = type("obj", (object,), {})()
                         dummy_state.move_history = []
                         node = current_node.root()
                         # Ricostruiamo la history seguendo la variazione principale
@@ -500,6 +547,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                             dummy_state.move_history.append(node.board().san(move))
                             node = node.variations[0]
                         from .. import ui
+
                         summary = ui.GenerateMoveSummary(dummy_state)
                         if summary:
                             print(_("\nLista mosse giocate:\n"))

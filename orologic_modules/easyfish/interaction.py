@@ -88,7 +88,11 @@ def BoardEditor(starting_fen=None, sharing_window=None):
                         print(_("- Diritti di arrocco non validi."))
                     if status & chess.STATUS_INVALID_EP_SQUARE:
                         print(_("- Casa en passant non valida."))
-                    print(_("\nCorreggi la posizione per poter uscire o usa '.i' / '.v' per resettare."))
+                    print(
+                        _(
+                            "\nCorreggi la posizione per poter uscire o usa '.i' / '.v' per resettare."
+                        )
+                    )
                     continue
 
             elif wherewho == ".?":
@@ -109,9 +113,11 @@ def BoardEditor(starting_fen=None, sharing_window=None):
                     rights = wherewho[3:].strip()
                 else:
                     rights = dgt(
-                        prompt=_("Modifica diritti arrocco (es. KQkq o -): "), kind="s", default=""
+                        prompt=_("Modifica diritti arrocco (es. KQkq o -): "),
+                        kind="s",
+                        default="",
                     ).strip()
-                
+
                 if not rights:
                     continue
 
@@ -129,23 +135,39 @@ def BoardEditor(starting_fen=None, sharing_window=None):
                                 tmp_board.castling_rights ^= chess.BB_H1
                                 has_it = bool(tmp_board.castling_rights & chess.BB_H1)
                                 status = _("attivo") if has_it else _("disattivato")
-                                feedback.append(_("Arrocco corto Bianco (K): {status}").format(status=status))
+                                feedback.append(
+                                    _("Arrocco corto Bianco (K): {status}").format(
+                                        status=status
+                                    )
+                                )
                             elif char == "Q":
                                 tmp_board.castling_rights ^= chess.BB_A1
                                 has_it = bool(tmp_board.castling_rights & chess.BB_A1)
                                 status = _("attivo") if has_it else _("disattivato")
-                                feedback.append(_("Arrocco lungo Bianco (Q): {status}").format(status=status))
+                                feedback.append(
+                                    _("Arrocco lungo Bianco (Q): {status}").format(
+                                        status=status
+                                    )
+                                )
                             elif char == "k":
                                 tmp_board.castling_rights ^= chess.BB_H8
                                 has_it = bool(tmp_board.castling_rights & chess.BB_H8)
                                 status = _("attivo") if has_it else _("disattivato")
-                                feedback.append(_("Arrocco corto Nero (k): {status}").format(status=status))
+                                feedback.append(
+                                    _("Arrocco corto Nero (k): {status}").format(
+                                        status=status
+                                    )
+                                )
                             elif char == "q":
                                 tmp_board.castling_rights ^= chess.BB_A8
                                 has_it = bool(tmp_board.castling_rights & chess.BB_A8)
                                 status = _("attivo") if has_it else _("disattivato")
-                                feedback.append(_("Arrocco lungo Nero (q): {status}").format(status=status))
-                        
+                                feedback.append(
+                                    _("Arrocco lungo Nero (q): {status}").format(
+                                        status=status
+                                    )
+                                )
+
                         print("\n".join(feedback))
 
             elif wherewho == ".e":
@@ -202,7 +224,11 @@ def BoardEditor(starting_fen=None, sharing_window=None):
 
             # Se ci sono più parti, e il pezzo è un Re (K o k), non è consentito
             if len(parts) > 1 and piece_name and piece_name.upper() == "K":
-                print(_("I Re sono unici, non puoi specificare più case contemporaneamente."))
+                print(
+                    _(
+                        "I Re sono unici, non puoi specificare più case contemporaneamente."
+                    )
+                )
                 continue
 
             squares_to_process = []
@@ -238,7 +264,11 @@ def BoardEditor(starting_fen=None, sharing_window=None):
                         tmp_board.set_piece_at(square, chess.Piece(chess.KING, color))
                     else:
                         if existing_piece and existing_piece.piece_type == chess.KING:
-                            print(_("Casa occupata dal Re. Sposta prima il Re in {sq}.").format(sq=sq_str))
+                            print(
+                                _(
+                                    "Casa occupata dal Re. Sposta prima il Re in {sq}."
+                                ).format(sq=sq_str)
+                            )
                         else:
                             color = chess.WHITE if p_name.isupper() else chess.BLACK
                             p_type = chess.PIECE_SYMBOLS.index(p_name.lower())
@@ -354,7 +384,9 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
         class DummyState:
             def __init__(self, board):
                 self.board = board
+
         from ..lichess_board import handle_exploration_command
+
         if handle_exploration_command(command, DummyState(current_board)):
             continue
 
