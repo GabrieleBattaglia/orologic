@@ -28,6 +28,7 @@ lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 VERSION = version.VERSION
 PROGRAMMER = version.PROGRAMMER
+RELEASE_DATE = version.RELEASE_DATE
 DB_FILE = percorso_salvataggio(os.path.join("settings", "orologic_db.json"))
 
 # Caricamento Volume
