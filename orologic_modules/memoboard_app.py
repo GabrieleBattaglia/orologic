@@ -17,16 +17,16 @@ from .config import _
 READING_TIME = (
     0.8  # Tempo di lettura delle domande in secondi, da parte della sintesi vocale
 )
-STARTTIME = time.time()
 SCORES_FILE = config.percorso_salvataggio(
     os.path.join("settings", "memoboard_scores.json")
 )
-FREQ_START, FREQ_END = 130.81, 2093.0
+FREQ_START, FREQ_END = 130.81, 4186.01  # C3 (130.81 Hz) a C8 (4186.01 Hz)
 PAN_START, PAN_END = -1.0, 1.0
-AUDIO_YES_NO_DUR = 0.06
-AUDIO_YES_NO_VOL = 0.2
 AUDIO_BAR_DUR = 0.025
-AUDIO_BAR_VOL = 0.15
+MIN_REPETITIONS_FOR_LEADERBOARD = (
+    20  # Domande minime per qualificare la sessione nei giochi singoli
+)
+MAX_LEADERBOARD_ENTRIES = 10  # Numero massimo di posizioni in classifica
 
 mnu = {
     "cavalli": _("Esercizio con i salti di cavallo"),
@@ -71,28 +71,80 @@ def get_column_spelling(col_letter):
 # --- FUNZIONI GESTIONE PUNTEGGI (JSON) ---
 
 
+def _deduplicate_scores(data):
+    """
+    Assicura che in ciascun esercizio ogni utente abbia un unico record (il migliore).
+    """
+    cleaned = {"colors": [], "knights": [], "bishops": [], "mixed": []}
+    for ex_name in cleaned.keys():
+        ex_list = data.get(ex_name, [])
+        metric_key = "score" if ex_name == "mixed" else "score_per_minute"
+        best_by_user = {}
+
+        for rec in ex_list:
+            if not isinstance(rec, dict):
+                continue
+            user = rec.get("username", _("Anonimo")).strip().title()
+            rec["username"] = user
+            val = rec.get(metric_key, 0)
+
+            if user not in best_by_user or val > best_by_user[user].get(metric_key, 0):
+                best_by_user[user] = rec
+
+        sorted_users = sorted(
+            best_by_user.values(), key=lambda x: x.get(metric_key, 0), reverse=True
+        )[:MAX_LEADERBOARD_ENTRIES]
+        cleaned[ex_name] = sorted_users
+
+    return cleaned
+
+
 def load_scores():
     """
-    Carica i punteggi dal file JSON.
-    Se il file non esiste o è vuoto, ritorna un dizionario vuoto.
+    Carica i punteggi dal file JSON ed elimina eventuali duplicati per utente.
     """
+    default_structure = {"colors": [], "knights": [], "bishops": [], "mixed": []}
     if not os.path.exists(SCORES_FILE):
-        return {}
+        return default_structure
     try:
         with open(SCORES_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except json.JSONDecodeError:
-        return {}
+            data = json.load(f)
+
+        if not isinstance(data, dict):
+            return default_structure
+
+        # Se già nel nuovo formato (chiavi di esercizi come liste)
+        if any(
+            k in data and isinstance(data[k], list) for k in default_structure.keys()
+        ):
+            for k in default_structure.keys():
+                if k in data and isinstance(data[k], list):
+                    default_structure[k] = data[k]
+            return _deduplicate_scores(default_structure)
+
+        # Altrimenti converti dal vecchio formato { username: { exercise: data } }
+        for user, user_exs in data.items():
+            if isinstance(user_exs, dict):
+                for ex_name, ex_data in user_exs.items():
+                    if ex_name in default_structure and isinstance(ex_data, dict):
+                        rec = dict(ex_data)
+                        rec["username"] = user
+                        default_structure[ex_name].append(rec)
+
+        return _deduplicate_scores(default_structure)
+    except Exception:
+        return default_structure
 
 
 def save_scores(scores_data):
     """
-    Salva il dizionario dei punteggi nel file JSON.
+    Salva il dizionario dei punteggi nel file JSON dopo la deduplicazione.
     """
     try:
+        cleaned_data = _deduplicate_scores(scores_data)
         os.makedirs(os.path.dirname(SCORES_FILE), exist_ok=True)
         with open(SCORES_FILE, "w", encoding="utf-8") as f:
-            json.dump(scores_data, f, indent=2, ensure_ascii=False)
+            json.dump(cleaned_data, f, indent=2, ensure_ascii=False)
     except Exception as e:
         print(_("Errore nel salvataggio dei punteggi: {e}").format(e=e))
 
@@ -143,24 +195,14 @@ def Prox(sq, kind, range_limit):
     return psq
 
 
-def report_and_update_scores(
-    all_scores, username, exercise_name, rpt, score, duration, wins
-):
+def report_and_update_scores(all_scores, exercise_name, rpt, score, duration, wins):
     """
-    Mostra un report dettagliato, confronta con i risultati precedenti e aggiorna i dati dell'utente.
-    Chiede conferma prima di sovrascrivere un record con un punteggio peggiore.
+    Mostra il report della sessione.
+    Se il punteggio si qualifica per la Top 10, chiede il nome utente.
+    Se l'utente è già presente, confronta il punteggio con il suo record precedente e chiede se sovrascrivere in caso sia peggiore.
     """
-    new_results = {
-        "score": score,
-        "wins": wins,
-        "repetitions": rpt,
-        "duration": duration,
-        "average_time_per_guess": duration / rpt if rpt > 0 else 0,
-        "score_per_win": score / wins if wins > 0 else 0,
-        "timestamp": datetime.datetime.now().isoformat(),
-    }
-
-    new_results["score_per_minute"] = (score / duration) * 60 if duration > 0 else 0
+    score_per_minute = (score / duration) * 60 if duration > 0 else 0
+    average_time = duration / rpt if rpt > 0 else 0
 
     print(_("\n--- Risultati Esercizio ---"))
     print(
@@ -173,160 +215,174 @@ def report_and_update_scores(
     )
     print(
         _("Performance: {score_per_minute:.0f} punti al minuto.").format(
-            score_per_minute=new_results["score_per_minute"]
+            score_per_minute=score_per_minute
         )
     )
 
-    previous_results = all_scores.get(username, {}).get(exercise_name)
-
-    should_save = True
-
-    if previous_results:
-        print(_("\n--- Confronto Dettagliato vs. Precedente ---"))
-
-        header = _(
-            "{metrica:<20} {precedente:>12} {attuale:>12} {differenza:<25}"
-        ).format(
-            metrica=_("Metrica"),
-            precedente=_("Precedente"),
-            attuale=_("Attuale"),
-            differenza=_("Differenza"),
-        )
-        print(header)
-        print("-" * len(header))
-
-        metrics_to_compare = {
-            _("Punti al Minuto"): ("score_per_minute", ".0f"),
-            _("Punteggio Totale"): ("score", ".0f"),
-            _("Risposte Corrette"): ("wins", ".0f"),
-        }
-
-        for label, (metric_key, fmt) in metrics_to_compare.items():
-            old_val = previous_results.get(metric_key, 0)
-            new_val = new_results.get(metric_key, 0)
-            diff = new_val - old_val
-
-            perc_str = (
-                f"({(diff / old_val) * 100:+.2f}%)" if old_val != 0 else _("(N/D)")
-            )
-
-            old_val_str = f"{old_val:{fmt}}"
-            new_val_str = f"{new_val:{fmt}}"
-            diff_str = f"{diff:+{fmt}} {perc_str}"
-
-            row = _(
-                "{label:<20} {old_val_str:>12} {new_val_str:>12} {diff_str:<25}"
-            ).format(
-                label=label,
-                old_val_str=old_val_str,
-                new_val_str=new_val_str,
-                diff_str=diff_str,
-            )
-            print(row)
-
-        print("-" * len(header))
-
-        ranking_metric = "score" if exercise_name == "mixed" else "score_per_minute"
-
-        old_performance = previous_results.get(ranking_metric, 0)
-        new_performance = new_results.get(ranking_metric, 0)
-
-        if new_performance < old_performance:
-            print(_("\nHai ottenuto un punteggio inferiore al precedente."))
-            si_key = _("s")
-            answer = key(
-                _("Vuoi sovrascrivere il tuo record con questo punteggio? (s/n): ")
-            ).lower()
-            if answer != si_key:
-                should_save = False
-                print(_("Il vecchio punteggio è stato mantenuto."))
-
-        new_record_jingle = [
-            "c5",
-            0.08,
-            -0.7,
-            config.VOLUME,
-            "e5",
-            0.08,
-            -0.2,
-            config.VOLUME,
-            "g5",
-            0.08,
-            0.2,
-            config.VOLUME,
-            "c6",
-            0.15,
-            0.7,
-            config.VOLUME,
-        ]
-        no_record_jingle = ["a4", 0.12, 0, config.VOLUME, "e4", 0.20, 0, config.VOLUME]
-        if new_performance > old_performance:
-            Acusticator(new_record_jingle, kind=1)
-        else:
-            Acusticator(no_record_jingle, kind=1)
-
-        key(prompt=_("\nPremi un tasto per procedere..."))
-
-    else:
+    if exercise_name != "mixed" and rpt < MIN_REPETITIONS_FOR_LEADERBOARD:
         print(
             _(
-                "\nQuesto è il tuo primo risultato per questo esercizio. Ottimo! Hai stabilito un nuovo record!"
+                "\nNota: Per qualificare un punteggio in classifica occorre eseguire almeno {min_rpt} domande (ne hai svolte {rpt})."
+            ).format(min_rpt=MIN_REPETITIONS_FOR_LEADERBOARD, rpt=rpt)
+        )
+        key(prompt=_("\nPremi un tasto per procedere..."))
+        return
+
+    ranking_metric = "score" if exercise_name == "mixed" else "score_per_minute"
+    new_performance = score if exercise_name == "mixed" else score_per_minute
+
+    ex_list = all_scores.get(exercise_name, [])
+    sorted_ex_list = sorted(
+        ex_list, key=lambda x: x.get(ranking_metric, 0), reverse=True
+    )
+
+    qualifies = False
+    if len(sorted_ex_list) < MAX_LEADERBOARD_ENTRIES:
+        qualifies = True
+    else:
+        worst_score = sorted_ex_list[MAX_LEADERBOARD_ENTRIES - 1].get(ranking_metric, 0)
+        if new_performance > worst_score:
+            qualifies = True
+
+    new_record_jingle = [
+        "c5",
+        0.08,
+        -0.7,
+        config.VOLUME,
+        "e5",
+        0.08,
+        -0.2,
+        config.VOLUME,
+        "g5",
+        0.08,
+        0.2,
+        config.VOLUME,
+        "c6",
+        0.15,
+        0.7,
+        config.VOLUME,
+    ]
+    no_record_jingle = ["a4", 0.12, 0, config.VOLUME, "e4", 0.20, 0, config.VOLUME]
+
+    if qualifies:
+        Acusticator(new_record_jingle, kind=1)
+        print(
+            _(
+                "\n🏆 COMPLIMENTI! Ti sei guadagnato un posto nella Top 10 della classifica! 🏆"
             )
         )
-        first_record_jingle = [
-            "g4",
-            0.07,
-            -0.5,
-            config.VOLUME,
-            "c5",
-            0.07,
-            0.5,
-            config.VOLUME,
-            "e5",
-            0.1,
-            0,
-            config.VOLUME,
-        ]
-        Acusticator(first_record_jingle, kind=1)
-        key(prompt=_("\nPremi un tasto per continuare..."))
+        username = (
+            input(_("Per favore, inserisci il tuo nome per la classifica: "))
+            .strip()
+            .title()
+        )
+        if not username:
+            username = _("Anonimo")
 
-    if should_save:
-        if username not in all_scores:
-            all_scores[username] = {}
-        all_scores[username][exercise_name] = new_results
+        new_entry = {
+            "username": username,
+            "score": score,
+            "wins": wins,
+            "repetitions": rpt,
+            "duration": duration,
+            "average_time_per_guess": average_time,
+            "score_per_minute": score_per_minute,
+            "timestamp": datetime.datetime.now().isoformat(),
+        }
 
-        if log:
-            log.write(
-                _("\n## Esercizio '{exercise_name}' per {username}:").format(
-                    exercise_name=exercise_name, username=username
+        # Cerca se l'utente esiste già in questo esercizio
+        existing_index = None
+        for i, rec in enumerate(ex_list):
+            if rec.get("username", "").strip().lower() == username.lower():
+                existing_index = i
+                break
+
+        should_save = True
+        if existing_index is not None:
+            old_record = ex_list[existing_index]
+            old_perf = old_record.get(ranking_metric, 0)
+
+            if new_performance > old_perf:
+                print(
+                    _(
+                        "\n🎉 Nuovo record personale per {username}! Precedente: {old_perf:.0f}, Attuale: {new_perf:.0f}."
+                    ).format(
+                        username=username, old_perf=old_perf, new_perf=new_performance
+                    )
                 )
-            )
-            log.write(
-                _(
-                    "\nRisposte corrette: {wins}/{rpt} in {duration:.1f}s. Punti: {score:.0f}. Performance: {score_per_minute:.0f} p/min. [SALVATO]"
-                ).format(
-                    wins=wins,
-                    rpt=rpt,
-                    duration=duration,
-                    score=score,
-                    score_per_minute=new_results["score_per_minute"],
+                ex_list[existing_index] = new_entry
+            else:
+                print(
+                    _(
+                        "\nHai ottenuto un punteggio inferiore al tuo precedente record ({old_perf:.0f} vs {new_perf:.0f})."
+                    ).format(old_perf=old_perf, new_perf=new_performance)
                 )
-            )
-        print(_("\nRisultato salvato!"))
+                si_key = _("s")
+                answer = key(
+                    _(
+                        "Vuoi sovrascrivere il tuo record personale con questo punteggio? (s/n): "
+                    )
+                ).lower()
+                if answer == si_key:
+                    ex_list[existing_index] = new_entry
+                    print(_("Record personale aggiornato con il nuovo punteggio."))
+                else:
+                    should_save = False
+                    print(_("Il vecchio record personale è stato mantenuto."))
+        else:
+            ex_list.append(new_entry)
+
+        if should_save:
+            sorted_updated = sorted(
+                ex_list, key=lambda x: x.get(ranking_metric, 0), reverse=True
+            )[:MAX_LEADERBOARD_ENTRIES]
+            all_scores[exercise_name] = sorted_updated
+            save_scores(all_scores)
+
+            if log:
+                log.write(
+                    _("\n## Esercizio '{exercise_name}' per {username}:").format(
+                        exercise_name=exercise_name, username=username
+                    )
+                )
+                log.write(
+                    _(
+                        "\nRisposte corrette: {wins}/{rpt} in {duration:.1f}s. Punti: {score:.0f}. Performance: {score_per_minute:.0f} p/min. [QUALIFICATO]"
+                    ).format(
+                        wins=wins,
+                        rpt=rpt,
+                        duration=duration,
+                        score=score,
+                        score_per_minute=score_per_minute,
+                    )
+                )
+            print(_("\nRisultato salvato in classifica con successo!"))
     else:
+        Acusticator(no_record_jingle, kind=1)
+        print(
+            _(
+                "\nOttima prova! Purtroppo questo punteggio non è sufficiente per entrare nella Top 10."
+            )
+        )
         if log:
             log.write(
                 _(
-                    "\n## Esercizio '{exercise_name}' per {username}: Nuovo punteggio di {score:.0f} scartato dall'utente. [SCARTATO]"
-                ).format(exercise_name=exercise_name, username=username, score=score)
+                    "\n## Esercizio '{exercise_name}': Punteggio di {score:.0f} (Perf: {score_per_minute:.0f} p/min) non qualificato."
+                ).format(
+                    exercise_name=exercise_name,
+                    score=score,
+                    score_per_minute=score_per_minute,
+                )
             )
+
+    key(prompt=_("\nPremi un tasto per procedere..."))
 
 
 def show_leaderboard(all_scores):
     """
-    Mostra una classifica dettagliata.
+    Mostra una classifica dettagliata Top 10.
     """
-    if not all_scores:
+    if not all_scores or not any(all_scores.values()):
         print(
             _("\nNon ci sono ancora punteggi registrati per mostrare una classifica.")
         )
@@ -355,140 +411,129 @@ def show_leaderboard(all_scores):
         return
 
     selected_exercise = map_menu_to_db[selected_menu]
-
-    leaderboard_data = []
-    for user, data in all_scores.items():
-        if selected_exercise in data:
-            ex_data = data[selected_exercise]
-            score = ex_data.get("score", 0)
-            performance = ex_data.get("score_per_minute", 0)
-            reps = ex_data.get("repetitions", 0)
-            wins = ex_data.get("wins", 0)
-            duration = ex_data.get("duration", 0)
-            timestamp = ex_data.get("timestamp", None)
-            avg_time = ex_data.get("average_time_per_guess", 0)
-            leaderboard_data.append(
-                (user, score, performance, reps, wins, duration, timestamp, avg_time)
-            )
+    leaderboard_data = all_scores.get(selected_exercise, [])
 
     if not leaderboard_data:
         print(
             _(
-                "\nNessun punteggio trovato per l'esercizio '{selected_exercise}'."
+                "\nNessun punteggio trovato in classifica per l'esercizio '{selected_exercise}'."
             ).format(selected_exercise=selected_exercise)
         )
+        key(prompt=_("\nPremi un tasto per tornare al menu..."))
+        return
+
+    if selected_exercise == "mixed":
+        sorted_leaderboard = sorted(
+            leaderboard_data, key=lambda item: item.get("score", 0), reverse=True
+        )[:MAX_LEADERBOARD_ENTRIES]
+
+        print(
+            _(
+                "\n--- 🏆 CLASSIFICA: {exercise} (Ordinata per Punteggio Totale) 🏆 ---"
+            ).format(exercise=selected_exercise.upper())
+        )
+        header = _(
+            "{pos:<4} {utente:<14} {punti:>10} {pmin:>8} {win:>6} {avg:>7} {tempo:>6} {data:>17}"
+        ).format(
+            pos=_("Pos"),
+            utente=_("Utente"),
+            punti=_("Punti"),
+            pmin=_("P/Min"),
+            win=_("Win%"),
+            avg=_("Avg(s)"),
+            tempo=_("Tempo"),
+            data=_("Data"),
+        )
+        print(header)
+        print("-" * len(header))
+
+        for i, item in enumerate(sorted_leaderboard, 1):
+            user = item.get("username", _("Anonimo"))
+            score = item.get("score", 0)
+            performance = item.get("score_per_minute", 0)
+            reps = item.get("repetitions", 0)
+            wins = item.get("wins", 0)
+            duration = item.get("duration", 0)
+            timestamp = item.get("timestamp", None)
+            avg_time = item.get("average_time_per_guess", 0)
+
+            accuracy_str = f"{(wins / reps) * 100:3.0f}%" if reps > 0 else _("N/D")
+            time_str = f"{int(duration // 60):02d}:{int(duration % 60):02d}"
+            date_str = (
+                datetime.datetime.fromisoformat(timestamp).strftime("%Y-%m-%d %H:%M")
+                if timestamp
+                else _("N/D")
+            )
+
+            row = _(
+                "{pos:<4} {user:<14} {score:>10.0f} {performance:>8.0f} {accuracy:>6} {avg_time:>7.2f} {time_str:>6} {date_str:>17}"
+            ).format(
+                pos=i,
+                user=user[:14],
+                score=score,
+                performance=performance,
+                accuracy=accuracy_str,
+                avg_time=avg_time,
+                time_str=time_str,
+                date_str=date_str,
+            )
+            print(row)
+        print("-" * len(header))
+
     else:
-        if selected_exercise == "mixed":
-            sorted_leaderboard = sorted(
-                leaderboard_data, key=lambda item: item[1], reverse=True
+        sorted_leaderboard = sorted(
+            leaderboard_data,
+            key=lambda item: item.get("score_per_minute", 0),
+            reverse=True,
+        )[:MAX_LEADERBOARD_ENTRIES]
+
+        print(
+            _(
+                "\n--- 🏆 CLASSIFICA: {exercise} (Ordinata per Punti/Min, Min. 20 Domande) 🏆 ---"
+            ).format(exercise=selected_exercise.upper())
+        )
+        header = _(
+            "{pos:<4} {utente:<14} {tent:>4} {win:>6} {avg:>7} {pmin:>8} {data:>17}"
+        ).format(
+            pos=_("Pos"),
+            utente=_("Utente"),
+            tent=_("Tent"),
+            win=_("Win%"),
+            avg=_("Avg(s)"),
+            pmin=_("P/Min"),
+            data=_("Data"),
+        )
+        print(header)
+        print("-" * len(header))
+
+        for i, item in enumerate(sorted_leaderboard, 1):
+            user = item.get("username", _("Anonimo"))
+            performance = item.get("score_per_minute", 0)
+            reps = item.get("repetitions", 0)
+            wins = item.get("wins", 0)
+            timestamp = item.get("timestamp", None)
+            avg_time = item.get("average_time_per_guess", 0)
+
+            accuracy_str = f"{(wins / reps) * 100:3.0f}%" if reps > 0 else _("N/D")
+            date_str = (
+                datetime.datetime.fromisoformat(timestamp).strftime("%Y-%m-%d %H:%M")
+                if timestamp
+                else _("N/D")
             )
 
-            print(
-                _(
-                    "\n--- 🏆 CLASSIFICA: {exercise} (Ordinata per Punteggio Totale) 🏆 ---"
-                ).format(exercise=selected_exercise.upper())
-            )
-            header = _(
-                "{pos:<4} {utente:<12} {punti:>10} {pmin:>8} {win:>5} {avg:>7} {tempo:>6} {data:>17}"
+            row = _(
+                "{pos:<4} {user:<14} {reps:>4} {accuracy:>6} {avg_time:>7.2f} {performance:>8.0f} {date_str:>17}"
             ).format(
-                pos=_("Pos"),
-                utente=_("Utente"),
-                punti=_("Punti"),
-                pmin=_("P/Min"),
-                win=_("Win%"),
-                avg=_("Avg(s)"),
-                tempo=_("Tempo"),
-                data=_("Data"),
+                pos=i,
+                user=user[:14],
+                reps=reps,
+                accuracy=accuracy_str,
+                avg_time=avg_time,
+                performance=performance,
+                date_str=date_str,
             )
-            print(header)
-            print("-" * len(header))
-
-            for i, item in enumerate(sorted_leaderboard, 1):
-                user, score, performance, reps, wins, duration, timestamp, avg_time = (
-                    item
-                )
-                accuracy_str = f"{(wins / reps) * 100:3.0f}%" if reps > 0 else _("N/D")
-                time_str = f"{int(duration // 60):02d}:{int(duration % 60):02d}"
-                date_str = (
-                    datetime.datetime.fromisoformat(timestamp).strftime(
-                        "%Y-%m-%d %H:%M"
-                    )
-                    if timestamp
-                    else _("N/D")
-                )
-
-                row = _(
-                    "{pos:<4} {user:<12} {score:>10.0f} {performance:>8.0f} {accuracy:>5} {avg_time:>7.2f} {time_str:>6} {date_str:>17}"
-                ).format(
-                    pos=i,
-                    user=user[:12],
-                    score=score,
-                    performance=performance,
-                    accuracy=accuracy_str,
-                    avg_time=avg_time,
-                    time_str=time_str,
-                    date_str=date_str,
-                )
-                print(row)
-            print("-" * len(header))
-
-        else:
-            sorted_leaderboard = sorted(
-                leaderboard_data, key=lambda item: item[2], reverse=True
-            )
-
-            print(
-                _(
-                    "\n--- 🏆 CLASSIFICA: {exercise} (Ordinata per Punti/Min) 🏆 ---"
-                ).format(exercise=selected_exercise.upper())
-            )
-            header = _(
-                "{pos:<4} {utente:<12} {tent:>4} {win:>5} {avg:>7} {pmin:>8} {data:>17}"
-            ).format(
-                pos=_("Pos"),
-                utente=_("Utente"),
-                tent=_("Tent"),
-                win=_("Win%"),
-                avg=_("Avg(s)"),
-                pmin=_("P/Min"),
-                data=_("Data"),
-            )
-            print(header)
-            print("-" * len(header))
-
-            for i, item in enumerate(sorted_leaderboard, 1):
-                (
-                    user,
-                    unused_score,
-                    performance,
-                    reps,
-                    wins,
-                    unused_duration,
-                    timestamp,
-                    avg_time,
-                ) = item
-                accuracy_str = f"{(wins / reps) * 100:3.0f}%" if reps > 0 else _("N/D")
-                date_str = (
-                    datetime.datetime.fromisoformat(timestamp).strftime(
-                        "%Y-%m-%d %H:%M"
-                    )
-                    if timestamp
-                    else _("N/D")
-                )
-
-                row = _(
-                    "{pos:<4} {user:<12} {reps:>4} {accuracy:>5} {avg_time:>7.2f} {performance:>8.0f} {date_str:>17}"
-                ).format(
-                    pos=i,
-                    user=user[:12],
-                    reps=reps,
-                    accuracy=accuracy_str,
-                    avg_time=avg_time,
-                    performance=performance,
-                    date_str=date_str,
-                )
-                print(row)
-            print("-" * len(header))
+            print(row)
+        print("-" * len(header))
 
     key(prompt=_("\nPremi un tasto per tornare al menu..."))
 
@@ -578,20 +623,22 @@ def ExKnights(ripetitions):
                     "correct_answer": "y" if yes else "n",
                 }
             )
+
         current_rep_index = initial_rpt - ripetitions
-        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1
+        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
         current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
         current_pan = PAN_START + (PAN_END - PAN_START) * progress
-        note_feedback = "c6" if correct else "c4"
+
+        # Portamento a 6 semitoni (+6 se corretto, -6 se errato)
+        semitone_ratio = (2.0 ** (6.0 / 12.0)) if correct else (2.0 ** (-6.0 / 12.0))
+        target_freq = max(20.0, current_freq * semitone_ratio)
+
+        portamento_str = f"{int(current_freq)}.{int(target_freq)}"
         sound_score = [
-            note_feedback,
-            AUDIO_YES_NO_DUR,
-            0,
-            config.VOLUME,
-            current_freq,
-            AUDIO_BAR_DUR,
+            portamento_str,
+            AUDIO_BAR_DUR * 3.0,
             current_pan,
-            AUDIO_BAR_VOL,
+            config.VOLUME,
         ]
         Acusticator(sound_score, kind=1)
         ripetitions -= 1
@@ -668,23 +715,26 @@ def ExBishops(ripetitions):
                     "correct_answer": "y" if yes else "n",
                 }
             )
+
         current_rep_index = initial_rpt - ripetitions
-        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1
+        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
         current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
         current_pan = PAN_START + (PAN_END - PAN_START) * progress
-        note_feedback = "c6" if correct else "c4"
+
+        # Portamento a 6 semitoni (+6 se corretto, -6 se errato)
+        semitone_ratio = (2.0 ** (6.0 / 12.0)) if correct else (2.0 ** (-6.0 / 12.0))
+        target_freq = max(20.0, current_freq * semitone_ratio)
+
+        portamento_str = f"{int(current_freq)}.{int(target_freq)}"
         sound_score = [
-            note_feedback,
-            AUDIO_YES_NO_DUR,
-            0,
-            config.VOLUME,
-            current_freq,
-            AUDIO_BAR_DUR,
+            portamento_str,
+            AUDIO_BAR_DUR * 3.0,
             current_pan,
-            AUDIO_BAR_VOL,
+            config.VOLUME,
         ]
         Acusticator(sound_score, kind=1)
         ripetitions -= 1
+
     duration = time.time() - timeex
     return score, scoreslist, duration, timeslist, wins, errors_list
 
@@ -868,19 +918,20 @@ def ExMixed(ripetitions):
                 )
 
         current_rep_index = initial_rpt - ripetitions
-        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1
+        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
         current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
         current_pan = PAN_START + (PAN_END - PAN_START) * progress
-        note_feedback = "c6" if correct else "c4"
+
+        # Portamento a 6 semitoni (+6 se corretto, -6 se errato)
+        semitone_ratio = (2.0 ** (6.0 / 12.0)) if correct else (2.0 ** (-6.0 / 12.0))
+        target_freq = max(20.0, current_freq * semitone_ratio)
+
+        portamento_str = f"{int(current_freq)}.{int(target_freq)}"
         sound_score = [
-            note_feedback,
-            AUDIO_YES_NO_DUR,
-            0,
-            config.VOLUME,
-            current_freq,
-            AUDIO_BAR_DUR,
+            portamento_str,
+            AUDIO_BAR_DUR * 3.0,
             current_pan,
-            AUDIO_BAR_VOL,
+            config.VOLUME,
         ]
         Acusticator(sound_score, kind=1)
         ripetitions -= 1
@@ -944,19 +995,20 @@ def ExColors(ripetitions):
             )
 
         current_rep_index = initial_rpt - ripetitions
-        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1
+        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
         current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
         current_pan = PAN_START + (PAN_END - PAN_START) * progress
-        note_feedback = "c6" if correct else "c4"
+
+        # Portamento a 6 semitoni (+6 se corretto, -6 se errato)
+        semitone_ratio = (2.0 ** (6.0 / 12.0)) if correct else (2.0 ** (-6.0 / 12.0))
+        target_freq = max(20.0, current_freq * semitone_ratio)
+
+        portamento_str = f"{int(current_freq)}.{int(target_freq)}"
         sound_score = [
-            note_feedback,
-            AUDIO_YES_NO_DUR,
-            0,
-            config.VOLUME,
-            current_freq,
-            AUDIO_BAR_DUR,
+            portamento_str,
+            AUDIO_BAR_DUR * 3.0,
             current_pan,
-            AUDIO_BAR_VOL,
+            config.VOLUME,
         ]
         Acusticator(sound_score, kind=1)
         ripetitions -= 1
@@ -967,11 +1019,23 @@ def ExColors(ripetitions):
 
 def main():
     global log
+    start_memoboard_time = time.time()
     all_scores = load_scores()
+
+    release_date_str = (
+        config.RELEASE_DATE.strftime("%d/%m/%Y")
+        if isinstance(config.RELEASE_DATE, datetime.datetime)
+        else str(config.RELEASE_DATE)
+    )
+
     print(
         _(
-            "Benvenuto in MemoBoard.\nIl tuo assistente per giocare a scacchi senza scacchiera.\nQuesta utility ti aiuta a visualizzare la scacchiera e a diventare un giocatore migliore.\n\t(Integrato in Orologic {version})"
-        ).format(version=config.VERSION)
+            "Benvenuto in MemoBoard (v{version} - {release_date}).\nAutori: {programmer}\nIl tuo assistente per giocare a scacchi senza scacchiera.\nQuesta utility ti aiuta a visualizzare la scacchiera e a diventare un giocatore migliore."
+        ).format(
+            version=config.VERSION,
+            release_date=release_date_str,
+            programmer=config.PROGRAMMER,
+        )
     )
     Acusticator(
         [
@@ -991,7 +1055,6 @@ def main():
         kind=1,
     )
 
-    # Inizializziamo il log all'interno di main()
     log_dir = config.percorso_salvataggio("txt")
     os.makedirs(log_dir, exist_ok=True)
     log = open(os.path.join(log_dir, "memoboard.txt"), "a+", encoding="utf-8")
@@ -999,14 +1062,7 @@ def main():
         f"\n# {time.asctime()} Ciao, Memoboard (Orologic {config.VERSION}) si avvia."
     )
 
-    username = input(_("\nPer favore, inserisci il tuo nome: ")).strip().title()
-    if not username:
-        username = _("UtentePredefinito")
-    print(
-        _(
-            "\nBentornato, {username}! Pronto ad allenarti? Digita '?'.\nSe hai attivato i menu numerati in Orologic, puoi usarli anche qui."
-        ).format(username=username)
-    )
+    print(_("\nPronto ad allenarti? Scegli un esercizio dal menu."))
 
     while True:
         s = menu(d=mnu, ntf=_("Comando non trovato"), show=True, keyslist=True)
@@ -1025,8 +1081,10 @@ def main():
                 ),
                 kind="i",
                 imin=5,
-                imax=150,
+                imax=300,
             )
+            if rpt > 300:
+                rpt = 300
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
             score, scoreslist, duration, timeslist, wins, errors_list = ExColors(rpt)
@@ -1042,9 +1100,7 @@ def main():
                         ).format(q=q, ua=ua, ca=ca)
                     )
                 key(_("\nPremi un tasto per procedere alla classifica..."))
-            report_and_update_scores(
-                all_scores, username, "colors", rpt, score, duration, wins
-            )
+            report_and_update_scores(all_scores, "colors", rpt, score, duration, wins)
 
         elif s == "cavalli":
             print(
@@ -1058,8 +1114,10 @@ def main():
                 ),
                 kind="i",
                 imin=5,
-                imax=150,
+                imax=300,
             )
+            if rpt > 300:
+                rpt = 300
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
             score, scoreslist, duration, timeslist, wins, errors_list = ExKnights(rpt)
@@ -1075,9 +1133,7 @@ def main():
                         ).format(q=q, ua=ua, ca=ca)
                     )
                 key(_("\nPremi un tasto per procedere alla classifica..."))
-            report_and_update_scores(
-                all_scores, username, "knights", rpt, score, duration, wins
-            )
+            report_and_update_scores(all_scores, "knights", rpt, score, duration, wins)
 
         elif s == "alfieri":
             print(
@@ -1091,8 +1147,10 @@ def main():
                 ),
                 kind="i",
                 imin=5,
-                imax=150,
+                imax=300,
             )
+            if rpt > 300:
+                rpt = 300
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
             score, scoreslist, duration, timeslist, wins, errors_list = ExBishops(rpt)
@@ -1108,9 +1166,7 @@ def main():
                         ).format(q=q, ua=ua, ca=ca)
                     )
                 key(_("\nPremi un tasto per procedere alla classifica..."))
-            report_and_update_scores(
-                all_scores, username, "bishops", rpt, score, duration, wins
-            )
+            report_and_update_scores(all_scores, "bishops", rpt, score, duration, wins)
 
         elif s == "classifiche":
             Acusticator(
@@ -1173,9 +1229,7 @@ def main():
                         )
 
                 key(_("\nPremi un tasto per procedere alla classifica..."))
-            report_and_update_scores(
-                all_scores, username, "mixed", rpt, score, duration, wins
-            )
+            report_and_update_scores(all_scores, "mixed", rpt, score, duration, wins)
 
     save_scores(all_scores)
     Acusticator(
@@ -1196,7 +1250,7 @@ def main():
         kind=1,
         sync=True,
     )
-    endtime = time.time() - STARTTIME
+    endtime = time.time() - start_memoboard_time
     print(
         _(
             "\nMemoBoard terminato. Tempo di esecuzione: {minuti} minuti e {secondi} secondi.\n\tControlla txt/memoboard.txt. Arrivederci!"
@@ -1209,5 +1263,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # Fallback per test o sviluppo se lanciato come main
     main()
