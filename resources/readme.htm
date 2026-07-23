@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 8.8.8 - 18 luglio 2026 - 12:23)</h1>
+<h1>Guida Utente di Orologic (Versione 8.8.9 - 22 luglio 2026 - 19:14)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -403,16 +403,19 @@ margin: 1em 0;
 <p>Per stimolare il miglioramento, Memoboard calcola un punteggio basato su velocità e precisione. Ogni domanda parte con un valore massimo di 15.000 punti, decrescendo di 1 punto per ogni millisecondo impiegato per rispondere. Una risposta esatta aggiunge i punti restanti al totale, mentre una risposta errata non assegna punti.</p>
 <p>La classifica viene ordinata per <strong>Punti al Minuto</strong> (efficienza), calcolati dividendo il punteggio totale per il tempo impiegato in secondi (moltiplicato per 60). Questo premia la precisione e la rapidità di esecuzione rispetto a sessioni lunghe e lente.</p>
 
-<h4>2.5.2. Esercizi Disponibili</h4>
+<h4>2.5.2. Esercizi Disponibili e Feedback Acustico</h4>
 <ul>
     <li><strong>Esercizio con i cavalli (knights):</strong> Determina se due case sono a distanza di un salto di cavallo (es. a1 e b3). Rispondi con INVIO per Sì o ESC per No.</li>
     <li><strong>Esercizio con le diagonali (bishops):</strong> Determina se due case appartengono alla stessa diagonale (es. a1 e h7). Rispondi con INVIO per Sì o ESC per No.</li>
     <li><strong>Esercizio con i colori (colors):</strong> Determina se una casa è bianca o nera. Rispondi con INVIO per Bianco o ESC per Nero.</li>
     <li><strong>Sfida Mista (mixed):</strong> Affronta la prova definitiva composta da una serie fissa di 100 domande miste scelte casualmente tra i tre tipi di esercizio precedenti.</li>
 </ul>
+<p>Durante lo svolgimento delle domande viene riprodotto un segnale acustico singolo con effetto portamento: la frequenza di partenza sale da C3 (130,81 Hz) a C8 (4186,01 Hz) in base alla percentuale di completamento dell'esercizio. Se la risposta è corretta, il tono scivola velocemente verso l'alto di 6 semitoni; se la risposta è sbagliata, scivola verso il basso di 6 semitoni.</p>
 
-<h4>2.5.3. Classifiche</h4>
-<p>Il comando <code>classifiche</code> visualizza una classifica dettagliata degli utenti registrati per ciascun esercizio, con indicazione di punti totali, accuratezza (Win%), punti al minuto e data del record. I punteggi vengono salvati nel file <code>memoboard_scores.json</code> nella cartella <code>settings</code> di Orologic.</p>
+<h4>2.5.3. Classifiche e Qualificazione</h4>
+<p>Negli esercizi singoli (cavalli, alfieri, colori) l'utente può impostare un numero di domande compreso tra 5 e 300 (valori superiori a 300 vengono automaticamente ridotti a 300). Per evitare punteggi casuali o falsati, le sessioni si qualificano per la classifica Top 10 solo se vengono svolte <strong>almeno 20 domande</strong> (la Sfida Mista prevede invece 100 domande fisse).</p>
+<p>Il nome utente viene richiesto al termine della sessione solo se il punteggio ottenuto è sufficiente ad entrare nei primi 10 posti della classifica. Se l'utente è già presente in classifica per quell'esercizio, il nuovo record sostituisce automaticamente il precedente se migliore; se invece il punteggio è inferiore, il programma richiede conferma prima dell'eventuale sovrascrittura.</p>
+<p>Il comando <code>classifiche</code> visualizza una classifica dettagliata per ciascun esercizio, con indicazione di punti totali, accuratezza (Win%), punti al minuto e data del record. I punteggi vengono salvati nel file <code>memoboard_scores.json</code> nella cartella <code>settings</code> di Orologic.</p>
 
 <h3>2.6. Tempo (Orologio nudo e crudo) (tempo)</h3>
 <p>Questa modalità è progettata per chi desidera utilizzare Orologic come un semplice orologio da scacchi fisico (timer di gioco) senza che il software registri le mosse, effettui controlli di legalità o richieda l'inserimento in notazione algebrica (SAN). È ideale per:</p>
