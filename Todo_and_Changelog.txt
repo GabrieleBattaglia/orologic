@@ -2,6 +2,11 @@ TodoList & ChangeLog.
 TodoList:
 
 ChangeLog:
+8.8.9 (22 luglio 2026 - 19:14)
+	* [Memoboard] Isolato il calcolo del tempo di funzionamento di MemoBoard alla sola durata della sessione corrente invece dell'avvio globale di Orologic.
+	+ [Memoboard] Nuova gestione acustica con segnale unico a portamento su scala C3-C8 (+6 semitoni per risposta corretta, -6 semitoni per risposta errata).
+	+ [Memoboard] Aggiornata la gestione della classifica Top 10: richiesta del nome utente posticipata al termine dell'esercizio solo in caso di qualificazione, con soglia minima di 20 domande (max 300) per gli esercizi singoli e gestione della sovrascrittura condizionale del record personale.
+
 8.8.8 (18 luglio 2026 - 12:23)
 	* [Core] Risolto l'errore di sgrammaticatura nella verbalizzazione della presa al varco (en passant), includendo il nome del pedone catturato prima dell'indicazione "al varco" (Issue #31).
 	+ [Lichess] Localizzate tutte le stringhe di Orolichess, dei relativi menu, sottomenu, voci e informazioni visualizzate, aggiornando e allineando i cataloghi di traduzione (en, es, fr, pt) e correggendo gli errori di traduzione (Issue #32).
