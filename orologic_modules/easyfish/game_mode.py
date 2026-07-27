@@ -1,15 +1,18 @@
+import threading
+import time
+
 import chess
 import chess.engine
 import chess.pgn
-import time
-import threading
-from GBUtils import dgt, menu, Acusticator, enter_escape
-from ..config import _
+
+from GBUtils import Acusticator, dgt, enter_escape, menu
+
 from .. import engine as orologic_engine
 from .. import storage
-from ..board_utils import DescribeMove, FormatTime, NormalizeMove, CustomBoard
-from .constants import MNGAME
+from ..board_utils import CustomBoard, DescribeMove, FormatTime, NormalizeMove
+from ..config import _
 from . import analysis_utils
+from .constants import MNGAME
 
 
 class EasyfishGameState:
@@ -198,11 +201,9 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                 return game_node
 
     elif engine_mode == "2":
+        ignore_clock = True
         engine_limit_type = "move"
         engine_has_clock = False
-        user_time, user_inc = ParseTimeInput(_("Tuo tempo partita"))
-        if user_time is None:
-            return game_node
         engine_time = dgt(_("Secondi per mossa motore: "), kind="f", default=2.0)
 
     elif engine_mode == "3":
