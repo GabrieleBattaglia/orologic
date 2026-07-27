@@ -113,12 +113,16 @@ def format_profile(profile):
     createdAt = profile.get("createdAt")
     if createdAt:
         dt = datetime.datetime.fromtimestamp(createdAt / 1000.0)
-        p.append(_("Iscritto il: {d}").format(d=dt.strftime("%d/%m/%Y")))
+        p.append(
+            _("Iscritto il: {d}").format(
+                d=config.format_date_italian(dt, include_time=False)
+            )
+        )
 
     seenAt = profile.get("seenAt")
     if seenAt:
         dt = datetime.datetime.fromtimestamp(seenAt / 1000.0)
-        p.append(_("Ultimo accesso: {d}").format(d=dt.strftime("%d/%m/%Y %H:%M")))
+        p.append(_("Ultimo accesso: {d}").format(d=config.format_date_italian(dt)))
 
     count = profile.get("count", {})
     t = count.get("all", 0)

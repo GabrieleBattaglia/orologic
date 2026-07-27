@@ -2,8 +2,57 @@ import sys
 import os
 import json
 import re
+import datetime
 from GBUtils import polipo
 from . import version
+
+GIORNI_IT = [
+    "lunedì",
+    "martedì",
+    "mercoledì",
+    "giovedì",
+    "venerdì",
+    "sabato",
+    "domenica",
+]
+
+MESI_IT = [
+    "",
+    "gennaio",
+    "febbraio",
+    "marzo",
+    "aprile",
+    "maggio",
+    "giugno",
+    "luglio",
+    "agosto",
+    "settembre",
+    "ottobre",
+    "novembre",
+    "dicembre",
+]
+
+
+def format_date_italian(dt=None, include_time=True, include_day_name=True):
+    """
+    Restituisce una data formattata in italiano esteso comprensiva del giorno della settimana.
+    Esempio: 'sabato 25 luglio 2026 - 17:20' oppure 'sabato 25 luglio 2026'.
+    """
+    if dt is None:
+        dt = datetime.datetime.now()
+    elif isinstance(dt, str):
+        try:
+            dt = datetime.datetime.fromisoformat(dt)
+        except Exception:
+            return dt
+    day_name = GIORNI_IT[dt.weekday()] if include_day_name else ""
+    day = dt.day
+    month = MESI_IT[dt.month]
+    year = dt.year
+    date_str = f"{day_name} {day} {month} {year}".strip()
+    if include_time:
+        return f"{date_str} - {dt.strftime('%H:%M')}"
+    return date_str
 
 
 def resource_path(relative_path):
@@ -216,6 +265,7 @@ MENU_CHOICES = {
     "arbitra": _("Inizia partita (Arbitraggio)"),
     "tempo": _("Tempo (Orologio nudo e crudo)"),
     "manuale": _("Guida app"),
+    "novita": _("Novita' (changelog)"),
     "motore": _("Configurazione motore"),
     "nomi": _("Personalizzazione nomi"),
     "ricerca": _("Ricerca PGN"),

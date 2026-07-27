@@ -1292,7 +1292,7 @@ def genera_sommario_analitico_txt(
         "Mossa Normale": l10n_analysis.get("normal", _("Mossa Normale")),
         "Teoria": l10n_analysis.get("book", _("Teoria")),
     }
-    now_str = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    now_str = config.format_date_italian()
     lines = [
         _("Orologic Analisi Automatica [OAA] V.{v}").format(v=version.VERSION),
         _("Generato il: {d}").format(d=now_str),

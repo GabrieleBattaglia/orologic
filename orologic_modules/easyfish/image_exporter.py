@@ -422,10 +422,10 @@ def export_board_pdf(board, node=None):
         default="",
     ).strip()
 
-    footer_text = _("Generata con Orologic v.{v}, {a}, il {d}").format(
+    footer_text = _("Generata con Orologic v.{v}, {a}, {d}").format(
         v=config.VERSION,
         a=config.version.PROGRAMMER,
-        d=now.strftime("%d/%m/%Y %H:%M:%S"),
+        d=config.format_date_italian(now),
     )
 
     img_dir = config.percorso_salvataggio("images")

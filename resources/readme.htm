@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 8.8.9 - 22 luglio 2026 - 19:14)</h1>
+<h1>Guida Utente di Orologic (Versione 8.9.1 - sabato 25 luglio 2026 - 17:20)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -416,6 +416,16 @@ margin: 1em 0;
 <p>Negli esercizi singoli (cavalli, alfieri, colori) l'utente può impostare un numero di domande compreso tra 5 e 300 (valori superiori a 300 vengono automaticamente ridotti a 300). Per evitare punteggi casuali o falsati, le sessioni si qualificano per la classifica Top 10 solo se vengono svolte <strong>almeno 20 domande</strong> (la Sfida Mista prevede invece 100 domande fisse).</p>
 <p>Il nome utente viene richiesto al termine della sessione solo se il punteggio ottenuto è sufficiente ad entrare nei primi 10 posti della classifica. Se l'utente è già presente in classifica per quell'esercizio, il nuovo record sostituisce automaticamente il precedente se migliore; se invece il punteggio è inferiore, il programma richiede conferma prima dell'eventuale sovrascrittura.</p>
 <p>Il comando <code>classifiche</code> visualizza una classifica dettagliata per ciascun esercizio, con indicazione di punti totali, accuratezza (Win%), punti al minuto e data del record. I punteggi vengono salvati nel file <code>memoboard_scores.json</code> nella cartella <code>settings</code> di Orologic.</p>
+
+<h4>2.5.4. Report di Sessione e Analisi dei Tempi</h4>
+<p>Al termine di ogni esercizio svolto in MemoBoard (inclusi quelli non qualificati o con punteggio inferiore al proprio record), Orologic genera o aggiorna immediatamente un file di report testuale individuale salvato nella cartella <code>txt/</code>.</p>
+<p>Il nome del file viene generato secondo lo schema <code>Memoboard_{tipologie}_{timestamp}.txt</code> (ad esempio <code>Memoboard_colori_20260725180345.txt</code> oppure <code>Memoboard_colori_cavalli_20260725180345.txt</code> se nella medesima sessione sono stati svolti più esercizi).</p>
+<p>Ciascun report include le seguenti informazioni per ogni esercizio svolto:</p>
+<ul>
+    <li><strong>Riepilogo risultati:</strong> numero di risposte corrette, tempo totale impiegato, punteggio ottenuto, performance in punti al minuto e lo stato di qualificazione in classifica.</li>
+    <li><strong>Statistiche sui tempi di risposta:</strong> tempo minimo, tempo massimo e tempo medio di risposta espressi in secondi.</li>
+    <li><strong>Analisi stanchezza per quartili cronologici:</strong> suddivisione dell'intera serie di domande in 4 quartili (Q1, Q2, Q3, Q4) per valutare l'andamento dei tempi medi e la variazione percentuale di affaticamento rispetto al primo quartile iniziale (Q1).</li>
+</ul>
 
 <h3>2.6. Tempo (Orologio nudo e crudo) (tempo)</h3>
 <p>Questa modalità è progettata per chi desidera utilizzare Orologic come un semplice orologio da scacchi fisico (timer di gioco) senza che il software registri le mosse, effettui controlli di legalità o richieda l'inserimento in notazione algebrica (SAN). È ideale per:</p>

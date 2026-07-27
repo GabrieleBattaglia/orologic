@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChangeLog - Orologic</title>
+<style>
+body { font-family: sans-serif; line-height: 1.6; margin: 2em; background-color: #fdfdfd; color: #1a1a1a; }
+h1, h2, h3, h4 { color: #005a9c; }
+h1 { border-bottom: 2px solid #005a9c; padding-bottom: 10px; }
+h2 { border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 1.8em; color: #003366; }
+h3 { margin-top: 1.4em; color: #005a9c; }
+h4 { margin-top: 1em; color: #222; }
+ul { margin-top: 0.3em; margin-bottom: 1em; }
+li { margin-bottom: 0.3em; }
+</style>
+</head>
+<body>
+<h1>ChangeLog di Orologic</h1>
+<h2>Versione 8</h2>
+<h3>Versione 8.9</h3>
+<h4>8.9.1 (25 luglio 2026 - 17:20)</h4>
+<ul>
+  <li>+ [Memoboard] Salvataggio delle sessioni in file txt individuali nella cartella txt/ con prefisso Memoboard_{tipologie}_{timestamp}.txt, date estese in italiano e formato TXT puro senza sintassi markdown (Issue #34).</li>
+  <li>+ [Memoboard] Arricchiti i report di sessione con statistiche dettagliate sui tempi di risposta (minimo, massimo e medio) e analisi dell'affaticamento per quartili cronologici (Q1-Q4) con variazioni percentuali.</li>
+  <li>+ [Memoboard] Garantita la creazione e il salvataggio immediato del report su disco al termine di ciascun esercizio svolto.</li>
+  <li>* [Memoboard] Semplificato il messaggio di benvenuto all'ingresso di MemoBoard rimuovendo la ridondanza di data e autori.</li>
+  <li>+ [Core] Centralizzata la formattazione delle date in italiano esteso (comprensiva del giorno della settimana) e affinato il calcolo dell'età/rilascio al singolare/plurale con congiunzione naturale nella schermata iniziale.</li>
+</ul>
+<h4>8.9.0 (25 luglio 2026 - 16:35)</h4>
+<ul>
+  <li>+ [Core] Modificato il changelog da file di testo a formato HTML con struttura ad albero delle versioni e integrato il richiamo diretto al browser dal menu principale (Issue #33).</li>
+</ul>
+<h3>Versione 8.8</h3>
+<h4>8.8.9 (22 luglio 2026 - 19:14)</h4>
+<ul>
+  <li>* [Memoboard] Isolato il calcolo del tempo di funzionamento di MemoBoard alla sola durata della sessione corrente invece dell&#x27;avvio globale di Orologic.</li>
+  <li>+ [Memoboard] Nuova gestione acustica con segnale unico a portamento su scala C3-C8 (+6 semitoni per risposta corretta, -6 semitoni per risposta errata).</li>
+  <li>+ [Memoboard] Aggiornata la gestione della classifica Top 10: richiesta del nome utente posticipata al termine dell&#x27;esercizio solo in caso di qualificazione, con soglia minima di 20 domande (max 300) per gli esercizi singoli e gestione della sovrascrittura condizionale del record personale.</li>
+</ul>
+<h4>8.8.8 (18 luglio 2026 - 12:23)</h4>
+<ul>
+  <li>* [Core] Risolto l&#x27;errore di sgrammaticatura nella verbalizzazione della presa al varco (en passant), includendo il nome del pedone catturato prima dell&#x27;indicazione &quot;al varco&quot; (Issue #31).</li>
+  <li>+ [Lichess] Localizzate tutte le stringhe di Orolichess, dei relativi menu, sottomenu, voci e informazioni visualizzate, aggiornando e allineando i cataloghi di traduzione (en, es, fr, pt) e correggendo gli errori di traduzione (Issue #32).</li>
+</ul>
+<h4>8.8.7 (12 luglio 2026 - 15:12)</h4>
+<ul>
+  <li>* [Core] Allineata la lingua del messaggio di Donazione() all&#x27;uscita passando lingua_rilevata.</li>
+</ul>
+<h4>8.8.6 (11 luglio 2026 - 09:23)</h4>
+<ul>
+  <li>* [Core] Risolto un bug grave nel parsing e calcolo dei tempi delle mosse nelle partite su Lichess: l&#x27;orologio interno veniva erroneamente azzerato alla ricezione di eventi non di mossa (es. offerte di patta, takeback, chat o notifiche di stato) a causa della mancanza di clock in questi pacchetti. Corretto il parsing per preservare il tempo mossa precedentemente memorizzato se non presente nel messaggio.</li>
+</ul>
+<h4>8.8.5 (10 luglio 2026 - 12:46)</h4>
+<ul>
+  <li>* [Core] Risolto un bug grave nel calcolo dei tempi delle mosse e delle statistiche durante le partite su Lichess: l&#x27;incremento di tempo applicato automaticamente dal server non veniva compensato, portando a sottostimare sistematicamente la durata delle mosse di un valore pari all&#x27;incremento stesso (o azzerandola in caso di mosse istantanee).</li>
+</ul>
+<h4>8.8.4 (10 luglio 2026 - 10:17)</h4>
+<ul>
+  <li>+ [Core] Ottimizzato il caricamento e il rilevamento delle aperture ECO: implementato caching in memoria del database, ottimizzato l&#x27;algoritmo di scorrimento delle mosse da quadratico a lineare, e velocizzata la ricerca delle posizioni tramite indicizzazione a dizionario EPD (Extended Position Description) ad accesso O(1).</li>
+  <li>* [Core] Risolto un bug latente nel seek dello stream del database che cercava per byte invece che per caratteri su StringIO, provocando potenziali skip in presenza di caratteri non-ASCII.</li>
+  <li>* [Core] Migliorato il rilevamento delle aperture tramite EPD per gestire correttamente le trasposizioni e la variabilità del ply count nelle partite.</li>
+</ul>
+<h4>8.8.3 (8 luglio 2026 - 12:51)</h4>
+<ul>
+  <li>+ [Easyfish] Sostituito il prompt del tempo del motore con `enter_escape` (INVIO per no, ESC per sì).</li>
+  <li>+ [Easyfish] Migliorato il comando `.c` del Board Editor per abilitare l&#x27;inserimento in linea dei diritti d&#x27;arrocco (es. `.c Q` o `.c KQ`) come interruttori/toggle con feedback esplicativo.</li>
+</ul>
+<h4>8.8.1 (7 luglio 2026 - 21:02)</h4>
+<ul>
+  <li>+ [Core] Nelle statistiche di fine partita in modalità Lichess, abilitata la visualizzazione dei tempi mossa per entrambi i colori anziché solo per l&#x27;utente loggato.</li>
+  <li>* [Core] Modificato il salvataggio dei tempi mossa nei tag `%clk` del PGN: ora riporta il tempo effettivo impiegato per la mossa invece del tempo rimanente sull&#x27;orologio.</li>
+</ul>
+<h4>8.8.0 (7 luglio 2026 - 13:09)</h4>
+<ul>
+  <li>+ [Tempo] Aggiunto il comando `.q` per eliminare l&#x27;ultimo input e ripristinare il turno precedente e l&#x27;orologio (Issue #26).</li>
+  <li>+ [Tempo] Inserimento di una nota di sessione iniziale (max 250 caratteri) tramite `dgt()` salvata nel report testuale prima della lista mosse (Issue #26).</li>
+  <li>+ [Easyfish] Sostituito il menu di scelta del colore nel gioco contro il motore con una domanda tramite `enter_escape` (colore Bianco con INVIO, colore Nero con ESCAPE) (Issue #27).</li>
+  <li>+ [Easyfish] Riconoscimento intelligente e parsing del tempo e dell&#x27;incremento unificato (es. `20:00+15`, `400+5`) nel gioco contro il motore, eliminando la richiesta separata dell&#x27;incremento (Issue #28).</li>
+  <li>+ [Core] Tracciamento dei tempi spesi per ogni singola mossa in modalità Arbitraggio e Lichess (Issue #29).</li>
+  <li>+ [Core] Visualizzazione a fine partita delle statistiche avanzate dei tempi mossa: classifica delle mosse più lente, analisi e ripartizione in 4 quartili temporali, indicazione della mossa più lenta e più veloce (Issue #29).</li>
+  <li>+ [Core] Salvataggio opzionale dei tempi delle mosse come annotazioni `%clk` nel file PGN finale (Issue #29).</li>
+  <li>+ [Core] Supporto al ripristino dei tempi delle mosse e cronologia degli orologi tramite file di autosave (Issue #29).</li>
+</ul>
+<h3>Versione 8.7</h3>
+<h4>8.7.0 (28 giugno 2026 - 17:15)</h4>
+<ul>
+  <li>+ [Core] Nuova funzionalità &quot;Ricerca PGN&quot;: caricamento di archivi PGN multi-partita da appunti (percorsi di file, URL Lichess o testo diretto).</li>
+  <li>+ [Core] Navigazione interattiva dell&#x27;albero delle aperture con tasti di scelta rapida WAXD (su, giù, risali, scendi).</li>
+  <li>+ [Core] Statistiche delle aperture dinamiche e intelligenti (assolute B/P/N o relative al giocatore selezionato/comune con i simboli +, =, -).</li>
+  <li>+ [Core] Integrazione del Pager partite (tasto 0) in ordine alfabetico con continuazione delle mosse.</li>
+  <li>* [Core] Salvataggio opzionale del PGN con le sole partite che soddisfano i filtri attivi.</li>
+  <li>+ [L10N] Allineate e aggiornate tutte le traduzioni per le lingue locali (en, es, fr, pt).</li>
+</ul>
+<h3>Versione 8.6</h3>
+<h4>8.6.0 (5 giugno 2026 - 16:20)</h4>
+<ul>
+  <li>+ [Core] Implementazione completa della variante di gioco Chess960 (Fischer Random).</li>
+</ul>
+<h3>Versione 8.5</h3>
+<h4>8.5.0 (4 giugno 2026 - 09:06)</h4>
+<ul>
+  <li>+ [Core] Implementato un validatore e correttore automatico di PGN negli appunti (validate_and_clean_pgn).</li>
+  <li>+ [Core] Correzione automatica di piccoli errori di layout PGN (es. spazi errati nei puntini delle mosse o formattazione parentesi dei commenti) direttamente all&#x27;importazione dagli appunti.</li>
+  <li>+ [Core] Segnalazione dettagliata in caso di errori di parsing gravi (es. mosse illegali, turni errati) con blocco dell&#x27;azione corrente per evitare analisi corrotte.</li>
+  <li>+ [Core] Sincronizzazione automatica dello stato di modifica (saved/is_modified) sia in modalità analisi che in Easyfish se il PGN incollato è stato recuperato/migliorato.</li>
+</ul>
+<h3>Versione 8.4</h3>
+<h4>8.4.0 (4 giugno 2026 - 07:42)</h4>
+<ul>
+  <li>+ [Core] Implementazione della nuova modalità &quot;Tempo&quot; (Issue #24), un orologio nudo e crudo per sessioni di allenamento o partite non arbitrate.</li>
+</ul>
+<h3>Versione 8.3</h3>
+<h4>8.3.1 (3 giugno 2026 - 10:47)</h4>
+<ul>
+  <li>+ [Lichess] Corrette le issue #22 e #23 relative alle statistiche Elo di fine partita.</li>
+  <li>+ [Lichess] Integrato il calcolo del posizionamento dell&#x27;Elo finale e la variazione della media Elo storica direttamente nel report post-partita.</li>
+  <li>+ [L10N] Aggiornate e allineate le traduzioni in inglese, spagnolo, francese e portoghese.</li>
+</ul>
+<h4>8.3.0 (3 giugno 2026 - 08:01)</h4>
+<ul>
+  <li>+ [Lichess] Aggiunta della funzione DEA (Dynamic Elo Analysis) per analizzare storicamente l&#x27;Elo del giocatore.</li>
+</ul>
+<h3>Versione 8.2</h3>
+<h4>8.2.1 (1 giugno 2026 - 11:27)</h4>
+<ul>
+  <li>+ [Lichess] Semplificato il report di fine partita rimuovendo la richiesta di analisi server (che generava errore 403) e il relativo loop di polling.</li>
+</ul>
+<h4>8.2.0 (31 maggio 2026 - 08:52)</h4>
+<ul>
+  <li>+ [Easyfish] Ottimizzato il posizionamento multiplo dei pezzi nel Board Editor (Issue #21): ora è possibile specificare una lista di case separate da virgole (es. `ra8,h8` per posizionare le torri nere o `a8,h8` per svuotare le case).</li>
+  <li>+ [Easyfish] Aumentata la lunghezza massima dell&#x27;input (`smax`) nel Board Editor a 100 caratteri per permettere l&#x27;inserimento di coordinate multiple lunghe.</li>
+  <li>+ [Easyfish] Riorganizzato il prompt riassuntivo del Board Editor (Issue #18 e #20): i pezzi vengono elencati in ordine di importanza (`Q R B N P`) nel formato `PEZZO=bianco/nero` (es. `Q=1/0`, `R=2/2`), sostituendo l&#x27;ambiguo separatore `-`.</li>
+  <li>+ [Easyfish] Omessi i Re (`K`/`k`) dal prompt del Board Editor perché obbligatori (Issue #19).</li>
+  <li>+ [Docs] Aggiornato il manuale utente (`readme.htm`) per spiegare la nuova modalità di inserimento multiplo e l&#x27;interpretazione del prompt del Board Editor.</li>
+</ul>
+<h3>Versione 8.1</h3>
+<h4>8.1.0 (29 maggio 2026 - 09:18)</h4>
+<ul>
+  <li>+ [Lichess] Risolto il problema del download delle partite analizzate (Issue #17): l&#x27;URL di esportazione include ora la valutazione ed i commenti analitici completi (`evals=true&amp;literate=true`).</li>
+  <li>+ [Lichess] Spostata la memorizzazione del PGN dopo l&#x27;analisi di fine partita, assicurando che le valutazioni vengano salvate sul file locale e copiate negli appunti.</li>
+  <li>+ [Lichess] Sostituito il polling a punti con una percentuale di avanzamento dinamico durante l&#x27;attesa del report dell&#x27;analisi di Lichess.</li>
+  <li>+ [Lichess] Introdotto il nuovo modulo `lichess_stats` per visualizzare la storia completa dell&#x27;Elo e la sonificazione per qualsiasi giocatore.</li>
+  <li>+ [Lichess] Implementato il calcolo delle statistiche avanzate (Globale e per Quartili temporali): Minimo, Massimo, Media, Coefficiente di Variazione (CV), Tendenza e Moda.</li>
+  <li>+ [Lichess] Aggiunto il calcolo della durata del periodo totale e dei singoli quartili espressa in anni, mesi, giorni, ore, minuti.</li>
+  <li>+ [Lichess] Gestione dinamica del volume di sonificazione, con controllo per impostare un volume minimo di 0.2 se l&#x27;impostazione globale di Orologic è pari a 0.</li>
+</ul>
+<h3>Versione 8.0</h3>
+<h4>8.0.0 (29 maggio 2026 - 08:15)</h4>
+<ul>
+  <li>+ [Core] Fusa la suite Memoboard (allenamento alla cieca per cavalli, diagonali, colori e sfide miste) all&#x27;interno di Orologic come modulo interno.</li>
+  <li>+ [Core] Condivisione delle impostazioni di localizzazione, del volume globale e dello spelling delle colonne (config.L10N).</li>
+  <li>+ [Core] Spostamento dei dati dei punteggi in settings/ e del log in log/.</li>
+  <li>+ [Docs] Integrata la guida utente di Memoboard all&#x27;interno del manuale utente di Orologic.</li>
+</ul>
+<h2>Versione 7</h2>
+<h3>Versione 7.5</h3>
+<h4>7.5.3 (28 maggio 2026 - 15:10)</h4>
+<ul>
+  <li>+ [Easyfish] Implementato il suggerimento e la possibilità di avviare l&#x27;analisi (tramite enter_escape) direttamente al termine di una partita contro il motore (Issue #15).</li>
+  <li>+ [Easyfish] Abilitati tutti i comandi di ispezione scacchiera (/, \, -, +, ,) in Modalità Gioco contro il motore e in modalità Esploratore, riutilizzando in modo DRY la funzione nativa di Orologic (Issue #14).</li>
+  <li>+ [Easyfish] Abilitati i comandi di ispezione diagonale (/ e \) anche nel menu principale di Easyfish.</li>
+</ul>
+<h4>7.5.2 (26 maggio 2026 - 22:58)</h4>
+<ul>
+  <li>+ [Core] Risolto un bug latente di RecursionError (ricorsione infinita) in copy.deepcopy su partite lunghe (&gt;85 mosse) durante l&#x27;analisi automatica, sostituendo deepcopy con una copia sicura del PGN tramite serializzazione/deserializzazione.</li>
+</ul>
+<h4>7.5.1 (26 maggio 2026 - 19:10)</h4>
+<ul>
+  <li>+ [Lichess] Esteso il supporto per il refresh automatico degli orologi e il comando `.6` alla modalità spettatore (&quot;Guarda partita&quot;).</li>
+  <li>+ [Arbitraggio] Implementato il refresh automatico a tempo degli orologi e il comando `.6` in modalità Arbitraggio, con valore di default a 0 (disattivo).</li>
+  <li>+ [Core] Nelle modalità partita Lichess, spettatore e Arbitraggio, gli orologi vengono ora visualizzati nel prompt solo se il refresh periodico è attivo (&gt;0 secondi).</li>
+</ul>
+<h4>7.5.0 (26 maggio 2026 - 18:50)</h4>
+<ul>
+  <li>+ [Motore] Implementato il controllo silenzioso all&#x27;avvio per la disponibilità di nuove versioni di Stockfish su GitHub, con richiesta di aggiornamento automatico e mantenimento dei parametri di configurazione esistenti.</li>
+  <li>+ [Lichess] Aggiunto il comando `.6` in partita per configurare l&#x27;intervallo di aggiornamento automatico degli orologi (0-120 secondi, dove 0 disattiva il refresh automatico).</li>
+</ul>
+<h3>Versione 7.4</h3>
+<h4>7.4.3 (26 maggio 2026 - 16:40)</h4>
+<ul>
+  <li>+ [Lichess] Ottimizzato il polling di attesa dell&#x27;analisi computerizzata a fine partita, portandolo a 60 secondi con possibilità di interruzione tramite ESC.</li>
+  <li>+ [Lichess] Evitato il salvataggio PGN (in locale e negli appunti) e la richiesta/visualizzazione dell&#x27;analisi per le partite che terminano con 5 o meno mosse (10 semimosse).</li>
+</ul>
+<h4>7.4.2 (25 maggio 2026 - 22:45)</h4>
+<ul>
+  <li>+ [Lichess] Risolto l&#x27;errore di streaming (404) quando si inserivano URL TV o profilo dei giocatori (es. con /@/) estraendo correttamente l&#x27;username e interrogando l&#x27;API ufficiale.</li>
+  <li>+ [Lichess] Implementata la funzione di attesa (max 30 minuti) all&#x27;inizio di una partita per un amico o nickname specificato, con visualizzazione del tempo residuo (\r) e possibilità di interrompere premendo ESC o `.`.</li>
+  <li>+ [Lichess] Ottimizzato e semplificato il menu &quot;Gestione Amici&quot;, rimuovendo voci ridondanti e integrando la lista amici direttamente con il menu azioni del profilatore per inviare messaggi, sfidare, scaricare partite e smettere di seguire.</li>
+  <li>+ [Lichess] Ordinata e riformattata la lista amici per mostrare solo lo stato dell&#x27;utente senza ripetizioni (`- (Username) -- Stato`), mostrando prima gli utenti in gioco, poi quelli online e infine quelli offline.</li>
+  <li>+ [Lichess] Aggiunto il controllo automatico delle sfide ricevute all&#x27;avvio e ad ogni visualizzazione del menu principale di Lichess, indicando dinamicamente il numero di sfide con l&#x27;opzione `Sfide in attesa ({n})` per accettarle/rifiutarle.</li>
+  <li>+ [Lichess] Aggiunta l&#x27;opzione `Casella Postale` per aprire direttamente l&#x27;inbox di Lichess nel browser predefinito per visualizzare, rispondere o eliminare messaggi non gestibili tramite API pubbliche.</li>
+</ul>
+<h4>7.4.1 (25 maggio 2026 - 14:26)</h4>
+<ul>
+  <li>+ [Easyfish] Ottimizzata la scacchiera condivisa (.cs): ora occupa la massima area disponibile nella finestra. L&#x27;area testo (.cso) e&#x27; proporzionale all&#x27;altezza della finestra (max 15%) anziche&#x27; fissa a 140px. L&#x27;SVG viene generato alla dimensione di rendering per massima nitidezza.</li>
+</ul>
+<h4>7.4.0 (23 maggio 2026 - 14:03)</h4>
+<ul>
+  <li>+ [Easyfish] Aggiunto il comando `.cso` per attivare o disattivare un box di testo sotto la scacchiera condivisa, mostrando mosse, commenti ed analisi in tempo reale con andamento a capo automatico.</li>
+  <li>+ [Easyfish] Risolti i problemi di visibilità dei pezzi (SVG Flattening) e di massimizzazione automatica all&#x27;apertura della finestra di condivisione con `.cs`.</li>
+  <li>+ [Easyfish] Aggiunti i comandi `.csb`, `.csn` e `.cst` per bloccare o rendere dinamico l&#x27;orientamento della scacchiera condivisa.</li>
+  <li>+ [Docs] Aggiunta sezione dettagliata nel manuale utente (`readme.htm`) per la spiegazione dei nuovi comandi di condivisione scacchiera didattica.</li>
+  <li>+ [Credits] Aggiunta Romana Trapletti tra i ringraziamenti come ispiratrice della scacchiera condivisa.</li>
+</ul>
+<h3>Versione 7.3</h3>
+<h4>7.3.7 (03 maggio 2026 - 16:50)</h4>
+<ul>
+  <li>+ [Core] Aggiornati tutti i punti di input (in Easyfish, Arbitraggio, Profilatore Lichess, ecc.) per supportare e garantire la piena compatibilita&#x27; con la nuova versione 6.0 della funzione `key()` in GBUtils (multi-piattaforma, supporto a nomi logici per i tasti speciali come &#x27;enter&#x27;, &#x27;esc&#x27;, &#x27;backspace&#x27;).</li>
+</ul>
+<h4>7.3.6 (03 maggio 2026 - 16:05)</h4>
+<ul>
+  <li>+ [Easyfish] Risolto errore di scope `F823 Local variable referenced before assignment` nel gioco contro il motore, causato da un import locale che mascherava la funzione menu globale.</li>
+</ul>
+<h4>7.3.5 (03 maggio 2026 - 11:58)</h4>
+<ul>
+  <li>+ [L10N] Aggiornate le traduzioni in Inglese, Portoghese (Brasile), Spagnolo e Francese per coprire le nuove funzionalita&#x27; di Lichess, Easyfish e gioco per corrispondenza.</li>
+  <li>+ [L10N] Corretti i placeholder di formattazione nei file di lingua per evitare crash di compilazione.</li>
+</ul>
+<h4>7.3.4 (24 aprile 2026 - 10:00)</h4>
+<ul>
+  <li>+ [Easyfish] Risolto bug sulla scelta del colore in partite contro il motore (.g): l&#x27;input dipendente dalla lingua (es. &quot;b&quot; o &quot;p&quot; in portoghese) e&#x27; stato sostituito con un menu numerico robusto (1 per Bianco, 2 per Nero).</li>
+  <li>+ [Easyfish] Aggiunti i comandi di gestione orologio (`.3`, `.4`, `.5`) e di riepilogo mosse giocate (`.l`) durante le partite contro il motore, uniformando l&#x27;esperienza con la modalita&#x27; Arbitraggio.</li>
+  <li>+ [Easyfish] Fixato il menu di aiuto `.?` in partita: risolto un problema di importazione che impediva la corretta localizzazione in portoghese e altre lingue delle voci di menu (MNGAME e MNEXPLORER).</li>
+</ul>
+<h4>7.3.4 (24 aprile 2026 - 10:00)</h4>
+<ul>
+  <li>+ [Updater] Risolto bug critico nell&#x27;aggiornamento automatico (GBUtils perform_update): la procedura di copia falliva a causa del case-sensitivity del nome dell&#x27;eseguibile e per la presenza di cartelle nidificate nell&#x27;archivio ZIP della release. Ora l&#x27;aggiornamento avviene correttamente e l&#x27;archivio ZIP della release e&#x27; pacchettizzato senza directory root intermedie.</li>
+</ul>
+<h4>7.3.3 (23 aprile 2026 - 10:30)</h4>
+<ul>
+  <li>+ [Easyfish] Esportazione PDF: risolto l&#x27;errore di limite caratteri aumentando il buffer massimo (smax) per il commento, per permettere l&#x27;inserimento di testi lunghi senza generare eccezioni.</li>
+  <li>+ [Motore] Chiusura applicazione: intercettato e gestito l&#x27;errore &quot;engine event loop dead&quot; che si verificava quando si tentava di chiudere un&#x27;istanza di python-chess gia&#x27; terminata.</li>
+</ul>
+<h4>7.3.2 (23 aprile 2026 - 10:00)</h4>
+<ul>
+  <li>+ [Easyfish] Risolto problema di chiusura del Board Editor: l&#x27;errore &quot;STATUS_TOO_MANY_WHITE_KINGS&quot; per posizione illegale e&#x27; stato rimosso e sostituito con la corretta verifica delle regole di validita&#x27; della scacchiera con python-chess, fornendo spiegazioni chiare all&#x27;utente.</li>
+  <li>+ [Easyfish] Esportazione PDF: rimosso il limite di 1500 caratteri per il commento e aggiunto il supporto per andare a capo utilizzando \n nel testo inserito.</li>
+  <li>+ [Linter] Correzioni E741 (Variabili ambigue) nel codice.</li>
+</ul>
+<h4>7.3.1 (20 aprile 2026 - 09:51)</h4>
+<ul>
+  <li>+ [Motore] Aggiunto invito automatico alla configurazione del motore scacchistico (scaricamento/ricerca/manuale) quando si tenta di avviare l&#x27;analisi, Easyfish o il report a fine arbitraggio e il motore non risulta ancora impostato.</li>
+  <li>+ [Easyfish] Risolto problema nel comando `.e#` (Elo): ora supporta gli spazi (es. `.e 1500`), mostra il valore corretto nel messaggio di conferma e indica il range minimo/massimo se il motore rifiuta il valore.</li>
+  <li>+ [Docs] Aggiornato il manuale (`readme.htm`) includendo la spiegazione del comando `.e#` in Easyfish.</li>
+</ul>
+<h4>7.3.0 (17 aprile 2026 - 08:15)</h4>
+<ul>
+  <li>+ [Arbitraggio] Implementato il ripristino automatico dell&#x27;arbitraggio in caso di crash o chiusura accidentale (richiede Salvataggio Automatico attivo nelle Impostazioni). All&#x27;avvio, Orologic rileva i dati in sospeso e chiede se si desidera continuare la partita.</li>
+  <li>+ [Lichess] Gestione gioco per corrispondenza e ripresa partite in sospeso dal menu principale.</li>
+  <li>+ [Lichess] Possibilita&#x27; di sfidare amici offline (per partite a scacchiera aperta/corrispondenza).</li>
+  <li>+ [Lichess] Aggiunto Elo &#x27;Correspondence&#x27; al profilo e login.</li>
+  <li>+ [Lichess] Profilatore: il menu ora ha &#x27;Sfida&#x27; e mostra dinamicamente &#x27;Segui/Smetti di seguire&#x27;.</li>
+  <li>+ [Lichess] Menu Amici: la lista seguiti ora e&#x27; interattiva e permette di selezionare un giocatore per visualizzarne il profilo.</li>
+</ul>
+<h3>Versione 7.2</h3>
+<h4>7.2.6 (15 aprile 2026 - 17:40)</h4>
+<ul>
+  <li>+ [Arbitraggio] Aggiunti i comandi di esplorazione scacchiera (`/`, `\`, `-`, `,`, `.s`) al menu di aiuto `.?` durante la partita.</li>
+  <li>+ [Arbitraggio] Risolto crash quando si inseriva un comando di esplorazione vuoto (es. solo `\`); ora mostra l&#x27;aiuto in caso di input errato.</li>
+  <li>+ [Docs] Aggiunto &#x27;Luca Davanzo&#x27; tra i ringraziamenti del manuale.</li>
+</ul>
+<h4>7.2.5 (13 aprile 2026 - 12:00)</h4>
+<ul>
+  <li>+ [UI] Uniformata la modalità Menu a Numeri in tutte le schede (es: Lichess, Motore).</li>
+  <li>+ [Lichess] Risolto problema di visibilità delle notifiche post-partita (es: abbandoni).</li>
+  <li>+ [Analisi] Migliorato output del log testuale (OAA), eliminando artefatti a fine ramo principale e aggiungendo un riepilogo del risultato a fine file.</li>
+  <li>+ [Docs] Aggiunto &#x27;limaoscar&#x27; tra i ringraziamenti del manuale.</li>
+</ul>
+<h4>7.2.2 (13 aprile 2026 - 10:00)</h4>
+<ul>
+  <li>+ [Lichess] Migliorato il prompt di gioco: ora sovrascrive la riga con `\r`, visualizza un orologio compatto (es. `38:42 35:11`) aggiornato ogni secondo e mostra un countdown dinamico per il claim di vittoria (`[CLAIM IN s]`). Rimosso il simbolo `&gt;` per risparmiare spazio sui display Braille.</li>
+  <li>+ [Lichess] Report di fine partita: Aggiunta la visualizzazione automatica di un report a fine partita classificata (sezione Lichess), che mostra variazioni Elo, ed eventuali dati di analisi del motore di Lichess se disponibili (Inesattezze, Errori, Svarioni, ACPL).</li>
+</ul>
+<h4>7.2.1 (12 aprile 2026 - 12:35)</h4>
+<ul>
+  <li>+ [I10N] Supporto Linguistico Esteso: Aggiunte traduzioni complete per Portoghese (Brasile), Spagnolo e Francese tramite `translator_tool`.</li>
+  <li>+ [I10N] Gestione Repository: Aggiornato `.gitignore` per includere i file binari delle traduzioni (`.mo`) e il template (`.pot`).</li>
+</ul>
+<h4>7.2.0 (12 aprile 2026 - 11:18)</h4>
+<ul>
+  <li>+ [Lichess] Integrazione Completa Gioco Online: Aggiunta modalità per giocare partite live contro utenti o bot, con supporto per premoves, sincronizzazione orologio real-time e chat integrata.</li>
+  <li>+ [Lichess] Gestione Abbandono: Aggiunto sistema intelligente per rilevare l&#x27;abbandono dell&#x27;avversario (`opponentGone`) e comando `claim` per reclamare vittoria.</li>
+  <li>+ [Lichess] Salvataggio PGN: Interrogazione nativa API Lichess per salvare i PGN ufficiali a fine partita con precisione assoluta.</li>
+  <li>+ [Lichess] Profilatore di Avversari: Aggiunto strumento avanzato per cercare giocatori tramite autocompletamento. Mostra statistiche dettagliate, permette di interagire (messaggi/follow) e filtra le partite in streaming NDJSON per Colore, Risultato, Elo, o ECO, salvando il PGN filtrato in locale e passandolo a Easyfish per l&#x27;analisi.</li>
+  <li>+ [Sistema] Pulizia Automatica: Aggiunto un controllo all&#x27;avvio che rileva file più vecchi di un anno nelle cartelle PGN, TXT e Images, permettendo all&#x27;utente di elencarli, cancellarli o ignorare l&#x27;avviso aggiornando la data di modifica.</li>
+  <li>= [Doc] Aggiunta guida all&#x27;ottimizzazione NVDA per la console in readme.htm e riscrittura voci menu Lichess.</li>
+</ul>
+<h3>Versione 7.1</h3>
+<h4>7.1.0 (10 aprile 2026 - 15:56)</h4>
+<ul>
+  <li>+ [Easyfish] Nuovo comando &#x27;.e#&#x27; (Elo): Permette di impostare la forza del motore tramite Rating Elo diretto (es. .e1200). Il sistema gestisce automaticamente l&#x27;attivazione di `UCI_LimitStrength` e interroga il motore per confermare il valore accettato.</li>
+  <li>= [Easyfish] Aggiornato il comando &#x27;.s#&#x27; (Skill Level): Ora disattiva automaticamente la limitazione Elo per tornare alla modalità di forza classica (0-20).</li>
+  <li>+ [Doc] Manuale Utente (readme.htm) aggiornato alla versione 7.1.0: Aggiunte sezioni dettagliate sulla portabilità (cartella &#x27;engine&#x27;) e sulla spiegazione dei parametri tecnici UCI (Hash, Threads, Skill Level, Move Overhead).</li>
+</ul>
+<h2>Versione 6</h2>
+<h3>Versione 6.5</h3>
+<h4>6.5.1</h4>
+<ul>
+  <li>= [L10N] Aggiornato e compilato il catalogo delle traduzioni in Portoghese/Brasiliano (`pt`). Tutte le nuove stringhe sono ora tradotte.</li>
+  <li>= [L10N] Rigenerati i file compilati `.mo` e aggiornati i file di riferimento `.po` per Inglese (`en`) e Spagnolo (`es`).</li>
+  <li>+ [Doc] Aggiornato il manuale utente (readme.htm) con la spiegazione dettagliata del nuovo comando `.d` (Disegna) di Easyfish.</li>
+</ul>
+<h4>6.5.0</h4>
+<ul>
+  <li>+ [Easyfish] Nuovo comando &#x27;.d&#x27; (Disegna): Permette di aggiungere, listare e cancellare frecce e cerchi colorati (Verde, Rosso, Blu, Giallo) associati alla mossa corrente.</li>
+  <li>+ [PGN] Le forme disegnate vengono salvate nei commenti PGN nel formato standard `[%cal ...]` e `[%csl ...]`, garantendo piena compatibilità con altri software scacchistici.</li>
+  <li>+ [PDF] L&#x27;esportazione `.i` ora include correttamente le frecce ed i cerchi salvati sulla mossa.</li>
+  <li>= [PDF] Fix trasparenza frecce: le grafiche ora vengono renderizzate con il 50% di trasparenza e posizionate *sotto* i pezzi per non coprirli.</li>
+  <li>= [PDF] Fix colore: il giallo standard di python-chess è stato sovrascritto con un vero giallo (`#e6e600`) al posto dell&#x27;arancione.</li>
+  <li>= [PDF] Fix rendering Cavallo Nero: sistemata la regex di colorazione per applicare correttamente i bordi scelti dall&#x27;utente anche ai cavalli neri (che usavano stili CSS inline e colori specifici).</li>
+</ul>
+<h3>Versione 6.4</h3>
+<h4>6.4.1</h4>
+<ul>
+  <li>+ [Easyfish] Esportazione PDF (.i): Ora la scacchiera viene orientata dal punto di vista del giocatore di turno. Aggiunta la lista delle mosse (o il FEN se non ci sono mosse) sotto al commento nel PDF.</li>
+  <li>= [Refactoring] Risolti avvisi Ruff (bare except e import inutilizzati) in Easyfish.</li>
+</ul>
+<h4>6.4.0</h4>
+<ul>
+  <li>+ [Easyfish] Aggiunta l&#x27;esportazione PDF.</li>
+  <li>+ [Engine] Attivazione NNUE.</li>
+</ul>
+<h3>Versione 6.3</h3>
+<h4>6.3.3</h4>
+<ul>
+  <li>= [Refactoring] Pulizia globale del codice tramite Ruff: risolti shadowing di variabili, rimossi import inutilizzati e corretti bare except in Exception.</li>
+  <li>+ [Config] Aggiunta configurazione Ruff (`pyproject.toml`) ottimizzata per l&#x27;accessibilità con display Braille (lunghezza riga 240, tolleranza su istruzioni multiple).</li>
+</ul>
+<h4>6.3.2</h4>
+<ul>
+  <li>= [Auto-Updater] Fix critico per errore `SSL: CERTIFICATE_VERIFY_FAILED` durante il download dell&#x27;aggiornamento.</li>
+</ul>
+<h4>6.3.1</h4>
+<ul>
+  <li>+ [OAA] Aggiunta l&#x27;indicazione testuale &quot;Linea principale:&quot; nel report .txt dopo la chiusura di una variante, per migliorare l&#x27;accessibilità con sintesi vocali.</li>
+  <li>= [Doc] Arricchito il manuale (readme.htm) con un esempio pratico dettagliato sull&#x27;uso del Board Editor in Easyfish.</li>
+</ul>
+<h4>6.3.0</h4>
+<ul>
+  <li>+ [Auto-Updater] Integrato il sistema di aggiornamento automatico all&#x27;avvio (solo per eseguibili Windows .exe). Verifica su GitHub le nuove release e si aggiorna autonomamente.</li>
+</ul>
+<h3>Versione 6.2</h3>
+<h4>6.2.9</h4>
+<ul>
+  <li>= Fix crash causato dal tentativo di salvare il PGN in una cartella &#x27;pgn/&#x27; non esistente nelle installazioni pulite.</li>
+  <li>= Fix apertura manuale (&#x27;readme.htm&#x27;) non trovato dal menu principale se lanciato dalla CLI o da vecchie istanze.</li>
+  <li>= Silenziato il warning di dipendenza obsoleto della libreria `requests` all&#x27;avvio.</li>
+</ul>
+<h4>6.2.8</h4>
+<ul>
+  <li>+ [Easyfish] Aggiunto il prompt di scelta (Sovrascrivi/Aggiungi variante) in caso di inserimento di una mossa divergente.</li>
+  <li>= [Doc] Aggiornato il manuale utente (versione HTML) includendo OAA, Easyfish, e contatti aggiornati.</li>
+  <li>= [Easyfish] Ottimizzazione di default PGN tags (omessi first name se non indicati) e persistenza Date.</li>
+</ul>
+<h4>6.2.7</h4>
+<ul>
+  <li>+ [Easyfish] In Esploratore (.e), il comando &#x27;b&#x27; per mostrare la scacchiera usa ora CustomBoard per uniformità visiva.</li>
+  <li>= [Easyfish] All&#x27;uscita dall&#x27;Esploratore (.), vengono correttamente ripristinati in Easyfish sia la posizione che il tratto attuale, garantendo la fluidità.</li>
+  <li>+ [Easyfish] In Modalità Gioco (.g), aggiunti i controlli di fine partita nativi del motore (stallo, materiale insufficiente, 50/75 mosse, tripla/quintupla ripetizione) coerentemente con l&#x27;arbitraggio.</li>
+</ul>
+<h4>6.2.4</h4>
+<ul>
+  <li>+ [Easyfish] Game Mode (.g): Aggiunta la possibilità di scegliere con quale colore giocare prima dell&#x27;inizio della partita. Se l&#x27;utente seleziona un colore diverso dal turno corrente, il motore esegue la prima mossa in automatico.</li>
+  <li>+ [Easyfish] Board Editor (.be): Aggiornato il comando di pulizia scacchiera da &#x27;--&#x27; a &#x27;.v&#x27; (per omogeneità di interfaccia) e aggiunto il comando &#x27;.i&#x27; per reimpostare la posizione iniziale standard.</li>
+</ul>
+<h4>6.2.2</h4>
+<ul>
+  <li>+ [Easyfish] L&#x27;Esploratore mostra ora dinamicamente nel prompt il livello della variante (es. Lvl0 per la mainline, Lvl1, ecc.), supporta correttamente la numerazione delle mosse ed i puntini di sospensione per il nero.</li>
+  <li>= [Easyfish] Fixato il comando &#x27;z&#x27; in Explorer che ora risale in modo sicuro e preciso al nodo padre della variante attuale.</li>
+  <li>= [Easyfish] Il comando di uscita &#x27;.&#x27; in Easyfish non si limita più a chiudere la partita dalla mossa 1, ma esce sempre se impartito dalla Mainline (Lvl0).</li>
+  <li>= [Easyfish] Introdotto flag &#x27;is_modified&#x27; per limitare i salvataggi automatici in file &#x27;.pgn&#x27; solo a partite effettivamente modificate dall&#x27;utente.</li>
+</ul>
+<h4>6.2.1</h4>
+<ul>
+  <li>= [Easyfish] Migliorata logica di avvio partita contro il motore: ora chiede prima la modalità e omette richieste di tempo inutili.</li>
+  <li>= [Easyfish] Disattivati orologi (.1, .2) in modalità Amichevole (Senza tempo).</li>
+  <li>+ [Easyfish] Aggiunto comando .s# in partita per modificare la forza del motore in tempo reale.</li>
+  <li>= [Easyfish] Formattazione comando .a ottimizzata in partita (singola linea, info compatte).</li>
+  <li>= [Easyfish] Ripristinato il menu aiuti .? in modalità gioco.</li>
+</ul>
+<h4>6.2.0</h4>
+<ul>
+  <li>+ [Easyfish] Nuova Modalità Gioco (.g): Permette di giocare contro il motore a partire dalla posizione corrente.</li>
+  <li>- Gestione completa del tempo (Orologio partita, tempo fisso per mossa, o senza tempo).</li>
+  <li>- Supporto per incremento.</li>
+  <li>- Il motore rispetta i limiti di tempo impostati.</li>
+  <li>- Comandi in partita: .1/.2 (info tempo), .a (analisi), .v (suggerimento variante), . (abbandona).</li>
+  <li>- Integrazione fluida: la partita aggiorna la posizione corrente in Easyfish.</li>
+  <li>+ [Easyfish] Refactoring Analisi: Centralizzata la logica di analisi e formattazione in `analysis_utils.py` per coerenza tra Explorer e Game Mode.</li>
+  <li>+ [Easyfish] Miglioramenti vari all&#x27;interfaccia e alla gestione degli errori.</li>
+</ul>
+<h3>Versione 6.1</h3>
+<h4>6.1.1</h4>
+<ul>
+  <li>+ [Easyfish] Board Editor: Aggiunto comando &#x27;--&#x27; per svuotare la scacchiera (solo Re).</li>
+  <li>+ [Easyfish] Comando .k: Fixato e potenziato il salto mossa. Supporta .k# (Bianco), .k#+ (Bianco), .k#- (Nero). Se non specificato, chiede interattivamente numero e colore. Rimosso output FEN ridondante.</li>
+  <li>+ [Easyfish] Explorer (.e): Navigazione varianti fluida. I comandi &#x27;w&#x27; (precedente) e &#x27;x&#x27; (successiva) funzionano ora direttamente nel menu principale dell&#x27;esploratore, eliminando sottomenu modali.</li>
+  <li>= Fixato un problema con i percorsi dei file di configurazione (settings/) che venivano creati nella directory di lavoro corrente invece che nella root del progetto.</li>
+</ul>
+<h4>6.1.0</h4>
+<ul>
+  <li>+ Modalità &quot;Arbitra&quot;: Rinominata la voce &quot;Gioca&quot; in &quot;Arbitra&quot; nel menu principale.</li>
+  <li>+ Gestione Bandierina Caduta: Quando scade il tempo, l&#x27;applicazione non termina immediatamente ma chiede se continuare senza orologio (per gestione amichevole/didattica).</li>
+  <li>+ Ripristinati comandi orologio: I comandi .b+, .b-, .n+, .n- (aggiungi/togli tempo) sono nuovamente disponibili in pausa.</li>
+  <li>= Migliorato il feedback sonoro in caso di errore nella creazione orologio (suono meno aggressivo).</li>
+  <li>= Aggiunto comando &quot;.*&quot; (risultato sconosciuto) nei suggerimenti di fine partita.</li>
+  <li>= Aggiornamenti minori e fix in Easyfish (Board Editor, PGN handling).</li>
+</ul>
+<h3>Versione 6.0</h3>
+<h4>6.0.0</h4>
+<ul>
+  <li>+ Integrazione completa del progetto Easyfish (interfaccia accessibile per l&#x27;analisi scacchistica) come modulo interno di Orologic.</li>
+  <li>+ Nuova voce di menu &quot;Easyfish&quot; nel menu principale.</li>
+  <li>+ Refactoring strutturale per supportare moduli estendibili in `orologic_modules`.</li>
+  <li>+ Aggiornamento motore: Easyfish utilizza ora il motore configurato centralmente in Orologic.</li>
+  <li>+ Localizzazione: Easyfish è completamente localizzato in italiano (nativo) e supporta il sistema di traduzione di Orologic.</li>
+</ul>
+<h2>Versione 5</h2>
+<h3>Versione 5.2</h3>
+<h4>5.2.0</h4>
+<ul>
+  <li>+ [OAA] Implementato calcolo scientifico della Precisione (0-100%) basato su WDL.</li>
+  <li>+ [OAA] Calcolo Game Accuracy con media ponderata su volatilità e media armonica.</li>
+  <li>+ [OAA] Stima Rating ELO basata sulla precisione della partita.</li>
+  <li>+ Integrazione libreria numpy per calcoli statistici avanzati.</li>
+</ul>
+<h3>Versione 5.1</h3>
+<h4>5.1.11</h4>
+<ul>
+  <li>= Fix crash comandi tempo (.1, .2) dovuto a refactoring moduli.</li>
+  <li>= Migliorato messaggio errore mossa illegale (nascosto FEN tecnico).</li>
+  <li>= Fix suggerimenti mosse in caso di input errato.</li>
+</ul>
+<h4>5.1.9</h4>
+<ul>
+  <li>= Fix critico lista mosse (.l) che mostrava &quot;Err&quot;.</li>
+  <li>= Fix crash su menu &quot;Nomi&quot; per configurazioni precedenti (KeyError analysis).</li>
+  <li>= Ripristinata e migliorata scala sonora in personalizzazione nomi.</li>
+  <li>= OAA: Rimossa copia ridondante PGN negli appunti (ora solo TXT completo).</li>
+</ul>
+<h4>5.1.8</h4>
+<ul>
+  <li>+ [OAA] Aggiunto parametro &quot;Tronca varianti&quot; per limitare la lunghezza delle linee nel report.</li>
+  <li>+ [OAA] Copia automatica del contenuto del report TXT negli appunti.</li>
+  <li>+ [OAA] Migliorato layout report TXT (aggettivo a fine riga, &quot;Matto in X&quot; esplicito, CPL nascosto se 0).</li>
+  <li>+ [Impostazioni] Nuovi parametri default per Tempo Analisi e Multipv.</li>
+  <li>+ [Localizzazione] Etichette di analisi (Svarione, ecc.) personalizzabili e tradotte.</li>
+  <li>= Fix crash su mosse illegali (DescribeMove).</li>
+  <li>= Fix aggiornamento lista orologi dopo creazione/eliminazione.</li>
+  <li>= Fix comando &#x27;w&#x27; in analisi manuale (supporto multipv e formato descrittivo).</li>
+</ul>
+<h4>5.1.1</h4>
+<ul>
+  <li>= Corretta la gestione del file .gitignore per escludere correttamente la cartella engine/.</li>
+  <li>= Rimosso l&#x27;eseguibile di Stockfish dal repository per rispettare i limiti di dimensione di GitHub.</li>
+  <li>= Aggiornata la versione e la data di rilascio.</li>
+</ul>
+<h4>5.1.0</h4>
+<ul>
+  <li>+ Implementata la procedura di download e installazione automatica di Stockfish tramite GitHub API.</li>
+  <li>+ Refactoring del modulo engine per supportare l&#x27;installazione dinamica.</li>
+</ul>
+<h2>Versione 4</h2>
+<h3>Versione 4.11</h3>
+<h4>4.11.111</h4>
+<ul>
+  <li>= Implementato &#x27;paracadute di sicurezza&#x27; per la creazione di nuovi orologi: validazione rigorosa dei tempi e prevenzione di input errati.</li>
+  <li>= Riscritta completamente l&#x27;Analisi Automatica (OAA): ora esegue un&#x27;analisi approfondita e corretta, con multipv garantito e calcolo preciso della perdita di centipawn (CPL).</li>
+  <li>= Migliorato il report TXT dell&#x27;analisi automatica: indentazione ad albero leggibile per le varianti e statistiche dettagliate.</li>
+  <li>= Ottimizzata l&#x27;esperienza utente (UX) per l&#x27;analisi: spostata la configurazione delle soglie nel menu Impostazioni, riducendo le domande all&#x27;avvio.</li>
+  <li>= Resa statica la visualizzazione della lista orologi per evitare modifiche accidentali.</li>
+</ul>
+<h4>4.11.83</h4>
+<ul>
+  <li>= Refactoring completo del codice: suddivisione in moduli (orologic_modules) per migliorare manutenibilità e stabilità.</li>
+  <li>= Corretta gestione aggiornamento motore Stockfish (chiusura forzata processi attivi prima del download).</li>
+  <li>= Integrata logica ricorsiva per report analisi (da ramo dev).</li>
+  <li>= Migliorata gestione localizzazione e impostazioni.</li>
+</ul>
+<h3>Versione 4.10</h3>
+<h4>4.10.x</h4>
+<ul>
+  <li>+ Aggiunta possibilità di riprendere una partita interrotta per mancata chiusura dell&#x27;applicazione, e.s. interruzione di corrente. L&#x27;autosave va attivato dalle impostazioni.</li>
+  <li>+ Aggiunta una struttura di cartelle per mettere ordine fra i file di orologic</li>
+  <li>+ Aggiunta l&#x27;autoanalisi di una partita</li>
+  <li>+ Aggiunto suffisso OAA (orologic Analisi Automatica) prima dei commenti inseriti da questa funzionalità</li>
+  <li>+ OAA ora riporta correttamente le linee di matto.</li>
+  <li>+ Arricchito il txt prodotto da OAA, ora è molto più ricco di informazioni.</li>
+  <li>+ Corretto un piccolo bug per cui non veniva più chiesto se si voleva analizzare la partita, a fine arbitraggio</li>
+</ul>
+<h3>Versione 4.7</h3>
+<h4>4.7.3</h4>
+<ul>
+  <li>+ Aggiunto un timeout che richiede la pressione di un tasto per chiudere il programma.</li>
+  <li>+ Traduzione portoghese di Marcos Schllosser.</li>
+</ul>
+<h4>4.7.1</h4>
+<ul>
+  <li>+ Risolto un grave problema per cui Orologic non riusciva a salvare le proprie impostazioni.</li>
+  <li>= modificato il compotamento alla voce motore del menù principale. Ora l&#x27;utente può decidere se cercare un motore, configurarne uno o scaricare Stockfish</li>
+  <li>= La ricerca del motore non avviene più in automatico al lancio dell&#x27;applicazione.</li>
+  <li>+ Corretti alcuni problemi di visualizzazione degli orologi quando il menù si trova in forma numerata anzicché a parole chiave.</li>
+  <li>+ Migliorata comprensibilità nella lista degli orologi salvati.</li>
+  <li>+ Corretta la mancata cancellazione del file autosave.pgn quando orologic.py è in versione compilata</li>
+  <li>+ Ora la configurazione del motore funzionerà anche su versioni portatili in chiavette USB</li>
+  <li>+ Aggiunto tempo rimanente bianco e nero al sommario txt</li>
+</ul>
+<h3>Versione 4.6</h3>
+<h4>4.6.7</h4>
+<ul>
+  <li>+ Inserita nuova impostazione, salvataggio automatico</li>
+  <li>+ segnale acustico su apertura rilevata</li>
+  <li>- Rimosse impostazioni default PGN da impostazioni che risultavano ormai obsolete</li>
+  <li>+ Aggiunta l&#x27;impostazione per avere i numeri al posto delle parole chiave nei menu.</li>
+  <li>= leggera modifica alle voci del menu principale</li>
+  <li>+ Corretto un problema per cui a volte gli orologi non venivano eliminati dalla collezione</li>
+  <li>+ Aggiornata la guida HTML alla versione 4.6.7</li>
+</ul>
+<h3>Versione 4.5</h3>
+<h4>4.5.0</h4>
+<ul>
+  <li>+ Ora il motore viene cercato in tutto il computer. Orologic presenta all&#x27;utente tutti quegli eseguibili che sembrano essere motori e l&#x27;utente può scegliere se usarne uno, non usarne uno oppure scaricare Stockfish</li>
+  <li>+ Implementata la procedura per scaricare, decomprimere, salvare ed usare Stockfish</li>
+  <li>+ Aggiunta richiesta di conferma prima di cancellare un orologio</li>
+  <li>+ inglese e spagnolo, oltre alla lingua madre che è l&#x27;italiano</li>
+  <li>+ Aggiunto supporto multilingue via gettext</li>
+</ul>
+<h2>Versione 3</h2>
+<h3>Versione 3.20</h3>
+<h4>3.20.2</h4>
+<ul>
+  <li>Corretto un errore che si verificava sui comandi virgola per la ricerca dei pezzi: ,n ora funzionano di nuovo correttamente</li>
+</ul>
+<h4>3.20.1</h4>
+<ul>
+  <li>+ Aggiunta la gestione delle partite Fisher Random 960</li>
+  <li>+ Riscritta la funzione che descrive una casa, e.g. -d3, ora molto più descrittiva ed utile.</li>
+  <li>+ Introdotta la possibilità di personalizzare nomi di pezzi, colonne ed alcune altre parole che formano la descrizione verbosa delle mosse</li>
+  <li>+ Aggiunto il salvataggio automatico di un riepilogo della partita arbitrata in formato testo</li>
+  <li>= La richiesta di analisi post-arbitraggio avviene solo se sono state giocate almeno 4 mosse complete, 8 semi-mosse</li>
+</ul>
+<h3>Versione 3.16</h3>
+<h4>3.16.13</h4>
+<ul>
+  <li>Modificato il comando &quot;b&quot; in fase analisi. Ora attiva/disattiva la lettura automatica dei commenti mentre si scorrono le mosse. Un segnale acustico indica la presenza di un commento, così come un segno &quot;-&quot; appare dopo la notazione SAN</li>
+  <li>Eliminate ancune visualizzazioni utili per il debug</li>
+  <li>Corretta la gestione delle catture en-passant</li>
+</ul>
+<h4>3.16.10</h4>
+<ul>
+  <li>Corretta, e resa assoluta, la visualizzazione delle statistiche WDL, comando t, in analisi</li>
+  <li>Corretta la descrizione verbosa della mossa in caso di cattura di un pezzo da parte di un pedone</li>
+  <li>Corretto un doppio &quot;:&quot; al prompt &quot;Start&quot; in fase Analisi</li>
+  <li>Corretto l&#x27;inserimento dei commenti in fase analisi</li>
+  <li>Eliminato un bug per cui la copia negli appunti di un file modificato in analisi, non avveniva</li>
+  <li>Corretta la visualizzazione della linea di matto rilevata dal motore, nelle funzioni di analisi dai comandi q, w, e ed r.</li>
+  <li>Corretta la valutazione riportata in Centipawn (CP) in maniera che sia sempre assoluta: positiva per il bianco e negativa per il nero e non relativa al turno di mossa</li>
+  <li>Sistemati 2 segnali acustici per i comandi -traversa e -colonna</li>
+</ul>
+<h4>3.16.0</h4>
+<ul>
+  <li>+ Aggiunte notazioni NAG e lettura atuomatica delle stesse. Le notazioni valide sono: =, ?, !, ??, !!, !? e ?!</li>
+</ul>
+<h3>Versione 3.15</h3>
+<h4>3.15.1</h4>
+<ul>
+  <li>= Corretto un problema che causava un errore quando si cercava di cambiare volume agli effetti audio</li>
+</ul>
+<h4>3.15.0</h4>
+<ul>
+  <li>= Aumentato il tempo di attesa per inizio partita</li>
+  <li>+ Aggiunta segnalazione acustica su disambiguazione mossa</li>
+  <li>+ Segnalazione acustica per cambio volume</li>
+  <li>+ implementata correzione maiuscole automatiche nei nomi dei giocatori</li>
+  <li>+ Aggiunto salvataggio automatico negli appunti a fine arbitraggio e a fine analisi</li>
+  <li>+ Aggiunto altro set di segnalazioni acustiche, ora dovrebbero essere coperte praticamente tutte le azioni dell&#x27;utente ed i messaggi di errore</li>
+  <li>= Piccola modifica al prompt di inizio partita</li>
+  <li>+ Aggiunti molti nuovi suoni</li>
+  <li>= Migliorato l&#x27;agoritmo di rilevazione codici ECO e varianti</li>
+  <li>= Corretto un problema di visualizzazione prompt quando tocca al nero e sono presenti rami varianti</li>
+  <li>= Migliorata visualizzazione allarmi</li>
+</ul>
+<h3>Versione 3.14</h3>
+<h4>3.14.1</h4>
+<ul>
+  <li>+ Aggiunto commento automatico in caso di annullamento mosse</li>
+  <li>+ Migliorata la scrittura del ControlTime Tag nel pgn, ora riporta anche eventuali fasi ed incrementi</li>
+  <li>= Importante correzione sul comando .q di annullamento mossa. Ora dovrebbe funzionare tutto correttamente</li>
+  <li>+ Aggiunta lettura automatica commenti su tutti i movimenti mossa, da A ad H, testare.</li>
+</ul>
+<h3>Versione 3.10</h3>
+<h4>3.10.4</h4>
+<ul>
+  <li>= Cambiamento nel comando w in analisi, ora la bestline è in formato descrittivo.</li>
+  <li>+ Bestmove anche in formato descrittivo</li>
+  <li>+ Corretto un problema di visualizzazione messaggio di disambiguazione mossa</li>
+</ul>
+<h4>3.10.1</h4>
+<ul>
+  <li>= Migliorata scelta multigames dagli appunti</li>
+  <li>+ Ottimizzazione dell&#x27;eseguibile, migliorata velocità di caricamento</li>
+</ul>
+<h3>Versione 3.9</h3>
+<h4>3.9.12</h4>
+<ul>
+  <li>= inserita gestione multigame dagli appunti.</li>
+</ul>
+<h4>3.9.11</h4>
+<ul>
+  <li>= Modificati alcuni suoni</li>
+  <li>+ Aggiunta una pausa dopo la visualizzazione orologi per dare il tempo all&#x27;utente di consultare la lista</li>
+  <li>= Risolto un problema per cui non si salvavano gli allarmi.</li>
+</ul>
+<h4>3.9.8</h4>
+<ul>
+  <li>+ Tradotta guida in spagnolo, francese e inglese</li>
+  <li>+ Guida aggiornata con gli ultimi cambiamenti introdotti.</li>
+</ul>
+<h4>3.9.6</h4>
+<ul>
+  <li>= Semplificata scelta e cancellazione orologi</li>
+  <li>= modificata visualizzazione menu principale</li>
+</ul>
+<h4>3.9.4</h4>
+<ul>
+  <li>= Eliminata una stringa di debug sulla memorizzazione in  cache di una posizione</li>
+  <li>= Corretto errore di ortografia</li>
+</ul>
+<h4>3.9.1</h4>
+<ul>
+  <li>+ Aggiunta classificazione ECO</li>
+  <li>= salvataggio automatico del volume effetti audio</li>
+</ul>
+<h3>Versione 3.8</h3>
+<h4>3.8.1</h4>
+<ul>
+  <li>+ Aggiunto volume per effetti audio globali</li>
+  <li>+ Lista mosse giocate nei dot_commands</li>
+  <li>+ Ampliato il salvataggio dei parametri di default del pgn</li>
+  <li>= corretta voce di menù per impostazioni pgn</li>
+</ul>
+<h3>Versione 3.5</h3>
+<h4>3.5.2</h4>
+<ul>
+  <li>+ Aiuto su mosse illegali</li>
+  <li>= Corretto un piccolo errore di visualizzazione nell&#x27;età di Orologic</li>
+  <li>= Risolto un problema per cui non si salvavano gli allarmi.</li>
+</ul>
+<h3>Versione 3.4</h3>
+<h4>3.4.9</h4>
+<ul>
+  <li>+ aggiunti remaining tag nel pgn</li>
+  <li>+ non vengono accettate mosse se l&#x27;orologio è in pausa</li>
+  <li>+ migliorata richiesta di analisi partita post-arbitraggio</li>
+  <li>+ Aggiunto comando .5</li>
+  <li>+ Migliorato lo starter del tempo</li>
+  <li>+ Corretto messaggio di benvenuto ed aggiunto messaggio di commiato</li>
+  <li>+ Sistemata la bestmove nel comando w</li>
+  <li>+ Aggiornata la documentazione. ora in html.</li>
+  <li>- readme.md</li>
+  <li>+ Aggiunti avvisi sul numero di posizioni salvate in chache</li>
+  <li>+ svuotamento cache al cambio di analisis_time e multipv</li>
+</ul>
+<h3>Versione 3.2</h3>
+<h4>3.2.7</h4>
+<ul>
+  <li>+ Ora la valutazione della posizione viene calcolata solo quando questa cambia.</li>
+  <li>+ Corretta valutazione CP inserita nei commenti</li>
+  <li>+ Migliorato il sistema di eliminazione commenti dal pgn.</li>
+  <li>+ Corretta valutazione in CP in caso di matto del bianco</li>
+  <li>- Risultato doppio in nome file</li>
+  <li>+ Aggiunto tag annotator in file commentati.</li>
+  <li>+ Corretto un problema nella richiesta nome file commentato</li>
+  <li>+ Correzione del navigatore di varianti.</li>
+</ul>
+<h3>Versione 3.1</h3>
+<h4>3.1.5</h4>
+<ul>
+  <li>+ inserite info statistiche in analisi, comando e</li>
+  <li>+ Corretto un problema in comando k analisi</li>
+  <li>+ Corretta una voce di menù.</li>
+</ul>
+<h4>3.1.2</h4>
+<ul>
+  <li>+ Correzioni alla smart inspection.</li>
+</ul>
+<h4>3.1.0</h4>
+<ul>
+  <li>+ Inserita modalità SmartInspection</li>
+</ul>
+</body>
+</html>

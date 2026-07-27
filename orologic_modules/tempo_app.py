@@ -633,7 +633,7 @@ def _salva_report_tempo(
 ):
     """Salva il report testuale della sessione in formato Tempo+data+ora.txt."""
     now = datetime.datetime.now()
-    data_ora_str = now.strftime("%d/%m/%Y %H:%M:%S")
+    data_ora_str = config.format_date_italian(now)
 
     file_content = _("Sessione Orologio - Tempo\n")
     file_content += "================================\n"
