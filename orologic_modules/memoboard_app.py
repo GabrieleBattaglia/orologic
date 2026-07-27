@@ -36,7 +36,7 @@ mnu = {
     "classifiche": _("Mostra la classifica"),
     ".": _("per tornare ad Orologic"),
 }
-log = None
+
 
 board_set = set()
 for y in "12345678":
@@ -195,14 +195,134 @@ def Prox(sq, kind, range_limit):
     return psq
 
 
-def report_and_update_scores(all_scores, exercise_name, rpt, score, duration, wins):
+EX_NAME_MAP = {
+    "colors": "colori",
+    "knights": "cavalli",
+    "bishops": "alfieri",
+    "mixed": "mista",
+}
+
+
+def compute_time_stats(timeslist):
     """
-    Mostra il report della sessione.
-    Se il punteggio si qualifica per la Top 10, chiede il nome utente.
-    Se l'utente è già presente, confronta il punteggio con il suo record precedente e chiede se sovrascrivere in caso sia peggiore.
+    Calcola le statistiche sui tempi di risposta:
+    - Minimo, massimo e medio
+    - Suddivisione in quartili cronologici con medie e variazioni percentuali (indice di stanchezza)
+    """
+    if not timeslist:
+        return None
+
+    min_t = min(timeslist)
+    max_t = max(timeslist)
+    avg_t = sum(timeslist) / len(timeslist)
+
+    n = len(timeslist)
+    quartiles_info = []
+
+    if n >= 4:
+        chunk_size = n / 4.0
+        chunks = []
+        for i in range(4):
+            start_idx = int(round(i * chunk_size))
+            end_idx = int(round((i + 1) * chunk_size))
+            if start_idx == end_idx:
+                end_idx = min(start_idx + 1, n)
+            chunk = timeslist[start_idx:end_idx]
+            chunks.append((start_idx + 1, end_idx, chunk))
+
+        first_chunk = chunks[0][2]
+        q1_avg = sum(first_chunk) / len(first_chunk) if first_chunk else avg_t
+
+        for i, (q_start, q_end, chunk) in enumerate(chunks, 1):
+            if chunk:
+                q_avg = sum(chunk) / len(chunk)
+                pct_var = ((q_avg - q1_avg) / q1_avg) * 100 if q1_avg > 0 else 0
+                quartiles_info.append(
+                    {
+                        "quartile": i,
+                        "start_q": q_start,
+                        "end_q": q_end,
+                        "count": len(chunk),
+                        "avg": q_avg,
+                        "pct_var": pct_var,
+                    }
+                )
+
+    return {
+        "min": min_t,
+        "max": max_t,
+        "avg": avg_t,
+        "quartiles": quartiles_info,
+    }
+
+
+def format_time_stats_string(time_stats):
+    if not time_stats:
+        return ""
+
+    lines = []
+    lines.append(_("  Statistiche tempi di risposta:"))
+    lines.append(
+        _(
+            "    - Tempo minimo: {min:.2f}s | Massimo: {max:.2f}s | Medio: {avg:.2f}s"
+        ).format(
+            min=time_stats["min"],
+            max=time_stats["max"],
+            avg=time_stats["avg"],
+        )
+    )
+
+    quartiles = time_stats.get("quartiles", [])
+    if quartiles:
+        lines.append(_("    - Analisi stanchezza per quartili cronologici:"))
+        for q in quartiles:
+            idx = q["quartile"]
+            start_q = q["start_q"]
+            end_q = q["end_q"]
+            q_avg = q["avg"]
+            pct_var = q["pct_var"]
+
+            if idx == 1:
+                var_str = _("riferimento iniziale")
+            else:
+                sign = "+" if pct_var >= 0 else ""
+                var_str = f"{sign}{pct_var:.1f}% " + _("rispetto a Q1")
+
+            lines.append(
+                _(
+                    "        Q{idx} (domande {start_q}-{end_q}): media {q_avg:.2f}s ({var_str})"
+                ).format(
+                    idx=idx,
+                    start_q=start_q,
+                    end_q=end_q,
+                    q_avg=q_avg,
+                    var_str=var_str,
+                )
+            )
+    return "\n".join(lines)
+
+
+def report_and_update_scores(
+    all_scores,
+    exercise_name,
+    rpt,
+    score,
+    duration,
+    wins,
+    session_logs=None,
+    exercises_played=None,
+    save_session_callback=None,
+    timeslist=None,
+):
+    """
+    Mostra il report della sessione e aggiorna la classifica.
     """
     score_per_minute = (score / duration) * 60 if duration > 0 else 0
     average_time = duration / rpt if rpt > 0 else 0
+    ex_label = EX_NAME_MAP.get(exercise_name, exercise_name)
+
+    time_stats = compute_time_stats(timeslist)
+    time_stats_str = format_time_stats_string(time_stats)
 
     print(_("\n--- Risultati Esercizio ---"))
     print(
@@ -218,16 +338,44 @@ def report_and_update_scores(all_scores, exercise_name, rpt, score, duration, wi
             score_per_minute=score_per_minute
         )
     )
+    if time_stats_str:
+        print(time_stats_str)
 
+    if exercises_played is not None:
+        if ex_label not in exercises_played:
+            exercises_played.append(ex_label)
+
+    # 1. Se le ripetizioni sono inferiori a MIN_REPETITIONS_FOR_LEADERBOARD
     if exercise_name != "mixed" and rpt < MIN_REPETITIONS_FOR_LEADERBOARD:
         print(
             _(
                 "\nNota: Per qualificare un punteggio in classifica occorre eseguire almeno {min_rpt} domande (ne hai svolte {rpt})."
             ).format(min_rpt=MIN_REPETITIONS_FOR_LEADERBOARD, rpt=rpt)
         )
+        if session_logs is not None:
+            date_str = config.format_date_italian()
+            log_entry = _(
+                "Esercizio '{exercise_name}' ({date_str}):\n"
+                "  Risposte corrette: {wins}/{rpt} in {duration:.1f}s. Punti: {score:.0f} (Perf: {score_per_minute:.0f} p/min) - Non qualificato per la classifica (meno di {min_rpt} domande)."
+            ).format(
+                exercise_name=ex_label,
+                date_str=date_str,
+                wins=wins,
+                rpt=rpt,
+                duration=duration,
+                score=score,
+                score_per_minute=score_per_minute,
+                min_rpt=MIN_REPETITIONS_FOR_LEADERBOARD,
+            )
+            if time_stats_str:
+                log_entry += "\n" + time_stats_str
+            session_logs.append(log_entry)
+            if save_session_callback:
+                save_session_callback()
         key(prompt=_("\nPremi un tasto per procedere..."))
         return
 
+    # 2. Verifica qualificazione Top 10
     ranking_metric = "score" if exercise_name == "mixed" else "score_per_minute"
     new_performance = score if exercise_name == "mixed" else score_per_minute
 
@@ -264,6 +412,7 @@ def report_and_update_scores(all_scores, exercise_name, rpt, score, duration, wi
     ]
     no_record_jingle = ["a4", 0.12, 0, config.VOLUME, "e4", 0.20, 0, config.VOLUME]
 
+    username = _("Anonimo")
     if qualifies:
         Acusticator(new_record_jingle, kind=1)
         print(
@@ -338,25 +487,26 @@ def report_and_update_scores(all_scores, exercise_name, rpt, score, duration, wi
             )[:MAX_LEADERBOARD_ENTRIES]
             all_scores[exercise_name] = sorted_updated
             save_scores(all_scores)
-
-            if log:
-                log.write(
-                    _("\n## Esercizio '{exercise_name}' per {username}:").format(
-                        exercise_name=exercise_name, username=username
-                    )
-                )
-                log.write(
-                    _(
-                        "\nRisposte corrette: {wins}/{rpt} in {duration:.1f}s. Punti: {score:.0f}. Performance: {score_per_minute:.0f} p/min. [QUALIFICATO]"
-                    ).format(
-                        wins=wins,
-                        rpt=rpt,
-                        duration=duration,
-                        score=score,
-                        score_per_minute=score_per_minute,
-                    )
-                )
             print(_("\nRisultato salvato in classifica con successo!"))
+
+        if session_logs is not None:
+            date_str = config.format_date_italian()
+            log_entry = _(
+                "Esercizio '{exercise_name}' per {username} ({date_str}):\n"
+                "  Risposte corrette: {wins}/{rpt} in {duration:.1f}s. Punti: {score:.0f}. Performance: {score_per_minute:.0f} p/min. [QUALIFICATO]"
+            ).format(
+                exercise_name=ex_label,
+                username=username,
+                date_str=date_str,
+                wins=wins,
+                rpt=rpt,
+                duration=duration,
+                score=score,
+                score_per_minute=score_per_minute,
+            )
+            if time_stats_str:
+                log_entry += "\n" + time_stats_str
+            session_logs.append(log_entry)
     else:
         Acusticator(no_record_jingle, kind=1)
         print(
@@ -364,16 +514,26 @@ def report_and_update_scores(all_scores, exercise_name, rpt, score, duration, wi
                 "\nOttima prova! Purtroppo questo punteggio non è sufficiente per entrare nella Top 10."
             )
         )
-        if log:
-            log.write(
-                _(
-                    "\n## Esercizio '{exercise_name}': Punteggio di {score:.0f} (Perf: {score_per_minute:.0f} p/min) non qualificato."
-                ).format(
-                    exercise_name=exercise_name,
-                    score=score,
-                    score_per_minute=score_per_minute,
-                )
+        if session_logs is not None:
+            date_str = config.format_date_italian()
+            log_entry = _(
+                "Esercizio '{exercise_name}' ({date_str}):\n"
+                "  Risposte corrette: {wins}/{rpt} in {duration:.1f}s. Punti: {score:.0f} (Perf: {score_per_minute:.0f} p/min) - Non qualificato."
+            ).format(
+                exercise_name=ex_label,
+                date_str=date_str,
+                wins=wins,
+                rpt=rpt,
+                duration=duration,
+                score=score,
+                score_per_minute=score_per_minute,
             )
+            if time_stats_str:
+                log_entry += "\n" + time_stats_str
+            session_logs.append(log_entry)
+
+    if save_session_callback:
+        save_session_callback()
 
     key(prompt=_("\nPremi un tasto per procedere..."))
 
@@ -609,9 +769,10 @@ def ExKnights(ripetitions):
         if singlescore < 0:
             singlescore = 0
 
+        elapsed_q = time.time() - now
+        timeslist.append(elapsed_q)
         correct = user_says_yes == yes
         if correct:
-            timeslist.append(time.time() - now)
             wins += 1
             score += singlescore
             scoreslist.append(singlescore)
@@ -701,9 +862,10 @@ def ExBishops(ripetitions):
         if singlescore < 0:
             singlescore = 0
 
+        elapsed_q = time.time() - now
+        timeslist.append(elapsed_q)
         correct = user_says_yes == yes
         if correct:
-            timeslist.append(time.time() - now)
             wins += 1
             score += singlescore
             scoreslist.append(singlescore)
@@ -748,6 +910,8 @@ def ExMixed(ripetitions):
     wins = 0
     scoretime = 15
     timeex = time.time()
+    timeslist = []
+    scoreslist = []
     errors_list = []
     knight_moves = [
         (1, 2),
@@ -785,7 +949,9 @@ def ExMixed(ripetitions):
                 elif s in ("\x1b", "esc"):
                     user_says_white = False
                     break
-            singlescore = (scoretime * 1000) - (time.time() - now) * 1000
+            elapsed_q = time.time() - now
+            timeslist.append(elapsed_q)
+            singlescore = (scoretime * 1000) - (elapsed_q * 1000)
             if singlescore < 0:
                 singlescore = 0
 
@@ -794,6 +960,7 @@ def ExMixed(ripetitions):
             if correct:
                 wins += 1
                 score += singlescore
+                scoreslist.append(singlescore)
             else:
                 errors_list.append(
                     {
@@ -846,7 +1013,9 @@ def ExMixed(ripetitions):
                 elif s in ("\x1b", "esc"):
                     user_says_yes = False
                     break
-            singlescore = (scoretime * 1000) - (time.time() - now) * 1000
+            elapsed_q = time.time() - now
+            timeslist.append(elapsed_q)
+            singlescore = (scoretime * 1000) - (elapsed_q * 1000)
             if singlescore < 0:
                 singlescore = 0
 
@@ -854,6 +1023,7 @@ def ExMixed(ripetitions):
             if correct:
                 wins += 1
                 score += singlescore
+                scoreslist.append(singlescore)
             else:
                 errors_list.append(
                     {
@@ -900,7 +1070,9 @@ def ExMixed(ripetitions):
                 elif s in ("\x1b", "esc"):
                     user_says_yes = False
                     break
-            singlescore = (scoretime * 1000) - (time.time() - now) * 1000
+            elapsed_q = time.time() - now
+            timeslist.append(elapsed_q)
+            singlescore = (scoretime * 1000) - (elapsed_q * 1000)
             if singlescore < 0:
                 singlescore = 0
 
@@ -908,6 +1080,7 @@ def ExMixed(ripetitions):
             if correct:
                 wins += 1
                 score += singlescore
+                scoreslist.append(singlescore)
             else:
                 errors_list.append(
                     {
@@ -937,7 +1110,7 @@ def ExMixed(ripetitions):
         ripetitions -= 1
 
     duration = time.time() - timeex
-    return score, duration, wins, errors_list
+    return score, scoreslist, duration, timeslist, wins, errors_list
 
 
 def ExColors(ripetitions):
@@ -978,10 +1151,11 @@ def ExColors(ripetitions):
         if singlescore < 0:
             singlescore = 0
 
+        elapsed_q = time.time() - now
+        timeslist.append(elapsed_q)
         correct_is_white = get_square_color(sq) == "w"
         correct = user_says_white == correct_is_white
         if correct:
-            timeslist.append(time.time() - now)
             wins += 1
             score += singlescore
             scoreslist.append(singlescore)
@@ -1018,23 +1192,66 @@ def ExColors(ripetitions):
 
 
 def main():
-    global log
     start_memoboard_time = time.time()
+    session_start_dt = datetime.datetime.now()
     all_scores = load_scores()
+    session_logs = []
+    exercises_played = []
+    current_session_filepath = None
 
-    release_date_str = (
-        config.RELEASE_DATE.strftime("%d/%m/%Y")
-        if isinstance(config.RELEASE_DATE, datetime.datetime)
-        else str(config.RELEASE_DATE)
-    )
+    def save_current_session_report():
+        nonlocal current_session_filepath
+        if not session_logs:
+            return
+        types_str = "_".join(exercises_played) if exercises_played else "sessione"
+        save_dir = config.percorso_salvataggio("txt")
+        os.makedirs(save_dir, exist_ok=True)
+
+        timestamp_str = session_start_dt.strftime("%Y%m%d%H%M%S")
+        filename = config.sanitize_filename(
+            f"Memoboard_{types_str}_{timestamp_str}.txt"
+        )
+        target_path = os.path.join(save_dir, filename)
+
+        if (
+            current_session_filepath
+            and current_session_filepath != target_path
+            and os.path.exists(current_session_filepath)
+        ):
+            try:
+                os.remove(current_session_filepath)
+            except Exception:
+                pass
+        current_session_filepath = target_path
+
+        endtime = time.time() - start_memoboard_time
+        header = (
+            "======================================================================\n"
+            f"Report Sessione MemoBoard (Orologic V{config.VERSION})\n"
+            f"Data e ora: {config.format_date_italian(session_start_dt)}\n"
+            "======================================================================\n\n"
+        )
+        footer = (
+            "\n\n======================================================================\n"
+            f"Fine sessione MemoBoard. Tempo di esecuzione: {int(endtime / 60)} minuti e {int(endtime % 60)} secondi.\n"
+            "======================================================================"
+        )
+        report_content = header + "\n\n".join(session_logs) + footer
+
+        try:
+            with open(current_session_filepath, "w", encoding="utf-8") as f:
+                f.write(report_content)
+            print(
+                _("\n[Report salvato in: txt/{filename}]").format(
+                    filename=os.path.basename(current_session_filepath)
+                )
+            )
+        except Exception as e:
+            print(_("Errore durante il salvataggio del report: {e}").format(e=e))
 
     print(
         _(
-            "Benvenuto in MemoBoard (v{version} - {release_date}).\nAutori: {programmer}\nIl tuo assistente per giocare a scacchi senza scacchiera.\nQuesta utility ti aiuta a visualizzare la scacchiera e a diventare un giocatore migliore."
-        ).format(
-            version=config.VERSION,
-            release_date=release_date_str,
-            programmer=config.PROGRAMMER,
+            "Benvenuto in MemoBoard.\nIl tuo assistente per giocare a scacchi senza scacchiera.\nQuesta utility ti aiuta a visualizzare la scacchiera e a diventare un giocatore migliore."
         )
     )
     Acusticator(
@@ -1053,13 +1270,6 @@ def main():
             config.VOLUME,
         ],
         kind=1,
-    )
-
-    log_dir = config.percorso_salvataggio("txt")
-    os.makedirs(log_dir, exist_ok=True)
-    log = open(os.path.join(log_dir, "memoboard.txt"), "a+", encoding="utf-8")
-    log.write(
-        f"\n# {time.asctime()} Ciao, Memoboard (Orologic {config.VERSION}) si avvia."
     )
 
     print(_("\nPronto ad allenarti? Scegli un esercizio dal menu."))
@@ -1100,7 +1310,18 @@ def main():
                         ).format(q=q, ua=ua, ca=ca)
                     )
                 key(_("\nPremi un tasto per procedere alla classifica..."))
-            report_and_update_scores(all_scores, "colors", rpt, score, duration, wins)
+            report_and_update_scores(
+                all_scores,
+                "colors",
+                rpt,
+                score,
+                duration,
+                wins,
+                session_logs,
+                exercises_played,
+                save_current_session_report,
+                timeslist,
+            )
 
         elif s == "cavalli":
             print(
@@ -1133,7 +1354,18 @@ def main():
                         ).format(q=q, ua=ua, ca=ca)
                     )
                 key(_("\nPremi un tasto per procedere alla classifica..."))
-            report_and_update_scores(all_scores, "knights", rpt, score, duration, wins)
+            report_and_update_scores(
+                all_scores,
+                "knights",
+                rpt,
+                score,
+                duration,
+                wins,
+                session_logs,
+                exercises_played,
+                save_current_session_report,
+                timeslist,
+            )
 
         elif s == "alfieri":
             print(
@@ -1166,7 +1398,18 @@ def main():
                         ).format(q=q, ua=ua, ca=ca)
                     )
                 key(_("\nPremi un tasto per procedere alla classifica..."))
-            report_and_update_scores(all_scores, "bishops", rpt, score, duration, wins)
+            report_and_update_scores(
+                all_scores,
+                "bishops",
+                rpt,
+                score,
+                duration,
+                wins,
+                session_logs,
+                exercises_played,
+                save_current_session_report,
+                timeslist,
+            )
 
         elif s == "classifiche":
             Acusticator(
@@ -1202,7 +1445,7 @@ def main():
             )
 
             key(prompt=_("Sei pronto per iniziare? Via!"))
-            score, duration, wins, errors_list = ExMixed(100)
+            score, scoreslist, duration, timeslist, wins, errors_list = ExMixed(100)
             rpt = 100
 
             print(_("\n--- SFIDA MISTA COMPLETATA! ---"))
@@ -1229,7 +1472,18 @@ def main():
                         )
 
                 key(_("\nPremi un tasto per procedere alla classifica..."))
-            report_and_update_scores(all_scores, "mixed", rpt, score, duration, wins)
+            report_and_update_scores(
+                all_scores,
+                "mixed",
+                rpt,
+                score,
+                duration,
+                wins,
+                session_logs,
+                exercises_played,
+                save_current_session_report,
+                timeslist,
+            )
 
     save_scores(all_scores)
     Acusticator(
@@ -1251,15 +1505,24 @@ def main():
         sync=True,
     )
     endtime = time.time() - start_memoboard_time
-    print(
-        _(
-            "\nMemoBoard terminato. Tempo di esecuzione: {minuti} minuti e {secondi} secondi.\n\tControlla txt/memoboard.txt. Arrivederci!"
-        ).format(minuti=int(endtime / 60), secondi=int(endtime % 60))
-    )
-    log.write(
-        f"\n### Arrivederci da Memoboard, eseguito per {int(endtime / 60)} minuti e {int(endtime % 60)} secondi.\n"
-    )
-    log.close()
+
+    if session_logs:
+        save_current_session_report()
+        print(
+            _(
+                "\nMemoBoard terminato. Tempo di esecuzione: {minuti} minuti e {secondi} secondi.\n\tReport salvato in: txt/{filename}. Arrivederci!"
+            ).format(
+                minuti=int(endtime / 60),
+                secondi=int(endtime % 60),
+                filename=os.path.basename(current_session_filepath),
+            )
+        )
+    else:
+        print(
+            _(
+                "\nMemoBoard terminato. Tempo di esecuzione: {minuti} minuti e {secondi} secondi. Arrivederci!"
+            ).format(minuti=int(endtime / 60), secondi=int(endtime % 60))
+        )
 
 
 if __name__ == "__main__":

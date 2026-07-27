@@ -708,7 +708,7 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
     )
     footer_text += "--------------------------------\n"
     footer_text += _("File generato il: {datetime}\n").format(
-        datetime=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        datetime=config.format_date_italian()
     )
     footer_text += _("Report generato da Orologic V{version} - {programmer}\n").format(
         version=version.VERSION, programmer=version.PROGRAMMER

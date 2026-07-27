@@ -148,7 +148,7 @@ def format_timestamp(ts):
 
     if not ts:
         return _("Sconosciuto")
-    return datetime.datetime.fromtimestamp(ts / 1000).strftime("%d/%m/%Y %H:%M")
+    return config.format_date_italian(datetime.datetime.fromtimestamp(ts / 1000))
 
 
 def format_playtime(seconds):
@@ -215,7 +215,7 @@ def format_iso_date(iso_str):
         # Rimuove millisecondi e Z per la compatibilità con le vecchie versioni di Python
         iso_str = iso_str.split(".")[0].replace("Z", "")
         dt = datetime.datetime.fromisoformat(iso_str)
-        return dt.strftime("%d/%m/%Y %H:%M")
+        return config.format_date_italian(dt)
     except Exception:
         return iso_str
 

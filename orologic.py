@@ -60,41 +60,69 @@ def OpenManual():
         print(_("Manuale non trovato in:"), manual_path)
 
 
+def OpenChangelog():
+    changelog_path = config.resource_path(os.path.join("resources", "changelog.htm"))
+    if os.path.exists(changelog_path):
+        try:
+            if sys.platform == "win32":
+                os.startfile(changelog_path)
+            else:
+                import subprocess
+
+                subprocess.run(
+                    ["open" if sys.platform == "darwin" else "xdg-open", changelog_path]
+                )
+        except Exception as e:
+            print(_("Errore nell'apertura del changelog:"), e)
+    else:
+        print(_("Changelog non trovato in:"), changelog_path)
+
+
+def _format_time_delta_parts(diff):
+    parts = []
+    if diff.years:
+        parts.append(
+            _("1 anno") if diff.years == 1 else _("{num} anni").format(num=diff.years)
+        )
+    if diff.months:
+        parts.append(
+            _("1 mese") if diff.months == 1 else _("{num} mesi").format(num=diff.months)
+        )
+    if diff.days:
+        parts.append(
+            _("1 giorno") if diff.days == 1 else _("{num} giorni").format(num=diff.days)
+        )
+    if diff.hours:
+        parts.append(
+            _("1 ora") if diff.hours == 1 else _("{num} ore").format(num=diff.hours)
+        )
+    if diff.minutes:
+        parts.append(
+            _("1 minuto")
+            if diff.minutes == 1
+            else _("{num} minuti").format(num=diff.minutes)
+        )
+
+    if not parts:
+        return _("meno di un minuto")
+    if len(parts) == 1:
+        return parts[0]
+    return ", ".join(parts[:-1]) + _(" e ") + parts[-1]
+
+
 def SchermataIniziale():
     now = datetime.datetime.now()
     diff1 = relativedelta(now, version.BIRTH_DATE)
     diff2 = relativedelta(now, version.RELEASE_DATE)
-    parts1 = []
-    if diff1.years:
-        parts1.append(_("{num} anni").format(num=diff1.years))
-    if diff1.months:
-        parts1.append(_("{num} mesi").format(num=diff1.months))
-    if diff1.days:
-        parts1.append(_("{num} giorni").format(num=diff1.days))
-    if diff1.hours:
-        parts1.append(_("{num} ore").format(num=diff1.hours))
-    if diff1.minutes:
-        parts1.append(_("e {num} minuti").format(num=diff1.minutes))
-    age_string = ", ".join(parts1)
-    parts2 = []
-    if diff2.years:
-        parts2.append(_("{num} anni").format(num=diff2.years))
-    if diff2.months:
-        parts2.append(_("{num} mesi").format(num=diff2.months))
-    if diff2.days:
-        parts2.append(_("{num} giorni").format(num=diff2.days))
-    if diff2.hours:
-        parts2.append(_("{num} ore").format(num=diff2.hours))
-    if diff2.minutes:
-        parts2.append(_("{num} minuti").format(num=diff2.minutes))
-    release_string = ", ".join(parts2)
+    age_string = _format_time_delta_parts(diff1)
+    release_string = _format_time_delta_parts(diff2)
     print(_("\nCiao! Benvenuto, sono Orologic e ho {age}.").format(age=age_string))
     print(
         _(
-            "L'ultima versione e' la {version} ed e' stata rilasciata il {release_date}."
+            "L'ultima versione e' la {version} ed e' stata rilasciata {release_date}."
         ).format(
             version=version.VERSION,
-            release_date=version.RELEASE_DATE.strftime("%d/%m/%Y %H:%M"),
+            release_date=config.format_date_italian(version.RELEASE_DATE),
         )
     )
     print(_("\tcioe': {release_ago} fa.").format(release_ago=release_string))
@@ -541,6 +569,14 @@ def Main():
                 adsr=[10, 10, 80, 10],
             )
             OpenManual()
+
+        elif scelta == "novita":
+            Acusticator(
+                [400.0, 0.2, 0, config.VOLUME, 600.0, 0.2, 0, config.VOLUME],
+                kind=1,
+                adsr=[10, 10, 80, 10],
+            )
+            OpenChangelog()
 
         elif scelta == "vedi":
             Acusticator(
