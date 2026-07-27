@@ -1,10 +1,12 @@
-import json
-import urllib.request
-import urllib.parse
-import sys
-import os
 import datetime
-from GBUtils import menu, key, dgt, enter_escape, Acusticator
+import json
+import os
+import sys
+import urllib.parse
+import urllib.request
+
+from GBUtils import Acusticator, dgt, enter_escape, key, menu
+
 from . import config, storage
 
 
@@ -272,6 +274,26 @@ def follow_player(username, token, follow=True):
                     print(_("Non segui piu' {u}.").format(u=username))
     except Exception as e:
         print(_("Errore: {e}").format(e=e))
+
+
+def report_player(username):
+    report_url = f"https://lichess.org/report?username={username}"
+    import contextlib
+    import webbrowser
+
+    import pyperclip
+
+    with contextlib.suppress(Exception):
+        pyperclip.copy(report_url)
+    print(
+        _(
+            "\nURL per la segnalazione di {u} copiato negli appunti: {url}"
+        ).format(u=username, url=report_url)
+    )
+    print(_("Apertura della pagina di segnalazione nel browser in corso..."))
+    webbrowser.open(report_url)
+
+
 
 
 def download_games(username, token):
@@ -559,6 +581,7 @@ def show_player_menu(username, secrets):
             "scarica": _("Cerca e scarica partite"),
             "ricerca_pgn": _("Copia URL partite e vai a Ricerca PGN"),
             "storia": _("Storia Elo e Sonificazione"),
+            "segnala": _("Segnala giocatore agli admin"),
         }
 
         if is_following:
@@ -664,6 +687,8 @@ def show_player_menu(username, secrets):
             from . import lichess_stats
 
             lichess_stats.run_stats(username, secrets)
+        elif scelta == "segnala":
+            report_player(username)
 
 
 def run_profiler(secrets):
