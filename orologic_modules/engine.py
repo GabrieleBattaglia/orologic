@@ -1,20 +1,19 @@
+import datetime
+import math
+import os
+import re
+import sys
+import time
+
 import chess
 import chess.engine
 import chess.pgn
-import os
-import time
-import datetime
-import pyperclip
-import re
-import sys
-import math
 import numpy as np
-from . import config
-from . import storage
-from . import ui
-from . import board_utils
-from . import version
-from GBUtils import dgt, menu, Acusticator, key, polipo
+import pyperclip
+
+from GBUtils import Acusticator, dgt, key, menu, polipo
+
+from . import board_utils, config, storage, ui, version
 
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 
@@ -356,12 +355,12 @@ def SmartInspection(analysis_lines, board):
                 white_move = pv[j]
                 white_san = temp_board.san(white_move)
                 temp_board.push(white_move)
-                move_str = "{num}. {san}".format(num=move_num, san=white_san)
+                move_str = f"{move_num}. {white_san}"
                 if j + 1 < len(pv) and temp_board.turn == chess.BLACK:
                     black_move = pv[j + 1]
                     black_san = temp_board.san(black_move)
                     temp_board.push(black_move)
-                    move_str += " {san}".format(san=black_san)
+                    move_str += f" {black_san}"
                     j += 2
                 else:
                     j += 1
@@ -371,9 +370,7 @@ def SmartInspection(analysis_lines, board):
                 black_move = pv[j]
                 black_san = temp_board.san(black_move)
                 temp_board.push(black_move)
-                moves_with_numbers.append(
-                    "{num}... {san}".format(num=move_num, san=black_san)
-                )
+                moves_with_numbers.append(f"{move_num}... {black_san}")
                 j += 1
         line_summary = " ".join(moves_with_numbers)
         print(_("Linea {num}: {summary}").format(num=i, summary=line_summary))
@@ -398,7 +395,7 @@ def SmartInspection(analysis_lines, board):
         eval_str = _("Mate in {moves}").format(moves=abs(score.relative.mate()))
     elif score is not None:
         cp = score.white().score()
-        eval_str = "{cp:.2f}".format(cp=cp / 100)
+        eval_str = f"{cp / 100:.2f}"
     else:
         eval_str = "0.00"
     total_moves = len(pv_moves)
@@ -413,9 +410,9 @@ def SmartInspection(analysis_lines, board):
         current_move = pv_moves[current_index - 1]
         move_verbose = board_utils.DescribeMove(current_move, temp_board)
         m_num = (
-            "{n}.".format(n=temp_board.fullmove_number)
+            f"{temp_board.fullmove_number}."
             if temp_board.turn == chess.WHITE
-            else "{n}...".format(n=temp_board.fullmove_number)
+            else f"{temp_board.fullmove_number}..."
         )
         smart_prompt = _(
             "\n({current}/{total}) {move_num} {move_desc} CP: {cp}"
@@ -459,7 +456,7 @@ def SmartInspection(analysis_lines, board):
                 else:
                     cp_si = score_object_si.white().score(mate_score=30000)
                     if cp_si is not None:
-                        new_eval_str = "{cp:+.2f}".format(cp=cp_si / 100)
+                        new_eval_str = f"{cp_si / 100:+.2f}"
                     else:
                         new_eval_str = "ERR"
                 eval_str = new_eval_str
@@ -542,9 +539,9 @@ def AnalyzeGame(pgn_game, is_corrected=False):
             parent_board = current_node.parent.board()
             fullmove = parent_board.fullmove_number
             move_indicator = (
-                "{num}. {san}".format(num=fullmove, san=move_san)
+                f"{fullmove}. {move_san}"
                 if parent_board.turn == chess.WHITE
-                else "{num}... {san}".format(num=fullmove, san=move_san)
+                else f"{fullmove}... {move_san}"
             )
 
             if current_node.parent and len(current_node.parent.variations) > 1:
@@ -552,17 +549,11 @@ def AnalyzeGame(pgn_game, is_corrected=False):
                 try:
                     idx = siblings.index(current_node)
                     if idx == 0 and len(siblings) > 1:
-                        prompt_move_part = "<{indicator}".format(
-                            indicator=move_indicator
-                        )
+                        prompt_move_part = f"<{move_indicator}"
                     elif idx > 0 and idx < len(siblings) - 1:
-                        prompt_move_part = "<{indicator}>".format(
-                            indicator=move_indicator
-                        )
+                        prompt_move_part = f"<{move_indicator}>"
                     elif idx > 0 and idx == len(siblings) - 1:
-                        prompt_move_part = "{indicator}>".format(
-                            indicator=move_indicator
-                        )
+                        prompt_move_part = f"{move_indicator}>"
                     else:
                         prompt_move_part = move_indicator
                 except ValueError:
@@ -573,9 +564,7 @@ def AnalyzeGame(pgn_game, is_corrected=False):
         if current_node.move and current_node.comment and not comment_auto_read:
             prompt_move_part += "-"
 
-        prompt = "\n{extra} {move_part}: ".format(
-            extra=extra_prompt, move_part=prompt_move_part
-        )
+        prompt = f"\n{extra_prompt} {prompt_move_part}: "
         extra_prompt = ""
 
         if current_node.comment and comment_auto_read:
@@ -879,7 +868,7 @@ def AnalyzeGame(pgn_game, is_corrected=False):
                         eval_str = (
                             _("M{m}").format(m=abs(score.mate()))
                             if score.is_mate()
-                            else "{cp:+.2f}".format(cp=score.score() / 100)
+                            else f"{score.score() / 100:+.2f}"
                             if score.score() is not None
                             else _("N/A")
                         )
@@ -896,7 +885,7 @@ def AnalyzeGame(pgn_game, is_corrected=False):
                         eval_str = (
                             _("M{m}").format(m=abs(score.mate()))
                             if score.is_mate()
-                            else "{cp:+.2f}".format(cp=score.score() / 100)
+                            else f"{score.score() / 100:+.2f}"
                             if score.score() is not None
                             else _("N/A")
                         )
@@ -1554,9 +1543,7 @@ def AnalisiAutomatica(pgn_game):
     else:
         mosse_da_saltare = dgt(
             _(
-                "Quante semimosse (ply) iniziali vuoi saltare? (INVIO per {n}) ".format(
-                    n=mosse_da_saltare
-                )
+                f"Quante semimosse (ply) iniziali vuoi saltare? (INVIO per {mosse_da_saltare}) "
             ),
             kind="i",
             imin=0,
@@ -1889,6 +1876,7 @@ def AnalisiAutomatica(pgn_game):
 
 def MenuMotore():
     from GBUtils import key
+
     from . import stockfish_installer
 
     print(_("\nAzioni per il motore scacchistico:"))
@@ -1921,7 +1909,7 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
     if engine_config:
         print(_("Configurazione attuale del motore:"))
         for key, val in engine_config.items():
-            print("  {key}: {val}".format(key=key, val=val))
+            print(f"  {key}: {val}")
     else:
         print(_("Nessuna configurazione trovata."))
 

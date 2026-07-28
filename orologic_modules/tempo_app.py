@@ -1,14 +1,12 @@
-import time
-import threading
-import os
 import datetime
-from GBUtils import dgt, Acusticator, key, polipo, menu
-from . import config
-from . import board_utils
-from . import clock
-from . import ui
-from . import version
-from .game_flow import clock_thread, async_arbitration_input
+import os
+import threading
+import time
+
+from GBUtils import Acusticator, dgt, key, menu, polipo
+
+from . import board_utils, clock, config, ui, version
+from .game_flow import async_arbitration_input, clock_thread
 
 # Inizializzazione localizzazione
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
@@ -146,14 +144,10 @@ def _loop_tempo(game_state, clock_config):
                 prompt_text = _("Inizio, mossa 0. ")
             elif len(game_state.move_history) % 2 == 1:
                 full_move = (len(game_state.move_history) + 1) // 2
-                prompt_text = "{num}. {last_move} ".format(
-                    num=full_move, last_move=game_state.move_history[-1]
-                )
+                prompt_text = f"{full_move}. {game_state.move_history[-1]} "
             else:
                 full_move = (len(game_state.move_history)) // 2
-                prompt_text = "{num}... {last_move} ".format(
-                    num=full_move, last_move=game_state.move_history[-1]
-                )
+                prompt_text = f"{full_move}... {game_state.move_history[-1]} "
 
             if game_state.paused:
                 prompt_text = "[" + prompt_text.strip() + "] "

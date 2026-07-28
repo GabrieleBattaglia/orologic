@@ -1,17 +1,20 @@
+import datetime
+import os
+
 import chess
 import chess.pgn
-import os
 import pyperclip
-import datetime
-from GBUtils import dgt, key, Acusticator
-from ..config import _, sanitize_filename, percorso_salvataggio
+
+from GBUtils import Acusticator, dgt, key
+
 from ..board_utils import format_pgn_comments, validate_and_clean_pgn
+from ..config import _, percorso_salvataggio, sanitize_filename
 from .constants import (
-    DEFAULT_EVENT,
-    DEFAULT_SITE,
-    DEFAULT_ROUND,
-    DEFAULT_WHITE_SURENAME,
     DEFAULT_BLACK_SURENAME,
+    DEFAULT_EVENT,
+    DEFAULT_ROUND,
+    DEFAULT_SITE,
+    DEFAULT_WHITE_SURENAME,
 )
 
 
@@ -22,7 +25,6 @@ def CopyPGNToClipboard(game):
     pgn_string = str(exporter)
     pyperclip.copy(pgn_string)
     print(_("PGN copiato negli appunti."))
-    return
 
 
 def PastePGNFromClipboard():
@@ -171,7 +173,6 @@ def AddingPGNTAGS(game):
     game.headers["Result"] = result
 
     print(_("Tag aggiornati."))
-    return
 
 
 def SaveGameToFile(game):
@@ -214,5 +215,3 @@ def SaveGameToFile(game):
 
     except Exception as e:
         print(_("Errore durante il salvataggio del file PGN: {e}").format(e=e))
-
-    return

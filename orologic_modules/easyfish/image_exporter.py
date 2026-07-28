@@ -1,18 +1,20 @@
-import os
-import io
 import datetime
+import io
+import os
 import re
+
 import chess
 import chess.svg
-from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPDF
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import cm
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Flowable
 from reportlab.lib.styles import getSampleStyleSheet
-from GBUtils import dgt, Acusticator
-from .. import config
-from .. import storage
+from reportlab.lib.units import cm
+from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Spacer
+from svglib.svglib import svg2rlg
+
+from GBUtils import Acusticator, dgt
+
+from .. import config, storage
 from ..config import _
 from .drawing import get_drawings_from_node
 
@@ -45,7 +47,7 @@ def rgb_from_percent(r_perc, g_perc, b_perc):
     r = int(max(0, min(100, r_perc)) * 2.55)
     g = int(max(0, min(100, g_perc)) * 2.55)
     b = int(max(0, min(100, b_perc)) * 2.55)
-    return "#{:02x}{:02x}{:02x}".format(r, g, b)
+    return f"#{r:02x}{g:02x}{b:02x}"
 
 
 def get_image_settings():

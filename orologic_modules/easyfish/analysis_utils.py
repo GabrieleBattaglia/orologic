@@ -1,5 +1,6 @@
 import chess
 import chess.engine
+
 from ..config import _
 
 
@@ -24,9 +25,9 @@ def FormatAnalysisInfo(board, info):
 
     score_val = info.get("score").pov(board.turn)
     if score_val.is_mate():
-        eval_str = "M{m}".format(m=abs(score_val.mate()))
+        eval_str = f"M{abs(score_val.mate())}"
     else:
-        eval_str = "{cp:+.2f}".format(cp=score_val.score(mate_score=10000) / 100)
+        eval_str = f"{score_val.score(mate_score=10000) / 100:+.2f}"
 
     wdl = info.get("wdl")
     wdl_str = ""
@@ -39,7 +40,7 @@ def FormatAnalysisInfo(board, info):
             loss = (
                 wdl_pov.losses / 10 if hasattr(wdl_pov, "losses") else wdl_pov[2] / 10
             )
-            wdl_str = " WDL:{:.0f}%-{:.0f}%-{:.0f}%".format(w, d, loss)
+            wdl_str = f" WDL:{w:.0f}%-{d:.0f}%-{loss:.0f}%"
         except Exception:
             pass
 
@@ -64,9 +65,7 @@ def RunAnalysis(board, engine, time_limit, multipv_count):
         limit = chess.engine.Limit(time=time_limit)
         info_list = engine.analyse(board, limit, multipv=multipv_count)
 
-        if isinstance(info_list, dict):
-            info_list = [info_list]
-        elif not isinstance(info_list, list):
+        if isinstance(info_list, dict) or not isinstance(info_list, list):
             info_list = [info_list]
 
         for i, info in enumerate(info_list):

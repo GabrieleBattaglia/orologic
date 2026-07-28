@@ -1,7 +1,6 @@
-from . import config
-from . import storage
-from . import board_utils
-from GBUtils import dgt, menu, Acusticator, key, polipo
+from GBUtils import Acusticator, dgt, key, menu, polipo
+
+from . import board_utils, config, storage
 
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
 
@@ -16,17 +15,9 @@ def generate_time_control_string(clock_config):
         base_time = int(phase["white_time"])
         inc = int(phase["white_inc"])
         if moves == 0:
-            tc = (
-                "{base}+{inc}".format(base=base_time, inc=inc)
-                if inc > 0
-                else "{base}".format(base=base_time)
-            )
+            tc = f"{base_time}+{inc}" if inc > 0 else f"{base_time}"
         else:
-            tc = (
-                "{moves}/{base}+{inc}".format(moves=moves, base=base_time, inc=inc)
-                if inc > 0
-                else "{moves}/{base}".format(moves=moves, base=base_time)
-            )
+            tc = f"{moves}/{base_time}+{inc}" if inc > 0 else f"{moves}/{base_time}"
         tc_list.append(tc)
     return ", ".join(tc_list)
 
@@ -270,4 +261,3 @@ def DeleteClock(db):
             storage.SaveDB(db)
             Acusticator(["c4", 0.025, 0, config.VOLUME])
             print(_("\nOrologio eliminato."))
-    return

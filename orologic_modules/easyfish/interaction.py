@@ -1,11 +1,13 @@
 import chess
 import chess.engine
+
 from GBUtils import dgt, key, menu
-from .constants import MNEXPLORER, MNEDITOR
-from ..board_utils import CustomBoard
-from .utils import InsertedCounter
-from ..config import _
+
 from .. import engine as orologic_engine
+from ..board_utils import CustomBoard
+from ..config import _
+from .constants import MNEDITOR, MNEXPLORER
+from .utils import InsertedCounter
 
 
 def BoardEditor(starting_fen=None, sharing_window=None):
@@ -483,17 +485,13 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
                             continue
                         score_val = info.get("score").pov(current_board.turn)
                         eval_str = (
-                            "M{m}".format(m=abs(score_val.mate()))
+                            f"M{abs(score_val.mate())}"
                             if score_val.is_mate()
-                            else "{cp:+.2f}".format(
-                                cp=score_val.score(mate_score=10000) / 100
-                            )
+                            else f"{score_val.score(mate_score=10000) / 100:+.2f}"
                         )
                         wdl = info.get("wdl")
                         wdl_str = (
-                            "({:.1f}/{:.1f}/{:.1f}) ".format(
-                                wdl[0] / 10, wdl[1] / 10, wdl[2] / 10
-                            )
+                            f"({wdl[0] / 10:.1f}/{wdl[1] / 10:.1f}/{wdl[2] / 10:.1f}) "
                             if wdl
                             else ""
                         )

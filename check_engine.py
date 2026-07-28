@@ -1,7 +1,8 @@
-from orologic_modules import config
-import chess.engine
 import os
 import sys
+
+import chess.engine
+from orologic_modules import config
 
 # Utilizza il percorso dinamico configurato nel progetto
 engine_dir = config.percorso_salvataggio("engine")

@@ -1,9 +1,12 @@
 import os
-import sys
-import requests
-import zipfile
 import re
+import sys
+import zipfile
+
+import requests
+
 from GBUtils import polipo
+
 from . import config
 
 # Inizializzazione localizzazione per questo modulo
@@ -150,8 +153,7 @@ def CheckForStockfishUpdatesSilent():
     Se disponibile, chiede all'utente se desidera aggiornare.
     """
     try:
-        from . import engine
-        from . import storage
+        from . import engine, storage
 
         if not engine.ENGINE or "stockfish" not in engine.ENGINE_NAME.lower():
             return

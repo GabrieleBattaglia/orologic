@@ -1,10 +1,13 @@
-import os
 import json
 import multiprocessing
+import os
+
 import chess.engine
+
 from GBUtils import dgt
-from .constants import CONFIG_FILE
+
 from ..config import _
+from .constants import CONFIG_FILE
 
 
 def GetEngineSet():
@@ -158,4 +161,3 @@ def ShowStats(board, info):
         san_moves += san_move + " "
         temp_board.push(move)
     print(_("Line:") + " " + san_moves)
-    return

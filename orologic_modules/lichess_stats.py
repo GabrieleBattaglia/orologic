@@ -1,15 +1,13 @@
-import urllib.request
-import json
 import datetime
+import json
+import urllib.request
+
 from dateutil.relativedelta import relativedelta
-from GBUtils import sonify, menu, enter_escape
+
+from GBUtils import enter_escape, menu, sonify
+
 from . import storage
-
-
-def _(testo):
-    from .config import L10N
-
-    return L10N.get(testo, testo)
+from .config import _
 
 
 def fetch_rating_history(username):
@@ -388,9 +386,11 @@ def run_stats(username, secrets):
 
                 span_days = (selected_pts[-1]["dt"] - selected_pts[0]["dt"]).days
                 usa_quartili = False
-                if len(ratings_subset) >= 20:
-                    usa_quartili = True
-                elif len(ratings_subset) >= 8 and span_days >= 60:
+                if (
+                    len(ratings_subset) >= 20
+                    or len(ratings_subset) >= 8
+                    and span_days >= 60
+                ):
                     usa_quartili = True
 
                 print(_("\nElaborazione stringa DEA in corso..."))

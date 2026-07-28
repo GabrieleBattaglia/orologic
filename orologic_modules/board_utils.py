@@ -1,9 +1,12 @@
+import io
+import os
+import re
+
 import chess
 import chess.pgn
-import re
-import os
-import io
-from GBUtils import polipo, Acusticator
+
+from GBUtils import Acusticator, polipo
+
 from . import config
 
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
@@ -91,26 +94,15 @@ def DescribeMove(move, board, annotation=None):
             promo_str = ""
             if is_promo:
                 promo_piece_symbol = chess.piece_symbol(move.promotion).upper()
-                promo_str = "={promo}".format(promo=promo_piece_symbol)
+                promo_str = f"={promo_piece_symbol}"
             capture_char = "x" if is_capture else ""
             if piece_symbol:
-                san_base = "{symbol}{disambiguation}{capture}{to_sq}{promo}".format(
-                    symbol=piece_symbol,
-                    disambiguation=disambiguation,
-                    capture=capture_char,
-                    to_sq=to_sq_str,
-                    promo=promo_str,
-                )
+                san_base = f"{piece_symbol}{disambiguation}{capture_char}{to_sq_str}{promo_str}"
             else:
                 if is_capture:
-                    san_base = "{from_file}{capture}{to_sq}{promo}".format(
-                        from_file=from_sq_str[0],
-                        capture=capture_char,
-                        to_sq=to_sq_str,
-                        promo=promo_str,
-                    )
+                    san_base = f"{from_sq_str[0]}{capture_char}{to_sq_str}{promo_str}"
                 else:
-                    san_base = "{to_sq}{promo}".format(to_sq=to_sq_str, promo=promo_str)
+                    san_base = f"{to_sq_str}{promo_str}"
         except Exception:
             try:
                 san_base = board.san(move).replace("!", "").replace("?", "")
@@ -172,7 +164,7 @@ def DescribeMove(move, board, annotation=None):
                         captured_piece.piece_type
                     ].lower()
                     captured_name = L10N["pieces"][captured_type_key]["name"]
-                    descr += " {name}".format(name=captured_name)
+                    descr += f" {captured_name}"
                 if board.is_en_passant(move):
                     descr += " {ep}".format(ep=L10N["moves"]["en_passant"])
                 descr += " {prep} {file}{rank}".format(
@@ -227,13 +219,9 @@ def GenerateMoveSummary(game_state):
                 board_copy.push(black_move)
             except Exception as e:
                 black_move_desc = _("Errore nero: {e}").format(e=e)
-            summary.append(
-                "{num}. {w}, {b}".format(
-                    num=move_number, w=white_move_desc, b=black_move_desc
-                )
-            )
+            summary.append(f"{move_number}. {white_move_desc}, {black_move_desc}")
         else:
-            summary.append("{num}. {w}".format(num=move_number, w=white_move_desc))
+            summary.append(f"{move_number}. {white_move_desc}")
         move_number += 1
     return summary
 
@@ -480,20 +468,20 @@ def format_pv_descriptively(board, pv):
         if temp_board.turn == chess.WHITE:
             white_move = pv[i]
             white_desc = DescribeMove(white_move, temp_board)
-            line_str = "  {num}. {desc}".format(num=move_num, desc=white_desc)
+            line_str = f"  {move_num}. {white_desc}"
             temp_board.push(white_move)
             i += 1
             if i < len(pv):
                 black_move = pv[i]
                 black_desc = DescribeMove(black_move, temp_board)
-                line_str += ", {desc}".format(desc=black_desc)
+                line_str += f", {black_desc}"
                 temp_board.push(black_move)
                 i += 1
             output_lines.append(line_str)
         else:
             black_move = pv[i]
             black_desc = DescribeMove(black_move, temp_board)
-            line_str = "  {num}... {desc}".format(num=move_num, desc=black_desc)
+            line_str = f"  {move_num}... {black_desc}"
             output_lines.append(line_str)
             temp_board.push(black_move)
             i += 1
@@ -558,7 +546,7 @@ def SecondsToHMS(seconds):
     h = int(seconds // 3600)
     m = int((seconds % 3600) // 60)
     s = int(seconds % 60)
-    return "{:02d}:{:02d}:{:02d}".format(h, m, s)
+    return f"{h:02d}:{m:02d}:{s:02d}"
 
 
 def FormatClock(seconds):
@@ -568,9 +556,7 @@ def FormatClock(seconds):
     hours = total // 3600
     minutes = (total % 3600) // 60
     secs = total % 60
-    return "{hours:02d}:{minutes:02d}:{secs:02d}".format(
-        hours=hours, minutes=minutes, secs=secs
-    )
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
 
 def seconds_to_mmss(seconds):
@@ -826,7 +812,7 @@ def AnalizzaEStampaStatisticheTempo(game_state, color_filter=None):
             print(part1 + "% " + _("del tempo;"))
 
         # 3. Lenta / Veloce
-        print("")
+        print()
         mostra_lenta = sorted_moves[0]
         mostra_veloce = sorted_moves[-1]
         print(

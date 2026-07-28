@@ -1,12 +1,12 @@
-import os
-import json
-import chess
 import datetime
-from GBUtils import polipo, key, dgt, Acusticator
-from . import config
-from . import board_utils
-from . import storage
-from . import version
+import json
+import os
+
+import chess
+
+from GBUtils import Acusticator, dgt, key, polipo
+
+from . import board_utils, config, storage, version
 
 # Inizializzazione localizzazione
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
@@ -218,9 +218,7 @@ def EditLocalization():
             sub_key, prompt_text = details
             current_val = l10n_config.get(cat, {}).get(key_item, {}).get(sub_key, "")
             new_val = dgt(
-                "{prompt} [{current}]: ".format(
-                    prompt=prompt_text, current=current_val
-                ),
+                f"{prompt_text} [{current_val}]: ",
                 kind="s",
                 default=current_val,
             )
@@ -272,9 +270,7 @@ def EditLocalization():
             prompt_text = details
             current_val = l10n_config.get(cat, {}).get(key_item, "")
             new_val = dgt(
-                "{prompt} [{current}]: ".format(
-                    prompt=prompt_text, current=current_val
-                ),
+                f"{prompt_text} [{current_val}]: ",
                 kind="s",
                 default=current_val,
             )
@@ -355,7 +351,7 @@ def report_all_pieces(game_state, color):
                 file_letter = chess.square_name(sq)[0]
                 rank = chess.square_name(sq)[1]
                 descriptive_file = cols_dict.get(file_letter, file_letter)
-                positions.append("{f} {r}".format(f=descriptive_file, r=rank))
+                positions.append(f"{descriptive_file} {rank}")
 
             print(
                 "{p}: {pos}".format(
@@ -407,7 +403,7 @@ def extended_piece_description(piece):
     piece_name = piece_info.get("name", piece.symbol()).capitalize()
     piece_gender = piece_info.get("gender", "m")
     color_adj = get_color_adjective(piece.color, piece_gender)
-    return "{piece} {color}".format(piece=piece_name, color=color_adj)
+    return f"{piece_name} {color_adj}"
 
 
 def format_pv_descriptively(board, pv):
@@ -435,7 +431,7 @@ def read_diagonal(game_state, base_column, direction_right):
     rank_index = 0
     report = []
     cols_dict = L10N.get("columns", {})
-    base_descr = "{col} 1".format(col=cols_dict.get(base_column, base_column))
+    base_descr = f"{cols_dict.get(base_column, base_column)} 1"
     while 0 <= file_index < 8 and 0 <= rank_index < 8:
         square = chess.square(file_index, rank_index)
         piece = game_state.board.piece_at(square)
@@ -443,11 +439,7 @@ def read_diagonal(game_state, base_column, direction_right):
             current_file = chr(ord("a") + file_index)
             descriptive_file = cols_dict.get(current_file, current_file)
             report.append(
-                "{file} {rank}: {piece_desc}".format(
-                    file=descriptive_file,
-                    rank=rank_index + 1,
-                    piece_desc=extended_piece_description(piece),
-                )
+                f"{descriptive_file} {rank_index + 1}: {extended_piece_description(piece)}"
             )
         rank_index += 1
         file_index = file_index + 1 if direction_right else file_index - 1
@@ -485,11 +477,7 @@ def read_rank(game_state, rank_number):
             file_letter = chr(ord("a") + file_idx)
             descriptive_file = cols_dict.get(file_letter, file_letter)
             report.append(
-                "{file} {rank}: {piece_desc}".format(
-                    file=descriptive_file,
-                    rank=rank_number,
-                    piece_desc=extended_piece_description(piece),
-                )
+                f"{descriptive_file} {rank_number}: {extended_piece_description(piece)}"
             )
     if report:
         print(_("Traversa {rank}: ").format(rank=rank_number) + ", ".join(report))
@@ -511,11 +499,7 @@ def read_file(game_state, file_letter):
         piece = game_state.board.piece_at(square)
         if piece:
             report.append(
-                "{file} {rank}: {piece_desc}".format(
-                    file=descriptive_file,
-                    rank=rank_idx + 1,
-                    piece_desc=extended_piece_description(piece),
-                )
+                f"{descriptive_file} {rank_idx + 1}: {extended_piece_description(piece)}"
             )
     if report:
         print(_("Colonna {file}: ").format(file=descriptive_file) + ", ".join(report))
@@ -623,14 +607,9 @@ def report_piece_positions(game_state, piece_symbol):
         rank = chess.square_rank(square) + 1
         file_letter = chr(ord("a") + file_index)
         descriptive_file = L10N["columns"].get(file_letter, file_letter)
-        positions.append("{file} {rank}".format(file=descriptive_file, rank=rank))
+        positions.append(f"{descriptive_file} {rank}")
     if positions:
-        print(
-            "{color}: {name} in: ".format(
-                color=color_string.capitalize(), name=full_name
-            )
-            + ", ".join(positions)
-        )
+        print(f"{color_string.capitalize()}: {full_name} in: " + ", ".join(positions))
     else:
         print(
             _("Nessun {name} {color} trovato.").format(
@@ -648,7 +627,7 @@ def report_white_time(game_state):
     print(
         _("Tempo bianco: ")
         + board_utils.FormatTime(game_state.white_remaining)
-        + " ({perc:.0f}%)".format(perc=perc_white)
+        + f" ({perc_white:.0f}%)"
     )
 
 
@@ -661,7 +640,7 @@ def report_black_time(game_state):
     print(
         _("Tempo nero: ")
         + board_utils.FormatTime(game_state.black_remaining)
-        + " ({perc:.0f}%)".format(perc=perc_black)
+        + f" ({perc_black:.0f}%)"
     )
 
 

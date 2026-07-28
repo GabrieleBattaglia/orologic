@@ -7,18 +7,19 @@ visualizzare statistiche, applicare filtri interattivi e navigare
 un albero delle aperture con statistiche W/D/L per ogni ramo.
 """
 
-import os
 import io
+import os
 import sys
 import time
-import urllib.request
 import urllib.error
-import pyperclip
-import chess
-import chess.pgn
+import urllib.request
 from collections import defaultdict
 
-from GBUtils import dgt, menu, enter_escape, key, polipo
+import chess
+import chess.pgn
+import pyperclip
+
+from GBUtils import dgt, enter_escape, key, menu, polipo
 from orologic_modules import board_utils, engine
 
 # Inizializzazione localizzazione
@@ -125,8 +126,9 @@ def _carica_archivio():
             # Aggiungi token Lichess se presente
             token = None
             try:
-                from orologic_modules.config import percorso_salvataggio
                 import json
+
+                from orologic_modules.config import percorso_salvataggio
 
                 secrets_path = percorso_salvataggio(
                     os.path.join("settings", "secrets.json")
@@ -653,8 +655,7 @@ def _menu_filtri(games, info_list, totale):
             if r and r != "." and r != "qualsiasi":
                 filtri["result"] = r
             else:
-                if "result" in filtri:
-                    del filtri["result"]
+                filtri.pop("result", None)
 
         elif scelta == "elo_min":
             v = dgt(
@@ -1106,9 +1107,9 @@ def _stampa_ramo_corrente(
         for i, mossa in enumerate(ramo_mosse):
             move_num = (i // 2) + 1
             if i % 2 == 0:
-                parti.append("{n}. {m}".format(n=move_num, m=mossa))
+                parti.append(f"{move_num}. {mossa}")
             else:
-                parti.append("{n}... {m}".format(n=move_num, m=mossa))
+                parti.append(f"{move_num}... {mossa}")
         breadcrumb = " > ".join(parti)
 
     stats_str = _formato_statistiche(info_list, indici, filtri_attivi, giocatore_comune)
@@ -1138,14 +1139,7 @@ def _stampa_lista_rami(rami, board, info_list, filtri_attivi, giocatore_comune=N
             info_list, idx_list, filtri_attivi, giocatore_comune
         )
         print(
-            "  {num}. {mossa_verbose} ({mossa_san}) ({n} partite) = {pct:.1f}% | {stats}".format(
-                num=i + 1,
-                mossa_verbose=desc_mossa,
-                mossa_san=mossa,
-                n=n,
-                pct=pct,
-                stats=stats_str,
-            )
+            f"  {i + 1}. {desc_mossa} ({mossa}) ({n} partite) = {pct:.1f}% | {stats_str}"
         )
 
 
@@ -1245,10 +1239,10 @@ def _mosse_continuazione(game, ramo_mosse, max_mosse=5):
         san = board.san(next_node.move)
         fullmove = board.fullmove_number
         if board.turn == chess.WHITE:
-            parti.append("{n}. {m}".format(n=fullmove, m=san))
+            parti.append(f"{fullmove}. {san}")
         else:
             if not parti:
-                parti.append("{n}... {m}".format(n=fullmove, m=san))
+                parti.append(f"{fullmove}... {san}")
             else:
                 parti.append(san)
         node = next_node
@@ -1326,7 +1320,7 @@ def _avvia_analisi(game):
     print(_("\n--- Partita selezionata ---"))
     for k, v in game.headers.items():
         if v and v != "?" and v != "????.??.??":
-            print("  {k}: {v}".format(k=k, v=v))
+            print(f"  {k}: {v}")
 
     # Controlla che il motore sia disponibile
     if engine.ENGINE is None and not engine.InitEngine():

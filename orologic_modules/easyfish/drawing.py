@@ -1,8 +1,11 @@
 import re
+
 import chess
-from GBUtils import dgt, Acusticator
+
+from GBUtils import Acusticator, dgt
+
 from .. import config
-from ..config import _, L10N
+from ..config import L10N, _
 
 MNDRAWING = {
     "A": _("Aggiungi una forma (freccia o cerchio)"),
