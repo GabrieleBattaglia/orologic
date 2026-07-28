@@ -1,21 +1,17 @@
-import time
-import threading
+import datetime
+import io
 import json
+import os
+import threading
+import time
+
 import chess
 import chess.pgn
-import os
-import datetime
 import pyperclip
-import io
-from GBUtils import dgt, Acusticator, key, polipo, menu, enter_escape
-from . import config
-from . import board_utils
-from . import clock
-from . import ui
-from . import engine
-from . import storage
-from . import version
-from . import chess960_utils
+
+from GBUtils import Acusticator, dgt, enter_escape, key, menu, polipo
+
+from . import board_utils, chess960_utils, clock, config, engine, storage, ui, version
 
 # Inizializzazione localizzazione
 lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
@@ -178,10 +174,10 @@ def RiprendiPartita(dati_partita):
         last_move_san = game_state.move_history[-1]
         if game_state.active_color == "black":
             move_num = (len(game_state.move_history) + 1) // 2
-            last_move_str = "{num}. {san}".format(num=move_num, san=last_move_san)
+            last_move_str = f"{move_num}. {last_move_san}"
         else:
             move_num = len(game_state.move_history) // 2
-            last_move_str = "{num}... {san}".format(num=move_num, san=last_move_san)
+            last_move_str = f"{move_num}... {last_move_san}"
         print(_("Ultima mossa: {move}").format(move=last_move_str))
     tocca_a_player = (
         game_state.white_player
@@ -194,7 +190,6 @@ def RiprendiPartita(dati_partita):
         game_state, eco_database, autosave_is_on
     )
     _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on)
-    return
 
 
 def EseguiAutosave(game_state):
@@ -228,8 +223,8 @@ def EseguiAutosave(game_state):
 
 
 def async_arbitration_input(game_state, get_prompt):
-    import sys
     import msvcrt
+    import sys
     import time
 
     buf = []
@@ -265,10 +260,7 @@ def async_arbitration_input(game_state, get_prompt):
                     buf.pop()
                     sys.stdout.write("\b \b")
                     sys.stdout.flush()
-            elif c == "\x03":
-                sys.stdout.write("\n")
-                return "."
-            elif c == "\x1b":
+            elif c == "\x03" or c == "\x1b":
                 sys.stdout.write("\n")
                 return "."
             elif c.isprintable():
@@ -328,14 +320,10 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 prompt_text = _("Inizio, mossa 0. ")
             elif len(game_state.move_history) % 2 == 1:
                 full_move = (len(game_state.move_history) + 1) // 2
-                prompt_text = "{num}. {last_move} ".format(
-                    num=full_move, last_move=game_state.move_history[-1]
-                )
+                prompt_text = f"{full_move}. {game_state.move_history[-1]} "
             else:
                 full_move = (len(game_state.move_history)) // 2
-                prompt_text = "{num}... {last_move} ".format(
-                    num=full_move, last_move=game_state.move_history[-1]
-                )
+                prompt_text = f"{full_move}... {game_state.move_history[-1]} "
 
             if game_state.paused:
                 prompt_text = "[" + prompt_text.strip() + "] "
@@ -1516,7 +1504,7 @@ def StartGame(clock_config):
     print(_("\nAvvio partita\n"))
     is_standard = enter_escape(
         _(
-            "Vuoi giocare alla variante standard (scacchi ortodossi)? (INVIO per si', ESC per Fischer Random): "
+            "Vuoi giocare alla variante standard (scacchi standard)? (INVIO per si', ESC per Fischer Random): "
         )
     )
     is_fischer_random = not is_standard
@@ -1805,9 +1793,7 @@ def StartGame(clock_config):
     )
     game_state.pgn_game.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
     game_state.pgn_game.headers["Annotator"] = (
-        "Orologic V{version} by {programmer}".format(
-            version=version.VERSION, programmer=version.PROGRAMMER
-        )
+        f"Orologic V{version.VERSION} by {version.PROGRAMMER}"
     )
     threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
     last_valid_eco_entry = _loop_principale_partita(

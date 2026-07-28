@@ -3,9 +3,10 @@ Espone funzioni per generare posizioni, configurare il motore e interagire con l
 """
 
 import random
-from GBUtils import dgt, Acusticator
-from . import board_utils
-from . import config
+
+from GBUtils import Acusticator, dgt
+
+from . import board_utils, config
 from .config import _
 
 # Mappa simbolo pezzo → chiave nel dizionario L10N
@@ -152,8 +153,8 @@ def setup_fischer_random_board_interactive():
             Acusticator(["b3", 0.2, 0, config.VOLUME], kind=2)
             continue
         else:
-            fen_to_try = "{sequence}/pppppppp/8/8/8/8/PPPPPPPP/{sequence_upper} w - - 0 1".format(
-                sequence=user_input.lower(), sequence_upper=user_input
+            fen_to_try = (
+                f"{user_input.lower()}/pppppppp/8/8/8/8/PPPPPPPP/{user_input} w - - 0 1"
             )
             try:
                 board = board_utils.CustomBoard(fen_to_try, chess960=True)

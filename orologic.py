@@ -1,38 +1,39 @@
-import warnings
-import sys
-import os
-import time
-import json
 import datetime
+import json
+import os
+import sys
+import time
+import warnings
 
 from dateutil.relativedelta import relativedelta
-from GBUtils import (
-    dgt,
-    menu,
-    Acusticator,
-    key,
-    Donazione,
-    polipo,
-    update_checker,
-    perform_update,
-    enter_escape,
-)
 from orologic_modules import (
     board_utils,
-    config,
-    storage,
-    ui,
+    cleaner,
     clock,
+    config,
     engine,
     game_flow,
-    version,
     lichess_app,
-    cleaner,
     memoboard_app,
-    tempo_app,
     pgn_search,
+    storage,
+    tempo_app,
+    ui,
+    version,
 )
 from orologic_modules.easyfish import easyfish_app
+
+from GBUtils import (
+    Acusticator,
+    Donazione,
+    dgt,
+    enter_escape,
+    key,
+    menu,
+    perform_update,
+    polipo,
+    update_checker,
+)
 
 warnings.filterwarnings(
     "ignore", message="urllib3 .* doesn't match a supported version!"
@@ -184,8 +185,7 @@ def Main():
         api_url = (
             "https://api.github.com/repos/GabrieleBattaglia/orologic/releases/latest"
         )
-        print(_("Ricerca aggiornamenti in corso..."))
-        has_update, new_ver, dl_url, changelog = update_checker(
+        has_update, new_ver, dl_url, _changelog = update_checker(
             version.VERSION, api_url
         )
         if has_update:
@@ -223,12 +223,8 @@ def Main():
                     ).format(new_ver=new_ver)
                 )
                 print(_("Riprova piu' tardi."))
-        else:
-            print(
-                _("Hai gia' l'ultima versione disponibile ({ver})!").format(
-                    ver=version.VERSION
-                )
-            )
+        elif new_ver is None:
+            print(_("\nImpossibile verificare gli aggiornamenti."))
 
     # Inizializzazione Motore (se configurato)
     if engine.InitEngine():

@@ -1,10 +1,7 @@
 import os
 import time
-from .config import percorso_salvataggio, L10N
 
-
-def _(testo):
-    return L10N.get(testo, testo)
+from .config import _, percorso_salvataggio
 
 
 def check_and_clean_old_files(days=365):
@@ -56,6 +53,7 @@ def check_and_clean_old_files(days=365):
                     print()  # Riga vuota
                 elif choice == "c":
                     from GBUtils import Acusticator
+
                     from . import config
 
                     Acusticator(

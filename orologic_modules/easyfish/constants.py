@@ -1,14 +1,8 @@
 import os
+
 import chess
 
-# Import translator function
-try:
-    from ..config import _
-except ImportError:
-    # Fallback for standalone testing or if import fails
-    def _(text):
-        return text
-
+from ..config import _
 
 # File paths
 CONFIG_FILE = "easyfish.json"

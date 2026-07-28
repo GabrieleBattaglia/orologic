@@ -1,13 +1,16 @@
-import os
 import json
-import urllib.request
-import urllib.error
-import webbrowser
-import chess
+import os
 import time
-from GBUtils import menu, enter_escape, Acusticator, dgt
-from . import storage, board_utils, config, ui, lichess_board, lichess_profiler
-from .config import percorso_salvataggio
+import urllib.error
+import urllib.request
+import webbrowser
+
+import chess
+
+from GBUtils import Acusticator, dgt, enter_escape, menu
+
+from . import board_utils, config, lichess_board, lichess_profiler, storage, ui
+from .config import _, percorso_salvataggio
 
 SECRETS_FILE = percorso_salvataggio(os.path.join("settings", "secrets.json"))
 
@@ -26,16 +29,6 @@ def save_secrets(secrets):
             json.dump(secrets, f, indent=4)
     except Exception as e:
         print(_("Errore salvataggio segreti: {e}").format(e=e))
-
-
-def _(testo):
-    """
-    Quando L10N è configurato, importalo dal modulo apposito.
-    Per ora usa una pass-through per compatibilità.
-    """
-    from .config import L10N
-
-    return L10N.get(testo, testo)
 
 
 def fetch_profile_info(token):
@@ -272,7 +265,7 @@ def menu_statistiche(db):
             puzzle_perf = perfs.get("puzzle", {})
             print(_("Elo Attuale: {r}").format(r=puzzle_perf.get("rating", "N/A")))
             print(_("Puzzle giocati: {g}").format(g=puzzle_perf.get("games", 0)))
-            if "prov" in puzzle_perf and puzzle_perf["prov"]:
+            if puzzle_perf.get("prov"):
                 print(_("Stato: Provvisorio"))
             print(_("Progressione (recente): {p}").format(p=puzzle_perf.get("prog", 0)))
             print(
@@ -1074,6 +1067,7 @@ def menu_puzzle(db):
         print(_("Tema: {t}").format(t=", ".join(puz.get("themes", []))))
 
         import io
+
         import chess.pgn
 
         last_move_san = None
@@ -1319,8 +1313,8 @@ def fetch_user_profile(username, token=None):
 
 
 def watch_player(username, token):
-    import sys
     import msvcrt
+    import sys
 
     print(_("Controllo se l'utente e' in gioco..."))
     profile = fetch_user_profile(username, token)
@@ -1711,11 +1705,11 @@ def challenge_user(token, username, params_dict):
 
 
 def seek_game(token, params_dict):
-    import urllib.parse
-    import threading
-    import time
     import msvcrt
     import sys
+    import threading
+    import time
+    import urllib.parse
 
     req = urllib.request.Request("https://lichess.org/api/board/seek", method="POST")
     req.add_header("Authorization", f"Bearer {token}")

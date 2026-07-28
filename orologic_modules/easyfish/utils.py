@@ -1,4 +1,5 @@
 import chess
+
 from ..config import _
 from .constants import PIECE_VALUES
 
@@ -42,7 +43,7 @@ def InsertedCounter(board):
 
 def SquaresListToString(board, sq_list, report_piece=False, occupied_only=False):
     """Converte una lista di case in una stringa leggibile."""
-    from .constants import COLUMN_TO_NATO, CHESSPIECE_TO_NAME
+    from .constants import CHESSPIECE_TO_NAME, COLUMN_TO_NATO
 
     result = ""
     for j in sq_list:

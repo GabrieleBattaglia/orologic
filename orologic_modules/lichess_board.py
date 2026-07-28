@@ -1,20 +1,17 @@
 import json
-import urllib.request
-import threading
-import queue
 import msvcrt
-import time
+import queue
 import sys
+import threading
+import time
+import urllib.request
+
 import chess
 
 from GBUtils import Acusticator, dgt
+
 from . import board_utils, config, ui
-
-
-def _(testo):
-    from .config import L10N
-
-    return L10N.get(testo, testo)
+from .config import _
 
 
 class SpectatorGameState:
@@ -49,8 +46,9 @@ def format_time(seconds):
 
 
 def save_lichess_game(game_state, result_str="*"):
-    from .easyfish import pgn_handler
     import io
+
+    from .easyfish import pgn_handler
 
     pgn_text = ""
     # Se abbiamo un game_id, proviamo a scaricare il PGN completo e ufficiale da Lichess
@@ -442,19 +440,13 @@ def async_spectator_loop(q, game_state):
             return (
                 "\n"
                 + clock_str
-                + "{num}. {last_move}>".format(
-                    num=(len(game_state.move_history) + 1) // 2,
-                    last_move=game_state.move_history[-1],
-                )
+                + f"{(len(game_state.move_history) + 1) // 2}. {game_state.move_history[-1]}>"
             )
         else:
             return (
                 "\n"
                 + clock_str
-                + "{num}... {last_move}>".format(
-                    num=len(game_state.move_history) // 2,
-                    last_move=game_state.move_history[-1],
-                )
+                + f"{len(game_state.move_history) // 2}... {game_state.move_history[-1]}>"
             )
 
     def refresh_line():
@@ -658,10 +650,7 @@ def async_spectator_loop(q, game_state):
                     buf.pop()
                     sys.stdout.write("\b \b")
                     sys.stdout.flush()
-            elif c == "\x03":  # Ctrl+C
-                sys.stdout.write("\n")
-                return "."
-            elif c == "\x1b":  # ESC
+            elif c == "\x03" or c == "\x1b":  # Ctrl+C
                 sys.stdout.write("\n")
                 return "."
             elif c.isprintable():
@@ -974,17 +963,9 @@ def async_play_loop(q, game_state):
         if not game_state.move_history:
             p = clock_str + _("Inizio, mossa 0. ")
         elif len(game_state.move_history) % 2 == 1:
-            p = "{c}{num}. {last_move} ".format(
-                c=clock_str,
-                num=(len(game_state.move_history) + 1) // 2,
-                last_move=game_state.move_history[-1],
-            )
+            p = f"{clock_str}{(len(game_state.move_history) + 1) // 2}. {game_state.move_history[-1]} "
         else:
-            p = "{c}{num}... {last_move} ".format(
-                c=clock_str,
-                num=len(game_state.move_history) // 2,
-                last_move=game_state.move_history[-1],
-            )
+            p = f"{clock_str}{len(game_state.move_history) // 2}... {game_state.move_history[-1]} "
 
         if hasattr(game_state, "premove") and game_state.premove:
             p = p.rstrip() + f" [{game_state.premove}] "
@@ -1355,10 +1336,7 @@ def async_play_loop(q, game_state):
                     buf.pop()
                     sys.stdout.write("\b \b")
                     sys.stdout.flush()
-            elif c == "\x03":  # Ctrl+C
-                sys.stdout.write("\n")
-                return "."
-            elif c == "\x1b":  # ESC
+            elif c == "\x03" or c == "\x1b":  # Ctrl+C
                 sys.stdout.write("\n")
                 return "."
             elif c.isprintable():

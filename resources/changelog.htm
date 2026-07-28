@@ -19,6 +19,11 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.9</h3>
+<h4>8.9.5 (28 luglio 2026 - 19:20)</h4>
+<ul>
+  <li>* [L10N/Lichess] Risolto un bug critico che impediva la traduzione delle stringhe di Orolichess nelle lingue estere (es. Portoghese): rimosse le definizioni stub locali di `_()` nei sottomoduli `lichess_app`, `lichess_board`, `lichess_profiler`, `lichess_stats` e `cleaner`, ripristinando l'importazione diretta di `gettext` tramite `config._`.</li>
+  <li>* [L10N/Terminologia] Sostituita la dicitura "scacchi ortodossi" con "scacchi standard" in tutta l'applicazione (`game_flow` ed `easyfish`), aggiornate le traduzioni nei cataloghi multilingua (en, es, fr, pt) e ricompilati i binari `.mo` con Babel.</li>
+</ul>
 <h4>8.9.4 (28 luglio 2026 - 09:05)</h4>
 <ul>
   <li>* [Core/GBUtils] Risolto un bug critico nel gestore delle lingue (polipo): evitato il blocco/chiusura all'avvio dopo l'aggiornamento quando la lingua salvata è già valida, preservando l'avvio automatico e gestendo in modo sicuro gli ambienti non interattivi.</li>

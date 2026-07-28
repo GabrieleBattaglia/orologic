@@ -3,12 +3,13 @@
 # June 28th, 2024: moved on Github
 # Fuso in Orologic il 29 Maggio 2026.
 
-from GBUtils import key, dgt, menu, Acusticator
-import time
 import datetime
-import random
 import json
 import os
+import random
+import time
+
+from GBUtils import Acusticator, dgt, key, menu
 
 from . import config
 from .config import _
@@ -76,7 +77,7 @@ def _deduplicate_scores(data):
     Assicura che in ciascun esercizio ogni utente abbia un unico record (il migliore).
     """
     cleaned = {"colors": [], "knights": [], "bishops": [], "mixed": []}
-    for ex_name in cleaned.keys():
+    for ex_name in cleaned:
         ex_list = data.get(ex_name, [])
         metric_key = "score" if ex_name == "mixed" else "score_per_minute"
         best_by_user = {}
@@ -114,10 +115,8 @@ def load_scores():
             return default_structure
 
         # Se già nel nuovo formato (chiavi di esercizi come liste)
-        if any(
-            k in data and isinstance(data[k], list) for k in default_structure.keys()
-        ):
-            for k in default_structure.keys():
+        if any(k in data and isinstance(data[k], list) for k in default_structure):
+            for k in default_structure:
                 if k in data and isinstance(data[k], list):
                     default_structure[k] = data[k]
             return _deduplicate_scores(default_structure)
@@ -766,8 +765,7 @@ def ExKnights(ripetitions):
                 break
 
         singlescore = (scoretime * 1000) - (time.time() - now) * 1000
-        if singlescore < 0:
-            singlescore = 0
+        singlescore = max(singlescore, 0)
 
         elapsed_q = time.time() - now
         timeslist.append(elapsed_q)
@@ -859,8 +857,7 @@ def ExBishops(ripetitions):
                 break
 
         singlescore = (scoretime * 1000) - (time.time() - now) * 1000
-        if singlescore < 0:
-            singlescore = 0
+        singlescore = max(singlescore, 0)
 
         elapsed_q = time.time() - now
         timeslist.append(elapsed_q)
@@ -952,8 +949,7 @@ def ExMixed(ripetitions):
             elapsed_q = time.time() - now
             timeslist.append(elapsed_q)
             singlescore = (scoretime * 1000) - (elapsed_q * 1000)
-            if singlescore < 0:
-                singlescore = 0
+            singlescore = max(singlescore, 0)
 
             correct_is_white = get_square_color(sq) == "w"
             correct = user_says_white == correct_is_white
@@ -1016,8 +1012,7 @@ def ExMixed(ripetitions):
             elapsed_q = time.time() - now
             timeslist.append(elapsed_q)
             singlescore = (scoretime * 1000) - (elapsed_q * 1000)
-            if singlescore < 0:
-                singlescore = 0
+            singlescore = max(singlescore, 0)
 
             correct = user_says_yes == yes
             if correct:
@@ -1073,8 +1068,7 @@ def ExMixed(ripetitions):
             elapsed_q = time.time() - now
             timeslist.append(elapsed_q)
             singlescore = (scoretime * 1000) - (elapsed_q * 1000)
-            if singlescore < 0:
-                singlescore = 0
+            singlescore = max(singlescore, 0)
 
             correct = user_says_yes == yes
             if correct:
@@ -1148,8 +1142,7 @@ def ExColors(ripetitions):
                 break
 
         singlescore = (scoretime * 1000) - (time.time() - now) * 1000
-        if singlescore < 0:
-            singlescore = 0
+        singlescore = max(singlescore, 0)
 
         elapsed_q = time.time() - now
         timeslist.append(elapsed_q)
@@ -1293,8 +1286,7 @@ def main():
                 imin=5,
                 imax=300,
             )
-            if rpt > 300:
-                rpt = 300
+            rpt = min(rpt, 300)
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
             score, scoreslist, duration, timeslist, wins, errors_list = ExColors(rpt)
@@ -1337,8 +1329,7 @@ def main():
                 imin=5,
                 imax=300,
             )
-            if rpt > 300:
-                rpt = 300
+            rpt = min(rpt, 300)
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
             score, scoreslist, duration, timeslist, wins, errors_list = ExKnights(rpt)
@@ -1381,8 +1372,7 @@ def main():
                 imin=5,
                 imax=300,
             )
-            if rpt > 300:
-                rpt = 300
+            rpt = min(rpt, 300)
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
             score, scoreslist, duration, timeslist, wins, errors_list = ExBishops(rpt)

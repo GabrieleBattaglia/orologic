@@ -8,12 +8,7 @@ import urllib.request
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
 from . import config, storage
-
-
-def _(testo):
-    from .config import L10N
-
-    return L10N.get(testo, testo)
+from .config import _
 
 
 def get_token(secrets):
@@ -286,14 +281,12 @@ def report_player(username):
     with contextlib.suppress(Exception):
         pyperclip.copy(report_url)
     print(
-        _(
-            "\nURL per la segnalazione di {u} copiato negli appunti: {url}"
-        ).format(u=username, url=report_url)
+        _("\nURL per la segnalazione di {u} copiato negli appunti: {url}").format(
+            u=username, url=report_url
+        )
     )
     print(_("Apertura della pagina di segnalazione nel browser in corso..."))
     webbrowser.open(report_url)
-
-
 
 
 def download_games(username, token):

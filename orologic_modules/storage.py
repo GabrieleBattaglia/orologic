@@ -1,5 +1,6 @@
 import json
 import os
+
 from . import config
 
 
@@ -10,7 +11,7 @@ def LoadDB():
     try:
         with open(config.DB_FILE, "r") as f:
             return json.load(f)
-    except (json.JSONDecodeError, IOError):
+    except (OSError, json.JSONDecodeError):
         return {"clocks": [], "menu_numerati": False}
 
 
@@ -21,5 +22,5 @@ def SaveDB(db):
         with open(config.DB_FILE, "w") as f:
             json.dump(db, f, indent=4)
         # print(f"[DEBUG] DB salvato in: {config.DB_FILE}") # Scommentare se serve debug
-    except IOError as e:
+    except OSError as e:
         print(f"Errore nel salvataggio del DB: {e}")

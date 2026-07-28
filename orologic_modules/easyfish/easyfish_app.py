@@ -1,31 +1,33 @@
+import builtins
+import re
+
 import chess
 import chess.engine
 import pyperclip
-import re
-from GBUtils import dgt, menu, Acusticator
-from .constants import MNMAIN
+
+from GBUtils import Acusticator, dgt, menu
+
+from .. import chess960_utils, config
+from .. import engine as orologic_engine
 
 # DRY: Uso le utility di Orologic
 from ..board_utils import CustomBoard, DescribeMove, GameState, NormalizeMove
-from .utils import CalculateMaterial
+from ..config import _
+from . import game_mode
+from .constants import MNMAIN
+from .drawing import drawing_menu, verbalize_drawings
+from .engine_handler import ShowStats
+from .image_exporter import export_board_pdf, image_settings_menu
+from .interaction import BoardEditor, ExplorerMode
 from .pgn_handler import (
+    AddingPGNTAGS,
+    CopyPGNToClipboard,
     InitNewPGN,
     PastePGNFromClipboard,
-    CopyPGNToClipboard,
     SaveGameToFile,
-    AddingPGNTAGS,
 )
-from .. import engine as orologic_engine
-from .. import config
-from ..config import _
-from .engine_handler import ShowStats
-from .interaction import ExplorerMode, BoardEditor
-from . import game_mode
-from .image_exporter import image_settings_menu, export_board_pdf
-from .drawing import drawing_menu, verbalize_drawings
-from .. import chess960_utils
 from .sharing_window import PygameBoardWindow
-import builtins
+from .utils import CalculateMaterial
 
 _orig_print = builtins.print
 show_output_on_board = False
@@ -485,7 +487,7 @@ def run():
 
                 is_standard = enter_escape(
                     _(
-                        "Vuoi giocare alla variante standard (scacchi ortodossi)? (INVIO per si', ESC per no): "
+                        "Vuoi giocare alla variante standard (scacchi standard)? (INVIO per si', ESC per no): "
                     )
                 )
                 if not is_standard:
@@ -798,8 +800,7 @@ def run():
             elif cmd_clean == ".l":
                 if info:
                     idx = number_command - 1 if number_command > 0 else 0
-                    if idx < 0:
-                        idx = 0
+                    idx = max(idx, 0)
                     current_info_list = info if isinstance(info, list) else [info]
                     if idx >= len(current_info_list):
                         print(

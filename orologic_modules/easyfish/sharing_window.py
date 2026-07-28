@@ -1,12 +1,13 @@
+import copy
 import io
 import os
 import threading
 import xml.etree.ElementTree as ET
-import copy
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
-import pygame
 import chess
+import pygame
+
 from .image_exporter import generate_custom_svg, get_image_settings
 
 
@@ -203,8 +204,7 @@ class PygameBoardWindow:
         try:
             reserved_height = min(int(height * 0.15), 140) if show_text else 0
             size = min(width, height - reserved_height)
-            if size < 100:
-                size = 100
+            size = max(size, 100)
             svg_data = generate_custom_svg(
                 board_to_render,
                 node_to_render,
@@ -218,8 +218,7 @@ class PygameBoardWindow:
                 surf = pygame.transform.smoothscale(surf, (size, size))
             x_offset = (width - size) // 2
             y_offset = (height - reserved_height - size) // 2
-            if y_offset < 0:
-                y_offset = 0
+            y_offset = max(y_offset, 0)
             screen.fill((30, 30, 30))
             screen.blit(surf, (x_offset, y_offset))
             if show_text and reserved_height > 30:
