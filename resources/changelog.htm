@@ -19,6 +19,11 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.9</h3>
+<h4>8.9.6 (30 luglio 2026 - 18:55)</h4>
+<ul>
+  <li>* [Engine/Config] Risolto un bug nella configurazione manuale del motore (`EditEngineConfig`): garantito il corretto rilevamento dei percorsi relativi inseriti dall'utente (es. cartella `engine`), prevenendo falsi avvisi di drive differente e salvando correttamente `engine_is_relative: true` per la portabilità su USB.</li>
+  <li>+ [Doc/Manuale] Arricchito il manuale utente (`readme.htm`) nella sezione 2.8.2.1 spiegando in dettaglio la gestione intelligente dei percorsi relativi vs assoluti per il motore scacchistico.</li>
+</ul>
 <h4>8.9.5 (28 luglio 2026 - 19:20)</h4>
 <ul>
   <li>* [L10N/Lichess] Risolto un bug critico che impediva la traduzione delle stringhe di Orolichess nelle lingue estere (es. Portoghese): rimosse le definizioni stub locali di `_()` nei sottomoduli `lichess_app`, `lichess_board`, `lichess_profiler`, `lichess_stats` e `cleaner`, ripristinando l'importazione diretta di `gettext` tramite `config._`.</li>
