@@ -514,15 +514,20 @@ margin: 1em 0;
 <h4>2.8.2. Configurazione Motore Scacchistico (motore)</h4>
 <p>Questo passaggio è fondamentale per abilitare le funzioni di analisi. Orologic ti guiderà nella configurazione iniziale, ma è importante capire come renderlo portatile e cosa significano i parametri tecnici.</p>
 
-<h5>2.8.2.1. Portabilità: Usare la cartella 'engine'</h5>
-<p>Se desideri utilizzare Orologic da una chiavetta USB e cambiare spesso computer, puoi evitare di riconfigurare il percorso del motore ogni volta seguendo questi passi:</p>
+<h5>2.8.2.1. Portabilità e Gestione Percorsi (Relativi vs Assoluti)</h5>
+<p>Orologic gestisce in modo intelligente il percorso del motore scacchistico per garantire la massima portabilità:</p>
+<ul>
+    <li><strong>Percorso Relativo (Consigliato per chiavette USB e portabilità):</strong> Se il motore si trova nello stesso disco/drive di Orologic (ad esempio nella cartella <code>engine</code> all'interno del programma), Orologic salverà un percorso relativo. Questo ti permette di spostare l'intera cartella di Orologic o utilizzarla da una chiavetta USB su diversi computer senza dover riconfigurare il motore.</li>
+    <li><strong>Percorso Assoluto:</strong> Se il motore risiede su un disco o partizione differente rispetto a Orologic (ad es. <code>D:\scacchi\stockfish.exe</code>), Orologic salverà il percorso assoluto e avviserà che la configurazione è legata a quello specifico computer/drive.</li>
+</ul>
+<p><strong>Come impostare un percorso relativo per la portabilità:</strong></p>
 <ol>
-    <li>Crea una cartella chiamata <code>engine</code> nella stessa cartella dove si trova il file <code>orologic.py</code> (o l'eseguibile).</li>
+    <li>Crea una cartella chiamata <code>engine</code> nella stessa cartella dove si trova l'eseguibile di Orologic.</li>
     <li>Copia il file del tuo motore (es: <code>stockfish.exe</code>) all'interno di questa cartella <code>engine</code>.</li>
-    <li>Quando Orologic ti chiede il percorso (path), scrivi semplicemente <code>engine</code>.</li>
+    <li>Nel menu di configurazione manuale del motore (<code>m</code>), quando Orologic ti chiede il percorso (path), scrivi semplicemente <code>engine</code> (o lascia il default suggerito).</li>
     <li>Quando ti chiede il nome dell'eseguibile, scrivi il nome esatto del file (es: <code>stockfish.exe</code>).</li>
 </ol>
-<p>In questo modo, Orologic creerà un percorso relativo che funzionerà ovunque tu sposti la cartella del programma.</p>
+<p>Orologic rileverà automaticamente che il motore si trova nello stesso drive e confermerà il salvataggio in modalità relativa portabile.</p>
 
 <h5>2.8.2.2. Spiegazione dei Parametri UCI</h5>
 <p>Durante la configurazione, ti verranno chiesti alcuni valori. Ecco una guida per impostarli correttamente:</p>

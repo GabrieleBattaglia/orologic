@@ -1938,9 +1938,13 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
         default=default_exe,
     )
 
-    full_engine_path = os.path.join(path, executable)
+    raw_engine_path = os.path.join(path, executable)
+    if os.path.isabs(raw_engine_path):
+        abs_engine_path = os.path.abspath(raw_engine_path)
+    else:
+        abs_engine_path = os.path.abspath(percorso_salvataggio(raw_engine_path))
 
-    if not os.path.isfile(full_engine_path):
+    if not os.path.isfile(abs_engine_path):
         print(
             _(
                 "Il file specificato non esiste. Verifica il percorso e il nome dell'eseguibile."
@@ -1948,16 +1952,16 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
         )
         return
 
-    app_path = percorso_salvataggio("")
+    app_path = os.path.abspath(percorso_salvataggio(""))
     app_drive = os.path.splitdrive(app_path)[0]
-    engine_drive = os.path.splitdrive(full_engine_path)[0]
+    engine_drive = os.path.splitdrive(abs_engine_path)[0]
 
     path_to_save = ""
     is_relative = False
 
     if app_drive.lower() == engine_drive.lower() and app_drive != "":
         try:
-            path_to_save = os.path.relpath(full_engine_path, app_path)
+            path_to_save = os.path.relpath(abs_engine_path, app_path)
             is_relative = True
             print(
                 _(
@@ -1965,10 +1969,10 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
                 )
             )
         except ValueError:
-            path_to_save = full_engine_path
+            path_to_save = abs_engine_path
             is_relative = False
     else:
-        path_to_save = full_engine_path
+        path_to_save = abs_engine_path
         is_relative = False
         print(
             _(
