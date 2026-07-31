@@ -50,6 +50,10 @@ def save_lichess_game(game_state, result_str="*"):
 
     from .easyfish import pgn_handler
 
+    if getattr(game_state, "saved", False):
+        return
+    game_state.saved = True
+
     pgn_text = ""
     # Se abbiamo un game_id, proviamo a scaricare il PGN completo e ufficiale da Lichess
     if hasattr(game_state, "game_id") and game_state.game_id:
@@ -72,7 +76,7 @@ def save_lichess_game(game_state, result_str="*"):
                 pgn_handler.SaveGameToFile(game)
                 print(
                     _(
-                        "La partita e' stata scaricata da Lichess e salvata nella cartella PGN."
+                        "La partita e' stata scaricata da Lichess, salvata nella cartella PGN e copiata negli appunti."
                     )
                 )
                 return
@@ -681,6 +685,8 @@ def spectate_game(game_id, token=None):
 
     board = board_utils.CustomBoard()
     game_state = SpectatorGameState(board)
+    game_state.game_id = game_id
+    game_state.token = token
 
     while True:
         user_input = async_spectator_loop(q, game_state)
@@ -852,6 +858,8 @@ def spectate_game(game_id, token=None):
             print(_(".  : Esci"))
         else:
             print(_("\nComando non riconosciuto. Usa .? per l'aiuto."))
+
+    save_lichess_game(game_state, getattr(game_state, "winner", "*"))
 
 
 class GamePlayState:
