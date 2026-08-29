@@ -10,7 +10,11 @@ from GBUtils import polipo
 from . import config
 
 # Inizializzazione localizzazione per questo modulo
-lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
+lingua_rilevata, _ = polipo(
+    source_language="it",
+    localedir=config.CARTELLA_LOCALES,
+    config_path=config.CARTELLA_SETTINGS,
+)
 
 
 def GetLatestStockfishURL():

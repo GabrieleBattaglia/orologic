@@ -9,7 +9,11 @@ from GBUtils import Acusticator, polipo
 
 from . import config
 
-lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
+lingua_rilevata, _ = polipo(
+    source_language="it",
+    localedir=config.CARTELLA_LOCALES,
+    config_path=config.CARTELLA_SETTINGS,
+)
 
 
 def CalculateMaterial(board):

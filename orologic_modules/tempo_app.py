@@ -9,7 +9,11 @@ from . import board_utils, clock, config, ui, version
 from .game_flow import async_arbitration_input, clock_thread
 
 # Inizializzazione localizzazione
-lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
+lingua_rilevata, _ = polipo(
+    source_language="it",
+    localedir=config.CARTELLA_LOCALES,
+    config_path=config.CARTELLA_SETTINGS,
+)
 
 TEMPO_COMMANDS = {
     ".1": _("Mostra il tempo rimanente del bianco"),

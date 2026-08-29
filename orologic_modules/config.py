@@ -57,24 +57,41 @@ def format_date_italian(dt=None, include_time=True, include_day_name=True):
     return date_str
 
 
+# Radice dell'applicazione: la cartella che contiene orologic.py, cioe' quella
+# sopra orologic_modules. Ricavarla dal file sorgente invece che dalla directory
+# di lavoro fa si' che salvataggi e risorse si trovino sempre nella stessa
+# cartella, da qualunque posto venga lanciato il programma.
+RADICE_APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
+    """Percorso di una risorsa inclusa nel pacchetto (manuale, changelog, eco.db)."""
+    base_path = getattr(sys, "_MEIPASS", None) or RADICE_APP
     return os.path.join(base_path, relative_path)
 
 
 def percorso_salvataggio(relative_path):
+    """Percorso di lettura e scrittura dei dati dell'utente (pgn, txt, settings)."""
     if getattr(sys, "frozen", False):
         base_path = os.path.dirname(sys.executable)
     else:
-        base_path = os.path.abspath(".")
+        base_path = RADICE_APP
     return os.path.join(base_path, relative_path)
 
 
+# Cartelle passate a polipo in forma assoluta: senza di questo, GBUtils le
+# risolve rispetto alla directory di lavoro, quindi lanciando il programma da
+# un'altra cartella le traduzioni non verrebbero trovate e la lingua scelta
+# verrebbe salvata altrove.
+CARTELLA_LOCALES = resource_path("locales")
+CARTELLA_SETTINGS = percorso_salvataggio("settings")
+
 # Inizializzazione localizzazione base
-lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
+lingua_rilevata, _ = polipo(
+    source_language="it",
+    localedir=CARTELLA_LOCALES,
+    config_path=CARTELLA_SETTINGS,
+)
 
 STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
 VERSION = version.VERSION

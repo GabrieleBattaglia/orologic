@@ -15,7 +15,11 @@ from GBUtils import Acusticator, dgt, key, menu, polipo
 
 from . import board_utils, config, storage, ui, version
 
-lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
+lingua_rilevata, _ = polipo(
+    source_language="it",
+    localedir=config.CARTELLA_LOCALES,
+    config_path=config.CARTELLA_SETTINGS,
+)
 
 
 def calculate_win_probability(score_obj, turn):
@@ -107,10 +111,9 @@ cache_analysis = {}
 oaa_analysis_cache = {}
 
 
-def percorso_salvataggio(file):
-    """Restituisce il percorso assoluto partendo dalla cartella dell'eseguibile/script."""
-    app_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    return os.path.join(app_path, file)
+# I percorsi passano tutti da config: una sola definizione per l'intero
+# progetto, altrimenti moduli diversi salvano in cartelle diverse.
+percorso_salvataggio = config.percorso_salvataggio
 
 
 def SetAnalysisTime(t):

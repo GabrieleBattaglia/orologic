@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Il testo integrale della fase 1, con tutti i 154 rilievi iniziali, resta nella storia del repository al commit che lo ha introdotto. Ultimo aggiornamento 2026-08-29: chiusa la tappa 1, integrita dei dati, per un totale di 5 rilievi risolti e rimossi.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-29: chiuse la tappa 1, integrita dei dati, e la tappa 2, avvio e robustezza di base, per un totale di 12 rilievi risolti sui 154 iniziali.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -51,8 +51,6 @@ R004 gravita alto, categoria fragilita, in stockfish_installer.py:25,93 (B1-04)
 requests.get senza timeout sia per l'API GitHub sia per il download. Impatto: avvio o aggiornamento bloccati a tempo indefinito con rete lenta. Correzione: timeout esplicito su entrambe le chiamate.
 R005 gravita alto, categoria fragilita, in stockfish_installer.py:155,237-238 (B1-05)
 except Exception seguito da pass avvolge l'intera CheckForStockfishUpdatesSilent, download e salvataggio db compresi. Un errore a meta aggiornamento lascia db e cartella engine incoerenti senza alcun avviso.
-R007 gravita alto, categoria fragilita, in orologic.py:307 (B1-07)
-engine.CloseEngine viene chiamato solo sul ramo di uscita dal menu. Interruzione da tastiera o eccezione lasciano il processo Stockfish orfano. Correzione: try finally attorno al loop oppure registrazione atexit.
 R008 gravita alto, categoria logica, in chess960_utils.py:156-186 (B2-01)
 Il FEN della posizione Fischer Random inserita a mano viene costruito con campo arrocco a trattino. Verificato sperimentalmente: la stessa posizione ottenuta dal generatore casuale ha diritti KQkq e numero 518, mentre inserita a mano non ha alcun diritto di arrocco e chess960_pos restituisce None. Impatto: chi inserisce la sequenza a mano gioca una partita in cui nessuno dei due puo arroccare, e il messaggio annuncia Numero Chess960 None. Inoltre sequenze illegali come otto torri vengono accettate senza errore. Correzione: aggiungere i diritti di arrocco al FEN e rifiutare la sequenza se chess960_pos e None.
 R009 gravita alto, categoria logica, in board_utils.py:723-737 con game_flow.py:1421 e lichess_board.py:132 (B2-02)
@@ -81,8 +79,6 @@ R021 gravita alto, categoria DRY, in ui.py:33-131 con config.py:126-195 (B3-04)
 Esistono due sistemi di localizzazione paralleli e divergenti: due get_default_localization, due recursive_merge, due LoadLocalization e due dizionari L10N. I contenuti differiscono: config chiama la regina donna e usa le colonne fonetiche Ancona Bologna Como, ui usa regina e le lettere semplici; la stessa annotazione e descritta mossa dubbia in config e mossa interessante in ui. A seconda del modulo che parla l'utente sente termini diversi per la stessa cosa. Da unificare in un solo modulo di localizzazione.
 R022 gravita alto, categoria logica, in ui.py:642-676 con game_flow.py:1093 (B3-05)
 descriptive_move_history viene solo accodata e mai ripulita quando si annulla una mossa, a differenza di move_history, move_times e clocks_history. Impatto: il riepilogo testuale salvato a fine partita contiene la mossa annullata e da quel punto in poi la numerazione delle mosse e sfalsata di mezzo turno.
-R023 gravita alto, categoria DRY, in engine.py:110-114 con config.py:68-73 (B3-06)
-Due funzioni omonime percorso_salvataggio con basi diverse: engine parte dalla cartella di sys.argv[0], config dalla directory corrente o dalla cartella dell'eseguibile. A seconda del modulo che salva, gli stessi file possono finire in cartelle diverse.
 R024 gravita alto, categoria regole generali, in engine.py:1569,1572,1821, ui.py:645,675,685, memoboard_app.py:607,640,666,695 (B3-07)
 Separatori grafici generati a runtime: quaranta caratteri uguale in engine, trentadue trattini nel riepilogo testuale salvato, righe di trattini lunghe quanto l'intestazione in memoboard. La riga 1821 di engine somma tre violazioni: due righe vuote consecutive, quaranta uguali, testo, altri quaranta uguali.
 R025 gravita alto, categoria fragilita, in lichess_app.py in oltre venti punti e lichess_stats.py:17 (B4-01)
@@ -107,12 +103,6 @@ R034 gravita alto, categoria fragilita, in pgn_search.py:230-234 (B6-02)
 Dentro il ciclo di lettura delle partite, l'eccezione di read_game viene gestita con continue: se l'errore si ripresenta senza che lo stream avanzi, il ciclo non termina mai e il programma si blocca senza messaggi ne possibilita di interruzione. Correzione: contare i tentativi falliti e interrompere dopo pochi, oppure uscire dal ciclo segnalando l'errore.
 R035 gravita alto, categoria DRY, in tempo_app.py:141-178 con game_flow.py:318-355 (B6-03)
 La funzione get_prompt, compresa la funzione fmt annidata, e copiata parola per parola da game_flow: circa quaranta righe. Il modulo importa correttamente async_arbitration_input e clock_thread dallo stesso file, quindi la duplicazione e tanto piu evitabile.
-R036 gravita alto, categoria fragilita, in easyfish/constants.py:12 (B7-01)
-La costante del sito PGN e costruita concatenando la variabile d'ambiente COMPUTERNAME a una stringa, senza verificarne l'esistenza. Dove quella variabile non c'e, per esempio su Linux e macOS o in certe sessioni di servizio, getenv restituisce nulla e la concatenazione solleva TypeError durante l'import del modulo. Poiche orologic.py importa easyfish_app fra i primi import, l'intera applicazione non si avvia e l'errore non dice nulla di comprensibile. Correzione: valore di ripiego esplicito.
-R037 gravita alto, categoria fragilita, in easyfish/constants.py:8 con engine_handler.py:15,90 (B7-02)
-Il file di configurazione del motore di Easyfish e indicato con il solo nome, quindi viene cercato e creato nella directory di lavoro corrente invece che nella cartella dell'applicazione. Lanciando Orologic da una cartella diversa, Easyfish non trova piu la configurazione e ripropone tutte le domande iniziali. Correzione: costruire il percorso con percorso_salvataggio come fa il resto del progetto.
-R038 gravita alto, categoria regole generali, in easyfish/engine_handler.py:26-45 (B7-03)
-I messaggi di prima configurazione sono scritti in inglese in un progetto la cui lingua sorgente e l'italiano: non essendoci una traduzione dall'inglese, l'utente italiano legge testi in inglese. Nella stessa stringa compare inoltre una sequenza di ritorno a capo scritta con doppia barra rovesciata, che finisce stampata a schermo come testo invece di andare a capo. Verificato leggendo il file.
 R039 gravita alto, categoria logica, in easyfish/constants.py:20-28 (B7-04)
 Le colonne sono nominate con l'alfabeto NATO, alpha bravo charlie, che e la terza convenzione del programma dopo Ancona Bologna Como di config e le lettere semplici di ui. Questi nomi non passano da gettext e non sono raggiunti dal menu di personalizzazione dei nomi, quindi la stessa casa viene annunciata in tre modi diversi a seconda di dove ci si trova.
 R040 gravita alto, categoria DRY, in easyfish/game_mode.py:33-115 (B7-05)
@@ -121,8 +111,6 @@ R041 gravita medio, categoria logica, in config.py:294 (B1-08)
 re.sub con classe di caratteri da zero a 31 scritta come escape ottale: viene interpretata come intervallo 0-25, quindi i caratteri di controllo da 26 a 31 restano nel nome file e Windows rifiuta la scrittura. Verificato sperimentalmente. Correzione: usare la forma esadecimale da x00 a x1f.
 R042 gravita medio, categoria logica, in stockfish_installer.py:165,181 (B1-09)
 La versione locale e quella remota si ricavano concatenando tutti i gruppi numerici del nome. Con un nome tipo Stockfish 16 AVX2 64bit si ottiene 1664, valore sempre maggiore del remoto, e l'aggiornamento non viene mai proposto. Correzione: estrarre il primo gruppo numerico e confrontare tuple di interi.
-R043 gravita medio, categoria fragilita, in config.py:72 (B1-10)
-percorso_salvataggio usa la directory corrente quando l'app non e congelata. Lanciando l'app da un'altra cartella i salvataggi finiscono altrove. Correzione: derivare la radice dal percorso del file sorgente.
 R044 gravita medio, categoria DRY, in dieci moduli (B1-11)
 polipo viene inizializzato dieci volte, una per modulo, rileggendo ogni volta i file di traduzione. Correzione: inizializzare una sola volta in config ed esportare la funzione di traduzione.
 R045 gravita medio, categoria DRY, in orologic.py:46-77 (B1-12)
@@ -255,8 +243,6 @@ R110 gravita medio, categoria DRY, in easyfish/game_mode.py:117-155 (B7-13)
 Ennesimo parser del tempo digitato, accanto a ParseTime di board_utils: questo accetta anche la forma con incremento, quindi andrebbero unificati estendendo quello esistente.
 R111 gravita medio, categoria ottimizzazione, in easyfish/game_mode.py:18-31 (B7-14)
 Quinta classe di stato partita del progetto, dopo GameState, SpectatorGameState, GamePlayState e DummyGameState, con nomi divergenti per gli stessi concetti: qui white_time, altrove white_remaining.
-R112 gravita medio, categoria ottimizzazione, in easyfish/engine_handler.py:13-95 (B7-15)
-Easyfish mantiene una configurazione del motore tutta sua, separata da quella di Orologic nel database: l'utente deve indicare due volte lo stesso eseguibile e regolare due volte hash, core e livello.
 R113 gravita basso, categoria ottimizzazione, in check_engine.py (B1-21)
 Script diagnostico rimasto nel repository, con except generico e ricerca dell'eseguibile duplicata rispetto a stockfish_installer.
 R114 gravita basso, categoria ottimizzazione, in zip_maker.py:4,13 (B1-22)
@@ -383,21 +369,20 @@ constants.py centralizza mappe e valori del sottopacchetto in un punto unico.
 La divisione del sottopacchetto e chiara: una responsabilita per file, dai disegni all'esportazione PDF alla finestra di condivisione.
 Il prompt compatto con materiale e conteggio pezzi e adatto alla lettura rapida su display braille.
 Criticita rilevate in GBUtils.
-Nessuna. GBUtils e stato consultato in sola lettura per verificare la firma di dgt, che prevede gia i parametri smin, smax e pwd usati nei rilievi. Non sono emerse criticita da sottoporre a Gabriele e non e stata modificata alcuna riga del pacchetto.
+Segnalazione emersa durante la tappa 2, da sottoporre a Gabriele senza intervenire. polipo risolve la cartella delle traduzioni e quella di configurazione rispetto a os.getcwd() quando il programma non e' congelato: chi lo chiama con percorsi relativi si ritrova le traduzioni cercate nella directory di lavoro e una cartella settings creata li' dentro. Orologic ora passa percorsi assoluti, quindi il problema non lo tocca piu', ma gli altri progetti del parco software che usano polipo con percorsi relativi hanno lo stesso difetto. La firma di dgt e' invece risultata completa: smin, smax e pwd coprono i casi in cui il progetto validava a mano.
 Riepilogo per gravita.
 Critico: 0 rilievi
-Alto: 37 rilievi
-Medio: 70 rilievi
+Alto: 32 rilievi
+Medio: 68 rilievi
 Basso: 42 rilievi
-Totale: 149 rilievi ancora aperti
+Totale: 142 rilievi ancora aperti
 Riepilogo per categoria.
-DRY: 29 rilievi
-fragilita: 32 rilievi
+DRY: 28 rilievi
+fragilita: 28 rilievi
 logica: 29 rilievi
-ottimizzazione: 30 rilievi
-regole generali: 29 rilievi
+ottimizzazione: 29 rilievi
+regole generali: 28 rilievi
 Proposta di ordine di lavorazione, in nove tappe, da concordare con Gabriele prima di toccare il codice.
-Tappa 2, avvio e robustezza di base. Sistemare la variabile d'ambiente COMPUTERNAME che puo impedire l'avvio dell'intera applicazione, il percorso relativo della configurazione di Easyfish, la dipendenza dalla directory corrente in percorso_salvataggio e la chiusura del motore in un blocco finally.
 Tappa 3, rete. Introdurre timeout e messaggi parlanti su tutte le chiamate, prendendo a modello quanto gia fatto bene in pgn_search._carica_archivio: timeout esplicito, lettura a blocchi, interruzione con ESC, tetto complessivo. Aggiungere un limite al download delle partite di un giocatore e qualche tentativo di riconnessione allo stream della partita Lichess.
 Tappa 4, correttezza scacchistica. Diritti di arrocco nel FEN Fischer Random inserito a mano, tempo di fase che si somma invece di sostituire, contatori di mossa e fase nell'annullamento, tag clk con il tempo residuo, chiave della cache di analisi comprensiva del numero di linee, classificazione della mossa quando il matto resta disponibile, riconfigurazione di UCI_Chess960 quando il motore parte piu tardi.
 Tappa 5, accessibilita. Eliminare tutti i separatori grafici, letterali e generati a runtime, riscrivere la classifica di Memoboard in forma discorsiva, spezzare le righe di esplorazione lunghe, togliere tabulazioni, righe vuote superflue e unita attaccate ai numeri. Da fare in un passaggio unico su tutto il progetto, perche il difetto e trasversale.
