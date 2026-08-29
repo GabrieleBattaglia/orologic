@@ -20,10 +20,14 @@ import chess.pgn
 import pyperclip
 
 from GBUtils import dgt, enter_escape, key, menu, polipo
-from orologic_modules import board_utils, engine
+from orologic_modules import board_utils, config, engine
 
 # Inizializzazione localizzazione
-lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
+lingua_rilevata, _ = polipo(
+    source_language="it",
+    localedir=config.CARTELLA_LOCALES,
+    config_path=config.CARTELLA_SETTINGS,
+)
 
 
 # ---------------------------------------------------------------------------

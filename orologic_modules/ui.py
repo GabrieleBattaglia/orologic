@@ -9,7 +9,11 @@ from GBUtils import Acusticator, dgt, key, polipo
 from . import board_utils, config, storage, version
 
 # Inizializzazione localizzazione
-lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
+lingua_rilevata, _ = polipo(
+    source_language="it",
+    localedir=config.CARTELLA_LOCALES,
+    config_path=config.CARTELLA_SETTINGS,
+)
 
 # Variabile globale per la localizzazione dinamica
 L10N = {}

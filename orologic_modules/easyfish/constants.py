@@ -1,15 +1,24 @@
 import os
+import platform
 
 import chess
 
 from ..config import _
 
-# File paths
-CONFIG_FILE = "easyfish.json"
+
+def _nome_computer():
+    """Nome della macchina, con ripieghi: su sistemi senza la variabile
+    COMPUTERNAME la vecchia concatenazione diretta faceva fallire l'import
+    dell'intero sottopacchetto, e con esso l'avvio di Orologic."""
+    for nome in (os.getenv("COMPUTERNAME"), os.getenv("HOSTNAME"), platform.node()):
+        if nome:
+            return nome
+    return "PC"
+
 
 # Defaults
 DEFAULT_EVENT = _("Orologic's Game")
-DEFAULT_SITE = os.getenv("COMPUTERNAME") + "'s PC"
+DEFAULT_SITE = f"{_nome_computer()}'s PC"
 DEFAULT_ROUND = "-"
 DEFAULT_WHITE_SURENAME = _("Bianco")
 DEFAULT_WHITE_FIRSTNAME = ""

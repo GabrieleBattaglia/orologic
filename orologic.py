@@ -1,3 +1,4 @@
+import atexit
 import datetime
 import json
 import os
@@ -40,7 +41,11 @@ warnings.filterwarnings(
 )
 
 # Inizializzazione localizzazione
-lingua_rilevata, _ = polipo(source_language="it", config_path="settings")
+lingua_rilevata, _ = polipo(
+    source_language="it",
+    localedir=config.CARTELLA_LOCALES,
+    config_path=config.CARTELLA_SETTINGS,
+)
 
 
 def OpenManual():
@@ -174,6 +179,11 @@ def _incrementa_lanci(db):
 
 
 def Main():
+    # Il motore va chiuso comunque vada: uscita dal menu, eccezione o
+    # interruzione da tastiera. Senza questo, Stockfish resterebbe in
+    # esecuzione come processo orfano. CloseEngine e' ripetibile senza danni.
+    atexit.register(engine.CloseEngine)
+
     # Incremento contatore lanci
     db = storage.UpdateDB(_incrementa_lanci)
 
@@ -621,7 +631,10 @@ def Main():
 
 if __name__ == "__main__":
     t_start = datetime.datetime.now()
-    Main()
+    try:
+        Main()
+    except KeyboardInterrupt:
+        print(_("\nInterruzione richiesta, chiudo Orologic."))
     t_end = datetime.datetime.now()
     delta = relativedelta(t_end, t_start)
     comp = []
