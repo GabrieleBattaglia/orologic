@@ -5,16 +5,10 @@ import re
 import chess
 import chess.pgn
 
-from GBUtils import Acusticator, polipo
+from GBUtils import Acusticator
 
-from . import config
-
-lingua_rilevata, _ = polipo(
-    source_language="it",
-    localedir=config.CARTELLA_LOCALES,
-    config_path=config.CARTELLA_SETTINGS,
-)
-
+from . import config, localizzazione
+from .config import _
 
 LARGHEZZA_BRAILLE = 40
 
@@ -68,7 +62,7 @@ def NormalizeMove(m):
 
 
 def DescribeMove(move, board, annotation=None):
-    L10N = config.L10N
+    L10N = localizzazione.L10N
     if board.is_castling(move):
         base_descr = (
             L10N["moves"]["short_castle"]
@@ -195,13 +189,13 @@ def DescribeMove(move, board, annotation=None):
                     descr += f" {captured_name}"
                 if board.is_en_passant(move):
                     descr += " {ep}".format(ep=L10N["moves"]["en_passant"])
-                descr += " {prep} {file}{rank}".format(
+                descr += " {prep} {file} {rank}".format(
                     prep=L10N["moves"]["capture_on"],
                     file=L10N["columns"].get(dest[0], dest[0]),
                     rank=dest[1],
                 )
             else:
-                descr += " {prep} {file}{rank}".format(
+                descr += " {prep} {file} {rank}".format(
                     prep=L10N["moves"]["move_to"],
                     file=L10N["columns"].get(dest[0], dest[0]),
                     rank=dest[1],

@@ -19,16 +19,8 @@ import chess
 import chess.pgn
 import pyperclip
 
-from GBUtils import dgt, enter_escape, key, menu, polipo
-from orologic_modules import board_utils, config, engine
-
-# Inizializzazione localizzazione
-lingua_rilevata, _ = polipo(
-    source_language="it",
-    localedir=config.CARTELLA_LOCALES,
-    config_path=config.CARTELLA_SETTINGS,
-)
-
+from GBUtils import dgt, enter_escape, key, menu
+from orologic_modules import board_utils, engine
 
 # ---------------------------------------------------------------------------
 # Entry point
@@ -438,11 +430,11 @@ def _formato_statistiche(info_list, indici, filtri_attivi, giocatore_comune=None
 
         tot = len(indici)
         if tot == 0:
-            return "+0% =0% -0%"
+            return _("+0% =0% -0%")
         pw = win / tot * 100
         pd = draw / tot * 100
         pl = loss / tot * 100
-        return f"+{pw:.0f}% ={pd:.0f}% -{pl:.0f}%"
+        return _("+{pw:.0f}% ={pd:.0f}% -{pl:.0f}%").format(pw=pw, pd=pd, pl=pl)
     else:
         # Statistiche assolute del bianco e del nero
         w = d = b = other = 0
@@ -458,11 +450,11 @@ def _formato_statistiche(info_list, indici, filtri_attivi, giocatore_comune=None
                 other += 1
         tot = len(indici)
         if tot == 0:
-            return "B:0% P:0% N:0%"
+            return _("B:0% P:0% N:0%")
         pw = w / tot * 100
         pd = d / tot * 100
         pb = b / tot * 100
-        return f"B:{pw:.0f}% P:{pd:.0f}% N:{pb:.0f}%"
+        return _("B:{pw:.0f}% P:{pd:.0f}% N:{pb:.0f}%").format(pw=pw, pd=pd, pb=pb)
 
 
 def _mostra_statistiche(totale, info_list):

@@ -1,12 +1,7 @@
-from GBUtils import Acusticator, dgt, enter_escape, key, menu, polipo
+from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
 from . import board_utils, config, storage
-
-lingua_rilevata, _ = polipo(
-    source_language="it",
-    localedir=config.CARTELLA_LOCALES,
-    config_path=config.CARTELLA_SETTINGS,
-)
+from .config import _
 
 # Volume gestito via config.VOLUME
 

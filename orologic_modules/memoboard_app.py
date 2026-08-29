@@ -11,7 +11,7 @@ import time
 
 from GBUtils import Acusticator, dgt, key, menu
 
-from . import config
+from . import config, localizzazione
 from .config import _
 
 # COSTANTI
@@ -66,7 +66,7 @@ diagonals = {
 def get_column_spelling(col_letter):
     """Ottiene la pronuncia fonetica delle colonne da Orologic (config.L10N)."""
     col_lower = col_letter.lower()
-    return config.L10N.get("columns", {}).get(col_lower, col_letter).title()
+    return localizzazione.L10N.get("columns", {}).get(col_lower, col_letter).title()
 
 
 # --- FUNZIONI GESTIONE PUNTEGGI (JSON) ---

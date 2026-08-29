@@ -26,26 +26,6 @@ DEFAULT_BLACK_SURENAME = _("Nero")
 DEFAULT_BLACK_FIRSTNAME = ""
 
 # Chess conversion maps
-COLUMN_TO_NATO = {
-    "a": "alpha",
-    "b": "bravo",
-    "c": "charlie",
-    "d": "delta",
-    "e": "echo",
-    "f": "foxtrot",
-    "g": "golf",
-    "h": "hotel",
-}
-
-CHESSPIECE_TO_NAME = {
-    chess.PAWN: _("Pedone"),
-    chess.KNIGHT: _("Cavallo"),
-    chess.BISHOP: _("Alfiere"),
-    chess.ROOK: _("Torre"),
-    chess.QUEEN: _("Donna"),
-    chess.KING: _("Re"),
-}
-
 PIECE_VALUES = {
     "R": 5,
     "r": 5,
@@ -74,21 +54,6 @@ SAN_CHESSPIECES = {
     "r": chess.ROOK,
     "q": chess.QUEEN,
     "k": chess.KING,
-}
-
-SYMBOLS_TO_NAME = {
-    "R": _("Torre bianca"),
-    "r": _("Torre nera"),
-    "N": _("Cavallo bianco"),
-    "n": _("Cavallo nero"),
-    "B": _("Alfiere bianco"),
-    "b": _("Alfiere nero"),
-    "Q": _("Donna bianca"),
-    "q": _("Donna nera"),
-    "K": _("Re bianco"),
-    "k": _("Re nero"),
-    "P": _("Pedone bianco"),
-    "p": _("Pedone nero"),
 }
 
 # Menus

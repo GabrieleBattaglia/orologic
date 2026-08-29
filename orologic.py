@@ -22,6 +22,7 @@ from orologic_modules import (
     ui,
     version,
 )
+from orologic_modules.config import _, lingua_rilevata
 from orologic_modules.easyfish import easyfish_app
 
 from GBUtils import (
@@ -32,19 +33,11 @@ from GBUtils import (
     key,
     menu,
     perform_update,
-    polipo,
     update_checker,
 )
 
 warnings.filterwarnings(
     "ignore", message="urllib3 .* doesn't match a supported version!"
-)
-
-# Inizializzazione localizzazione
-lingua_rilevata, _ = polipo(
-    source_language="it",
-    localedir=config.CARTELLA_LOCALES,
-    config_path=config.CARTELLA_SETTINGS,
 )
 
 

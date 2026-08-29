@@ -8,36 +8,42 @@ from GBUtils import polipo
 
 from . import version
 
-GIORNI_IT = [
-    "lunedì",
-    "martedì",
-    "mercoledì",
-    "giovedì",
-    "venerdì",
-    "sabato",
-    "domenica",
-]
 
-MESI_IT = [
-    "",
-    "gennaio",
-    "febbraio",
-    "marzo",
-    "aprile",
-    "maggio",
-    "giugno",
-    "luglio",
-    "agosto",
-    "settembre",
-    "ottobre",
-    "novembre",
-    "dicembre",
-]
+# I nomi di giorni e mesi passano da gettext: scritti a mano restavano
+# italiani anche con l'interfaccia in inglese o portoghese.
+def _giorni():
+    return [
+        _("lunedì"),
+        _("martedì"),
+        _("mercoledì"),
+        _("giovedì"),
+        _("venerdì"),
+        _("sabato"),
+        _("domenica"),
+    ]
+
+
+def _mesi():
+    return [
+        "",
+        _("gennaio"),
+        _("febbraio"),
+        _("marzo"),
+        _("aprile"),
+        _("maggio"),
+        _("giugno"),
+        _("luglio"),
+        _("agosto"),
+        _("settembre"),
+        _("ottobre"),
+        _("novembre"),
+        _("dicembre"),
+    ]
 
 
 def format_date_italian(dt=None, include_time=True, include_day_name=True):
     """
-    Restituisce una data formattata in italiano esteso comprensiva del giorno della settimana.
+    Data per esteso con il giorno della settimana, nella lingua attiva.
     Esempio: 'sabato 25 luglio 2026 - 17:20' oppure 'sabato 25 luglio 2026'.
     """
     if dt is None:
@@ -47,9 +53,9 @@ def format_date_italian(dt=None, include_time=True, include_day_name=True):
             dt = datetime.datetime.fromisoformat(dt)
         except Exception:
             return dt
-    day_name = GIORNI_IT[dt.weekday()] if include_day_name else ""
+    day_name = _giorni()[dt.weekday()] if include_day_name else ""
     day = dt.day
-    month = MESI_IT[dt.month]
+    month = _mesi()[dt.month]
     year = dt.year
     date_str = f"{day_name} {day} {month} {year}".strip()
     if include_time:
@@ -128,7 +134,7 @@ NAG_MAP = {
     "?": (2, _("mossa debole")),
     "!!": (3, _("mossa molto forte")),
     "??": (4, _("mossa molto debole")),
-    "!?": (5, _("mossa dubbia")),
+    "!?": (5, _("mossa interessante")),
     "?!": (6, _("mossa dubbia")),
 }
 NAG_REVERSE_MAP = {v[0]: k for k, v in NAG_MAP.items()}
@@ -139,77 +145,6 @@ ANNOTATION_SUFFIX_PATTERN = re.compile(r"([!?=]{1,2}$)(?<!=.)")
 # Pattern Regex specifico per gestire i suffissi DOPO una promozione (es. "d8=Q!")
 PROMOTION_PATTERN_WITH_SUFFIX = re.compile(r"(=[RNBQ])([!?=]{1,2})?$")
 
-
-def get_default_localization():
-    return {
-        "pieces": {
-            "pawn": {"name": "pedone", "pname": "pedoni", "gender": "m"},
-            "knight": {"name": "cavallo", "pname": "cavalli", "gender": "m"},
-            "bishop": {"name": "alfiere", "pname": "alfieri", "gender": "m"},
-            "rook": {"name": "torre", "pname": "torri", "gender": "f"},
-            "queen": {"name": "donna", "pname": "donne", "gender": "f"},
-            "king": {"name": "Re", "pname": "Re", "gender": "m"},
-        },
-        "columns": {
-            "a": "Ancona",
-            "b": "Bologna",
-            "c": "Como",
-            "d": "Domodossola",
-            "e": "Empoli",
-            "f": "Firenze",
-            "g": "Genova",
-            "h": "Hotel",
-        },
-        "adjectives": {
-            "white": {"m": "bianco", "f": "bianca", "mp": "bianchi", "fp": "bianche"},
-            "black": {"m": "nero", "f": "nera", "mp": "neri", "fp": "nere"},
-        },
-        "moves": {
-            "capture": "prende",
-            "capture_on": "in",
-            "move_to": "in",
-            "en_passant": "en passant",
-            "short_castle": "arrocco corto",
-            "long_castle": "arrocco lungo",
-            "promotes_to": "e promuove a",
-            "check": "scacco",
-            "checkmate": "scacco matto!",
-        },
-        "annotations": {
-            "=": "proposta di patta",
-            "?": "mossa debole",
-            "!": "mossa forte",
-            "??": "mossa pessima",
-            "!!": "mossa geniale!",
-            "?!": "mossa dubbia",
-            "!?": "mossa dubbia",
-        },
-    }
-
-
-def recursive_merge(base, user):
-    for k, v in user.items():
-        if k in base and isinstance(base[k], dict) and isinstance(v, dict):
-            recursive_merge(base[k], v)
-        else:
-            base[k] = v
-    return base
-
-
-def LoadLocalization():
-    l10n = get_default_localization()
-    try:
-        with open(DB_FILE, "r", encoding="utf-8") as f:
-            db = json.load(f)
-            user_l10n = db.get("localization", {})
-            if user_l10n:
-                l10n = recursive_merge(l10n, user_l10n)
-    except Exception:
-        pass
-    return l10n
-
-
-L10N = LoadLocalization()
 
 SMART_COMMANDS = {
     "s": _("Vai alla mossa precedente"),

@@ -4,8 +4,8 @@ import chess
 
 from GBUtils import Acusticator, dgt
 
-from .. import config
-from ..config import L10N, _
+from .. import config, localizzazione
+from ..config import _
 
 MNDRAWING = {
     "A": _("Aggiungi una forma (freccia o cerchio)"),
@@ -56,7 +56,7 @@ def verbalize_square(sq_str):
     if len(sq_str) == 2:
         col = sq_str[0]
         row = sq_str[1]
-        col_name = L10N["columns"].get(col, col)
+        col_name = localizzazione.colonna(col)
         return f"{col_name} {row}"
     return sq_str
 

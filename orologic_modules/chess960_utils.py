@@ -8,7 +8,7 @@ import chess.engine
 
 from GBUtils import Acusticator, dgt
 
-from . import board_utils, config
+from . import board_utils, config, localizzazione
 from .config import _
 
 # Mappa simbolo pezzo → chiave nel dizionario L10N
@@ -71,7 +71,7 @@ def describe_960_position(board, pos_number=None):
     Returns:
         Stringa descrittiva della posizione.
     """
-    L10N = config.L10N
+    L10N = localizzazione.L10N
     pieces_dict = L10N.get("pieces", {})
     columns_dict = L10N.get("columns", {})
     col_letters = "abcdefgh"
