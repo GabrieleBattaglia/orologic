@@ -30,12 +30,13 @@ def enter_escape(prompt=""):
 
 
 def EditLocalization():
-    print(_("Personalizzazione Lingua"))
+    print(_("Personalizzazione dei nomi e della grammatica di gioco"))
     print(
         _(
             "Per ogni voce, inserisci il nuovo testo o premi INVIO per mantenere il valore attuale."
         )
     )
+    print(_("Digita un punto per chiudere subito, conservando le voci gia' riviste."))
     db = storage.LoadDB()
     # Carica i default e sovrascrivili con le personalizzazioni utente esistenti
     # Questo garantisce che le nuove chiavi (es. 'analysis') siano presenti anche se il DB è vecchio
@@ -79,8 +80,18 @@ def EditLocalization():
         ("moves", "short_castle", _("Testo per 'arrocco corto'")),
         ("moves", "long_castle", _("Testo per 'arrocco lungo'")),
         ("moves", "promotes_to", _("Testo per la promozione (es. 'e promuove a')")),
+        ("moves", "move", _("Verbo di spostamento (es. 'va in')")),
+        ("moves", "promotion", _("Testo breve per la promozione (es. 'promuove a')")),
         ("moves", "check", _("Testo per 'scacco'")),
+        ("moves", "mate", _("Testo per 'scacco matto' senza esclamativo")),
         ("moves", "checkmate", _("Testo per 'scacco matto!'")),
+        ("annotations", "!", _("Commento per la mossa forte")),
+        ("annotations", "?", _("Commento per la mossa debole")),
+        ("annotations", "!!", _("Commento per la mossa molto forte")),
+        ("annotations", "??", _("Commento per la mossa molto debole")),
+        ("annotations", "!?", _("Commento per la mossa interessante")),
+        ("annotations", "?!", _("Commento per la mossa dubbia")),
+        ("annotations", "=", _("Commento per la proposta di patta")),
         ("analysis", "blunder", _("Termine per 'Svarione'")),
         ("analysis", "mistake", _("Termine per 'Errore'")),
         ("analysis", "inaccuracy", _("Termine per 'Inesattezza'")),
@@ -102,6 +113,7 @@ def EditLocalization():
         )
         pitches.append(p)
 
+    interrompi = False
     for i, item in enumerate(items_to_edit):
         cat, key_item, details = item
         current_pitch = pitches[i]
@@ -115,6 +127,8 @@ def EditLocalization():
                 kind="s",
                 default=current_val,
             )
+            if new_val.strip() == ".":
+                break
             if cat not in l10n_config:
                 l10n_config[cat] = {}
             if key_item not in l10n_config[cat]:
@@ -131,12 +145,17 @@ def EditLocalization():
 
                 current_gender = l10n_config[cat][key_item].get("gender", "m")
                 gender_prompt = _(
-                    "  Genere per '{new_val}' (m/f/n) [{current_gender}]: "
+                    "Genere per '{new_val}', m, f oppure n [{current_gender}]: "
                 ).format(new_val=new_val, current_gender=current_gender)
                 while True:
                     new_gender = dgt(
                         gender_prompt, kind="s", default=current_gender
                     ).lower()
+                    # Il punto chiude qui come nelle altre domande: senza questa
+                    # via d'uscita si restava intrappolati nel ciclo.
+                    if new_gender.strip() == ".":
+                        interrompi = True
+                        break
                     if new_gender in ["m", "f", "n"]:
                         l10n_config[cat][key_item]["gender"] = new_gender
                         # Suono di conferma per il genere
@@ -146,12 +165,13 @@ def EditLocalization():
                             adsr=[2, 5, 80, 10],
                         )
                         break
-                    else:
-                        print(
-                            _(
-                                "Input non valido. Inserisci 'm' (maschile), 'f' (femminile) o 'n' (neutro)."
-                            )
+                    print(
+                        _(
+                            "Risposta non valida. Scrivi m per maschile, f per femminile, n per neutro, oppure un punto per chiudere."
                         )
+                    )
+                if interrompi:
+                    break
             else:
                 # Suono di conferma standard (aggettivi)
                 Acusticator(
@@ -167,6 +187,8 @@ def EditLocalization():
                 kind="s",
                 default=current_val,
             )
+            if new_val.strip() == ".":
+                break
             if cat not in l10n_config:
                 l10n_config[cat] = {}
             l10n_config[cat][key_item] = new_val.strip()
