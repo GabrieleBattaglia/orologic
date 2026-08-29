@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-29: chiuse le tappe 1 integrita dei dati, 2 avvio e robustezza, 3 rete, 4 correttezza scacchistica, 5 accessibilita, 6 localizzazione nel codice, per un totale di 66 rilievi risolti sui 154 iniziali.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-29: chiuse le tappe 1 integrita dei dati, 2 avvio e robustezza, 3 rete, 4 correttezza scacchistica, 5 accessibilita, 6 localizzazione nel codice, per un totale di 67 rilievi risolti sui 154 iniziali.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -99,8 +99,6 @@ R075 gravita medio, categoria DRY, in ui.py:617-641 (B3-18)
 report_white_time e report_black_time sono identiche a meno del colore.
 R076 gravita medio, categoria ottimizzazione, in engine.py:525-1121 e 1415-1876 (B3-19)
 AnalyzeGame occupa 596 righe e AnalisiAutomatica 461, entrambe con dispatch di comandi, analisi, formattazione e salvataggio mescolati.
-R077 gravita medio, categoria regole generali, in ui.py:153-280 (B3-20)
-EditLocalization chiede quarantotto voci di seguito senza alcuna via d'uscita: chi entra per sbaglio o vuole cambiare solo un nome deve passare tutte le domande.
 R078 gravita medio, categoria DRY, in lichess_app.py:77,86 e lichess_stats.py:305,331 (B4-07)
 input al posto di dgt: nel modulo statistiche la lettura degli indici e accompagnata da conversione manuale e cattura di ValueError, tutte cose che dgt fa gia con imin e imax.
 R079 gravita medio, categoria ottimizzazione, in lichess_app.py:2087-2101 (B4-08)
@@ -265,15 +263,15 @@ Segnalazione emersa durante la tappa 2, da sottoporre a Gabriele senza interveni
 Riepilogo per gravita.
 Critico: 0 rilievi
 Alto: 8 rilievi
-Medio: 46 rilievi
+Medio: 45 rilievi
 Basso: 34 rilievi
-Totale: 88 rilievi ancora aperti
+Totale: 87 rilievi ancora aperti
 Riepilogo per categoria.
 DRY: 26 rilievi
 fragilita: 18 rilievi
 logica: 8 rilievi
 ottimizzazione: 28 rilievi
-regole generali: 8 rilievi
+regole generali: 7 rilievi
 Proposta di ordine di lavorazione, in dieci tappe, da concordare con Gabriele prima di toccare il codice.
 Tappa 7, DRY. Unificare il dispatch dei comandi di esplorazione oggi triplicato, le dodici funzioni di formattazione del tempo, le tre copie di CalculateMaterial, i tre thread orologio, le due funzioni percorso_salvataggio e le due enter_escape, preferendo sempre l'utilita di GBUtils dove esiste.
 Tappa 8, struttura. Spezzare le funzioni piu grandi, il loop di partita da 1124 righe, AnalyzeGame da 596 e AnalisiAutomatica da 461, estraendo un dispatcher di comandi e funzioni per gruppo. Estrarre le sequenze sonore in un dizionario di temi.
