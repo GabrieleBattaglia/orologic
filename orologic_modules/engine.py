@@ -11,15 +11,10 @@ import chess.pgn
 import numpy as np
 import pyperclip
 
-from GBUtils import Acusticator, dgt, key, menu, polipo
+from GBUtils import Acusticator, dgt, key, menu
 
-from . import board_utils, config, storage, ui, version
-
-lingua_rilevata, _ = polipo(
-    source_language="it",
-    localedir=config.CARTELLA_LOCALES,
-    config_path=config.CARTELLA_SETTINGS,
-)
+from . import board_utils, config, localizzazione, storage, ui, version
+from .config import _
 
 
 def calculate_win_probability(score_obj, turn):
@@ -1254,7 +1249,7 @@ def genera_sommario_analitico_txt(
     engine_metadata=None,
     accuracies=None,
 ):
-    l10n_analysis = ui.L10N.get("analysis", {})
+    l10n_analysis = localizzazione.L10N.get("analysis", {})
     classification_labels = {
         "Svarione": l10n_analysis.get("blunder", _("Svarione")),
         "Errore": l10n_analysis.get("mistake", _("Errore")),
@@ -1564,7 +1559,7 @@ def AnalisiAutomatica(pgn_game):
     mainline_nodes = list(pgn_game.mainline())
 
     analysis_results = []
-    l10n_analysis = ui.L10N.get("analysis", {})
+    l10n_analysis = localizzazione.L10N.get("analysis", {})
     classification_labels = {
         "Svarione": l10n_analysis.get("blunder", _("Svarione")),
         "Errore": l10n_analysis.get("mistake", _("Errore")),

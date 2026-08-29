@@ -6,16 +6,8 @@ import re
 import shutil
 import zipfile
 
-from GBUtils import polipo
-
 from . import config, rete
-
-# Inizializzazione localizzazione per questo modulo
-lingua_rilevata, _ = polipo(
-    source_language="it",
-    localedir=config.CARTELLA_LOCALES,
-    config_path=config.CARTELLA_SETTINGS,
-)
+from .config import _
 
 API_RELEASE = (
     "https://api.github.com/repos/official-stockfish/Stockfish/releases/latest"

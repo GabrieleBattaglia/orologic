@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-29: chiuse le tappe 1 integrita dei dati, 2 avvio e robustezza, 3 rete, 4 correttezza scacchistica, 5 accessibilita, per un totale di 58 rilievi risolti sui 154 iniziali.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-29: chiuse le tappe 1 integrita dei dati, 2 avvio e robustezza, 3 rete, 4 correttezza scacchistica, 5 accessibilita, 6 localizzazione nel codice, per un totale di 66 rilievi risolti sui 154 iniziali.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -49,10 +49,6 @@ R012 gravita alto, categoria fragilita, in game_flow.py:22-113 (B2-05)
 clock_thread modifica white_remaining, black_remaining, paused, flag_fallen e game_over senza alcun lock, mentre il thread principale legge e scrive gli stessi campi durante mosse, pause e correzioni manuali del tempo. Race condition su stato condiviso mutabile. Correzione: un lock unico attorno alle transizioni di stato dell'orologio.
 R014 gravita alto, categoria ottimizzazione, in game_flow.py:274-1397 (B2-07)
 _loop_principale_partita e una sola funzione di 1124 righe, con il solo ramo dei comandi punto che ne occupa 822 e nidificazione fino a otto livelli. Impossibile da testare e rischiosa da modificare. Correzione: estrarre un dispatcher di comandi e una funzione per gruppo di comandi.
-R020 gravita alto, categoria logica, in ui.py:304-305 con config.py:195 (B3-03)
-Dopo la personalizzazione dei nomi, EditLocalization ricarica solo il dizionario di ui, mentre config.L10N resta quello caricato all'import. Le descrizioni delle mosse passano da config.L10N, quindi le personalizzazioni appena inserite non si sentono fino al riavvio del programma.
-R021 gravita alto, categoria DRY, in ui.py:33-131 con config.py:126-195 (B3-04)
-Esistono due sistemi di localizzazione paralleli e divergenti: due get_default_localization, due recursive_merge, due LoadLocalization e due dizionari L10N. I contenuti differiscono: config chiama la regina donna e usa le colonne fonetiche Ancona Bologna Como, ui usa regina e le lettere semplici; la stessa annotazione e descritta mossa dubbia in config e mossa interessante in ui. A seconda del modulo che parla l'utente sente termini diversi per la stessa cosa. Da unificare in un solo modulo di localizzazione.
 R026 gravita alto, categoria logica, in lichess_app.py:2062 con 2087,2100,2182-2188 (B4-02)
 La variabile token viene letta una sola volta prima del ciclo del menu e non e mai riassegnata nei rami login e logout, mentre secrets viene ricaricato a ogni giro. Dopo un login nella stessa sessione il menu risulta connesso ma le chiamate usano ancora token nullo, quindi partite attive e sfide in arrivo non compaiono finche non si esce e si rientra in Orolichess. Dopo un logout accade il contrario: il token resta in memoria e le chiamate autenticate proseguono nonostante l'utente creda di essersi disconnesso.
 R027 gravita alto, categoria DRY, in lichess_app.py:583-849 con game_flow.py:365-575 e lichess_board.py:143-350 (B4-03)
@@ -61,14 +57,10 @@ R034 gravita alto, categoria fragilita, in pgn_search.py:230-234 (B6-02)
 Dentro il ciclo di lettura delle partite, l'eccezione di read_game viene gestita con continue: se l'errore si ripresenta senza che lo stream avanzi, il ciclo non termina mai e il programma si blocca senza messaggi ne possibilita di interruzione. Correzione: contare i tentativi falliti e interrompere dopo pochi, oppure uscire dal ciclo segnalando l'errore.
 R035 gravita alto, categoria DRY, in tempo_app.py:141-178 con game_flow.py:318-355 (B6-03)
 La funzione get_prompt, compresa la funzione fmt annidata, e copiata parola per parola da game_flow: circa quaranta righe. Il modulo importa correttamente async_arbitration_input e clock_thread dallo stesso file, quindi la duplicazione e tanto piu evitabile.
-R039 gravita alto, categoria logica, in easyfish/constants.py:20-28 (B7-04)
-Le colonne sono nominate con l'alfabeto NATO, alpha bravo charlie, che e la terza convenzione del programma dopo Ancona Bologna Como di config e le lettere semplici di ui. Questi nomi non passano da gettext e non sono raggiunti dal menu di personalizzazione dei nomi, quindi la stessa casa viene annunciata in tre modi diversi a seconda di dove ci si trova.
 R040 gravita alto, categoria DRY, in easyfish/game_mode.py:33-115 (B7-05)
 Terzo thread orologio del progetto, riscritto invece di riusare quello di game_flow che tempo_app importa correttamente. Ripete inoltre lo stesso blocco di cinquanta righe per i due colori e condivide lo stato con il thread principale senza alcun lock.
 R041 gravita medio, categoria logica, in config.py:294 (B1-08)
 re.sub con classe di caratteri da zero a 31 scritta come escape ottale: viene interpretata come intervallo 0-25, quindi i caratteri di controllo da 26 a 31 restano nel nome file e Windows rifiuta la scrittura. Verificato sperimentalmente. Correzione: usare la forma esadecimale da x00 a x1f.
-R044 gravita medio, categoria DRY, in dieci moduli (B1-11)
-polipo viene inizializzato dieci volte, una per modulo, rileggendo ogni volta i file di traduzione. Correzione: inizializzare una sola volta in config ed esportare la funzione di traduzione.
 R045 gravita medio, categoria DRY, in orologic.py:46-77 (B1-12)
 OpenManual e OpenChangelog sono identiche a meno del nome del file. Da unificare e da valutare l'utilita manuale di GBUtils.
 R046 gravita medio, categoria DRY, in cleaner.py:47 (B1-13)
@@ -77,10 +69,6 @@ R047 gravita medio, categoria logica, in clock.py:67 (B1-14)
 same_time e vero solo con stringa vuota: chi risponde s per si ottiene tempi diversi per bianco e nero. Il prompt non lo lascia intuire. Correzione: usare enter_escape oppure accettare esplicitamente le risposte affermative.
 R050 gravita medio, categoria fragilita, in cleaner.py:54-79 (B1-17)
 La scelta c cancella immediatamente tutti i file vecchi senza conferma e senza possibilita di annullare. Correzione: conferma esplicita con enter_escape prima della cancellazione.
-R051 gravita medio, categoria logica, in config.py:11-57 (B1-18)
-Giorni e mesi sono scritti a mano in italiano mentre l'app e localizzata in cinque lingue: le date restano italiane anche con interfaccia inglese.
-R052 gravita medio, categoria logica, in config.py:114-115,167-168 (B1-19)
-Le annotazioni punto esclamativo interrogativo e interrogativo esclamativo hanno la stessa descrizione mossa dubbia. Il NAG 5 indica mossa interessante o speculativa, il NAG 6 mossa dubbia.
 R058 gravita medio, categoria DRY, in board_utils.py:500,552,545,563,673,710 e game_flow.py:334 (B2-15)
 Sei funzioni di formattazione del tempo nello stesso modulo piu una settima annidata nel prompt di gioco. SecondsToHMS e FormatClock sono identiche nel comportamento, FormatTime e format_time_italian quasi. Da unificare e da proporre come utilita unica in GBUtils, senza intervenire su GBUtils in questa fase.
 R059 gravita medio, categoria ottimizzazione, in board_utils.py:41-199 (B2-16)
@@ -145,8 +133,6 @@ R100 gravita medio, categoria fragilita, in memoboard_app.py:134-136 (B6-08)
 Se il file dei punteggi e illeggibile si riparte dalla struttura vuota senza avvisare, e il primo salvataggio successivo cancella definitivamente le classifiche.
 R101 gravita medio, categoria DRY, in tempo_app.py:267-285 (B6-09)
 Dodicesima formattazione di durata del progetto, costruita a mano con ore, minuti, secondi e millesimi.
-R102 gravita medio, categoria logica, in pgn_search.py:440,459 (B6-10)
-Le sigle delle statistiche, piu uguale meno per il giocatore e B P N per bianco patta nero, sono scritte fuori da gettext: restano in italiano nelle altre quattro lingue.
 R103 gravita medio, categoria DRY, in easyfish/utils.py:7-19 e constants.py:39-52 (B7-06)
 Terza copia di CalculateMaterial nel progetto e seconda tabella dei valori dei pezzi, identica a quella di config.
 R104 gravita medio, categoria fragilita, in easyfish_app.py:213,905 (B7-07)
@@ -233,8 +219,6 @@ R151 gravita basso, categoria ottimizzazione, in pgn_search.py:407,443 (B6-16)
 La variabile other viene calcolata in entrambi i rami delle statistiche e non usata.
 R153 gravita basso, categoria fragilita, in easyfish/sharing_window.py:100-104 (B7-17)
 La chiusura della finestra grafica attende il thread senza timeout: se il thread pygame si blocca, si blocca anche l'applicazione.
-R154 gravita basso, categoria logica, in easyfish/constants.py:31-80 (B7-18)
-I nomi dei pezzi sono definiti qui in due dizionari e non sono raggiunti dal menu di personalizzazione dei nomi di Orologic.
 Quanto risulta conforme e non richiede interventi nelle fasi successive.
 GBUtils correttamente importato e non reimplementato in tutti i moduli del blocco.
 Separazione dei moduli chiara e coerente con i nomi.
@@ -280,18 +264,17 @@ Criticita rilevate in GBUtils.
 Segnalazione emersa durante la tappa 2, da sottoporre a Gabriele senza intervenire. polipo risolve la cartella delle traduzioni e quella di configurazione rispetto a os.getcwd() quando il programma non e' congelato: chi lo chiama con percorsi relativi si ritrova le traduzioni cercate nella directory di lavoro e una cartella settings creata li' dentro. Orologic ora passa percorsi assoluti, quindi il problema non lo tocca piu', ma gli altri progetti del parco software che usano polipo con percorsi relativi hanno lo stesso difetto. La firma di dgt e' invece risultata completa: smin, smax e pwd coprono i casi in cui il progetto validava a mano.
 Riepilogo per gravita.
 Critico: 0 rilievi
-Alto: 11 rilievi
-Medio: 50 rilievi
-Basso: 35 rilievi
-Totale: 96 rilievi ancora aperti
+Alto: 8 rilievi
+Medio: 46 rilievi
+Basso: 34 rilievi
+Totale: 88 rilievi ancora aperti
 Riepilogo per categoria.
-DRY: 28 rilievi
+DRY: 26 rilievi
 fragilita: 18 rilievi
-logica: 14 rilievi
+logica: 8 rilievi
 ottimizzazione: 28 rilievi
 regole generali: 8 rilievi
 Proposta di ordine di lavorazione, in dieci tappe, da concordare con Gabriele prima di toccare il codice.
-Tappa 6, localizzazione nel codice. Unificare i due sistemi paralleli di config e ui in un solo modulo, ricondurvi anche i nomi di Easyfish comprese le colonne NATO, ricaricare il dizionario unico dopo la personalizzazione dei nomi e portare dentro gettext le stringhe rimaste fuori. Qui si tocca solo il codice: la traduzione vera e propria e' spostata in coda, vedi tappa 10.
 Tappa 7, DRY. Unificare il dispatch dei comandi di esplorazione oggi triplicato, le dodici funzioni di formattazione del tempo, le tre copie di CalculateMaterial, i tre thread orologio, le due funzioni percorso_salvataggio e le due enter_escape, preferendo sempre l'utilita di GBUtils dove esiste.
 Tappa 8, struttura. Spezzare le funzioni piu grandi, il loop di partita da 1124 righe, AnalyzeGame da 596 e AnalisiAutomatica da 461, estraendo un dispatcher di comandi e funzioni per gruppo. Estrarre le sequenze sonore in un dizionario di temi.
 Tappa 9, pulizie finali. Portare ruff a zero rilievi, rimuovere codice morto e script diagnostici, aggiornare requirements, aggiungere l'intestazione autori prevista in tutti i file e allineare la versione dopo le correzioni.

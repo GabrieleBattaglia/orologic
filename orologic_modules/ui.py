@@ -1,23 +1,17 @@
 import datetime
-import json
 import os
 
 import chess
 
-from GBUtils import Acusticator, dgt, key, polipo
+from GBUtils import Acusticator, dgt, key
 
-from . import board_utils, config, storage, version
+from . import board_utils, config, localizzazione, storage, version
 from .board_utils import stampa_elenco
+from .config import _
 
-# Inizializzazione localizzazione
-lingua_rilevata, _ = polipo(
-    source_language="it",
-    localedir=config.CARTELLA_LOCALES,
-    config_path=config.CARTELLA_SETTINGS,
-)
-
-# Variabile globale per la localizzazione dinamica
-L10N = {}
+# Il dizionario dei termini vive in localizzazione: qui solo un rimando,
+# aggiornato sul posto, cosi' tutti i moduli vedono le stesse parole.
+L10N = localizzazione.L10N
 
 # Volume gestito via config.VOLUME
 
@@ -35,112 +29,6 @@ def enter_escape(prompt=""):
         print(_("Conferma con invio o annulla con escape"))
 
 
-def get_default_localization():
-    return {
-        "pieces": {
-            "pawn": {"name": _("pedone"), "pname": _("pedoni"), "gender": "m"},
-            "knight": {"name": _("cavallo"), "pname": _("cavalli"), "gender": "m"},
-            "bishop": {"name": _("alfiere"), "pname": _("alfieri"), "gender": "m"},
-            "rook": {"name": _("torre"), "pname": _("torri"), "gender": "f"},
-            "queen": {"name": _("regina"), "pname": _("regine"), "gender": "f"},
-            "king": {"name": _("re"), "pname": _("re"), "gender": "m"},
-        },
-        "adjectives": {
-            "white": {
-                "m": _("bianco"),
-                "f": _("bianca"),
-                "mp": _("bianchi"),
-                "fp": _("bianche"),
-            },
-            "black": {"m": _("nero"), "f": _("nera"), "mp": _("neri"), "fp": _("nere")},
-        },
-        "columns": {
-            "a": "a",
-            "b": "b",
-            "c": "c",
-            "d": "d",
-            "e": "e",
-            "f": "f",
-            "g": "g",
-            "h": "h",
-        },
-        "moves": {
-            "short_castle": _("arrocco corto"),
-            "long_castle": _("arrocco lungo"),
-            "capture": _("mangia"),
-            "capture_on": _("in"),
-            "move": _("va in"),
-            "move_to": _("in"),
-            "check": _("scacco"),
-            "mate": _("scacco matto"),
-            "checkmate": _("scacco matto!"),
-            "promotion": _("promuove a"),
-            "promotes_to": _("e promuove a"),
-            "en_passant": _("en passant"),
-        },
-        "annotations": {
-            "!": _("mossa forte"),
-            "?": _("mossa debole"),
-            "!!": _("mossa molto forte"),
-            "??": _("mossa molto debole"),
-            "!?": _("mossa interessante"),
-            "?!": _("mossa dubbia"),
-        },
-        "analysis": {
-            "blunder": _("Svarione"),
-            "mistake": _("Errore"),
-            "inaccuracy": _("Inesattezza"),
-            "good": _("Buona"),
-            "brilliant": _("Geniale"),
-            "normal": _("Ok"),
-            "book": _("Teoria"),
-        },
-    }
-
-
-def recursive_merge(base_dict, user_dict):
-    for k, value in user_dict.items():
-        if (
-            k in base_dict
-            and isinstance(base_dict[k], dict)
-            and isinstance(value, dict)
-        ):
-            recursive_merge(base_dict[k], value)
-        else:
-            base_dict[k] = value
-    return base_dict
-
-
-def LoadLocalization():
-    path = config.percorso_salvataggio(
-        os.path.join("locales", f"orologic_ui_{lingua_rilevata}.json")
-    )
-    default = get_default_localization()
-    if os.path.exists(path):
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                loaded = json.load(f)
-                merged = recursive_merge(default, loaded)
-        except Exception:
-            merged = default
-    else:
-        try:
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(default, f, indent=4, ensure_ascii=False)
-        except Exception:
-            pass
-        merged = default
-    try:
-        db = storage.LoadDB()
-        user_l10n = db.get("localization", {})
-        if user_l10n:
-            merged = recursive_merge(merged, user_l10n)
-    except Exception:
-        pass
-    return merged
-
-
 def EditLocalization():
     print(_("Personalizzazione Lingua"))
     print(
@@ -151,8 +39,8 @@ def EditLocalization():
     db = storage.LoadDB()
     # Carica i default e sovrascrivili con le personalizzazioni utente esistenti
     # Questo garantisce che le nuove chiavi (es. 'analysis') siano presenti anche se il DB è vecchio
-    l10n_config = recursive_merge(
-        get_default_localization(), db.get("localization", {})
+    l10n_config = localizzazione.unisci(
+        localizzazione.predefinito(), db.get("localization", {})
     )
 
     items_to_edit = [
@@ -305,8 +193,7 @@ def EditLocalization():
         adsr=[2, 5, 90, 5],
     )
     storage.SetValue("localization", l10n_config)
-    global L10N
-    L10N = LoadLocalization()
+    localizzazione.ricarica()
     print(_("\nImpostazioni di lingua salvate con successo!"))
 
 
@@ -906,6 +793,3 @@ def Impostazioni():
 
     storage.SaveDB(db)
     print(_("Impostazioni aggiornate"))
-
-
-L10N = LoadLocalization()
