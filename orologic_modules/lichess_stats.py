@@ -29,10 +29,7 @@ def calcola_durata_str(dt1, dt2):
         parts.append(f"{diff.days} " + (_("giorno") if diff.days == 1 else _("giorni")))
 
     if not parts:
-        parts.append("0 " + _("giorni"))
-
-    parts.append("0 " + _("ore"))
-    parts.append("0 " + _("minuti"))
+        parts.append(_("meno di un giorno"))
     return ", ".join(parts)
 
 
@@ -105,16 +102,18 @@ def dividi_in_quartili(sub_history):
 def formatta_stats_globale(title, stats):
     if not stats:
         return _("{title}: N/A").format(title=title)
-    line1 = _("{title} (N={n}): Min={min}, Max={max}, Media={mean:.2f}").format(
+    line1 = _(
+        "{title}: {n} valori, minimo {min}, massimo {max}, media {mean:.0f}"
+    ).format(
         title=title,
         n=stats["n"],
         min=stats["min"],
         max=stats["max"],
         mean=stats["mean"],
     )
-    line2 = _("CV={cv:.2f}%, Tendenza={trend:.4f}, Moda={mode}").format(
-        cv=stats["cv"], trend=stats["trend"], mode=stats["mode"]
-    )
+    line2 = _(
+        "Variabilita' {cv:.0f} per cento, tendenza {trend:.2f} punti a partita, valore piu' frequente {mode}"
+    ).format(cv=stats["cv"], trend=stats["trend"], mode=stats["mode"])
     return f"{line1}\n{line2}"
 
 
@@ -130,7 +129,7 @@ def formatta_stats_quartile(title, stats):
         durata=durata_str,
     )
     line2 = _(
-        "Min={min}, Max={max}, Media={mean:.2f}, CV={cv:.2f}%, Tendenza={trend:.4f}, Moda={mode}"
+        "Minimo {min}, massimo {max}, media {mean:.0f}, variabilita' {cv:.0f} per cento, tendenza {trend:.2f}, piu' frequente {mode}"
     ).format(
         min=stats["min"],
         max=stats["max"],
@@ -236,9 +235,7 @@ def run_stats(username, secrets):
             stats_q3 = calcola_statistiche(q3)
             stats_q4 = calcola_statistiche(q4)
 
-            print(
-                _("\n--- STATISTICHE ELO: {v} ---").format(v=selected_item.get("name"))
-            )
+            print(_("STATISTICHE ELO: {v}").format(v=selected_item.get("name")))
             print(
                 _("Periodo: {d1} - {d2} (valori {i1}-{i2} su {tot})").format(
                     d1=pt_list[start_idx]["date"],
@@ -389,7 +386,16 @@ def run_stats(username, secrets):
                 ):
                     usa_quartili = True
 
-                print(_("\nElaborazione stringa DEA in corso..."))
+                # La stringa DEA e' un grafico disegnato con caratteri: utile
+                # a chi guarda, illeggibile con la sintesi vocale. Resta
+                # disponibile su richiesta, mentre l'andamento si ascolta con
+                # la sonificazione, che porta la stessa informazione.
+                if not enter_escape(
+                    _(
+                        "Vuoi anche la stringa DEA, il grafico in caratteri? (INVIO per si', ESC per no): "
+                    )
+                ):
+                    continue
 
                 if usa_quartili:
                     q1, q2, q3, q4 = dividi_in_quartili(selected_pts)

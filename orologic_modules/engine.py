@@ -1366,7 +1366,7 @@ def genera_sommario_analitico_txt(
 
     # Footer
     lines.append("")
-    lines.append(_("--- Riepilogo Partita ---"))
+    lines.append(_("Riepilogo Partita"))
     lines.append(_("Esito Finale: {e}").format(e=esito_str))
     if accuracies:
         lines.append(
@@ -1421,7 +1421,7 @@ def AnalisiAutomatica(pgn_game):
             final_cp = cp if pov_color == chess.WHITE else -cp
             return f"{final_cp / 100:+.2f}"
 
-    print(_("\n--- Analisi Automatica della Partita ---"))
+    print(_("Analisi Automatica della Partita"))
 
     # Caricamento configurazione soglie da DB
     db = storage.LoadDB()

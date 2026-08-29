@@ -168,7 +168,7 @@ def RiprendiPartita(dati_partita):
     db = storage.LoadDB()
     autosave_is_on = db.get("autosave_enabled", False)
     eco_database = board_utils.LoadEcoDatabaseWithFEN("eco.db")
-    print("\n" + "--- Riepilogo Partita ---")
+    print("\n" + "Riepilogo Partita")
     print(
         _("Bianco: {player} - Tempo: {time}").format(
             player=game_state.white_player,
@@ -196,7 +196,6 @@ def RiprendiPartita(dati_partita):
         else game_state.black_player
     )
     print(_("Tocca a: {player}").format(player=tocca_a_player))
-    print("-------------------------" + "\n")
     last_valid_eco_entry = _loop_principale_partita(
         game_state, eco_database, autosave_is_on
     )
@@ -305,7 +304,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 )
             )
             # Usiamo key per un input secco
-            choice = key(">>> ")
+            choice = key(_("Scegli, INVIO o ESC: "))
             if choice in ("\x1b", "esc"):  # ESC
                 game_state.game_over = True
                 # Assegna risultato

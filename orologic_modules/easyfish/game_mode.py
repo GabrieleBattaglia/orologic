@@ -164,7 +164,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
         print(_("Motore non disponibile. Configuralo nelle impostazioni."))
         return game_node
 
-    print(_("\n--- Nuova Partita contro il Motore ---"))
+    print(_("Nuova Partita contro il Motore"))
 
     engine_mode = menu(
         {

@@ -16,6 +16,30 @@ lingua_rilevata, _ = polipo(
 )
 
 
+LARGHEZZA_BRAILLE = 40
+
+
+def stampa_elenco(voci, intestazione=None, larghezza=LARGHEZZA_BRAILLE):
+    """Stampa un elenco in righe di circa quaranta caratteri.
+
+    Il display braille di Gabriele mostra quaranta celle per volta: una riga
+    unica lunga duecento caratteri costringe a scorrere avanti e indietro per
+    ricostruire l'informazione, mentre righe brevi si leggono di seguito. Le
+    singole voci non vengono mai spezzate a meta'.
+    """
+    riga = intestazione or ""
+    for voce in voci:
+        unione = ", " if riga and not riga.endswith(":") else " "
+        pezzo = voce if not riga else f"{riga}{unione}{voce}"
+        if riga and len(pezzo) > larghezza:
+            print(riga if riga.endswith(":") else riga + ",")
+            riga = voce
+        else:
+            riga = pezzo
+    if riga:
+        print(riga)
+
+
 def CalculateMaterial(board):
     w, b = 0, 0
     for sq in chess.SQUARES:
@@ -492,7 +516,7 @@ def format_pv_descriptively(board, pv):
         if temp_board.turn == chess.WHITE:
             white_move = pv[i]
             white_desc = DescribeMove(white_move, temp_board)
-            line_str = f"  {move_num}. {white_desc}"
+            line_str = f"{move_num}. {white_desc}"
             temp_board.push(white_move)
             i += 1
             if i < len(pv):
@@ -505,7 +529,7 @@ def format_pv_descriptively(board, pv):
         else:
             black_move = pv[i]
             black_desc = DescribeMove(black_move, temp_board)
-            line_str = f"  {move_num}... {black_desc}"
+            line_str = f"{move_num}... {black_desc}"
             output_lines.append(line_str)
             temp_board.push(black_move)
             i += 1
@@ -798,7 +822,7 @@ def AnalizzaEStampaStatisticheTempo(game_state, color_filter=None):
 
         color_name = _("Bianco") if color == chess.WHITE else _("Nero")
         if color_filter is None:
-            print(f"\n=== Statistiche Tempo: {color_name} ===")
+            print(f"Statistiche Tempo: {color_name}")
 
         # 1. Classifica delle mosse in base al tempo usato
         sorted_moves = sorted(user_moves, key=lambda x: x[2], reverse=True)
@@ -806,15 +830,10 @@ def AnalizzaEStampaStatisticheTempo(game_state, color_filter=None):
         for idx, san, t in sorted_moves:
             formatted_sorted.append(format_semimove(idx, san))
 
-        print(_("Classifica delle mosse in base al tempo usato per ciascuna:"))
-        for i in range(0, len(formatted_sorted), 10):
-            chunk = formatted_sorted[i : i + 10]
-            line = ", ".join(chunk)
-            if i + 10 >= len(formatted_sorted):
-                line += ";"
-            else:
-                line += ","
-            print(line)
+        stampa_elenco(
+            formatted_sorted,
+            intestazione=_("Mosse dalla piu' lenta alla piu' rapida:"),
+        )
 
         # 2. Suddivisione in quartili
         total_time = sum(m[2] for m in user_moves)

@@ -122,7 +122,7 @@ def SchermataIniziale():
     diff2 = relativedelta(now, version.RELEASE_DATE)
     age_string = _format_time_delta_parts(diff1)
     release_string = _format_time_delta_parts(diff2)
-    print(_("\nCiao! Benvenuto, sono Orologic e ho {age}.").format(age=age_string))
+    print(_("Ciao! Benvenuto, sono Orologic e ho {age}.").format(age=age_string))
     print(
         _(
             "L'ultima versione e' la {version} ed e' stata rilasciata {release_date}."
@@ -131,9 +131,9 @@ def SchermataIniziale():
             release_date=config.format_date_italian(version.RELEASE_DATE),
         )
     )
-    print(_("\tcioe': {release_ago} fa.").format(release_ago=release_string))
-    print("\t\t" + _("Autore: ") + version.PROGRAMMER)
-    print("\t\t\t" + _("Digita '?' per visualizzare il menu'."))
+    print(_("Cioe' {release_ago} fa.").format(release_ago=release_string))
+    print(_("Autore: {autore}").format(autore=version.PROGRAMMER))
+    print(_("Digita punto interrogativo per il menu."))
     Acusticator(
         [
             "c4",

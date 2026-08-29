@@ -259,43 +259,44 @@ def format_time_stats_string(time_stats):
     if not time_stats:
         return ""
 
+    # Frasi brevi e complete: niente incolonnamenti, niente barre verticali,
+    # unita' scritte per esteso perche' la sintesi non legga esse per secondi.
     lines = []
-    lines.append(_("  Statistiche tempi di risposta:"))
+    lines.append(_("Tempi di risposta."))
     lines.append(
-        _(
-            "    - Tempo minimo: {min:.2f}s | Massimo: {max:.2f}s | Medio: {avg:.2f}s"
-        ).format(
-            min=time_stats["min"],
-            max=time_stats["max"],
-            avg=time_stats["avg"],
+        _("Piu' rapida {min:.1f} secondi, piu' lenta {max:.1f} secondi.").format(
+            min=time_stats["min"], max=time_stats["max"]
         )
     )
+    lines.append(_("Media {avg:.1f} secondi.").format(avg=time_stats["avg"]))
 
     quartiles = time_stats.get("quartiles", [])
     if quartiles:
-        lines.append(_("    - Analisi stanchezza per quartili cronologici:"))
+        lines.append(_("Andamento nel corso della sessione."))
         for q in quartiles:
             idx = q["quartile"]
-            start_q = q["start_q"]
-            end_q = q["end_q"]
-            q_avg = q["avg"]
             pct_var = q["pct_var"]
-
             if idx == 1:
-                var_str = _("riferimento iniziale")
+                confronto = _("e' il riferimento")
+            elif pct_var > 0:
+                confronto = _("cioe' {p:.0f} per cento piu' lento del primo").format(
+                    p=pct_var
+                )
+            elif pct_var < 0:
+                confronto = _("cioe' {p:.0f} per cento piu' rapido del primo").format(
+                    p=abs(pct_var)
+                )
             else:
-                sign = "+" if pct_var >= 0 else ""
-                var_str = f"{sign}{pct_var:.1f}% " + _("rispetto a Q1")
-
+                confronto = _("come il primo")
             lines.append(
                 _(
-                    "        Q{idx} (domande {start_q}-{end_q}): media {q_avg:.2f}s ({var_str})"
+                    "Quarto {idx}, domande da {start_q} a {end_q}: media {q_avg:.1f} secondi, {confronto}."
                 ).format(
                     idx=idx,
-                    start_q=start_q,
-                    end_q=end_q,
-                    q_avg=q_avg,
-                    var_str=var_str,
+                    start_q=q["start_q"],
+                    end_q=q["end_q"],
+                    q_avg=q["avg"],
+                    confronto=confronto,
                 )
             )
     return "\n".join(lines)
@@ -323,7 +324,7 @@ def report_and_update_scores(
     time_stats = compute_time_stats(timeslist)
     time_stats_str = format_time_stats_string(time_stats)
 
-    print(_("\n--- Risultati Esercizio ---"))
+    print(_("Risultati Esercizio"))
     print(
         _("Hai ottenuto {wins} risposte corrette su {rpt}.").format(wins=wins, rpt=rpt)
     )
@@ -537,6 +538,40 @@ def report_and_update_scores(
     key(prompt=_("\nPremi un tasto per procedere..."))
 
 
+NOMI_ESERCIZI = {
+    "knights": _("salti di cavallo"),
+    "bishops": _("diagonali"),
+    "colors": _("colore delle case"),
+    "mixed": _("sfida mista"),
+}
+
+
+def _nome_esercizio(chiave):
+    return NOMI_ESERCIZI.get(chiave, chiave)
+
+
+def _data_parlata(timestamp):
+    """Data e ora di un punteggio, in forma leggibile e senza sigle."""
+    if not timestamp:
+        return _("data sconosciuta")
+    try:
+        quando = datetime.datetime.fromisoformat(timestamp)
+    except (TypeError, ValueError):
+        return _("data sconosciuta")
+    return config.format_date_italian(quando)
+
+
+def _durata_parlata(secondi):
+    """Durata di una sessione detta in minuti e secondi."""
+    secondi = int(secondi or 0)
+    minuti, resto = divmod(secondi, 60)
+    if minuti and resto:
+        return _("{m} minuti e {s} secondi").format(m=minuti, s=resto)
+    if minuti:
+        return _("{m} minuti").format(m=minuti)
+    return _("{s} secondi").format(s=resto)
+
+
 def show_leaderboard(all_scores):
     """
     Mostra una classifica dettagliata Top 10.
@@ -587,57 +622,38 @@ def show_leaderboard(all_scores):
         )[:MAX_LEADERBOARD_ENTRIES]
 
         print(
-            _(
-                "\n--- 🏆 CLASSIFICA: {exercise} (Ordinata per Punteggio Totale) 🏆 ---"
-            ).format(exercise=selected_exercise.upper())
+            _("Classifica {exercise}, ordinata per punteggio totale.").format(
+                exercise=_nome_esercizio(selected_exercise)
+            )
         )
-        header = _(
-            "{pos:<4} {utente:<14} {punti:>10} {pmin:>8} {win:>6} {avg:>7} {tempo:>6} {data:>17}"
-        ).format(
-            pos=_("Pos"),
-            utente=_("Utente"),
-            punti=_("Punti"),
-            pmin=_("P/Min"),
-            win=_("Win%"),
-            avg=_("Avg(s)"),
-            tempo=_("Tempo"),
-            data=_("Data"),
-        )
-        print(header)
-        print("-" * len(header))
 
         for i, item in enumerate(sorted_leaderboard, 1):
             user = item.get("username", _("Anonimo"))
-            score = item.get("score", 0)
-            performance = item.get("score_per_minute", 0)
             reps = item.get("repetitions", 0)
             wins = item.get("wins", 0)
             duration = item.get("duration", 0)
-            timestamp = item.get("timestamp", None)
-            avg_time = item.get("average_time_per_guess", 0)
-
-            accuracy_str = f"{(wins / reps) * 100:3.0f}%" if reps > 0 else _("N/D")
-            time_str = f"{int(duration // 60):02d}:{int(duration % 60):02d}"
-            date_str = (
-                datetime.datetime.fromisoformat(timestamp).strftime("%Y-%m-%d %H:%M")
-                if timestamp
-                else _("N/D")
+            precisione = (wins / reps) * 100 if reps else 0.0
+            print(
+                _("{pos}. {user}, {score:.0f} punti.").format(
+                    pos=i, user=user, score=item.get("score", 0)
+                )
             )
-
-            row = _(
-                "{pos:<4} {user:<14} {score:>10.0f} {performance:>8.0f} {accuracy:>6} {avg_time:>7.2f} {time_str:>6} {date_str:>17}"
-            ).format(
-                pos=i,
-                user=user[:14],
-                score=score,
-                performance=performance,
-                accuracy=accuracy_str,
-                avg_time=avg_time,
-                time_str=time_str,
-                date_str=date_str,
+            print(
+                _(
+                    "{pmin:.0f} al minuto, {acc:.0f} per cento di risposte esatte."
+                ).format(pmin=item.get("score_per_minute", 0), acc=precisione)
             )
-            print(row)
-        print("-" * len(header))
+            print(
+                _("Media {avg:.1f} secondi, durata {dur}.").format(
+                    avg=item.get("average_time_per_guess", 0),
+                    dur=_durata_parlata(duration),
+                )
+            )
+            print(
+                _("Ottenuto il {data}.").format(
+                    data=_data_parlata(item.get("timestamp"))
+                )
+            )
 
     else:
         sorted_leaderboard = sorted(
@@ -648,51 +664,32 @@ def show_leaderboard(all_scores):
 
         print(
             _(
-                "\n--- 🏆 CLASSIFICA: {exercise} (Ordinata per Punti/Min, Min. 20 Domande) 🏆 ---"
-            ).format(exercise=selected_exercise.upper())
+                "Classifica {exercise}, ordinata per punti al minuto, almeno venti domande."
+            ).format(exercise=_nome_esercizio(selected_exercise))
         )
-        header = _(
-            "{pos:<4} {utente:<14} {tent:>4} {win:>6} {avg:>7} {pmin:>8} {data:>17}"
-        ).format(
-            pos=_("Pos"),
-            utente=_("Utente"),
-            tent=_("Tent"),
-            win=_("Win%"),
-            avg=_("Avg(s)"),
-            pmin=_("P/Min"),
-            data=_("Data"),
-        )
-        print(header)
-        print("-" * len(header))
 
         for i, item in enumerate(sorted_leaderboard, 1):
             user = item.get("username", _("Anonimo"))
-            performance = item.get("score_per_minute", 0)
             reps = item.get("repetitions", 0)
             wins = item.get("wins", 0)
-            timestamp = item.get("timestamp", None)
-            avg_time = item.get("average_time_per_guess", 0)
-
-            accuracy_str = f"{(wins / reps) * 100:3.0f}%" if reps > 0 else _("N/D")
-            date_str = (
-                datetime.datetime.fromisoformat(timestamp).strftime("%Y-%m-%d %H:%M")
-                if timestamp
-                else _("N/D")
+            precisione = (wins / reps) * 100 if reps else 0.0
+            print(
+                _("{pos}. {user}, {pmin:.0f} punti al minuto.").format(
+                    pos=i, user=user, pmin=item.get("score_per_minute", 0)
+                )
             )
-
-            row = _(
-                "{pos:<4} {user:<14} {reps:>4} {accuracy:>6} {avg_time:>7.2f} {performance:>8.0f} {date_str:>17}"
-            ).format(
-                pos=i,
-                user=user[:14],
-                reps=reps,
-                accuracy=accuracy_str,
-                avg_time=avg_time,
-                performance=performance,
-                date_str=date_str,
+            print(
+                _(
+                    "{reps} domande, {acc:.0f} per cento esatte, media {avg:.1f} secondi."
+                ).format(
+                    reps=reps, acc=precisione, avg=item.get("average_time_per_guess", 0)
+                )
             )
-            print(row)
-        print("-" * len(header))
+            print(
+                _("Ottenuto il {data}.").format(
+                    data=_data_parlata(item.get("timestamp"))
+                )
+            )
 
     key(prompt=_("\nPremi un tasto per tornare al menu..."))
 
@@ -1219,7 +1216,7 @@ def main():
 
         endtime = time.time() - start_memoboard_time
         header = (
-            "======================================================================\n"
+            ""
             f"Report Sessione MemoBoard (Orologic V{config.VERSION})\n"
             f"Data e ora: {config.format_date_italian(session_start_dt)}\n"
             "======================================================================\n\n"
@@ -1227,7 +1224,7 @@ def main():
         footer = (
             "\n\n======================================================================\n"
             f"Fine sessione MemoBoard. Tempo di esecuzione: {int(endtime / 60)} minuti e {int(endtime % 60)} secondi.\n"
-            "======================================================================"
+            ""
         )
         report_content = header + "\n\n".join(session_logs) + footer
 
@@ -1291,7 +1288,7 @@ def main():
             print(_(" Inizio"))
             score, scoreslist, duration, timeslist, wins, errors_list = ExColors(rpt)
             if errors_list:
-                print(_("\n--- I tuoi errori ---"))
+                print(_("I tuoi errori"))
                 for err in errors_list:
                     q = err["question"]
                     ua = err["user_answer"]
@@ -1334,7 +1331,7 @@ def main():
             print(_(" Inizio"))
             score, scoreslist, duration, timeslist, wins, errors_list = ExKnights(rpt)
             if errors_list:
-                print(_("\n--- I tuoi errori ---"))
+                print(_("I tuoi errori"))
                 for err in errors_list:
                     q = err["question"]
                     ua = _("Sì") if err["user_answer"] == "y" else _("No")
@@ -1377,7 +1374,7 @@ def main():
             print(_(" Inizio"))
             score, scoreslist, duration, timeslist, wins, errors_list = ExBishops(rpt)
             if errors_list:
-                print(_("\n--- I tuoi errori ---"))
+                print(_("I tuoi errori"))
                 for err in errors_list:
                     q = err["question"]
                     ua = _("Sì") if err["user_answer"] == "y" else _("No")
@@ -1438,9 +1435,9 @@ def main():
             score, scoreslist, duration, timeslist, wins, errors_list = ExMixed(100)
             rpt = 100
 
-            print(_("\n--- SFIDA MISTA COMPLETATA! ---"))
+            print(_("SFIDA MISTA COMPLETATA!"))
             if errors_list:
-                print(_("\n--- I tuoi errori nella Sfida Mista ---"))
+                print(_("I tuoi errori nella Sfida Mista"))
                 for err in errors_list:
                     q = err["question"]
                     ua = err["user_answer"]

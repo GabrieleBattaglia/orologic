@@ -579,7 +579,7 @@ def _loop_tempo(game_state, clock_config):
     n_mosse = (len(game_state.move_history) + 1) // 2
 
     # Visualizzazione a schermo
-    print("\n" + "--- " + _("Riepilogo Sessione Tempo") + " ---")
+    print("\n" + "" + _("Riepilogo Sessione Tempo") + "")
     print(
         _("Tempo rimasto al Bianco: {time}").format(
             time=board_utils.FormatTime(game_state.white_remaining)
@@ -606,7 +606,6 @@ def _loop_tempo(game_state, clock_config):
             time=board_utils.FormatTime(tempo_totale)
         )
     )
-    print("--------------------------------\n")
 
     # Salva il file di report
     _salva_report_tempo(
@@ -634,7 +633,6 @@ def _salva_report_tempo(
     data_ora_str = config.format_date_italian(now)
 
     file_content = _("Sessione Orologio - Tempo\n")
-    file_content += "================================\n"
     file_content += _("Data e ora: {datetime}\n").format(datetime=data_ora_str)
     file_content += _("Orologio utilizzato: {clock_name}\n").format(
         clock_name=clock_config.get("name", "N/D")
@@ -642,12 +640,10 @@ def _salva_report_tempo(
     file_content += _("Controllo del tempo: {tc}\n").format(
         tc=clock.generate_time_control_string(clock_config)
     )
-    file_content += "--------------------------------\n\n"
 
     session_note = getattr(game_state, "session_note", "")
     if session_note:
         file_content += _("Nota: {note}\n").format(note=session_note)
-        file_content += "--------------------------------\n\n"
 
     file_content += _("Lista Mosse:\n")
     for i in range(0, len(game_state.move_history), 2):
@@ -660,7 +656,6 @@ def _salva_report_tempo(
         )
         file_content += f"{num_mossa}. {w_move}" + (f" {b_move}\n" if b_move else "\n")
 
-    file_content += "\n--------------------------------\n"
     file_content += _("STATISTICHE FINALI:\n")
     file_content += _("Tempo rimasto al Bianco: {time}\n").format(
         time=board_utils.FormatTime(game_state.white_remaining)
@@ -678,7 +673,6 @@ def _salva_report_tempo(
     file_content += _("Tempo totale + tempo in pausa: {time}\n").format(
         time=board_utils.FormatTime(tempo_totale)
     )
-    file_content += "================================\n"
     file_content += _("Generato da Orologic V{version}\n").format(
         version=version.VERSION
     )

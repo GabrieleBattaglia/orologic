@@ -65,7 +65,7 @@ def format_ratings(perfs):
 
 def menu_login(db):
     """Gestisce il login e il salvataggio del token di Lichess."""
-    print(_("\n--- Login a Lichess ---"))
+    print(_("Login a Lichess"))
     print(_("Per collegare Orologic a Lichess e' necessario un 'Personal API Token'."))
     print(
         _(
@@ -114,7 +114,7 @@ def menu_login(db):
 
 def menu_logout(db):
     """Gestisce il logout rimuovendo il token."""
-    print(_("\n--- Logout da Lichess ---"))
+    print(_("Logout da Lichess"))
     secrets = load_secrets()
     if "lichess_token" in secrets:
         if enter_escape(
@@ -178,9 +178,7 @@ def menu_profilo(db):
         )
         return
 
-    print(_("\n=================================="))
     print(lichess_profiler.format_profile(profile))
-    print(_("=================================="))
 
     enter_escape(_("\nPremi Invio per tornare al menu Lichess..."))
 
@@ -257,9 +255,7 @@ def menu_statistiche(db):
             break
 
         if scelta == "puzzle":
-            print(_("\n=================================="))
             print(_("     STATISTICHE: PUZZLE"))
-            print(_("=================================="))
             puzzle_perf = perfs.get("puzzle", {})
             print(_("Elo Attuale: {r}").format(r=puzzle_perf.get("rating", "N/A")))
             print(_("Puzzle giocati: {g}").format(g=puzzle_perf.get("games", 0)))
@@ -271,7 +267,6 @@ def menu_statistiche(db):
                     "\nNota: Le statistiche avanzate (es. Win/Loss/Streak) per i puzzle non sono esposte dall'API di base di Lichess."
                 )
             )
-            print(_("=================================="))
             enter_escape(_("\nPremi Invio per continuare..."))
             continue
 
@@ -288,9 +283,7 @@ def menu_statistiche(db):
         stat = perf_data["stat"]
         perf = perf_data.get("perf", {})
 
-        print(_("\n=================================="))
         print(_("     STATISTICHE: {m}").format(m=scelta.upper()))
-        print(_("=================================="))
 
         glicko = perf.get("glicko", {})
         print(
@@ -385,7 +378,6 @@ def menu_statistiche(db):
                 )
             )
 
-        print(_("=================================="))
         enter_escape(_("\nPremi Invio per continuare..."))
 
 
@@ -444,9 +436,7 @@ def menu_amici(db):
         return
 
     while True:
-        print(_("\n=================================="))
         print(_("          GESTIONE AMICI"))
-        print(_("=================================="))
 
         scelte_amici = {
             "vedi": _("Vedi persone che segui"),
@@ -944,9 +934,7 @@ def menu_puzzle(db):
     token = secrets.get("lichess_token")
 
     while True:
-        print(_("\n=================================="))
         print(_("             PUZZLE LICHESS"))
-        print(_("=================================="))
 
         scelte_puzzle = {
             "giorno": _("Puzzle del Giorno"),
@@ -1019,7 +1007,7 @@ def menu_puzzle(db):
         puz = puzzle_data["puzzle"]
         game_info = puzzle_data.get("game", {})
 
-        print(_("\n--- Puzzle {id} ---").format(id=puz.get("id")))
+        print(_("Puzzle {id}").format(id=puz.get("id")))
         print(_("Difficolta' (Rating Lichess): {r}").format(r=puz.get("rating")))
         print(_("Tema: {t}").format(t=", ".join(puz.get("themes", []))))
 
@@ -1134,7 +1122,7 @@ def menu_puzzle(db):
                     if not result_sent:
                         send_puzzle_result(token, puz.get("id"), win=False)
                         result_sent = True
-                    print(_("\n--- Soluzione del Puzzle ---"))
+                    print(_("Soluzione del Puzzle"))
                     temp_board = board.copy()
                     for i in range(mossa_idx, len(soluzione)):
                         sol_move = chess.Move.from_uci(soluzione[i])
@@ -1349,9 +1337,7 @@ def menu_guarda(db):
     token = secrets.get("lichess_token")
 
     while True:
-        print(_("\n=================================="))
         print(_("          GUARDA PARTITA"))
-        print(_("=================================="))
         scelte = {
             "id": _("Inserisci ID o URL Partita"),
             "giocatore": _("Inserisci Nome Utente Lichess"),
@@ -1802,9 +1788,7 @@ def menu_gioca(db):
         return
 
     while True:
-        print(_("\n=================================="))
         print(_("          GIOCA PARTITA"))
-        print(_("=================================="))
 
         scelte = {
             "cerca": _("Cerca avversario casuale (Seek)"),
@@ -2090,14 +2074,12 @@ def run():
         if is_logged:
             username = secrets.get("lichess_username", _("Utente"))
             print(
-                _("\n--- OROLICHESS --- CONNESSO COME: {username}{rating} ---").format(
+                _("OROLICHESS --- CONNESSO COME: {username}{rating}").format(
                     username=username, rating=rating_info
                 )
             )
         else:
-            print(
-                _("\n--- OROLICHESS --- DISCONNESSO (Seleziona Login per iniziare) ---")
-            )
+            print(_("Orolichess, non connesso: scegli Login per iniziare"))
 
         scelta = menu(
             MENU_CHOICES,

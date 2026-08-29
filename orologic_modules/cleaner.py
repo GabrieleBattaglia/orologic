@@ -36,7 +36,7 @@ def check_and_clean_old_files(days=365):
             while True:
                 print(
                     _(
-                        "\nAttenzione: la cartella '{d}' contiene {n} file piu' vecchi di {days} giorni."
+                        "Attenzione: la cartella '{d}' contiene {n} file piu' vecchi di {days} giorni."
                     ).format(d=d, n=len(old_files), days=days)
                 )
                 print(
@@ -47,10 +47,9 @@ def check_and_clean_old_files(days=365):
                 choice = input("> ").strip().lower()
 
                 if choice == "v":
-                    print(_("\nLista file:"))
+                    print(_("Lista file:"))
                     for f in old_files:
                         print(f" - {os.path.basename(f)}")
-                    print()  # Riga vuota
                 elif choice == "c":
                     from GBUtils import Acusticator
 

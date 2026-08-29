@@ -228,7 +228,7 @@ ANALYSIS_COMMANDS = {
     "h": _("Seleziona nodo variante successivo"),
     "j": _("Legge gli headers della partita"),
     "k": _("Vai a mossa"),
-    "l": _("Carica il PGN	dagli appunti"),
+    "l": _("Carica il PGN dagli appunti"),
     "z": _("Inserisce la bestline come variante nel PGN"),
     "x": _("Inserisce la bestmove nel PGN"),
     "c": _("Richiede un commento all'utente e lo aggiunge"),
@@ -251,7 +251,7 @@ ANALYSIS_COMMANDS = {
 DOT_COMMANDS = {
     ".1": _("Mostra il tempo rimanente del bianco"),
     ".2": _("Mostra il tempo rimanente del nero"),
-    ".3": _("Mostra entrambe gli orologi"),
+    ".3": _("Mostra entrambi gli orologi"),
     ".4": _("Confronta i tempi rimanenti e indica il vantaggio"),
     ".5": _("Stato orologi/pausa"),
     ".6": _("Modifica timing aggiornamento orologio"),

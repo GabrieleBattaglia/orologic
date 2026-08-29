@@ -122,7 +122,7 @@ def setup_fischer_random_board_interactive():
     Returns:
         Tupla (board, fen, pos_number) oppure (None, None, None) se annullato.
     """
-    print(_("\n--- Configurazione Fischer Random (Chess960) ---"))
+    print(_("Configurazione Fischer Random (Chess960)"))
     while True:
         prompt = _(
             "\nInserisci la sequenza di 8 pezzi, '?' per una casuale, o '.' per annullare: "

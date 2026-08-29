@@ -17,7 +17,7 @@ def get_token(secrets):
 
 
 def search_player():
-    print(_("\n=== RICERCA GIOCATORE ==="))
+    print(_("RICERCA GIOCATORE"))
     print(
         _(
             "Digita il nome utente. Usa il tasto Backspace per correggere, INVIO per confermare, ESC per annullare."
@@ -71,7 +71,7 @@ def search_player():
         else:
             print()
 
-        prompt_text = f"> {term}"
+        prompt_text = _("Nome: ") + term
         c = key(prompt=prompt_text)
 
         if c in ("\x1b", "esc"):  # ESC
@@ -113,7 +113,7 @@ def search_player():
 
 def format_profile(profile):
     p = []
-    p.append(_("--- PROFILO DI {u} ---").format(u=profile.get("username")))
+    p.append(_("PROFILO DI {u}").format(u=profile.get("username")))
     if "title" in profile:
         p.append(_("Titolo: {t}").format(t=profile["title"]))
 
@@ -295,7 +295,7 @@ def report_player(username):
 
 
 def download_games(username, token):
-    print(_("\n--- Scarica e Filtra Partite di {u} ---").format(u=username))
+    print(_("Scarica e Filtra Partite di {u}").format(u=username))
 
     if enter_escape(
         _(
@@ -544,7 +544,7 @@ def choose_game_for_analysis(games_list):
         choices["."] = _("Annulla")
 
         print(
-            _("\n--- Partite Trovate (Pagina {c}/{t}) ---").format(
+            _("Partite Trovate (Pagina {c}/{t})").format(
                 c=current_page + 1, t=(total + page_size - 1) // page_size
             )
         )
@@ -709,7 +709,7 @@ def show_player_menu(username, secrets):
 
 def run_profiler(secrets):
     while True:
-        print(_("\n=== RICERCA GIOCATORE (PROFILATORE) ==="))
+        print(_("RICERCA GIOCATORE (PROFILATORE)"))
         username = search_player()
         if not username:
             break
