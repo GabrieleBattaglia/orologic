@@ -4,6 +4,8 @@ Espone funzioni per generare posizioni, configurare il motore e interagire con l
 
 import random
 
+import chess.engine
+
 from GBUtils import Acusticator, dgt
 
 from . import board_utils, config
@@ -37,17 +39,27 @@ def get_starting_board(pos_num):
 
 
 def configure_engine_for_chess960(engine_instance, enable=True):
-    """Configura l'opzione UCI_Chess960 sull'istanza del motore Stockfish.
+    """Configura l'opzione UCI_Chess960 sull'istanza del motore.
+
+    Se il motore non accetta l'opzione lo dice, perche' senza di essa le
+    analisi di una partita Fischer Random sbagliano gli arrocchi.
     Args:
         engine_instance: Istanza del motore chess.engine.
         enable: True per abilitare Chess960, False per disabilitare.
     """
     if engine_instance is None:
-        return
+        return False
     try:
         engine_instance.configure({"UCI_Chess960": enable})
-    except Exception:
-        pass
+        return True
+    except (chess.engine.EngineError, chess.engine.EngineTerminatedError) as e:
+        if enable:
+            print(
+                _(
+                    "Attenzione: il motore non accetta la variante Fischer Random ({motivo}). Le analisi degli arrocchi saranno inattendibili."
+                ).format(motivo=e)
+            )
+        return False
 
 
 def describe_960_position(board, pos_number=None):
@@ -67,12 +79,13 @@ def describe_960_position(board, pos_number=None):
     if pos_number is not None:
         lines.append(_("Variante Fischer Random 960, numero {n}:").format(n=pos_number))
     else:
-        # Tenta di recuperare il numero dalla board
-        try:
-            num = board.chess960_pos()
-            lines.append(_("Variante Fischer Random 960, numero {n}:").format(n=num))
-        except Exception:
+        # Il numero si ricava dalla posizione, ma non tutte le disposizioni ne
+        # hanno uno: in quel caso si annuncia la variante e basta.
+        num = board.chess960_pos()
+        if num is None:
             lines.append(_("Variante Fischer Random 960:"))
+        else:
+            lines.append(_("Variante Fischer Random 960, numero {n}:").format(n=num))
     # Descrizione pezzo per colonna (prima traversa, da A a H)
     parts = []
     for i, col in enumerate(col_letters):
@@ -153,37 +166,51 @@ def setup_fischer_random_board_interactive():
             Acusticator(["b3", 0.2, 0, config.VOLUME], kind=2)
             continue
         else:
-            fen_to_try = (
-                f"{user_input.lower()}/pppppppp/8/8/8/8/PPPPPPPP/{user_input} w - - 0 1"
-            )
+            # I diritti di arrocco vanno dichiarati nel FEN: senza, la partita
+            # partirebbe con arrocco impossibile per entrambi i colori e la
+            # posizione non verrebbe riconosciuta come una delle 960.
+            fen_to_try = f"{user_input.lower()}/pppppppp/8/8/8/8/PPPPPPPP/{user_input} w KQkq - 0 1"
             try:
                 board = board_utils.CustomBoard(fen_to_try, chess960=True)
-                Acusticator(
-                    [
-                        "c5",
-                        0.1,
-                        -0.8,
-                        config.VOLUME,
-                        "e5",
-                        0.1,
-                        0,
-                        config.VOLUME,
-                        "g5",
-                        0.2,
-                        0.8,
-                        config.VOLUME,
-                    ],
-                    kind=1,
-                    adsr=[2, 8, 90, 0],
-                )
-                pos_number = board.chess960_pos()
+            except ValueError:
                 print(
-                    _("Posizione valida! Numero Chess960: {number}").format(
-                        number=pos_number
+                    _(
+                        "Sequenza non valida: usa le lettere dei pezzi R N B Q K, una per colonna."
                     )
                 )
-                print(describe_960_position(board, pos_number))
-                return board, fen_to_try, pos_number
-            except Exception:
                 Acusticator(["a3", 0.3, 0, config.VOLUME], kind=2)
                 continue
+            pos_number = board.chess960_pos()
+            if pos_number is None:
+                print(
+                    _(
+                        "Questa disposizione non e' una posizione Fischer Random valida: servono due torri con il re in mezzo e gli alfieri su case di colore diverso."
+                    )
+                )
+                Acusticator(["a3", 0.3, 0, config.VOLUME], kind=2)
+                continue
+            Acusticator(
+                [
+                    "c5",
+                    0.1,
+                    -0.8,
+                    config.VOLUME,
+                    "e5",
+                    0.1,
+                    0,
+                    config.VOLUME,
+                    "g5",
+                    0.2,
+                    0.8,
+                    config.VOLUME,
+                ],
+                kind=1,
+                adsr=[2, 8, 90, 0],
+            )
+            print(
+                _("Posizione valida! Numero Chess960: {number}").format(
+                    number=pos_number
+                )
+            )
+            print(describe_960_position(board, pos_number))
+            return board, fen_to_try, pos_number

@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-29: chiuse le tappe 1 integrita dei dati, 2 avvio e robustezza, 3 rete, per un totale di 27 rilievi risolti sui 154 iniziali.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-29: chiuse le tappe 1 integrita dei dati, 2 avvio e robustezza, 3 rete, 4 correttezza scacchistica, per un totale di 41 rilievi risolti sui 154 iniziali.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -43,10 +43,6 @@ check_engine.py, 34 righe
 zip_maker.py, 24 righe
 resources/translator_tool.py, 92 righe
 Rilievi, ordinati per gravita decrescente. Ogni rilievo riporta identificativo progressivo, gravita, categoria, posizione, descrizione con impatto e correzione proposta. Fra parentesi l'identificativo usato durante l'analisi a blocchi.
-R008 gravita alto, categoria logica, in chess960_utils.py:156-186 (B2-01)
-Il FEN della posizione Fischer Random inserita a mano viene costruito con campo arrocco a trattino. Verificato sperimentalmente: la stessa posizione ottenuta dal generatore casuale ha diritti KQkq e numero 518, mentre inserita a mano non ha alcun diritto di arrocco e chess960_pos restituisce None. Impatto: chi inserisce la sequenza a mano gioca una partita in cui nessuno dei due puo arroccare, e il messaggio annuncia Numero Chess960 None. Inoltre sequenze illegali come otto torri vengono accettate senza errore. Correzione: aggiungere i diritti di arrocco al FEN e rifiutare la sequenza se chess960_pos e None.
-R009 gravita alto, categoria logica, in board_utils.py:723-737 con game_flow.py:1421 e lichess_board.py:132 (B2-02)
-Nel PGN il tag clk viene riempito con il tempo speso per la mossa, mentre lo standard vuole il tempo residuo sull'orologio. Il dato corretto esiste gia in clocks_history ma non viene usato. Impatto: i tempi mostrati da Lichess o da qualsiasi altro visualizzatore sono sbagliati. Correzione: usare clocks_history per clk, oppure cambiare il tag in emt che indica il tempo speso.
 R011 gravita alto, categoria fragilita, in game_flow.py:1439-1441 (B2-04)
 La scrittura del PGN di fine partita non e protetta da alcun try. Disco pieno, percorso non scrivibile o nome non valido fanno terminare il programma con traceback e la partita appena giocata va persa. Da notare che la copia negli appunti, meno importante, e invece protetta.
 R012 gravita alto, categoria fragilita, in game_flow.py:22-113 (B2-05)
@@ -55,22 +51,10 @@ R013 gravita alto, categoria regole generali, in board_utils.py:768, game_flow.p
 Separatori grafici nell'output: righe di trattini e di uguali, in lichess_app fino a trentaquattro uguali consecutivi. Alcune di queste righe non passano nemmeno da gettext, quindi restano in italiano nelle altre lingue. Correzione: eliminare i separatori e affidare la struttura alle intestazioni testuali.
 R014 gravita alto, categoria ottimizzazione, in game_flow.py:274-1397 (B2-07)
 _loop_principale_partita e una sola funzione di 1124 righe, con il solo ramo dei comandi punto che ne occupa 822 e nidificazione fino a otto livelli. Impossibile da testare e rischiosa da modificare. Correzione: estrarre un dispatcher di comandi e una funzione per gruppo di comandi.
-R015 gravita alto, categoria logica, in board_utils.py:295-360 (B2-08)
-Al cambio di fase il tempo residuo viene sostituito con quello della nuova fase invece di sommarsi ad esso. Nelle regole FIDE il tempo del nuovo controllo si aggiunge al residuo, quindi chi ha risparmiato tempo lo perde. Gabriele ha confermato che si tratta di un errore da correggere, non di una scelta.
-R016 gravita alto, categoria logica, in game_flow.py:808-836 (B2-09)
-L'annullamento della mossa con il comando punto q ripristina scacchiera, PGN, incremento, move_times e clocks_history, ma non decrementa white_moves e black_moves e non ripristina white_phase e black_phase. Impatto: annullando e rigiocando una mossa il contatore avanza di due, e con un controllo a quaranta mosse il cambio di fase scatta in anticipo.
-R017 gravita alto, categoria logica, in game_flow.py:129-147 (B2-10)
-Se il PGN del file di ripristino e assente o illeggibile viene creato un nuovo oggetto partita, ma pgn_node continua a puntare all'albero creato nel costruttore. Impatto: dopo un ripristino da PGN corrotto le mosse successive non finiscono nel PGN salvato a fine partita.
-R018 gravita alto, categoria logica, in engine.py:238,254,329,807,910 (B3-01)
-La cache delle analisi e indicizzata solo sul FEN, ma il contenuto dipende anche dal numero di linee richieste. Se l'utente chiede prima la valutazione, che analizza con una sola linea, e poi il comando e che mostra le linee di analisi, la posizione risulta gia in cache e vengono mostrate una linea sola invece delle tre configurate. Il modo corretto e gia presente nel progetto: analyze_position_deep a riga 1125 costruisce la chiave con tempo, profondita, nodi e numero di linee.
-R019 gravita alto, categoria logica, in engine.py:1707-1710 (B3-02)
-Nell'analisi automatica, se la mossa migliore portava a matto a favore, qualunque altra mossa viene classificata Svarione con perdita fissata a 5000 centipedoni, senza verificare la valutazione della mossa effettivamente giocata. Impatto: dare matto in quattro quando ne esisteva uno in tre viene registrato come svarione e distrugge accuratezza e stima Elo della partita. Correzione: confrontare anche il punteggio della mossa giocata e classificare come svarione solo se il matto e stato realmente perso.
 R020 gravita alto, categoria logica, in ui.py:304-305 con config.py:195 (B3-03)
 Dopo la personalizzazione dei nomi, EditLocalization ricarica solo il dizionario di ui, mentre config.L10N resta quello caricato all'import. Le descrizioni delle mosse passano da config.L10N, quindi le personalizzazioni appena inserite non si sentono fino al riavvio del programma.
 R021 gravita alto, categoria DRY, in ui.py:33-131 con config.py:126-195 (B3-04)
 Esistono due sistemi di localizzazione paralleli e divergenti: due get_default_localization, due recursive_merge, due LoadLocalization e due dizionari L10N. I contenuti differiscono: config chiama la regina donna e usa le colonne fonetiche Ancona Bologna Como, ui usa regina e le lettere semplici; la stessa annotazione e descritta mossa dubbia in config e mossa interessante in ui. A seconda del modulo che parla l'utente sente termini diversi per la stessa cosa. Da unificare in un solo modulo di localizzazione.
-R022 gravita alto, categoria logica, in ui.py:642-676 con game_flow.py:1093 (B3-05)
-descriptive_move_history viene solo accodata e mai ripulita quando si annulla una mossa, a differenza di move_history, move_times e clocks_history. Impatto: il riepilogo testuale salvato a fine partita contiene la mossa annullata e da quel punto in poi la numerazione delle mosse e sfalsata di mezzo turno.
 R024 gravita alto, categoria regole generali, in engine.py:1569,1572,1821, ui.py:645,675,685, memoboard_app.py:607,640,666,695 (B3-07)
 Separatori grafici generati a runtime: quaranta caratteri uguale in engine, trentadue trattini nel riepilogo testuale salvato, righe di trattini lunghe quanto l'intestazione in memoboard. La riga 1821 di engine somma tre violazioni: due righe vuote consecutive, quaranta uguali, testo, altri quaranta uguali.
 R026 gravita alto, categoria logica, in lichess_app.py:2062 con 2087,2100,2182-2188 (B4-02)
@@ -107,14 +91,6 @@ R051 gravita medio, categoria logica, in config.py:11-57 (B1-18)
 Giorni e mesi sono scritti a mano in italiano mentre l'app e localizzata in cinque lingue: le date restano italiane anche con interfaccia inglese.
 R052 gravita medio, categoria logica, in config.py:114-115,167-168 (B1-19)
 Le annotazioni punto esclamativo interrogativo e interrogativo esclamativo hanno la stessa descrizione mossa dubbia. Il NAG 5 indica mossa interessante o speculativa, il NAG 6 mossa dubbia.
-R054 gravita medio, categoria logica, in game_flow.py:195-215 con 116-120 (B2-11)
-L'autosave non registra ne il flag chess960 ne il FEN iniziale, e il ripristino ricostruisce la scacchiera senza chess960. Impatto: una partita Fischer Random ripresa da autosave perde gli arrocchi e la posizione di partenza corretta nel PGN.
-R055 gravita medio, categoria logica, in game_flow.py:1770-1780 e 1466-1490 (B2-12)
-UCI_Chess960 viene impostato solo se il motore e gia attivo all'avvio della partita. Se il motore viene inizializzato piu tardi, per esempio quando si accetta l'analisi a fine partita, l'opzione non viene mai riconfigurata e l'analisi di una partita Fischer Random tratta gli arrocchi in modo errato.
-R056 gravita medio, categoria logica, in game_flow.py:33-58 (B2-13)
-Gli allarmi scattano solo se la distanza fra tempo residuo e soglia e inferiore all'intervallo trascorso nell'ultimo giro di ciclo, tipicamente un decimo di secondo. Se il ciclo salta, per carico di sistema o per una pausa, l'allarme non suona piu. Correzione: confrontare con minore o uguale e ricordare gli allarmi gia emessi, come gia si fa.
-R057 gravita medio, categoria logica, in game_flow.py:1120-1133 (B2-14)
-Il commento di proposta di patta viene scritto con graffe dentro il testo, e le graffe sono i delimitatori di commento del PGN. Verificato: il file esportato contiene un commento malformato e alla rilettura il testo risulta troncato. Correzione: testo senza graffe.
 R058 gravita medio, categoria DRY, in board_utils.py:500,552,545,563,673,710 e game_flow.py:334 (B2-15)
 Sei funzioni di formattazione del tempo nello stesso modulo piu una settima annidata nel prompt di gioco. SecondsToHMS e FormatClock sono identiche nel comportamento, FormatTime e format_time_italian quasi. Da unificare e da proporre come utilita unica in GBUtils, senza intervenire su GBUtils in questa fase.
 R059 gravita medio, categoria ottimizzazione, in board_utils.py:41-199 (B2-16)
@@ -245,10 +221,6 @@ R127 gravita basso, categoria ottimizzazione, in board_utils.py:742, game_flow.p
 Import di chess ripetuto dentro una funzione dove e gia importato in testa al modulo, controlli hasattr su attributi sempre presenti, doppia copia della scacchiera per ogni descrizione di mossa.
 R128 gravita basso, categoria logica, in game_flow.py:1553,1576 (B2-25)
 Il metodo title applicato ai nomi dei giocatori altera sigle e nomi composti, per esempio IZ4APU diventa Iz4Apu.
-R129 gravita basso, categoria fragilita, in chess960_utils.py:47-50 (B2-26)
-Se il motore non accetta UCI_Chess960 l'errore viene ingoiato e l'utente non sa che le analisi della partita 960 saranno inattendibili.
-R130 gravita basso, categoria regole generali, in chess960_utils.py:187-189 (B2-27)
-Sequenza rifiutata con un solo suono e nessun messaggio che spieghi cosa non va.
 R131 gravita basso, categoria regole generali, in board_utils.py:786-795 (B2-28)
 La classifica delle mosse per tempo viene stampata a dieci mosse per riga, righe che superano gli ottanta caratteri e mal si prestano alla lettura su display braille.
 R132 gravita basso, categoria ottimizzazione, in engine.py:102-107 (B3-21)
@@ -342,18 +314,17 @@ Criticita rilevate in GBUtils.
 Segnalazione emersa durante la tappa 2, da sottoporre a Gabriele senza intervenire. polipo risolve la cartella delle traduzioni e quella di configurazione rispetto a os.getcwd() quando il programma non e' congelato: chi lo chiama con percorsi relativi si ritrova le traduzioni cercate nella directory di lavoro e una cartella settings creata li' dentro. Orologic ora passa percorsi assoluti, quindi il problema non lo tocca piu', ma gli altri progetti del parco software che usano polipo con percorsi relativi hanno lo stesso difetto. La firma di dgt e' invece risultata completa: smin, smax e pwd coprono i casi in cui il progetto validava a mano.
 Riepilogo per gravita.
 Critico: 0 rilievi
-Alto: 23 rilievi
-Medio: 62 rilievi
-Basso: 42 rilievi
-Totale: 127 rilievi ancora aperti
+Alto: 15 rilievi
+Medio: 58 rilievi
+Basso: 40 rilievi
+Totale: 113 rilievi ancora aperti
 Riepilogo per categoria.
 DRY: 28 rilievi
-fragilita: 19 rilievi
-logica: 26 rilievi
+fragilita: 18 rilievi
+logica: 14 rilievi
 ottimizzazione: 28 rilievi
-regole generali: 26 rilievi
+regole generali: 25 rilievi
 Proposta di ordine di lavorazione, in nove tappe, da concordare con Gabriele prima di toccare il codice.
-Tappa 4, correttezza scacchistica. Diritti di arrocco nel FEN Fischer Random inserito a mano, tempo di fase che si somma invece di sostituire, contatori di mossa e fase nell'annullamento, tag clk con il tempo residuo, chiave della cache di analisi comprensiva del numero di linee, classificazione della mossa quando il matto resta disponibile, riconfigurazione di UCI_Chess960 quando il motore parte piu tardi.
 Tappa 5, accessibilita. Eliminare tutti i separatori grafici, letterali e generati a runtime, riscrivere la classifica di Memoboard in forma discorsiva, spezzare le righe di esplorazione lunghe, togliere tabulazioni, righe vuote superflue e unita attaccate ai numeri. Da fare in un passaggio unico su tutto il progetto, perche il difetto e trasversale.
 Tappa 6, localizzazione. Unificare i due sistemi paralleli di config e ui in un solo modulo, ricondurvi anche i nomi di Easyfish comprese le colonne NATO, ricaricare il dizionario unico dopo la personalizzazione dei nomi, tradurre le stringhe rimaste fuori da gettext e togliere i separatori dal catalogo.
 Tappa 7, DRY. Unificare il dispatch dei comandi di esplorazione oggi triplicato, le dodici funzioni di formattazione del tempo, le tre copie di CalculateMaterial, i tre thread orologio, le due funzioni percorso_salvataggio e le due enter_escape, preferendo sempre l'utilita di GBUtils dove esiste.

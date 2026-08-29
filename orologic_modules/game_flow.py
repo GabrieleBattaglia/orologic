@@ -25,8 +25,11 @@ lingua_rilevata, _ = polipo(
 
 def clock_thread(game_state):
     last_time = time.time()
-    triggered_alarms_white = set()
-    triggered_alarms_black = set()
+    # Gli allarmi gia' superati alla partenza si considerano fatti: se un
+    # orologio parte con meno tempo della soglia, non ha senso suonarli.
+    allarmi = game_state.clock_config.get("alarms", [])
+    triggered_alarms_white = {a for a in allarmi if game_state.white_remaining <= a}
+    triggered_alarms_black = {a for a in allarmi if game_state.black_remaining <= a}
     while not game_state.game_over:
         current_time = time.time()
         elapsed = current_time - last_time
@@ -37,7 +40,7 @@ def clock_thread(game_state):
                 for alarm in game_state.clock_config.get("alarms", []):
                     if (
                         alarm not in triggered_alarms_white
-                        and abs(game_state.white_remaining - alarm) < elapsed
+                        and game_state.white_remaining <= alarm
                     ):
                         print(
                             _("\nAllarme: tempo del bianco raggiunto {time}").format(
@@ -52,7 +55,7 @@ def clock_thread(game_state):
                 for alarm in game_state.clock_config.get("alarms", []):
                     if (
                         alarm not in triggered_alarms_black
-                        and abs(game_state.black_remaining - alarm) < elapsed
+                        and game_state.black_remaining <= alarm
                     ):
                         print(
                             _("\nAllarme: tempo del nero raggiunto {time}").format(
@@ -120,7 +123,10 @@ def clock_thread(game_state):
 def RiprendiPartita(dati_partita):
     print(_("Ricostruzione dello stato della partita..."))
     game_state = board_utils.GameState(dati_partita["clock_config"])
-    game_state.board = board_utils.CustomBoard(dati_partita["board_fen"])
+    e_chess960 = bool(dati_partita.get("chess960", False))
+    game_state.board = board_utils.CustomBoard(
+        dati_partita["board_fen"], chess960=e_chess960
+    )
     game_state.white_remaining = dati_partita["white_remaining"]
     game_state.black_remaining = dati_partita["black_remaining"]
     game_state.white_phase = dati_partita["white_phase"]
@@ -147,16 +153,17 @@ def RiprendiPartita(dati_partita):
                 )
             )
             game_state.pgn_game = chess.pgn.Game.from_board(game_state.board)
-        else:
-            game_state.pgn_node = game_state.pgn_game.end()
-    except Exception as e:
+        game_state.pgn_node = game_state.pgn_game.end()
+    except (ValueError, KeyError, AttributeError) as e:
         print(
             _(
                 "Errore nella lettura del PGN salvato: {error}. La partita riprendera' senza cronologia PGN."
             ).format(error=e)
         )
         game_state.pgn_game = chess.pgn.Game.from_board(game_state.board)
+        game_state.pgn_node = game_state.pgn_game.end()
     game_state.paused = True
+    chess960_utils.configure_engine_for_chess960(engine.ENGINE, e_chess960)
     threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
     db = storage.LoadDB()
     autosave_is_on = db.get("autosave_enabled", False)
@@ -216,6 +223,8 @@ def EseguiAutosave(game_state):
         "black_player": game_state.black_player,
         "move_times": getattr(game_state, "move_times", []),
         "clocks_history": getattr(game_state, "clocks_history", []),
+        "chess960": bool(getattr(game_state.board, "chess960", False)),
+        "starting_fen": game_state.pgn_game.headers.get("FEN", ""),
     }
     try:
         with open(full_path, "w", encoding="utf-8") as f:
@@ -819,23 +828,38 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                     if not hasattr(game_state, "cancelled_san_moves"):
                         game_state.cancelled_san_moves = []
                     game_state.cancelled_san_moves.insert(0, undone_move_san)
-                    if game_state.active_color == "black":
-                        game_state.white_remaining -= game_state.clock_config["phases"][
-                            game_state.white_phase
-                        ]["white_inc"]
-                        game_state.active_color = "white"
+                    # Il tratto torna a chi aveva mosso, poi si disfa quanto
+                    # la mossa aveva prodotto: incremento, contatore delle
+                    # mosse ed eventuale passaggio di fase.
+                    game_state.active_color = (
+                        "white" if game_state.active_color == "black" else "black"
+                    )
+                    fasi = game_state.clock_config["phases"]
+                    if game_state.active_color == "white":
+                        game_state.white_remaining -= fasi[game_state.white_phase][
+                            "white_inc"
+                        ]
                     else:
-                        game_state.black_remaining -= game_state.clock_config["phases"][
-                            game_state.black_phase
-                        ]["black_inc"]
-                        game_state.active_color = "black"
-                    if hasattr(game_state, "move_times") and game_state.move_times:
+                        game_state.black_remaining -= fasi[game_state.black_phase][
+                            "black_inc"
+                        ]
+                    tempo_di_fase = game_state.annulla_mossa()
+                    if tempo_di_fase:
+                        if game_state.active_color == "white":
+                            game_state.white_remaining -= tempo_di_fase
+                        else:
+                            game_state.black_remaining -= tempo_di_fase
+                        print(
+                            _("Rientro nella fase precedente, tolto il tempo aggiunto.")
+                        )
+                    if game_state.move_times:
                         game_state.move_times.pop()
-                    if (
-                        hasattr(game_state, "clocks_history")
-                        and game_state.clocks_history
-                    ):
+                    if game_state.clocks_history:
                         game_state.clocks_history.pop()
+                    if game_state.descriptive_move_history:
+                        # Senza questo, il riepilogo testuale di fine partita
+                        # conteneva la mossa annullata e sfalsava la numerazione.
+                        game_state.descriptive_move_history.pop()
                     current_turn_clock_before = None
                     print(_("Ultima mossa annullata: ") + undone_move_san)
             elif (
@@ -1127,10 +1151,10 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         existing_comment = new_node.comment or ""
                         if existing_comment:
                             new_node.comment = existing_comment + _(
-                                " {Proposta di patta}"
+                                " proposta di patta"
                             )
                         else:
-                            new_node.comment = _("{Proposta di patta}")
+                            new_node.comment = _("proposta di patta")
                     elif annotation_suffix in config.NAG_MAP:
                         nag_value = config.NAG_MAP[annotation_suffix][0]
                         new_node.nags.add(nag_value)
@@ -1423,7 +1447,9 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
                 )
             ):
                 board_utils.AggiungiTempiPgn(
-                    game_state.pgn_game, getattr(game_state, "move_times", [])
+                    game_state.pgn_game,
+                    game_state.clocks_history,
+                    game_state.move_times,
                 )
     if last_valid_eco_entry:
         game_state.pgn_game.headers["ECO"] = last_valid_eco_entry["eco"]
@@ -1491,6 +1517,10 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
                 print(_("Impossibile inizializzare il motore. Analisi annullata."))
                 return
             engine.cache_analysis.clear()
+            chess960_utils.configure_engine_for_chess960(
+                engine.ENGINE,
+                game_state.pgn_game.headers.get("Variant", "") == "Chess960",
+            )
             if ui.enter_escape(
                 _("Desideri l'analisi automatica? (INVIO per si', ESC per manuale): ")
             ):
