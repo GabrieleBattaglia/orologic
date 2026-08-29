@@ -290,10 +290,11 @@ fragilita: 18 rilievi
 logica: 14 rilievi
 ottimizzazione: 28 rilievi
 regole generali: 8 rilievi
-Proposta di ordine di lavorazione, in nove tappe, da concordare con Gabriele prima di toccare il codice.
-Tappa 6, localizzazione. Unificare i due sistemi paralleli di config e ui in un solo modulo, ricondurvi anche i nomi di Easyfish comprese le colonne NATO, ricaricare il dizionario unico dopo la personalizzazione dei nomi, tradurre le stringhe rimaste fuori da gettext e togliere i separatori dal catalogo.
+Proposta di ordine di lavorazione, in dieci tappe, da concordare con Gabriele prima di toccare il codice.
+Tappa 6, localizzazione nel codice. Unificare i due sistemi paralleli di config e ui in un solo modulo, ricondurvi anche i nomi di Easyfish comprese le colonne NATO, ricaricare il dizionario unico dopo la personalizzazione dei nomi e portare dentro gettext le stringhe rimaste fuori. Qui si tocca solo il codice: la traduzione vera e propria e' spostata in coda, vedi tappa 10.
 Tappa 7, DRY. Unificare il dispatch dei comandi di esplorazione oggi triplicato, le dodici funzioni di formattazione del tempo, le tre copie di CalculateMaterial, i tre thread orologio, le due funzioni percorso_salvataggio e le due enter_escape, preferendo sempre l'utilita di GBUtils dove esiste.
 Tappa 8, struttura. Spezzare le funzioni piu grandi, il loop di partita da 1124 righe, AnalyzeGame da 596 e AnalisiAutomatica da 461, estraendo un dispatcher di comandi e funzioni per gruppo. Estrarre le sequenze sonore in un dizionario di temi.
 Tappa 9, pulizie finali. Portare ruff a zero rilievi, rimuovere codice morto e script diagnostici, aggiornare requirements, aggiungere l'intestazione autori prevista in tutti i file e allineare la versione dopo le correzioni.
+Tappa 10, traduzioni, da fare per ultima. Rigenerare messages.pot, riallineare i cataloghi delle quattro lingue e tradurre le stringhe nuove. Va in coda per una ragione pratica: ogni tappa precedente cambia messaggi a schermo, quindi tradurre prima significherebbe ritradurre dopo. Nel frattempo gettext mostra la stringa sorgente, cioe' l'italiano, per le voci non ancora allineate: nessun danno finche' non si rilascia, ma il rilascio non va fatto prima di questa tappa.
 Nota sul metodo per le fasi successive. I bug segnalati come verificati sono stati riprodotti eseguendo codice di prova durante l'analisi: posizione Fischer Random senza diritti di arrocco, intervallo della classe di caratteri in sanitize_filename, commento PGN con graffe interne, sequenze di ritorno a capo scritte come testo. Gli altri rilievi nascono dalla lettura del codice e vanno confermati sul campo prima della correzione.
 Fine del rapporto di fase 1.
