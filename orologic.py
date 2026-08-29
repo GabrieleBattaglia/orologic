@@ -169,11 +169,13 @@ def SchermataIniziale():
     )
 
 
+def _incrementa_lanci(db):
+    db["launch_count"] = db.get("launch_count", 0) + 1
+
+
 def Main():
     # Incremento contatore lanci
-    db = storage.LoadDB()
-    db["launch_count"] = db.get("launch_count", 0) + 1
-    storage.SaveDB(db)
+    db = storage.UpdateDB(_incrementa_lanci)
 
     SchermataIniziale()
 
@@ -261,6 +263,9 @@ def Main():
 
     # Loop Principale
     while True:
+        # Ricarico a ogni giro: le voci di menu possono aver salvato modifiche
+        # e la copia in memoria sarebbe vecchia.
+        db = storage.LoadDB()
         scelta = menu(
             config.MENU_CHOICES,
             show=True,
@@ -500,7 +505,7 @@ def Main():
                 kind=1,
                 adsr=[5, 5, 80, 10],
             )
-            ui.Impostazioni(db)
+            ui.Impostazioni()
 
         elif scelta == "arbitra":
             Acusticator(
@@ -603,8 +608,7 @@ def Main():
             )
             old_v = config.VOLUME
             config.VOLUME = new_vol / 100.0
-            db["volume"] = config.VOLUME
-            storage.SaveDB(db)
+            db = storage.SetValue("volume", config.VOLUME)
             Acusticator(["c5", 0.2, 0, old_v], sync=True)
             time.sleep(0.3)
             Acusticator(["c6", 0.2, 0, config.VOLUME])
@@ -612,7 +616,7 @@ def Main():
 
         elif scelta == "elimina":
             Acusticator([200.0, 0.5, 0, config.VOLUME], kind=2, adsr=[10, 10, 80, 10])
-            clock.DeleteClock(db)
+            clock.DeleteClock()
 
 
 if __name__ == "__main__":

@@ -86,9 +86,7 @@ def get_image_settings():
 
 
 def save_image_settings(settings):
-    db = storage.LoadDB()
-    db["image_settings"] = settings
-    storage.SaveDB(db)
+    storage.SetValue("image_settings", settings)
 
 
 def ask_rgb(label, defaults):

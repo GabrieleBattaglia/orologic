@@ -148,44 +148,32 @@ def InitEngine():
     CloseEngine()  # Chiudiamo sempre eventuali istanze precedenti per evitare processi orfani
     db = storage.LoadDB()
 
-    # Caricamento parametri analisi globali
-    if "default_analysis_time" in db:
-        analysis_time = db["default_analysis_time"]
-    else:
-        db["default_analysis_time"] = analysis_time
-
-    if "default_multipv" in db:
-        multipv = db["default_multipv"]
-    else:
-        db["default_multipv"] = multipv
+    # Parametri di analisi: storage garantisce che le chiavi esistano.
+    analysis_time = db["default_analysis_time"]
+    multipv = db["default_multipv"]
 
     cfg = db.get("engine_config", {})
     if not cfg:
         p, e, unused_v = SearchForEngine()
-        if p and e:
-            cfg = {
-                "engine_path": os.path.join(p, e),
-                "engine_is_relative": False,
-                "hash_size": 128,
-                "num_cores": 1,
-                "skill_level": 20,
-                "move_overhead": 0,
-            }
-            db["engine_config"] = cfg
-            storage.SaveDB(db)
-        else:
+        if not (p and e):
             ENGINE = None
             ENGINE_NAME = "Nessuno"
-            storage.SaveDB(db)
             return False
-    else:
-        # Assicuriamoci che i default di analisi siano salvati se non c'erano
-        storage.SaveDB(db)
+        cfg = {
+            "engine_path": os.path.join(p, e),
+            "engine_is_relative": False,
+            "hash_size": 128,
+            "num_cores": 1,
+            "skill_level": 20,
+            "move_overhead": 0,
+        }
+        storage.SetValue("engine_config", cfg)
 
+    percorso_configurato = cfg.get("engine_path", "")
     path = (
-        percorso_salvataggio(cfg["engine_path"])
+        percorso_salvataggio(percorso_configurato)
         if cfg.get("engine_is_relative")
-        else cfg["engine_path"]
+        else percorso_configurato
     )
     if os.path.exists(path):
         try:
@@ -2033,8 +2021,7 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
         "skill_level": skill_level,
         "move_overhead": move_overhead,
     }
-    db["engine_config"] = engine_config
-    storage.SaveDB(db)
+    storage.SetValue("engine_config", engine_config)
     print(_("Configurazione del motore salvata."))
     InitEngine()
     Acusticator(["a6", 0.5, 1, config.VOLUME], kind=3, adsr=[0.001, 0, 100, 99.9])

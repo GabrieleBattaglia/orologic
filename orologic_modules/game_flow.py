@@ -1477,7 +1477,9 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
                     )
                 ):
                     engine.MenuMotore()
-                engine_config = db.get("engine_config", {})
+                # MenuMotore salva su disco: rileggo, altrimenti userei la
+                # copia caricata prima della configurazione appena fatta.
+                engine_config = storage.LoadDB().get("engine_config", {})
                 if not engine_config or not engine_config.get("engine_path"):
                     print(_("Motore non configurato. Ritorno al menu'."))
                     return
@@ -1722,16 +1724,18 @@ def StartGame(clock_config):
         kind=1,
         adsr=[0, 0, 100, 5],
     )
-    db["default_pgn"] = {
-        "Event": event,
-        "Site": site,
-        "Round": round_,
-        "White": white_player,
-        "Black": black_player,
-        "WhiteElo": white_elo,
-        "BlackElo": black_elo,
-    }
-    storage.SaveDB(db)
+    storage.SetValue(
+        "default_pgn",
+        {
+            "Event": event,
+            "Site": site,
+            "Round": round_,
+            "White": white_player,
+            "Black": black_player,
+            "WhiteElo": white_elo,
+            "BlackElo": black_elo,
+        },
+    )
     key(
         _("Premi un tasto qualsiasi per iniziare la partita quando sei pronto..."),
         attesa=7200,
