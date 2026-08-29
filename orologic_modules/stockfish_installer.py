@@ -211,20 +211,20 @@ def CheckForStockfishUpdatesSilent():
                         engine.CloseEngine()
                         p, e = DownloadAndInstallEngine()
                         if p and e:
-                            db = storage.LoadDB()
-                            cfg = db.get("engine_config", {})
                             full_path = os.path.join(p, e)
                             app_path = config.percorso_salvataggio("")
-                            try:
-                                cfg["engine_path"] = os.path.relpath(
-                                    full_path, app_path
-                                )
-                                cfg["engine_is_relative"] = True
-                            except Exception:
-                                cfg["engine_path"] = full_path
-                                cfg["engine_is_relative"] = False
-                            db["engine_config"] = cfg
-                            storage.SaveDB(db)
+
+                            def aggiorna_motore(db, percorso=full_path, base=app_path):
+                                cfg = db.get("engine_config", {})
+                                try:
+                                    cfg["engine_path"] = os.path.relpath(percorso, base)
+                                    cfg["engine_is_relative"] = True
+                                except ValueError:
+                                    cfg["engine_path"] = percorso
+                                    cfg["engine_is_relative"] = False
+                                db["engine_config"] = cfg
+
+                            storage.UpdateDB(aggiorna_motore)
                             print(_("Aggiornamento completato con successo!"))
                             engine.InitEngine()
                         else:

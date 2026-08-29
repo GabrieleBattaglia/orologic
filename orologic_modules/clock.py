@@ -1,4 +1,4 @@
-from GBUtils import Acusticator, dgt, key, menu, polipo
+from GBUtils import Acusticator, dgt, enter_escape, key, menu, polipo
 
 from . import board_utils, config, storage
 
@@ -178,10 +178,11 @@ def CreateClock():
         ]
     )
     new_clock = ClockConfig(name, same_time, phases, alarms, note)
-    if "clocks" not in db:
-        db["clocks"] = []
-    db["clocks"].append(new_clock.to_dict())
-    storage.SaveDB(db)
+
+    def aggiungi(db_aggiornato):
+        db_aggiornato.setdefault("clocks", []).append(new_clock.to_dict())
+
+    storage.UpdateDB(aggiungi)
     print(_("\nOrologio creato e salvato."))
 
 
@@ -244,20 +245,22 @@ def SelectClock(db=None):
     return None
 
 
-def DeleteClock(db):
+def DeleteClock(db=None):
     print(_("\nEliminazione orologi salvati\n"))
     Acusticator(["b4", 0.02, 0, config.VOLUME, "d4", 0.2, 0, config.VOLUME])
     orologio = SelectClock(db)
-    if orologio:
-        if (
-            key(
-                _(
-                    "Sei sicuro di voler eliminare {name}? (Invio per si', ESC per no): "
-                ).format(name=orologio["name"])
-            ).strip()
-            == ""
-        ):
-            db["clocks"] = [c for c in db["clocks"] if c["name"] != orologio["name"]]
-            storage.SaveDB(db)
-            Acusticator(["c4", 0.025, 0, config.VOLUME])
-            print(_("\nOrologio eliminato."))
+    if orologio and enter_escape(
+        _("Sei sicuro di voler eliminare {name}? (INVIO per si', ESC per no): ").format(
+            name=orologio["name"]
+        )
+    ):
+        nome = orologio["name"]
+
+        def elimina(db_aggiornato):
+            db_aggiornato["clocks"] = [
+                c for c in db_aggiornato.get("clocks", []) if c.get("name") != nome
+            ]
+
+        storage.UpdateDB(elimina)
+        Acusticator(["c4", 0.025, 0, config.VOLUME])
+        print(_("\nOrologio eliminato."))

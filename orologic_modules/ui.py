@@ -299,8 +299,7 @@ def EditLocalization():
         kind=1,
         adsr=[2, 5, 90, 5],
     )
-    db["localization"] = l10n_config
-    storage.SaveDB(db)
+    storage.SetValue("localization", l10n_config)
     global L10N
     L10N = LoadLocalization()
     print(_("\nImpostazioni di lingua salvate con successo!"))
@@ -793,9 +792,12 @@ def verbose_legal_moves_for_san(board, san_str):
     )
 
 
-def Impostazioni(db):
+def Impostazioni():
     from . import engine
 
+    # Il database si carica qui e si salva in coda: durante le domande nulla
+    # altro puo' scriverlo, quindi la copia in memoria resta quella buona.
+    db = storage.LoadDB()
     print(_("\nModifica impostazioni varie di Orologic\n"))
     autosave_enabled = db.get("autosave_enabled", False)
     if (
