@@ -1,25 +1,21 @@
 import datetime
-import json
-import urllib.request
 
 from dateutil.relativedelta import relativedelta
 
 from GBUtils import enter_escape, menu, sonify
 
-from . import storage
+from . import rete, storage
 from .config import _
 
 
 def fetch_rating_history(username):
-    url = f"https://lichess.org/api/user/{username}/rating-history"
-    req = urllib.request.Request(url)
-    try:
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                return json.loads(response.read().decode("utf-8"))
-    except Exception as e:
-        print(_("Errore nel recupero della storia Elo: {e}").format(e=e))
-    return None
+    dati, errore = rete.leggi_json(
+        f"https://lichess.org/api/user/{username}/rating-history"
+    )
+    if errore:
+        print(_("Storia Elo non recuperata. {motivo}").format(motivo=errore))
+        return None
+    return dati
 
 
 def calcola_durata_str(dt1, dt2):

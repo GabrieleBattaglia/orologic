@@ -4,13 +4,12 @@ import queue
 import sys
 import threading
 import time
-import urllib.request
 
 import chess
 
 from GBUtils import Acusticator, dgt
 
-from . import board_utils, config, ui
+from . import board_utils, config, rete, ui
 from .config import _
 
 
@@ -57,16 +56,12 @@ def save_lichess_game(game_state, result_str="*"):
     pgn_text = ""
     # Se abbiamo un game_id, proviamo a scaricare il PGN completo e ufficiale da Lichess
     if hasattr(game_state, "game_id") and game_state.game_id:
-        try:
-            url = f"https://lichess.org/game/export/{game_state.game_id}?clocks=false&evals=true&literate=true"
-            req = urllib.request.Request(url)
-            if hasattr(game_state, "token") and game_state.token:
-                req.add_header("Authorization", f"Bearer {game_state.token}")
-
-            with urllib.request.urlopen(req) as resp:
-                pgn_text = resp.read().decode("utf-8")
-        except Exception:
-            pgn_text = ""  # Fallback alla ricostruzione manuale se il download fallisce
+        url = f"https://lichess.org/game/export/{game_state.game_id}?clocks=true&evals=true&literate=true"
+        pgn_text, errore = rete.leggi(url, token=getattr(game_state, "token", None))
+        if errore:
+            # Si prosegue con la ricostruzione locale, ma l'utente sa perche'.
+            print(_("PGN ufficiale non scaricato. {motivo}").format(motivo=errore))
+            pgn_text = ""
 
     if pgn_text:
         try:
@@ -354,9 +349,14 @@ def handle_exploration_command(user_input, game_state):
     return False
 
 
-def _spectate_worker(req, q, stop_event):
+def _spectate_worker(url, token, q, stop_event):
+    risposta, errore = rete.apri(url, token=token, timeout=rete.TIMEOUT_STREAM)
+    if errore:
+        q.put(f"Error: {errore}")
+        q.put("EOF")
+        return
     try:
-        with urllib.request.urlopen(req) as resp:
+        with risposta as resp:
             for line in resp:
                 if stop_event.is_set():
                     break
@@ -666,14 +666,12 @@ def async_spectator_loop(q, game_state):
 
 
 def spectate_game(game_id, token=None):
-    req = urllib.request.Request(f"https://lichess.org/api/stream/game/{game_id}")
-    if token:
-        req.add_header("Authorization", f"Bearer {token}")
+    url_stream = f"https://lichess.org/api/stream/game/{game_id}"
 
     q = queue.Queue()
     stop_event = threading.Event()
     t = threading.Thread(
-        target=_spectate_worker, args=(req, q, stop_event), daemon=True
+        target=_spectate_worker, args=(url_stream, token, q, stop_event), daemon=True
     )
     t.start()
 
@@ -899,38 +897,60 @@ class GamePlayState:
         return w_time, b_time
 
 
-def _play_worker(req, q, stop_event):
-    try:
-        with urllib.request.urlopen(req) as resp:
-            for line in resp:
-                if stop_event.is_set():
-                    break
-                if line.strip():
-                    d = json.loads(line.decode("utf-8"))
-                    q.put(d)
-    except Exception as e:
-        q.put({"type": "error", "error": str(e)})
+def _play_worker(url, token, q, stop_event, tentativi=3):
+    """Segue la partita e, se la connessione cade, prova a riprenderla.
+
+    Prima bastava un singhiozzo di rete per abbandonare la partita mentre su
+    Lichess il tempo continuava a scorrere.
+    """
+    for tentativo in range(1, tentativi + 1):
+        if stop_event.is_set():
+            break
+        risposta, errore = rete.apri(url, token=token, timeout=rete.TIMEOUT_STREAM)
+        if errore:
+            if tentativo >= tentativi:
+                q.put({"type": "error", "error": errore})
+                break
+            q.put({"type": "riconnessione", "tentativo": tentativo, "motivo": errore})
+            time.sleep(2)
+            continue
+        try:
+            with risposta as resp:
+                for line in resp:
+                    if stop_event.is_set():
+                        break
+                    if line.strip():
+                        q.put(json.loads(line.decode("utf-8")))
+            # Lo stream si e' chiuso senza errori: se la partita non e' finita
+            # ritentiamo, altrimenti il ciclo esterno chiudera' comunque.
+            if stop_event.is_set() or tentativo >= tentativi:
+                break
+            q.put({"type": "riconnessione", "tentativo": tentativo, "motivo": ""})
+            time.sleep(1)
+        except (OSError, ValueError) as e:
+            if tentativo >= tentativi:
+                q.put({"type": "error", "error": str(e)})
+                break
+            q.put({"type": "riconnessione", "tentativo": tentativo, "motivo": str(e)})
+            time.sleep(2)
     q.put({"type": "eof"})
 
 
-def send_action(game_id, token, action, uci=None, chat_text=None):
-    import urllib.parse
-
+def send_action(game_id, token, action, uci=None, chat_text=None, motivo=None):
+    """Invia mossa, resa, patta o messaggio. Restituisce vero o falso e, se
+    riceve una lista in motivo, vi lascia la spiegazione del rifiuto."""
     url = f"https://lichess.org/api/board/game/{game_id}/{action}"
     if action == "move":
         url += f"/{uci}"
-    req = urllib.request.Request(url, method="POST")
-    req.add_header("Authorization", f"Bearer {token}")
-    data = None
-    if action == "chat" and chat_text:
-        data = urllib.parse.urlencode({"room": "player", "text": chat_text}).encode(
-            "utf-8"
-        )
-    try:
-        with urllib.request.urlopen(req, data=data) as resp:
-            return resp.status == 200
-    except Exception:
-        return False
+    dati = (
+        {"room": "player", "text": chat_text}
+        if action == "chat" and chat_text
+        else None
+    )
+    riuscito, errore = rete.invia(url, token=token, dati=dati)
+    if not riuscito and motivo is not None:
+        motivo.append(errore)
+    return riuscito
 
 
 def async_play_loop(q, game_state):
@@ -1012,10 +1032,23 @@ def async_play_loop(q, game_state):
             if msg.get("type") == "eof":
                 sys.stdout.write("\n" + _("Connessione al server chiusa.") + "\n")
                 return None
+            elif msg.get("type") == "riconnessione":
+                motivo = msg.get("motivo") or _("connessione interrotta")
+                sys.stdout.write(
+                    "\n"
+                    + _(
+                        "Riprovo a collegarmi alla partita, tentativo {n}. {motivo}"
+                    ).format(n=msg.get("tentativo", 1), motivo=motivo)
+                    + "\n"
+                )
+                sys.stdout.flush()
+                continue
             elif msg.get("type") == "error":
                 sys.stdout.write(
                     "\n"
-                    + _("Errore durante lo streaming: {e}").format(e=msg.get("error"))
+                    + _("Collegamento alla partita perduto. {motivo}").format(
+                        motivo=msg.get("error")
+                    )
                     + "\n"
                 )
                 return None
@@ -1358,17 +1391,11 @@ def async_play_loop(q, game_state):
 def show_post_game_report(game_id, token, username):
     print(_("\n--- Recupero Report Partita da Lichess (Attendi...) ---"))
     time.sleep(2)
-    req = urllib.request.Request(
-        f"https://lichess.org/game/export/{game_id}?evals=true&clocks=false"
+    data, errore = rete.leggi_json(
+        f"https://lichess.org/game/export/{game_id}?evals=true&clocks=true", token=token
     )
-    req.add_header("Accept", "application/json")
-    if token:
-        req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-    except Exception as e:
-        print(_("Impossibile recuperare il report della partita: {e}").format(e=e))
+    if errore:
+        print(_("Report della partita non recuperato. {motivo}").format(motivo=errore))
         return
 
     w = data.get("players", {}).get("white", {})
@@ -1475,12 +1502,13 @@ def show_post_game_report(game_id, token, username):
 
 
 def play_game(game_id, token, username):
-    req = urllib.request.Request(f"https://lichess.org/api/board/game/stream/{game_id}")
-    req.add_header("Authorization", f"Bearer {token}")
+    url_partita = f"https://lichess.org/api/board/game/stream/{game_id}"
 
     q = queue.Queue()
     stop_event = threading.Event()
-    t = threading.Thread(target=_play_worker, args=(req, q, stop_event), daemon=True)
+    t = threading.Thread(
+        target=_play_worker, args=(url_partita, token, q, stop_event), daemon=True
+    )
     t.start()
 
     from GBUtils import enter_escape

@@ -1,5 +1,6 @@
 import datetime
 import json
+import msvcrt
 import os
 import sys
 import urllib.parse
@@ -7,7 +8,7 @@ import urllib.request
 
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
-from . import config, storage
+from . import config, rete, storage
 from .config import _
 
 
@@ -31,16 +32,31 @@ def search_player():
     term = ""
     results = []
 
+    suggerimenti_visti = {}
+    errore_segnalato = False
+
     while True:
         if len(term) >= 3 and not term.startswith("="):
-            try:
-                url = f"https://lichess.org/api/player/autocomplete?term={urllib.parse.quote(term)}&object=true"
-                req = urllib.request.Request(url)
-                with urllib.request.urlopen(req) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
-                results = data.get("result", [])
-            except Exception:
-                results = []
+            chiave = term.lower()
+            if chiave in suggerimenti_visti:
+                results = suggerimenti_visti[chiave]
+            else:
+                url = (
+                    "https://lichess.org/api/player/autocomplete?term="
+                    + urllib.parse.quote(term)
+                    + "&object=true"
+                )
+                data, errore = rete.leggi_json(url, timeout=5)
+                if errore and not errore_segnalato:
+                    # Un solo avviso: ripeterlo a ogni tasto sarebbe insopportabile.
+                    print(
+                        _("Suggerimenti non disponibili. {motivo}").format(
+                            motivo=errore
+                        )
+                    )
+                    errore_segnalato = True
+                results = data.get("result", []) if data else []
+                suggerimenti_visti[chiave] = results
         else:
             results = []
 
@@ -208,18 +224,14 @@ def format_profile(profile):
 
 
 def show_profile(username, token):
-    try:
-        url = f"https://lichess.org/api/user/{username}"
-        req = urllib.request.Request(url)
-        if token:
-            req.add_header("Authorization", f"Bearer {token}")
-        with urllib.request.urlopen(req) as resp:
-            profile = json.loads(resp.read().decode("utf-8"))
-            print("\n" + format_profile(profile))
-            return profile
-    except Exception as e:
-        print(_("Errore durante il caricamento del profilo: {e}").format(e=e))
+    profile, errore = rete.leggi_json(
+        f"https://lichess.org/api/user/{username}", token=token
+    )
+    if errore:
+        print(_("Profilo non caricato. {motivo}").format(motivo=errore))
         return None
+    print("\n" + format_profile(profile))
+    return profile
 
 
 def send_message(username, token):
@@ -235,19 +247,14 @@ def send_message(username, token):
     if not msg:
         return
 
-    try:
-        url = f"https://lichess.org/inbox/{username}"
-        data = urllib.parse.urlencode({"text": msg}).encode("utf-8")
-        req = urllib.request.Request(url, data=data, method="POST")
-        req.add_header("Authorization", f"Bearer {token}")
-        with urllib.request.urlopen(req) as resp:
-            if resp.status == 200:
-                Acusticator(["c5", 0.1, 0, config.VOLUME], kind=1)
-                print(_("Messaggio inviato con successo."))
-    except urllib.error.HTTPError as e:
-        print(_("Impossibile inviare il messaggio. Errore API: {c}").format(c=e.code))
-    except Exception as e:
-        print(_("Errore: {e}").format(e=e))
+    riuscito, errore = rete.invia(
+        f"https://lichess.org/inbox/{username}", token=token, dati={"text": msg}
+    )
+    if riuscito:
+        Acusticator(["c5", 0.1, 0, config.VOLUME], kind=1)
+        print(_("Messaggio inviato con successo."))
+    else:
+        print(_("Messaggio non inviato. {motivo}").format(motivo=errore))
 
 
 def follow_player(username, token, follow=True):
@@ -256,19 +263,17 @@ def follow_player(username, token, follow=True):
         return
 
     action = "follow" if follow else "unfollow"
-    try:
-        url = f"https://lichess.org/api/rel/{action}/{username}"
-        req = urllib.request.Request(url, method="POST")
-        req.add_header("Authorization", f"Bearer {token}")
-        with urllib.request.urlopen(req) as resp:
-            if resp.status == 200:
-                Acusticator(["e5", 0.1, 0, config.VOLUME], kind=1)
-                if follow:
-                    print(_("Ora segui {u}.").format(u=username))
-                else:
-                    print(_("Non segui piu' {u}.").format(u=username))
-    except Exception as e:
-        print(_("Errore: {e}").format(e=e))
+    riuscito, errore = rete.invia(
+        f"https://lichess.org/api/rel/{action}/{username}", token=token
+    )
+    if not riuscito:
+        print(_("Operazione non riuscita. {motivo}").format(motivo=errore))
+        return
+    Acusticator(["e5", 0.1, 0, config.VOLUME], kind=1)
+    if follow:
+        print(_("Ora segui {u}.").format(u=username))
+    else:
+        print(_("Non segui piu' {u}.").format(u=username))
 
 
 def report_player(username):
@@ -339,24 +344,46 @@ def download_games(username, token):
                 filters["eco"] = eco
 
     # Download
-    print(_("\nInizio download e filtraggio in corso... (potrebbe volerci del tempo)"))
+    massimo = dgt(
+        _("Quante partite scaricare al massimo? "),
+        kind="i",
+        imin=1,
+        imax=100000,
+        default=500,
+    )
+    print(
+        _(
+            "Scaricamento in corso, al massimo {n} partite. Premi ESC per interrompere e tenere quelle gia' arrivate."
+        ).format(n=massimo)
+    )
 
-    url = f"https://lichess.org/api/games/user/{username}?pgnInJson=true&opening=true"
+    url = f"https://lichess.org/api/games/user/{username}?pgnInJson=true&opening=true&max={massimo}"
     if "color" in filters:
         url += f"&color={filters['color']}"
-
-    req = urllib.request.Request(url)
-    req.add_header("Accept", "application/x-ndjson")
-    if token:
-        req.add_header("Authorization", f"Bearer {token}")
 
     downloaded_games = []
     analyzed = 0
     matched = 0
+    interrotto = False
+
+    risposta, errore_rete = rete.apri(
+        url, token=token, timeout=rete.TIMEOUT_STREAM, accetta="application/x-ndjson"
+    )
+    if errore_rete:
+        print(_("Scaricamento non riuscito. {motivo}").format(motivo=errore_rete))
+        return
 
     try:
-        with urllib.request.urlopen(req) as resp:
+        with risposta as resp:
             for line in resp:
+                if msvcrt.kbhit() and msvcrt.getwch() == "\x1b":
+                    interrotto = True
+                    print(
+                        _(
+                            "Scaricamento interrotto. Elaboro le {n} partite gia' ricevute."
+                        ).format(n=analyzed)
+                    )
+                    break
                 if not line.strip():
                     continue
                 analyzed += 1
@@ -429,8 +456,8 @@ def download_games(username, token):
                     )
                     sys.stdout.flush()
 
-    except Exception as e:
-        print(_("\nErrore durante il download: {e}").format(e=e))
+    except OSError as e:
+        print(_("Scaricamento interrotto dalla rete: {e}").format(e=e))
 
     sys.stdout.write(
         _("\rAnalizzate: {analyzed}, {matched} trovate.\n").format(
@@ -444,7 +471,7 @@ def download_games(username, token):
 
     # Salvataggio PGN
     now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    kind_str = "partial" if is_partial else "complete"
+    kind_str = "partial" if (is_partial or interrotto) else "complete"
     filename = f"{username}_{kind_str}_games_{now_str}.pgn"
     filepath = config.percorso_salvataggio(os.path.join("pgn", filename))
 
@@ -642,14 +669,10 @@ def show_player_menu(username, secrets):
                         )
                     )
                     try:
-                        import urllib.request
-
-                        req = urllib.request.Request(
+                        rete.invia(
                             f"https://lichess.org/api/challenge/{challenge_id}/cancel",
-                            method="POST",
+                            token=token,
                         )
-                        req.add_header("Authorization", f"Bearer {token}")
-                        urllib.request.urlopen(req)
                     except Exception:
                         pass
         elif scelta == "segui":
