@@ -298,80 +298,100 @@ class GameState:
         self.move_times = []
         self.clocks_history = []
 
+    def fase_per_mosse(self, mosse_giocate):
+        """Indice della fase corrispondente al numero di mosse gia' giocate.
+
+        Le mosse richieste dalle fasi si sommano: con un controllo di 40 mosse
+        seguito da uno di 20, la seconda fase finisce alla mossa 60. Prima il
+        confronto avveniva sul solo numero della fase corrente, cosi' la
+        seconda fase durava una mossa sola.
+        """
+        fasi = self.clock_config.get("phases", [])
+        soglia = 0
+        for indice, fase in enumerate(fasi):
+            mosse_fase = fase.get("moves", 0)
+            if not mosse_fase:
+                return indice
+            soglia += mosse_fase
+            if mosse_giocate < soglia:
+                return indice
+        return max(0, len(fasi) - 1)
+
+    def _tempo_fase(self, indice, colore):
+        """Tempo assegnato dalla fase indicata al colore indicato."""
+        fasi = self.clock_config.get("phases", [])
+        if not 0 <= indice < len(fasi):
+            return 0
+        return fasi[indice].get(f"{colore}_time", 0)
+
+    def _annuncia_fase(self, giocatore, indice, residuo):
+        Acusticator(
+            [
+                "d2",
+                0.8,
+                0,
+                config.VOLUME,
+                "d7",
+                0.03,
+                0,
+                config.VOLUME,
+                "a#6",
+                0.03,
+                0,
+                config.VOLUME,
+            ],
+            kind=3,
+            adsr=[20, 10, 75, 20],
+        )
+        print(
+            _("{giocatore} entra in fase {numero}, ha ora {tempo}").format(
+                giocatore=giocatore, numero=indice + 1, tempo=FormatTime(residuo)
+            )
+        )
+
     def switch_turn(self):
+        """Conclude il turno: conta la mossa, cambia fase se serve, passa il tratto."""
         if self.active_color == "white":
             self.white_moves += 1
-            if self.white_phase < len(self.clock_config["phases"]) - 1:
-                phase_moves = self.clock_config["phases"][self.white_phase]["moves"]
-                if phase_moves != 0 and self.white_moves >= phase_moves:
-                    self.white_phase += 1
-                    Acusticator(
-                        [
-                            "d2",
-                            0.8,
-                            0,
-                            config.VOLUME,
-                            "d7",
-                            0.03,
-                            0,
-                            config.VOLUME,
-                            "a#6",
-                            0.03,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=3,
-                        adsr=[20, 10, 75, 20],
-                    )
-                    print(
-                        self.white_player
-                        + _(" entra in fase ")
-                        + str(self.white_phase + 1)
-                        + _(" tempo fase ")
-                        + FormatTime(
-                            self.clock_config["phases"][self.white_phase]["white_time"]
-                        )
-                    )
-                    self.white_remaining = self.clock_config["phases"][
-                        self.white_phase
-                    ]["white_time"]
+            nuova_fase = self.fase_per_mosse(self.white_moves)
+            if nuova_fase > self.white_phase:
+                self.white_phase = nuova_fase
+                # Il tempo del nuovo controllo si aggiunge al residuo, come
+                # vogliono le regole: chi ha risparmiato tempo se lo tiene.
+                self.white_remaining += self._tempo_fase(nuova_fase, "white")
+                self._annuncia_fase(self.white_player, nuova_fase, self.white_remaining)
         else:
             self.black_moves += 1
-            if self.black_phase < len(self.clock_config["phases"]) - 1:
-                phase_moves = self.clock_config["phases"][self.black_phase]["moves"]
-                if phase_moves != 0 and self.black_moves >= phase_moves:
-                    self.black_phase += 1
-                    Acusticator(
-                        [
-                            "d2",
-                            0.8,
-                            0,
-                            config.VOLUME,
-                            "d7",
-                            0.03,
-                            0,
-                            config.VOLUME,
-                            "a#6",
-                            0.03,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=3,
-                        adsr=[20, 10, 75, 20],
-                    )
-                    print(
-                        self.black_player
-                        + _(" entra in fase ")
-                        + str(self.black_phase + 1)
-                        + _(" tempo fase ")
-                        + FormatTime(
-                            self.clock_config["phases"][self.black_phase]["black_time"]
-                        )
-                    )
-                    self.black_remaining = self.clock_config["phases"][
-                        self.black_phase
-                    ]["black_time"]
+            nuova_fase = self.fase_per_mosse(self.black_moves)
+            if nuova_fase > self.black_phase:
+                self.black_phase = nuova_fase
+                self.black_remaining += self._tempo_fase(nuova_fase, "black")
+                self._annuncia_fase(self.black_player, nuova_fase, self.black_remaining)
         self.active_color = "black" if self.active_color == "white" else "white"
+
+    def annulla_mossa(self):
+        """Riporta indietro contatori e fase dopo l'annullamento di una mossa.
+
+        Restituisce il tempo da togliere al giocatore se l'annullamento fa
+        rientrare in una fase precedente, cosi' il tempo aggiunto al cambio
+        non resta regalato.
+        """
+        colore = "white" if self.active_color == "white" else "black"
+        if colore == "white":
+            self.white_moves = max(0, self.white_moves - 1)
+            nuova_fase = self.fase_per_mosse(self.white_moves)
+            da_togliere = 0
+            if nuova_fase < self.white_phase:
+                da_togliere = self._tempo_fase(self.white_phase, "white")
+                self.white_phase = nuova_fase
+            return da_togliere
+        self.black_moves = max(0, self.black_moves - 1)
+        nuova_fase = self.fase_per_mosse(self.black_moves)
+        da_togliere = 0
+        if nuova_fase < self.black_phase:
+            da_togliere = self._tempo_fase(self.black_phase, "black")
+            self.black_phase = nuova_fase
+        return da_togliere
 
 
 _eco_database_cache = {}
@@ -724,18 +744,27 @@ def format_pgn_clk(sec):
         return f"{seconds}"
 
 
-def AggiungiTempiPgn(pgn_game, times_history):
+def AggiungiTempiPgn(pgn_game, clocks_history, times_history=None):
+    """Scrive i tempi nei commenti del PGN.
+
+    Il tag clk previsto dallo standard indica il tempo che resta
+    sull'orologio dopo la mossa, non quello impiegato per giocarla: prima ci
+    finiva il tempo speso e ogni visualizzatore mostrava orologi falsi. Il
+    tempo impiegato, se disponibile, viene scritto con il suo tag proprio.
+    """
     node = pgn_game
     ply = 0
-    while node.variations and ply < len(times_history):
+    while node.variations and ply < len(clocks_history):
         next_node = node.variations[0]
-        spent_time = times_history[ply]
-        clk_str = f"[%clk {format_pgn_clk(spent_time)}]"
+        etichette = [f"[%clk {format_pgn_clk(clocks_history[ply])}]"]
+        if times_history and ply < len(times_history):
+            etichette.append(f"[%emt {format_pgn_clk(times_history[ply])}]")
+        aggiunta = " ".join(etichette)
         if next_node.comment:
             if "[%clk" not in next_node.comment:
-                next_node.comment = clk_str + " " + next_node.comment
+                next_node.comment = aggiunta + " " + next_node.comment
         else:
-            next_node.comment = clk_str
+            next_node.comment = aggiunta
         node = next_node
         ply += 1
 

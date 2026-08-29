@@ -221,32 +221,43 @@ def CalculateMaterial(board):
     return w, b
 
 
+def _analizza_con_cache(board, linee):
+    """Interroga il motore tenendo il risultato in cache.
+
+    La chiave comprende il numero di linee richieste: indicizzando sul solo
+    FEN, una valutazione a una linea gia' in cache faceva restituire una sola
+    linea anche a chi ne aveva chieste tre, e le altre sparivano senza
+    spiegazione. Tempo di analisi e numero di linee azzerano comunque la
+    cache quando cambiano, quindi qui basta distinguere le linee.
+    """
+    if ENGINE is None:
+        return None
+    chiave = (board.fen(), linee)
+    if chiave not in cache_analysis:
+        cache_analysis[chiave] = ENGINE.analyse(
+            board, chess.engine.Limit(time=analysis_time), multipv=linee
+        )
+    return cache_analysis[chiave]
+
+
 def CalculateEvaluation(board):
     if ENGINE is None:
         return None
     try:
-        fen = board.fen()
-        if fen not in cache_analysis:
-            cache_analysis[fen] = ENGINE.analyse(
-                board, chess.engine.Limit(time=analysis_time), multipv=1
-            )
-        analysis_result = cache_analysis[fen]
+        analysis_result = _analizza_con_cache(board, 1)
         if not analysis_result:
             return None
         return analysis_result[0].get("score")
-    except Exception:
+    except chess.engine.EngineError:
         return None
 
 
 def CalculateBest(board, bestmove=True, as_san=False):
     Acusticator(["e5", 0.008, -1, config.VOLUME])
     try:
-        fen = board.fen()
-        if fen not in cache_analysis:
-            cache_analysis[fen] = ENGINE.analyse(
-                board, chess.engine.Limit(time=analysis_time), multipv=multipv
-            )
-        analysis = cache_analysis[fen]
+        analysis = _analizza_con_cache(board, multipv)
+        if not analysis:
+            return None
         best_line = analysis[0].get("pv", [])
         if not best_line:
             return None
@@ -316,12 +327,7 @@ def CalculateWDL(board):
     if ENGINE is None:
         return None
     try:
-        fen = board.fen()
-        if fen not in cache_analysis:
-            cache_analysis[fen] = ENGINE.analyse(
-                board, chess.engine.Limit(time=analysis_time), multipv=1
-            )
-        analysis_result = cache_analysis[fen]
+        analysis_result = _analizza_con_cache(board, 1)
         if not analysis_result:
             return None
         score = analysis_result[0].get("score")
@@ -794,14 +800,7 @@ def AnalyzeGame(pgn_game, is_corrected=False):
         elif cmd == "w":  # Bestline display
             if ENGINE:
                 print(_("\nCalcolo bestline..."))
-                fen = current_node.board().fen()
-                if fen not in cache_analysis:
-                    cache_analysis[fen] = ENGINE.analyse(
-                        current_node.board(),
-                        chess.engine.Limit(time=analysis_time),
-                        multipv=multipv,
-                    )
-                analysis = cache_analysis[fen]
+                analysis = _analizza_con_cache(current_node.board(), multipv)
                 if analysis:
                     Acusticator(
                         [
@@ -897,15 +896,8 @@ def AnalyzeGame(pgn_game, is_corrected=False):
         elif cmd == "e":  # Deep analysis
             if ENGINE:
                 print(_("\nAnalisi in corso..."))
-                fen = current_node.board().fen()
-                if fen not in cache_analysis:
-                    cache_analysis[fen] = ENGINE.analyse(
-                        current_node.board(),
-                        chess.engine.Limit(time=analysis_time),
-                        multipv=multipv,
-                    )
-                analysis = cache_analysis[fen]
-                for i, info in enumerate(analysis):
+                analysis = _analizza_con_cache(current_node.board(), multipv)
+                for i, info in enumerate(analysis or []):
                     pv = info.get("pv", [])
                     score = info.get("score").pov(current_node.board().turn)
                     san_moves = []
@@ -1696,9 +1688,25 @@ def AnalisiAutomatica(pgn_game):
             best_pov_score = best_alternative["score"].pov(turn)
             played_pov_score = eval_after_move.pov(turn)
 
-            if best_pov_score.is_mate() and best_pov_score.mate() > 0:
+            matto_disponibile = best_pov_score.is_mate() and best_pov_score.mate() > 0
+            matto_conservato = (
+                played_pov_score.is_mate() and played_pov_score.mate() > 0
+            )
+            if matto_disponibile and not matto_conservato:
+                # Il matto c'era ed e' stato lasciato andare.
                 classification = "Svarione"
                 centipawn_loss = 5000
+            elif matto_disponibile and matto_conservato:
+                # Un altro matto, magari piu' lungo, resta comunque vincente:
+                # prima finiva fra gli svarioni con cinquemila centesimi di
+                # perdita e rovinava accuratezza e stima Elo della partita.
+                mosse_migliore = abs(best_pov_score.mate())
+                mosse_giocata = abs(played_pov_score.mate())
+                if mosse_giocata > mosse_migliore:
+                    classification = "Inesattezza"
+                else:
+                    classification = "Mossa Buona"
+                centipawn_loss = 0
             else:
                 score_best = best_pov_score.score(mate_score=30000)
                 score_played = played_pov_score.score(mate_score=30000)

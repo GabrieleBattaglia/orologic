@@ -121,10 +121,12 @@ def save_lichess_game(game_state, result_str="*"):
             break
 
     # Before calling SaveGameToFile:
-    if getattr(game_state, "save_clock_times", False) and hasattr(
-        game_state, "move_times"
-    ):
-        board_utils.AggiungiTempiPgn(game, game_state.move_times)
+    if getattr(game_state, "save_clock_times", False):
+        board_utils.AggiungiTempiPgn(
+            game,
+            getattr(game_state, "clocks_history", []),
+            getattr(game_state, "move_times", []),
+        )
 
     try:
         pgn_handler.SaveGameToFile(game)
