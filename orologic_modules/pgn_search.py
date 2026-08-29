@@ -37,7 +37,7 @@ lingua_rilevata, _ = polipo(
 
 def run():
     """Entry point principale, chiamato dal menu principale di Orologic."""
-    print(_("\n=== Ricerca PGN ==="))
+    print(_("Ricerca PGN"))
     print(_("Caricamento archivio dagli appunti..."))
 
     games = _carica_archivio()
@@ -474,10 +474,10 @@ def _mostra_statistiche(totale, info_list):
     d_count = sum(1 for i in tutti if info_list[i]["Result"] == "1/2-1/2")
     b_count = sum(1 for i in tutti if info_list[i]["Result"] == "0-1")
 
-    print(_("\n=== Archivio PGN Caricato ==="))
+    print(_("Archivio PGN Caricato"))
     print(_("Partite totali: {n}").format(n=totale))
 
-    print(_("\n--- Statistiche Risultati ---"))
+    print(_("Statistiche Risultati"))
     print(_("  Vittorie Bianco: {n} ({p:.1f}%)").format(n=w_count, p=pw))
     print(_("  Patte:           {n} ({p:.1f}%)").format(n=d_count, p=pd))
     print(_("  Vittorie Nero:   {n} ({p:.1f}%)").format(n=b_count, p=pb))
@@ -565,7 +565,7 @@ def _menu_filtri(games, info_list, totale):
         n_filtrate = len(indici)
         pct = (n_filtrate / totale) * 100 if totale > 0 else 0.0
 
-        print(_("\n--- Filtri ---"))
+        print(_("Filtri"))
         print(
             _("Partite corrispondenti: {n} di {tot} ({pct:.2f}%)").format(
                 n=n_filtrate, tot=totale, pct=pct
@@ -1149,7 +1149,7 @@ def _stampa_lista_rami(rami, board, info_list, filtri_attivi, giocatore_comune=N
 
 def _mostra_aiuto():
     """Mostra la mappa dei tasti per la navigazione dell'albero."""
-    print(_("\n--- Aiuto Navigazione Albero ---"))
+    print(_("Aiuto Navigazione Albero"))
     print(_("  w = Ramo precedente (su)"))
     print(_("  x = Ramo successivo (giu')"))
     print(_("  d = Scendi nel ramo selezionato"))
@@ -1321,7 +1321,7 @@ def _salva_pgn_filtrato(games, indici, filtri_attivi):
 
 def _avvia_analisi(game):
     """Gestisce il passaggio di una partita all'analisi (automatica o manuale)."""
-    print(_("\n--- Partita selezionata ---"))
+    print(_("Partita selezionata"))
     for k, v in game.headers.items():
         if v and v != "?" and v != "????.??.??":
             print(f"  {k}: {v}")

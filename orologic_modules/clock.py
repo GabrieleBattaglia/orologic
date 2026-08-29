@@ -55,7 +55,7 @@ class ClockConfig:
 
 
 def CreateClock():
-    print(_("\nCreazione orologi\n"))
+    print(_("Creazione orologi"))
     name = dgt(_("Nome dell'orologio: "), kind="s", smin=1)
     Acusticator(["f7", 0.09, 0, config.VOLUME, "d4", 0.07, 0, config.VOLUME], sync=True)
     db = storage.LoadDB()
@@ -187,11 +187,11 @@ def CreateClock():
         db_aggiornato.setdefault("clocks", []).append(new_clock.to_dict())
 
     storage.UpdateDB(aggiungi)
-    print(_("\nOrologio creato e salvato."))
+    print(_("Orologio creato e salvato."))
 
 
 def ViewClocks():
-    print(_("\nVisualizzazione orologi\n"))
+    print(_("Orologi salvati"))
     db = storage.LoadDB()
     if not db.get("clocks"):
         print(_("Nessun orologio salvato."))
@@ -250,7 +250,7 @@ def SelectClock(db=None):
 
 
 def DeleteClock(db=None):
-    print(_("\nEliminazione orologi salvati\n"))
+    print(_("Eliminazione di un orologio salvato"))
     Acusticator(["b4", 0.02, 0, config.VOLUME, "d4", 0.2, 0, config.VOLUME])
     orologio = SelectClock(db)
     if orologio and enter_escape(
@@ -267,4 +267,4 @@ def DeleteClock(db=None):
 
         storage.UpdateDB(elimina)
         Acusticator(["c4", 0.025, 0, config.VOLUME])
-        print(_("\nOrologio eliminato."))
+        print(_("Orologio eliminato."))

@@ -57,7 +57,7 @@ def GetDynamicPrompt(board, node):
             variant_level += 1
         temp_node = temp_node.parent
 
-    prefix = f"Lvl{variant_level} "
+    prefix = f"var{variant_level} " if variant_level else ""
 
     if not board.move_stack:
         return _("{p}INIZIO {n}. ").format(p=prefix, n=n)

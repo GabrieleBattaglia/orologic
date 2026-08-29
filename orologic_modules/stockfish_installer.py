@@ -17,7 +17,9 @@ lingua_rilevata, _ = polipo(
     config_path=config.CARTELLA_SETTINGS,
 )
 
-API_RELEASE = "https://api.github.com/repos/official-stockfish/Stockfish/releases/latest"
+API_RELEASE = (
+    "https://api.github.com/repos/official-stockfish/Stockfish/releases/latest"
+)
 # Il download del motore e' un file di parecchi megabyte: serve piu' respiro
 # della normale interrogazione di un'API.
 TIMEOUT_DOWNLOAD = 120.0

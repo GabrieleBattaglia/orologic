@@ -1391,7 +1391,7 @@ def async_play_loop(q, game_state):
 
 
 def show_post_game_report(game_id, token, username):
-    print(_("\n--- Recupero Report Partita da Lichess (Attendi...) ---"))
+    print(_("Recupero Report Partita da Lichess (Attendi...)"))
     time.sleep(2)
     data, errore = rete.leggi_json(
         f"https://lichess.org/game/export/{game_id}?evals=true&clocks=true", token=token

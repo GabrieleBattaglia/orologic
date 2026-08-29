@@ -7,6 +7,7 @@ import chess
 from GBUtils import Acusticator, dgt, key, polipo
 
 from . import board_utils, config, storage, version
+from .board_utils import stampa_elenco
 
 # Inizializzazione localizzazione
 lingua_rilevata, _ = polipo(
@@ -141,7 +142,7 @@ def LoadLocalization():
 
 
 def EditLocalization():
-    print(_("\n--- Personalizzazione Lingua ---\n"))
+    print(_("Personalizzazione Lingua"))
     print(
         _(
             "Per ogni voce, inserisci il nuovo testo o premi INVIO per mantenere il valore attuale."
@@ -327,7 +328,7 @@ def report_all_pieces(game_state, color):
             pieces_map[piece.piece_type].append(sq)
 
     color_str = get_color_adjective(color, gender="m", plural=True)
-    print(_("\n--- Riepilogo pezzi {c} ---").format(c=color_str.capitalize()))
+    print(_("Riepilogo pezzi {c}").format(c=color_str.capitalize()))
 
     found_any = False
     for p_type in [
@@ -356,11 +357,7 @@ def report_all_pieces(game_state, color):
                 descriptive_file = cols_dict.get(file_letter, file_letter)
                 positions.append(f"{descriptive_file} {rank}")
 
-            print(
-                "{p}: {pos}".format(
-                    p=display_name.capitalize(), pos=", ".join(positions)
-                )
-            )
+            stampa_elenco(positions, intestazione=display_name.capitalize() + ":")
 
     if not found_any:
         print(_("Nessun pezzo rimasto!"))
@@ -448,11 +445,11 @@ def read_diagonal(game_state, base_column, direction_right):
         file_index = file_index + 1 if direction_right else file_index - 1
     dir_str = _("alto-destra") if direction_right else _("alto-sinistra")
     if report:
-        print(
-            _("Diagonale da {base} in direzione {direction}: ").format(
+        stampa_elenco(
+            report,
+            intestazione=_("Diagonale da {base} verso {direction}:").format(
                 base=base_descr, direction=dir_str
-            )
-            + ", ".join(report)
+            ),
         )
     else:
         print(
@@ -483,7 +480,9 @@ def read_rank(game_state, rank_number):
                 f"{descriptive_file} {rank_number}: {extended_piece_description(piece)}"
             )
     if report:
-        print(_("Traversa {rank}: ").format(rank=rank_number) + ", ".join(report))
+        stampa_elenco(
+            report, intestazione=_("Traversa {rank}:").format(rank=rank_number)
+        )
     else:
         print(_("La traversa {rank} e' vuota.").format(rank=rank_number))
 
@@ -505,7 +504,9 @@ def read_file(game_state, file_letter):
                 f"{descriptive_file} {rank_idx + 1}: {extended_piece_description(piece)}"
             )
     if report:
-        print(_("Colonna {file}: ").format(file=descriptive_file) + ", ".join(report))
+        stampa_elenco(
+            report, intestazione=_("Colonna {file}:").format(file=descriptive_file)
+        )
     else:
         print(_("La colonna {file} e' vuota.").format(file=descriptive_file))
 
@@ -612,7 +613,12 @@ def report_piece_positions(game_state, piece_symbol):
         descriptive_file = L10N["columns"].get(file_letter, file_letter)
         positions.append(f"{descriptive_file} {rank}")
     if positions:
-        print(f"{color_string.capitalize()}: {full_name} in: " + ", ".join(positions))
+        stampa_elenco(
+            positions,
+            intestazione=_("{name} {color} in:").format(
+                name=full_name.capitalize(), color=color_string
+            ),
+        )
     else:
         print(
             _("Nessun {name} {color} trovato.").format(
@@ -650,7 +656,6 @@ def report_black_time(game_state):
 def save_text_summary(game_state, descriptive_moves, eco_entry):
     headers = game_state.pgn_game.headers
     header_text = _("Riepilogo Partita di Orologic\n")
-    header_text += "--------------------------------\n"
     header_text += _("Evento: {event}\n").format(event=headers.get("Event", _("N/D")))
     header_text += _("Sede: {site}\n").format(site=headers.get("Site", _("N/D")))
     header_text += _("Data: {date}\n").format(date=headers.get("Date", _("N/D")))
@@ -679,7 +684,7 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
     )
     if eco_entry and eco_entry.get("variation"):
         opening_text += " ({variation})\n".format(variation=eco_entry.get("variation"))
-    header_text += opening_text + "--------------------------------\n\n"
+    header_text += opening_text
     move_list_text = _("Lista Mosse:\n")
     for num, i in enumerate(range(0, len(descriptive_moves), 2), 1):
         white = descriptive_moves[i]
@@ -688,7 +693,6 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
     footer_text = _("\nRisultato finale: {result}\n").format(
         result=headers.get("Result", "*")
     )
-    footer_text += "--------------------------------\n"
     footer_text += _("File generato il: {datetime}\n").format(
         datetime=config.format_date_italian()
     )
