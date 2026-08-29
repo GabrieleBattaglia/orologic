@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-29: chiuse la tappa 1, integrita dei dati, e la tappa 2, avvio e robustezza di base, per un totale di 12 rilievi risolti sui 154 iniziali.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-29: chiuse le tappe 1 integrita dei dati, 2 avvio e robustezza, 3 rete, per un totale di 27 rilievi risolti sui 154 iniziali.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -43,14 +43,6 @@ check_engine.py, 34 righe
 zip_maker.py, 24 righe
 resources/translator_tool.py, 92 righe
 Rilievi, ordinati per gravita decrescente. Ogni rilievo riporta identificativo progressivo, gravita, categoria, posizione, descrizione con impatto e correzione proposta. Fra parentesi l'identificativo usato durante l'analisi a blocchi.
-R002 gravita alto, categoria fragilita, in stockfish_installer.py:66-88,230-236 (B1-02)
-La cartella engine viene svuotata prima di sapere se il download riuscira. Se la rete cade l'utente resta senza motore e il messaggio Ripristino vecchio motore e falso: nessun rollback esiste. Correzione: scaricare in cartella temporanea e sostituire solo a estrazione riuscita.
-R003 gravita alto, categoria regole generali, in stockfish_installer.py:102-113 (B1-03)
-Barra di avanzamento disegnata con cinquanta caratteri uguale e riscritta a ogni blocco da quattro kilobyte, quindi centinaia di volte durante il download. Il problema non e il ritorno carrello, che nel progetto e usato correttamente per posizionare cursore e display braille, ma i separatori grafici e la frequenza di riscrittura. Correzione: sostituire gli uguali con la sola percentuale e aggiornare a scatti radi, per esempio ogni venticinque per cento.
-R004 gravita alto, categoria fragilita, in stockfish_installer.py:25,93 (B1-04)
-requests.get senza timeout sia per l'API GitHub sia per il download. Impatto: avvio o aggiornamento bloccati a tempo indefinito con rete lenta. Correzione: timeout esplicito su entrambe le chiamate.
-R005 gravita alto, categoria fragilita, in stockfish_installer.py:155,237-238 (B1-05)
-except Exception seguito da pass avvolge l'intera CheckForStockfishUpdatesSilent, download e salvataggio db compresi. Un errore a meta aggiornamento lascia db e cartella engine incoerenti senza alcun avviso.
 R008 gravita alto, categoria logica, in chess960_utils.py:156-186 (B2-01)
 Il FEN della posizione Fischer Random inserita a mano viene costruito con campo arrocco a trattino. Verificato sperimentalmente: la stessa posizione ottenuta dal generatore casuale ha diritti KQkq e numero 518, mentre inserita a mano non ha alcun diritto di arrocco e chess960_pos restituisce None. Impatto: chi inserisce la sequenza a mano gioca una partita in cui nessuno dei due puo arroccare, e il messaggio annuncia Numero Chess960 None. Inoltre sequenze illegali come otto torri vengono accettate senza errore. Correzione: aggiungere i diritti di arrocco al FEN e rifiutare la sequenza se chess960_pos e None.
 R009 gravita alto, categoria logica, in board_utils.py:723-737 con game_flow.py:1421 e lichess_board.py:132 (B2-02)
@@ -81,22 +73,12 @@ R022 gravita alto, categoria logica, in ui.py:642-676 con game_flow.py:1093 (B3-
 descriptive_move_history viene solo accodata e mai ripulita quando si annulla una mossa, a differenza di move_history, move_times e clocks_history. Impatto: il riepilogo testuale salvato a fine partita contiene la mossa annullata e da quel punto in poi la numerazione delle mosse e sfalsata di mezzo turno.
 R024 gravita alto, categoria regole generali, in engine.py:1569,1572,1821, ui.py:645,675,685, memoboard_app.py:607,640,666,695 (B3-07)
 Separatori grafici generati a runtime: quaranta caratteri uguale in engine, trentadue trattini nel riepilogo testuale salvato, righe di trattini lunghe quanto l'intestazione in memoboard. La riga 1821 di engine somma tre violazioni: due righe vuote consecutive, quaranta uguali, testo, altri quaranta uguali.
-R025 gravita alto, categoria fragilita, in lichess_app.py in oltre venti punti e lichess_stats.py:17 (B4-01)
-Nessuna chiamata urlopen ha un timeout. Con rete lenta o server irraggiungibile il programma resta bloccato a tempo indefinito, senza messaggi e senza modo di annullare se non interrompendo il processo. Per un utente che lavora con lo screen reader il terminale resta semplicemente muto. Correzione: timeout esplicito su tutte le chiamate, e messaggio parlante alla scadenza.
 R026 gravita alto, categoria logica, in lichess_app.py:2062 con 2087,2100,2182-2188 (B4-02)
 La variabile token viene letta una sola volta prima del ciclo del menu e non e mai riassegnata nei rami login e logout, mentre secrets viene ricaricato a ogni giro. Dopo un login nella stessa sessione il menu risulta connesso ma le chiamate usano ancora token nullo, quindi partite attive e sfide in arrivo non compaiono finche non si esce e si rientra in Orolichess. Dopo un logout accade il contrario: il token resta in memoria e le chiamate autenticate proseguono nonostante l'utente creda di essersi disconnesso.
 R027 gravita alto, categoria DRY, in lichess_app.py:583-849 con game_flow.py:365-575 e lichess_board.py:143-350 (B4-03)
 Il dispatch dei comandi di esplorazione della scacchiera, barra, barra rovesciata, meno, piu e virgola, e copiato tre volte con le stesse sequenze sonore: circa seicento righe complessive che si differenziano solo per dettagli. Ogni correzione futura va replicata in tre punti. Correzione: una sola funzione di esplorazione condivisa, che riceva la scacchiera.
-R028 gravita alto, categoria fragilita, in lichess_app.py:1735-1745 (B4-04)
-Il thread che cerca l'avversario ingoia qualsiasi eccezione e riprova ogni secondo. Se il token e scaduto o l'API rifiuta la richiesta, la ricerca prosegue all'infinito e l'utente continua a leggere Ricerca avversario in corso senza sapere che non accadra mai nulla.
 R029 gravita alto, categoria regole generali, in lichess_app.py:182,184,262,264,276,293,295,390,482,484,990,992,1394,1396,1843,1845 (B4-05)
 Dodici blocchi di trentaquattro caratteri uguale come cornice delle statistiche, con i titoli centrati mediante spazi iniziali. I separatori sono anche racchiusi in chiamate di traduzione, quindi finiscono nel catalogo delle stringhe da tradurre in cinque lingue.
-R030 gravita alto, categoria fragilita, in lichess_board.py:357-404,902-913,1012-1019 (B5-01)
-Lo streaming della partita non prevede alcun tentativo di riconnessione. Se la connessione cade, anche solo per un istante, il worker chiude, il programma stampa Connessione al server chiusa e torna al menu abbandonando la partita, mentre su Lichess il tempo continua a scorrere. Esiste la voce Riprendi partita in sospeso, che limita il danno, ma richiede all'utente di accorgersene e di rientrare a mano. Correzione: ritentare la connessione allo stream per qualche volta prima di arrendersi, avvisando a voce di cosa sta accadendo.
-R031 gravita alto, categoria fragilita, in lichess_profiler.py:343-360 (B5-02)
-Il download delle partite di un giocatore non passa alcun limite all'API e accumula tutto in memoria in una lista. Per un utente con decine di migliaia di partite significa decine di megabyte, minuti di attesa e nessun modo di interrompere: il programma resta muto fino alla fine. Correzione: parametro max, possibilita di annullare, e scrittura incrementale su file invece dell'accumulo in memoria.
-R032 gravita alto, categoria ottimizzazione, in lichess_profiler.py:34-42 (B5-03)
-La ricerca del giocatore interroga l'API di autocompletamento a ogni singolo tasto premuto, senza attesa di stabilizzazione ne timeout: digitare un nome di dieci lettere produce otto chiamate di rete e altrettante attese percepibili fra un tasto e il successivo. Correzione: interrogare solo dopo una breve pausa nella digitazione e mantenere una cache dei termini gia cercati.
 R033 gravita alto, categoria regole generali, in memoboard_app.py:594-641,650-700 (B6-01)
 La classifica e una tabella a colonne di larghezza fissa, delimitata sopra e sotto da righe di trattini lunghe quanto l'intestazione. Lo screen reader legge una fila di numeri separati da spazi senza poterli ricondurre alla colonna di appartenenza, e i nomi utente vengono troncati a quattordici caratteri solo per far tornare l'allineamento. Correzione: una riga discorsiva per ogni posizione, del tipo primo, nome, tanti punti, tante domande al minuto, e via dicendo.
 R034 gravita alto, categoria fragilita, in pgn_search.py:230-234 (B6-02)
@@ -109,8 +91,6 @@ R040 gravita alto, categoria DRY, in easyfish/game_mode.py:33-115 (B7-05)
 Terzo thread orologio del progetto, riscritto invece di riusare quello di game_flow che tempo_app importa correttamente. Ripete inoltre lo stesso blocco di cinquanta righe per i due colori e condivide lo stato con il thread principale senza alcun lock.
 R041 gravita medio, categoria logica, in config.py:294 (B1-08)
 re.sub con classe di caratteri da zero a 31 scritta come escape ottale: viene interpretata come intervallo 0-25, quindi i caratteri di controllo da 26 a 31 restano nel nome file e Windows rifiuta la scrittura. Verificato sperimentalmente. Correzione: usare la forma esadecimale da x00 a x1f.
-R042 gravita medio, categoria logica, in stockfish_installer.py:165,181 (B1-09)
-La versione locale e quella remota si ricavano concatenando tutti i gruppi numerici del nome. Con un nome tipo Stockfish 16 AVX2 64bit si ottiene 1664, valore sempre maggiore del remoto, e l'aggiornamento non viene mai proposto. Correzione: estrarre il primo gruppo numerico e confrontare tuple di interi.
 R044 gravita medio, categoria DRY, in dieci moduli (B1-11)
 polipo viene inizializzato dieci volte, una per modulo, rileggendo ogni volta i file di traduzione. Correzione: inizializzare una sola volta in config ed esportare la funzione di traduzione.
 R045 gravita medio, categoria DRY, in orologic.py:46-77 (B1-12)
@@ -127,8 +107,6 @@ R051 gravita medio, categoria logica, in config.py:11-57 (B1-18)
 Giorni e mesi sono scritti a mano in italiano mentre l'app e localizzata in cinque lingue: le date restano italiane anche con interfaccia inglese.
 R052 gravita medio, categoria logica, in config.py:114-115,167-168 (B1-19)
 Le annotazioni punto esclamativo interrogativo e interrogativo esclamativo hanno la stessa descrizione mossa dubbia. Il NAG 5 indica mossa interessante o speculativa, il NAG 6 mossa dubbia.
-R053 gravita medio, categoria fragilita, in stockfish_installer.py:117-118 (B1-20)
-extractall su archivio scaricato dalla rete senza controllo dei percorsi interni ne verifica di integrita. Rischio di scrittura fuori dalla cartella di destinazione.
 R054 gravita medio, categoria logica, in game_flow.py:195-215 con 116-120 (B2-11)
 L'autosave non registra ne il flag chess960 ne il FEN iniziale, e il ripristino ricostruisce la scacchiera senza chess960. Impatto: una partita Fischer Random ripresa da autosave perde gli arrocchi e la posizione di partenza corretta nel PGN.
 R055 gravita medio, categoria logica, in game_flow.py:1770-1780 e 1466-1490 (B2-12)
@@ -181,8 +159,6 @@ R079 gravita medio, categoria ottimizzazione, in lichess_app.py:2087-2101 (B4-08
 A ogni ritorno al menu principale vengono eseguite due chiamate di rete, partite attive e sfide in entrata, senza alcuna cache: il menu si blocca a ogni giro in attesa della rete.
 R080 gravita medio, categoria ottimizzazione, in lichess_app.py:1735-1790 (B4-09)
 La richiesta di seek viene ripetuta ogni secondo e le partite attive interrogate ogni cinque: traffico continuo verso Lichess con rischio concreto di superare i limiti di frequenza dell'API.
-R081 gravita medio, categoria logica, in lichess_app.py:1723 (B4-10)
-Il tempo di gioco viene convertito in minuti interi con divisione intera: un controllo da novanta secondi diventa un minuto e la partita parte con un tempo diverso da quello scelto.
 R082 gravita medio, categoria regole generali, in lichess_stats.py:38-39 (B4-11)
 La durata di un periodo termina sempre con zero ore e zero minuti, aggiunti in modo fisso: informazione priva di senso che allunga ogni annuncio vocale.
 R083 gravita medio, categoria regole generali, in lichess_stats.py:149-171 (B4-12)
@@ -193,14 +169,10 @@ R085 gravita medio, categoria DRY, in lichess_stats.py:25-40 (B4-14)
 Ennesima funzione di formattazione della durata, l'ottava del progetto.
 R086 gravita medio, categoria ottimizzazione, in lichess_app.py:542-547 (B4-15)
 La classe DummyGameState esiste solo per confezionare una scacchiera nel formato che le funzioni di ui pretendono: sintomo che quelle funzioni dovrebbero accettare direttamente una scacchiera.
-R087 gravita medio, categoria logica, in lichess_board.py:60 (B5-04)
-Il PGN ufficiale viene scaricato con il parametro clocks impostato a falso, quindi senza i tempi degli orologi, proprio mentre il percorso di riserva, la ricostruzione locale, i tempi li aggiunge. Il risultato e che la via preferita produce il PGN meno completo.
 R088 gravita medio, categoria fragilita, in lichess_board.py:120-126 (B5-05)
 Nella ricostruzione locale del PGN, la prima mossa non interpretabile interrompe il ciclo in silenzio: il file salvato risulta troncato senza che nulla lo segnali.
 R089 gravita medio, categoria ottimizzazione, in lichess_board.py:357-404 (B5-06)
 Il worker dell'osservazione impacchetta i dati in stringhe separate da barre verticali, che il consumatore deve poi ritagliare, mentre il worker della partita, nello stesso file, mette in coda direttamente i dizionari. Due approcci opposti, e quello a stringhe si rompe se un campo contiene il separatore.
-R090 gravita medio, categoria regole generali, in lichess_board.py:916-934 (B5-07)
-send_action riduce ogni esito a vero o falso: se una mossa viene rifiutata l'utente non sa se era illegale, se la partita era gia finita o se e caduta la rete. Correzione: propagare il codice di stato e il messaggio del server.
 R091 gravita medio, categoria ottimizzazione, in lichess_profiler.py:343-350 (B5-08)
 Solo il filtro sul colore viene passato all'API. Risultato, fascia Elo e codice ECO sono applicati localmente dopo aver scaricato tutto, mentre Lichess offre parametri per restringere la richiesta alla fonte.
 R092 gravita medio, categoria DRY, in lichess_board.py:44-45,947-960 (B5-09)
@@ -209,8 +181,6 @@ R093 gravita medio, categoria logica, in lichess_profiler.py:111,122 (B5-10)
 I timestamp di Lichess sono in tempo universale ma vengono convertiti con fromtimestamp senza fuso, quindi interpretati come ora locale: data di iscrizione e ultimo accesso possono risultare sfasate di ore e, a cavallo di mezzanotte, di un giorno.
 R094 gravita medio, categoria DRY, in lichess_profiler.py:145-160 (B5-11)
 Undicesima formattazione di durata del progetto, e con regole ancora diverse: anno di trecentosessantacinque giorni e mese di trenta calcolati a mano, mentre altrove si usa relativedelta.
-R095 gravita medio, categoria fragilita, in lichess_board.py:60,359,904 e lichess_profiler.py:37,357 (B5-12)
-Nessun timeout nelle chiamate, streaming compreso. Per gli stream il caso e piu insidioso: se la rete sparisce senza chiudere la connessione, il thread resta appeso per sempre e la partita si blocca senza un solo messaggio.
 R096 gravita medio, categoria DRY, in tempo_app.py:190-400 con game_flow.py:575-1070 (B6-04)
 Il dispatch dei comandi punto, dall'uno al sei piu pausa e correzioni di tempo, e duplicato con le stesse sequenze sonore e la stessa logica.
 R097 gravita medio, categoria DRY, in tempo_app.py:14-30 con config.py:234-258 (B6-05)
@@ -372,18 +342,17 @@ Criticita rilevate in GBUtils.
 Segnalazione emersa durante la tappa 2, da sottoporre a Gabriele senza intervenire. polipo risolve la cartella delle traduzioni e quella di configurazione rispetto a os.getcwd() quando il programma non e' congelato: chi lo chiama con percorsi relativi si ritrova le traduzioni cercate nella directory di lavoro e una cartella settings creata li' dentro. Orologic ora passa percorsi assoluti, quindi il problema non lo tocca piu', ma gli altri progetti del parco software che usano polipo con percorsi relativi hanno lo stesso difetto. La firma di dgt e' invece risultata completa: smin, smax e pwd coprono i casi in cui il progetto validava a mano.
 Riepilogo per gravita.
 Critico: 0 rilievi
-Alto: 32 rilievi
-Medio: 68 rilievi
+Alto: 23 rilievi
+Medio: 62 rilievi
 Basso: 42 rilievi
-Totale: 142 rilievi ancora aperti
+Totale: 127 rilievi ancora aperti
 Riepilogo per categoria.
 DRY: 28 rilievi
-fragilita: 28 rilievi
-logica: 29 rilievi
-ottimizzazione: 29 rilievi
-regole generali: 28 rilievi
+fragilita: 19 rilievi
+logica: 26 rilievi
+ottimizzazione: 28 rilievi
+regole generali: 26 rilievi
 Proposta di ordine di lavorazione, in nove tappe, da concordare con Gabriele prima di toccare il codice.
-Tappa 3, rete. Introdurre timeout e messaggi parlanti su tutte le chiamate, prendendo a modello quanto gia fatto bene in pgn_search._carica_archivio: timeout esplicito, lettura a blocchi, interruzione con ESC, tetto complessivo. Aggiungere un limite al download delle partite di un giocatore e qualche tentativo di riconnessione allo stream della partita Lichess.
 Tappa 4, correttezza scacchistica. Diritti di arrocco nel FEN Fischer Random inserito a mano, tempo di fase che si somma invece di sostituire, contatori di mossa e fase nell'annullamento, tag clk con il tempo residuo, chiave della cache di analisi comprensiva del numero di linee, classificazione della mossa quando il matto resta disponibile, riconfigurazione di UCI_Chess960 quando il motore parte piu tardi.
 Tappa 5, accessibilita. Eliminare tutti i separatori grafici, letterali e generati a runtime, riscrivere la classifica di Memoboard in forma discorsiva, spezzare le righe di esplorazione lunghe, togliere tabulazioni, righe vuote superflue e unita attaccate ai numeri. Da fare in un passaggio unico su tutto il progetto, perche il difetto e trasversale.
 Tappa 6, localizzazione. Unificare i due sistemi paralleli di config e ui in un solo modulo, ricondurvi anche i nomi di Easyfish comprese le colonne NATO, ricaricare il dizionario unico dopo la personalizzazione dei nomi, tradurre le stringhe rimaste fuori da gettext e togliere i separatori dal catalogo.

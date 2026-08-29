@@ -1,15 +1,13 @@
 import json
 import os
 import time
-import urllib.error
-import urllib.request
 import webbrowser
 
 import chess
 
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
-from . import board_utils, config, lichess_board, lichess_profiler, storage, ui
+from . import board_utils, config, lichess_board, lichess_profiler, rete, storage, ui
 from .config import _, percorso_salvataggio
 
 SECRETS_FILE = percorso_salvataggio(os.path.join("settings", "secrets.json"))
@@ -31,17 +29,18 @@ def save_secrets(secrets):
         print(_("Errore salvataggio segreti: {e}").format(e=e))
 
 
-def fetch_profile_info(token):
-    """Recupera le info del profilo dal server Lichess."""
-    req = urllib.request.Request("https://lichess.org/api/account")
-    req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                return json.loads(response.read().decode("utf-8"))
-    except Exception:
-        pass
-    return None
+def fetch_profile_info(token, silenzioso=True):
+    """Recupera le info del profilo dal server Lichess.
+
+    Con silenzioso a falso, il motivo del mancato recupero viene detto
+    all'utente invece di restituire soltanto nulla.
+    """
+    dati, errore = rete.leggi_json("https://lichess.org/api/account", token=token)
+    if errore:
+        if not silenzioso:
+            print(_("Profilo non recuperato. {motivo}").format(motivo=errore))
+        return None
+    return dati
 
 
 def format_ratings(perfs):
@@ -188,14 +187,13 @@ def menu_profilo(db):
 
 def fetch_perf_info(username, perf):
     """Recupera le statistiche dettagliate di una variante."""
-    req = urllib.request.Request(f"https://lichess.org/api/user/{username}/perf/{perf}")
-    try:
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                return json.loads(response.read().decode("utf-8"))
-    except Exception:
-        pass
-    return None
+    dati, errore = rete.leggi_json(
+        f"https://lichess.org/api/user/{username}/perf/{perf}"
+    )
+    if errore:
+        print(_("Statistiche non recuperate. {motivo}").format(motivo=errore))
+        return None
+    return dati
 
 
 def format_iso_date(iso_str):
@@ -392,82 +390,49 @@ def menu_statistiche(db):
 
 
 def fetch_following(token):
-    req = urllib.request.Request("https://lichess.org/api/rel/following")
-    req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                lines = response.read().decode("utf-8").strip().split("\n")
-                users = []
-                for line in lines:
-                    if line.strip():
-                        try:
-                            users.append(json.loads(line))
-                        except Exception:
-                            pass
-                return users
-    except Exception as e:
-        print(_("Errore durante il recupero dei seguiti: {e}").format(e=e))
-    return []
+    utenti, errore = rete.leggi_righe_json(
+        "https://lichess.org/api/rel/following", token=token
+    )
+    if errore:
+        print(_("Elenco dei seguiti non recuperato. {motivo}").format(motivo=errore))
+        return []
+    return utenti
 
 
 def follow_user(token, username):
-    req = urllib.request.Request(
-        f"https://lichess.org/api/rel/follow/{username}", method="POST"
+    riuscito, errore = rete.invia(
+        f"https://lichess.org/api/rel/follow/{username}", token=token
     )
-    req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                print(_("Ora segui {u}!").format(u=username))
-                return True
-    except urllib.error.HTTPError as e:
-        print(
-            _("Errore HTTP: {c} (Assicurati di avere il permesso follow:write)").format(
-                c=e.code
-            )
+    if riuscito:
+        print(_("Ora segui {u}!").format(u=username))
+        return True
+    print(
+        _("Non e' stato possibile seguire {u}. {motivo}").format(
+            u=username, motivo=errore
         )
-    except Exception as e:
-        print(_("Errore di connessione: {e}").format(e=e))
+    )
     return False
 
 
 def unfollow_user(token, username):
-    req = urllib.request.Request(
-        f"https://lichess.org/api/rel/unfollow/{username}", method="POST"
+    riuscito, errore = rete.invia(
+        f"https://lichess.org/api/rel/unfollow/{username}", token=token
     )
-    req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                print(_("Non segui piu' {u}.").format(u=username))
-                return True
-    except urllib.error.HTTPError as e:
-        print(_("Errore HTTP: {c}").format(c=e.code))
-    except Exception as e:
-        print(_("Errore di connessione: {e}").format(e=e))
+    if riuscito:
+        print(_("Non segui piu' {u}.").format(u=username))
+        return True
+    print(_("Operazione non riuscita. {motivo}").format(motivo=errore))
     return False
 
 
 def send_message(token, username, text):
-    import urllib.parse
-
-    req = urllib.request.Request(f"https://lichess.org/inbox/{username}", method="POST")
-    req.add_header("Authorization", f"Bearer {token}")
-    data = urllib.parse.urlencode({"text": text}).encode("utf-8")
-    try:
-        with urllib.request.urlopen(req, data=data) as response:
-            if response.status == 200:
-                print(_("Messaggio inviato a {u} con successo!").format(u=username))
-                return True
-    except urllib.error.HTTPError as e:
-        print(
-            _(
-                "Errore HTTP: {c} (L'utente potrebbe non accettare messaggi o ti manca il permesso msg:write)"
-            ).format(c=e.code)
-        )
-    except Exception as e:
-        print(_("Errore di connessione: {e}").format(e=e))
+    riuscito, errore = rete.invia(
+        f"https://lichess.org/inbox/{username}", token=token, dati={"text": text}
+    )
+    if riuscito:
+        print(_("Messaggio inviato a {u} con successo!").format(u=username))
+        return True
+    print(_("Messaggio non inviato a {u}. {motivo}").format(u=username, motivo=errore))
     return False
 
 
@@ -862,35 +827,27 @@ def fetch_puzzle(token=None, daily=False, difficulty=None, angle=None):
         if params:
             url += "?" + "&".join(params)
 
-    req = urllib.request.Request(url)
-    if token and not daily:
-        req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                return json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        print(_("Errore HTTP durante il recupero del puzzle: {c}").format(c=e.code))
-    except Exception as e:
-        print(_("Errore di connessione: {e}").format(e=e))
-    return None
+    dati, errore = rete.leggi_json(url, token=None if daily else token)
+    if errore:
+        print(_("Puzzle non recuperato. {motivo}").format(motivo=errore))
+        return None
+    return dati
 
 
 def send_puzzle_result(token, puzzle_id, win):
     if not token or not puzzle_id:
         return
-    url = "https://lichess.org/api/puzzle/batch/mix"
-    req = urllib.request.Request(url, method="POST")
-    req.add_header("Authorization", f"Bearer {token}")
-    req.add_header("Content-Type", "application/json")
-    data = json.dumps(
-        {"solutions": [{"id": puzzle_id, "win": win, "rated": True}]}
-    ).encode("utf-8")
-    try:
-        with urllib.request.urlopen(req, data=data):
-            pass
-    except Exception:
-        pass
+    # L'esito del puzzle e' un dato accessorio: se non arriva a destinazione
+    # non vale la pena interrompere il gioco, ma un avviso breve ci sta.
+    riuscito, errore = rete.invia(
+        "https://lichess.org/api/puzzle/batch/mix",
+        token=token,
+        dati_json={"solutions": [{"id": puzzle_id, "win": win, "rated": True}]},
+    )
+    if not riuscito:
+        print(
+            _("Esito del puzzle non inviato a Lichess. {motivo}").format(motivo=errore)
+        )
 
 
 def calcola_difficolta(user_elo, puzzle_elo_richiesto):
@@ -966,7 +923,7 @@ def get_last_moves_san(board, num=5):
         return ""
     moves = board.move_stack[-num:]
     temp_board = board.copy()
-    for _ in range(len(moves)):
+    for _mossa in range(len(moves)):
         temp_board.pop()
     parts = []
     for m in moves:
@@ -1300,16 +1257,17 @@ def menu_puzzle(db):
 
 
 def fetch_user_profile(username, token=None):
-    req = urllib.request.Request(f"https://lichess.org/api/user/{username}")
-    if token:
-        req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                return json.loads(response.read().decode("utf-8"))
-    except Exception:
-        pass
-    return None
+    dati, errore = rete.leggi_json(
+        f"https://lichess.org/api/user/{username}", token=token
+    )
+    if errore:
+        print(
+            _("Profilo di {u} non recuperato. {motivo}").format(
+                u=username, motivo=errore
+            )
+        )
+        return None
+    return dati
 
 
 def watch_player(username, token):
@@ -1488,12 +1446,9 @@ def menu_guarda(db):
 
         elif scelta == "tv":
             print(_("Recupero canali TV in corso..."))
-            req = urllib.request.Request("https://lichess.org/api/tv/channels")
-            try:
-                with urllib.request.urlopen(req) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
-            except Exception as e:
-                print(_("Errore recupero TV: {e}").format(e=e))
+            data, errore = rete.leggi_json("https://lichess.org/api/tv/channels")
+            if errore:
+                print(_("Canali TV non recuperati. {motivo}").format(motivo=errore))
                 continue
 
             scelte_tv = {}
@@ -1517,54 +1472,49 @@ def menu_guarda(db):
                 lichess_board.spectate_game(game_id, token)
 
 
-def get_active_games(token):
-    req = urllib.request.Request("https://lichess.org/api/account/playing")
-    req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                data = json.loads(response.read().decode("utf-8"))
-                return data.get("nowPlaying", [])
-    except Exception:
-        pass
-    return []
+def get_active_games(token, silenzioso=True):
+    """Partite in corso. Interrogata a ogni giro di menu, quindi per scelta
+    tace sugli errori se non le si chiede il contrario."""
+    if not token:
+        return []
+    dati, errore = rete.leggi_json(
+        "https://lichess.org/api/account/playing", token=token
+    )
+    if errore:
+        if not silenzioso:
+            print(_("Partite in corso non recuperate. {motivo}").format(motivo=errore))
+        return []
+    return dati.get("nowPlaying", [])
 
 
-def get_incoming_challenges(token):
-    req = urllib.request.Request("https://lichess.org/api/challenge")
-    req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                data = json.loads(response.read().decode("utf-8"))
-                return data.get("in", [])
-    except Exception:
-        pass
-    return []
+def get_incoming_challenges(token, silenzioso=True):
+    """Sfide in arrivo, con la stessa regola di silenzio delle partite attive."""
+    if not token:
+        return []
+    dati, errore = rete.leggi_json("https://lichess.org/api/challenge", token=token)
+    if errore:
+        if not silenzioso:
+            print(_("Sfide in arrivo non recuperate. {motivo}").format(motivo=errore))
+        return []
+    return dati.get("in", [])
 
 
 def accept_challenge(token, challenge_id):
-    req = urllib.request.Request(
-        f"https://lichess.org/api/challenge/{challenge_id}/accept", method="POST"
+    riuscito, errore = rete.invia(
+        f"https://lichess.org/api/challenge/{challenge_id}/accept", token=token
     )
-    req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as response:
-            return response.status == 200
-    except Exception:
-        return False
+    if not riuscito:
+        print(_("Sfida non accettata. {motivo}").format(motivo=errore))
+    return riuscito
 
 
 def decline_challenge(token, challenge_id):
-    req = urllib.request.Request(
-        f"https://lichess.org/api/challenge/{challenge_id}/decline", method="POST"
+    riuscito, errore = rete.invia(
+        f"https://lichess.org/api/challenge/{challenge_id}/decline", token=token
     )
-    req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as response:
-            return response.status == 200
-    except Exception:
-        return False
+    if not riuscito:
+        print(_("Sfida non rifiutata. {motivo}").format(motivo=errore))
+    return riuscito
 
 
 def get_game_params(for_seek=False, for_bot=False):
@@ -1648,10 +1598,6 @@ def get_game_params(for_seek=False, for_bot=False):
 
 
 def challenge_ai(token, level, params_dict):
-    import urllib.parse
-
-    req = urllib.request.Request("https://lichess.org/api/challenge/ai", method="POST")
-    req.add_header("Authorization", f"Bearer {token}")
     payload = {
         "level": level,
         "color": params_dict["color"],
@@ -1663,23 +1609,18 @@ def challenge_ai(token, level, params_dict):
     else:
         payload["days"] = params_dict.get("days", 1)
 
-    data = urllib.parse.urlencode(payload).encode("utf-8")
-    try:
-        with urllib.request.urlopen(req, data=data) as response:
-            if response.status == 201:
-                return json.loads(response.read().decode("utf-8"))
-    except Exception as e:
-        print(_("Errore durante la creazione della partita: {e}").format(e=e))
-    return None
+    dati, errore = rete.leggi_json(
+        "https://lichess.org/api/challenge/ai", token=token, metodo="POST", dati=payload
+    )
+    if errore:
+        print(
+            _("Partita contro il computer non creata. {motivo}").format(motivo=errore)
+        )
+        return None
+    return dati
 
 
 def challenge_user(token, username, params_dict):
-    import urllib.parse
-
-    req = urllib.request.Request(
-        f"https://lichess.org/api/challenge/{username}", method="POST"
-    )
-    req.add_header("Authorization", f"Bearer {token}")
     payload = {
         "color": params_dict["color"],
         "variant": params_dict["variant"],
@@ -1691,17 +1632,16 @@ def challenge_user(token, username, params_dict):
     else:
         payload["days"] = params_dict.get("days", 1)
 
-    data = urllib.parse.urlencode(payload).encode("utf-8")
-    try:
-        with urllib.request.urlopen(req, data=data) as response:
-            if response.status == 200:
-                return json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        err = json.loads(e.read().decode("utf-8"))
-        print(_("Errore Lichess: {err}").format(err=err.get("error", e.code)))
-    except Exception as e:
-        print(_("Errore di connessione: {e}").format(e=e))
-    return None
+    dati, errore = rete.leggi_json(
+        f"https://lichess.org/api/challenge/{username}",
+        token=token,
+        metodo="POST",
+        dati=payload,
+    )
+    if errore:
+        print(_("Sfida non inviata. {motivo}").format(motivo=errore))
+        return None
+    return dati
 
 
 def seek_game(token, params_dict):
@@ -1709,17 +1649,16 @@ def seek_game(token, params_dict):
     import sys
     import threading
     import time
-    import urllib.parse
 
-    req = urllib.request.Request("https://lichess.org/api/board/seek", method="POST")
-    req.add_header("Authorization", f"Bearer {token}")
     payload = {
         "color": params_dict["color"],
         "variant": params_dict["variant"],
         "rated": "true" if params_dict["rated"] else "false",
     }
     if params_dict["clock_limit"] is not None:
-        payload["time"] = params_dict["clock_limit"] // 60
+        # Lichess accetta i minuti anche con la mezza unita': la divisione
+        # intera faceva diventare un minuto e mezzo un minuto secco.
+        payload["time"] = params_dict["clock_limit"] / 60
         payload["increment"] = params_dict["clock_increment"]
     else:
         payload["days"] = params_dict.get("days", 1)
@@ -1727,18 +1666,37 @@ def seek_game(token, params_dict):
     if params_dict.get("rating_range"):
         payload["ratingRange"] = params_dict["rating_range"]
 
-    data = urllib.parse.urlencode(payload).encode("utf-8")
-
     stop_seek = threading.Event()
+    problemi = []
 
     def do_seek():
+        """Tiene aperta la richiesta di avversario finche' non arriva una
+        partita. Se il server rifiuta piu' volte di seguito, si arrende e
+        lascia detto perche': prima girava all'infinito in silenzio."""
+        errori_di_fila = 0
         while not stop_seek.is_set():
+            risposta, errore = rete.apri(
+                "https://lichess.org/api/board/seek",
+                token=token,
+                metodo="POST",
+                dati=payload,
+                timeout=rete.TIMEOUT_STREAM,
+            )
+            if errore:
+                errori_di_fila += 1
+                if errori_di_fila >= 3:
+                    problemi.append(errore)
+                    stop_seek.set()
+                    return
+                time.sleep(2)
+                continue
+            errori_di_fila = 0
             try:
-                with urllib.request.urlopen(req, data=data) as response:
-                    for line in response:
+                with risposta:
+                    for _riga in risposta:
                         if stop_seek.is_set():
                             break
-            except Exception:
+            except OSError:
                 pass
             if not stop_seek.is_set():
                 time.sleep(1)
@@ -1758,6 +1716,10 @@ def seek_game(token, params_dict):
     initial_games = {g["gameId"] for g in get_active_games(token)}
 
     while t.is_alive() or not stop_seek.is_set():
+        if problemi:
+            sys.stdout.write("\r" + " " * 79 + "\r")
+            print(_("Ricerca interrotta. {motivo}").format(motivo=problemi[0]))
+            return None
         if msvcrt.kbhit():
             if msvcrt.getwch() == "\x1b":
                 stop_seek.set()
@@ -1973,15 +1935,10 @@ def menu_gioca(db):
                             "Nota: La sfida potrebbe rimanere valida su Lichess se era per corrispondenza."
                         )
                     )
-                    try:
-                        req = urllib.request.Request(
-                            f"https://lichess.org/api/challenge/{challenge_id}/cancel",
-                            method="POST",
-                        )
-                        req.add_header("Authorization", f"Bearer {token}")
-                        urllib.request.urlopen(req)
-                    except Exception:
-                        pass
+                    rete.invia(
+                        f"https://lichess.org/api/challenge/{challenge_id}/cancel",
+                        token=token,
+                    )
 
         elif scelta == "accetta":
             print(_("Controllo sfide in entrata..."))

@@ -1,13 +1,14 @@
+# Orologic, modulo stockfish_installer: scarica e aggiorna il motore.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import os
 import re
-import sys
+import shutil
 import zipfile
-
-import requests
 
 from GBUtils import polipo
 
-from . import config
+from . import config, rete
 
 # Inizializzazione localizzazione per questo modulo
 lingua_rilevata, _ = polipo(
@@ -16,227 +17,243 @@ lingua_rilevata, _ = polipo(
     config_path=config.CARTELLA_SETTINGS,
 )
 
-
-def GetLatestStockfishURL():
-    """
-    Ottiene l'URL di download dell'ultima versione di Stockfish per Windows AVX2 tramite API GitHub.
-    """
-    try:
-        api_url = (
-            "https://api.github.com/repos/official-stockfish/Stockfish/releases/latest"
-        )
-        print(_("Controllo ultima versione su GitHub..."))
-        response = requests.get(api_url)
-        response.raise_for_status()
-        data = response.json()
-
-        tag_name = data.get("tag_name", "Sconosciuta")
-        print(_("Ultima versione trovata: {v}").format(v=tag_name))
-
-        for asset in data.get("assets", []):
-            name = asset.get("name", "").lower()
-            # Criteri di ricerca per l'asset corretto: windows, avx2 e zip
-            # Nota: Stockfish a volte usa 'win' o 'windows' nel nome
-            if "windows" in name and "avx2" in name and name.endswith(".zip"):
-                download_url = asset.get("browser_download_url")
-                print(_("Trovato asset: {n}").format(n=name))
-                return download_url
-
-        print(_("Nessun asset compatibile trovato nell'ultima release."))
-        return None
-
-    except Exception as e:
-        print(_("Errore durante il controllo della versione: {e}").format(e=e))
-        return None
+API_RELEASE = "https://api.github.com/repos/official-stockfish/Stockfish/releases/latest"
+# Il download del motore e' un file di parecchi megabyte: serve piu' respiro
+# della normale interrogazione di un'API.
+TIMEOUT_DOWNLOAD = 120.0
 
 
-def DownloadAndInstallEngine():
-    """
-    Scarica Stockfish, lo estrae in una cartella locale e restituisce il percorso all'eseguibile.
-    """
-    try:
-        # Recupera URL dinamico
-        download_url = GetLatestStockfishURL()
-
-        # Fallback al config se l'API fallisce (o se l'utente preferisce un override statico)
-        if not download_url:
-            print(_("Tentativo con URL di fallback..."))
-            download_url = config.STOCKFISH_DOWNLOAD_URL
-
-        # Definisce il percorso di installazione locale nella cartella del progetto
-        install_path = config.percorso_salvataggio("engine")
-
-        # PULIZIA: Rimuove versioni precedenti per evitare conflitti
-        if os.path.exists(install_path):
-            try:
-                print(_("Rimozione versioni precedenti..."))
-                for filename in os.listdir(install_path):
-                    file_path = os.path.join(install_path, filename)
-                    try:
-                        if os.path.isfile(file_path) or os.path.islink(file_path):
-                            os.unlink(file_path)
-                        elif os.path.isdir(file_path):
-                            import shutil
-
-                            shutil.rmtree(file_path)
-                    except Exception as e:
-                        print(
-                            _("Impossibile rimuovere {file}: {e}").format(
-                                file=file_path, e=e
-                            )
-                        )
-            except Exception as e:
-                print(_("Errore durante la pulizia della cartella: {e}").format(e=e))
-        else:
-            os.makedirs(install_path)
-
-        zip_filename = os.path.join(install_path, "stockfish.zip")
-
-        # 1. Download
-        print(_("\nSto scaricando Stockfish da {url}...").format(url=download_url))
-        response = requests.get(download_url, stream=True)
-        response.raise_for_status()  # Verifica errori HTTP
-
-        with open(zip_filename, "wb") as f:
-            total_length = int(response.headers.get("content-length", 0))
-            downloaded = 0
-            for chunk in response.iter_content(chunk_size=4096):
-                downloaded += len(chunk)
-                f.write(chunk)
-                if total_length > 0:
-                    done = int(50 * downloaded / total_length)
-                    sys.stdout.write(
-                        "\r[{}{}] {:.1f}%".format(
-                            "=" * done,
-                            " " * (50 - done),
-                            (downloaded / total_length) * 100,
-                        )
-                    )
-                    sys.stdout.flush()
-
-        print("\n" + _("Download completato."))
-
-        # 2. Estrazione
-        print(_("...sto estraendo i file..."))
-        with zipfile.ZipFile(zip_filename, "r") as zip_ref:
-            zip_ref.extractall(install_path)
-        print(_("Estrazione completata."))
-
-        # Pulizia file zip
-        try:
-            os.remove(zip_filename)
-        except OSError:
-            pass
-
-        # 3. Trova l'eseguibile dentro la cartella appena estratta
-        for root, dirs, files in os.walk(install_path):
-            for file in files:
-                if file.lower().startswith("stockfish") and file.lower().endswith(
-                    ".exe"
-                ):
-                    print(_("Installazione di Stockfish completata con successo!"))
-                    return root, file  # Restituisce cartella ed eseguibile
-
-    except requests.exceptions.RequestException as e:
-        print(_("\nErrore di rete durante il download: {error}").format(error=e))
-    except zipfile.BadZipFile:
-        print(_("\nErrore: Il file scaricato non e' uno zip valido."))
-    except Exception as e:
-        print(
-            _(
-                "\nSi e' verificato un errore imprevisto durante l'installazione: {error}"
-            ).format(error=e)
-        )
-
+def _asset_windows(dati):
+    """Cerca fra gli allegati della release quello per Windows AVX2."""
+    for asset in dati.get("assets", []):
+        nome = asset.get("name", "").lower()
+        if "windows" in nome and "avx2" in nome and nome.endswith(".zip"):
+            return asset.get("browser_download_url"), nome
     return None, None
 
 
-def CheckForStockfishUpdatesSilent():
+def GetLatestStockfishURL():
+    """Indirizzo dell'ultima versione di Stockfish per Windows AVX2."""
+    print(_("Controllo ultima versione su GitHub..."))
+    dati, errore = rete.leggi_json(API_RELEASE)
+    if errore:
+        print(
+            _("Controllo della versione non riuscito. {motivo}").format(motivo=errore)
+        )
+        return None
+    print(_("Ultima versione trovata: {v}").format(v=dati.get("tag_name", "?")))
+    url, nome = _asset_windows(dati)
+    if not url:
+        print(_("Nessun pacchetto compatibile nell'ultima release."))
+        return None
+    print(_("Trovato pacchetto: {n}").format(n=nome))
+    return url
+
+
+def _estrai_in_sicurezza(archivio, destinazione):
+    """Estrae lo zip rifiutando i percorsi che uscirebbero dalla cartella.
+
+    Un archivio confezionato male, o malevolo, puo' contenere nomi con
+    percorsi risalenti e scrivere altrove nel disco.
     """
-    Verifica silenziosamente se esiste una nuova versione di Stockfish.
-    Se disponibile, chiede all'utente se desidera aggiornare.
+    radice = os.path.abspath(destinazione)
+    for elemento in archivio.namelist():
+        completo = os.path.abspath(os.path.join(radice, elemento))
+        if not completo.startswith(radice + os.sep) and completo != radice:
+            raise ValueError(
+                _("L'archivio contiene un percorso non valido: {p}").format(p=elemento)
+            )
+    archivio.extractall(radice)
+
+
+def _scarica_file(url, destinazione):
+    """Scarica a blocchi mostrando l'avanzamento a scatti radi.
+
+    Niente barre disegnate con caratteri ripetuti: solo qualche riga di
+    avanzamento, leggibile dalla sintesi vocale senza diventare invadente.
     """
+    risposta, errore = rete.apri(url, timeout=TIMEOUT_DOWNLOAD)
+    if errore:
+        return errore
     try:
-        from . import engine, storage
-
-        if not engine.ENGINE or "stockfish" not in engine.ENGINE_NAME.lower():
-            return
-
-        # Ricaviamo la versione locale dal nome del motore
-        local_name = engine.ENGINE_NAME
-        match = re.search(r"stockfish\s*([\d\.]+)", local_name, re.IGNORECASE)
-        local_ver_str = (
-            match.group(1) if match else "".join(re.findall(r"[\d\.]+", local_name))
-        )
-        if not local_ver_str:
-            return
-
-        # Interroghiamo le API di GitHub per l'ultima release
-        api_url = (
-            "https://api.github.com/repos/official-stockfish/Stockfish/releases/latest"
-        )
-        response = requests.get(api_url, timeout=3.0)
-        if response.status_code == 200:
-            data = response.json()
-            tag_name = data.get("tag_name", "")
-            if not tag_name:
-                return
-
-            remote_ver_str = "".join(re.findall(r"[\d\.]+", tag_name))
-            if not remote_ver_str:
-                return
-
-            def parse_ver(v_str):
-                return tuple(int(x) for x in re.findall(r"\d+", v_str))
-
-            if parse_ver(remote_ver_str) > parse_ver(local_ver_str):
-                # Trovato aggiornamento!
-                download_url = None
-                for asset in data.get("assets", []):
-                    name = asset.get("name", "").lower()
-                    if "windows" in name and "avx2" in name and name.endswith(".zip"):
-                        download_url = asset.get("browser_download_url")
-                        break
-
-                if download_url:
-                    from GBUtils import enter_escape
-
-                    print(_("\n*** AGGIORNAMENTO MOTORE STOCKFISH DISPONIBILE ***"))
-                    print(
-                        _(
-                            "E' disponibile una nuova versione di Stockfish: {new} (Installata: {curr})"
-                        ).format(new=tag_name, curr=local_name)
-                    )
-                    if enter_escape(
-                        _(
-                            "Desideri aggiornare il motore ora? (INVIO per si', ESC per ignorare): "
+        with risposta as sorgente, open(destinazione, "wb") as f:
+            totale = int(sorgente.headers.get("content-length", 0) or 0)
+            scaricato = 0
+            prossimo_avviso = 25
+            while True:
+                blocco = sorgente.read(65536)
+                if not blocco:
+                    break
+                f.write(blocco)
+                scaricato += len(blocco)
+                if totale > 0:
+                    percentuale = scaricato * 100 // totale
+                    if percentuale >= prossimo_avviso:
+                        print(
+                            _("Scaricato il {p} per cento.").format(p=prossimo_avviso)
                         )
-                    ):
-                        engine.CloseEngine()
-                        p, e = DownloadAndInstallEngine()
-                        if p and e:
-                            full_path = os.path.join(p, e)
-                            app_path = config.percorso_salvataggio("")
+                        prossimo_avviso += 25
+    except OSError as e:
+        return _("Scaricamento interrotto: {motivo}").format(motivo=e)
+    return None
 
-                            def aggiorna_motore(db, percorso=full_path, base=app_path):
-                                cfg = db.get("engine_config", {})
-                                try:
-                                    cfg["engine_path"] = os.path.relpath(percorso, base)
-                                    cfg["engine_is_relative"] = True
-                                except ValueError:
-                                    cfg["engine_path"] = percorso
-                                    cfg["engine_is_relative"] = False
-                                db["engine_config"] = cfg
 
-                            storage.UpdateDB(aggiorna_motore)
-                            print(_("Aggiornamento completato con successo!"))
-                            engine.InitEngine()
-                        else:
-                            print(
-                                _(
-                                    "Errore durante l'aggiornamento. Ripristino vecchio motore..."
-                                )
-                            )
-                            engine.InitEngine()
-    except Exception:
+def DownloadAndInstallEngine():
+    """Scarica Stockfish e lo installa, restituendo (cartella, eseguibile).
+
+    Il motore gia' presente viene sostituito soltanto quando il nuovo e'
+    scaricato ed estratto: se qualcosa va storto per strada, quello vecchio
+    resta al suo posto e continua a funzionare.
+    """
+    url = GetLatestStockfishURL() or config.STOCKFISH_DOWNLOAD_URL
+    destinazione = config.percorso_salvataggio("engine")
+    lavorazione = destinazione + ".nuovo"
+    archivio = os.path.join(lavorazione, "stockfish.zip")
+
+    try:
+        shutil.rmtree(lavorazione, ignore_errors=True)
+        os.makedirs(lavorazione, exist_ok=True)
+    except OSError as e:
+        print(
+            _("Impossibile preparare la cartella di lavoro: {motivo}").format(motivo=e)
+        )
+        return None, None
+
+    print(_("Scaricamento di Stockfish in corso, attendere."))
+    errore = _scarica_file(url, archivio)
+    if errore:
+        print(_("Motore non aggiornato. {motivo}").format(motivo=errore))
+        print(_("Il motore gia' installato resta invariato."))
+        shutil.rmtree(lavorazione, ignore_errors=True)
+        return None, None
+
+    print(_("Scaricamento completato, estrazione in corso."))
+    try:
+        with zipfile.ZipFile(archivio, "r") as zip_ref:
+            _estrai_in_sicurezza(zip_ref, lavorazione)
+    except (zipfile.BadZipFile, ValueError, OSError) as e:
+        print(_("Archivio non utilizzabile: {motivo}").format(motivo=e))
+        print(_("Il motore gia' installato resta invariato."))
+        shutil.rmtree(lavorazione, ignore_errors=True)
+        return None, None
+
+    try:
+        os.remove(archivio)
+    except OSError:
         pass
+
+    eseguibile = None
+    for radice, _cartelle, file_presenti in os.walk(lavorazione):
+        for nome in file_presenti:
+            if nome.lower().startswith("stockfish") and nome.lower().endswith(".exe"):
+                eseguibile = (radice, nome)
+                break
+        if eseguibile:
+            break
+
+    if not eseguibile:
+        print(_("Nell'archivio non c'e' l'eseguibile di Stockfish."))
+        print(_("Il motore gia' installato resta invariato."))
+        shutil.rmtree(lavorazione, ignore_errors=True)
+        return None, None
+
+    # Solo adesso, a nuovo motore pronto, si sostituisce il vecchio.
+    cartella_relativa = os.path.relpath(eseguibile[0], lavorazione)
+    vecchio = destinazione + ".vecchio"
+    try:
+        shutil.rmtree(vecchio, ignore_errors=True)
+        if os.path.exists(destinazione):
+            os.replace(destinazione, vecchio)
+        os.replace(lavorazione, destinazione)
+    except OSError as e:
+        print(_("Sostituzione non riuscita: {motivo}").format(motivo=e))
+        if os.path.exists(vecchio) and not os.path.exists(destinazione):
+            os.replace(vecchio, destinazione)
+            print(_("Ripristinato il motore precedente."))
+        shutil.rmtree(lavorazione, ignore_errors=True)
+        return None, None
+
+    shutil.rmtree(vecchio, ignore_errors=True)
+    cartella_finale = os.path.normpath(os.path.join(destinazione, cartella_relativa))
+    print(_("Installazione di Stockfish completata."))
+    return cartella_finale, eseguibile[1]
+
+
+def _versione(testo):
+    """Estrae la versione dal nome del motore, per esempio 17.1 da Stockfish 17.1.
+
+    Prende il primo gruppo numerico: sommando tutte le cifre del nome, come si
+    faceva prima, Stockfish 16 AVX2 64bit diventava 1664 e nessun
+    aggiornamento risultava mai disponibile.
+    """
+    trovato = re.search(r"(\d+(?:\.\d+)*)", testo or "")
+    if not trovato:
+        return ()
+    return tuple(int(x) for x in trovato.group(1).split("."))
+
+
+def CheckForStockfishUpdatesSilent():
+    """Se esiste una versione piu' recente di Stockfish, propone di installarla."""
+    from GBUtils import enter_escape
+
+    from . import engine, storage
+
+    if not engine.ENGINE or "stockfish" not in engine.ENGINE_NAME.lower():
+        return
+
+    locale = _versione(engine.ENGINE_NAME)
+    if not locale:
+        return
+
+    dati, errore = rete.leggi_json(API_RELEASE, timeout=5)
+    if errore:
+        # Controllo di cortesia all'avvio: non vale un allarme, ma nemmeno il
+        # silenzio totale di prima, che nascondeva anche gli errori veri.
+        print(
+            _("Aggiornamenti del motore non verificati. {motivo}").format(motivo=errore)
+        )
+        return
+
+    tag = dati.get("tag_name", "")
+    remota = _versione(tag)
+    if not remota or remota <= locale:
+        return
+
+    url, _nome = _asset_windows(dati)
+    if not url:
+        return
+
+    print(_("Aggiornamento del motore disponibile."))
+    print(
+        _("Nuova versione di Stockfish: {new}, installata: {curr}").format(
+            new=tag, curr=engine.ENGINE_NAME
+        )
+    )
+    if not enter_escape(
+        _("Desideri aggiornare il motore ora? (INVIO per si', ESC per ignorare): ")
+    ):
+        return
+
+    engine.CloseEngine()
+    cartella, eseguibile = DownloadAndInstallEngine()
+    if not (cartella and eseguibile):
+        print(_("Aggiornamento non riuscito, riavvio il motore precedente."))
+        engine.InitEngine()
+        return
+
+    percorso = os.path.join(cartella, eseguibile)
+    base = config.percorso_salvataggio("")
+
+    def aggiorna_motore(db):
+        cfg = db.get("engine_config", {})
+        try:
+            cfg["engine_path"] = os.path.relpath(percorso, base)
+            cfg["engine_is_relative"] = True
+        except ValueError:
+            cfg["engine_path"] = percorso
+            cfg["engine_is_relative"] = False
+        db["engine_config"] = cfg
+
+    storage.UpdateDB(aggiorna_motore)
+    print(_("Aggiornamento completato."))
+    engine.InitEngine()
