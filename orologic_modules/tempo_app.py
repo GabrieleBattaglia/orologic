@@ -1,13 +1,12 @@
 import datetime
 import os
-import threading
 import time
 
 from GBUtils import Acusticator, dgt, key, menu
 
-from . import board_utils, clock, config, ui, version
+from . import board_utils, clock, config, orologio, ui, version
 from .config import _
-from .game_flow import async_arbitration_input, clock_thread
+from .game_flow import async_arbitration_input
 
 TEMPO_COMMANDS = {
     ".1": _("Mostra il tempo rimanente del bianco"),
@@ -100,7 +99,7 @@ def StartTempo(clock_config):
     )
 
     # Avvio del thread dell'orologio
-    threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
+    orologio.avvia(game_state)
 
     # Esecuzione del loop principale per Tempo
     _loop_tempo(game_state, clock_config)
@@ -341,15 +340,23 @@ def _loop_tempo(game_state, clock_config):
                     if game_state.active_color == "white":
                         game_state.active_color = "black"
                         game_state.black_moves = max(0, game_state.black_moves - 1)
-                        game_state.black_remaining -= game_state.clock_config["phases"][
-                            game_state.black_phase
-                        ]["black_inc"]
+                        orologio.aggiungi(
+                            game_state,
+                            False,
+                            -game_state.clock_config["phases"][game_state.black_phase][
+                                "black_inc"
+                            ],
+                        )
                     else:
                         game_state.active_color = "white"
                         game_state.white_moves = max(0, game_state.white_moves - 1)
-                        game_state.white_remaining -= game_state.clock_config["phases"][
-                            game_state.white_phase
-                        ]["white_inc"]
+                        orologio.aggiungi(
+                            game_state,
+                            True,
+                            -game_state.clock_config["phases"][game_state.white_phase][
+                                "white_inc"
+                            ],
+                        )
 
                     Acusticator(
                         [
@@ -397,7 +404,7 @@ def _loop_tempo(game_state, clock_config):
                                 kind=1,
                                 adsr=[15, 0, 90, 5],
                             )
-                            game_state.white_remaining += adjust
+                            orologio.aggiungi(game_state, True, adjust)
                         elif cmd.startswith(".b-"):
                             Acusticator(
                                 [
@@ -421,7 +428,7 @@ def _loop_tempo(game_state, clock_config):
                                 kind=1,
                                 adsr=[15, 0, 90, 5],
                             )
-                            game_state.white_remaining -= adjust
+                            orologio.aggiungi(game_state, True, -adjust)
                         elif cmd.startswith(".n+"):
                             Acusticator(
                                 [
@@ -445,7 +452,7 @@ def _loop_tempo(game_state, clock_config):
                                 kind=1,
                                 adsr=[15, 0, 90, 5],
                             )
-                            game_state.black_remaining += adjust
+                            orologio.aggiungi(game_state, False, adjust)
                         elif cmd.startswith(".n-"):
                             Acusticator(
                                 [
@@ -469,7 +476,7 @@ def _loop_tempo(game_state, clock_config):
                                 kind=1,
                                 adsr=[15, 0, 90, 5],
                             )
-                            game_state.black_remaining -= adjust
+                            orologio.aggiungi(game_state, False, -adjust)
                         print(
                             _(
                                 "Nuovo tempo bianco: {white_time}, nero: {black_time}"
@@ -513,13 +520,21 @@ def _loop_tempo(game_state, clock_config):
 
             # Applica incrementi o cambi fase
             if game_state.active_color == "white":
-                game_state.white_remaining += game_state.clock_config["phases"][
-                    game_state.white_phase
-                ]["white_inc"]
+                orologio.aggiungi(
+                    game_state,
+                    True,
+                    game_state.clock_config["phases"][game_state.white_phase][
+                        "white_inc"
+                    ],
+                )
             else:
-                game_state.black_remaining += game_state.clock_config["phases"][
-                    game_state.black_phase
-                ]["black_inc"]
+                orologio.aggiungi(
+                    game_state,
+                    False,
+                    game_state.clock_config["phases"][game_state.black_phase][
+                        "black_inc"
+                    ],
+                )
 
             game_state.switch_turn()
 

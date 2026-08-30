@@ -7,7 +7,7 @@ import chess.pgn
 
 from GBUtils import Acusticator
 
-from . import config, localizzazione, tempo
+from . import config, localizzazione, orologio, tempo
 from .config import _
 
 LARGHEZZA_BRAILLE = 40
@@ -405,14 +405,16 @@ class GameState:
                 self.white_phase = nuova_fase
                 # Il tempo del nuovo controllo si aggiunge al residuo, come
                 # vogliono le regole: chi ha risparmiato tempo se lo tiene.
-                self.white_remaining += self._tempo_fase(nuova_fase, "white")
+                with orologio.blocco():
+                    self.white_remaining += self._tempo_fase(nuova_fase, "white")
                 self._annuncia_fase(self.white_player, nuova_fase, self.white_remaining)
         else:
             self.black_moves += 1
             nuova_fase = self.fase_per_mosse(self.black_moves)
             if nuova_fase > self.black_phase:
                 self.black_phase = nuova_fase
-                self.black_remaining += self._tempo_fase(nuova_fase, "black")
+                with orologio.blocco():
+                    self.black_remaining += self._tempo_fase(nuova_fase, "black")
                 self._annuncia_fase(self.black_player, nuova_fase, self.black_remaining)
         self.active_color = "black" if self.active_color == "white" else "white"
 

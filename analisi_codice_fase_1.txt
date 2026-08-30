@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-30: chiuse le tappe da 1 a 6 e la maggior parte della 7 DRY, per un totale di 80 rilievi risolti sui 154 iniziali.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-30: chiuse le tappe da 1 a 6 e quasi tutta la 7 DRY, per un totale di 83 rilievi risolti sui 154 iniziali.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -45,16 +45,12 @@ resources/translator_tool.py, 92 righe
 Rilievi, ordinati per gravita decrescente. Ogni rilievo riporta identificativo progressivo, gravita, categoria, posizione, descrizione con impatto e correzione proposta. Fra parentesi l'identificativo usato durante l'analisi a blocchi.
 R011 gravita alto, categoria fragilita, in game_flow.py:1439-1441 (B2-04)
 La scrittura del PGN di fine partita non e protetta da alcun try. Disco pieno, percorso non scrivibile o nome non valido fanno terminare il programma con traceback e la partita appena giocata va persa. Da notare che la copia negli appunti, meno importante, e invece protetta.
-R012 gravita alto, categoria fragilita, in game_flow.py:22-113 (B2-05)
-clock_thread modifica white_remaining, black_remaining, paused, flag_fallen e game_over senza alcun lock, mentre il thread principale legge e scrive gli stessi campi durante mosse, pause e correzioni manuali del tempo. Race condition su stato condiviso mutabile. Correzione: un lock unico attorno alle transizioni di stato dell'orologio.
 R014 gravita alto, categoria ottimizzazione, in game_flow.py:274-1397 (B2-07)
 _loop_principale_partita e una sola funzione di 1124 righe, con il solo ramo dei comandi punto che ne occupa 822 e nidificazione fino a otto livelli. Impossibile da testare e rischiosa da modificare. Correzione: estrarre un dispatcher di comandi e una funzione per gruppo di comandi.
 R026 gravita alto, categoria logica, in lichess_app.py:2062 con 2087,2100,2182-2188 (B4-02)
 La variabile token viene letta una sola volta prima del ciclo del menu e non e mai riassegnata nei rami login e logout, mentre secrets viene ricaricato a ogni giro. Dopo un login nella stessa sessione il menu risulta connesso ma le chiamate usano ancora token nullo, quindi partite attive e sfide in arrivo non compaiono finche non si esce e si rientra in Orolichess. Dopo un logout accade il contrario: il token resta in memoria e le chiamate autenticate proseguono nonostante l'utente creda di essersi disconnesso.
 R034 gravita alto, categoria fragilita, in pgn_search.py:230-234 (B6-02)
 Dentro il ciclo di lettura delle partite, l'eccezione di read_game viene gestita con continue: se l'errore si ripresenta senza che lo stream avanzi, il ciclo non termina mai e il programma si blocca senza messaggi ne possibilita di interruzione. Correzione: contare i tentativi falliti e interrompere dopo pochi, oppure uscire dal ciclo segnalando l'errore.
-R040 gravita alto, categoria DRY, in easyfish/game_mode.py:33-115 (B7-05)
-Terzo thread orologio del progetto, riscritto invece di riusare quello di game_flow che tempo_app importa correttamente. Ripete inoltre lo stesso blocco di cinquanta righe per i due colori e condivide lo stato con il thread principale senza alcun lock.
 R041 gravita medio, categoria logica, in config.py:294 (B1-08)
 re.sub con classe di caratteri da zero a 31 scritta come escape ottale: viene interpretata come intervallo 0-25, quindi i caratteri di controllo da 26 a 31 restano nel nome file e Windows rifiuta la scrittura. Verificato sperimentalmente. Correzione: usare la forma esadecimale da x00 a x1f.
 R045 gravita medio, categoria DRY, in orologic.py:46-77 (B1-12)
@@ -121,8 +117,6 @@ R109 gravita medio, categoria fragilita, in easyfish_app.py:63-66 (B7-12)
 Per ricavare la notazione dell'ultima mossa, GetDynamicPrompt toglie e rimette la mossa sulla scacchiera reale invece di lavorare su una copia. Un'eccezione fra le due operazioni lascerebbe la posizione priva di una mossa.
 R110 gravita medio, categoria DRY, in easyfish/game_mode.py:117-155 (B7-13)
 Ennesimo parser del tempo digitato, accanto a ParseTime di board_utils: questo accetta anche la forma con incremento, quindi andrebbero unificati estendendo quello esistente.
-R111 gravita medio, categoria ottimizzazione, in easyfish/game_mode.py:18-31 (B7-14)
-Quinta classe di stato partita del progetto, dopo GameState, SpectatorGameState, GamePlayState e DummyGameState, con nomi divergenti per gli stessi concetti: qui white_time, altrove white_remaining.
 R113 gravita basso, categoria ottimizzazione, in check_engine.py (B1-21)
 Script diagnostico rimasto nel repository, con except generico e ricerca dell'eseguibile duplicata rispetto a stockfish_installer.
 R114 gravita basso, categoria ottimizzazione, in zip_maker.py:4,13 (B1-22)
@@ -236,15 +230,15 @@ Criticita rilevate in GBUtils.
 Segnalazione emersa durante la tappa 2, da sottoporre a Gabriele senza intervenire. polipo risolve la cartella delle traduzioni e quella di configurazione rispetto a os.getcwd() quando il programma non e' congelato: chi lo chiama con percorsi relativi si ritrova le traduzioni cercate nella directory di lavoro e una cartella settings creata li' dentro. Orologic ora passa percorsi assoluti, quindi il problema non lo tocca piu', ma gli altri progetti del parco software che usano polipo con percorsi relativi hanno lo stesso difetto. La firma di dgt e' invece risultata completa: smin, smax e pwd coprono i casi in cui il progetto validava a mano.
 Riepilogo per gravita.
 Critico: 0 rilievi
-Alto: 6 rilievi
-Medio: 34 rilievi
+Alto: 4 rilievi
+Medio: 33 rilievi
 Basso: 34 rilievi
-Totale: 74 rilievi ancora aperti
+Totale: 71 rilievi ancora aperti
 Riepilogo per categoria.
-DRY: 13 rilievi
-fragilita: 18 rilievi
+DRY: 12 rilievi
+fragilita: 17 rilievi
 logica: 8 rilievi
-ottimizzazione: 28 rilievi
+ottimizzazione: 27 rilievi
 regole generali: 7 rilievi
 Proposta di ordine di lavorazione, in dieci tappe, da concordare con Gabriele prima di toccare il codice.
 Tappa 7, DRY. Unificare il dispatch dei comandi di esplorazione oggi triplicato, le dodici funzioni di formattazione del tempo, le tre copie di CalculateMaterial, i tre thread orologio, le due funzioni percorso_salvataggio e le due enter_escape, preferendo sempre l'utilita di GBUtils dove esiste.

@@ -1,4 +1,3 @@
-import threading
 import time
 
 import chess
@@ -7,7 +6,7 @@ import chess.pgn
 
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
-from .. import engine as orologic_engine
+from .. import engine as orologic_engine, orologio
 from .. import storage
 from ..board_utils import CustomBoard, DescribeMove, FormatTime, NormalizeMove
 from ..config import _
@@ -17,8 +16,8 @@ from .constants import MNGAME
 
 class EasyfishGameState:
     def __init__(self):
-        self.white_time = 0.0
-        self.black_time = 0.0
+        self.white_remaining = 0.0
+        self.black_remaining = 0.0
         self.white_inc = 0.0
         self.black_inc = 0.0
         self.active_color = chess.WHITE
@@ -28,90 +27,6 @@ class EasyfishGameState:
         self.human_color = None
         self.engine_has_clock = True
         self.ignore_clock = False
-
-
-def clock_thread(game_state):
-    """Thread che gestisce il decremento del tempo e la bandierina."""
-    last_time = time.time()
-
-    while not game_state.game_over:
-        current_time = time.time()
-        elapsed = current_time - last_time
-        last_time = current_time
-
-        if not game_state.paused and not game_state.ignore_clock:
-            if game_state.active_color == chess.WHITE:
-                # Decrementa solo se white ha un clock (sempre vero per l'umano se bianco, o per motore se game mode)
-                # Ma qui semplifichiamo: i tempi ci sono sempre, al massimo sono infiniti o ignorati per il motore
-                if (
-                    game_state.active_color == game_state.human_color
-                    or game_state.engine_has_clock
-                ):
-                    game_state.white_time -= elapsed
-
-                if game_state.white_time <= 0 and (
-                    game_state.active_color == game_state.human_color
-                    or game_state.engine_has_clock
-                ):
-                    game_state.white_time = 0
-                    game_state.flag_fallen = True
-                    if not game_state.game_over:
-                        Acusticator(
-                            [
-                                "e4",
-                                0.2,
-                                -0.5,
-                                0.5,
-                                "d4",
-                                0.2,
-                                0,
-                                0.5,
-                                "c4",
-                                0.2,
-                                0.5,
-                                0.5,
-                            ],
-                            kind=1,
-                            adsr=[10, 0, 90, 10],
-                        )
-                        print(_("\nTempo Bianco scaduto!"))
-                        game_state.paused = True
-            else:
-                if (
-                    game_state.active_color == game_state.human_color
-                    or game_state.engine_has_clock
-                ):
-                    game_state.black_time -= elapsed
-
-                if game_state.black_time <= 0 and (
-                    game_state.active_color == game_state.human_color
-                    or game_state.engine_has_clock
-                ):
-                    game_state.black_time = 0
-                    game_state.flag_fallen = True
-                    if not game_state.game_over:
-                        Acusticator(
-                            [
-                                "e4",
-                                0.2,
-                                -0.5,
-                                0.5,
-                                "d4",
-                                0.2,
-                                0,
-                                0.5,
-                                "c4",
-                                0.2,
-                                0.5,
-                                0.5,
-                            ],
-                            kind=1,
-                            adsr=[10, 0, 90, 10],
-                        )
-                        print(_("\nTempo Nero scaduto!"))
-                        game_state.paused = True
-
-        time.sleep(0.1)
 
 
 def ParseTimeInput(prompt_text):
@@ -224,15 +139,15 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     game_state.human_color = chess.WHITE if is_white else chess.BLACK
 
     if game_state.human_color == chess.WHITE:
-        game_state.white_time = float(user_time)
+        game_state.white_remaining = float(user_time)
         game_state.white_inc = float(user_inc)
-        game_state.black_time = float(engine_time) if engine_has_clock else 0
+        game_state.black_remaining = float(engine_time) if engine_has_clock else 0
         game_state.black_inc = float(engine_inc) if engine_has_clock else 0
         print(_("Giochi col BIANCO."))
     else:
-        game_state.black_time = float(user_time)
+        game_state.black_remaining = float(user_time)
         game_state.black_inc = float(user_inc)
-        game_state.white_time = float(engine_time) if engine_has_clock else 0
+        game_state.white_remaining = float(engine_time) if engine_has_clock else 0
         game_state.white_inc = float(engine_inc) if engine_has_clock else 0
         print(_("Giochi col NERO."))
 
@@ -249,9 +164,8 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     except Exception as e:
         print(_("Errore lettura skill level: {e}").format(e=e))
 
-    # Avvio Thread Orologio
-    t = threading.Thread(target=clock_thread, args=(game_state,), daemon=True)
-    t.start()
+    # Avvio dell'orologio, lo stesso usato dall'arbitraggio.
+    orologio.avvia(game_state)
 
     current_node = game_node
 
@@ -450,7 +364,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                         else:
                             print(
                                 _("Tempo Bianco: {t}").format(
-                                    t=FormatTime(game_state.white_time)
+                                    t=FormatTime(game_state.white_remaining)
                                 )
                             )
                     elif cmd == ".2":
@@ -459,7 +373,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                         else:
                             print(
                                 _("Tempo Nero: {t}").format(
-                                    t=FormatTime(game_state.black_time)
+                                    t=FormatTime(game_state.black_remaining)
                                 )
                             )
                     elif cmd == ".3":
@@ -468,22 +382,25 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                         else:
                             print(
                                 _("Tempo Bianco: {t}").format(
-                                    t=FormatTime(game_state.white_time)
+                                    t=FormatTime(game_state.white_remaining)
                                 )
                             )
                             print(
                                 _("Tempo Nero: {t}").format(
-                                    t=FormatTime(game_state.black_time)
+                                    t=FormatTime(game_state.black_remaining)
                                 )
                             )
                     elif cmd == ".4":
                         if getattr(game_state, "ignore_clock", False):
                             print(_("Orologi disattivati."))
                         else:
-                            diff = abs(game_state.white_time - game_state.black_time)
+                            diff = abs(
+                                game_state.white_remaining - game_state.black_remaining
+                            )
                             adv = (
                                 _("bianco")
-                                if game_state.white_time > game_state.black_time
+                                if game_state.white_remaining
+                                > game_state.black_remaining
                                 else _("nero")
                             )
                             print(
@@ -685,9 +602,9 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                             sharing_window.update_board(board, current_node)
 
                         if game_state.human_color == chess.WHITE:
-                            game_state.white_time += game_state.white_inc
+                            orologio.aggiungi(game_state, True, game_state.white_inc)
                         else:
-                            game_state.black_time += game_state.black_inc
+                            orologio.aggiungi(game_state, False, game_state.black_inc)
 
                         game_state.active_color = board.turn
                         Acusticator([1000.0, 0.05, 0, 0.5], kind=1)
@@ -907,8 +824,8 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                 limit = None
                 if engine_limit_type == "game":
                     limit = chess.engine.Limit(
-                        white_clock=game_state.white_time,
-                        black_clock=game_state.black_time,
+                        white_clock=game_state.white_remaining,
+                        black_clock=game_state.black_remaining,
                         white_inc=game_state.white_inc,
                         black_inc=game_state.black_inc,
                     )
@@ -923,9 +840,13 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                     if result.move:
                         if engine_has_clock:
                             if game_state.active_color == chess.WHITE:
-                                game_state.white_time += game_state.white_inc
+                                orologio.aggiungi(
+                                    game_state, True, game_state.white_inc
+                                )
                             else:
-                                game_state.black_time += game_state.black_inc
+                                orologio.aggiungi(
+                                    game_state, False, game_state.black_inc
+                                )
 
                         new_node = current_node.add_main_variation(result.move)
                         current_node = new_node

@@ -2,7 +2,6 @@ import datetime
 import io
 import json
 import os
-import threading
 import time
 
 import chess
@@ -17,6 +16,7 @@ from . import (
     clock,
     config,
     engine,
+    orologio,
     storage,
     ui,
     version,
@@ -24,103 +24,6 @@ from . import (
 from .config import _
 
 # Volume ora gestito via config.VOLUME
-
-
-def clock_thread(game_state):
-    last_time = time.time()
-    # Gli allarmi gia' superati alla partenza si considerano fatti: se un
-    # orologio parte con meno tempo della soglia, non ha senso suonarli.
-    allarmi = game_state.clock_config.get("alarms", [])
-    triggered_alarms_white = {a for a in allarmi if game_state.white_remaining <= a}
-    triggered_alarms_black = {a for a in allarmi if game_state.black_remaining <= a}
-    while not game_state.game_over:
-        current_time = time.time()
-        elapsed = current_time - last_time
-        last_time = current_time
-        if not game_state.paused and not game_state.ignore_clock:
-            if game_state.active_color == "white":
-                game_state.white_remaining -= elapsed
-                for alarm in game_state.clock_config.get("alarms", []):
-                    if (
-                        alarm not in triggered_alarms_white
-                        and game_state.white_remaining <= alarm
-                    ):
-                        print(
-                            _("\nAllarme: tempo del bianco raggiunto {time}").format(
-                                time=board_utils.seconds_to_mmss(alarm)
-                            ),
-                            end="",
-                        )
-                        Acusticator(["c4", 0.2, -0.75, config.VOLUME])
-                        triggered_alarms_white.add(alarm)
-            else:
-                game_state.black_remaining -= elapsed
-                for alarm in game_state.clock_config.get("alarms", []):
-                    if (
-                        alarm not in triggered_alarms_black
-                        and game_state.black_remaining <= alarm
-                    ):
-                        print(
-                            _("\nAllarme: tempo del nero raggiunto {time}").format(
-                                time=board_utils.seconds_to_mmss(alarm)
-                            ),
-                            end="",
-                        )
-                        Acusticator(["c4", 0.2, 0.75, config.VOLUME])
-                        triggered_alarms_black.add(alarm)
-
-        if not game_state.ignore_clock and (
-            game_state.white_remaining <= 0 or game_state.black_remaining <= 0
-        ):
-            if not game_state.flag_fallen:
-                Acusticator(
-                    [
-                        "e4",
-                        0.2,
-                        -0.5,
-                        config.VOLUME,
-                        "d4",
-                        0.2,
-                        0,
-                        config.VOLUME,
-                        "c4",
-                        0.2,
-                        0.5,
-                        config.VOLUME,
-                    ],
-                    kind=1,
-                    adsr=[10, 0, 90, 10],
-                )
-                game_state.flag_fallen = True
-                game_state.paused = True
-                print(_("\nBandierina caduta! Premi INVIO per gestire l'evento..."))
-                if game_state.white_remaining <= 0:
-                    print(_("Tempo del Bianco scaduto."))
-                else:
-                    print(_("Tempo del Nero scaduto."))
-                Acusticator(
-                    [
-                        "c5",
-                        0.1,
-                        -0.5,
-                        config.VOLUME,
-                        "e5",
-                        0.1,
-                        0,
-                        config.VOLUME,
-                        "g5",
-                        0.1,
-                        0.5,
-                        config.VOLUME,
-                        "c6",
-                        0.2,
-                        0,
-                        config.VOLUME,
-                    ],
-                    kind=1,
-                    adsr=[2, 8, 90, 0],
-                )
-        time.sleep(0.1)
 
 
 def RiprendiPartita(dati_partita):
@@ -167,7 +70,7 @@ def RiprendiPartita(dati_partita):
         game_state.pgn_node = game_state.pgn_game.end()
     game_state.paused = True
     chess960_utils.configure_engine_for_chess960(engine.ENGINE, e_chess960)
-    threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
+    orologio.avvia(game_state)
     db = storage.LoadDB()
     autosave_is_on = db.get("autosave_enabled", False)
     eco_database = board_utils.LoadEcoDatabaseWithFEN("eco.db")
@@ -600,19 +503,21 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                     )
                     fasi = game_state.clock_config["phases"]
                     if game_state.active_color == "white":
-                        game_state.white_remaining -= fasi[game_state.white_phase][
-                            "white_inc"
-                        ]
+                        orologio.aggiungi(
+                            game_state, True, -fasi[game_state.white_phase]["white_inc"]
+                        )
                     else:
-                        game_state.black_remaining -= fasi[game_state.black_phase][
-                            "black_inc"
-                        ]
+                        orologio.aggiungi(
+                            game_state,
+                            False,
+                            -fasi[game_state.black_phase]["black_inc"],
+                        )
                     tempo_di_fase = game_state.annulla_mossa()
                     if tempo_di_fase:
                         if game_state.active_color == "white":
-                            game_state.white_remaining -= tempo_di_fase
+                            orologio.aggiungi(game_state, True, -tempo_di_fase)
                         else:
-                            game_state.black_remaining -= tempo_di_fase
+                            orologio.aggiungi(game_state, False, -tempo_di_fase)
                         print(
                             _("Rientro nella fase precedente, tolto il tempo aggiunto.")
                         )
@@ -658,7 +563,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                                 kind=1,
                                 adsr=[15, 0, 90, 5],
                             )
-                            game_state.white_remaining += adjust
+                            orologio.aggiungi(game_state, True, adjust)
                         elif cmd.startswith(".b-"):
                             Acusticator(
                                 [
@@ -682,7 +587,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                                 kind=1,
                                 adsr=[15, 0, 90, 5],
                             )
-                            game_state.white_remaining -= adjust
+                            orologio.aggiungi(game_state, True, -adjust)
                         elif cmd.startswith(".n+"):
                             Acusticator(
                                 [
@@ -706,7 +611,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                                 kind=1,
                                 adsr=[15, 0, 90, 5],
                             )
-                            game_state.black_remaining += adjust
+                            orologio.aggiungi(game_state, False, adjust)
                         elif cmd.startswith(".n-"):
                             Acusticator(
                                 [
@@ -730,7 +635,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                                 kind=1,
                                 adsr=[15, 0, 90, 5],
                             )
-                            game_state.black_remaining -= adjust
+                            orologio.aggiungi(game_state, False, -adjust)
                         print(
                             _(
                                 "Nuovo tempo bianco: {white_time}, nero: {black_time}"
@@ -1154,13 +1059,21 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                     )
                     break
                 if game_state.active_color == "white":
-                    game_state.white_remaining += game_state.clock_config["phases"][
-                        game_state.white_phase
-                    ]["white_inc"]
+                    orologio.aggiungi(
+                        game_state,
+                        True,
+                        game_state.clock_config["phases"][game_state.white_phase][
+                            "white_inc"
+                        ],
+                    )
                 else:
-                    game_state.black_remaining += game_state.clock_config["phases"][
-                        game_state.black_phase
-                    ]["black_inc"]
+                    orologio.aggiungi(
+                        game_state,
+                        False,
+                        game_state.clock_config["phases"][game_state.black_phase][
+                            "black_inc"
+                        ],
+                    )
 
                 if not hasattr(game_state, "clocks_history"):
                     game_state.clocks_history = []
@@ -1597,7 +1510,7 @@ def StartGame(clock_config):
     game_state.pgn_game.headers["Annotator"] = (
         f"Orologic V{version.VERSION} by {version.PROGRAMMER}"
     )
-    threading.Thread(target=clock_thread, args=(game_state,), daemon=True).start()
+    orologio.avvia(game_state)
     last_valid_eco_entry = _loop_principale_partita(
         game_state, eco_database, autosave_is_on
     )
