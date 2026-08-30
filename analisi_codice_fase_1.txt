@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-30: chiuse le tappe da 1 a 7, la 8 struttura e' in corso, per un totale di 99 rilievi risolti sui 154 iniziali. Le prove da fare a mano sono elencate in collaudo.txt.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-30: chiuse le tappe da 1 a 7, la 8 struttura e' in corso, per un totale di 99 rilievi risolti sui 154 iniziali, piu' un rilievo nuovo trovato strada facendo. Le prove da fare a mano sono elencate in collaudo.txt.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -83,6 +83,8 @@ R096 gravita medio, categoria DRY, in tempo_app.py:190-400 con game_flow.py:575-
 Il dispatch dei comandi punto, dall'uno al sei piu pausa e correzioni di tempo, e duplicato con le stesse sequenze sonore e la stessa logica.
 R097 gravita medio, categoria DRY, in tempo_app.py:14-30 con config.py:234-258 (B6-05)
 Due dizionari di comandi che descrivono in gran parte gli stessi tasti. Prova della divergenza: la voce del comando tre e corretta in tempo_app e contiene il refuso entrambe in config.
+R155 gravita medio, categoria DRY, in easyfish/game_mode.py:62-192 con ui.py:648-719 (nuovo, trovato il 2026-08-30)
+I comandi orologio punto uno, due, tre e quattro esistono in due versioni: quella di ui.comandi_orologio, usata dalla partita normale e da Tempo, e una copia dentro Easyfish che in piu' avvisa quando gli orologi sono disattivati, usa testi diversi e non emette suoni. Unificarle non e' neutro perche' cambierebbe i messaggi di Easyfish e vi aggiungerebbe i suoni, quindi va deciso prima quale dei due comportamenti tenere.
 R100 gravita medio, categoria fragilita, in memoboard_app.py:134-136 (B6-08)
 Se il file dei punteggi e illeggibile si riparte dalla struttura vuota senza avvisare, e il primo salvataggio successivo cancella definitivamente le classifiche.
 R104 gravita medio, categoria fragilita, in easyfish_app.py:213,905 (B7-07)
