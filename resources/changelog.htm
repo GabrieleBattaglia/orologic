@@ -19,6 +19,12 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.13</h3>
+<h4>8.13.2 (31 agosto 2026)</h4>
+<ul>
+  <li>* [Core] Il salvataggio del PGN a fine partita non interrompe più il programma se il disco è pieno o la cartella non è scrivibile: in quel caso il file viene scritto nella cartella personale, e se anche questo non riesce viene dato un avviso esplicito, ricordando che la partita resta comunque negli appunti. Prima un errore di scrittura terminava l'applicazione con un messaggio tecnico e la partita appena giocata andava perduta.</li>
+  <li>* [Core] Ricerca PGN: corretto un errore che impediva la visualizzazione di qualsiasi messaggio della funzione, introdotto durante la riorganizzazione della localizzazione.</li>
+  <li>* [Core] Ricerca PGN: la lettura di un archivio danneggiato termina con un avviso dopo pochi tentativi, invece di ripetere all'infinito la lettura dello stesso punto lasciando l'applicazione bloccata e non interrompibile.</li>
+</ul>
 <h4>8.13.1 (30 agosto 2026)</h4>
 <ul>
   <li>* [Core] I comandi di correzione manuale del tempo (<code>.b+</code>, <code>.b-</code>, <code>.n+</code>, <code>.n-</code>) rispondono ora soltanto dove esiste un arbitro che possa fermare gli orologi, cioè nell'arbitraggio e nella modalità Tempo. Contro il motore ed in Orolichess non sono riconosciuti: prima, dopo l'unificazione dei comandi, rimandavano al comando di pausa <code>.p</code>, che in quelle modalità non esiste.</li>

@@ -973,8 +973,8 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
         + ".txt"
     )
     full_path = config.percorso_salvataggio(os.path.join("txt", base_filename))
-    os.makedirs(os.path.dirname(full_path), exist_ok=True)
     try:
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
         with open(full_path, "w", encoding="utf-8") as f:
             f.write(full_text)
         print(
