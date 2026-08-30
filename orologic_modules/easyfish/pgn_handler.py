@@ -1,3 +1,6 @@
+# Orologic, Easyfish: lettura e scrittura dei PGN.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import datetime
 import os
 
@@ -8,7 +11,7 @@ import pyperclip
 from GBUtils import Acusticator, dgt, key
 
 from ..board_utils import format_pgn_comments, validate_and_clean_pgn
-from ..config import _, percorso_salvataggio, sanitize_filename
+from ..config import _, maiuscole_nomi, percorso_salvataggio, sanitize_filename
 from .constants import (
     DEFAULT_BLACK_SURENAME,
     DEFAULT_EVENT,
@@ -134,7 +137,8 @@ def AddingPGNTAGS(game):
         smin=2,
         smax=64,
         default=current_white,
-    ).title()
+    )
+    white_player = maiuscole_nomi(white_player)
 
     current_black = game.headers.get("Black", DEFAULT_BLACK_SURENAME)
     black_player = dgt(
@@ -143,7 +147,8 @@ def AddingPGNTAGS(game):
         smin=2,
         smax=64,
         default=current_black,
-    ).title()
+    )
+    black_player = maiuscole_nomi(black_player)
 
     result_prompt = _("Risultato: [W]Bianco, [B]Nero, [D]Patta, [U]Sconosciuto.")
     print(result_prompt)

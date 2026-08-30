@@ -1,3 +1,6 @@
+# Orologic, Easyfish: frecce e cerchi sulla scacchiera.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import re
 
 import chess

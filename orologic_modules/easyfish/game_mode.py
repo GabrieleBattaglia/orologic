@@ -1,11 +1,14 @@
+# Orologic, Easyfish: la partita contro il motore.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import chess
 import chess.engine
 import chess.pgn
 
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
-from .. import engine as orologic_engine, orologio, tempo
-from .. import storage, ui
+from .. import engine as orologic_engine
+from .. import orologio, storage, tempo, ui
 from ..board_utils import CustomBoard, DescribeMove, NormalizeMove
 from ..config import _
 from . import analysis_utils

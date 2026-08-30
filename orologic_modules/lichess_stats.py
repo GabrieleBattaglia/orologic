@@ -1,5 +1,7 @@
-import datetime
+# Orologic, Orolichess: statistiche e storia del punteggio.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
+import datetime
 
 from GBUtils import dgt, enter_escape, menu, sonify
 

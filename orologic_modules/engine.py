@@ -1,3 +1,6 @@
+# Orologic, motore: analisi assistita e analisi automatica.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import datetime
 import math
 import os
@@ -140,9 +143,13 @@ def SearchForEngine():
                     return appdata_path, f, False
     local_dir = percorso_salvataggio("engine")
     if os.path.exists(local_dir):
-        for f in os.listdir(local_dir):
-            if f.endswith(".exe"):
-                return local_dir, f, False
+        # Anche nelle sottocartelle: l'archivio di Stockfish si estrae in
+        # engine/stockfish, quindi guardando solo in engine non si trovava
+        # nulla e il motore andava configurato a mano dopo ogni scaricamento.
+        for radice, _cartelle, file in os.walk(local_dir):
+            for f in sorted(file):
+                if f.lower().endswith(".exe"):
+                    return radice, f, False
     return None, None, False
 
 

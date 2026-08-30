@@ -2,8 +2,8 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
 import json
-import time
 import socket
+import time
 import urllib.error
 import urllib.parse
 import urllib.request

@@ -1,3 +1,6 @@
+# Orologic, partita arbitrata: svolgimento e salvataggio.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import datetime
 import io
 import os
@@ -1080,10 +1083,8 @@ def StartGame(clock_config):
         ).strip()
         if not risposta:
             risposta = predefinito
-        elif e_un_nome and risposta.islower():
-            # Le maiuscole si aggiustano solo a chi ha scritto tutto minuscolo:
-            # title() trasformava IZ4APU in Iz4Apu e McDonald in Mcdonald.
-            risposta = risposta.title()
+        elif e_un_nome:
+            risposta = config.maiuscole_nomi(risposta)
         intestazione[chiave] = risposta
         Acusticator(
             [

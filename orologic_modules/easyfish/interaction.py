@@ -1,3 +1,6 @@
+# Orologic, Easyfish: editor della scacchiera ed esplorazione.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import chess
 import chess.engine
 

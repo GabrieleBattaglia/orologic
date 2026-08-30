@@ -1,3 +1,6 @@
+# Orologic: menu principale e avvio dell'applicazione.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import atexit
 import datetime
 import json

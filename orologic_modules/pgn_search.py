@@ -1,3 +1,6 @@
+# Orologic, ricerca PGN: archivi, filtri e statistiche.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 # orologic_modules/pgn_search.py
 
 """Modulo per la ricerca e l'esplorazione di archivi PGN.

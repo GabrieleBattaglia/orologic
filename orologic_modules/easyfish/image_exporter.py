@@ -1,7 +1,11 @@
+# Orologic, Easyfish: immagini e PDF della scacchiera.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import datetime
 import io
 import os
 import re
+from xml.sax.saxutils import escape
 
 import chess
 import chess.svg
@@ -17,7 +21,6 @@ from GBUtils import Acusticator, dgt
 from .. import config, storage
 from ..config import _
 from .drawing import get_drawings_from_node
-from xml.sax.saxutils import escape
 
 
 class DrawingFlowable(Flowable):
