@@ -18,6 +18,7 @@ from orologic_modules import (
     memoboard_app,
     pgn_search,
     storage,
+    tempo,
     tempo_app,
     ui,
     version,
@@ -77,44 +78,10 @@ def OpenChangelog():
         print(_("Changelog non trovato in:"), changelog_path)
 
 
-def _format_time_delta_parts(diff):
-    parts = []
-    if diff.years:
-        parts.append(
-            _("1 anno") if diff.years == 1 else _("{num} anni").format(num=diff.years)
-        )
-    if diff.months:
-        parts.append(
-            _("1 mese") if diff.months == 1 else _("{num} mesi").format(num=diff.months)
-        )
-    if diff.days:
-        parts.append(
-            _("1 giorno") if diff.days == 1 else _("{num} giorni").format(num=diff.days)
-        )
-    if diff.hours:
-        parts.append(
-            _("1 ora") if diff.hours == 1 else _("{num} ore").format(num=diff.hours)
-        )
-    if diff.minutes:
-        parts.append(
-            _("1 minuto")
-            if diff.minutes == 1
-            else _("{num} minuti").format(num=diff.minutes)
-        )
-
-    if not parts:
-        return _("meno di un minuto")
-    if len(parts) == 1:
-        return parts[0]
-    return ", ".join(parts[:-1]) + _(" e ") + parts[-1]
-
-
 def SchermataIniziale():
     now = datetime.datetime.now()
-    diff1 = relativedelta(now, version.BIRTH_DATE)
-    diff2 = relativedelta(now, version.RELEASE_DATE)
-    age_string = _format_time_delta_parts(diff1)
-    release_string = _format_time_delta_parts(diff2)
+    age_string = tempo.fra_date(version.BIRTH_DATE, now)
+    release_string = tempo.fra_date(version.RELEASE_DATE, now)
     print(_("Ciao! Benvenuto, sono Orologic e ho {age}.").format(age=age_string))
     print(
         _(

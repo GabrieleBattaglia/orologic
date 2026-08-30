@@ -536,216 +536,11 @@ def describe_board(board, last_move_san=None):
 
 
 def handle_exploration_command(user_input, game_state):
-    if user_input.startswith("/"):
-        Acusticator(
-            [
-                "c5",
-                0.07,
-                -1,
-                config.VOLUME,
-                "d5",
-                0.07,
-                -0.75,
-                config.VOLUME,
-                "e5",
-                0.07,
-                -0.5,
-                config.VOLUME,
-                "f5",
-                0.07,
-                -0.25,
-                config.VOLUME,
-                "g5",
-                0.07,
-                0,
-                config.VOLUME,
-                "a5",
-                0.07,
-                0.25,
-                config.VOLUME,
-                "b5",
-                0.07,
-                0.5,
-                config.VOLUME,
-                "c6",
-                0.07,
-                0.75,
-                config.VOLUME,
-            ],
-            kind=3,
-            adsr=[0, 0, 100, 100],
-        )
-        base_column = user_input[1:2].strip()
-        ui.read_diagonal(game_state, base_column, True)
+    """Comandi di esplorazione, piu' i due che valgono solo qui."""
+    if ui.esplora_scacchiera(user_input, game_state):
         return True
-    elif user_input.startswith("\\"):
-        Acusticator(
-            [
-                "c5",
-                0.07,
-                1,
-                config.VOLUME,
-                "d5",
-                0.07,
-                0.75,
-                config.VOLUME,
-                "e5",
-                0.07,
-                0.5,
-                config.VOLUME,
-                "f5",
-                0.07,
-                0.25,
-                config.VOLUME,
-                "g5",
-                0.07,
-                0,
-                config.VOLUME,
-                "a5",
-                0.07,
-                -0.25,
-                config.VOLUME,
-                "b5",
-                0.07,
-                -0.5,
-                config.VOLUME,
-                "c6",
-                0.07,
-                -0.75,
-                config.VOLUME,
-            ],
-            kind=3,
-            adsr=[0, 0, 100, 100],
-        )
-        base_column = user_input[1:2].strip()
-        ui.read_diagonal(game_state, base_column, False)
-        return True
-    elif user_input.startswith("-"):
-        param = user_input[1:].strip()
-        if not param:
-            Acusticator(["c5", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            ui.report_all_pieces(game_state, chess.WHITE)
-            return True
-        elif len(param) == 1 and param.isalpha():
-            Acusticator(
-                [
-                    "c5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "d5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "e5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "f5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "g5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "a5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "b5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "c6",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=3,
-                adsr=[0, 0, 100, 100],
-            )
-            ui.read_file(game_state, param)
-        elif len(param) == 1 and param.isdigit():
-            rank_number = int(param)
-            if 1 <= rank_number <= 8:
-                Acusticator(
-                    [
-                        "g5",
-                        0.07,
-                        -1,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        -0.75,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        -0.5,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        -0.25,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        0,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        0.25,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        0.5,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        0.75,
-                        config.VOLUME,
-                    ],
-                    kind=3,
-                    adsr=[0, 0, 100, 100],
-                )
-                ui.read_rank(game_state, rank_number)
-            else:
-                print(_("Traversa non valida."))
-        elif len(param) == 2 and param[0].isalpha() and param[1].isdigit():
-            Acusticator(["d#4", 0.7, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            ui.read_square(game_state, param)
-        else:
-            print(_("Comando dash non riconosciuto."))
-        return True
-    elif user_input == "+":
-        Acusticator(["c4", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-        ui.report_all_pieces(game_state, chess.BLACK)
-        return True
-    elif user_input.startswith(","):
-        Acusticator(
-            [
-                "a3",
-                0.06,
-                -1,
-                config.VOLUME,
-                "c4",
-                0.06,
-                -0.5,
-                config.VOLUME,
-                "d#4",
-                0.06,
-                0.5,
-                config.VOLUME,
-                "f4",
-                0.06,
-                1,
-                config.VOLUME,
-            ],
-            kind=3,
-            adsr=[20, 5, 70, 25],
-        )
-        ui.report_piece_positions(game_state, user_input[1:2])
-        return True
-    elif user_input.lower() == ".b":
+
+    if user_input.lower() == ".b":
         Acusticator(
             [
                 "c4",
@@ -764,41 +559,38 @@ def handle_exploration_command(user_input, game_state):
                 0.2,
                 1,
                 config.VOLUME,
-                "g5",
-                0.4,
-                0,
-                config.VOLUME,
             ],
             kind=1,
-            adsr=[10, 5, 80, 5],
+            adsr=[5, 5, 80, 10],
         )
         print(game_state.board)
         return True
-    elif user_input == ".?":
+
+    if user_input == ".?":
         Acusticator(
             [440.0, 0.3, 0, config.VOLUME, 880.0, 0.3, 0, config.VOLUME],
             kind=1,
             adsr=[10, 0, 100, 20],
         )
-        commands = {
-            "-": _("Riepilogo dei pezzi Bianchi"),
-            "+": _("Riepilogo dei pezzi Neri"),
-            "-[a-h]": _("Esplora colonna"),
-            "-[1-8]": _("Esplora traversa"),
-            "-[casa]": _("Dettagli su una casa (es. -e4)"),
-            "/[a-h]": _("Diagonale ascendente destra"),
-            "\\[a-h]": _("Diagonale ascendente sinistra"),
-            ",[P,N,B,R,Q,K]": _("Posizioni di un pezzo specifico"),
-            ".b": _("Mostra la scacchiera grafica"),
-            ".": _("Arrenditi o esci dal puzzle"),
-        }
         menu(
-            commands,
+            {
+                "-": _("Riepilogo dei pezzi Bianchi"),
+                "+": _("Riepilogo dei pezzi Neri"),
+                "-[a-h]": _("Esplora colonna"),
+                "-[1-8]": _("Esplora traversa"),
+                "-[casa]": _("Dettagli su una casa (es. -e4)"),
+                "/[a-h]": _("Diagonale ascendente destra"),
+                "\\[a-h]": _("Diagonale ascendente sinistra"),
+                ",[P,N,B,R,Q,K]": _("Posizioni di un pezzo specifico"),
+                ".b": _("Mostra la scacchiera grafica"),
+                ".": _("Arrenditi o esci dal puzzle"),
+            },
             show_only=True,
             p=_("Comandi di esplorazione disponibili:"),
             ordered=False,
         )
         return True
+
     return False
 
 

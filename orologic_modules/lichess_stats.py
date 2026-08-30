@@ -1,10 +1,9 @@
 import datetime
 
-from dateutil.relativedelta import relativedelta
 
 from GBUtils import enter_escape, menu, sonify
 
-from . import rete, storage
+from . import rete, storage, tempo
 from .config import _
 
 
@@ -19,18 +18,7 @@ def fetch_rating_history(username):
 
 
 def calcola_durata_str(dt1, dt2):
-    diff = relativedelta(dt2, dt1)
-    parts = []
-    if diff.years:
-        parts.append(f"{diff.years} " + (_("anno") if diff.years == 1 else _("anni")))
-    if diff.months:
-        parts.append(f"{diff.months} " + (_("mese") if diff.months == 1 else _("mesi")))
-    if diff.days:
-        parts.append(f"{diff.days} " + (_("giorno") if diff.days == 1 else _("giorni")))
-
-    if not parts:
-        parts.append(_("meno di un giorno"))
-    return ", ".join(parts)
+    return tempo.fra_date(dt1, dt2)
 
 
 def calcola_statistiche(sub_history):

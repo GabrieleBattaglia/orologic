@@ -138,43 +138,7 @@ def _loop_tempo(game_state, clock_config):
 
         # Generatore di prompt dinamicizzato
         def get_prompt():
-            if not game_state.move_history:
-                prompt_text = _("Inizio, mossa 0. ")
-            elif len(game_state.move_history) % 2 == 1:
-                full_move = (len(game_state.move_history) + 1) // 2
-                prompt_text = f"{full_move}. {game_state.move_history[-1]} "
-            else:
-                full_move = (len(game_state.move_history)) // 2
-                prompt_text = f"{full_move}... {game_state.move_history[-1]} "
-
-            if game_state.paused:
-                prompt_text = "[" + prompt_text.strip() + "] "
-            elif game_state.ignore_clock:
-                prompt_text = "(NoClock) " + prompt_text.strip() + " "
-
-            # Visualizzazione dinamica del tempo al tick dell'orologio (se refresh_interval > 0)
-            clock_str = ""
-            refresh_interval = getattr(game_state, "refresh_interval", 0)
-            if refresh_interval > 0 and not game_state.ignore_clock:
-                wt = max(0.0, game_state.white_remaining)
-                bt = max(0.0, game_state.black_remaining)
-
-                def fmt(sec):
-                    sec = max(0, int(sec))
-                    m, s = divmod(sec, 60)
-                    h, m = divmod(m, 60)
-                    d, h = divmod(h, 24)
-                    if d > 0:
-                        d_str = _("{d}g").format(d=d)
-                        return f"{d_str} {h:02d}:{m:02d}:{s:02d}"
-                    if h > 0:
-                        return f"{h}:{m:02d}:{s:02d}"
-                    return f"{m:02d}:{s:02d}"
-
-                clock_str = f"{fmt(wt)} {fmt(bt)} "
-
-            prefix = "\n" if not game_state.move_history else ""
-            return prefix + clock_str + prompt_text
+            return board_utils.prompt_partita(game_state)
 
         # Lettura asincrona dell'input
         user_input = async_arbitration_input(game_state, get_prompt)
