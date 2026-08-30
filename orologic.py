@@ -42,40 +42,34 @@ warnings.filterwarnings(
 )
 
 
-def OpenManual():
-    manual_path = config.resource_path(os.path.join("resources", "readme.htm"))
-    if os.path.exists(manual_path):
-        try:
-            if sys.platform == "win32":
-                os.startfile(manual_path)
-            else:
-                import subprocess
+def _apri_documento(nome_file, descrizione):
+    """Apre un documento della cartella resources con il programma di sistema."""
+    percorso = config.resource_path(os.path.join("resources", nome_file))
+    if not os.path.exists(percorso):
+        print(_("{cosa} non trovato in {dove}").format(cosa=descrizione, dove=percorso))
+        return
+    try:
+        if sys.platform == "win32":
+            os.startfile(percorso)
+        else:
+            import subprocess
 
-                subprocess.run(
-                    ["open" if sys.platform == "darwin" else "xdg-open", manual_path]
-                )
-        except Exception as e:
-            print(_("Errore nell'apertura del manuale:"), e)
-    else:
-        print(_("Manuale non trovato in:"), manual_path)
+            apri = "open" if sys.platform == "darwin" else "xdg-open"
+            subprocess.run([apri, percorso], check=False)
+    except OSError as e:
+        print(
+            _("Non riesco ad aprire {cosa}: {motivo}").format(
+                cosa=descrizione, motivo=e
+            )
+        )
+
+
+def OpenManual():
+    _apri_documento("readme.htm", _("il manuale"))
 
 
 def OpenChangelog():
-    changelog_path = config.resource_path(os.path.join("resources", "changelog.htm"))
-    if os.path.exists(changelog_path):
-        try:
-            if sys.platform == "win32":
-                os.startfile(changelog_path)
-            else:
-                import subprocess
-
-                subprocess.run(
-                    ["open" if sys.platform == "darwin" else "xdg-open", changelog_path]
-                )
-        except Exception as e:
-            print(_("Errore nell'apertura del changelog:"), e)
-    else:
-        print(_("Changelog non trovato in:"), changelog_path)
+    _apri_documento("changelog.htm", _("il changelog"))
 
 
 def SchermataIniziale():

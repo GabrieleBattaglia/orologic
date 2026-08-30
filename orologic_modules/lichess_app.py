@@ -5,7 +5,7 @@ import webbrowser
 
 import chess
 
-from GBUtils import Acusticator, dgt, enter_escape, menu
+from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
 from . import board_utils, config, lichess_board, lichess_profiler, rete, storage, ui
 from .config import _, percorso_salvataggio
@@ -73,7 +73,7 @@ def menu_login(db):
         )
     )
 
-    input(_("Premi Invio per aprire il browser e generare il tuo token su Lichess..."))
+    key(_("Premi un tasto per aprire il browser e generare il token su Lichess..."))
     try:
         webbrowser.open("https://lichess.org/account/oauth/token")
     except Exception:
@@ -83,10 +83,12 @@ def menu_login(db):
             )
         )
 
-    token = input(
-        _(
-            "\nIncolla qui il tuo Personal API Token (oppure premi Invio per annullare): "
-        )
+    # Il token si digita mascherato: e' una credenziale e non deve restare
+    # leggibile a schermo ne' nella cronologia del terminale.
+    token = dgt(
+        _("Incolla qui il tuo token personale, INVIO per annullare: "),
+        kind="s",
+        pwd=True,
     ).strip()
 
     if token:

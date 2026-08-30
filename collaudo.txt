@@ -1,0 +1,104 @@
+Collaudo di Orologic durante il refactoring di fase 1
+Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto)
+Aperto il 2026-08-30, versione in lavorazione 8.10.0
+
+A cosa serve questo file
+Elenca le prove da fare a mano, quelle che non si possono automatizzare
+perche' richiedono di giocare, ascoltare o interagire davvero. Sotto ogni voce
+c'e' una riga Esito, da riempire con ok oppure con la descrizione del problema.
+Quando il file sara' compilato, dedicheremo una sessione alle correzioni.
+Le voci restano qui finche' non sono verificate: una volta collaudate e
+sistemate si cancellano, come si fa con analisi_codice_fase_1.txt.
+
+Prova 1, partita contro il motore in Easyfish, la piu' importante
+E' l'unica parte toccata in profondita' che nessuna prova automatica copre.
+Da verificare: il tempo scorre solo per chi ha il tratto; l'incremento viene
+aggiunto dopo ogni mossa; la bandierina cade e viene annunciata; il comando
+punto u, che annulla la semimossa, non sballa gli orologi; i comandi punto uno,
+due, tre e cinque riportano tempi coerenti; se il motore e' impostato senza
+orologio, il tempo scorre solo quando tocca a te.
+Motivo: i tre thread orologio sono diventati uno solo, e in Easyfish i campi
+dei tempi sono stati rinominati.
+Esito:
+
+Prova 2, partita arbitrata con controlli a piu' fasi
+Creare un orologio con due o tre fasi, per esempio quaranta mosse in novanta
+minuti piu' trenta minuti per il resto, e verificare che il cambio di fase
+avvenga alla mossa giusta e che il tempo della nuova fase si sommi al residuo
+invece di sostituirlo. Provare poi l'annullamento con punto q a cavallo del
+cambio di fase.
+Motivo: prima la seconda fase durava una mossa sola e il tempo risparmiato
+andava perduto.
+Esito:
+
+Prova 3, correzioni manuali del tempo durante la partita
+Con la partita in pausa, aggiungere e togliere tempo a bianco e nero con i
+comandi punto b piu', punto b meno, punto n piu' e punto n meno, controllando
+che i valori risultanti siano esatti.
+Motivo: le modifiche ai tempi passano ora da una funzione protetta, per non
+accavallarsi con l'orologio che scorre.
+Esito:
+
+Prova 4, allarmi
+Creare un orologio con uno o due allarmi e verificare che suonino al momento
+giusto, una sola volta ciascuno.
+Motivo: prima scattavano solo se il controllo cadeva in una finestra di un
+decimo di secondo, quindi potevano non suonare affatto.
+Esito:
+
+Prova 5, esplorazione della scacchiera nei tre contesti
+Provare i comandi barra, barra rovesciata, meno, piu' e virgola durante una
+partita arbitrata, dentro Orolichess e in una partita giocata su Lichess,
+controllando che si comportino allo stesso modo e che le righe risultino
+comode da leggere sul display braille.
+Motivo: le tre copie del codice sono state sostituite da una sola, e le righe
+sono state riorganizzate in blocchi di circa quaranta caratteri.
+Esito:
+
+Prova 6, personalizzazione dei nomi
+Dal menu principale, comando nomi, cambiare qualche voce, comprese le nuove
+annotazioni, e verificare che il cambiamento si senta subito nelle descrizioni
+delle mosse, in Easyfish e nell'esplorazione, senza riavviare. Provare anche a
+chiudere a meta' con il punto.
+Motivo: i due dizionari divergenti sono diventati uno, e la personalizzazione
+ora copre tutta la grammatica di gioco.
+Esito:
+
+Prova 7, Fischer Random inserito a mano
+Avviare una partita Fischer Random digitando la sequenza degli otto pezzi
+invece di chiederne una casuale, e verificare che l'arrocco sia possibile e che
+venga annunciato il numero della posizione. Provare anche una sequenza
+impossibile, per esempio otto torri, e controllare che venga rifiutata con un
+messaggio comprensibile.
+Motivo: prima la posizione digitata a mano nasceva senza diritti di arrocco.
+Esito:
+
+Prova 8, Lichess
+Fare login, giocare o osservare una partita, cercare un giocatore, scaricare
+partite indicando un tetto massimo e interrompendo con ESC. Verificare che i
+messaggi di errore siano comprensibili quando la rete manca o il token non e'
+valido, e che dopo il login le partite in corso compaiano subito nel menu.
+Motivo: tutte le chiamate hanno ora un timeout e messaggi parlanti; resta
+aperto il rilievo sul token non aggiornato nel menu, quindi quest'ultima parte
+potrebbe ancora non funzionare.
+Esito:
+
+Prova 9, aggiornamento del motore
+Se e quando esce una versione nuova di Stockfish, verificare che venga
+proposta e che l'installazione vada a buon fine, e che in caso di problemi il
+motore gia' installato resti utilizzabile.
+Motivo: il confronto di versione non funzionava mai, e la cartella del motore
+veniva svuotata prima del download.
+Esito:
+
+Prova 10, lettura generale con lo screen reader
+Girare per i menu e le schermate principali e segnalare ogni punto in cui la
+lettura risulti scomoda: righe troppo lunghe, informazioni ripetute, silenzi
+inattesi, testi rimasti in italiano dove servirebbe un'altra lingua.
+Motivo: separatori grafici, tabulazioni e tabelle incolonnate sono stati tolti
+in tutto il programma.
+Esito:
+
+Difficolta' incontrate e note libere
+Scrivere qui sotto qualsiasi cosa non torni, anche se non rientra nelle prove
+elencate sopra.
