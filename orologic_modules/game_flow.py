@@ -192,9 +192,9 @@ def async_arbitration_input(game_state, get_prompt):
 def comandi_di_lettura(cmd, game_state):
     """Comandi che si limitano a leggere o annunciare qualcosa.
 
-    Restituisce vero se il comando e' stato riconosciuto. Stanno fuori dal
-    ciclo di gioco perche' non toccano il suo stato: il ciclo era arrivato a
-    settecentosessanta righe.
+    L'aiuto e' proprio della partita, il resto lo fa ui.comandi_lettura,
+    uguale per tutte le modalita'. Restituisce vero se il comando e' stato
+    riconosciuto.
     """
     if cmd == ".?":
         Acusticator(
@@ -210,88 +210,7 @@ def comandi_di_lettura(cmd, game_state):
         )
         return True
 
-    if cmd == ".m":
-        Acusticator(
-            [
-                "c4",
-                0.1,
-                -1,
-                config.VOLUME,
-                "e4",
-                0.1,
-                -0.3,
-                config.VOLUME,
-                "g4",
-                0.1,
-                0.3,
-                config.VOLUME,
-                "c5",
-                0.1,
-                1,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[2, 8, 80, 10],
-        )
-        white_material, black_material = board_utils.CalculateMaterial(game_state.board)
-        print(
-            _(
-                "Materiale: {white_player} {white_mat}, {black_player} {black_mat}"
-            ).format(
-                white_player=game_state.white_player,
-                white_mat=white_material,
-                black_player=game_state.black_player,
-                black_mat=black_material,
-            )
-        )
-        return True
-
-    if cmd == ".s":
-        Acusticator(
-            [
-                "c4",
-                0.2,
-                -1,
-                config.VOLUME,
-                "g4",
-                0.2,
-                -0.3,
-                config.VOLUME,
-                "c5",
-                0.2,
-                0.3,
-                config.VOLUME,
-                "e5",
-                0.2,
-                1,
-                config.VOLUME,
-                "g5",
-                0.4,
-                0,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[10, 5, 80, 5],
-        )
-        print(game_state.board)
-        return True
-
-    if cmd == ".l":
-        Acusticator(
-            [900.0, 0.1, 0, config.VOLUME, 440.0, 0.3, 0, config.VOLUME],
-            kind=1,
-            adsr=[1, 0, 80, 19],
-        )
-        summary = ui.GenerateMoveSummary(game_state)
-        if summary:
-            print(_("\nLista mosse giocate:\n"))
-            for line in summary:
-                print(line)
-        else:
-            print(_("Nessuna mossa ancora giocata."))
-        return True
-
-    return False
+    return ui.comandi_lettura(cmd, game_state)
 
 
 _COMANDI_RISULTATO = (".1-0", ".0-1", ".1/2", ".*")

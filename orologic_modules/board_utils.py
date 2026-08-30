@@ -251,19 +251,29 @@ def prompt_partita(game_state):
 
 
 def GenerateMoveSummary(game_state):
+    """Riepilogo discorsivo delle mosse di una partita in corso."""
+    return riepilogo_mosse(game_state.move_history)
+
+
+def riepilogo_mosse(mosse):
+    """Riepilogo discorsivo a partire dal solo elenco delle mosse.
+
+    Easyfish ricostruisce l'elenco dal PGN e non da uno stato di partita:
+    con questa forma tutte le modalita' usano lo stesso riepilogo.
+    """
     summary = []
     move_number = 1
     board_copy = CustomBoard()
-    for i in range(0, len(game_state.move_history), 2):
-        white_move_san = game_state.move_history[i]
+    for i in range(0, len(mosse), 2):
+        white_move_san = mosse[i]
         try:
             white_move = board_copy.parse_san(white_move_san)
             white_move_desc = DescribeMove(white_move, board_copy)
             board_copy.push(white_move)
         except Exception as e:
             white_move_desc = _("Errore bianco: {e}").format(e=e)
-        if i + 1 < len(game_state.move_history):
-            black_move_san = game_state.move_history[i + 1]
+        if i + 1 < len(mosse):
+            black_move_san = mosse[i + 1]
             try:
                 black_move = board_copy.parse_san(black_move_san)
                 black_move_desc = DescribeMove(black_move, board_copy)

@@ -7,7 +7,7 @@ import pyperclip
 
 from GBUtils import Acusticator, dgt, menu
 
-from .. import chess960_utils, config
+from .. import chess960_utils, config, ui
 from .. import engine as orologic_engine
 
 # DRY: Uso le utility di Orologic
@@ -27,7 +27,6 @@ from .pgn_handler import (
     SaveGameToFile,
 )
 from .sharing_window import PygameBoardWindow
-from .utils import CalculateMaterial
 
 _orig_print = builtins.print
 show_output_on_board = False
@@ -223,15 +222,10 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
         )
     elif cmd == ".?":
         menu(d=MNMAIN, show_only=True)
-    elif cmd == ".b":
-        print(board)
-    elif cmd == ".bm":
-        white, black = CalculateMaterial(board)
-        print(
-            _("Materiale sulla scacchiera: {w}/{b} Bianco/Nero").format(
-                w=white, b=black
-            )
-        )
+    elif cmd in ui.COMANDI_SCACCHIERA or cmd in (".m", ".bm"):
+        # Scacchiera e materiale sono quelli di tutte le altre modalita':
+        # qui il menu stampava una scacchiera grezza, senza le colonne.
+        ui.comandi_lettura(".m" if cmd in (".m", ".bm") else ".s", game, board=board)
     elif cmd == ".gp":
         CopyPGNToClipboard(game)
     elif cmd == ".i":

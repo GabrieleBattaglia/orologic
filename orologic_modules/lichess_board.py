@@ -492,79 +492,8 @@ def spectate_game(game_id, token=None):
         if ui.comandi_orologio(cmd, game_state):
             if cmd == ".6":
                 continue
-        elif cmd == ".m":
-            Acusticator(
-                [
-                    "c4",
-                    0.1,
-                    -1,
-                    config.VOLUME,
-                    "e4",
-                    0.1,
-                    -0.3,
-                    config.VOLUME,
-                    "g4",
-                    0.1,
-                    0.3,
-                    config.VOLUME,
-                    "c5",
-                    0.1,
-                    1,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 80, 10],
-            )
-            w_mat, b_mat = board_utils.CalculateMaterial(game_state.board)
-            print(
-                _("\nMateriale: {wp} {wm}, {bp} {bm}").format(
-                    wp=game_state.white_player,
-                    wm=w_mat,
-                    bp=game_state.black_player,
-                    bm=b_mat,
-                )
-            )
-        elif cmd == ".l":
-            Acusticator(
-                [900.0, 0.1, 0, config.VOLUME, 440.0, 0.3, 0, config.VOLUME],
-                kind=1,
-                adsr=[1, 0, 80, 19],
-            )
-            summary = ui.GenerateMoveSummary(game_state)
-            if summary:
-                print(_("\nLista mosse giocate:\n"))
-                for line in summary:
-                    print(line)
-            else:
-                print(_("\nNessuna mossa ancora giocata."))
-        elif cmd == ".b":
-            Acusticator(
-                [
-                    "c4",
-                    0.2,
-                    -1,
-                    config.VOLUME,
-                    "g4",
-                    0.2,
-                    -0.3,
-                    config.VOLUME,
-                    "c5",
-                    0.2,
-                    0.3,
-                    config.VOLUME,
-                    "e5",
-                    0.2,
-                    1,
-                    config.VOLUME,
-                    "g5",
-                    0.4,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[10, 5, 80, 5],
-            )
-            print("\n" + str(game_state.board))
+        elif ui.comandi_lettura(cmd, game_state):
+            pass
         elif cmd == ".?":
             print(_("\nComandi disponibili:"))
             print(_(".1 : Tempo Bianco"))
@@ -575,7 +504,7 @@ def spectate_game(game_id, token=None):
             print(_(".6 : Modifica timing aggiornamento orologio"))
             print(_(".m : Materiale in gioco"))
             print(_(".l : Lista mosse"))
-            print(_(".b : Mostra scacchiera"))
+            print(_(".s oppure .b : Mostra scacchiera"))
             print(_(".  : Esci"))
         else:
             print(_("\nComando non riconosciuto. Usa .? per l'aiuto."))
@@ -1331,79 +1260,8 @@ def play_game(game_id, token, username):
         if ui.comandi_orologio(cmd, game_state):
             if cmd == ".6":
                 continue
-        elif cmd == ".m":
-            Acusticator(
-                [
-                    "c4",
-                    0.1,
-                    -1,
-                    config.VOLUME,
-                    "e4",
-                    0.1,
-                    -0.3,
-                    config.VOLUME,
-                    "g4",
-                    0.1,
-                    0.3,
-                    config.VOLUME,
-                    "c5",
-                    0.1,
-                    1,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 80, 10],
-            )
-            w_mat, b_mat = board_utils.CalculateMaterial(game_state.board)
-            print(
-                _("\nMateriale: {wp} {wm}, {bp} {bm}").format(
-                    wp=game_state.white_player,
-                    wm=w_mat,
-                    bp=game_state.black_player,
-                    bm=b_mat,
-                )
-            )
-        elif cmd == ".l":
-            Acusticator(
-                [900.0, 0.1, 0, config.VOLUME, 440.0, 0.3, 0, config.VOLUME],
-                kind=1,
-                adsr=[1, 0, 80, 19],
-            )
-            summary = ui.GenerateMoveSummary(game_state)
-            if summary:
-                print(_("\nLista mosse giocate:\n"))
-                for line in summary:
-                    print(line)
-            else:
-                print(_("\nNessuna mossa ancora giocata."))
-        elif cmd == ".b":
-            Acusticator(
-                [
-                    "c4",
-                    0.2,
-                    -1,
-                    config.VOLUME,
-                    "g4",
-                    0.2,
-                    -0.3,
-                    config.VOLUME,
-                    "c5",
-                    0.2,
-                    0.3,
-                    config.VOLUME,
-                    "e5",
-                    0.2,
-                    1,
-                    config.VOLUME,
-                    "g5",
-                    0.4,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[10, 5, 80, 5],
-            )
-            print("\n" + str(game_state.board))
+        elif ui.comandi_lettura(cmd, game_state):
+            pass
         elif cmd == ".?":
             print(_("\nComandi disponibili per giocare:"))
             print(_(".1 : Tempo Bianco"))
@@ -1414,7 +1272,7 @@ def play_game(game_id, token, username):
             print(_(".6 : Modifica timing aggiornamento orologio"))
             print(_(".m : Materiale in gioco"))
             print(_(".l : Lista mosse"))
-            print(_(".b : Mostra scacchiera"))
+            print(_(".s oppure .b : Mostra scacchiera"))
             print(_("draw : Proponi patta"))
             print(_("resign : Abbandona la partita"))
             print(_("takeback : Chiedi di ritirare la mossa"))

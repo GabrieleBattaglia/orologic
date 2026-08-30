@@ -707,6 +707,115 @@ def _intervallo_aggiornamento(game_state):
     print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=secondi))
 
 
+COMANDI_SCACCHIERA = (".s", ".b")
+
+
+def _nome_giocatore(game_state, bianco):
+    """Nome del giocatore, dallo stato della partita o dal PGN.
+
+    Il menu di Easyfish non ha uno stato di partita: li' i nomi stanno
+    nelle intestazioni.
+    """
+    nome = getattr(game_state, "white_player" if bianco else "black_player", None)
+    if nome:
+        return nome
+    intestazioni = getattr(game_state, "headers", None)
+    if intestazioni:
+        nome = intestazioni.get("White" if bianco else "Black")
+        if nome and nome not in ("?", ""):
+            return nome
+    return _("bianco") if bianco else _("nero")
+
+
+def comandi_lettura(comando, game_state, board=None, mosse=None):
+    """Comandi che leggono la partita, uguali in tutte le modalita'.
+
+    Scacchiera, materiale e lista delle mosse. La scacchiera si chiede con
+    punto esse oppure punto b, e ora valgono tutti e due dappertutto:
+    prima ogni modalita' ne accettava uno solo, e non era lo stesso, cosa
+    che confondeva chi passava dalla partita a Easyfish o a Lichess.
+
+    La scacchiera e l'elenco delle mosse si possono passare a parte, per
+    le modalita' che non li tengono nello stato della partita.
+    """
+    scacchiera = board if board is not None else game_state.board
+    if comando in COMANDI_SCACCHIERA:
+        Acusticator(
+            [
+                "c4",
+                0.2,
+                -1,
+                config.VOLUME,
+                "g4",
+                0.2,
+                -0.3,
+                config.VOLUME,
+                "c5",
+                0.2,
+                0.3,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[1, 5, 90, 4],
+        )
+        print("\n" + str(board_utils.CustomBoard(scacchiera.fen())))
+        return True
+
+    if comando == ".m":
+        Acusticator(
+            [
+                "c4",
+                0.1,
+                -1,
+                config.VOLUME,
+                "e4",
+                0.1,
+                -0.3,
+                config.VOLUME,
+                "g4",
+                0.1,
+                0.3,
+                config.VOLUME,
+                "c5",
+                0.1,
+                1,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[1, 5, 90, 4],
+        )
+        bianco, nero = board_utils.CalculateMaterial(scacchiera)
+        print(
+            _(
+                "Materiale: {white_player} {white_mat}, {black_player} {black_mat}"
+            ).format(
+                white_player=_nome_giocatore(game_state, True),
+                white_mat=bianco,
+                black_player=_nome_giocatore(game_state, False),
+                black_mat=nero,
+            )
+        )
+        return True
+
+    if comando == ".l":
+        Acusticator(
+            [900.0, 0.1, 0, config.VOLUME, 440.0, 0.3, 0, config.VOLUME],
+            kind=1,
+            adsr=[1, 0, 80, 19],
+        )
+        elenco = mosse if mosse is not None else getattr(game_state, "move_history", [])
+        riepilogo = board_utils.riepilogo_mosse(elenco)
+        if not riepilogo:
+            print(_("Nessuna mossa ancora giocata."))
+            return True
+        print(_("\nLista mosse giocate:\n"))
+        for riga in riepilogo:
+            print(riga)
+        return True
+
+    return False
+
+
 COMANDI_OROLOGIO = (".1", ".2", ".3", ".4", ".5", ".6")
 
 
