@@ -11,7 +11,7 @@ import time
 
 from GBUtils import Acusticator, dgt, key, menu
 
-from . import config, localizzazione
+from . import config, localizzazione, tempo
 from .config import _
 
 # COSTANTI
@@ -562,14 +562,7 @@ def _data_parlata(timestamp):
 
 
 def _durata_parlata(secondi):
-    """Durata di una sessione detta in minuti e secondi."""
-    secondi = int(secondi or 0)
-    minuti, resto = divmod(secondi, 60)
-    if minuti and resto:
-        return _("{m} minuti e {s} secondi").format(m=minuti, s=resto)
-    if minuti:
-        return _("{m} minuti").format(m=minuti)
-    return _("{s} secondi").format(s=resto)
+    return tempo.parlato(secondi)
 
 
 def show_leaderboard(all_scores):

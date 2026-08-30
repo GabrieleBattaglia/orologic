@@ -6,6 +6,7 @@ from GBUtils import dgt, key, menu
 from .. import engine as orologic_engine
 from ..board_utils import CustomBoard
 from ..config import _
+from .analysis_utils import GetPrincipalVariationSan
 from .constants import MNEDITOR, MNEXPLORER
 from .utils import InsertedCounter
 
@@ -307,17 +308,6 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
             if move:
                 board.push(move)
         return board
-
-    def GetPrincipalVariationSan(board, pv):
-        temp_board = board.copy()
-        san_moves = []
-        for move in pv:
-            try:
-                san_moves.append(temp_board.san(move))
-                temp_board.push(move)
-            except Exception:
-                break  # Evitiamo crash su linee engine sporche
-        return san_moves
 
     current_board = SyncBoardToNode(node)
     is_modified = False

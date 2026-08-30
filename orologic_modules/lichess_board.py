@@ -9,7 +9,7 @@ import chess
 
 from GBUtils import Acusticator, dgt
 
-from . import board_utils, config, rete, ui
+from . import board_utils, config, rete, tempo, ui
 from .config import _
 
 
@@ -40,8 +40,7 @@ class SpectatorGameState:
         return w_time, b_time
 
 
-def format_time(seconds):
-    return board_utils.FormatTime(seconds)
+format_time = tempo.parlato
 
 
 def save_lichess_game(game_state, result_str="*"):
@@ -138,217 +137,8 @@ def save_lichess_game(game_state, result_str="*"):
 
 
 def handle_exploration_command(user_input, game_state):
-    # Ripresa da lichess_app.py
-    if user_input.startswith("/"):
-        Acusticator(
-            [
-                "c5",
-                0.07,
-                -1,
-                config.VOLUME,
-                "d5",
-                0.07,
-                -0.75,
-                config.VOLUME,
-                "e5",
-                0.07,
-                -0.5,
-                config.VOLUME,
-                "f5",
-                0.07,
-                -0.25,
-                config.VOLUME,
-                "g5",
-                0.07,
-                0,
-                config.VOLUME,
-                "a5",
-                0.07,
-                0.25,
-                config.VOLUME,
-                "b5",
-                0.07,
-                0.5,
-                config.VOLUME,
-                "c6",
-                0.07,
-                0.75,
-                config.VOLUME,
-            ],
-            kind=3,
-            adsr=[0, 0, 100, 100],
-        )
-        base_column = user_input[1:2].strip()
-        ui.read_diagonal(game_state, base_column, True)
-        return True
-    elif user_input.startswith("\\"):
-        Acusticator(
-            [
-                "c5",
-                0.07,
-                1,
-                config.VOLUME,
-                "d5",
-                0.07,
-                0.75,
-                config.VOLUME,
-                "e5",
-                0.07,
-                0.5,
-                config.VOLUME,
-                "f5",
-                0.07,
-                0.25,
-                config.VOLUME,
-                "g5",
-                0.07,
-                0,
-                config.VOLUME,
-                "a5",
-                0.07,
-                -0.25,
-                config.VOLUME,
-                "b5",
-                0.07,
-                -0.5,
-                config.VOLUME,
-                "c6",
-                0.07,
-                -0.75,
-                config.VOLUME,
-            ],
-            kind=3,
-            adsr=[0, 0, 100, 100],
-        )
-        base_column = user_input[1:2].strip()
-        ui.read_diagonal(game_state, base_column, False)
-        return True
-    elif user_input.startswith("-"):
-        param = user_input[1:].strip()
-        if not param:
-            Acusticator(["c5", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            ui.report_all_pieces(game_state, chess.WHITE)
-            return True
-        elif len(param) == 1 and param.isalpha():
-            Acusticator(
-                [
-                    "c5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "d5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "e5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "f5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "g5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "a5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "b5",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                    "c6",
-                    0.07,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=3,
-                adsr=[0, 0, 100, 100],
-            )
-            ui.read_file(game_state, param)
-        elif len(param) == 1 and param.isdigit():
-            rank_number = int(param)
-            if 1 <= rank_number <= 8:
-                Acusticator(
-                    [
-                        "g5",
-                        0.07,
-                        -1,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        -0.75,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        -0.5,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        -0.25,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        0,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        0.25,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        0.5,
-                        config.VOLUME,
-                        "g5",
-                        0.07,
-                        0.75,
-                        config.VOLUME,
-                    ],
-                    kind=3,
-                    adsr=[0, 0, 100, 100],
-                )
-                ui.read_rank(game_state, rank_number)
-            else:
-                print(_("Traversa non valida."))
-        elif len(param) == 2 and param[0].isalpha() and param[1].isdigit():
-            Acusticator(["d#4", 0.7, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            ui.read_square(game_state, param)
-        else:
-            print(_("Comando dash non riconosciuto."))
-        return True
-    elif user_input == "+":
-        Acusticator(["c4", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-        ui.report_all_pieces(game_state, chess.BLACK)
-        return True
-    elif user_input.startswith(","):
-        Acusticator(
-            [
-                "a3",
-                0.06,
-                -1,
-                config.VOLUME,
-                "c4",
-                0.06,
-                -0.5,
-                config.VOLUME,
-                "d#4",
-                0.06,
-                0.5,
-                config.VOLUME,
-                "f4",
-                0.06,
-                1,
-                config.VOLUME,
-            ],
-            kind=3,
-            adsr=[20, 5, 70, 25],
-        )
-        ui.report_piece_positions(game_state, user_input[1:2])
-        return True
-    return False
+    """Comandi di esplorazione della scacchiera, gestiti da ui."""
+    return ui.esplora_scacchiera(user_input, game_state)
 
 
 def _spectate_worker(url, token, q, stop_event):
@@ -421,17 +211,7 @@ def async_spectator_loop(q, game_state):
             else:
                 bt = max(0, bt - elapsed)
 
-        def fmt(sec):
-            sec = max(0, int(sec))
-            m, s = divmod(sec, 60)
-            h, m = divmod(m, 60)
-            d, h = divmod(h, 24)
-            if d > 0:
-                d_str = _("{d}g").format(d=d)
-                return f"{d_str} {h:02d}:{m:02d}:{s:02d}"
-            if h > 0:
-                return f"{h}:{m:02d}:{s:02d}"
-            return f"{m:02d}:{s:02d}"
+        fmt = tempo.compatto
 
         refresh_interval = getattr(game_state, "refresh_interval", 1)
         clock_str = (
@@ -970,17 +750,7 @@ def async_play_loop(q, game_state):
             else:
                 bt = max(0, bt - elapsed)
 
-        def fmt(sec):
-            sec = max(0, int(sec))
-            m, s = divmod(sec, 60)
-            h, m = divmod(m, 60)
-            d, h = divmod(h, 24)
-            if d > 0:
-                d_str = _("{d}g").format(d=d)
-                return f"{d_str} {h:02d}:{m:02d}:{s:02d}"
-            if h > 0:
-                return f"{h}:{m:02d}:{s:02d}"
-            return f"{m:02d}:{s:02d}"
+        fmt = tempo.compatto
 
         refresh_interval = getattr(game_state, "refresh_interval", 1)
         clock_str = (

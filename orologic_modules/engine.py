@@ -203,17 +203,9 @@ def CloseEngine():
         ENGINE = None
 
 
-def CalculateMaterial(board):
-    w, b = 0, 0
-    for sq in chess.SQUARES:
-        p = board.piece_at(sq)
-        if p:
-            val = config.PIECE_VALUES.get(p.symbol().upper(), 0)
-            if p.color == chess.WHITE:
-                w += val
-            else:
-                b += val
-    return w, b
+# Il conteggio del materiale sta in board_utils: era ricopiato qui e in
+# Easyfish, con tre tabelle di valori da tenere allineate.
+CalculateMaterial = board_utils.CalculateMaterial
 
 
 def _analizza_con_cache(board, linee):

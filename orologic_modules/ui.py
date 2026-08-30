@@ -4,6 +4,7 @@ import os
 import chess
 
 from GBUtils import Acusticator, dgt, key
+from GBUtils import enter_escape as _enter_escape_gbutils
 
 from . import board_utils, config, localizzazione, storage, version
 from .board_utils import stampa_elenco
@@ -16,17 +17,9 @@ L10N = localizzazione.L10N
 # Volume gestito via config.VOLUME
 
 
-def enter_escape(prompt=""):
-    """Ritorna vero su invio, falso su escape."""
-    while True:
-        k = key(prompt)
-        if k in ("\r", "\n", "enter"):
-            print()
-            return True
-        elif k in ("\x1b", "esc"):
-            print()
-            return False
-        print(_("Conferma con invio o annulla con escape"))
+# La conferma con INVIO o ESC e' un'utilita' di GBUtils: qui ne esisteva
+# una seconda versione, e nello stesso file se ne usavano tutte e due.
+enter_escape = _enter_escape_gbutils
 
 
 def EditLocalization():
@@ -315,20 +308,9 @@ def extended_piece_description(piece):
     return f"{piece_name} {color_adj}"
 
 
-def format_pv_descriptively(board, pv):
-    if not pv:
-        return ""
-    temp_board = board.copy()
-    output_lines = []
-    for i, move in enumerate(pv):
-        move_num = temp_board.fullmove_number
-        line_prefix = (
-            f"{move_num}." if temp_board.turn == chess.WHITE else f"{move_num}..."
-        )
-        descriptive_move = board_utils.DescribeMove(move, temp_board)
-        output_lines.append(f"\t\t\t{line_prefix} {descriptive_move}")
-        temp_board.push(move)
-    return "\n".join(output_lines)
+# La variante principale si descrive con la funzione di board_utils: qui
+# ce n'era una seconda, che indentava con tabulazioni e spezzava le mosse.
+format_pv_descriptively = board_utils.format_pv_descriptively
 
 
 def read_diagonal(game_state, base_column, direction_right):
@@ -418,6 +400,109 @@ def read_file(game_state, file_letter):
         )
     else:
         print(_("La colonna {file} e' vuota.").format(file=descriptive_file))
+
+
+# Sequenze sonore dell'esplorazione, raccolte qui una volta sola: prima
+# erano ricopiate per intero in ognuno dei tre punti che gestivano questi
+# comandi.
+def _scala(pan_iniziale, pan_finale):
+    """Arpeggio che scorre da un lato all'altro, per le diagonali."""
+    note = ["c5", "d5", "e5", "f5", "g5", "a5", "b5", "c6"]
+    passo = (pan_finale - pan_iniziale) / (len(note) - 1)
+    sequenza = []
+    for indice, nota in enumerate(note):
+        sequenza += [nota, 0.07, pan_iniziale + passo * indice, config.VOLUME]
+    return sequenza
+
+
+def _colonna_sonora():
+    """Arpeggio fermo al centro, per le colonne."""
+    sequenza = []
+    for nota in ["c5", "d5", "e5", "f5", "g5", "a5", "b5", "c6"]:
+        sequenza += [nota, 0.07, 0, config.VOLUME]
+    return sequenza
+
+
+def _traversa_sonora():
+    """Stessa nota che attraversa lo stereo, per le traverse."""
+    sequenza = []
+    for indice in range(8):
+        sequenza += ["g5", 0.07, -1 + indice * 0.25, config.VOLUME]
+    return sequenza
+
+
+def esplora_scacchiera(comando, game_state):
+    """Esegue i comandi di esplorazione della scacchiera.
+
+    Restituisce vero se il comando e' stato riconosciuto. Prima questo blocco
+    era ricopiato in tre file, arbitraggio, Orolichess e partita su Lichess,
+    per circa seicento righe complessive: ogni correzione andava fatta tre
+    volte e le tre copie erano gia' divergenti.
+    """
+    if comando.startswith("/"):
+        Acusticator(_scala(-1, 0.75), kind=3, adsr=[0, 0, 100, 100])
+        read_diagonal(game_state, comando[1:2].strip(), True)
+        return True
+
+    if comando.startswith("\\"):
+        Acusticator(_scala(1, -0.75), kind=3, adsr=[0, 0, 100, 100])
+        read_diagonal(game_state, comando[1:2].strip(), False)
+        return True
+
+    if comando == "+":
+        Acusticator(["c4", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+        report_all_pieces(game_state, chess.BLACK)
+        return True
+
+    if comando.startswith(","):
+        Acusticator(
+            [
+                "a3",
+                0.06,
+                -1,
+                config.VOLUME,
+                "c4",
+                0.06,
+                -0.5,
+                config.VOLUME,
+                "d#4",
+                0.06,
+                0.5,
+                config.VOLUME,
+                "f4",
+                0.06,
+                1,
+                config.VOLUME,
+            ],
+            kind=3,
+            adsr=[20, 5, 70, 25],
+        )
+        report_piece_positions(game_state, comando[1:2])
+        return True
+
+    if comando.startswith("-"):
+        parametro = comando[1:].strip()
+        if not parametro:
+            Acusticator(["c5", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+            report_all_pieces(game_state, chess.WHITE)
+        elif len(parametro) == 1 and parametro.isalpha():
+            Acusticator(_colonna_sonora(), kind=3, adsr=[0, 0, 100, 100])
+            read_file(game_state, parametro)
+        elif len(parametro) == 1 and parametro.isdigit():
+            traversa = int(parametro)
+            if 1 <= traversa <= 8:
+                Acusticator(_traversa_sonora(), kind=3, adsr=[0, 0, 100, 100])
+                read_rank(game_state, traversa)
+            else:
+                print(_("Traversa non valida: usa un numero da 1 a 8."))
+        elif len(parametro) == 2 and parametro[0].isalpha() and parametro[1].isdigit():
+            Acusticator(["d#4", 0.7, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+            read_square(game_state, parametro)
+        else:
+            print(_("Dopo il meno serve una colonna, una traversa o una casa."))
+        return True
+
+    return False
 
 
 def _get_piece_descriptions_from_squareset(board, squareset):
@@ -645,30 +730,7 @@ def setup_fischer_random_board():
     return board, fen
 
 
-def GenerateMoveSummary(game_state):
-    summary = []
-    board_copy = board_utils.CustomBoard()
-    for i in range(0, len(game_state.move_history), 2):
-        white_san = game_state.move_history[i]
-        try:
-            white_move = board_copy.parse_san(white_san)
-            white_desc = board_utils.DescribeMove(white_move, board_copy)
-            board_copy.push(white_move)
-        except Exception:
-            white_desc = "Err"
-        black_desc = ""
-        if i + 1 < len(game_state.move_history):
-            black_san = game_state.move_history[i + 1]
-            try:
-                black_move = board_copy.parse_san(black_san)
-                black_desc = board_utils.DescribeMove(black_move, board_copy)
-                board_copy.push(black_move)
-            except Exception:
-                black_desc = "Err"
-        summary.append(
-            f"{i // 2 + 1}. {white_desc}" + (f", {black_desc}" if black_desc else "")
-        )
-    return summary
+GenerateMoveSummary = board_utils.GenerateMoveSummary
 
 
 def verbose_legal_moves_for_san(board, san_str):

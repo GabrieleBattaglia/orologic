@@ -1,23 +1,12 @@
 import chess
 
-from .. import localizzazione
+from .. import board_utils, localizzazione
 from ..config import _
-from .constants import PIECE_VALUES
 
 
-def CalculateMaterial(board):
-    """Calcola il valore del materiale per bianco e nero."""
-    white_value = 0
-    black_value = 0
-    for square in chess.SQUARES:
-        piece = board.piece_at(square)
-        if piece is not None:
-            piece_symbol = piece.symbol()
-            if piece_symbol.isupper():
-                white_value += PIECE_VALUES[piece_symbol]
-            else:
-                black_value += PIECE_VALUES[piece_symbol]
-    return white_value, black_value
+# Il conteggio del materiale e' quello di board_utils, valido per tutto
+# il programma.
+CalculateMaterial = board_utils.CalculateMaterial
 
 
 def InsertedCounter(board):

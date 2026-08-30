@@ -7,7 +7,7 @@ import chess.pgn
 
 from GBUtils import Acusticator
 
-from . import config, localizzazione
+from . import config, localizzazione, tempo
 from .config import _
 
 LARGHEZZA_BRAILLE = 40
@@ -219,6 +219,35 @@ def DescribeMove(move, board, annotation=None):
     if annotation and annotation in L10N["annotations"]:
         final_descr += " ({a})".format(a=L10N["annotations"][annotation])
     return final_descr
+
+
+def prompt_partita(game_state):
+    """Testo del prompt durante la partita: numero di mossa, stato e orologi.
+
+    Uguale per l'arbitraggio e per la modalita' Tempo, che prima ne tenevano
+    due copie identiche.
+    """
+    mosse = game_state.move_history
+    if not mosse:
+        testo = _("Inizio, mossa 0. ")
+    elif len(mosse) % 2 == 1:
+        testo = f"{(len(mosse) + 1) // 2}. {mosse[-1]} "
+    else:
+        testo = f"{len(mosse) // 2}... {mosse[-1]} "
+
+    if game_state.paused:
+        testo = "[" + testo.strip() + "] "
+    elif game_state.ignore_clock:
+        testo = _("senza orologio") + " " + testo.strip() + " "
+
+    orologi = ""
+    intervallo = getattr(game_state, "refresh_interval", 0)
+    if intervallo > 0 and not game_state.ignore_clock:
+        bianco = tempo.compatto(max(0.0, game_state.white_remaining))
+        nero = tempo.compatto(max(0.0, game_state.black_remaining))
+        orologi = f"{bianco} {nero} "
+
+    return orologi + testo
 
 
 def GenerateMoveSummary(game_state):
@@ -541,87 +570,25 @@ def DetectOpeningByFEN(current_board, eco_db):
     return max(possible_matches, key=lambda x: len(x.get("moves", [])))
 
 
-def FormatTime(seconds):
-    total = int(seconds)
-    h = total // 3600
-    m = (total % 3600) // 60
-    s = total % 60
-    parts = []
-    if h:
-        parts.append(
-            _("{num} ora").format(num=h) if h == 1 else _("{num} ore").format(num=h)
-        )
-    if m:
-        parts.append(
-            _("{num} minuto").format(num=m)
-            if m == 1
-            else _("{num} minuti").format(num=m)
-        )
-    if s:
-        parts.append(
-            _("{num} secondo").format(num=s)
-            if s == 1
-            else _("{num} secondi").format(num=s)
-        )
-    return ", ".join(parts) if parts else _("0 secondi")
+# I nomi storici restano come rimando al modulo tempo, che ora e' l'unico
+# posto dove si scrivono e si leggono le durate.
+FormatTime = tempo.parlato
+SecondsToHMS = tempo.orologio
+FormatClock = tempo.orologio
+seconds_to_mmss = tempo.mmss_parlato
+format_time_italian = tempo.parlato
+format_pgn_clk = tempo.pgn
 
 
 def ParseTime(prompt):
+    """Chiede una durata e la restituisce in secondi, None se non valida."""
     from GBUtils import dgt
 
-    t = dgt(prompt, kind="s")
-    try:
-        parts = t.split(":")
-        if len(parts) != 3:
-            return -1
-        h, m, s = map(int, parts)
-        if h < 0 or m < 0 or s < 0 or m > 59 or s > 59:
-            return -1
-        return h * 3600 + m * 60 + s
-    except Exception:
-        return -1
-
-
-def SecondsToHMS(seconds):
-    if seconds < 0:
-        return "00:00:00"
-    h = int(seconds // 3600)
-    m = int((seconds % 3600) // 60)
-    s = int(seconds % 60)
-    return f"{h:02d}:{m:02d}:{s:02d}"
-
-
-def FormatClock(seconds):
-    if seconds < 0:
-        return "00:00:00"
-    total = int(seconds)
-    hours = total // 3600
-    minutes = (total % 3600) // 60
-    secs = total % 60
-    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
-
-
-def seconds_to_mmss(seconds):
-    if seconds < 0:
-        return _("00 minuti e 00 secondi!")
-    m = int(seconds // 60)
-    s = int(seconds % 60)
-    return _("{minutes:02d} minuti e {seconds:02d} secondi!").format(
-        minutes=m, seconds=s
-    )
+    return tempo.da_testo(dgt(prompt, kind="s"))
 
 
 def parse_mmss_to_seconds(time_str):
-    try:
-        parts = time_str.split(":")
-        if len(parts) != 2:
-            return -1
-        minutes, seconds = map(int, parts)
-        if minutes < 0 or seconds < 0 or seconds > 59:
-            return -1
-        return minutes * 60 + seconds
-    except Exception:
-        return -1
+    return tempo.da_mmss(time_str)
 
 
 def validate_and_clean_pgn(pgn_text):
@@ -712,30 +679,6 @@ def format_semimove(index, san):
         return f"{num_mossa}... {san}"
 
 
-def format_time_italian(seconds):
-    seconds = int(round(seconds))
-    if seconds == 0:
-        return _("0 secondi")
-    m, s = divmod(seconds, 60)
-    h, m = divmod(m, 60)
-
-    parts = []
-    if h > 0:
-        parts.append(_("{h} ore").format(h=h))
-    if m > 0:
-        parts.append(_("{m} minuti").format(m=m))
-    if s > 0:
-        parts.append(_("{s} secondi").format(s=s))
-
-    if len(parts) == 3:
-        return f"{parts[0]}, {parts[1]} e {parts[2]}"
-    elif len(parts) == 2:
-        return f"{parts[0]} e {parts[1]}"
-    elif len(parts) == 1:
-        return parts[0]
-    return _("0 secondi")
-
-
 def get_quarters(total_len):
     q = total_len // 4
     rem = total_len % 4
@@ -747,19 +690,6 @@ def get_quarters(total_len):
         quarters.append((start, start + size))
         start += size
     return quarters
-
-
-def format_pgn_clk(sec):
-    sec = max(0.0, sec)
-    hours = int(sec // 3600)
-    minutes = int((sec % 3600) // 60)
-    seconds = int(sec % 60)
-    if hours > 0:
-        return f"{hours}:{minutes:02d}:{seconds:02d}"
-    elif minutes > 0:
-        return f"{minutes}:{seconds:02d}"
-    else:
-        return f"{seconds}"
 
 
 def AggiungiTempiPgn(pgn_game, clocks_history, times_history=None):
