@@ -1,3 +1,6 @@
+# Orologic, interfaccia: comandi comuni, prompt e riepiloghi.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import datetime
 import os
 import time

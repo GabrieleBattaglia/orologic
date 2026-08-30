@@ -1,3 +1,6 @@
+# Orologic, configurazione: percorsi, costanti e localizzazione.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import datetime
 import json
 import os
@@ -239,6 +242,17 @@ FILE_NAMES = {
     6: "genova",
     7: "hotel",
 }
+
+
+def maiuscole_nomi(testo):
+    """Sistema le maiuscole di un nome solo se serve davvero.
+
+    Chi scrive tutto in minuscolo si vede correggere, chi ha gia' usato
+    le maiuscole viene lasciato in pace: title() trasformava IZ4APU in
+    Iz4Apu e McDonald in Mcdonald.
+    """
+    pulito = (testo or "").strip()
+    return pulito.title() if pulito.islower() else pulito
 
 
 def sanitize_filename(filename):

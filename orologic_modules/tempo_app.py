@@ -1,3 +1,6 @@
+# Orologic, Tempo: l'orologio nudo e crudo.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import datetime
 import os
 import time

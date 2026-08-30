@@ -1,3 +1,6 @@
+# Orologic, sviluppo: aiuto alla traduzione dei cataloghi.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import os
 import re
 import sys

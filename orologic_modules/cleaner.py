@@ -1,3 +1,6 @@
+# Orologic, manutenzione: cancellazione dei file datati.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import os
 import time
 

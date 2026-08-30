@@ -1,3 +1,6 @@
+# Orologic, scacchiera: descrizione delle mosse, materiale, aperture.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import io
 import os
 import re

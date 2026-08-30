@@ -1,3 +1,6 @@
+# Orologic, orologi: creazione e modifica dei controlli di tempo.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
 from . import board_utils, config, storage

@@ -1,3 +1,6 @@
+# Orologic, Fischer Random: posizioni, arrocchi e header PGN.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 """Modulo centralizzato per la gestione della variante Chess960 (Fischer Random).
 Espone funzioni per generare posizioni, configurare il motore e interagire con l'utente.
 """

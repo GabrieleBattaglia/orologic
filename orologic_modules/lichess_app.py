@@ -1,3 +1,6 @@
+# Orologic, Orolichess: menu, profilo e sfide.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import json
 import os
 import time

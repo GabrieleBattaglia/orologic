@@ -19,6 +19,13 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.14</h3>
+<h4>8.14.5 (31 agosto 2026)</h4>
+<ul>
+  <li>* [Engine] La ricerca automatica del motore guarda anche nelle sottocartelle. L'archivio di Stockfish si estrae in una cartella propria, per cui la ricerca non trovava nulla ed il motore andava configurato a mano dopo ogni scaricamento.</li>
+  <li>* [Core] La correzione automatica delle maiuscole nei nomi segue ora una regola sola, applicata in tutti i punti in cui si inserisce un nome: partita arbitraggio, classifica di Memoboard ed intestazioni PGN di Easyfish. Chi scrive già con le maiuscole viene lasciato in pace.</li>
+  <li>+ [Docs] Tutti i file del progetto portano l'intestazione con titolo ed autori, e l'autore mostrato dal programma è aggiornato.</li>
+  <li>* [Core] Riscritti i due script di servizio: la diagnostica del motore usa ora la stessa ricerca del programma, invece di una copia propria, e riferisce quali opzioni il motore dichiara; l'utilità che prepara l'archivio usa un percorso portabile e messaggi in italiano.</li>
+</ul>
 <h4>8.14.4 (31 agosto 2026)</h4>
 <ul>
   <li>* [Core] I nomi dei giocatori non vengono più alterati nelle maiuscole se sono già scritti con criterio: la correzione automatica interviene solo su chi digita tutto in minuscolo. Prima "IZ4APU" diventava "Iz4Apu" e "McDonald" diventava "Mcdonald".</li>

@@ -1,3 +1,6 @@
+# Orologic, Orolichess: partite giocate e osservate.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import json
 import msvcrt
 import queue

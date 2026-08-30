@@ -1,3 +1,6 @@
+# Orologic, Easyfish: menu principale della modalita'.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import builtins
 import contextlib
 import re

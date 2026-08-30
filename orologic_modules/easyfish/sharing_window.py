@@ -1,3 +1,6 @@
+# Orologic, Easyfish: finestra grafica per la didattica.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import copy
 import io
 import os

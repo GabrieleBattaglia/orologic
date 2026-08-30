@@ -1,3 +1,6 @@
+# Orologic, Memoboard: esercizi di memoria sulla scacchiera.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 # MEMOBOARD - Il tuo assistente per giocare a scacchi senza scacchiera.
 # Born on monday, may 6th, 2024 by Gabriele Battaglia IZ4APU.
 # June 28th, 2024: moved on Github
@@ -85,7 +88,7 @@ def _deduplicate_scores(data):
         for rec in ex_list:
             if not isinstance(rec, dict):
                 continue
-            user = rec.get("username", _("Anonimo")).strip().title()
+            user = config.maiuscole_nomi(rec.get("username", _("Anonimo")))
             rec["username"] = user
             val = rec.get(metric_key, 0)
 
@@ -427,8 +430,8 @@ def report_and_update_scores(
                 "\n🏆 COMPLIMENTI! Ti sei guadagnato un posto nella Top 10 della classifica! 🏆"
             )
         )
-        username = (
-            dgt(_("Il tuo nome per la classifica: "), kind="s", smax=40).strip().title()
+        username = config.maiuscole_nomi(
+            dgt(_("Il tuo nome per la classifica: "), kind="s", smax=40)
         )
         if not username:
             username = _("Anonimo")

@@ -1,3 +1,6 @@
+# Orologic, Easyfish: linee di analisi del motore.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import chess
 import chess.engine
 

@@ -1,8 +1,10 @@
+# Orologic, Easyfish: piccole utilita' di uso comune.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
 import chess
 
 from .. import board_utils, localizzazione
 from ..config import _
-
 
 # Il conteggio del materiale e' quello di board_utils, valido per tutto
 # il programma.
