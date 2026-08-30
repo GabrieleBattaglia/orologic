@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-30: chiuse le tappe da 1 a 7, la 8 struttura e' in corso, per un totale di 101 rilievi risolti sui 154 iniziali. Fatta anche l'unificazione dei comandi chiesta da Gabriele: da punto uno a punto sei, scacchiera, materiale e lista mosse vivono ora solo in ui e valgono uguali in tutte le modalita'. Le prove da fare a mano sono elencate in collaudo.txt.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-30: chiuse le tappe da 1 a 7, la 8 struttura e' in corso, per un totale di 102 rilievi risolti sui 154 iniziali. Non restano rilievi di gravita' alta. Fatta anche l'unificazione dei comandi chiesta da Gabriele: da punto uno a punto sei, scacchiera, materiale e lista mosse vivono ora solo in ui e valgono uguali in tutte le modalita'. Le prove da fare a mano sono elencate in collaudo.txt.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -43,8 +43,6 @@ check_engine.py, 34 righe
 zip_maker.py, 24 righe
 resources/translator_tool.py, 92 righe
 Rilievi, ordinati per gravita decrescente. Ogni rilievo riporta identificativo progressivo, gravita, categoria, posizione, descrizione con impatto e correzione proposta. Fra parentesi l'identificativo usato durante l'analisi a blocchi.
-R026 gravita alto, categoria logica, in lichess_app.py:2062 con 2087,2100,2182-2188 (B4-02)
-La variabile token viene letta una sola volta prima del ciclo del menu e non e mai riassegnata nei rami login e logout, mentre secrets viene ricaricato a ogni giro. Dopo un login nella stessa sessione il menu risulta connesso ma le chiamate usano ancora token nullo, quindi partite attive e sfide in arrivo non compaiono finche non si esce e si rientra in Orolichess. Dopo un logout accade il contrario: il token resta in memoria e le chiamate autenticate proseguono nonostante l'utente creda di essersi disconnesso.
 R041 gravita medio, categoria logica, in config.py:294 (B1-08)
 re.sub con classe di caratteri da zero a 31 scritta come escape ottale: viene interpretata come intervallo 0-25, quindi i caratteri di controllo da 26 a 31 restano nel nome file e Windows rifiuta la scrittura. Verificato sperimentalmente. Correzione: usare la forma esadecimale da x00 a x1f.
 R047 gravita medio, categoria logica, in clock.py:67 (B1-14)

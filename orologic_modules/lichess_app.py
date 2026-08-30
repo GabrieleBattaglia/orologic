@@ -1813,6 +1813,10 @@ def run():
         MENU_CHOICES = {}
 
         secrets = load_secrets()
+        # Il token va riletto a ogni giro insieme ai segreti: dopo un login
+        # o un logout fatti in questa stessa sessione, quello tenuto in
+        # memoria non e' piu' quello buono.
+        token = secrets.get("lichess_token")
         is_logged = "lichess_token" in secrets
 
         active_games = []
