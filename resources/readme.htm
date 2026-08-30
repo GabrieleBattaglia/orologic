@@ -108,11 +108,8 @@ margin: 1em 0;
 <h4>1.5.1. Dove e come richiamare la Scacchiera ASCII</h4>
 <p>La scacchiera testuale può essere mostrata in tempo reale nei principali punti di utilizzo dell'applicazione tramite comandi dedicati:</p>
 <ul>
-    <li><strong>Modalità Arbitraggio (Partita dal vivo da tastiera):</strong> digitando il comando col punto <code>.s</code> (Scacchiera testuale).</li>
-    <li><strong>Modalità Gioca contro il Motore (Easyfish <code>.g</code>):</strong> digitando il comando col punto <code>.b</code> (Mostra scacchiera).</li>
-    <li><strong>Modalità Orolichess (Partite online e modalità Osservatore / Spectate):</strong> digitando il comando col punto <code>.b</code> (Mostra scacchiera).</li>
-    <li><strong>Modalità Analisi Motore (Analisi PGN interattiva dal menu <code>analizza</code>):</strong> digitando la singola lettera <code>u</code> (Visualizza la scacchiera).</li>
-    <li><strong>Modalità Easyfish (Editor della Scacchiera <code>.be</code>):</strong> digitando il comando col punto <code>.s</code> (Scacchiera testuale).</li>
+    <li><strong>In tutte le modalità di gioco</strong> (Arbitraggio, Gioca contro il Motore, Orolichess sia in partita sia in osservazione, menu di Easyfish ed Editor della Scacchiera): digitando indifferentemente <code>.s</code> oppure <code>.b</code>. I due comandi sono equivalenti, così non occorre ricordare quale valga in quale contesto. Restano naturalmente distinti i comandi che iniziano con le stesse lettere ma proseguono: <code>.s</code> seguito da una cifra imposta la forza del motore in Easyfish, mentre <code>.b+</code> e <code>.b-</code> correggono i tempi in Arbitraggio.</li>
+    <li><strong>Modalità Analisi Motore (Analisi PGN interattiva dal menu <code>analizza</code>):</strong> digitando la singola lettera <code>u</code> (Visualizza la scacchiera). L'analisi usa lettere singole invece dei comandi col punto.</li>
     <li><strong>Ispezione diretta sulla Scacchiera:</strong> in tutte le modalità di gioco ed esplorazione tramite i comandi <code>-[col|trv|casa]</code>, <code>/[col]</code>, <code>\[col]</code> e <code>,[Pezzo]</code>.</li>
 </ul>
 
@@ -214,7 +211,7 @@ margin: 1em 0;
         <tr><td><code>.p</code></td><td>Mette in pausa o riavvia gli orologi.</td></tr>
         <tr><td><code>.q</code></td><td>Annulla l'ultima mossa (solo in pausa).</td></tr>
         <tr><td><code>.b+</code>/<code>.b-</code>/<code>.n+</code>/<code>.n-</code></td><td>Aggiunge/sottrae tempo al Bianco (b) o al Nero (n). Es: <code>.b+60</code>. Solo in pausa.</td></tr>
-        <tr><td><code>.s</code></td><td>Mostra la scacchiera testuale.</td></tr>
+        <tr><td><code>.s</code> oppure <code>.b</code></td><td>Mostra la scacchiera testuale. I due comandi sono equivalenti in tutte le modalita'.</td></tr>
         <tr><td><code>.c [commento]</code></td><td>Aggiunge un commento alla mossa corrente. Es: <code>.c Mossa chiave</code>.</td></tr>
         <tr><td><code>.1-0</code> / <code>.0-1</code> / <code>.1/2</code> / <code>.*</code></td><td>Assegna la vittoria al Bianco / al Nero / patta / risultato indefinito e termina la partita.</td></tr>
         <tr><td><code>.?</code></td><td>Mostra questa lista di comandi.</td></tr>
