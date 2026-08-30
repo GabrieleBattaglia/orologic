@@ -19,6 +19,15 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.14</h3>
+<h4>8.14.4 (31 agosto 2026)</h4>
+<ul>
+  <li>* [Core] I nomi dei giocatori non vengono più alterati nelle maiuscole se sono già scritti con criterio: la correzione automatica interviene solo su chi digita tutto in minuscolo. Prima "IZ4APU" diventava "Iz4Apu" e "McDonald" diventava "Mcdonald".</li>
+  <li>+ [Core] Le partite Fischer Random registrano il numero della posizione, da 0 a 959, nell'intestazione del PGN: è il modo in cui i giocatori si scambiano la posizione di partenza, e finora veniva calcolato e poi scartato.</li>
+  <li>+ [OAA] Le soglie che distinguono la mossa buona e la mossa geniale sono ora nel database insieme alle altre tre, invece di essere fissate nel codice.</li>
+  <li>* [Engine] Il commento sulla formula dell'accuratezza riportava un dubbio irrisolto sulla scala dei valori. Verificato sulla documentazione di Lichess: la scala è quella giusta, ed ora il commento lo dice con la fonte.</li>
+  <li>* [Easyfish] Tolto un ciclo che scorreva tutte le mosse della partita senza farne nulla ad ogni sincronizzazione della scacchiera.</li>
+  <li>* [Core] Rimosso codice mai chiamato nella configurazione degli orologi e semplificati alcuni controlli superflui durante la partita.</li>
+</ul>
 <h4>8.14.3 (31 agosto 2026)</h4>
 <ul>
   <li>* [Lichess] Il menu non interroga più Lichess ad ogni singolo giro: la risposta su partite in corso e sfide resta valida per qualche secondo, e viene comunque riletta quando si sceglie una voce che annuncia un controllo, oppure dopo un login o un logout. Prima ogni ritorno al menu comportava due attese di rete.</li>

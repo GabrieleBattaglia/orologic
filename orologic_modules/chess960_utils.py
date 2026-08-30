@@ -103,16 +103,24 @@ def describe_960_position(board, pos_number=None):
     return "\n".join(lines)
 
 
-def setup_pgn_headers_chess960(pgn_game, board, starting_fen=None):
+def setup_pgn_headers_chess960(pgn_game, board, starting_fen=None, posizione=None):
     """Configura gli header PGN per una partita Chess960.
+
     Args:
         pgn_game: Oggetto chess.pgn.Game.
         board: CustomBoard con posizione Chess960.
         starting_fen: FEN iniziale (se None, usa board.fen()).
+        posizione: numero della posizione da 0 a 959, se conosciuto. Va
+            negli header perche' identifica la partenza meglio del FEN, ed
+            e' il modo in cui i giocatori si scambiano le posizioni.
     """
     pgn_game.headers["Variant"] = "Chess960"
     pgn_game.headers["SetUp"] = "1"
     pgn_game.headers["FEN"] = starting_fen if starting_fen else board.fen()
+    if posizione is None:
+        posizione = getattr(board, "chess960_pos", lambda: None)()
+    if posizione is not None:
+        pgn_game.headers["Chess960Position"] = str(posizione)
     pgn_game.setup(board)
 
 

@@ -360,6 +360,8 @@ class GameState:
         self.refresh_interval = 0
         self.move_times = []
         self.clocks_history = []
+        # Mosse annullate con il comando punto q, pronte da rigiocare.
+        self.cancelled_san_moves = []
 
     def fase_per_mosse(self, mosse_giocate):
         """Indice della fase corrispondente al numero di mosse gia' giocate.

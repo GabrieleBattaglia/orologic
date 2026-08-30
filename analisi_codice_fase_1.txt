@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-31: chiuse le tappe da 1 a 8, restano la 9 pulizie finali e la 10 traduzioni. Risolti 124 rilievi sui 154 iniziali, piu' R156 sul riconoscimento delle aperture, aggiunto e risolto strada facendo. Non restano rilievi di gravita' alta. Due voci si sono rivelate false, e in entrambi i casi il codice ora spiega perche', per non farle correggere a torto: R093, perche' le date di Lichess erano gia' nell'ora giusta, e R091, perche' l'API di Lichess non offre alcun parametro per filtrare le partite per fascia Elo o per codice ECO, quindi quel filtro non puo' che restare locale. Fatta anche l'unificazione dei comandi chiesta da Gabriele: da punto uno a punto sei, scacchiera, materiale e lista mosse vivono ora solo in ui e si comportano allo stesso modo in tutte le modalita'. Le prove da fare a mano sono elencate in collaudo.txt.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-31: chiuse le tappe da 1 a 8, restano la 9 pulizie finali e la 10 traduzioni. Risolti 133 rilievi sui 154 iniziali, piu' R156 sul riconoscimento delle aperture, aggiunto e risolto strada facendo. Non restano rilievi di gravita' alta. Due voci si sono rivelate false, e in entrambi i casi il codice ora spiega perche', per non farle correggere a torto: R093, perche' le date di Lichess erano gia' nell'ora giusta, e R091, perche' l'API di Lichess non offre alcun parametro per filtrare le partite per fascia Elo o per codice ECO, quindi quel filtro non puo' che restare locale. Fatta anche l'unificazione dei comandi chiesta da Gabriele: da punto uno a punto sei, scacchiera, materiale e lista mosse vivono ora solo in ui e si comportano allo stesso modo in tutte le modalita'. Le prove da fare a mano sono elencate in collaudo.txt.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -55,14 +55,10 @@ R097 gravita medio, categoria DRY, in tempo_app.py:14-30 con config.py:234-258 (
 Due dizionari di comandi che descrivono in gran parte gli stessi tasti. Prova della divergenza: la voce del comando tre e corretta in tempo_app e contiene il refuso entrambe in config.
 R105 gravita medio, categoria regole generali, in easyfish_app.py e game_mode.py, una trentina di chiamate (B7-08)
 Il volume delle sequenze sonore e fissato a 0.5 nel codice invece di leggere config.VOLUME: la regolazione del volume fatta dal menu di Orologic non ha effetto dentro Easyfish.
-R106 gravita medio, categoria ottimizzazione, in easyfish/interaction.py:296-298 (B7-09)
-Un ciclo scorre tutte le mosse della linea principale senza fare nulla, con un commento che avverte di non usare quella logica. E codice morto che viene comunque eseguito a ogni sincronizzazione della scacchiera.
 R113 gravita basso, categoria ottimizzazione, in check_engine.py (B1-21)
 Script diagnostico rimasto nel repository, con except generico e ricerca dell'eseguibile duplicata rispetto a stockfish_installer.
 R114 gravita basso, categoria ottimizzazione, in zip_maker.py:4,13 (B1-22)
 exit al posto di sys.exit e percorso scritto a mano con backslash.
-R115 gravita basso, categoria ottimizzazione, in clock.py:42-50 (B1-23)
-ClockConfig.from_dict non e mai chiamata: codice morto.
 R116 gravita basso, categoria ottimizzazione, in resources/translator_tool.py (B1-24)
 Strumento di sviluppo dentro resources, cartella inclusa per intero nel bundle PyInstaller. Le sue dipendenze polib e deep_translator non sono in requirements. Inoltre salva il file po senza backup.
 R117 gravita basso, categoria ottimizzazione, in config.py:87,185 e storage.py:12 (B1-25)
@@ -75,28 +71,14 @@ R123 gravita basso, categoria ottimizzazione, in repository (B1-31)
 Le cartelle pgn e txt con oltre novanta partite e trascrizioni personali sono tracciate in git e si mescolano ai dati prodotti a runtime dall'utente.
 R124 gravita basso, categoria regole generali, in ruff, intero progetto (B1-32)
 230 rilievi: 139 blind-except, 32 try-except-pass, 17 datetime senza fuso, 11 if annidabili, 5 global non assegnate, 5 variabili spacchettate non usate, 4 fromtimestamp senza fuso, 3 datetime senza fuso, 3 startswith multipli, 3 cast a int inutili, 2 subprocess senza check, piu casi singoli.
-R127 gravita basso, categoria ottimizzazione, in board_utils.py:742, game_flow.py:1116,1373 (B2-24)
-Import di chess ripetuto dentro una funzione dove e gia importato in testa al modulo, controlli hasattr su attributi sempre presenti, doppia copia della scacchiera per ogni descrizione di mossa.
-R128 gravita basso, categoria logica, in game_flow.py:1553,1576 (B2-25)
-Il metodo title applicato ai nomi dei giocatori altera sigle e nomi composti, per esempio IZ4APU diventa Iz4Apu.
 R132 gravita basso, categoria ottimizzazione, in engine.py:102-107 (B3-21)
 Sei variabili globali mutabili governano motore, tempi, linee e cache.
-R133 gravita basso, categoria ottimizzazione, in engine.py:131-136 (B3-22)
-La ricerca del motore guarda in LOCALAPPDATA Orologic Engine stockfish, cartella che nessuna parte del programma crea piu: percorso legacy.
-R134 gravita basso, categoria ottimizzazione, in engine.py:1453-1454 (B3-23)
-Soglia mossa buona e soglia per la mossa geniale sono costanti nel codice, commentate come parametri fissi per ora, mentre le altre tre soglie sono configurabili dal menu impostazioni.
-R135 gravita basso, categoria ottimizzazione, in engine.py:44-50 (B3-24)
-Il commento sulla formula dell'accuratezza documenta un dubbio irrisolto dell'autore invece della formula effettiva.
-R136 gravita basso, categoria ottimizzazione, in ui.py:724-730 (B3-25)
-Il wrapper setup_fischer_random_board scarta il numero della posizione, che sarebbe utile negli header PGN.
 R138 gravita basso, categoria fragilita, in lichess_app.py:1763,1774 (B4-06)
 Il messaggio di avanzamento della ricerca viene riscritto sulla stessa riga previa pulizia con ritorno carrello: tecnica voluta e corretta per il posizionamento del cursore e del display braille. Vale anche qui l'unico difetto tecnico: la larghezza fissa a settantanove colonne.
 R139 gravita basso, categoria fragilita, in lichess_app.py:1757,1786,1993 e lichess_stats.py:222-228 (B4-16)
 Accessi diretti alle chiavi delle risposte JSON dell'API, gameId, id, challenger name, e ai punti della storia Elo per posizione numerica: un cambio di formato dell'API produce eccezioni invece di un messaggio.
 R142 gravita basso, categoria fragilita, in lichess_board.py:365-366 e lichess_profiler.py:456 (B5-13)
 Accessi diretti alle chiavi delle risposte JSON, per esempio i due giocatori nello stream e il campo pgn di ogni partita scaricata: un formato inatteso produce un'eccezione al posto di un messaggio.
-R146 gravita basso, categoria logica, in tempo_app.py:245-256 (B6-11)
-Nel confronto dei tempi, a parita esatta viene annunciato il nero in vantaggio di zero secondi, perche il ternario usa il maggiore stretto.
 R147 gravita basso, categoria ottimizzazione, in memoboard_app.py:41-45 (B6-12)
 La lista delle case viene costruita passando da un insieme, quindi con ordine non deterministico. Non ha conseguenze pratiche perche si usa solo random.choice, ma la costruzione diretta per comprensione sarebbe piu semplice e ordinata.
 R148 gravita basso, categoria fragilita, in memoboard_app.py:88,617 (B6-13)

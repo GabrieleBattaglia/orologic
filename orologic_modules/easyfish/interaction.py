@@ -295,9 +295,7 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
 
     def SyncBoardToNode(node):
         board = initial_board.copy()
-        for move in node.mainline_moves():  # Logica più sicura per PGN
-            pass  # Non usiamo questa, ma la versione a stack
-
+        # La posizione si ricostruisce risalendo i nodi fino alla radice.
         move_stack = []
         temp = node
         while temp.parent:
