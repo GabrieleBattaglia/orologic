@@ -208,6 +208,179 @@ def CheckGameOver(board, node=None):
             )
 
 
+def _comandi_informativi(cmd, board, node, game, sharing_window):
+    """Comandi del menu che si limitano a riferire qualcosa.
+
+    Scacchiera, elenco comandi, mossa migliore, intestazioni del PGN e
+    stato della finestra di condivisione. Restituisce vero se il
+    comando e' stato riconosciuto.
+    """
+    if cmd == ".v":
+        print(
+            _(
+                "Pronto per nuova variante. Inserisci una mossa diversa per creare un nuovo ramo."
+            )
+        )
+    elif cmd == ".?":
+        menu(d=MNMAIN, show_only=True)
+    elif cmd == ".b":
+        print(board)
+    elif cmd == ".bm":
+        white, black = CalculateMaterial(board)
+        print(
+            _("Materiale sulla scacchiera: {w}/{b} Bianco/Nero").format(
+                w=white, b=black
+            )
+        )
+    elif cmd == ".gp":
+        CopyPGNToClipboard(game)
+    elif cmd == ".i":
+        export_board_pdf(board, node)
+    elif cmd == ".ii":
+        image_settings_menu()
+        if sharing_window and sharing_window.is_active():
+            sharing_window.trigger_update()
+    elif cmd == ".gf":
+        pyperclip.copy(board.fen())
+        print(_("Partita in FEN. Copiata negli appunti"))
+    elif cmd in [".csb", ".csn", ".cst"]:
+        if sharing_window is None or not sharing_window.is_active():
+            print(_("Errore: devi prima avviare la condivisione con il comando .cs"))
+        else:
+            if cmd == ".csb":
+                sharing_window.set_orientation("white")
+                print(_("Orientamento scacchiera condivisa impostato: Bianco (fisso)."))
+            elif cmd == ".csn":
+                sharing_window.set_orientation("black")
+                print(_("Orientamento scacchiera condivisa impostato: Nero (fisso)."))
+            elif cmd == ".cst":
+                sharing_window.set_orientation("turn")
+                print(
+                    _(
+                        "Orientamento scacchiera condivisa impostato: in base al turno (dinamico)."
+                    )
+                )
+    else:
+        return False
+    return True
+
+
+def _comandi_analisi(cmd_clean, board, engine, number_command, info):
+    """Analizza la posizione e rilegge le linee gia' trovate.
+
+    Restituisce il risultato dell'analisi, che il comando punto elle
+    riusa senza interrogare di nuovo il motore.
+    """
+    if cmd_clean == ".a":
+        if not engine:
+            print(_("Motore non caricato in Orologic."))
+        else:
+            sec = number_command if number_command > 0 else 1
+            print(_("Analisi posizione corrente per {s} secondi.").format(s=sec))
+            limit = chess.engine.Limit(time=sec)
+            try:
+                info_result = engine.analyse(
+                    board, limit, multipv=orologic_engine.multipv
+                )
+                info = info_result
+                if isinstance(info, list):
+                    ShowStats(board, info[0])
+                elif isinstance(info, dict):
+                    ShowStats(board, info)
+            except Exception as e:
+                print(_("Errore analisi: {e}").format(e=e))
+    elif cmd_clean == ".l":
+        if info:
+            idx = number_command - 1 if number_command > 0 else 0
+            idx = max(idx, 0)
+            current_info_list = info if isinstance(info, list) else [info]
+            if idx >= len(current_info_list):
+                print(
+                    _("Ci sono solo {n} linee di analisi disponibili").format(
+                        n=len(current_info_list)
+                    )
+                )
+                idx = len(current_info_list) - 1
+            if idx == 0:
+                print(_("Migliore:"))
+            else:
+                print(_("{n}° scelta:").format(n=idx + 1))
+            ShowStats(board, current_info_list[idx])
+        else:
+            print(_("Prima devi eseguire l'analisi con il comando .a"))
+    return info
+
+
+def _apri_condivisione(board, node, sharing_window):
+    """Apre o chiude la finestra grafica per la didattica.
+
+    Restituisce la finestra da usare d'ora in poi, che puo' essere
+    quella appena aperta, quella gia' attiva o nessuna.
+    """
+    if sharing_window is None or not sharing_window.is_active():
+        print(
+            _(
+                "\nAttivazione condivisione scacchiera (finestra grafica per didattica)..."
+            )
+        )
+        print(_("ISTRUZIONI:"))
+        print(_("- Puoi condividere la nuova finestra su Meet, Zoom o Teams."))
+        print(
+            _(
+                "- Per continuare ad inserire comandi, ricordati di riportare il focus (cliccare) su questa finestra di testo della console."
+            )
+        )
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                0,
+                config.VOLUME,
+                "e5",
+                0.1,
+                0,
+                config.VOLUME,
+                "g5",
+                0.1,
+                0,
+                config.VOLUME,
+                "c6",
+                0.2,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+        )
+        sharing_window = PygameBoardWindow(config.VERSION)
+        sharing_window.start(board, node)
+    else:
+        Acusticator(
+            [
+                "c6",
+                0.1,
+                0,
+                config.VOLUME,
+                "g5",
+                0.1,
+                0,
+                config.VOLUME,
+                "e5",
+                0.1,
+                0,
+                config.VOLUME,
+                "c5",
+                0.2,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+        )
+        sharing_window.stop()
+        sharing_window = None
+        print(_("\nCondivisione scacchiera disattivata."))
+    return sharing_window
+
+
 def run():
     global sharing_window, show_output_on_board
     builtins.print = custom_print
@@ -346,13 +519,8 @@ def run():
                     sharing_window.stop()
                 break
 
-            elif cmd == ".v":
-                # Segnalazione visuale per l'utente
-                print(
-                    _(
-                        "Pronto per nuova variante. Inserisci una mossa diversa per creare un nuovo ramo."
-                    )
-                )
+            elif _comandi_informativi(cmd, board, node, game, sharing_window):
+                pass
 
             elif cmd == ".vm":
                 # Promuovi Variante a Mainline
@@ -468,9 +636,6 @@ def run():
                 game_state.board = board
                 print(board)
 
-            elif cmd == ".?":
-                menu(d=MNMAIN, show_only=True)
-
             elif cmd == ".e":
                 print(_("Accesso alla modalità esplorazione..."))
                 mod_in_exp, final_node = ExplorerMode(
@@ -538,132 +703,18 @@ def run():
                     if mod_in_exp:
                         is_modified = True
 
-            elif cmd == ".b":
-                print(board)
-
             elif cmd == ".d":
                 if drawing_menu(game, node):
                     is_modified = True
                     if sharing_window and sharing_window.is_active():
                         sharing_window.trigger_update()
 
-            elif cmd == ".bm":
-                white, black = CalculateMaterial(board)
-                print(
-                    _("Materiale sulla scacchiera: {w}/{b} Bianco/Nero").format(
-                        w=white, b=black
-                    )
-                )
-
             elif cmd == ".pt":
                 AddingPGNTAGS(game)
                 is_modified = True
 
-            elif cmd == ".gp":
-                CopyPGNToClipboard(game)
-
-            elif cmd == ".i":
-                export_board_pdf(board, node)
-
-            elif cmd == ".ii":
-                image_settings_menu()
-                if sharing_window and sharing_window.is_active():
-                    sharing_window.trigger_update()
-
             elif cmd == ".cs":
-                if sharing_window is None or not sharing_window.is_active():
-                    print(
-                        _(
-                            "\nAttivazione condivisione scacchiera (finestra grafica per didattica)..."
-                        )
-                    )
-                    print(_("ISTRUZIONI:"))
-                    print(
-                        _("- Puoi condividere la nuova finestra su Meet, Zoom o Teams.")
-                    )
-                    print(
-                        _(
-                            "- Per continuare ad inserire comandi, ricordati di riportare il focus (cliccare) su questa finestra di testo della console."
-                        )
-                    )
-                    Acusticator(
-                        [
-                            "c5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "e5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "g5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "c6",
-                            0.2,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                    )
-                    sharing_window = PygameBoardWindow(config.VERSION)
-                    sharing_window.start(board, node)
-                else:
-                    Acusticator(
-                        [
-                            "c6",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "g5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "e5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "c5",
-                            0.2,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                    )
-                    sharing_window.stop()
-                    sharing_window = None
-                    print(_("\nCondivisione scacchiera disattivata."))
-
-            elif cmd in [".csb", ".csn", ".cst"]:
-                if sharing_window is None or not sharing_window.is_active():
-                    print(
-                        _(
-                            "Errore: devi prima avviare la condivisione con il comando .cs"
-                        )
-                    )
-                else:
-                    if cmd == ".csb":
-                        sharing_window.set_orientation("white")
-                        print(
-                            _(
-                                "Orientamento scacchiera condivisa impostato: Bianco (fisso)."
-                            )
-                        )
-                    elif cmd == ".csn":
-                        sharing_window.set_orientation("black")
-                        print(
-                            _(
-                                "Orientamento scacchiera condivisa impostato: Nero (fisso)."
-                            )
-                        )
-                    elif cmd == ".cst":
-                        sharing_window.set_orientation("turn")
-                        print(
-                            _(
-                                "Orientamento scacchiera condivisa impostato: in base al turno (dinamico)."
-                            )
-                        )
+                sharing_window = _apri_condivisione(board, node, sharing_window)
 
             elif cmd_clean == ".cso":
                 parts = key_command.strip().split()
@@ -716,10 +767,6 @@ def run():
                     print(board)
                 else:
                     print(_("PGN non valido o appunti vuoti."))
-
-            elif cmd == ".gf":
-                pyperclip.copy(board.fen())
-                print(_("Partita in FEN. Copiata negli appunti"))
 
             elif cmd == ".fg":
                 fen_from_clip = pyperclip.paste()
@@ -776,46 +823,8 @@ def run():
                     print(_("Nuova partita avviata dalla posizione editata."))
                     print(board)
 
-            elif cmd_clean == ".a":
-                if not engine:
-                    print(_("Motore non caricato in Orologic."))
-                else:
-                    sec = number_command if number_command > 0 else 1
-                    print(
-                        _("Analisi posizione corrente per {s} secondi.").format(s=sec)
-                    )
-                    limit = chess.engine.Limit(time=sec)
-                    try:
-                        info_result = engine.analyse(
-                            board, limit, multipv=orologic_engine.multipv
-                        )
-                        info = info_result
-                        if isinstance(info, list):
-                            ShowStats(board, info[0])
-                        elif isinstance(info, dict):
-                            ShowStats(board, info)
-                    except Exception as e:
-                        print(_("Errore analisi: {e}").format(e=e))
-
-            elif cmd_clean == ".l":
-                if info:
-                    idx = number_command - 1 if number_command > 0 else 0
-                    idx = max(idx, 0)
-                    current_info_list = info if isinstance(info, list) else [info]
-                    if idx >= len(current_info_list):
-                        print(
-                            _("Ci sono solo {n} linee di analisi disponibili").format(
-                                n=len(current_info_list)
-                            )
-                        )
-                        idx = len(current_info_list) - 1
-                    if idx == 0:
-                        print(_("Migliore:"))
-                    else:
-                        print(_("{n}° scelta:").format(n=idx + 1))
-                    ShowStats(board, current_info_list[idx])
-                else:
-                    print(_("Prima devi eseguire l'analisi con il comando .a"))
+            elif cmd_clean in (".a", ".l"):
+                info = _comandi_analisi(cmd_clean, board, engine, number_command, info)
 
             else:
                 print(
