@@ -1,7 +1,7 @@
 import datetime
 
 
-from GBUtils import enter_escape, menu, sonify
+from GBUtils import dgt, enter_escape, menu, sonify
 
 from . import rete, storage, tempo
 from .config import _
@@ -282,20 +282,16 @@ def run_stats(username, secrets):
                         r=pt_list[-1]["rating"],
                     )
                 )
-                try:
-                    val = input(
-                        _(
-                            "Inserisci l'indice iniziale (1-{tot}, o invio per annullare): "
-                        ).format(tot=len(pt_list))
-                    ).strip()
-                    if val:
-                        val_idx = int(val) - 1
-                        if 0 <= val_idx <= end_idx:
-                            start_idx = val_idx
-                        else:
-                            print(_("Indice non valido o superiore all'indice finale."))
-                except ValueError:
-                    print(_("Valore non valido."))
+                start_idx = (
+                    dgt(
+                        _("Indice iniziale, da 1 a {tot}: ").format(tot=end_idx + 1),
+                        kind="i",
+                        imin=1,
+                        imax=end_idx + 1,
+                        default=start_idx + 1,
+                    )
+                    - 1
+                )
             elif scelta == "2":
                 print(
                     _("Primo valore: 1 - {d} (Elo: {r})").format(
@@ -309,22 +305,18 @@ def run_stats(username, secrets):
                         r=pt_list[-1]["rating"],
                     )
                 )
-                try:
-                    val = input(
-                        _(
-                            "Inserisci l'indice finale (1-{tot}, o invio per annullare): "
-                        ).format(tot=len(pt_list))
-                    ).strip()
-                    if val:
-                        val_idx = int(val) - 1
-                        if start_idx <= val_idx < len(pt_list):
-                            end_idx = val_idx
-                        else:
-                            print(
-                                _("Indice non valido o inferiore all'indice iniziale.")
-                            )
-                except ValueError:
-                    print(_("Valore non valido."))
+                end_idx = (
+                    dgt(
+                        _("Indice finale, da {da} a {tot}: ").format(
+                            da=start_idx + 1, tot=len(pt_list)
+                        ),
+                        kind="i",
+                        imin=start_idx + 1,
+                        imax=len(pt_list),
+                        default=end_idx + 1,
+                    )
+                    - 1
+                )
             elif scelta == "3":
                 start_idx = 0
                 end_idx = len(pt_list) - 1
@@ -338,17 +330,13 @@ def run_stats(username, secrets):
                     _("Abilitare il portamento? (Invio = Si', Esc = No): ")
                 )
 
-                try:
-                    sec_str = input(
-                        _(
-                            "Inserisci la durata in secondi (es. 5, max 30, o invio per 5): "
-                        )
-                    ).strip()
-                    duration = float(sec_str) if sec_str else 5.0
-                    if duration < 1.0 or duration > 30.0:
-                        duration = 5.0
-                except ValueError:
-                    duration = 5.0
+                duration = dgt(
+                    _("Durata in secondi, da 1 a 30: "),
+                    kind="f",
+                    fmin=1.0,
+                    fmax=30.0,
+                    default=5.0,
+                )
 
                 db_data = storage.LoadDB()
                 volume = db_data.get("volume", 1.0)

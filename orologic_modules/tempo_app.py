@@ -42,19 +42,11 @@ def StartTempo(clock_config):
     game_state.white_player = _("Bianco")
     game_state.black_player = _("Nero")
 
-    nota_sessione = ""
-    while True:
-        nota_sessione = dgt(
-            _("Inserisci una nota per questa sessione (massimo 250 caratteri): "),
-            kind="s",
-        )
-        if len(nota_sessione) <= 250:
-            break
-        print(
-            _(
-                "Errore: la nota non deve superare i 250 caratteri. Attualmente e' di {len_note} caratteri."
-            ).format(len_note=len(nota_sessione))
-        )
+    nota_sessione = dgt(
+        _("Nota per questa sessione, al massimo 250 caratteri: "),
+        kind="s",
+        smax=250,
+    )
     game_state.session_note = nota_sessione
 
     key(
@@ -190,36 +182,8 @@ def _loop_tempo(game_state, clock_config):
                     ordered=False,
                 )
 
-            elif cmd == ".1":
-                Acusticator(
-                    ["a6", 0.14, -1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                )
-                ui.report_white_time(game_state)
-            elif cmd == ".2":
-                Acusticator(
-                    ["b6", 0.14, 1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                )
-                ui.report_black_time(game_state)
-            elif cmd == ".3":
-                Acusticator(
-                    ["e7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                )
-                ui.report_white_time(game_state)
-                ui.report_black_time(game_state)
-            elif cmd == ".4":
-                Acusticator(
-                    ["f7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                )
-                diff = abs(game_state.white_remaining - game_state.black_remaining)
-                adv = (
-                    _("bianco")
-                    if game_state.white_remaining > game_state.black_remaining
-                    else _("nero")
-                )
-                print(
-                    _("{player} in vantaggio di ").format(player=adv)
-                    + board_utils.FormatTime(diff)
-                )
+            elif ui.comandi_orologio(cmd, game_state):
+                pass
             elif cmd == ".5":
                 if game_state.paused:
                     Acusticator(
@@ -372,125 +336,6 @@ def _loop_tempo(game_state, clock_config):
                         kind=1,
                     )
                     print(_("Ultimo input '{move}' eliminato.").format(move=last_move))
-            elif (
-                cmd.startswith(".b+")
-                or cmd.startswith(".b-")
-                or cmd.startswith(".n+")
-                or cmd.startswith(".n-")
-            ):
-                if game_state.paused:
-                    try:
-                        adjust = float(cmd[3:])
-                        if cmd.startswith(".b+"):
-                            Acusticator(
-                                [
-                                    "d4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "f4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "a4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "c5",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                ],
-                                kind=1,
-                                adsr=[15, 0, 90, 5],
-                            )
-                            orologio.aggiungi(game_state, True, adjust)
-                        elif cmd.startswith(".b-"):
-                            Acusticator(
-                                [
-                                    "c5",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "a4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "f4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "d4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                ],
-                                kind=1,
-                                adsr=[15, 0, 90, 5],
-                            )
-                            orologio.aggiungi(game_state, True, -adjust)
-                        elif cmd.startswith(".n+"):
-                            Acusticator(
-                                [
-                                    "d4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "f4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "a4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "c5",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                ],
-                                kind=1,
-                                adsr=[15, 0, 90, 5],
-                            )
-                            orologio.aggiungi(game_state, False, adjust)
-                        elif cmd.startswith(".n-"):
-                            Acusticator(
-                                [
-                                    "c5",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "a4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "f4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "d4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                ],
-                                kind=1,
-                                adsr=[15, 0, 90, 5],
-                            )
-                            orologio.aggiungi(game_state, False, -adjust)
-                        print(
-                            _(
-                                "Nuovo tempo bianco: {white_time}, nero: {black_time}"
-                            ).format(
-                                white_time=board_utils.FormatTime(
-                                    game_state.white_remaining
-                                ),
-                                black_time=board_utils.FormatTime(
-                                    game_state.black_remaining
-                                ),
-                            )
-                        )
-                    except Exception:
-                        print(_("Comando non valido."))
             else:
                 Acusticator(
                     ["e3", 1, 0, config.VOLUME, "a2", 1, 0, config.VOLUME],

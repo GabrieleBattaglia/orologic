@@ -120,21 +120,9 @@ def _carica_archivio():
                 headers={"User-Agent": "Orologic PGN Search"},
             )
             # Aggiungi token Lichess se presente
-            token = None
-            try:
-                import json
+            from orologic_modules.lichess_app import load_secrets
 
-                from orologic_modules.config import percorso_salvataggio
-
-                secrets_path = percorso_salvataggio(
-                    os.path.join("settings", "secrets.json")
-                )
-                if os.path.exists(secrets_path):
-                    with open(secrets_path, "r", encoding="utf-8") as f:
-                        secrets = json.load(f)
-                        token = secrets.get("lichess_token")
-            except Exception:
-                pass
+            token = load_secrets().get("lichess_token")
             if token and "lichess.org" in clipboard.lower():
                 req.add_header("Authorization", f"Bearer {token}")
 

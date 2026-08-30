@@ -6,7 +6,7 @@ import chess
 from GBUtils import Acusticator, dgt, key
 from GBUtils import enter_escape as _enter_escape_gbutils
 
-from . import board_utils, config, localizzazione, storage, version
+from . import board_utils, config, localizzazione, orologio, storage, tempo, version
 from .board_utils import stampa_elenco
 from .config import _
 
@@ -621,30 +621,102 @@ def report_piece_positions(game_state, piece_symbol):
         )
 
 
-def report_white_time(game_state):
-    initial_white = game_state.clock_config["phases"][game_state.white_phase][
-        "white_time"
-    ]
-    elapsed_white = initial_white - game_state.white_remaining
-    perc_white = (elapsed_white / initial_white * 100) if initial_white > 0 else 0
+def _report_tempo(game_state, bianco):
+    """Annuncia il tempo che resta a un giocatore e quanto ne ha speso."""
+    fase = game_state.white_phase if bianco else game_state.black_phase
+    campo = "white_time" if bianco else "black_time"
+    iniziale = game_state.clock_config["phases"][fase][campo]
+    residuo = game_state.white_remaining if bianco else game_state.black_remaining
+    speso = iniziale - residuo
+    percentuale = (speso / iniziale * 100) if iniziale > 0 else 0
+    etichetta = _("Tempo bianco: ") if bianco else _("Tempo nero: ")
     print(
-        _("Tempo bianco: ")
-        + board_utils.FormatTime(game_state.white_remaining)
-        + f" ({perc_white:.0f}%)"
+        etichetta
+        + tempo.parlato(residuo)
+        + _(", consumato il {p:.0f} per cento").format(p=percentuale)
     )
+
+
+def report_white_time(game_state):
+    _report_tempo(game_state, True)
 
 
 def report_black_time(game_state):
-    initial_black = game_state.clock_config["phases"][game_state.black_phase][
-        "black_time"
-    ]
-    elapsed_black = initial_black - game_state.black_remaining
-    perc_black = (elapsed_black / initial_black * 100) if initial_black > 0 else 0
-    print(
-        _("Tempo nero: ")
-        + board_utils.FormatTime(game_state.black_remaining)
-        + f" ({perc_black:.0f}%)"
-    )
+    _report_tempo(game_state, False)
+
+
+def comandi_orologio(comando, game_state):
+    """Comandi che riguardano solo gli orologi, uguali in partita e in Tempo.
+
+    Sono i tempi dei due giocatori, il confronto e le correzioni manuali in
+    pausa. Restituisce vero se il comando e' stato riconosciuto: prima questo
+    blocco viveva in due copie, nell'arbitraggio e nella modalita' Tempo.
+    """
+    if comando == ".1":
+        Acusticator(["a6", 0.14, -1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+        report_white_time(game_state)
+        return True
+
+    if comando == ".2":
+        Acusticator(["b6", 0.14, 1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+        report_black_time(game_state)
+        return True
+
+    if comando == ".3":
+        Acusticator(["e7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+        report_white_time(game_state)
+        report_black_time(game_state)
+        return True
+
+    if comando == ".4":
+        Acusticator(["f7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+        differenza = abs(game_state.white_remaining - game_state.black_remaining)
+        if differenza < 1:
+            print(_("I due orologi sono pari."))
+            return True
+        avanti = (
+            _("Il bianco")
+            if game_state.white_remaining > game_state.black_remaining
+            else _("Il nero")
+        )
+        print(
+            _("{chi} e' in vantaggio di {quanto}").format(
+                chi=avanti, quanto=tempo.parlato(differenza)
+            )
+        )
+        return True
+
+    if comando.startswith((".b+", ".b-", ".n+", ".n-")):
+        if not game_state.paused:
+            print(
+                _("Le correzioni di tempo si fanno in pausa, con il comando punto p.")
+            )
+            return True
+        secondi = tempo.da_testo(comando[3:].strip())
+        if secondi is None:
+            print(_("Dopo il comando serve un tempo, per esempio punto b piu' 30."))
+            return True
+        bianco = comando[1] == "b"
+        segno = 1 if comando[2] == "+" else -1
+        nuovo = orologio.aggiungi(game_state, bianco, segno * secondi)
+        chi = _("Il bianco") if bianco else _("Il nero")
+        if segno > 0:
+            Acusticator(["c6", 0.12, 0, config.VOLUME], kind=1)
+            print(
+                _("{chi} ha ricevuto {quanto}, ora ha {totale}").format(
+                    chi=chi, quanto=tempo.parlato(secondi), totale=tempo.parlato(nuovo)
+                )
+            )
+        else:
+            Acusticator(["c4", 0.12, 0, config.VOLUME], kind=1)
+            print(
+                _("{chi} ha perso {quanto}, ora ha {totale}").format(
+                    chi=chi, quanto=tempo.parlato(secondi), totale=tempo.parlato(nuovo)
+                )
+            )
+        return True
+
+    return False
 
 
 def save_text_summary(game_state, descriptive_moves, eco_entry):

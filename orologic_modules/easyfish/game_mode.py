@@ -6,7 +6,7 @@ import chess.pgn
 
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
-from .. import engine as orologic_engine, orologio
+from .. import engine as orologic_engine, orologio, tempo
 from .. import storage
 from ..board_utils import CustomBoard, DescribeMove, FormatTime, NormalizeMove
 from ..config import _
@@ -30,42 +30,32 @@ class EasyfishGameState:
 
 
 def ParseTimeInput(prompt_text):
-    """Richiede input tempo in formato HH:MM:SS o sss con opzionale incremento +inc."""
+    """Chiede tempo ed eventuale incremento, per esempio 20:00+15.
+
+    La lettura della durata e' quella del modulo tempo: qui si aggiunge solo
+    la parte dopo il piu', cioe' l'incremento in secondi.
+    """
     while True:
-        s = dgt(
-            prompt=prompt_text + " (es. 01:15:00+10, 20:00+15 o 400+5): ", kind="s"
+        risposta = dgt(
+            prompt=prompt_text + _(" (es. 01:15:00+10, 20:00+15 o 400+5): "), kind="s"
         ).strip()
-        if not s:
+        if not risposta:
             return None, None
 
-        inc = 0
-        if "+" in s:
-            parts_plus = s.split("+")
-            if len(parts_plus) == 2:
-                s = parts_plus[0].strip()
-                try:
-                    inc = int(parts_plus[1].strip())
-                except ValueError:
-                    print(_("Incremento non valido."))
-                    continue
-            else:
-                print(_("Formato incremento non valido."))
+        parte_tempo, _sep, parte_incremento = risposta.partition("+")
+        incremento = 0
+        if parte_incremento:
+            try:
+                incremento = int(parte_incremento.strip())
+            except ValueError:
+                print(_("L'incremento deve essere un numero di secondi."))
                 continue
 
-        try:
-            if ":" in s:
-                parts = s.split(":")
-                if len(parts) == 3:
-                    t_sec = int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
-                elif len(parts) == 2:
-                    t_sec = int(parts[0]) * 60 + int(parts[1])
-                else:
-                    raise ValueError
-            else:
-                t_sec = int(s)
-            return t_sec, inc
-        except ValueError:
-            print(_("Formato tempo non valido."))
+        secondi = tempo.da_testo(parte_tempo)
+        if secondi is None:
+            print(_("Tempo non riconosciuto: usa ore:minuti:secondi oppure i secondi."))
+            continue
+        return secondi, incremento
 
 
 def StartEngineGame(game_node, engine_instance, sharing_window=None):

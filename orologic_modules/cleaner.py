@@ -1,6 +1,8 @@
 import os
 import time
 
+from GBUtils import enter_escape, key
+
 from .config import _, percorso_salvataggio
 
 
@@ -44,13 +46,20 @@ def check_and_clean_old_files(days=365):
                         "Vuoi (v)edere la lista, (c)ancellarli, o (i)gnorare questo avviso?"
                     )
                 )
-                choice = input("> ").strip().lower()
+                choice = key(_("Scegli v, c oppure i: ")).strip().lower()
 
                 if choice == "v":
                     print(_("Lista file:"))
                     for f in old_files:
                         print(f" - {os.path.basename(f)}")
                 elif choice == "c":
+                    if not enter_escape(
+                        _(
+                            "Confermi la cancellazione di {n} file? Non si torna indietro. INVIO per si', ESC per no: "
+                        ).format(n=len(old_files))
+                    ):
+                        print(_("Cancellazione annullata."))
+                        continue
                     from GBUtils import Acusticator
 
                     from . import config

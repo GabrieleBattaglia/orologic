@@ -239,10 +239,10 @@ def send_message(username, token):
         print(_("Devi essere loggato per inviare messaggi."))
         return
 
-    msg = input(
-        _("\nScrivi il messaggio per {u} (lascia vuoto per annullare): ").format(
-            u=username
-        )
+    msg = dgt(
+        _("Scrivi il messaggio per {u}, vuoto per annullare: ").format(u=username),
+        kind="s",
+        smax=500,
     ).strip()
     if not msg:
         return
@@ -339,7 +339,11 @@ def download_games(username, token):
         if enter_escape(
             _("Vuoi specificare un codice ECO? (INVIO per si', ESC per no): ")
         ):
-            eco = input(_("Codice ECO (es. B10): ")).strip().upper()
+            eco = (
+                dgt(_("Codice ECO, per esempio B10: "), kind="s", smax=3)
+                .strip()
+                .upper()
+            )
             if eco:
                 filters["eco"] = eco
 

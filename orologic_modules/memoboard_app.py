@@ -421,9 +421,7 @@ def report_and_update_scores(
             )
         )
         username = (
-            input(_("Per favore, inserisci il tuo nome per la classifica: "))
-            .strip()
-            .title()
+            dgt(_("Il tuo nome per la classifica: "), kind="s", smax=40).strip().title()
         )
         if not username:
             username = _("Anonimo")

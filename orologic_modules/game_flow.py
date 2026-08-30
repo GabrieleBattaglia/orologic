@@ -288,36 +288,8 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                     p=_("Comandi disponibili:"),
                     ordered=False,
                 )
-            elif cmd == ".1":
-                Acusticator(
-                    ["a6", 0.14, -1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                )
-                ui.report_white_time(game_state)
-            elif cmd == ".2":
-                Acusticator(
-                    ["b6", 0.14, 1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                )
-                ui.report_black_time(game_state)
-            elif cmd == ".3":
-                Acusticator(
-                    ["e7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                )
-                ui.report_white_time(game_state)
-                ui.report_black_time(game_state)
-            elif cmd == ".4":
-                Acusticator(
-                    ["f7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                )
-                diff = abs(game_state.white_remaining - game_state.black_remaining)
-                adv = (
-                    _("bianco")
-                    if game_state.white_remaining > game_state.black_remaining
-                    else _("nero")
-                )
-                print(
-                    _("{player} in vantaggio di ").format(player=adv)
-                    + board_utils.FormatTime(diff)
-                )
+            elif ui.comandi_orologio(cmd, game_state):
+                pass
             elif cmd == ".5":
                 if game_state.paused:
                     Acusticator(
@@ -531,126 +503,6 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         game_state.descriptive_move_history.pop()
                     current_turn_clock_before = None
                     print(_("Ultima mossa annullata: ") + undone_move_san)
-            elif (
-                cmd.startswith(".b+")
-                or cmd.startswith(".b-")
-                or cmd.startswith(".n+")
-                or cmd.startswith(".n-")
-            ):
-                if game_state.paused:
-                    try:
-                        adjust = float(cmd[3:])
-                        if cmd.startswith(".b+"):
-                            Acusticator(
-                                [
-                                    "d4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "f4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "a4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "c5",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                ],
-                                kind=1,
-                                adsr=[15, 0, 90, 5],
-                            )
-                            orologio.aggiungi(game_state, True, adjust)
-                        elif cmd.startswith(".b-"):
-                            Acusticator(
-                                [
-                                    "c5",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "a4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "f4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                    "d4",
-                                    0.15,
-                                    -0.5,
-                                    config.VOLUME,
-                                ],
-                                kind=1,
-                                adsr=[15, 0, 90, 5],
-                            )
-                            orologio.aggiungi(game_state, True, -adjust)
-                        elif cmd.startswith(".n+"):
-                            Acusticator(
-                                [
-                                    "d4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "f4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "a4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "c5",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                ],
-                                kind=1,
-                                adsr=[15, 0, 90, 5],
-                            )
-                            orologio.aggiungi(game_state, False, adjust)
-                        elif cmd.startswith(".n-"):
-                            Acusticator(
-                                [
-                                    "c5",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "a4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "f4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                    "d4",
-                                    0.15,
-                                    0.5,
-                                    config.VOLUME,
-                                ],
-                                kind=1,
-                                adsr=[15, 0, 90, 5],
-                            )
-                            orologio.aggiungi(game_state, False, -adjust)
-                        print(
-                            _(
-                                "Nuovo tempo bianco: {white_time}, nero: {black_time}"
-                            ).format(
-                                white_time=board_utils.FormatTime(
-                                    game_state.white_remaining
-                                ),
-                                black_time=board_utils.FormatTime(
-                                    game_state.black_remaining
-                                ),
-                            )
-                        )
-                        current_turn_clock_before = None
-                    except Exception:
-                        print(_("Comando non valido."))
             elif cmd == ".s":
                 Acusticator(
                     [
@@ -1256,185 +1108,58 @@ def StartGame(clock_config):
     site_default = default_pgn.get("Site", _("Sede sconosciuta"))
     round_default = default_pgn.get("Round", "Round 1")
     eco_database = board_utils.LoadEcoDatabaseWithFEN("eco.db")
-    white_player = (
-        dgt(
-            _("Nome del bianco [{default}]: ").format(default=white_default),
+    # Le sette voci dell'intestazione si chiedevano con sette blocchi identici
+    # di prompt, suono e ripiego sul valore precedente: ora e' un giro solo.
+    CAMPI_PGN = (
+        ("White", _("Nome del bianco"), white_default, True),
+        ("Black", _("Nome del nero"), black_default, True),
+        ("WhiteElo", _("Elo del bianco"), white_elo_default, False),
+        ("BlackElo", _("Elo del nero"), black_elo_default, False),
+        ("Event", _("Evento"), event_default, False),
+        ("Site", _("Sede"), site_default, False),
+        ("Round", _("Round"), round_default, False),
+    )
+    intestazione = {}
+    for chiave, domanda, predefinito, e_un_nome in CAMPI_PGN:
+        risposta = dgt(
+            _("{domanda} [{predefinito}]: ").format(
+                domanda=domanda, predefinito=predefinito
+            ),
             kind="s",
-            default=white_default,
+            default=predefinito,
+        ).strip()
+        if not risposta:
+            risposta = predefinito
+        elif e_un_nome:
+            risposta = risposta.title()
+        intestazione[chiave] = risposta
+        Acusticator(
+            [
+                "c5",
+                0.05,
+                0,
+                config.VOLUME,
+                "e5",
+                0.05,
+                0,
+                config.VOLUME,
+                "g5",
+                0.05,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[0, 0, 100, 5],
         )
-        .strip()
-        .title()
-    )
-    Acusticator(
-        [
-            "c5",
-            0.05,
-            0,
-            config.VOLUME,
-            "e5",
-            0.05,
-            0,
-            config.VOLUME,
-            "g5",
-            0.05,
-            0,
-            config.VOLUME,
-        ],
-        kind=1,
-        adsr=[0, 0, 100, 5],
-    )
-    if white_player == "":
-        white_player = white_default
-    black_player = (
-        dgt(
-            _("Nome del nero [{default}]: ").format(default=black_default),
-            kind="s",
-            default=black_default,
-        )
-        .strip()
-        .title()
-    )
-    Acusticator(
-        [
-            "c5",
-            0.05,
-            0,
-            config.VOLUME,
-            "e5",
-            0.05,
-            0,
-            config.VOLUME,
-            "g5",
-            0.05,
-            0,
-            config.VOLUME,
-        ],
-        kind=1,
-        adsr=[0, 0, 100, 5],
-    )
-    if black_player == "":
-        black_player = black_default
-    white_elo = dgt(
-        _("Elo del bianco [{default}]: ").format(default=white_elo_default),
-        kind="s",
-        default=white_elo_default,
-    )
-    Acusticator(
-        [
-            "c5",
-            0.05,
-            0,
-            config.VOLUME,
-            "e5",
-            0.05,
-            0,
-            config.VOLUME,
-            "g5",
-            0.05,
-            0,
-            config.VOLUME,
-        ],
-        kind=1,
-        adsr=[0, 0, 100, 5],
-    )
-    if white_elo.strip() == "":
-        white_elo = white_elo_default
-    black_elo = dgt(
-        _("Elo del nero [{default}]: ").format(default=black_elo_default),
-        kind="s",
-        default=black_elo_default,
-    )
-    Acusticator(
-        [
-            "c5",
-            0.05,
-            0,
-            config.VOLUME,
-            "e5",
-            0.05,
-            0,
-            config.VOLUME,
-            "g5",
-            0.05,
-            0,
-            config.VOLUME,
-        ],
-        kind=1,
-        adsr=[0, 0, 100, 5],
-    )
-    if black_elo.strip() == "":
-        black_elo = black_elo_default
-    event = dgt(
-        _("Evento [{default}]: ").format(default=event_default),
-        kind="s",
-        default=event_default,
-    )
-    Acusticator(
-        [
-            "c5",
-            0.05,
-            0,
-            config.VOLUME,
-            "e5",
-            0.05,
-            0,
-            config.VOLUME,
-            "g5",
-            0.05,
-            0,
-            config.VOLUME,
-        ],
-        kind=1,
-        adsr=[0, 0, 100, 5],
-    )
-    if event.strip() == "":
-        event = event_default
-    site = dgt(
-        _("Sede [{default}]: ").format(default=site_default),
-        kind="s",
-        default=site_default,
-    )
-    Acusticator(
-        [
-            "c5",
-            0.05,
-            0,
-            config.VOLUME,
-            "e5",
-            0.05,
-            0,
-            config.VOLUME,
-            "g5",
-            0.05,
-            0,
-            config.VOLUME,
-        ],
-        kind=1,
-        adsr=[0, 0, 100, 5],
-    )
-    round_ = dgt(
-        _("Round [{default}]: ").format(default=round_default),
-        kind="s",
-        default=round_default,
-    )
-    Acusticator(
-        [
-            "c5",
-            0.05,
-            0,
-            config.VOLUME,
-            "e5",
-            0.05,
-            0,
-            config.VOLUME,
-            "g5",
-            0.05,
-            0,
-            config.VOLUME,
-        ],
-        kind=1,
-        adsr=[0, 0, 100, 5],
-    )
+
+    white_player = intestazione["White"]
+    black_player = intestazione["Black"]
+    white_elo = intestazione["WhiteElo"]
+    black_elo = intestazione["BlackElo"]
+    event = intestazione["Event"]
+    site = intestazione["Site"]
+    round_ = intestazione["Round"]
+
     storage.SetValue(
         "default_pgn",
         {
