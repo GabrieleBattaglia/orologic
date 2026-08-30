@@ -42,11 +42,11 @@ def calculate_move_accuracy(w_before, w_after):
     w_after: Probabilità vittoria DOPO la mossa (dal punto di vista di chi HA mosso).
     """
     delta_w = max(0.0, w_before - w_after)
-    # Formula: Accuracy% = 103.1668 * exp(-0.04354 * delta_w * 100) - 3.1669
-    # Nota: delta_w * 100 perché la formula originale usa scala % per l'esponente?
-    # Dal documento: "Se delta W cresce, il punteggio crolla".
-    # Se Delta W è [0, 1], exp(-0.04 * 0.2) ~ 1.
-    # Assumo che delta_w nella formula debba essere in scala 0-100 (punti percentuali).
+    # Formula di Lichess, dalla sua pagina sull'accuratezza:
+    #   Accuracy% = 103.1668 * exp(-0.04354 * (Win%prima - Win%dopo)) - 3.1669
+    # Li' Win% va da 0 a 100, mentre calculate_win_probability restituisce un
+    # valore fra 0 e 1: per questo delta_w si moltiplica per cento. Il dubbio
+    # che stava scritto qui era legittimo, ma la scelta era quella giusta.
     acc = 103.1668 * math.exp(-0.04354 * delta_w * 100) - 3.1669
     return max(0.0, min(100.0, acc))
 
@@ -128,6 +128,9 @@ def SetMultipv(m):
 def SearchForEngine():
     """Cerca il motore UCI nel sistema. Restituisce (path, exe, False)"""
     if sys.platform == "win32":
+        # Cartella usata dalle versioni vecchie: nessuna parte del
+        # programma la crea piu', ma chi aggiorna da lontano puo' averla
+        # ancora, quindi si continua a guardarci dentro.
         appdata_path = os.path.join(
             os.environ.get("LOCALAPPDATA", ""), "Orologic", "Engine", "stockfish"
         )
@@ -1677,7 +1680,7 @@ def AnalisiAutomatica(pgn_game):
     # Caricamento configurazione soglie da DB
     db = storage.LoadDB()
     thresholds = db.get(
-        "analysis_thresholds", {"inesattezza": 50, "errore": 100, "svarione": 250}
+        "analysis_thresholds", storage.DEFAULT_DB["analysis_thresholds"]
     )
     soglie = {
         "inesattezza": thresholds["inesattezza"],

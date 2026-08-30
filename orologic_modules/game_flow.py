@@ -329,8 +329,6 @@ def annulla_ultima_mossa(game_state):
         if current_node in parent.variations:
             parent.variations.remove(current_node)
         game_state.pgn_node = parent
-        if not hasattr(game_state, "cancelled_san_moves"):
-            game_state.cancelled_san_moves = []
         game_state.cancelled_san_moves.insert(0, undone_move_san)
         # Il tratto torna a chi aveva mosso, poi si disfa quanto
         # la mossa aveva prodotto: incremento, contatore delle
@@ -816,8 +814,6 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 else:
                     time_spent = 0.0
 
-                if not hasattr(game_state, "move_times"):
-                    game_state.move_times = []
                 game_state.move_times.append(time_spent)
                 new_node = game_state.pgn_node.add_variation(move)
                 if annotation_suffix:
@@ -887,8 +883,6 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         ],
                     )
 
-                if not hasattr(game_state, "clocks_history"):
-                    game_state.clocks_history = []
                 if game_state.active_color == "white":
                     game_state.clocks_history.append(game_state.white_remaining)
                 else:
@@ -1050,7 +1044,7 @@ def StartGame(clock_config):
     starting_board = None
     starting_fen = None
     if is_fischer_random:
-        starting_board, starting_fen = ui.setup_fischer_random_board()
+        starting_board, starting_fen, numero_posizione = ui.setup_fischer_random_board()
         if starting_board is None:
             return
     db = storage.LoadDB()
@@ -1086,7 +1080,9 @@ def StartGame(clock_config):
         ).strip()
         if not risposta:
             risposta = predefinito
-        elif e_un_nome:
+        elif e_un_nome and risposta.islower():
+            # Le maiuscole si aggiustano solo a chi ha scritto tutto minuscolo:
+            # title() trasformava IZ4APU in Iz4Apu e McDonald in Mcdonald.
             risposta = risposta.title()
         intestazione[chiave] = risposta
         Acusticator(
@@ -1170,7 +1166,7 @@ def StartGame(clock_config):
     if is_fischer_random:
         game_state.board = starting_board
         chess960_utils.setup_pgn_headers_chess960(
-            game_state.pgn_game, starting_board, starting_fen
+            game_state.pgn_game, starting_board, starting_fen, numero_posizione
         )
         chess960_utils.configure_engine_for_chess960(engine.ENGINE, True)
     else:

@@ -990,11 +990,14 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
 
 
 def setup_fischer_random_board():
-    """Wrapper per compatibilità: delega a chess960_utils e restituisce (board, fen)."""
+    """Prepara una posizione Fischer Random e ne restituisce anche il numero.
+
+    Il numero della posizione, da 0 a 959, serve negli header del PGN:
+    prima veniva calcolato e poi buttato via.
+    """
     from . import chess960_utils
 
-    board, fen, _pos = chess960_utils.setup_fischer_random_board_interactive()
-    return board, fen
+    return chess960_utils.setup_fischer_random_board_interactive()
 
 
 GenerateMoveSummary = board_utils.GenerateMoveSummary

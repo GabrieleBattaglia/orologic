@@ -38,16 +38,6 @@ class ClockConfig:
             "note": self.note,
         }
 
-    @staticmethod
-    def from_dict(d):
-        return ClockConfig(
-            d["name"],
-            d["same_time"],
-            d["phases"],
-            d.get("alarms", []),
-            d.get("note", ""),
-        )
-
 
 def CreateClock():
     print(_("Creazione orologi"))
