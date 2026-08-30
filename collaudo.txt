@@ -1,6 +1,6 @@
 Collaudo di Orologic durante il refactoring di fase 1
 Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto)
-Aperto il 2026-08-30, versione in lavorazione 8.10.0
+Aperto il 2026-08-30, versione in lavorazione 8.13.0
 
 A cosa serve questo file
 Elenca le prove da fare a mano, quelle che non si possono automatizzare
@@ -97,6 +97,42 @@ lettura risulti scomoda: righe troppo lunghe, informazioni ripetute, silenzi
 inattesi, testi rimasti in italiano dove servirebbe un'altra lingua.
 Motivo: separatori grafici, tabulazioni e tabelle incolonnate sono stati tolti
 in tutto il programma.
+Esito:
+
+Prova 11, i comandi da punto uno a punto sei nelle quattro modalita'
+Provare punto uno, due, tre, quattro, cinque e sei nella partita arbitrata, in
+Tempo, in Easyfish e in una partita su Lichess, verificando che dicano le stesse
+cose, con gli stessi suoni, e che punto cinque riconosca la pausa dove la pausa
+esiste. In Easyfish e su Lichess i suoni sono nuovi, prima non c'erano. Su
+Lichess punto uno e punto due annunciano il tempo senza la percentuale
+consumata, perche' li' le fasi non esistono: verificare che si capisca bene.
+Provare anche una partita con gli orologi disattivati e controllare l'avviso,
+che ora e' uno solo, "Gli orologi sono disattivati".
+Motivo: le quattro versioni diverse di questi comandi sono diventate una sola.
+Esito:
+
+Prova 12, scacchiera, materiale e lista mosse
+Provare punto esse e punto b nelle quattro modalita': devono fare la stessa
+cosa, cioe' mostrare la scacchiera. Verificare che in Easyfish punto esse
+seguito da una cifra continui a impostare il livello del motore, per esempio
+punto esse dieci, e che in partita punto b piu' e punto b meno continuino a
+correggere i tempi. Provare poi punto emme per il materiale e punto elle per la
+lista mosse, che ora esistono anche dove prima mancavano.
+Motivo: la scacchiera aveva un comando diverso a seconda della modalita'.
+Attenzione: nel menu di Easyfish, quello fuori dalla partita, punto elle sono
+ancora le linee di analisi e non la lista mosse. E' l'unico conflitto rimasto:
+va deciso se cambiarlo e come.
+Esito:
+
+Prova 13, analisi di una partita
+Aprire una partita in analisi e provare i comandi che sono usciti dal ciclo:
+le annotazioni, cioe' variante, commento manuale, commento con la mossa
+migliore, valutazione e cancellazione del commento; i comandi informativi, cioe'
+scacchiera, aiuto, tempo e numero di linee; e quelli che scrivono la valutazione
+nel prompt. Poi lanciare l'analisi automatica su una partita intera e
+controllare che i parametri chiesti all'inizio siano tutti quelli di prima e che
+il rapporto finale sia completo.
+Motivo: le due funzioni di analisi sono state spezzate in piu' parti.
 Esito:
 
 Difficolta' incontrate e note libere
