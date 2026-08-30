@@ -1,4 +1,5 @@
 import builtins
+import contextlib
 import re
 
 import chess
@@ -61,9 +62,12 @@ def GetDynamicPrompt(board, node):
     if not board.move_stack:
         return _("{p}INIZIO {n}. ").format(p=prefix, n=n)
 
-    last_move = board.pop()
-    last_san = board.san(last_move)
-    board.push(last_move)
+    # La notazione si ricava su una copia: prima la mossa veniva tolta e
+    # rimessa sulla scacchiera vera, e un errore fra le due operazioni
+    # avrebbe lasciato la posizione senza una mossa.
+    copia = board.copy()
+    last_move = copia.pop()
+    last_san = copia.san(last_move)
 
     if board.turn == chess.WHITE:
         return f"{prefix}{n - 1}... {last_san}: "
@@ -375,9 +379,31 @@ def _apri_condivisione(board, node, sharing_window):
     return sharing_window
 
 
-def run():
-    global sharing_window, show_output_on_board
+@contextlib.contextmanager
+def _stampa_deviata():
+    """Manda le stampe alla finestra grafica, e le rimette a posto comunque.
+
+    Il ripristino stava sull'ultima riga della funzione: un'uscita
+    anticipata o un errore lasciavano tutte le stampe del programma,
+    motore e scacchiera compresi, dirottate sulla finestra di Easyfish
+    anche dopo esserne usciti.
+    """
+    originale = builtins.print
     builtins.print = custom_print
+    try:
+        yield
+    finally:
+        builtins.print = originale
+
+
+def run():
+    """Avvia Easyfish, riportando la stampa alla normalita' all'uscita."""
+    with _stampa_deviata():
+        _esegui()
+
+
+def _esegui():
+    global sharing_window, show_output_on_board
     print(
         _(
             "\nBenvenuto in Easyfish, la tua interfaccia testuale con il motore scacchistico.\n\tBuon divertimento!"
@@ -905,4 +931,3 @@ def run():
                 print(
                     _("{k}: mossa illegale per il {c}.").format(k=key_command, c=color)
                 )
-    builtins.print = _orig_print

@@ -19,6 +19,17 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.14</h3>
+<h4>8.14.2 (31 agosto 2026)</h4>
+<ul>
+  <li>* [Engine] Un motore UCI diverso da Stockfish non viene più scartato: le opzioni vengono impostate solo se il motore dichiara di conoscerle. Prima la presenza di "Skill Level", che è un'opzione propria di Stockfish, era data per scontata, e un motore per il resto perfettamente utilizzabile veniva rifiutato con un generico errore.</li>
+  <li>* [Engine] L'elenco delle linee di analisi non si interrompe più quando il motore restituisce una linea priva di valutazione.</li>
+  <li>* [Easyfish] Uscendo da Easyfish, o in caso di errore al suo interno, le stampe tornano sempre al terminale. Prima venivano dirottate alla finestra grafica e, se l'uscita non avveniva dall'ultima riga della funzione, restavano dirottate per tutto il resto della sessione, comprese quelle del motore e della scacchiera.</li>
+  <li>* [Easyfish] La generazione del PDF accetta commenti contenenti parentesi angolari o e commerciali, che prima la facevano fallire con un errore generico.</li>
+  <li>* [Easyfish] Il prompt ricava la notazione dell'ultima mossa lavorando su una copia della posizione, invece di togliere e rimettere la mossa sulla scacchiera vera.</li>
+  <li>* [Easyfish] La chiusura della finestra di condivisione non attende più senza limite: se la finestra grafica non risponde entro cinque secondi viene lasciata andare, invece di bloccare l'applicazione.</li>
+  <li>* [Lichess] Se una mossa non è interpretabile durante la ricostruzione del PGN, ora viene detto quale e a che punto il file si ferma. Prima il salvataggio risultava troncato senza alcun avviso.</li>
+  <li>* [Core] Durante la partita la riga del prompt viene ripulita per tutta la larghezza del terminale, non più su 79 colonne fisse: con prompt e testo digitato più lunghi restavano caratteri residui.</li>
+</ul>
 <h4>8.14.1 (31 agosto 2026)</h4>
 <ul>
   <li>* [OAA] L'analisi automatica riconosce ora l'apertura scorrendo tutte le mosse e tenendo la linea più specifica trovata. Prima la ricerca si fermava alla prima posizione assente dall'archivio ECO, ma le linee catalogate non formano una catena continua: così la Najdorf veniva classificata B50, siciliana generica, invece di B90, ed il Drago B50 invece di B70. Verificato su 63 partite scaricate da Lichess, confrontando con il codice ufficiale: prima ne risultavano corrette 58, ora tutte e 63.</li>

@@ -143,6 +143,30 @@ def SearchForEngine():
     return None, None, False
 
 
+def _configura_opzioni(cfg):
+    """Imposta le opzioni del motore, saltando quelle che non conosce.
+
+    Skill Level e' un'opzione di Stockfish: un altro motore UCI, che pure
+    funzionerebbe benissimo, faceva fallire la configurazione in blocco e
+    veniva scartato con un generico errore.
+    """
+    desiderate = {
+        "Hash": cfg.get("hash_size", 128),
+        "Threads": cfg.get("num_cores", 1),
+        "Skill Level": cfg.get("skill_level", 20),
+    }
+    conosciute = {n: v for n, v in desiderate.items() if n in ENGINE.options}
+    ignorate = sorted(set(desiderate) - set(conosciute))
+    if conosciute:
+        ENGINE.configure(conosciute)
+    if ignorate:
+        print(
+            _(
+                "Il motore non conosce queste opzioni, che restano com'erano: {elenco}"
+            ).format(elenco=", ".join(ignorate))
+        )
+
+
 def InitEngine():
     global ENGINE, ENGINE_NAME, analysis_time, multipv
     CloseEngine()  # Chiudiamo sempre eventuali istanze precedenti per evitare processi orfani
@@ -178,13 +202,7 @@ def InitEngine():
     if os.path.exists(path):
         try:
             ENGINE = chess.engine.SimpleEngine.popen_uci(path)
-            ENGINE.configure(
-                {
-                    "Hash": cfg.get("hash_size", 128),
-                    "Threads": cfg.get("num_cores", 1),
-                    "Skill Level": cfg.get("skill_level", 20),
-                }
-            )
+            _configura_opzioni(cfg)
             ENGINE_NAME = ENGINE.id.get("name", "UCI Engine")
             print(_("Motore {n} pronto.").format(n=ENGINE_NAME))
             return True
@@ -635,7 +653,10 @@ def _comandi_informativi(cmd, current_node):
             analysis = _analizza_con_cache(current_node.board(), multipv)
             for i, info in enumerate(analysis or []):
                 pv = info.get("pv", [])
-                score = info.get("score").pov(current_node.board().turn)
+                valutazione = info.get("score")
+                if valutazione is None:
+                    continue
+                score = valutazione.pov(current_node.board().turn)
                 san_moves = []
                 temp_board = current_node.board().copy()
                 for m in pv:
@@ -728,7 +749,10 @@ def _comandi_valutazione(cmd, current_node):
                 print(_("\nLinee migliori:"))
                 for i, info in enumerate(analysis, start=1):
                     pv = info.get("pv", [])
-                    score = info.get("score").pov(current_node.board().turn)
+                    valutazione = info.get("score")
+                    if valutazione is None:
+                        continue
+                    score = valutazione.pov(current_node.board().turn)
                     eval_str = (
                         _("M{m}").format(m=abs(score.mate()))
                         if score.is_mate()

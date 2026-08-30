@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-30: chiuse le tappe da 1 a 7, la 8 struttura e' in corso, per un totale di 110 rilievi risolti sui 154 iniziali, compreso R156 sul riconoscimento delle aperture, aggiunto e risolto nella stessa sessione. Non restano rilievi di gravita' alta. Fra i 109 c'e' R093, che si e' rivelato un falso allarme del rapporto: le date di Lichess erano gia' mostrate nell'ora giusta, e nel codice ora c'e' scritto perche', cosi' nessuno le corregge a torto. Fatta anche l'unificazione dei comandi chiesta da Gabriele: da punto uno a punto sei, scacchiera, materiale e lista mosse vivono ora solo in ui e valgono uguali in tutte le modalita'. Le prove da fare a mano sono elencate in collaudo.txt.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-31: chiuse le tappe da 1 a 8, restano la 9 pulizie finali e la 10 traduzioni. Risolti 118 rilievi sui 154 iniziali, piu' R156 sul riconoscimento delle aperture, aggiunto e risolto strada facendo. Non restano rilievi di gravita' alta. Due voci si sono rivelate false: R093, perche' le date di Lichess erano gia' nell'ora giusta, e il codice ora lo spiega per non farle correggere a torto. Fatta anche l'unificazione dei comandi chiesta da Gabriele: da punto uno a punto sei, scacchiera, materiale e lista mosse vivono ora solo in ui e si comportano allo stesso modo in tutte le modalita'. Le prove da fare a mano sono elencate in collaudo.txt.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -47,16 +47,12 @@ R059 gravita medio, categoria ottimizzazione, in board_utils.py:41-199 (B2-16)
 DescribeMove ricostruisce a mano la notazione SAN, disambiguazione compresa, per poi rianalizzarla con due espressioni regolari. Sono circa centosessanta righe che duplicano quello che board.san fa gia, ed e presente pure il fallback su board.san dentro l'except. Correzione: partire dalla SAN della libreria o lavorare direttamente sull'oggetto mossa.
 R062 gravita medio, categoria regole generali, in board_utils.py:322-330, game_flow.py:783,1442 (B2-20)
 Frasi costruite concatenando pezzi tradotti separatamente, per esempio nome giocatore piu entra in fase piu numero. L'ordine delle parole non e adattabile nelle altre lingue.
-R069 gravita medio, categoria fragilita, in engine.py:191-197 (B3-12)
-InitEngine configura sempre Hash, Threads e Skill Level. Un motore UCI diverso da Stockfish che non espone Skill Level fa fallire la configure e viene scartato con un generico Errore motore, pur essendo utilizzabile. Correzione: impostare solo le opzioni presenti in ENGINE.options.
 R079 gravita medio, categoria ottimizzazione, in lichess_app.py:2087-2101 (B4-08)
 A ogni ritorno al menu principale vengono eseguite due chiamate di rete, partite attive e sfide in entrata, senza alcuna cache: il menu si blocca a ogni giro in attesa della rete.
 R080 gravita medio, categoria ottimizzazione, in lichess_app.py:1735-1790 (B4-09)
 La richiesta di seek viene ripetuta ogni secondo e le partite attive interrogate ogni cinque: traffico continuo verso Lichess con rischio concreto di superare i limiti di frequenza dell'API.
 R086 gravita medio, categoria ottimizzazione, in lichess_app.py:542-547 (B4-15)
 La classe DummyGameState esiste solo per confezionare una scacchiera nel formato che le funzioni di ui pretendono: sintomo che quelle funzioni dovrebbero accettare direttamente una scacchiera.
-R088 gravita medio, categoria fragilita, in lichess_board.py:120-126 (B5-05)
-Nella ricostruzione locale del PGN, la prima mossa non interpretabile interrompe il ciclo in silenzio: il file salvato risulta troncato senza che nulla lo segnali.
 R089 gravita medio, categoria ottimizzazione, in lichess_board.py:357-404 (B5-06)
 Il worker dell'osservazione impacchetta i dati in stringhe separate da barre verticali, che il consumatore deve poi ritagliare, mentre il worker della partita, nello stesso file, mette in coda direttamente i dizionari. Due approcci opposti, e quello a stringhe si rompe se un campo contiene il separatore.
 R091 gravita medio, categoria ottimizzazione, in lichess_profiler.py:343-350 (B5-08)
@@ -65,16 +61,10 @@ R096 gravita medio, categoria DRY, in tempo_app.py:190-400 con game_flow.py:575-
 Restano duplicati solo la pausa punto p e l'uscita punto q: i comandi da punto uno a punto sei, la scacchiera, il materiale e la lista mosse sono passati in ui.
 R097 gravita medio, categoria DRY, in tempo_app.py:14-30 con config.py:234-258 (B6-05)
 Due dizionari di comandi che descrivono in gran parte gli stessi tasti. Prova della divergenza: la voce del comando tre e corretta in tempo_app e contiene il refuso entrambe in config.
-R104 gravita medio, categoria fragilita, in easyfish_app.py:213,905 (B7-07)
-La funzione print incorporata viene sostituita globalmente all'ingresso in Easyfish e ripristinata solo all'ultima riga della funzione, fuori da qualsiasi try finally. Finche Easyfish e attivo, tutte le stampe di tutti i moduli, compresi motore e board_utils, passano dal filtro che le invia alla finestra grafica.
 R105 gravita medio, categoria regole generali, in easyfish_app.py e game_mode.py, una trentina di chiamate (B7-08)
 Il volume delle sequenze sonore e fissato a 0.5 nel codice invece di leggere config.VOLUME: la regolazione del volume fatta dal menu di Orologic non ha effetto dentro Easyfish.
 R106 gravita medio, categoria ottimizzazione, in easyfish/interaction.py:296-298 (B7-09)
 Un ciclo scorre tutte le mosse della linea principale senza fare nulla, con un commento che avverte di non usare quella logica. E codice morto che viene comunque eseguito a ogni sincronizzazione della scacchiera.
-R108 gravita medio, categoria fragilita, in easyfish/image_exporter.py:483-486 (B7-11)
-Il commento dell'utente viene passato a un paragrafo ReportLab senza sostituire i caratteri speciali dell'XML: un commento che contiene una parentesi angolare o una e commerciale fa fallire la generazione del PDF, con un messaggio d'errore generico.
-R109 gravita medio, categoria fragilita, in easyfish_app.py:63-66 (B7-12)
-Per ricavare la notazione dell'ultima mossa, GetDynamicPrompt toglie e rimette la mossa sulla scacchiera reale invece di lavorare su una copia. Un'eccezione fra le due operazioni lascerebbe la posizione priva di una mossa.
 R113 gravita basso, categoria ottimizzazione, in check_engine.py (B1-21)
 Script diagnostico rimasto nel repository, con except generico e ricerca dell'eseguibile duplicata rispetto a stockfish_installer.
 R114 gravita basso, categoria ottimizzazione, in zip_maker.py:4,13 (B1-22)
@@ -93,8 +83,6 @@ R123 gravita basso, categoria ottimizzazione, in repository (B1-31)
 Le cartelle pgn e txt con oltre novanta partite e trascrizioni personali sono tracciate in git e si mescolano ai dati prodotti a runtime dall'utente.
 R124 gravita basso, categoria regole generali, in ruff, intero progetto (B1-32)
 230 rilievi: 139 blind-except, 32 try-except-pass, 17 datetime senza fuso, 11 if annidabili, 5 global non assegnate, 5 variabili spacchettate non usate, 4 fromtimestamp senza fuso, 3 datetime senza fuso, 3 startswith multipli, 3 cast a int inutili, 2 subprocess senza check, piu casi singoli.
-R125 gravita basso, categoria fragilita, in game_flow.py:232-236 (B2-19)
-refresh_line pulisce la riga con settantanove spazi prima di riscriverla. La tecnica del ritorno carrello e voluta e corretta: forza il cursore di sistema sulla riga e lo riporta all'inizio, cosi il display braille inquadra la riga dall'inizio. Resta un solo difetto tecnico: la larghezza e fissata a settantanove colonne, quindi se prompt e testo digitato superano quella misura la pulizia e parziale e restano caratteri residui. Correzione: ricavare la larghezza dal terminale con shutil.get_terminal_size.
 R127 gravita basso, categoria ottimizzazione, in board_utils.py:742, game_flow.py:1116,1373 (B2-24)
 Import di chess ripetuto dentro una funzione dove e gia importato in testa al modulo, controlli hasattr su attributi sempre presenti, doppia copia della scacchiera per ogni descrizione di mossa.
 R128 gravita basso, categoria logica, in game_flow.py:1553,1576 (B2-25)
@@ -109,8 +97,6 @@ R135 gravita basso, categoria ottimizzazione, in engine.py:44-50 (B3-24)
 Il commento sulla formula dell'accuratezza documenta un dubbio irrisolto dell'autore invece della formula effettiva.
 R136 gravita basso, categoria ottimizzazione, in ui.py:724-730 (B3-25)
 Il wrapper setup_fischer_random_board scarta il numero della posizione, che sarebbe utile negli header PGN.
-R137 gravita basso, categoria fragilita, in engine.py:917 (B3-26)
-score preso dal dizionario senza verificarne la presenza prima di chiamare pov.
 R138 gravita basso, categoria fragilita, in lichess_app.py:1763,1774 (B4-06)
 Il messaggio di avanzamento della ricerca viene riscritto sulla stessa riga previa pulizia con ritorno carrello: tecnica voluta e corretta per il posizionamento del cursore e del display braille. Vale anche qui l'unico difetto tecnico: la larghezza fissa a settantanove colonne.
 R139 gravita basso, categoria fragilita, in lichess_app.py:1757,1786,1993 e lichess_stats.py:222-228 (B4-16)
@@ -131,8 +117,6 @@ R149 gravita basso, categoria regole generali, in pgn_search.py, diciotto punti 
 Diciotto righe di trattini lunghe settantacinque caratteri come separatori di sezione nei commenti del sorgente. Non e output a schermo, ma resta testo che va letto con lo screen reader durante lo sviluppo.
 R151 gravita basso, categoria ottimizzazione, in pgn_search.py:407,443 (B6-16)
 La variabile other viene calcolata in entrambi i rami delle statistiche e non usata.
-R153 gravita basso, categoria fragilita, in easyfish/sharing_window.py:100-104 (B7-17)
-La chiusura della finestra grafica attende il thread senza timeout: se il thread pygame si blocca, si blocca anche l'applicazione.
 Quanto risulta conforme e non richiede interventi nelle fasi successive.
 GBUtils correttamente importato e non reimplementato in tutti i moduli del blocco.
 Separazione dei moduli chiara e coerente con i nomi.

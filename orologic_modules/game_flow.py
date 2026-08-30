@@ -1,6 +1,7 @@
 import datetime
 import io
 import os
+import shutil
 import time
 
 import chess
@@ -148,7 +149,13 @@ def async_arbitration_input(game_state, get_prompt):
     buf = []
 
     def refresh_line():
-        sys.stdout.write("\r" + " " * 79 + "\r")
+        # Il ritorno carrello a inizio e fine riga e' voluto: porta il
+        # cursore di sistema sulla riga, cosi' il display braille la
+        # inquadra dall'inizio. La larghezza invece si chiede al
+        # terminale, perche' fissarla a settantanove colonne lasciava
+        # residui quando prompt e testo digitato erano piu' lunghi.
+        larghezza = shutil.get_terminal_size(fallback=(80, 24)).columns
+        sys.stdout.write("\r" + " " * max(1, larghezza - 1) + "\r")
         sys.stdout.write(get_prompt() + "".join(buf))
         sys.stdout.flush()
 

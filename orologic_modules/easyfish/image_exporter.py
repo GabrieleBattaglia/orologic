@@ -17,6 +17,7 @@ from GBUtils import Acusticator, dgt
 from .. import config, storage
 from ..config import _
 from .drawing import get_drawings_from_node
+from xml.sax.saxutils import escape
 
 
 class DrawingFlowable(Flowable):
@@ -475,7 +476,12 @@ def export_board_pdf(board, node=None):
         ]
         if user_comment:
             # Sostituisce eventuali literal '\n' o reali ritorni a capo con i tag <br/> richiesti da ReportLab
-            formatted_comment = user_comment.replace("\\n", "<br/>").replace(
+            # I caratteri speciali dell'XML vanno protetti prima di
+            # comporre il paragrafo: un commento contenente una
+            # parentesi angolare o una e commerciale faceva fallire
+            # la generazione dell'intero PDF.
+            testo_protetto = escape(user_comment)
+            formatted_comment = testo_protetto.replace("\\n", "<br/>").replace(
                 "\n", "<br/>"
             )
             story.extend(
