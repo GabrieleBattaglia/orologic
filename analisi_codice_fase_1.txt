@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-30: chiuse le tappe da 1 a 7 e avviata la 8 struttura, per un totale di 97 rilievi risolti sui 154 iniziali. Le prove da fare a mano sono elencate in collaudo.txt.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-30: chiuse le tappe da 1 a 7, la 8 struttura e' in corso, per un totale di 98 rilievi risolti sui 154 iniziali. Le prove da fare a mano sono elencate in collaudo.txt.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -67,8 +67,6 @@ R071 gravita medio, categoria logica, in engine.py:1835 (B3-14)
 Il PGN dell'analisi automatica viene scritto con codifica utf-8-sig, cioe con BOM, mentre game_flow scrive i PGN in utf-8 semplice. Due formati diversi per lo stesso tipo di file, e il BOM disturba alcuni lettori di PGN.
 R072 gravita medio, categoria logica, in engine.py:86-88 (B3-15)
 La media armonica dell'accuratezza usa epsilon un miliardesimo: una sola mossa con accuratezza zero fa collassare la componente armonica e dimezza il risultato finale. Correzione: epsilon significativo o soglia minima sull'accuratezza per mossa.
-R076 gravita medio, categoria ottimizzazione, in engine.py:525-1121 e 1415-1876 (B3-19)
-AnalyzeGame occupa 596 righe e AnalisiAutomatica 461, entrambe con dispatch di comandi, analisi, formattazione e salvataggio mescolati.
 R079 gravita medio, categoria ottimizzazione, in lichess_app.py:2087-2101 (B4-08)
 A ogni ritorno al menu principale vengono eseguite due chiamate di rete, partite attive e sfide in entrata, senza alcuna cache: il menu si blocca a ogni giro in attesa della rete.
 R080 gravita medio, categoria ottimizzazione, in lichess_app.py:1735-1790 (B4-09)
