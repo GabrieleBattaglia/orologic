@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-30: chiuse le tappe da 1 a 6 e la 7 DRY, per un totale di 95 rilievi risolti sui 154 iniziali. Le prove da fare a mano sono elencate in collaudo.txt.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-30: chiuse le tappe da 1 a 7 e avviata la 8 struttura, per un totale di 97 rilievi risolti sui 154 iniziali. Le prove da fare a mano sono elencate in collaudo.txt.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -111,8 +111,6 @@ R117 gravita basso, categoria ottimizzazione, in config.py:87,185 e storage.py:1
 Il file del database viene letto tre volte durante l'avvio.
 R120 gravita basso, categoria ottimizzazione, in orologic.py:617-646 (B1-28)
 Il blocco finale contiene calcolo durata, saluti e donazione fuori da qualsiasi funzione, non riutilizzabile ne testabile. Duplica inoltre in parte la logica di _format_time_delta_parts di riga 79.
-R121 gravita basso, categoria ottimizzazione, in orologic.py, intero loop del menu (B1-29)
-Le sequenze sonore di Acusticator sono scritte a mano in ogni ramo, centinaia di righe di costanti magiche. Da estrarre in un dizionario di temi sonori.
 R122 gravita basso, categoria regole generali, in tutti i moduli del blocco (B1-30)
 Nessun file porta l'intestazione autori prevista. version.py dichiara Gabriele Battaglia e Stella, senza IZ4APU e con nome assistente non aggiornato.
 R123 gravita basso, categoria ottimizzazione, in repository (B1-31)
@@ -121,8 +119,6 @@ R124 gravita basso, categoria regole generali, in ruff, intero progetto (B1-32)
 230 rilievi: 139 blind-except, 32 try-except-pass, 17 datetime senza fuso, 11 if annidabili, 5 global non assegnate, 5 variabili spacchettate non usate, 4 fromtimestamp senza fuso, 3 datetime senza fuso, 3 startswith multipli, 3 cast a int inutili, 2 subprocess senza check, piu casi singoli.
 R125 gravita basso, categoria fragilita, in game_flow.py:232-236 (B2-19)
 refresh_line pulisce la riga con settantanove spazi prima di riscriverla. La tecnica del ritorno carrello e voluta e corretta: forza il cursore di sistema sulla riga e lo riporta all'inizio, cosi il display braille inquadra la riga dall'inizio. Resta un solo difetto tecnico: la larghezza e fissata a settantanove colonne, quindi se prompt e testo digitato superano quella misura la pulizia e parziale e restano caratteri residui. Correzione: ricavare la larghezza dal terminale con shutil.get_terminal_size.
-R126 gravita basso, categoria ottimizzazione, in board_utils.py:236 (B2-23)
-CalculateMaterial viene chiamata a ogni stampa della scacchiera e il risultato non viene mai usato: sessantaquattro case scandite per nulla.
 R127 gravita basso, categoria ottimizzazione, in board_utils.py:742, game_flow.py:1116,1373 (B2-24)
 Import di chess ripetuto dentro una funzione dove e gia importato in testa al modulo, controlli hasattr su attributi sempre presenti, doppia copia della scacchiera per ogni descrizione di mossa.
 R128 gravita basso, categoria logica, in game_flow.py:1553,1576 (B2-25)
@@ -208,13 +204,13 @@ Riepilogo per gravita.
 Critico: 0 rilievi
 Alto: 4 rilievi
 Medio: 24 rilievi
-Basso: 31 rilievi
-Totale: 59 rilievi ancora aperti
+Basso: 29 rilievi
+Totale: 57 rilievi ancora aperti
 Riepilogo per categoria.
 DRY: 2 rilievi
 fragilita: 16 rilievi
 logica: 8 rilievi
-ottimizzazione: 27 rilievi
+ottimizzazione: 25 rilievi
 regole generali: 6 rilievi
 Proposta di ordine di lavorazione, in dieci tappe, da concordare con Gabriele prima di toccare il codice.
 Tappa 7, DRY. Unificare il dispatch dei comandi di esplorazione oggi triplicato, le dodici funzioni di formattazione del tempo, le tre copie di CalculateMaterial, i tre thread orologio, le due funzioni percorso_salvataggio e le due enter_escape, preferendo sempre l'utilita di GBUtils dove esiste.
