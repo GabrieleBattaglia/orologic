@@ -577,6 +577,59 @@ def format_pv_descriptively(board, pv):
     return "\n".join(output_lines)
 
 
+def _profondita_massima_eco(eco_db):
+    """Semimosse della linea piu' lunga presente nel database."""
+    if not isinstance(eco_db, dict):
+        return max((e.get("ply", 0) for e in eco_db), default=0)
+    return max((e.get("ply", 0) for v in eco_db.values() for e in v), default=0)
+
+
+def rileva_apertura(mosse, eco_db, tolleranza=6):
+    """Riconosce l'apertura di una partita e dice dove finisce la teoria.
+
+    Restituisce la voce del database e il numero di semimosse a cui
+    l'apertura si chiude, oppure nulla e zero se non si riconosce niente.
+
+    Il metodo e' quello di pgn-extract, il programma da cui proviene il
+    nostro eco.db: si cercano le posizioni della partita nella tabella
+    delle linee catalogate e si tiene la corrispondenza piu' specifica,
+    cioe' quella la cui linea e' piu' lunga. Non ci si ferma alla prima
+    posizione che manca, perche' le linee catalogate non formano una
+    catena continua: una posizione a meta' apertura puo' non esserci
+    mentre quella successiva c'e'.
+
+    In piu' si scartano le corrispondenze in cui la partita e' molto piu'
+    avanti della linea catalogata: sono ripetizioni o rientri, non
+    l'apertura giocata. Senza questo controllo una partita che ripete una
+    posizione d'apertura dopo qualche manovra farebbe credere che la
+    teoria sia durata fino a quel punto.
+    """
+    if not eco_db or not mosse:
+        return None, 0
+    limite = min(len(mosse), _profondita_massima_eco(eco_db) + tolleranza)
+    board = CustomBoard()
+    migliore, semimosse = None, 0
+    for numero, mossa in enumerate(mosse[:limite], start=1):
+        try:
+            board.push(mossa)
+        except (ValueError, AssertionError):
+            break
+        for voce in _voci_per_posizione(board, eco_db):
+            if numero - voce.get("ply", 0) > tolleranza:
+                continue
+            if migliore is None or voce.get("ply", 0) > migliore.get("ply", 0):
+                migliore, semimosse = voce, numero
+    return migliore, semimosse
+
+
+def _voci_per_posizione(board, eco_db):
+    """Voci del database che corrispondono alla posizione data."""
+    posizione = board.epd()
+    if isinstance(eco_db, dict):
+        return eco_db.get(posizione, [])
+    return [e for e in eco_db if e.get("fen") == posizione]
+
+
 def DetectOpeningByFEN(current_board, eco_db):
     current_epd = current_board.epd()
     if isinstance(eco_db, dict):

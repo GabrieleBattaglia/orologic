@@ -1490,15 +1490,12 @@ def _parametri_analisi_automatica(pgn_game, db):
         print(_("Rilevo la fine della teoria d'apertura..."))
         eco_db = board_utils.LoadEcoDatabaseWithFEN("eco.db")
         if eco_db:
-            temp_board = pgn_game.board().copy()
-            for move in pgn_game.mainline_moves():
-                temp_board.push(move)
-                detected_opening = board_utils.DetectOpeningByFEN(temp_board, eco_db)
-                if detected_opening:
-                    mosse_da_saltare = temp_board.ply()
-                    last_valid_eco_entry = detected_opening
-                else:
-                    break
+            # La ricerca guarda tutta l'apertura e tiene la linea piu'
+            # specifica: prima si fermava alla prima posizione mancante e
+            # assegnava un codice piu' generico del dovuto.
+            last_valid_eco_entry, mosse_da_saltare = board_utils.rileva_apertura(
+                list(pgn_game.mainline_moves()), eco_db
+            )
             if isinstance(last_valid_eco_entry, dict):
                 opening_name = last_valid_eco_entry.get(
                     "opening", _("Nome non trovato")

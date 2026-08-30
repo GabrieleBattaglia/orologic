@@ -18,6 +18,12 @@ li { margin-bottom: 0.3em; }
 <body>
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
+<h3>Versione 8.14</h3>
+<h4>8.14.1 (31 agosto 2026)</h4>
+<ul>
+  <li>* [OAA] L'analisi automatica riconosce ora l'apertura scorrendo tutte le mosse e tenendo la linea più specifica trovata. Prima la ricerca si fermava alla prima posizione assente dall'archivio ECO, ma le linee catalogate non formano una catena continua: così la Najdorf veniva classificata B50, siciliana generica, invece di B90, ed il Drago B50 invece di B70. Verificato su 63 partite scaricate da Lichess, confrontando con il codice ufficiale: prima ne risultavano corrette 58, ora tutte e 63.</li>
+  <li>* [OAA] Il numero di semimosse d'apertura che l'analisi salta non si lascia più ingannare dalle ripetizioni di posizione. Una partita che ripeteva una posizione d'apertura dopo qualche manovra faceva credere che la teoria fosse durata fino a quel punto, e l'analisi tralasciava mosse che facevano parte del gioco vero e proprio.</li>
+</ul>
 <h3>Versione 8.13</h3>
 <h4>8.14.0 (31 agosto 2026)</h4>
 <ul>
