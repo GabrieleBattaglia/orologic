@@ -41,6 +41,8 @@ def StartTempo(clock_config):
     game_state = board_utils.GameState(clock_config)
     game_state.white_player = _("Bianco")
     game_state.black_player = _("Nero")
+    # Orologio nudo: chi lo usa fa da arbitro, quindi pausa e correzioni.
+    game_state.arbitro_presente = True
 
     nota_sessione = dgt(
         _("Nota per questa sessione, al massimo 250 caratteri: "),
