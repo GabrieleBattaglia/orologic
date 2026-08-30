@@ -308,6 +308,448 @@ def comandi_di_lettura(cmd, game_state):
     return False
 
 
+_COMANDI_PAUSA = (".p", ".5")
+_COMANDI_RISULTATO = (".1-0", ".0-1", ".1/2", ".*")
+
+
+def comandi_pausa(cmd, game_state, paused_time_start):
+    """Mette in pausa gli orologi o annuncia da quanto lo sono.
+
+    Restituisce l'istante in cui la pausa e' iniziata, che il ciclo
+    conserva per calcolarne la durata.
+    """
+    if cmd == ".p":
+        game_state.paused = not game_state.paused
+        if game_state.paused:
+            paused_time_start = time.time()
+            print(_("Orologi in pausa"))
+            Acusticator(
+                [
+                    "c5",
+                    0.1,
+                    1,
+                    config.VOLUME,
+                    "g4",
+                    0.1,
+                    0.3,
+                    config.VOLUME,
+                    "e4",
+                    0.1,
+                    -0.3,
+                    config.VOLUME,
+                    "c4",
+                    0.1,
+                    -1,
+                    config.VOLUME,
+                ],
+                kind=1,
+                adsr=[2, 8, 80, 10],
+            )
+        else:
+            pause_duration = time.time() - paused_time_start if paused_time_start else 0
+            Acusticator(
+                [
+                    "c4",
+                    0.1,
+                    -1,
+                    config.VOLUME,
+                    "e4",
+                    0.1,
+                    -0.3,
+                    config.VOLUME,
+                    "g4",
+                    0.1,
+                    0.3,
+                    config.VOLUME,
+                    "c5",
+                    0.1,
+                    1,
+                    config.VOLUME,
+                ],
+                kind=1,
+                adsr=[2, 8, 80, 10],
+            )
+            print(_("Pausa durata ") + board_utils.FormatTime(pause_duration))
+    elif cmd == ".5":
+        if game_state.paused:
+            Acusticator(["d4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+            pause_duration = time.time() - paused_time_start if paused_time_start else 0
+            hours = int(pause_duration // 3600)
+            minutes = int((pause_duration % 3600) // 60)
+            seconds = int(pause_duration % 60)
+            ms = int((pause_duration - int(pause_duration)) * 1000)
+            print(
+                _("Tempo in pausa da: {duration}").format(
+                    duration="{h_str}{m_str}{s_str}{ms_str}".format(
+                        h_str=_("{h} ore, ").format(h=hours) if hours else "",
+                        m_str=_("{m} minuti, ").format(m=minutes)
+                        if minutes or hours
+                        else "",
+                        s_str=_("{s} secondi e ").format(s=seconds)
+                        if seconds or minutes or hours
+                        else "",
+                        ms_str=_("{ms} ms").format(ms=ms) if ms else "",
+                    )
+                )
+            )
+        else:
+            Acusticator(["f4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+            player = (
+                game_state.white_player
+                if game_state.active_color == "white"
+                else game_state.black_player
+            )
+            print(_("Orologio di {player} in moto").format(player=player))
+    return paused_time_start
+
+
+def annulla_ultima_mossa(game_state):
+    """Toglie dalla partita l'ultima mossa giocata.
+
+    Disfa anche quanto la mossa aveva prodotto: incremento, contatore
+    delle mosse ed eventuale passaggio di fase. Restituisce vero se
+    c'era davvero una mossa da annullare.
+    """
+    if game_state.paused and game_state.move_history:
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                1,
+                config.VOLUME,
+                "g4",
+                0.1,
+                0.3,
+                config.VOLUME,
+                "e4",
+                0.1,
+                -0.3,
+                config.VOLUME,
+                "c4",
+                0.1,
+                -1,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 80, 10],
+        )
+        undone_move_san = game_state.move_history.pop()
+        game_state.board.pop()
+        current_node = game_state.pgn_node
+        parent = current_node.parent
+        if current_node in parent.variations:
+            parent.variations.remove(current_node)
+        game_state.pgn_node = parent
+        if not hasattr(game_state, "cancelled_san_moves"):
+            game_state.cancelled_san_moves = []
+        game_state.cancelled_san_moves.insert(0, undone_move_san)
+        # Il tratto torna a chi aveva mosso, poi si disfa quanto
+        # la mossa aveva prodotto: incremento, contatore delle
+        # mosse ed eventuale passaggio di fase.
+        game_state.active_color = (
+            "white" if game_state.active_color == "black" else "black"
+        )
+        fasi = game_state.clock_config["phases"]
+        if game_state.active_color == "white":
+            orologio.aggiungi(
+                game_state, True, -fasi[game_state.white_phase]["white_inc"]
+            )
+        else:
+            orologio.aggiungi(
+                game_state,
+                False,
+                -fasi[game_state.black_phase]["black_inc"],
+            )
+        tempo_di_fase = game_state.annulla_mossa()
+        if tempo_di_fase:
+            if game_state.active_color == "white":
+                orologio.aggiungi(game_state, True, -tempo_di_fase)
+            else:
+                orologio.aggiungi(game_state, False, -tempo_di_fase)
+            print(_("Rientro nella fase precedente, tolto il tempo aggiunto."))
+        if game_state.move_times:
+            game_state.move_times.pop()
+        if game_state.clocks_history:
+            game_state.clocks_history.pop()
+        if game_state.descriptive_move_history:
+            # Senza questo, il riepilogo testuale di fine partita
+            # conteneva la mossa annullata e sfalsava la numerazione.
+            game_state.descriptive_move_history.pop()
+        print(_("Ultima mossa annullata: ") + undone_move_san)
+        return True
+    return False
+
+
+def assegna_risultato(cmd, game_state):
+    """Chiude la partita con il risultato indicato dall'arbitro."""
+    Acusticator(
+        [
+            "c5",
+            0.1,
+            -0.5,
+            config.VOLUME,
+            "e5",
+            0.1,
+            0,
+            config.VOLUME,
+            "g5",
+            0.1,
+            0.5,
+            config.VOLUME,
+            "c6",
+            0.2,
+            0,
+            config.VOLUME,
+        ],
+        kind=1,
+        adsr=[2, 8, 90, 0],
+    )
+    if cmd == ".1-0":
+        result = "1-0"
+    elif cmd == ".0-1":
+        result = "0-1"
+    elif cmd == ".1/2":
+        result = "1/2-1/2"
+    else:
+        result = "*"
+    print(_("Risultato assegnato: ") + result)
+    game_state.pgn_game.headers["Result"] = result
+    game_state.game_over = True
+
+
+def commenta_mossa(cmd, game_state):
+    """Aggiunge al PGN il commento scritto dopo il comando."""
+    new_comment = cmd[2:].strip()
+    if new_comment:
+        if game_state.move_history:
+            if game_state.pgn_node.comment:
+                game_state.pgn_node.comment += "\n" + new_comment
+            else:
+                game_state.pgn_node.comment = new_comment
+            Acusticator(
+                [
+                    "f5",
+                    0.1,
+                    0,
+                    config.VOLUME,
+                    "p",
+                    0.04,
+                    0,
+                    0,
+                    "c5",
+                    0.02,
+                    0,
+                    config.VOLUME,
+                ],
+                kind=1,
+                adsr=[3, 7, 88, 2],
+            )
+            print(_("Commento registrato per la mossa: ") + game_state.move_history[-1])
+        else:
+            print(_("Nessuna mossa da commentare."))
+
+
+def verifica_fine_partita(game_state):
+    """Riconosce le posizioni che chiudono la partita.
+
+    Matto, stallo, materiale insufficiente, ripetizione e le altre
+    patte. Restituisce vero quando la partita e' finita, cosi' il ciclo
+    si ferma senza passare il tratto.
+    """
+    if game_state.board.is_checkmate():
+        game_state.game_over = True
+        result = "1-0" if game_state.active_color == "white" else "0-1"
+        game_state.pgn_game.headers["Result"] = result
+        winner = game_state.black_player if result == "0-1" else game_state.white_player
+        print(_("Scacco matto! Vince {winner}.").format(winner=winner))
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                -0.5,
+                config.VOLUME,
+                "e5",
+                0.1,
+                0,
+                config.VOLUME,
+                "g5",
+                0.1,
+                0.5,
+                config.VOLUME,
+                "c6",
+                0.2,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 90, 0],
+        )
+        return True
+    elif game_state.board.is_stalemate():
+        game_state.game_over = True
+        game_state.pgn_game.headers["Result"] = "1/2-1/2"
+        print(_("Patta per stallo!"))
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                -0.5,
+                config.VOLUME,
+                "e5",
+                0.1,
+                0,
+                config.VOLUME,
+                "g5",
+                0.1,
+                0.5,
+                config.VOLUME,
+                "c6",
+                0.2,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 90, 0],
+        )
+        return True
+    elif game_state.board.is_insufficient_material():
+        game_state.game_over = True
+        game_state.pgn_game.headers["Result"] = "1/2-1/2"
+        print(_("Patta per materiale insufficiente!"))
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                -0.5,
+                config.VOLUME,
+                "e5",
+                0.1,
+                0,
+                config.VOLUME,
+                "g5",
+                0.1,
+                0.5,
+                config.VOLUME,
+                "c6",
+                0.2,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 90, 0],
+        )
+        return True
+    elif game_state.board.is_seventyfive_moves():
+        game_state.game_over = True
+        game_state.pgn_game.headers["Result"] = "1/2-1/2"
+        print(_("Patta per la regola delle 75 mosse!"))
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                -0.5,
+                config.VOLUME,
+                "e5",
+                0.1,
+                0,
+                config.VOLUME,
+                "g5",
+                0.1,
+                0.5,
+                config.VOLUME,
+                "c6",
+                0.2,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 90, 0],
+        )
+        return True
+    elif game_state.board.is_fivefold_repetition():
+        game_state.game_over = True
+        game_state.pgn_game.headers["Result"] = "1/2-1/2"
+        print(_("Patta per ripetizione della posizione (5 volte)!"))
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                -0.5,
+                config.VOLUME,
+                "e5",
+                0.1,
+                0,
+                config.VOLUME,
+                "g5",
+                0.1,
+                0.5,
+                config.VOLUME,
+                "c6",
+                0.2,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 90, 0],
+        )
+        return True
+    elif game_state.board.can_claim_fifty_moves():
+        game_state.game_over = True
+        game_state.pgn_game.headers["Result"] = "1/2-1/2"
+        print(_("Patta per la regola delle 50 mosse!"))
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                -0.5,
+                config.VOLUME,
+                "e5",
+                0.1,
+                0,
+                config.VOLUME,
+                "g5",
+                0.1,
+                0.5,
+                config.VOLUME,
+                "c6",
+                0.2,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 90, 0],
+        )
+        return True
+    elif game_state.board.can_claim_threefold_repetition():
+        game_state.game_over = True
+        game_state.pgn_game.headers["Result"] = "1/2-1/2"
+        print(_("Patta per triplice ripetizione della posizione!"))
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                -0.5,
+                config.VOLUME,
+                "e5",
+                0.1,
+                0,
+                config.VOLUME,
+                "g5",
+                0.1,
+                0.5,
+                config.VOLUME,
+                "c6",
+                0.2,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 90, 0],
+        )
+        return True
+    return False
+
+
 def _loop_principale_partita(game_state, eco_database, autosave_is_on):
     last_eco_msg = ""
     last_valid_eco_entry = None
@@ -399,232 +841,15 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 pass
             elif comandi_di_lettura(cmd, game_state):
                 pass
-            elif cmd == ".5":
-                if game_state.paused:
-                    Acusticator(
-                        ["d4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                    )
-                    pause_duration = (
-                        time.time() - paused_time_start if paused_time_start else 0
-                    )
-                    hours = int(pause_duration // 3600)
-                    minutes = int((pause_duration % 3600) // 60)
-                    seconds = int(pause_duration % 60)
-                    ms = int((pause_duration - int(pause_duration)) * 1000)
-                    print(
-                        _("Tempo in pausa da: {duration}").format(
-                            duration="{h_str}{m_str}{s_str}{ms_str}".format(
-                                h_str=_("{h} ore, ").format(h=hours) if hours else "",
-                                m_str=_("{m} minuti, ").format(m=minutes)
-                                if minutes or hours
-                                else "",
-                                s_str=_("{s} secondi e ").format(s=seconds)
-                                if seconds or minutes or hours
-                                else "",
-                                ms_str=_("{ms} ms").format(ms=ms) if ms else "",
-                            )
-                        )
-                    )
-                else:
-                    Acusticator(
-                        ["f4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                    )
-                    player = (
-                        game_state.white_player
-                        if game_state.active_color == "white"
-                        else game_state.black_player
-                    )
-                    print(_("Orologio di {player} in moto").format(player=player))
-            elif cmd == ".p":
-                game_state.paused = not game_state.paused
-                if game_state.paused:
-                    paused_time_start = time.time()
-                    print(_("Orologi in pausa"))
-                    Acusticator(
-                        [
-                            "c5",
-                            0.1,
-                            1,
-                            config.VOLUME,
-                            "g4",
-                            0.1,
-                            0.3,
-                            config.VOLUME,
-                            "e4",
-                            0.1,
-                            -0.3,
-                            config.VOLUME,
-                            "c4",
-                            0.1,
-                            -1,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 80, 10],
-                    )
-                else:
-                    pause_duration = (
-                        time.time() - paused_time_start if paused_time_start else 0
-                    )
-                    Acusticator(
-                        [
-                            "c4",
-                            0.1,
-                            -1,
-                            config.VOLUME,
-                            "e4",
-                            0.1,
-                            -0.3,
-                            config.VOLUME,
-                            "g4",
-                            0.1,
-                            0.3,
-                            config.VOLUME,
-                            "c5",
-                            0.1,
-                            1,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 80, 10],
-                    )
-                    print(_("Pausa durata ") + board_utils.FormatTime(pause_duration))
+            elif cmd in _COMANDI_PAUSA:
+                paused_time_start = comandi_pausa(cmd, game_state, paused_time_start)
             elif cmd == ".q":
-                if game_state.paused and game_state.move_history:
-                    Acusticator(
-                        [
-                            "c5",
-                            0.1,
-                            1,
-                            config.VOLUME,
-                            "g4",
-                            0.1,
-                            0.3,
-                            config.VOLUME,
-                            "e4",
-                            0.1,
-                            -0.3,
-                            config.VOLUME,
-                            "c4",
-                            0.1,
-                            -1,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 80, 10],
-                    )
-                    undone_move_san = game_state.move_history.pop()
-                    game_state.board.pop()
-                    current_node = game_state.pgn_node
-                    parent = current_node.parent
-                    if current_node in parent.variations:
-                        parent.variations.remove(current_node)
-                    game_state.pgn_node = parent
-                    if not hasattr(game_state, "cancelled_san_moves"):
-                        game_state.cancelled_san_moves = []
-                    game_state.cancelled_san_moves.insert(0, undone_move_san)
-                    # Il tratto torna a chi aveva mosso, poi si disfa quanto
-                    # la mossa aveva prodotto: incremento, contatore delle
-                    # mosse ed eventuale passaggio di fase.
-                    game_state.active_color = (
-                        "white" if game_state.active_color == "black" else "black"
-                    )
-                    fasi = game_state.clock_config["phases"]
-                    if game_state.active_color == "white":
-                        orologio.aggiungi(
-                            game_state, True, -fasi[game_state.white_phase]["white_inc"]
-                        )
-                    else:
-                        orologio.aggiungi(
-                            game_state,
-                            False,
-                            -fasi[game_state.black_phase]["black_inc"],
-                        )
-                    tempo_di_fase = game_state.annulla_mossa()
-                    if tempo_di_fase:
-                        if game_state.active_color == "white":
-                            orologio.aggiungi(game_state, True, -tempo_di_fase)
-                        else:
-                            orologio.aggiungi(game_state, False, -tempo_di_fase)
-                        print(
-                            _("Rientro nella fase precedente, tolto il tempo aggiunto.")
-                        )
-                    if game_state.move_times:
-                        game_state.move_times.pop()
-                    if game_state.clocks_history:
-                        game_state.clocks_history.pop()
-                    if game_state.descriptive_move_history:
-                        # Senza questo, il riepilogo testuale di fine partita
-                        # conteneva la mossa annullata e sfalsava la numerazione.
-                        game_state.descriptive_move_history.pop()
+                if annulla_ultima_mossa(game_state):
                     current_turn_clock_before = None
-                    print(_("Ultima mossa annullata: ") + undone_move_san)
-            elif cmd in [".1-0", ".0-1", ".1/2", ".*"]:
-                Acusticator(
-                    [
-                        "c5",
-                        0.1,
-                        -0.5,
-                        config.VOLUME,
-                        "e5",
-                        0.1,
-                        0,
-                        config.VOLUME,
-                        "g5",
-                        0.1,
-                        0.5,
-                        config.VOLUME,
-                        "c6",
-                        0.2,
-                        0,
-                        config.VOLUME,
-                    ],
-                    kind=1,
-                    adsr=[2, 8, 90, 0],
-                )
-                if cmd == ".1-0":
-                    result = "1-0"
-                elif cmd == ".0-1":
-                    result = "0-1"
-                elif cmd == ".1/2":
-                    result = "1/2-1/2"
-                else:
-                    result = "*"
-                print(_("Risultato assegnato: ") + result)
-                game_state.pgn_game.headers["Result"] = result
-                game_state.game_over = True
+            elif cmd in _COMANDI_RISULTATO:
+                assegna_risultato(cmd, game_state)
             elif cmd.startswith(".c"):
-                new_comment = cmd[2:].strip()
-                if new_comment:
-                    if game_state.move_history:
-                        if game_state.pgn_node.comment:
-                            game_state.pgn_node.comment += "\n" + new_comment
-                        else:
-                            game_state.pgn_node.comment = new_comment
-                        Acusticator(
-                            [
-                                "f5",
-                                0.1,
-                                0,
-                                config.VOLUME,
-                                "p",
-                                0.04,
-                                0,
-                                0,
-                                "c5",
-                                0.02,
-                                0,
-                                config.VOLUME,
-                            ],
-                            kind=1,
-                            adsr=[3, 7, 88, 2],
-                        )
-                        print(
-                            _("Commento registrato per la mossa: ")
-                            + game_state.move_history[-1]
-                        )
-                    else:
-                        print(_("Nessuna mossa da commentare."))
+                commenta_mossa(cmd, game_state)
             else:
                 Acusticator(
                     ["e3", 1, 0, config.VOLUME, "a2", 1, 0, config.VOLUME],
@@ -730,200 +955,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         last_valid_eco_entry = current_entry_this_turn
                     elif not new_eco_msg and last_eco_msg:
                         last_eco_msg = ""
-                if game_state.board.is_checkmate():
-                    game_state.game_over = True
-                    result = "1-0" if game_state.active_color == "white" else "0-1"
-                    game_state.pgn_game.headers["Result"] = result
-                    winner = (
-                        game_state.black_player
-                        if result == "0-1"
-                        else game_state.white_player
-                    )
-                    print(_("Scacco matto! Vince {winner}.").format(winner=winner))
-                    Acusticator(
-                        [
-                            "c5",
-                            0.1,
-                            -0.5,
-                            config.VOLUME,
-                            "e5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "g5",
-                            0.1,
-                            0.5,
-                            config.VOLUME,
-                            "c6",
-                            0.2,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 90, 0],
-                    )
-                    break
-                elif game_state.board.is_stalemate():
-                    game_state.game_over = True
-                    game_state.pgn_game.headers["Result"] = "1/2-1/2"
-                    print(_("Patta per stallo!"))
-                    Acusticator(
-                        [
-                            "c5",
-                            0.1,
-                            -0.5,
-                            config.VOLUME,
-                            "e5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "g5",
-                            0.1,
-                            0.5,
-                            config.VOLUME,
-                            "c6",
-                            0.2,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 90, 0],
-                    )
-                    break
-                elif game_state.board.is_insufficient_material():
-                    game_state.game_over = True
-                    game_state.pgn_game.headers["Result"] = "1/2-1/2"
-                    print(_("Patta per materiale insufficiente!"))
-                    Acusticator(
-                        [
-                            "c5",
-                            0.1,
-                            -0.5,
-                            config.VOLUME,
-                            "e5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "g5",
-                            0.1,
-                            0.5,
-                            config.VOLUME,
-                            "c6",
-                            0.2,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 90, 0],
-                    )
-                    break
-                elif game_state.board.is_seventyfive_moves():
-                    game_state.game_over = True
-                    game_state.pgn_game.headers["Result"] = "1/2-1/2"
-                    print(_("Patta per la regola delle 75 mosse!"))
-                    Acusticator(
-                        [
-                            "c5",
-                            0.1,
-                            -0.5,
-                            config.VOLUME,
-                            "e5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "g5",
-                            0.1,
-                            0.5,
-                            config.VOLUME,
-                            "c6",
-                            0.2,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 90, 0],
-                    )
-                    break
-                elif game_state.board.is_fivefold_repetition():
-                    game_state.game_over = True
-                    game_state.pgn_game.headers["Result"] = "1/2-1/2"
-                    print(_("Patta per ripetizione della posizione (5 volte)!"))
-                    Acusticator(
-                        [
-                            "c5",
-                            0.1,
-                            -0.5,
-                            config.VOLUME,
-                            "e5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "g5",
-                            0.1,
-                            0.5,
-                            config.VOLUME,
-                            "c6",
-                            0.2,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 90, 0],
-                    )
-                    break
-                elif game_state.board.can_claim_fifty_moves():
-                    game_state.game_over = True
-                    game_state.pgn_game.headers["Result"] = "1/2-1/2"
-                    print(_("Patta per la regola delle 50 mosse!"))
-                    Acusticator(
-                        [
-                            "c5",
-                            0.1,
-                            -0.5,
-                            config.VOLUME,
-                            "e5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "g5",
-                            0.1,
-                            0.5,
-                            config.VOLUME,
-                            "c6",
-                            0.2,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 90, 0],
-                    )
-                    break
-                elif game_state.board.can_claim_threefold_repetition():
-                    game_state.game_over = True
-                    game_state.pgn_game.headers["Result"] = "1/2-1/2"
-                    print(_("Patta per triplice ripetizione della posizione!"))
-                    Acusticator(
-                        [
-                            "c5",
-                            0.1,
-                            -0.5,
-                            config.VOLUME,
-                            "e5",
-                            0.1,
-                            0,
-                            config.VOLUME,
-                            "g5",
-                            0.1,
-                            0.5,
-                            config.VOLUME,
-                            "c6",
-                            0.2,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 90, 0],
-                    )
+                if verifica_fine_partita(game_state):
                     break
                 if game_state.active_color == "white":
                     orologio.aggiungi(
