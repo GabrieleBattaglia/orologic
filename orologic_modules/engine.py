@@ -506,6 +506,279 @@ def LoadPGNFromClipboard():
         return None
 
 
+_ANNOTAZIONI = ("z", "x", "c", "v", "n")
+_INFORMATIVI = ("e", "u", "i", "o", "?")
+_VALUTAZIONI = ("q", "w", "r", "t", "y")
+
+
+def _comandi_annotazione(cmd, current_node):
+    """Comandi che annotano il nodo: variante, commenti, valutazione.
+
+    Restituisce vero se il nodo e' stato modificato, cioe' se c'e' qualcosa
+    da salvare.
+    """
+    saved = False
+    if cmd == "z":
+        pv = CalculateBest(current_node.board(), bestmove=False, as_san=False)
+        if pv:
+            current_node.add_variation(pv[0]).add_line(pv[1:])
+            saved = True
+            print(_("\nVariante aggiunta."))
+            Acusticator(
+                [
+                    "a5",
+                    0.12,
+                    0.3,
+                    config.VOLUME,
+                    "b5",
+                    0.12,
+                    0.3,
+                    config.VOLUME,
+                    "c6",
+                    0.12,
+                    0.3,
+                    config.VOLUME,
+                    "d6",
+                    0.12,
+                    0.3,
+                    config.VOLUME,
+                    "e6",
+                    0.12,
+                    0.3,
+                    config.VOLUME,
+                ],
+                kind=1,
+                adsr=[4, 8, 85, 5],
+            )
+    elif cmd == "x":
+        bm = CalculateBest(current_node.board(), as_san=True)
+        if bm:
+            current_node.comment = (current_node.comment or "").strip() + _(
+                " {{BM: {bm}}}"
+            ).format(bm=bm[0])
+            saved = True
+            print(_("\nCommento aggiunto."))
+            Acusticator(["a5", 0.1, 0, config.VOLUME], kind=1, adsr=[2, 5, 90, 5])
+    elif cmd == "c":
+        Acusticator(
+            [
+                "d6",
+                0.012,
+                0,
+                config.VOLUME,
+                "p",
+                0.15,
+                0,
+                0,
+                "a6",
+                0.012,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[0.01, 0, 100, 0.01],
+        )
+        comm = dgt(_("\nInserisci il commento: "), kind="s").strip()
+        if comm:
+            current_node.comment = (current_node.comment or "").strip() + " " + comm
+            saved = True
+            Acusticator(
+                [
+                    "a6",
+                    0.012,
+                    0,
+                    config.VOLUME,
+                    "p",
+                    0.15,
+                    0,
+                    0,
+                    "d6",
+                    0.012,
+                    0,
+                    config.VOLUME,
+                ],
+                kind=1,
+                adsr=[0.01, 0, 100, 0.01],
+            )
+    elif cmd == "v":
+        score = CalculateEvaluation(current_node.board())
+        if score:
+            ev = score.white().score(mate_score=30000)
+            current_node.comment = (current_node.comment or "").strip() + _(
+                " {{Val: {ev:+.2f}}}"
+            ).format(ev=ev / 100)
+            saved = True
+            print(_("\nValutazione commentata."))
+            Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1, adsr=[2, 5, 90, 5])
+    elif cmd == "n":
+        if current_node.comment:
+            if ui.enter_escape(_("\nEliminare il commento? (INVIO si', ESC no): ")):
+                current_node.comment = ""
+                saved = True
+                print(_("\nCommento eliminato."))
+                Acusticator(
+                    ["e4", 0.1, -0.4, config.VOLUME], kind=1, adsr=[5, 10, 70, 15]
+                )
+    return saved
+
+
+def _comandi_informativi(cmd, current_node):
+    """Comandi che si limitano a mostrare qualcosa o a regolare il motore.
+
+    Non toccano ne' la partita ne' lo stato del ciclo.
+    """
+    if cmd == "e":
+        if ENGINE:
+            print(_("\nAnalisi in corso..."))
+            analysis = _analizza_con_cache(current_node.board(), multipv)
+            for i, info in enumerate(analysis or []):
+                pv = info.get("pv", [])
+                score = info.get("score").pov(current_node.board().turn)
+                san_moves = []
+                temp_board = current_node.board().copy()
+                for m in pv:
+                    san_moves.append(temp_board.san(m))
+                    temp_board.push(m)
+                san_pv = " ".join(san_moves)
+                print(_("Linea {i} ({s}): {pv}").format(i=i + 1, s=score, pv=san_pv))
+            if ui.enter_escape(_("\nIspezione smart? (INVIO si', ESC no): ")):
+                SmartInspection(analysis, current_node.board())
+    elif cmd == "u":
+        print("\n" + str(board_utils.CustomBoard(current_node.board().fen())))
+        Acusticator(["d6", 0.03, 0, config.VOLUME], kind=1)
+    elif cmd == "i":
+        new_t = dgt(_("\nTempo analisi (s): "), kind="f", default=analysis_time)
+        SetAnalysisTime(new_t)
+    elif cmd == "o":
+        new_m = dgt(_("\nLinee analisi: "), kind="i", default=multipv)
+        SetMultipv(new_m)
+    elif cmd == "?":
+        print(_("\nComandi disponibili:"))
+        menu(config.ANALYSIS_COMMANDS, show_only=True, ordered=False)
+
+
+def _comandi_valutazione(cmd, current_node):
+    """Comandi che scrivono la valutazione nel prompt.
+
+    Restituisce il testo da anteporre al prompt, vuoto se non c'e' nulla da
+    mostrare. Il ciclo azzera comunque il prompt supplementare a ogni giro.
+    """
+    extra_prompt = ""
+    if cmd == "q":
+        res = CalculateBest(current_node.board(), as_san=True)
+        if res:
+            extra_prompt = f" BM: {res[0]} "
+            Acusticator(["f6", 0.02, 0, config.VOLUME], kind=1)
+    elif cmd == "w":
+        if ENGINE:
+            print(_("\nCalcolo bestline..."))
+            analysis = _analizza_con_cache(current_node.board(), multipv)
+            if analysis:
+                Acusticator(
+                    [
+                        "f6",
+                        0.02,
+                        0,
+                        config.VOLUME,
+                        "p",
+                        0.15,
+                        0,
+                        0,
+                        "a6",
+                        0.02,
+                        0,
+                        config.VOLUME,
+                        "p",
+                        0.15,
+                        0,
+                        0,
+                        "c7",
+                        0.02,
+                        0,
+                        config.VOLUME,
+                        "p",
+                        0.15,
+                        0,
+                        0,
+                        "e7",
+                        0.02,
+                        0,
+                        config.VOLUME,
+                        "p",
+                        0.15,
+                        0,
+                        0,
+                        "g7",
+                        0.02,
+                        0,
+                        config.VOLUME,
+                        "p",
+                        0.15,
+                        0,
+                        0,
+                        "b7",
+                        0.02,
+                        0,
+                        config.VOLUME,
+                    ],
+                    kind=1,
+                )
+                print(_("\nLinee migliori:"))
+                for i, info in enumerate(analysis, start=1):
+                    pv = info.get("pv", [])
+                    score = info.get("score").pov(current_node.board().turn)
+                    eval_str = (
+                        _("M{m}").format(m=abs(score.mate()))
+                        if score.is_mate()
+                        else f"{score.score() / 100:+.2f}"
+                        if score.score() is not None
+                        else _("N/A")
+                    )
+                    print(_("Linea {i} ({score}):").format(i=i, score=eval_str))
+                    print(board_utils.format_pv_descriptively(current_node.board(), pv))
+
+                if analysis[0].get("pv"):
+                    bm_san = current_node.board().san(analysis[0]["pv"][0])
+                    score = analysis[0].get("score").pov(current_node.board().turn)
+                    eval_str = (
+                        _("M{m}").format(m=abs(score.mate()))
+                        if score.is_mate()
+                        else f"{score.score() / 100:+.2f}"
+                        if score.score() is not None
+                        else _("N/A")
+                    )
+                    extra_prompt = _(" BM: {score} {san} ").format(
+                        score=eval_str, san=bm_san
+                    )
+            else:
+                Acusticator(
+                    ["a#3", 0.15, 0.5, config.VOLUME], kind=2, adsr=[5, 20, 0, 75]
+                )
+                print(_("\nImpossibile calcolare la bestline."))
+                extra_prompt = _(" BM: N/A ")
+        else:
+            print(_("\nMotore non inizializzato."))
+            Acusticator(["a#3", 0.15, 0.5, config.VOLUME], kind=2, adsr=[5, 20, 0, 75])
+    elif cmd == "r":
+        score = CalculateEvaluation(current_node.board())
+        if score:
+            ev = score.white().score(mate_score=30000)
+            extra_prompt = _(" CP: {ev:+.2f} ").format(ev=ev / 100)
+            Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1, adsr=[2, 5, 90, 5])
+    elif cmd == "t":
+        wdl = CalculateWDL(current_node.board())
+        if wdl:
+            extra_prompt = _(" W:{w:.1f}% D:{d:.1f}% L:{l:.1f}% ").format(
+                w=wdl[0], d=wdl[1], l=wdl[2]
+            )
+            Acusticator(["g#5", 0.03, 0, config.VOLUME], kind=1)
+    elif cmd == "y":
+        w, b = CalculateMaterial(current_node.board())
+        extra_prompt = _(" Mtrl: {w}/{b} ").format(w=w, b=b)
+        Acusticator(["g#5", 0.03, 0, config.VOLUME], kind=1)
+    return extra_prompt
+
+
 def AnalyzeGame(pgn_game, is_corrected=False):
     print(_("\nModalita' analisi.\nHeaders della partita:\n"))
     for k, v in pgn_game.headers.items():
@@ -779,244 +1052,13 @@ def AnalyzeGame(pgn_game, is_corrected=False):
                 Acusticator(["c6", 0.15, 0, config.VOLUME], kind=1, adsr=[5, 10, 80, 5])
                 print(_("\nNuovo PGN caricato."))
                 [print(f"  {k}: {v}") for k, v in pgn_game.headers.items()]
-        elif cmd == "q":  # Bestmove prompt
-            res = CalculateBest(current_node.board(), as_san=True)
-            if res:
-                extra_prompt = f" BM: {res[0]} "
-                Acusticator(["f6", 0.02, 0, config.VOLUME], kind=1)
-        elif cmd == "w":  # Bestline display
-            if ENGINE:
-                print(_("\nCalcolo bestline..."))
-                analysis = _analizza_con_cache(current_node.board(), multipv)
-                if analysis:
-                    Acusticator(
-                        [
-                            "f6",
-                            0.02,
-                            0,
-                            config.VOLUME,
-                            "p",
-                            0.15,
-                            0,
-                            0,
-                            "a6",
-                            0.02,
-                            0,
-                            config.VOLUME,
-                            "p",
-                            0.15,
-                            0,
-                            0,
-                            "c7",
-                            0.02,
-                            0,
-                            config.VOLUME,
-                            "p",
-                            0.15,
-                            0,
-                            0,
-                            "e7",
-                            0.02,
-                            0,
-                            config.VOLUME,
-                            "p",
-                            0.15,
-                            0,
-                            0,
-                            "g7",
-                            0.02,
-                            0,
-                            config.VOLUME,
-                            "p",
-                            0.15,
-                            0,
-                            0,
-                            "b7",
-                            0.02,
-                            0,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                    )
-                    print(_("\nLinee migliori:"))
-                    for i, info in enumerate(analysis, start=1):
-                        pv = info.get("pv", [])
-                        score = info.get("score").pov(current_node.board().turn)
-                        eval_str = (
-                            _("M{m}").format(m=abs(score.mate()))
-                            if score.is_mate()
-                            else f"{score.score() / 100:+.2f}"
-                            if score.score() is not None
-                            else _("N/A")
-                        )
-                        print(_("Linea {i} ({score}):").format(i=i, score=eval_str))
-                        print(
-                            board_utils.format_pv_descriptively(
-                                current_node.board(), pv
-                            )
-                        )
 
-                    if analysis[0].get("pv"):
-                        bm_san = current_node.board().san(analysis[0]["pv"][0])
-                        score = analysis[0].get("score").pov(current_node.board().turn)
-                        eval_str = (
-                            _("M{m}").format(m=abs(score.mate()))
-                            if score.is_mate()
-                            else f"{score.score() / 100:+.2f}"
-                            if score.score() is not None
-                            else _("N/A")
-                        )
-                        extra_prompt = _(" BM: {score} {san} ").format(
-                            score=eval_str, san=bm_san
-                        )
-                else:
-                    Acusticator(
-                        ["a#3", 0.15, 0.5, config.VOLUME], kind=2, adsr=[5, 20, 0, 75]
-                    )
-                    print(_("\nImpossibile calcolare la bestline."))
-                    extra_prompt = _(" BM: N/A ")
-            else:
-                print(_("\nMotore non inizializzato."))
-                Acusticator(
-                    ["a#3", 0.15, 0.5, config.VOLUME], kind=2, adsr=[5, 20, 0, 75]
-                )
-        elif cmd == "e":  # Deep analysis
-            if ENGINE:
-                print(_("\nAnalisi in corso..."))
-                analysis = _analizza_con_cache(current_node.board(), multipv)
-                for i, info in enumerate(analysis or []):
-                    pv = info.get("pv", [])
-                    score = info.get("score").pov(current_node.board().turn)
-                    san_moves = []
-                    temp_board = current_node.board().copy()
-                    for m in pv:
-                        san_moves.append(temp_board.san(m))
-                        temp_board.push(m)
-                    san_pv = " ".join(san_moves)
-                    print(
-                        _("Linea {i} ({s}): {pv}").format(i=i + 1, s=score, pv=san_pv)
-                    )
-                if ui.enter_escape(_("\nIspezione smart? (INVIO si', ESC no): ")):
-                    SmartInspection(analysis, current_node.board())
-        elif cmd == "z":  # Variante bestline
-            pv = CalculateBest(current_node.board(), bestmove=False, as_san=False)
-            if pv:
-                current_node.add_variation(pv[0]).add_line(pv[1:])
-                saved = True
-                print(_("\nVariante aggiunta."))
-                Acusticator(
-                    [
-                        "a5",
-                        0.12,
-                        0.3,
-                        config.VOLUME,
-                        "b5",
-                        0.12,
-                        0.3,
-                        config.VOLUME,
-                        "c6",
-                        0.12,
-                        0.3,
-                        config.VOLUME,
-                        "d6",
-                        0.12,
-                        0.3,
-                        config.VOLUME,
-                        "e6",
-                        0.12,
-                        0.3,
-                        config.VOLUME,
-                    ],
-                    kind=1,
-                    adsr=[4, 8, 85, 5],
-                )
-        elif cmd == "x":  # Commento BM
-            bm = CalculateBest(current_node.board(), as_san=True)
-            if bm:
-                current_node.comment = (current_node.comment or "").strip() + _(
-                    " {{BM: {bm}}}"
-                ).format(bm=bm[0])
-                saved = True
-                print(_("\nCommento aggiunto."))
-                Acusticator(["a5", 0.1, 0, config.VOLUME], kind=1, adsr=[2, 5, 90, 5])
-        elif cmd == "c":  # Commento manuale
-            Acusticator(
-                [
-                    "d6",
-                    0.012,
-                    0,
-                    config.VOLUME,
-                    "p",
-                    0.15,
-                    0,
-                    0,
-                    "a6",
-                    0.012,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[0.01, 0, 100, 0.01],
-            )
-            comm = dgt(_("\nInserisci il commento: "), kind="s").strip()
-            if comm:
-                current_node.comment = (current_node.comment or "").strip() + " " + comm
-                saved = True
-                Acusticator(
-                    [
-                        "a6",
-                        0.012,
-                        0,
-                        config.VOLUME,
-                        "p",
-                        0.15,
-                        0,
-                        0,
-                        "d6",
-                        0.012,
-                        0,
-                        config.VOLUME,
-                    ],
-                    kind=1,
-                    adsr=[0.01, 0, 100, 0.01],
-                )
-        elif cmd == "v":  # Commento valutazione
-            score = CalculateEvaluation(current_node.board())
-            if score:
-                ev = score.white().score(mate_score=30000)
-                current_node.comment = (current_node.comment or "").strip() + _(
-                    " {{Val: {ev:+.2f}}}"
-                ).format(ev=ev / 100)
-                saved = True
-                print(_("\nValutazione commentata."))
-                Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1, adsr=[2, 5, 90, 5])
-        elif cmd == "r":  # Valutazione prompt
-            score = CalculateEvaluation(current_node.board())
-            if score:
-                ev = score.white().score(mate_score=30000)
-                extra_prompt = _(" CP: {ev:+.2f} ").format(ev=ev / 100)
-                Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1, adsr=[2, 5, 90, 5])
-        elif cmd == "t":  # WDL prompt
-            wdl = CalculateWDL(current_node.board())
-            if wdl:
-                extra_prompt = _(" W:{w:.1f}% D:{d:.1f}% L:{l:.1f}% ").format(
-                    w=wdl[0], d=wdl[1], l=wdl[2]
-                )
-                Acusticator(["g#5", 0.03, 0, config.VOLUME], kind=1)
-        elif cmd == "y":  # Materiale prompt
-            w, b = CalculateMaterial(current_node.board())
-            extra_prompt = _(" Mtrl: {w}/{b} ").format(w=w, b=b)
-            Acusticator(["g#5", 0.03, 0, config.VOLUME], kind=1)
-        elif cmd == "u":  # Scacchiera
-            print("\n" + str(board_utils.CustomBoard(current_node.board().fen())))
-            Acusticator(["d6", 0.03, 0, config.VOLUME], kind=1)
-        elif cmd == "i":  # Tempo
-            new_t = dgt(_("\nTempo analisi (s): "), kind="f", default=analysis_time)
-            SetAnalysisTime(new_t)
-        elif cmd == "o":  # Linee
-            new_m = dgt(_("\nLinee analisi: "), kind="i", default=multipv)
-            SetMultipv(new_m)
-
+        elif cmd in _ANNOTAZIONI:
+            saved = _comandi_annotazione(cmd, current_node) or saved
+        elif cmd in _INFORMATIVI:
+            _comandi_informativi(cmd, current_node)
+        elif cmd in _VALUTAZIONI:
+            extra_prompt = _comandi_valutazione(cmd, current_node)
         elif cmd == "b":  # Toggle commenti
             comment_auto_read = not comment_auto_read
             if comment_auto_read:
@@ -1057,18 +1099,6 @@ def AnalyzeGame(pgn_game, is_corrected=False):
                     kind=1,
                 )
                 print(_("\nLettura automatica disabilitata."))
-        elif cmd == "n":  # Elimina commento
-            if current_node.comment:
-                if ui.enter_escape(_("\nEliminare il commento? (INVIO si', ESC no): ")):
-                    current_node.comment = ""
-                    saved = True
-                    print(_("\nCommento eliminato."))
-                    Acusticator(
-                        ["e4", 0.1, -0.4, config.VOLUME], kind=1, adsr=[5, 10, 70, 15]
-                    )
-        elif cmd == "?":
-            print(_("\nComandi disponibili:"))
-            menu(config.ANALYSIS_COMMANDS, show_only=True, ordered=False)
         else:
             Acusticator(["d3", 0.5, 0, config.VOLUME], kind=3)
 
@@ -1382,46 +1412,13 @@ def genera_sommario_analitico_txt(
         print(_("Errore salvataggio TXT: {e}").format(e=e))
 
 
-def AnalisiAutomatica(pgn_game):
+def _parametri_analisi_automatica(pgn_game, db):
+    """Chiede all'utente i parametri dell'analisi automatica.
+
+    Restituisce varianti, limite, troncamento, semimosse da saltare e
+    l'ultima apertura riconosciuta. Restituisce nulla se la modalita'
+    scelta non e' valida, cioe' se l'analisi va annullata.
     """
-    Esegue un'analisi automatica completa della partita, aggiungendo commenti
-    sugli errori e varianti migliori direttamente nel PGN.
-    """
-    # Fase 1: Controllo motore e raccolta parametri
-    if ENGINE is None:
-        print(
-            _("\nMotore non inizializzato. Impossibile avviare l'analisi automatica.")
-        )
-        return
-
-    def _format_score(score_obj, pov_color):
-        if not score_obj:
-            return _("N/A")
-        pov_score = score_obj.pov(pov_color)
-        if pov_score.is_mate():
-            return _("M{m}").format(m=abs(pov_score.mate()))
-        else:
-            # La valutazione e' sempre dal punto di vista del bianco, quindi la adattiamo
-            cp = score_obj.white().score(mate_score=30000)
-            if cp is None:
-                return _("N/A")
-            final_cp = cp if pov_color == chess.WHITE else -cp
-            return f"{final_cp / 100:+.2f}"
-
-    print(_("Analisi Automatica della Partita"))
-
-    # Caricamento configurazione soglie da DB
-    db = storage.LoadDB()
-    thresholds = db.get(
-        "analysis_thresholds", {"inesattezza": 50, "errore": 100, "svarione": 250}
-    )
-    soglia_inesattezza = thresholds["inesattezza"]
-    soglia_errore = thresholds["errore"]
-    soglia_svarione = thresholds["svarione"]
-
-    # Parametri fissi per ora
-    soglia_mossa_buona = 20
-    soglia_mossa_geniale_gap = 180
     num_varianti = dgt(
         _("Varianti [{v}]: ").format(v=multipv),
         kind="i",
@@ -1520,8 +1517,17 @@ def AnalisiAutomatica(pgn_game):
             imax=40,
             default=mosse_da_saltare,
         )
+    return (
+        num_varianti,
+        limit,
+        truncate_length,
+        mosse_da_saltare,
+        last_valid_eco_entry,
+    )
 
-    # Dati Motore per Report
+
+def _dati_motore(db):
+    """Nome, autore e opzioni del motore, per il rapporto finale."""
     engine_metadata = {}
     if ENGINE:
         engine_metadata["name"] = ENGINE.id.get("name", _("Sconosciuto"))
@@ -1533,6 +1539,141 @@ def AnalisiAutomatica(pgn_game):
             "Threads": cfg.get("num_cores", "?"),
             "Skill Level": cfg.get("skill_level", "?"),
         }
+    return engine_metadata
+
+
+def _classifica_mossa(
+    node, analysis_before, best_alternative, eval_after_move, turn, soglie
+):
+    """Giudica la mossa giocata confrontandola con la migliore trovata.
+
+    Restituisce la classificazione, i centesimi di pedone persi e la
+    valutazione dopo la mossa, che il ramo della mossa migliore
+    sostituisce con quella del motore.
+    """
+    soglia_inesattezza = soglie["inesattezza"]
+    soglia_errore = soglie["errore"]
+    soglia_svarione = soglie["svarione"]
+    soglia_mossa_buona = soglie["mossa_buona"]
+    soglia_mossa_geniale_gap = soglie["mossa_geniale_gap"]
+    best_alternative_move = best_alternative["move"]
+    centipawn_loss = 0
+    classification = ""
+    # 3. Confronto e Classificazione
+    if node.move.uci() == best_alternative_move.uci():
+        eval_after_move = best_alternative["score"]
+
+        if len(analysis_before) > 1:
+            score_best = analysis_before[0]["score"].pov(turn).score(mate_score=30000)
+            score_second_best = (
+                analysis_before[1]["score"].pov(turn).score(mate_score=30000)
+            )
+            if score_best is not None and score_second_best is not None:
+                if (score_best - score_second_best) >= soglia_mossa_geniale_gap:
+                    classification = "Mossa Geniale"
+                else:
+                    classification = "Mossa Buona"
+            else:
+                classification = "Mossa Buona"
+        else:
+            classification = "Mossa Buona"
+    else:
+        best_pov_score = best_alternative["score"].pov(turn)
+        played_pov_score = eval_after_move.pov(turn)
+
+        matto_disponibile = best_pov_score.is_mate() and best_pov_score.mate() > 0
+        matto_conservato = played_pov_score.is_mate() and played_pov_score.mate() > 0
+        if matto_disponibile and not matto_conservato:
+            # Il matto c'era ed e' stato lasciato andare.
+            classification = "Svarione"
+            centipawn_loss = 5000
+        elif matto_disponibile and matto_conservato:
+            # Un altro matto, magari piu' lungo, resta comunque vincente:
+            # prima finiva fra gli svarioni con cinquemila centesimi di
+            # perdita e rovinava accuratezza e stima Elo della partita.
+            mosse_migliore = abs(best_pov_score.mate())
+            mosse_giocata = abs(played_pov_score.mate())
+            if mosse_giocata > mosse_migliore:
+                classification = "Inesattezza"
+            else:
+                classification = "Mossa Buona"
+            centipawn_loss = 0
+        else:
+            score_best = best_pov_score.score(mate_score=30000)
+            score_played = played_pov_score.score(mate_score=30000)
+
+            if score_best is not None and score_played is not None:
+                centipawn_loss = max(0, score_best - score_played)
+            else:
+                centipawn_loss = 0
+
+            if centipawn_loss >= soglia_svarione:
+                classification = "Svarione"
+            elif centipawn_loss >= soglia_errore:
+                classification = "Errore"
+            elif centipawn_loss >= soglia_inesattezza:
+                classification = "Inesattezza"
+            elif centipawn_loss <= soglia_mossa_buona:
+                classification = "Mossa Buona"
+            else:
+                classification = "Mossa Normale"
+
+    if not classification:
+        classification = "Mossa Normale"
+    return classification, centipawn_loss, eval_after_move
+
+
+def AnalisiAutomatica(pgn_game):
+    """
+    Esegue un'analisi automatica completa della partita, aggiungendo commenti
+    sugli errori e varianti migliori direttamente nel PGN.
+    """
+    # Fase 1: Controllo motore e raccolta parametri
+    if ENGINE is None:
+        print(
+            _("\nMotore non inizializzato. Impossibile avviare l'analisi automatica.")
+        )
+        return
+
+    def _format_score(score_obj, pov_color):
+        if not score_obj:
+            return _("N/A")
+        pov_score = score_obj.pov(pov_color)
+        if pov_score.is_mate():
+            return _("M{m}").format(m=abs(pov_score.mate()))
+        else:
+            # La valutazione e' sempre dal punto di vista del bianco, quindi la adattiamo
+            cp = score_obj.white().score(mate_score=30000)
+            if cp is None:
+                return _("N/A")
+            final_cp = cp if pov_color == chess.WHITE else -cp
+            return f"{final_cp / 100:+.2f}"
+
+    print(_("Analisi Automatica della Partita"))
+
+    # Caricamento configurazione soglie da DB
+    db = storage.LoadDB()
+    thresholds = db.get(
+        "analysis_thresholds", {"inesattezza": 50, "errore": 100, "svarione": 250}
+    )
+    soglie = {
+        "inesattezza": thresholds["inesattezza"],
+        "errore": thresholds["errore"],
+        "svarione": thresholds["svarione"],
+        "mossa_buona": 20,
+        "mossa_geniale_gap": 180,
+    }
+    parametri = _parametri_analisi_automatica(pgn_game, db)
+    if parametri is None:
+        return
+    (
+        num_varianti,
+        limit,
+        truncate_length,
+        mosse_da_saltare,
+        last_valid_eco_entry,
+    ) = parametri
+    engine_metadata = _dati_motore(db)
 
     print(
         "\n"
@@ -1645,77 +1786,15 @@ def AnalisiAutomatica(pgn_game):
             accuracies[color_key].append(move_acc)
         except Exception:
             move_acc = 0.0
-        best_alternative_move = best_alternative["move"]
-        centipawn_loss = 0
-        classification = ""
-
         CPL_STATISTICS_CAP = 1000
-
-        # 3. Confronto e Classificazione
-        if node.move.uci() == best_alternative_move.uci():
-            eval_after_move = best_alternative["score"]
-
-            if len(analysis_before) > 1:
-                score_best = (
-                    analysis_before[0]["score"].pov(turn).score(mate_score=30000)
-                )
-                score_second_best = (
-                    analysis_before[1]["score"].pov(turn).score(mate_score=30000)
-                )
-                if score_best is not None and score_second_best is not None:
-                    if (score_best - score_second_best) >= soglia_mossa_geniale_gap:
-                        classification = "Mossa Geniale"
-                    else:
-                        classification = "Mossa Buona"
-                else:
-                    classification = "Mossa Buona"
-            else:
-                classification = "Mossa Buona"
-        else:
-            best_pov_score = best_alternative["score"].pov(turn)
-            played_pov_score = eval_after_move.pov(turn)
-
-            matto_disponibile = best_pov_score.is_mate() and best_pov_score.mate() > 0
-            matto_conservato = (
-                played_pov_score.is_mate() and played_pov_score.mate() > 0
-            )
-            if matto_disponibile and not matto_conservato:
-                # Il matto c'era ed e' stato lasciato andare.
-                classification = "Svarione"
-                centipawn_loss = 5000
-            elif matto_disponibile and matto_conservato:
-                # Un altro matto, magari piu' lungo, resta comunque vincente:
-                # prima finiva fra gli svarioni con cinquemila centesimi di
-                # perdita e rovinava accuratezza e stima Elo della partita.
-                mosse_migliore = abs(best_pov_score.mate())
-                mosse_giocata = abs(played_pov_score.mate())
-                if mosse_giocata > mosse_migliore:
-                    classification = "Inesattezza"
-                else:
-                    classification = "Mossa Buona"
-                centipawn_loss = 0
-            else:
-                score_best = best_pov_score.score(mate_score=30000)
-                score_played = played_pov_score.score(mate_score=30000)
-
-                if score_best is not None and score_played is not None:
-                    centipawn_loss = max(0, score_best - score_played)
-                else:
-                    centipawn_loss = 0
-
-                if centipawn_loss >= soglia_svarione:
-                    classification = "Svarione"
-                elif centipawn_loss >= soglia_errore:
-                    classification = "Errore"
-                elif centipawn_loss >= soglia_inesattezza:
-                    classification = "Inesattezza"
-                elif centipawn_loss <= soglia_mossa_buona:
-                    classification = "Mossa Buona"
-                else:
-                    classification = "Mossa Normale"
-
-        if not classification:
-            classification = "Mossa Normale"
+        classification, centipawn_loss, eval_after_move = _classifica_mossa(
+            node,
+            analysis_before,
+            best_alternative,
+            eval_after_move,
+            turn,
+            soglie,
+        )
 
         if classification in imprecision_stats:
             imprecision_stats[classification][color_key] += 1
