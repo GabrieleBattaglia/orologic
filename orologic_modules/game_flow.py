@@ -1,6 +1,5 @@
 import datetime
 import io
-import json
 import os
 import time
 
@@ -132,8 +131,9 @@ def EseguiAutosave(game_state):
         "starting_fen": game_state.pgn_game.headers.get("FEN", ""),
     }
     try:
-        with open(full_path, "w", encoding="utf-8") as f:
-            json.dump(dati_partita, f, indent="\t")
+        # Scrittura atomica: un'interruzione a meta' lasciava un file
+        # troncato, e la partita non era piu' recuperabile.
+        storage.scrivi_json(full_path, dati_partita, indent="\t")
     except Exception as e:
         print(
             _("\n[Errore durante il salvataggio automatico: {error}]").format(error=e)

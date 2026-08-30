@@ -63,7 +63,9 @@ def CreateClock():
         kind="s",
     )
     Acusticator(["f7", 0.09, 0, config.VOLUME, "d4", 0.07, 0, config.VOLUME])
-    same_time = True if same == "" else False
+    # Vale si' anche chi lo scrive invece di premere Invio: prima solo la
+    # riga vuota contava, e rispondere s dava due tempi diversi.
+    same_time = same.strip().lower() not in ("n", "no")
     phases = []
     phase_count = 0
     valid_data = True

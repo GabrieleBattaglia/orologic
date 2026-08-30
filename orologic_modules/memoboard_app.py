@@ -11,7 +11,7 @@ import time
 
 from GBUtils import Acusticator, dgt, key, menu
 
-from . import config, localizzazione, tempo
+from . import config, localizzazione, storage, tempo
 from .config import _
 
 # COSTANTI
@@ -131,7 +131,16 @@ def load_scores():
                         default_structure[ex_name].append(rec)
 
         return _deduplicate_scores(default_structure)
-    except Exception:
+    except Exception as e:
+        # Senza questo avviso le classifiche sparivano in silenzio: il
+        # primo salvataggio successivo le avrebbe cancellate per sempre.
+        copia = storage.metti_da_parte(SCORES_FILE)
+        print(_("Il file dei punteggi non e' leggibile: {errore}").format(errore=e))
+        if copia:
+            print(_("L'ho messo da parte come {copia}.").format(copia=copia))
+            print(_("Le classifiche ripartono da zero."))
+        else:
+            print(_("Attenzione: il prossimo salvataggio lo sovrascrivera'."))
         return default_structure
 
 
@@ -141,9 +150,7 @@ def save_scores(scores_data):
     """
     try:
         cleaned_data = _deduplicate_scores(scores_data)
-        os.makedirs(os.path.dirname(SCORES_FILE), exist_ok=True)
-        with open(SCORES_FILE, "w", encoding="utf-8") as f:
-            json.dump(cleaned_data, f, indent=2, ensure_ascii=False)
+        storage.scrivi_json(SCORES_FILE, cleaned_data, indent=2)
     except Exception as e:
         print(_("Errore nel salvataggio dei punteggi: {e}").format(e=e))
 

@@ -125,6 +125,9 @@ def format_profile(profile):
 
     createdAt = profile.get("createdAt")
     if createdAt:
+        # Lichess manda millisecondi dall'epoca, cioe' un istante assoluto:
+        # fromtimestamp lo riporta all'ora di questo computer, che e' quella
+        # che l'utente si aspetta di leggere, la stessa che vedrebbe sul sito.
         dt = datetime.datetime.fromtimestamp(createdAt / 1000.0)
         p.append(
             _("Iscritto il: {d}").format(

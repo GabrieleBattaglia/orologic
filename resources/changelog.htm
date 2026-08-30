@@ -19,6 +19,15 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.13</h3>
+<h4>8.14.0 (31 agosto 2026)</h4>
+<ul>
+  <li>* [Core] I nomi dei file generati dal programma vengono ripuliti da tutti i caratteri di controllo. Sei di essi passavano attraverso il filtro e Windows rifiutava la scrittura: partite con nomi particolari potevano non essere salvate.</li>
+  <li>* [Core] Alla domanda se Bianco e Nero partono con lo stesso tempo, ora vale come risposta affermativa anche scrivere "s" o "sì", non soltanto premere Invio. Prima qualsiasi risposta diversa dalla riga vuota veniva presa per un no, e si finiva a inserire due tempi separati senza capire perché.</li>
+  <li>* [Core] Il salvataggio automatico della partita in corso viene scritto prima in un file temporaneo e poi sostituito: un'interruzione a metà scrittura non lascia più un file troncato e irrecuperabile.</li>
+  <li>* [Memoboard] Se il file dei punteggi risulta illeggibile viene messo da parte con la data nel nome e l'utente viene avvisato. Prima si ripartiva dalla classifica vuota in silenzio, ed il primo salvataggio successivo cancellava definitivamente i record. Anche il salvataggio dei punteggi è ora atomico.</li>
+  <li>* [OAA] Il PGN prodotto dall'analisi automatica viene scritto in utf-8 semplice, come tutti gli altri PGN dell'applicazione: la firma iniziale che veniva aggiunta disturbava alcuni lettori di partite.</li>
+  <li>* [OAA] Il calcolo dell'accuratezza di partita non si annulla più quando una singola mossa ha accuratezza zero. L'effetto sul risultato resta contenuto, perché la media armonica penalizza comunque le mosse peggiori, ma il valore non collassa per un solo errore.</li>
+</ul>
 <h4>8.13.3 (31 agosto 2026)</h4>
 <ul>
   <li>* [Lichess] Il menu di Orolichess tiene ora conto del token corrente. Dopo un login effettuato durante la sessione le partite attive e le sfide in arrivo compaiono subito, mentre prima occorreva uscire da Orolichess e rientrare; dopo un logout, viceversa, il token non resta più in memoria.</li>

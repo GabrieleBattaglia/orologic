@@ -242,6 +242,12 @@ FILE_NAMES = {
 
 
 def sanitize_filename(filename):
+    """Ripulisce un nome di file da tutto cio' che Windows rifiuta.
+
+    I caratteri di controllo si scrivono in esadecimale: la forma ottale
+    usata prima copriva da 0 a 25, quindi ne lasciava passare sei, e il
+    nome veniva poi rifiutato dal sistema.
+    """
     s = re.sub(r'[\\/:*?"<>|]', "_", filename)
-    s = re.sub(r"[\0-\31]", "", s)
+    s = re.sub(r"[\x00-\x1f]", "", s)
     return s.strip().strip(". ") or "default"
