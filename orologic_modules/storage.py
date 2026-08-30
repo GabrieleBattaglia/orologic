@@ -131,18 +131,25 @@ def _normalizza(db):
     return db, scartati
 
 
-def _salva_copia_danneggiata():
-    """Mette da parte un database illeggibile invece di sovrascriverlo.
+def metti_da_parte(percorso):
+    """Sposta un file illeggibile invece di lasciarlo sovrascrivere.
 
-    Restituisce il percorso della copia, oppure None se non e' stato possibile.
+    Il nome porta la data, cosi' i tentativi successivi non si pestano i
+    piedi. Restituisce il percorso della copia, oppure nulla se non c'e'
+    stato modo di spostarla.
     """
     marca = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-    destinazione = f"{config.DB_FILE}.danneggiato-{marca}"
+    destinazione = f"{percorso}.danneggiato-{marca}"
     try:
-        os.replace(config.DB_FILE, destinazione)
+        os.replace(percorso, destinazione)
         return destinazione
     except OSError:
         return None
+
+
+def _salva_copia_danneggiata():
+    """Mette da parte un database illeggibile invece di sovrascriverlo."""
+    return metti_da_parte(config.DB_FILE)
 
 
 def LoadDB():
@@ -185,27 +192,41 @@ def LoadDB():
     return db
 
 
-def SaveDB(db):
-    """Salva il database in modo atomico.
+def scrivi_json(percorso, dati, indent=4):
+    """Scrive un file JSON in modo atomico.
 
-    Scrive prima su un file temporaneo e lo sostituisce solo a scrittura
-    riuscita, cosi' un'interruzione non lascia mai il database a meta'.
-    Restituisce vero se il salvataggio e' andato a buon fine.
+    Il contenuto va prima su un file temporaneo, che prende il posto di
+    quello buono solo a scrittura conclusa: un'interruzione non lascia
+    mai un file troncato. In caso di guai il temporaneo viene rimosso e
+    l'errore risale al chiamante, che sa cosa dire all'utente.
     """
-    temporaneo = config.DB_FILE + ".tmp"
+    temporaneo = percorso + ".tmp"
     try:
-        os.makedirs(os.path.dirname(config.DB_FILE), exist_ok=True)
+        cartella = os.path.dirname(percorso)
+        if cartella:
+            os.makedirs(cartella, exist_ok=True)
         with open(temporaneo, "w", encoding="utf-8") as f:
-            json.dump(db, f, indent=4, ensure_ascii=False)
-        os.replace(temporaneo, config.DB_FILE)
-        return True
-    except (OSError, TypeError, ValueError) as e:
-        print(_("Errore nel salvataggio del database: {errore}").format(errore=e))
+            json.dump(dati, f, indent=indent, ensure_ascii=False)
+        os.replace(temporaneo, percorso)
+    except (OSError, TypeError, ValueError):
         try:
             if os.path.exists(temporaneo):
                 os.remove(temporaneo)
         except OSError:
             pass
+        raise
+
+
+def SaveDB(db):
+    """Salva il database in modo atomico.
+
+    Restituisce vero se il salvataggio e' andato a buon fine.
+    """
+    try:
+        scrivi_json(config.DB_FILE, db)
+        return True
+    except (OSError, TypeError, ValueError) as e:
+        print(_("Errore nel salvataggio del database: {errore}").format(errore=e))
         return False
 
 

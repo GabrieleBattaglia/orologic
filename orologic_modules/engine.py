@@ -83,8 +83,10 @@ def calculate_game_accuracy_numpy(accuracies):
     weighted_mean = np.average(acc_array, weights=sigmas)
 
     # Media Armonica
-    # Aggiungo epsilon per evitare divisione per zero se accuracy è 0
-    harmonic_mean = len(acc_array) / np.sum(1.0 / (acc_array + 1e-9))
+    # L'accuratezza di una mossa vale almeno uno: con un epsilon minuscolo
+    # bastava una singola mossa a zero per azzerare questa componente e
+    # dimezzare il risultato finale, che non e' quello che si vuole dire.
+    harmonic_mean = len(acc_array) / np.sum(1.0 / np.maximum(acc_array, 1.0))
 
     return (weighted_mean + harmonic_mean) / 2
 
@@ -1897,7 +1899,9 @@ def AnalisiAutomatica(pgn_game):
         sanitized_pgn_name = config.sanitize_filename(base_name) + ".pgn"
         full_pgn_path = percorso_salvataggio(os.path.join("pgn", sanitized_pgn_name))
         os.makedirs(os.path.dirname(full_pgn_path), exist_ok=True)
-        with open(full_pgn_path, "w", encoding="utf-8-sig") as f:
+        # utf-8 semplice come tutti gli altri PGN del programma: il BOM
+        # dava fastidio ad alcuni lettori di partite.
+        with open(full_pgn_path, "w", encoding="utf-8") as f:
             f.write(pgn_string_formatted)
         print(_("PGN analizzato salvato come: {path}").format(path=full_pgn_path))
 
