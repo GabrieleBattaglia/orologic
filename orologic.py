@@ -128,6 +128,259 @@ def SchermataIniziale():
     )
 
 
+# Il suono che accompagna ogni voce del menu. Le sequenze erano scritte
+# per esteso dentro i rami, nota per nota, per centinaia di righe.
+TEMI_MENU = {
+    ".": lambda: Acusticator(
+        [
+            "g4",
+            0.15,
+            -0.5,
+            config.VOLUME,
+            "g4",
+            0.15,
+            0.5,
+            config.VOLUME,
+            "a4",
+            0.15,
+            -0.5,
+            config.VOLUME,
+            "g4",
+            0.15,
+            0.5,
+            config.VOLUME,
+            "p",
+            0.15,
+            0,
+            0,
+            "b4",
+            0.15,
+            -0.5,
+            config.VOLUME,
+            "c5",
+            0.3,
+            0.5,
+            config.VOLUME,
+        ],
+        kind=1,
+        adsr=[5, 0, 100, 5],
+    ),
+    "analizza": lambda: Acusticator(
+        [
+            "a5",
+            0.04,
+            0,
+            config.VOLUME,
+            "e5",
+            0.04,
+            0,
+            config.VOLUME,
+            "p",
+            0.08,
+            0,
+            0,
+            "g5",
+            0.04,
+            0,
+            config.VOLUME,
+            "e6",
+            0.12,
+            0,
+            config.VOLUME,
+        ],
+        kind=1,
+        adsr=[2, 8, 90, 0],
+    ),
+    "crea": lambda: Acusticator(
+        [
+            1000.0,
+            0.05,
+            -1,
+            config.VOLUME,
+            "p",
+            0.05,
+            0,
+            0,
+            900.0,
+            0.05,
+            1,
+            config.VOLUME,
+        ],
+        kind=1,
+        adsr=[0, 0, 100, 0],
+    ),
+    "easyfish": lambda: Acusticator(
+        ["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0.5, config.VOLUME], kind=1
+    ),
+    "lichess": lambda: Acusticator(
+        ["g4", 0.1, 0, config.VOLUME, "c5", 0.2, 0, config.VOLUME], kind=1
+    ),
+    "memoboard": lambda: Acusticator(
+        [
+            "g4",
+            0.08,
+            0,
+            config.VOLUME,
+            "b4",
+            0.08,
+            0,
+            config.VOLUME,
+            "d5",
+            0.1,
+            0,
+            config.VOLUME,
+        ],
+        kind=1,
+    ),
+    "motore": lambda: Acusticator(
+        [
+            "e7",
+            0.02,
+            0,
+            config.VOLUME,
+            "a6",
+            0.02,
+            0,
+            config.VOLUME,
+            "e7",
+            0.02,
+            0,
+            config.VOLUME,
+            "a6",
+            0.02,
+            0,
+            config.VOLUME,
+            "e7",
+            0.02,
+            0,
+            config.VOLUME,
+            "a6",
+            0.02,
+            0,
+            config.VOLUME,
+        ]
+    ),
+    "ricerca": lambda: Acusticator(
+        [
+            "d5",
+            0.08,
+            -0.5,
+            config.VOLUME,
+            "a5",
+            0.08,
+            0,
+            config.VOLUME,
+            "f#5",
+            0.08,
+            0.5,
+            config.VOLUME,
+            "d6",
+            0.12,
+            0,
+            config.VOLUME,
+        ],
+        kind=1,
+        adsr=[2, 5, 90, 3],
+    ),
+    "nomi": lambda: Acusticator(
+        [
+            "c5",
+            0.1,
+            -1,
+            config.VOLUME,
+            "e5",
+            0.1,
+            -0.3,
+            config.VOLUME,
+            "g5",
+            0.1,
+            0.3,
+            config.VOLUME,
+            "c6",
+            0.1,
+            1,
+            config.VOLUME,
+        ],
+        kind=1,
+        adsr=[2, 8, 80, 10],
+    ),
+    "impostazioni": lambda: Acusticator(
+        ["a4", 0.2, 0, config.VOLUME, "c5", 0.2, 0, config.VOLUME],
+        kind=1,
+        adsr=[5, 5, 80, 10],
+    ),
+    "arbitra": lambda: Acusticator(
+        [
+            "c4",
+            0.2,
+            -1,
+            config.VOLUME,
+            "e4",
+            0.2,
+            -0.3,
+            config.VOLUME,
+            "g4",
+            0.2,
+            0.3,
+            config.VOLUME,
+            "c5",
+            0.4,
+            1,
+            config.VOLUME,
+        ],
+        kind=1,
+        adsr=[10, 5, 80, 5],
+    ),
+    "tempo": lambda: Acusticator(
+        [
+            "c4",
+            0.2,
+            -1,
+            config.VOLUME,
+            "e4",
+            0.2,
+            -0.3,
+            config.VOLUME,
+            "g4",
+            0.2,
+            0.3,
+            config.VOLUME,
+            "c5",
+            0.4,
+            1,
+            config.VOLUME,
+        ],
+        kind=1,
+        adsr=[10, 5, 80, 5],
+    ),
+    "manuale": lambda: Acusticator(
+        [400.0, 0.2, 0, config.VOLUME, 600.0, 0.2, 0, config.VOLUME],
+        kind=1,
+        adsr=[10, 10, 80, 10],
+    ),
+    "novita": lambda: Acusticator(
+        [400.0, 0.2, 0, config.VOLUME, 600.0, 0.2, 0, config.VOLUME],
+        kind=1,
+        adsr=[10, 10, 80, 10],
+    ),
+    "vedi": lambda: Acusticator(
+        [1000.0, 0.1, 0, config.VOLUME, "p", 0.1, 0, 0, 1000.0, 0.1, 0, config.VOLUME],
+        kind=1,
+        adsr=[0, 0, 100, 0],
+    ),
+    "elimina": lambda: Acusticator(
+        [200.0, 0.5, 0, config.VOLUME], kind=2, adsr=[10, 10, 80, 10]
+    ),
+}
+
+
+def _suona(voce):
+    """Esegue il tema sonoro della voce di menu, se ne ha uno."""
+    tema = TEMI_MENU.get(voce)
+    if tema:
+        tema()
+
+
 def _incrementa_lanci(db):
     db["launch_count"] = db.get("launch_count", 0) + 1
 
@@ -239,70 +492,12 @@ def Main():
         )
 
         if scelta == ".":
-            Acusticator(
-                [
-                    "g4",
-                    0.15,
-                    -0.5,
-                    config.VOLUME,
-                    "g4",
-                    0.15,
-                    0.5,
-                    config.VOLUME,
-                    "a4",
-                    0.15,
-                    -0.5,
-                    config.VOLUME,
-                    "g4",
-                    0.15,
-                    0.5,
-                    config.VOLUME,
-                    "p",
-                    0.15,
-                    0,
-                    0,
-                    "b4",
-                    0.15,
-                    -0.5,
-                    config.VOLUME,
-                    "c5",
-                    0.3,
-                    0.5,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[5, 0, 100, 5],
-            )
+            _suona(".")
             engine.CloseEngine()
             break
 
         elif scelta == "analizza":
-            Acusticator(
-                [
-                    "a5",
-                    0.04,
-                    0,
-                    config.VOLUME,
-                    "e5",
-                    0.04,
-                    0,
-                    config.VOLUME,
-                    "p",
-                    0.08,
-                    0,
-                    0,
-                    "g5",
-                    0.04,
-                    0,
-                    config.VOLUME,
-                    "e6",
-                    0.120,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 90, 0],
-            )
+            _suona("analizza")
             print(_("\nCaricamento partita dagli appunti..."))
             res = engine.LoadPGNFromClipboard()
             if res:
@@ -330,238 +525,61 @@ def Main():
                     engine.AnalyzeGame(pgn_da_analizzare, is_corrected=is_corrected)
 
         elif scelta == "crea":
-            Acusticator(
-                [
-                    1000.0,
-                    0.05,
-                    -1,
-                    config.VOLUME,
-                    "p",
-                    0.05,
-                    0,
-                    0,
-                    900.0,
-                    0.05,
-                    1,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[0, 0, 100, 0],
-            )
+            _suona("crea")
             clock.CreateClock()
 
         elif scelta == "easyfish":
-            Acusticator(
-                ["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0.5, config.VOLUME], kind=1
-            )
+            _suona("easyfish")
             easyfish_app.run()
 
         elif scelta == "lichess":
-            Acusticator(
-                ["g4", 0.1, 0, config.VOLUME, "c5", 0.2, 0, config.VOLUME], kind=1
-            )
+            _suona("lichess")
             lichess_app.run()
 
         elif scelta == "memoboard":
-            Acusticator(
-                [
-                    "g4",
-                    0.08,
-                    0,
-                    config.VOLUME,
-                    "b4",
-                    0.08,
-                    0,
-                    config.VOLUME,
-                    "d5",
-                    0.1,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-            )
+            _suona("memoboard")
             memoboard_app.main()
 
         elif scelta == "motore":
-            Acusticator(
-                [
-                    "e7",
-                    0.02,
-                    0,
-                    config.VOLUME,
-                    "a6",
-                    0.02,
-                    0,
-                    config.VOLUME,
-                    "e7",
-                    0.02,
-                    0,
-                    config.VOLUME,
-                    "a6",
-                    0.02,
-                    0,
-                    config.VOLUME,
-                    "e7",
-                    0.02,
-                    0,
-                    config.VOLUME,
-                    "a6",
-                    0.02,
-                    0,
-                    config.VOLUME,
-                ]
-            )
+            _suona("motore")
             engine.MenuMotore()
 
         elif scelta == "ricerca":
-            Acusticator(
-                [
-                    "d5",
-                    0.08,
-                    -0.5,
-                    config.VOLUME,
-                    "a5",
-                    0.08,
-                    0,
-                    config.VOLUME,
-                    "f#5",
-                    0.08,
-                    0.5,
-                    config.VOLUME,
-                    "d6",
-                    0.12,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 5, 90, 3],
-            )
+            _suona("ricerca")
             pgn_search.run()
 
         elif scelta == "nomi":
-            Acusticator(
-                [
-                    "c5",
-                    0.1,
-                    -1,
-                    config.VOLUME,
-                    "e5",
-                    0.1,
-                    -0.3,
-                    config.VOLUME,
-                    "g5",
-                    0.1,
-                    0.3,
-                    config.VOLUME,
-                    "c6",
-                    0.1,
-                    1,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 80, 10],
-            )
+            _suona("nomi")
             ui.EditLocalization()
 
         elif scelta == "impostazioni":
-            Acusticator(
-                ["a4", 0.2, 0, config.VOLUME, "c5", 0.2, 0, config.VOLUME],
-                kind=1,
-                adsr=[5, 5, 80, 10],
-            )
+            _suona("impostazioni")
             ui.Impostazioni()
 
         elif scelta == "arbitra":
-            Acusticator(
-                [
-                    "c4",
-                    0.2,
-                    -1,
-                    config.VOLUME,
-                    "e4",
-                    0.2,
-                    -0.3,
-                    config.VOLUME,
-                    "g4",
-                    0.2,
-                    0.3,
-                    config.VOLUME,
-                    "c5",
-                    0.4,
-                    1,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[10, 5, 80, 5],
-            )
+            _suona("arbitra")
             db = storage.LoadDB()
             clock_config = clock.SelectClock(db)
             if clock_config:
                 game_flow.StartGame(clock_config)
 
         elif scelta == "tempo":
-            Acusticator(
-                [
-                    "c4",
-                    0.2,
-                    -1,
-                    config.VOLUME,
-                    "e4",
-                    0.2,
-                    -0.3,
-                    config.VOLUME,
-                    "g4",
-                    0.2,
-                    0.3,
-                    config.VOLUME,
-                    "c5",
-                    0.4,
-                    1,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[10, 5, 80, 5],
-            )
+            _suona("tempo")
             db = storage.LoadDB()
             clock_config = clock.SelectClock(db)
             if clock_config:
                 tempo_app.StartTempo(clock_config)
 
         elif scelta == "manuale":
-            Acusticator(
-                [400.0, 0.2, 0, config.VOLUME, 600.0, 0.2, 0, config.VOLUME],
-                kind=1,
-                adsr=[10, 10, 80, 10],
-            )
+            _suona("manuale")
             OpenManual()
 
         elif scelta == "novita":
-            Acusticator(
-                [400.0, 0.2, 0, config.VOLUME, 600.0, 0.2, 0, config.VOLUME],
-                kind=1,
-                adsr=[10, 10, 80, 10],
-            )
+            _suona("novita")
             OpenChangelog()
 
         elif scelta == "vedi":
-            Acusticator(
-                [
-                    1000.0,
-                    0.1,
-                    0,
-                    config.VOLUME,
-                    "p",
-                    0.1,
-                    0,
-                    0,
-                    1000.0,
-                    0.1,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[0, 0, 100, 0],
-            )
+            _suona("vedi")
             clock.ViewClocks()
 
         elif scelta == "volume":
@@ -579,7 +597,7 @@ def Main():
             print(_("Volume impostato a {vol:.0f}%").format(vol=config.VOLUME * 100))
 
         elif scelta == "elimina":
-            Acusticator([200.0, 0.5, 0, config.VOLUME], kind=2, adsr=[10, 10, 80, 10])
+            _suona("elimina")
             clock.DeleteClock()
 
 

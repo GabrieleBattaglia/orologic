@@ -189,6 +189,125 @@ def async_arbitration_input(game_state, get_prompt):
         time.sleep(0.02)
 
 
+def comandi_di_lettura(cmd, game_state):
+    """Comandi che si limitano a leggere o annunciare qualcosa.
+
+    Restituisce vero se il comando e' stato riconosciuto. Stanno fuori dal
+    ciclo di gioco perche' non toccano il suo stato: il ciclo era arrivato a
+    settecentosessanta righe.
+    """
+    if cmd == ".?":
+        Acusticator(
+            [440.0, 0.3, 0, config.VOLUME, 880.0, 0.3, 0, config.VOLUME],
+            kind=1,
+            adsr=[10, 0, 100, 20],
+        )
+        menu(
+            config.DOT_COMMANDS,
+            show_only=True,
+            p=_("Comandi disponibili:"),
+            ordered=False,
+        )
+        return True
+
+    if cmd == ".m":
+        Acusticator(
+            [
+                "c4",
+                0.1,
+                -1,
+                config.VOLUME,
+                "e4",
+                0.1,
+                -0.3,
+                config.VOLUME,
+                "g4",
+                0.1,
+                0.3,
+                config.VOLUME,
+                "c5",
+                0.1,
+                1,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 80, 10],
+        )
+        white_material, black_material = board_utils.CalculateMaterial(game_state.board)
+        print(
+            _(
+                "Materiale: {white_player} {white_mat}, {black_player} {black_mat}"
+            ).format(
+                white_player=game_state.white_player,
+                white_mat=white_material,
+                black_player=game_state.black_player,
+                black_mat=black_material,
+            )
+        )
+        return True
+
+    if cmd == ".s":
+        Acusticator(
+            [
+                "c4",
+                0.2,
+                -1,
+                config.VOLUME,
+                "g4",
+                0.2,
+                -0.3,
+                config.VOLUME,
+                "c5",
+                0.2,
+                0.3,
+                config.VOLUME,
+                "e5",
+                0.2,
+                1,
+                config.VOLUME,
+                "g5",
+                0.4,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[10, 5, 80, 5],
+        )
+        print(game_state.board)
+        return True
+
+    if cmd == ".l":
+        Acusticator(
+            [900.0, 0.1, 0, config.VOLUME, 440.0, 0.3, 0, config.VOLUME],
+            kind=1,
+            adsr=[1, 0, 80, 19],
+        )
+        summary = ui.GenerateMoveSummary(game_state)
+        if summary:
+            print(_("\nLista mosse giocate:\n"))
+            for line in summary:
+                print(line)
+        else:
+            print(_("Nessuna mossa ancora giocata."))
+        return True
+
+    if cmd == ".6":
+        sec = dgt(
+            _(
+                "\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "
+            ),
+            kind="i",
+            imin=0,
+            imax=120,
+            default=game_state.refresh_interval,
+        )
+        game_state.refresh_interval = sec
+        print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec))
+        return True
+
+    return False
+
+
 def _loop_principale_partita(game_state, eco_database, autosave_is_on):
     last_eco_msg = ""
     last_valid_eco_entry = None
@@ -276,19 +395,9 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 print(_("Comando non disponibile: orologio disabilitato."))
                 continue
 
-            if cmd == ".?":
-                Acusticator(
-                    [440.0, 0.3, 0, config.VOLUME, 880.0, 0.3, 0, config.VOLUME],
-                    kind=1,
-                    adsr=[10, 0, 100, 20],
-                )
-                menu(
-                    config.DOT_COMMANDS,
-                    show_only=True,
-                    p=_("Comandi disponibili:"),
-                    ordered=False,
-                )
             elif ui.comandi_orologio(cmd, game_state):
+                pass
+            elif comandi_di_lettura(cmd, game_state):
                 pass
             elif cmd == ".5":
                 if game_state.paused:
@@ -326,59 +435,6 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         else game_state.black_player
                     )
                     print(_("Orologio di {player} in moto").format(player=player))
-            elif cmd == ".6":
-                sec = dgt(
-                    _(
-                        "\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "
-                    ),
-                    kind="i",
-                    imin=0,
-                    imax=120,
-                    default=game_state.refresh_interval,
-                )
-                game_state.refresh_interval = sec
-                print(
-                    _("Intervallo di aggiornamento impostato a {s} secondi.").format(
-                        s=sec
-                    )
-                )
-                continue
-            elif cmd == ".m":
-                Acusticator(
-                    [
-                        "c4",
-                        0.1,
-                        -1,
-                        config.VOLUME,
-                        "e4",
-                        0.1,
-                        -0.3,
-                        config.VOLUME,
-                        "g4",
-                        0.1,
-                        0.3,
-                        config.VOLUME,
-                        "c5",
-                        0.1,
-                        1,
-                        config.VOLUME,
-                    ],
-                    kind=1,
-                    adsr=[2, 8, 80, 10],
-                )
-                white_material, black_material = board_utils.CalculateMaterial(
-                    game_state.board
-                )
-                print(
-                    _(
-                        "Materiale: {white_player} {white_mat}, {black_player} {black_mat}"
-                    ).format(
-                        white_player=game_state.white_player,
-                        white_mat=white_material,
-                        black_player=game_state.black_player,
-                        black_mat=black_material,
-                    )
-                )
             elif cmd == ".p":
                 game_state.paused = not game_state.paused
                 if game_state.paused:
@@ -503,47 +559,6 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         game_state.descriptive_move_history.pop()
                     current_turn_clock_before = None
                     print(_("Ultima mossa annullata: ") + undone_move_san)
-            elif cmd == ".s":
-                Acusticator(
-                    [
-                        "c4",
-                        0.2,
-                        -1,
-                        config.VOLUME,
-                        "g4",
-                        0.2,
-                        -0.3,
-                        config.VOLUME,
-                        "c5",
-                        0.2,
-                        0.3,
-                        config.VOLUME,
-                        "e5",
-                        0.2,
-                        1,
-                        config.VOLUME,
-                        "g5",
-                        0.4,
-                        0,
-                        config.VOLUME,
-                    ],
-                    kind=1,
-                    adsr=[10, 5, 80, 5],
-                )
-                print(game_state.board)
-            elif cmd == ".l":
-                Acusticator(
-                    [900.0, 0.1, 0, config.VOLUME, 440.0, 0.3, 0, config.VOLUME],
-                    kind=1,
-                    adsr=[1, 0, 80, 19],
-                )
-                summary = ui.GenerateMoveSummary(game_state)
-                if summary:
-                    print(_("\nLista mosse giocate:\n"))
-                    for line in summary:
-                        print(line)
-                else:
-                    print(_("Nessuna mossa ancora giocata."))
             elif cmd in [".1-0", ".0-1", ".1/2", ".*"]:
                 Acusticator(
                     [
