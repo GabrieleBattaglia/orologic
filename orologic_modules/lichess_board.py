@@ -7,7 +7,7 @@ import time
 
 import chess
 
-from GBUtils import Acusticator, dgt
+from GBUtils import Acusticator
 
 from . import board_utils, config, rete, tempo, ui
 from .config import _
@@ -489,68 +489,9 @@ def spectate_game(game_id, token=None):
             continue
 
         cmd = user_input.lower()
-        if cmd == ".1":
-            w_time, _b_time = game_state.get_clocks()
-            Acusticator(["a6", 0.14, -1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            print(
-                _("\nTempo {p}: {t}").format(
-                    p=game_state.white_player, t=format_time(w_time)
-                )
-            )
-        elif cmd == ".2":
-            _w_time, b_time = game_state.get_clocks()
-            Acusticator(["b6", 0.14, 1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            print(
-                _("\nTempo {p}: {t}").format(
-                    p=game_state.black_player, t=format_time(b_time)
-                )
-            )
-        elif cmd == ".3":
-            w_time, b_time = game_state.get_clocks()
-            Acusticator(["e7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            print(
-                _("\nTempo {p}: {t}").format(
-                    p=game_state.white_player, t=format_time(w_time)
-                )
-            )
-            print(
-                _("Tempo {p}: {t}").format(
-                    p=game_state.black_player, t=format_time(b_time)
-                )
-            )
-        elif cmd == ".4":
-            w_time, b_time = game_state.get_clocks()
-            Acusticator(["f7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            diff = abs(w_time - b_time)
-            adv = _("bianco") if w_time > b_time else _("nero")
-            print(
-                _("\n{player} in vantaggio di {t}").format(
-                    player=adv, t=format_time(diff)
-                )
-            )
-        elif cmd == ".5":
-            Acusticator(["f4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            player = (
-                game_state.white_player
-                if game_state.board.turn == chess.WHITE
-                else game_state.black_player
-            )
-            print(_("\nOrologio di {player} in moto").format(player=player))
-        elif cmd == ".6":
-            sec = dgt(
-                _(
-                    "\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "
-                ),
-                kind="i",
-                imin=0,
-                imax=120,
-                default=game_state.refresh_interval,
-            )
-            game_state.refresh_interval = sec
-            print(
-                _("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec)
-            )
-            continue
+        if ui.comandi_orologio(cmd, game_state):
+            if cmd == ".6":
+                continue
         elif cmd == ".m":
             Acusticator(
                 [
@@ -1387,68 +1328,9 @@ def play_game(game_id, token, username):
         if handle_exploration_command(user_input, game_state):
             continue
 
-        if cmd == ".1":
-            w_time, _b_time = game_state.get_clocks()
-            Acusticator(["a6", 0.14, -1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            print(
-                _("\nTempo {p}: {t}").format(
-                    p=game_state.white_player, t=format_time(w_time)
-                )
-            )
-        elif cmd == ".2":
-            _w_time, b_time = game_state.get_clocks()
-            Acusticator(["b6", 0.14, 1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            print(
-                _("\nTempo {p}: {t}").format(
-                    p=game_state.black_player, t=format_time(b_time)
-                )
-            )
-        elif cmd == ".3":
-            w_time, b_time = game_state.get_clocks()
-            Acusticator(["e7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            print(
-                _("\nTempo {p}: {t}").format(
-                    p=game_state.white_player, t=format_time(w_time)
-                )
-            )
-            print(
-                _("Tempo {p}: {t}").format(
-                    p=game_state.black_player, t=format_time(b_time)
-                )
-            )
-        elif cmd == ".4":
-            w_time, b_time = game_state.get_clocks()
-            Acusticator(["f7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            diff = abs(w_time - b_time)
-            adv = _("bianco") if w_time > b_time else _("nero")
-            print(
-                _("\n{player} in vantaggio di {t}").format(
-                    player=adv, t=format_time(diff)
-                )
-            )
-        elif cmd == ".5":
-            Acusticator(["f4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            player = (
-                game_state.white_player
-                if game_state.board.turn == chess.WHITE
-                else game_state.black_player
-            )
-            print(_("\nOrologio di {player} in moto").format(player=player))
-        elif cmd == ".6":
-            sec = dgt(
-                _(
-                    "\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "
-                ),
-                kind="i",
-                imin=0,
-                imax=120,
-                default=game_state.refresh_interval,
-            )
-            game_state.refresh_interval = sec
-            print(
-                _("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec)
-            )
-            continue
+        if ui.comandi_orologio(cmd, game_state):
+            if cmd == ".6":
+                continue
         elif cmd == ".m":
             Acusticator(
                 [

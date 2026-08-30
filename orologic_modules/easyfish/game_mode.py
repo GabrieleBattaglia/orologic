@@ -1,5 +1,3 @@
-import time
-
 import chess
 import chess.engine
 import chess.pgn
@@ -7,8 +5,8 @@ import chess.pgn
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
 from .. import engine as orologic_engine, orologio, tempo
-from .. import storage
-from ..board_utils import CustomBoard, DescribeMove, FormatTime, NormalizeMove
+from .. import storage, ui
+from ..board_utils import CustomBoard, DescribeMove, NormalizeMove
 from ..config import _
 from . import analysis_utils
 from .constants import MNGAME
@@ -61,69 +59,12 @@ def ParseTimeInput(prompt_text):
 def _comandi_informativi(cmd, board, game_state, engine_instance):
     """Comandi che si limitano a riferire qualcosa.
 
-    Tempi dei giocatori, materiale, scacchiera, elenco comandi e forza
+    I comandi da punto uno a punto sei stanno in ui, uguali per tutte le
+    modalita': qui restano materiale, scacchiera, elenco comandi e forza
     del motore. Restituisce vero se il comando e' stato riconosciuto.
     """
-    if cmd == ".1":
-        if getattr(game_state, "ignore_clock", False):
-            print(_("Orologi disattivati."))
-        else:
-            print(
-                _("Tempo Bianco: {t}").format(t=FormatTime(game_state.white_remaining))
-            )
-    elif cmd == ".2":
-        if getattr(game_state, "ignore_clock", False):
-            print(_("Orologi disattivati."))
-        else:
-            print(_("Tempo Nero: {t}").format(t=FormatTime(game_state.black_remaining)))
-    elif cmd == ".3":
-        if getattr(game_state, "ignore_clock", False):
-            print(_("Orologi disattivati."))
-        else:
-            print(
-                _("Tempo Bianco: {t}").format(t=FormatTime(game_state.white_remaining))
-            )
-            print(_("Tempo Nero: {t}").format(t=FormatTime(game_state.black_remaining)))
-    elif cmd == ".4":
-        if getattr(game_state, "ignore_clock", False):
-            print(_("Orologi disattivati."))
-        else:
-            diff = abs(game_state.white_remaining - game_state.black_remaining)
-            adv = (
-                _("bianco")
-                if game_state.white_remaining > game_state.black_remaining
-                else _("nero")
-            )
-            print(_("{player} in vantaggio di ").format(player=adv) + FormatTime(diff))
-    elif cmd == ".5":
-        if getattr(game_state, "ignore_clock", False):
-            print(_("Orologi disattivati."))
-        else:
-            pause_duration = (
-                time.time() - game_state.paused_time_start
-                if getattr(game_state, "paused", False)
-                else 0
-            )
-            if pause_duration > 0:
-                hours = int(pause_duration // 3600)
-                minutes = int((pause_duration % 3600) // 60)
-                seconds = int(pause_duration % 60)
-                ms = int((pause_duration - int(pause_duration)) * 1000)
-                h_str = _("{h} ore, ").format(h=hours) if hours else ""
-                m_str = _("{m} minuti, ").format(m=minutes) if minutes or hours else ""
-                s_str = (
-                    _("{s} secondi e ").format(s=seconds)
-                    if seconds or minutes or hours
-                    else ""
-                )
-                ms_str = _("{ms} ms").format(ms=ms) if ms else ""
-                duration = f"{h_str}{m_str}{s_str}{ms_str}"
-                print(_("Tempo in pausa da: {duration}").format(duration=duration))
-            else:
-                player = (
-                    _("Bianco") if game_state.active_color == chess.WHITE else _("Nero")
-                )
-                print(_("Orologio del {player} in moto").format(player=player))
+    if ui.comandi_orologio(cmd, game_state):
+        return True
     elif cmd == ".a":
         lines = analysis_utils.get_lines_from_engine(
             board, engine_instance, orologic_engine.analysis_time, 1

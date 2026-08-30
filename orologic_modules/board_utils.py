@@ -330,6 +330,9 @@ class GameState:
         self.black_moves = 0
         self.active_color = "white"
         self.paused = False
+        # Istante in cui gli orologi sono stati fermati: serve al
+        # comando punto cinque per dire da quanto sono in pausa.
+        self.paused_time_start = None
         self.game_over = False
         self.descriptive_move_history = []
         self.move_history = []

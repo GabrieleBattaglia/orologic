@@ -99,7 +99,7 @@ def StartTempo(clock_config):
 
 def _loop_tempo(game_state, clock_config):
     """Loop principale della modalita' Tempo."""
-    paused_time_start = None
+    game_state.paused_time_start = None
     total_paused_time = 0.0
     start_time = time.time()
 
@@ -184,63 +184,10 @@ def _loop_tempo(game_state, clock_config):
 
             elif ui.comandi_orologio(cmd, game_state):
                 pass
-            elif cmd == ".5":
-                if game_state.paused:
-                    Acusticator(
-                        ["d4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                    )
-                    pause_duration = (
-                        time.time() - paused_time_start if paused_time_start else 0
-                    )
-                    hours = int(pause_duration // 3600)
-                    minutes = int((pause_duration % 3600) // 60)
-                    seconds = int(pause_duration % 60)
-                    ms = int((pause_duration - int(pause_duration)) * 1000)
-                    print(
-                        _("Tempo in pausa da: {duration}").format(
-                            duration="{h_str}{m_str}{s_str}{ms_str}".format(
-                                h_str=_("{h} ore, ").format(h=hours) if hours else "",
-                                m_str=_("{m} minuti, ").format(m=minutes)
-                                if minutes or hours
-                                else "",
-                                s_str=_("{s} secondi e ").format(s=seconds)
-                                if seconds or minutes or hours
-                                else "",
-                                ms_str=_("{ms} ms").format(ms=ms) if ms else "",
-                            )
-                        )
-                    )
-                else:
-                    Acusticator(
-                        ["f4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100]
-                    )
-                    player = (
-                        game_state.white_player
-                        if game_state.active_color == "white"
-                        else game_state.black_player
-                    )
-                    print(_("Orologio di {player} in moto").format(player=player))
-            elif cmd == ".6":
-                sec = dgt(
-                    _(
-                        "\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "
-                    ),
-                    kind="i",
-                    imin=0,
-                    imax=120,
-                    default=game_state.refresh_interval,
-                )
-                game_state.refresh_interval = sec
-                print(
-                    _("Intervallo di aggiornamento impostato a {s} secondi.").format(
-                        s=sec
-                    )
-                )
-                continue
             elif cmd == ".p":
                 game_state.paused = not game_state.paused
                 if game_state.paused:
-                    paused_time_start = time.time()
+                    game_state.paused_time_start = time.time()
                     print(_("Orologi in pausa"))
                     Acusticator(
                         [
@@ -266,10 +213,12 @@ def _loop_tempo(game_state, clock_config):
                     )
                 else:
                     pause_duration = (
-                        time.time() - paused_time_start if paused_time_start else 0
+                        time.time() - game_state.paused_time_start
+                        if game_state.paused_time_start
+                        else 0
                     )
                     total_paused_time += pause_duration
-                    paused_time_start = None
+                    game_state.paused_time_start = None
                     Acusticator(
                         [
                             "c4",
@@ -387,8 +336,8 @@ def _loop_tempo(game_state, clock_config):
     end_time = time.time()
     elapsed_real = end_time - start_time
 
-    if paused_time_start is not None:
-        total_paused_time += end_time - paused_time_start
+    if game_state.paused_time_start is not None:
+        total_paused_time += end_time - game_state.paused_time_start
 
     tempo_gioco = elapsed_real - total_paused_time
     tempo_pausa = total_paused_time
