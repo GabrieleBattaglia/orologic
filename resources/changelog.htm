@@ -18,7 +18,66 @@ li { margin-bottom: 0.3em; }
 <body>
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
+<h3>Versione 8.13</h3>
+<h4>8.13.1 (30 agosto 2026)</h4>
+<ul>
+  <li>* [Core] I comandi di correzione manuale del tempo (<code>.b+</code>, <code>.b-</code>, <code>.n+</code>, <code>.n-</code>) rispondono ora soltanto dove esiste un arbitro che possa fermare gli orologi, cioè nell'arbitraggio e nella modalità Tempo. Contro il motore ed in Orolichess non sono riconosciuti: prima, dopo l'unificazione dei comandi, rimandavano al comando di pausa <code>.p</code>, che in quelle modalità non esiste.</li>
+</ul>
+<h4>8.13.0 (30 agosto 2026)</h4>
+<ul>
+  <li>+ [Core] La scacchiera testuale si richiama indifferentemente con <code>.s</code> oppure con <code>.b</code> in tutte le modalità. Prima il comando cambiava a seconda del contesto (<code>.s</code> in arbitraggio ed editor, <code>.b</code> contro il motore ed in Orolichess) e chi passava da una modalità all'altra non ritrovava lo stesso tasto. Entrambe le abitudini precedenti restano valide: in Easyfish <code>.s</code> seguito da una cifra continua ad impostare la forza del motore, ed in arbitraggio <code>.b+</code> e <code>.b-</code> continuano a correggere i tempi.</li>
+  <li>+ [Easyfish] Aggiunto il comando <code>.m</code>, che annuncia il materiale ancora in gioco, prima assente nella partita contro il motore.</li>
+  <li>* [Easyfish] Il menu principale mostra ora la scacchiera nel formato accessibile con le coordinate, come tutte le altre modalità, invece della griglia grezza prodotta dalla libreria.</li>
+  <li>* [Core] Materiale (<code>.m</code>) e lista mosse (<code>.l</code>) usano lo stesso testo e lo stesso riscontro sonoro ovunque: prima ogni modalità aveva la propria versione.</li>
+</ul>
+<h3>Versione 8.12</h3>
+<h4>8.12.0 (30 agosto 2026)</h4>
+<ul>
+  <li>+ [Core] I comandi da <code>.1</code> a <code>.6</code> si comportano ora in modo identico nell'arbitraggio, nella modalità Tempo, in Easyfish ed in Orolichess: prima ne esistevano quattro versioni differenti, con testi e comportamenti divergenti.</li>
+  <li>+ [Easyfish] [Lichess] Aggiunti i riscontri sonori ai comandi dell'orologio, che finora suonavano soltanto nell'arbitraggio.</li>
+  <li>+ [Easyfish] Aggiunto il comando <code>.6</code>, per regolare l'aggiornamento automatico dell'orologio, prima non disponibile.</li>
+  <li>+ [Core] Il comando <code>.5</code> annuncia da quanto tempo gli orologi sono fermi in tutte le modalità che prevedono la pausa, e non più soltanto nell'arbitraggio ed in Tempo.</li>
+  <li>* [Core] Un unico avviso, "Gli orologi sono disattivati", sostituisce i tre messaggi differenti che le varie modalità davano nella medesima situazione.</li>
+  <li>* [Lichess] I comandi <code>.1</code> e <code>.2</code> annunciano il tempo residuo senza la percentuale consumata, che nelle partite su Lichess non è calcolabile perché quei controlli non hanno fasi.</li>
+</ul>
+<h3>Versione 8.11</h3>
+<h4>Da 8.11.0 a 8.11.5 (30 agosto 2026)</h4>
+<ul>
+  <li>+ [Core] Riorganizzazione interna delle funzioni più grandi, senza modifiche al funzionamento: il ciclo della partita arbitrata passa da 1124 a 247 righe, la partita contro il motore da 1034 a 378, il menu di Easyfish da 695 a 531, l'analisi assistita da 581 a 338 e l'analisi automatica da 476 a 314.</li>
+  <li>* [Easyfish] Il riconoscimento della fine partita, che esisteva in due copie identiche di duecento righe ciascuna, una dopo la mossa dell'utente ed una dopo quella del motore, è ora un blocco solo: le correzioni future non rischiano più di essere applicate ad una copia sola.</li>
+  <li>+ [Core] Le sequenze sonore del menu principale, prima scritte nota per nota in diciassette punti differenti, sono raccolte in un elenco di temi.</li>
+</ul>
+<h3>Versione 8.10</h3>
+<h4>8.10.0 (29 agosto 2026)</h4>
+<ul>
+  <li>* [Core] Un solo cronometro interno al posto dei tre quasi uguali che convivevano nell'arbitraggio, nella modalità Tempo ed in Easyfish. Aggiunta la protezione che mancava sulle modifiche ai tempi: il conteggio a scalare e gli incrementi, le correzioni manuali e gli annullamenti potevano sovrapporsi e perdere un aggiornamento.</li>
+  <li>* [Core] Le durate si annunciano ovunque allo stesso modo: prima esistevano dodici formattazioni differenti in sei file, tanto che la medesima durata poteva risultare "1 ora, 5 minuti, 3 secondi" oppure "1 ore, 5 minuti e 3 secondi" a seconda di chi la stampava.</li>
+  <li>+ [Core] Le correzioni manuali del tempo accettano anche la forma minuti e secondi, per esempio <code>.n+2:00</code>, prima rifiutata, ed annunciano quanto tempo resta dopo la modifica.</li>
+  <li>* [Core] I comandi di esplorazione della scacchiera, che esistevano in tre copie già divergenti fra arbitraggio ed Orolichess, sono ora un blocco unico.</li>
+  <li>+ [Lichess] Il token di accesso si digita mascherato: prima restava leggibile sullo schermo e nella cronologia del terminale.</li>
+  <li>+ [Core] La cancellazione dei file datati chiede conferma prima di procedere.</li>
+</ul>
 <h3>Versione 8.9</h3>
+<h4>8.9.10 (29 agosto 2026)</h4>
+<ul>
+  <li>* [L10N] Un solo elenco di termini scacchistici per tutto il programma, al posto dei tre che convivevano: la stessa figura veniva chiamata donna oppure regina, la stessa colonna Ancona oppure alpha, e la stessa annotazione mossa dubbia oppure mossa interessante, a seconda della parte del programma che stava parlando. Le colonne di Easyfish non usano più l'alfabeto NATO ma la convenzione del resto dell'applicazione.</li>
+  <li>+ [Core] Il comando "nomi" del menu principale permette ora di personalizzare l'intera grammatica di gioco, comprese le sette annotazioni delle mosse, il verbo di spostamento, la promozione e lo scacco matto: sono cinquantaquattro voci, e si può uscire in qualsiasi momento digitando un punto, conservando le modifiche già fatte.</li>
+  <li>* [Core] Le personalizzazioni dei nomi si sentono immediatamente in tutte le modalità: prima restavano invisibili fino al riavvio dell'applicazione.</li>
+  <li>* [Core] Nella descrizione delle mosse la colonna e la traversa risultavano attaccate, per cui la sintesi vocale leggeva "firenzetre" invece di "firenze tre".</li>
+  <li>* [L10N] Giorni e mesi, scritti a mano, restavano in italiano anche con l'interfaccia impostata in un'altra lingua. Corretti inoltre i due NAG che riportavano la medesima descrizione: il 5 indica una mossa interessante, il 6 una mossa dubbia.</li>
+</ul>
+<h4>8.9.9 (29 agosto 2026)</h4>
+<ul>
+  <li>* [Core] Risolta una perdita di dati: la copia del database tenuta in memoria dal menu principale veniva risalvata dai vari rami sovrascrivendo quanto era stato scritto nel frattempo, per cui un orologio appena creato poteva sparire semplicemente cambiando il volume o le impostazioni. Il salvataggio è ora atomico ed un database illeggibile viene messo da parte con la data nel nome, invece di andare perduto in silenzio.</li>
+  <li>* [Core] Controlli di tempo: il tempo del nuovo controllo si somma al residuo invece di sostituirlo, come vogliono le regole. Corretto inoltre il conteggio cumulativo delle mosse: con 40 mosse seguite da 20, la seconda fase durava una mossa sola. L'annullamento riporta indietro anche contatore e fase, restituendo il tempo aggiunto al cambio.</li>
+  <li>* [Core] Gli allarmi scattano appena il tempo scende sotto la soglia: prima suonavano soltanto se il controllo cadeva in una finestra di un decimo di secondo, quindi potevano non suonare affatto.</li>
+  <li>* [Core] Fischer Random: la posizione digitata a mano nasceva priva dei diritti di arrocco e veniva annunciata come "Numero Chess960 None", mentre disposizioni impossibili come otto torri venivano accettate. Ora l'arrocco è possibile, il numero è corretto e le sequenze non valide vengono rifiutate.</li>
+  <li>* [Core] PGN: il tag <code>%clk</code> contiene il tempo residuo, come vuole lo standard, ed il tempo impiegato ha il proprio tag <code>%emt</code>. Il commento di proposta di patta non contiene più le parentesi graffe, che rendevano il file malformato.</li>
+  <li>* [Engine] La cache delle analisi distingue il numero di linee richieste: una valutazione ad una sola linea non fa più sparire le altre. L'aggiornamento di Stockfish sostituisce il motore installato solo a nuovo motore scaricato ed estratto, per cui un errore di rete non lascia più senza motore, ed il confronto fra le versioni funziona: prima nessun aggiornamento risultava mai disponibile.</li>
+  <li>* [Lichess] Tutte le chiamate di rete hanno ora un tempo massimo di attesa e messaggi comprensibili: prima una connessione interrotta poteva bloccare l'applicazione a tempo indefinito, mentre su Lichess l'orologio continuava a scorrere. Il download delle partite di un giocatore ha un tetto massimo e si interrompe con ESC.</li>
+  <li>* [Accessibilità] Eliminati tutti i separatori grafici dall'output, sessantuno punti in tredici file, fra righe di uguali, trattini e cornici. La classifica di Memoboard non è più una tabella a colonne fisse, che lo screen reader leggeva come una fila di numeri e che troncava i nomi a quattordici caratteri: ogni posizione è ora annunciata a parole. Anche le statistiche dei tempi sono frasi complete, senza indentazioni progressive né barre verticali.</li>
+  <li>* [Core] I percorsi non dipendono più dalla cartella da cui si avvia il programma, ed il motore viene chiuso in ogni caso, così un errore o un'interruzione non lasciano più Stockfish come processo orfano.</li>
+</ul>
 <h4>8.9.8 (1 agosto 2026 - 11:00)</h4>
 <ul>
   <li>+ [Doc/Manuale] Aggiunta la sezione 1.5 nel manuale utente (`readme.htm`) per spiegare in dettaglio la scacchiera testuale disegnata in caratteri ASCII (coordinate, pezzi maiuscoli per il Bianco e minuscoli per il Nero, case vuote `-` per le bianche e `+` per le nere, ed orientamento dinamico) ed i relativi comandi per richiamarla nelle varie modalità dell'applicazione (`.s` in arbitraggio ed editor, `.b` contro il motore ed in Orolichess, `u` nell'analisi PGN).</li>
