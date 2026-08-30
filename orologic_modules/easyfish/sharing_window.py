@@ -8,6 +8,7 @@ os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import chess
 import pygame
 
+from ..config import _
 from .image_exporter import generate_custom_svg, get_image_settings
 
 
@@ -96,10 +97,17 @@ class PygameBoardWindow:
         self.thread.daemon = True
         self.thread.start()
 
-    def stop(self):
+    def stop(self, attesa=5.0):
+        """Chiude la finestra senza restare appesa se pygame non risponde.
+
+        L'attesa era senza limite: un blocco della finestra grafica
+        bloccava anche il programma che l'aveva aperta.
+        """
         self.running = False
         if self.thread:
-            self.thread.join()
+            self.thread.join(timeout=attesa)
+            if self.thread.is_alive():
+                print(_("La finestra di condivisione non si chiude, la lascio andare."))
             self.thread = None
 
     def update_board(self, board, node=None):

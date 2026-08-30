@@ -111,12 +111,20 @@ def save_lichess_game(game_state, result_str="*"):
 
     node = game
     temp_board = chess.Board(initial_fen, chess960=(variant == "chess960"))
-    for san in game_state.move_history:
+    for numero, san in enumerate(game_state.move_history, start=1):
         try:
             move = temp_board.parse_san(san)
             node = node.add_variation(move)
             temp_board.push(move)
         except ValueError:
+            # Prima il ciclo si fermava in silenzio e il file salvato
+            # risultava troncato senza che nulla lo segnalasse.
+            print(
+                _(
+                    "Attenzione: la mossa {san}, numero {n}, non e' interpretabile. "
+                    "Il PGN salvato si ferma alla mossa precedente."
+                ).format(san=san, n=numero)
+            )
             break
 
     # Before calling SaveGameToFile:
