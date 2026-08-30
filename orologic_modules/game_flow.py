@@ -291,116 +291,79 @@ def comandi_di_lettura(cmd, game_state):
             print(_("Nessuna mossa ancora giocata."))
         return True
 
-    if cmd == ".6":
-        sec = dgt(
-            _(
-                "\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "
-            ),
-            kind="i",
-            imin=0,
-            imax=120,
-            default=game_state.refresh_interval,
-        )
-        game_state.refresh_interval = sec
-        print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=sec))
-        return True
-
     return False
 
 
-_COMANDI_PAUSA = (".p", ".5")
 _COMANDI_RISULTATO = (".1-0", ".0-1", ".1/2", ".*")
 
 
-def comandi_pausa(cmd, game_state, paused_time_start):
-    """Mette in pausa gli orologi o annuncia da quanto lo sono.
+def comandi_pausa(cmd, game_state):
+    """Ferma gli orologi e li rimette in moto.
 
-    Restituisce l'istante in cui la pausa e' iniziata, che il ciclo
-    conserva per calcolarne la durata.
+    L'istante in cui la pausa comincia sta nello stato della partita,
+    cosi' il comando punto cinque lo trova in tutte le modalita'.
     """
-    if cmd == ".p":
-        game_state.paused = not game_state.paused
-        if game_state.paused:
-            paused_time_start = time.time()
-            print(_("Orologi in pausa"))
-            Acusticator(
-                [
-                    "c5",
-                    0.1,
-                    1,
-                    config.VOLUME,
-                    "g4",
-                    0.1,
-                    0.3,
-                    config.VOLUME,
-                    "e4",
-                    0.1,
-                    -0.3,
-                    config.VOLUME,
-                    "c4",
-                    0.1,
-                    -1,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 80, 10],
-            )
-        else:
-            pause_duration = time.time() - paused_time_start if paused_time_start else 0
-            Acusticator(
-                [
-                    "c4",
-                    0.1,
-                    -1,
-                    config.VOLUME,
-                    "e4",
-                    0.1,
-                    -0.3,
-                    config.VOLUME,
-                    "g4",
-                    0.1,
-                    0.3,
-                    config.VOLUME,
-                    "c5",
-                    0.1,
-                    1,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 80, 10],
-            )
-            print(_("Pausa durata ") + board_utils.FormatTime(pause_duration))
-    elif cmd == ".5":
-        if game_state.paused:
-            Acusticator(["d4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            pause_duration = time.time() - paused_time_start if paused_time_start else 0
-            hours = int(pause_duration // 3600)
-            minutes = int((pause_duration % 3600) // 60)
-            seconds = int(pause_duration % 60)
-            ms = int((pause_duration - int(pause_duration)) * 1000)
-            print(
-                _("Tempo in pausa da: {duration}").format(
-                    duration="{h_str}{m_str}{s_str}{ms_str}".format(
-                        h_str=_("{h} ore, ").format(h=hours) if hours else "",
-                        m_str=_("{m} minuti, ").format(m=minutes)
-                        if minutes or hours
-                        else "",
-                        s_str=_("{s} secondi e ").format(s=seconds)
-                        if seconds or minutes or hours
-                        else "",
-                        ms_str=_("{ms} ms").format(ms=ms) if ms else "",
-                    )
-                )
-            )
-        else:
-            Acusticator(["f4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            player = (
-                game_state.white_player
-                if game_state.active_color == "white"
-                else game_state.black_player
-            )
-            print(_("Orologio di {player} in moto").format(player=player))
-    return paused_time_start
+    if cmd != ".p":
+        return False
+    if getattr(game_state, "ignore_clock", False):
+        print(_("Gli orologi sono disattivati."))
+        return True
+    game_state.paused = not game_state.paused
+    if game_state.paused:
+        game_state.paused_time_start = time.time()
+        print(_("Orologi in pausa"))
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                1,
+                config.VOLUME,
+                "g4",
+                0.1,
+                0.3,
+                config.VOLUME,
+                "e4",
+                0.1,
+                -0.3,
+                config.VOLUME,
+                "c4",
+                0.1,
+                -1,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 80, 10],
+        )
+    else:
+        pause_duration = (
+            time.time() - game_state.paused_time_start
+            if game_state.paused_time_start
+            else 0
+        )
+        Acusticator(
+            [
+                "c4",
+                0.1,
+                -1,
+                config.VOLUME,
+                "e4",
+                0.1,
+                -0.3,
+                config.VOLUME,
+                "g4",
+                0.1,
+                0.3,
+                config.VOLUME,
+                "c5",
+                0.1,
+                1,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 80, 10],
+        )
+        print(_("Pausa durata ") + board_utils.FormatTime(pause_duration))
+    return True
 
 
 def annulla_ultima_mossa(game_state):
@@ -753,7 +716,6 @@ def verifica_fine_partita(game_state):
 def _loop_principale_partita(game_state, eco_database, autosave_is_on):
     last_eco_msg = ""
     last_valid_eco_entry = None
-    paused_time_start = None
     current_turn_clock_before = None
     while not game_state.game_over:
         if current_turn_clock_before is None:
@@ -817,32 +779,12 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
             u = user_input.strip()
             cmd = u.rstrip(".").lower()
 
-            # Comandi inibiti se ignore_clock è True
-            clock_commands = [
-                ".1",
-                ".2",
-                ".3",
-                ".4",
-                ".5",
-                ".6",
-                ".p",
-                ".b+",
-                ".b-",
-                ".n+",
-                ".n-",
-            ]
-            if game_state.ignore_clock and any(
-                cmd.startswith(c) for c in clock_commands
+            if (
+                ui.comandi_orologio(cmd, game_state)
+                or comandi_di_lettura(cmd, game_state)
+                or comandi_pausa(cmd, game_state)
             ):
-                print(_("Comando non disponibile: orologio disabilitato."))
-                continue
-
-            elif ui.comandi_orologio(cmd, game_state):
                 pass
-            elif comandi_di_lettura(cmd, game_state):
-                pass
-            elif cmd in _COMANDI_PAUSA:
-                paused_time_start = comandi_pausa(cmd, game_state, paused_time_start)
             elif cmd == ".q":
                 if annulla_ultima_mossa(game_state):
                     current_turn_clock_before = None

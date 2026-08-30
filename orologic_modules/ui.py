@@ -1,5 +1,6 @@
 import datetime
 import os
+import time
 
 import chess
 
@@ -621,15 +622,40 @@ def report_piece_positions(game_state, piece_symbol):
         )
 
 
+def _tempi_di(game_state):
+    """Tempo che resta ai due giocatori, comunque lo stato lo conservi.
+
+    Le partite su Lichess ricalcolano il residuo al momento della domanda,
+    quelle locali lo tengono in due attributi.
+    """
+    if hasattr(game_state, "get_clocks"):
+        return game_state.get_clocks()
+    return game_state.white_remaining, game_state.black_remaining
+
+
+def _tempo_iniziale(game_state, bianco):
+    """Tempo assegnato nella fase in corso, se la modalita' ha le fasi.
+
+    Restituisce nulla dove le fasi non esistono, come nelle partite su
+    Lichess: li' la percentuale consumata non si puo' calcolare.
+    """
+    try:
+        fase = game_state.white_phase if bianco else game_state.black_phase
+        campo = "white_time" if bianco else "black_time"
+        return game_state.clock_config["phases"][fase][campo]
+    except (AttributeError, IndexError, KeyError, TypeError):
+        return None
+
+
 def _report_tempo(game_state, bianco):
     """Annuncia il tempo che resta a un giocatore e quanto ne ha speso."""
-    fase = game_state.white_phase if bianco else game_state.black_phase
-    campo = "white_time" if bianco else "black_time"
-    iniziale = game_state.clock_config["phases"][fase][campo]
-    residuo = game_state.white_remaining if bianco else game_state.black_remaining
-    speso = iniziale - residuo
-    percentuale = (speso / iniziale * 100) if iniziale > 0 else 0
+    residuo = _tempi_di(game_state)[0 if bianco else 1]
     etichetta = _("Tempo bianco: ") if bianco else _("Tempo nero: ")
+    iniziale = _tempo_iniziale(game_state, bianco)
+    if not iniziale:
+        print(etichetta + tempo.parlato(residuo))
+        return
+    percentuale = (iniziale - residuo) / iniziale * 100
     print(
         etichetta
         + tempo.parlato(residuo)
@@ -645,13 +671,61 @@ def report_black_time(game_state):
     _report_tempo(game_state, False)
 
 
-def comandi_orologio(comando, game_state):
-    """Comandi che riguardano solo gli orologi, uguali in partita e in Tempo.
+def _stato_orologio(game_state):
+    """Dice da quanto gli orologi sono fermi, oppure di chi e' il tratto."""
+    inizio_pausa = getattr(game_state, "paused_time_start", None)
+    if getattr(game_state, "paused", False) and inizio_pausa:
+        Acusticator(["d4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+        print(
+            _("Orologi fermi da {quanto}").format(
+                quanto=tempo.parlato(time.time() - inizio_pausa)
+            )
+        )
+        return
+    Acusticator(["f4", 0.54, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+    if getattr(game_state, "active_color", None) is not None:
+        bianco_muove = game_state.active_color in ("white", chess.WHITE)
+    else:
+        bianco_muove = game_state.board.turn == chess.WHITE
+    chi = game_state.white_player if bianco_muove else game_state.black_player
+    print(_("Orologio di {player} in moto").format(player=chi))
 
-    Sono i tempi dei due giocatori, il confronto e le correzioni manuali in
-    pausa. Restituisce vero se il comando e' stato riconosciuto: prima questo
-    blocco viveva in due copie, nell'arbitraggio e nella modalita' Tempo.
+
+def _intervallo_aggiornamento(game_state):
+    """Chiede ogni quanti secondi ripetere da solo la situazione."""
+    Acusticator(["g7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
+    secondi = dgt(
+        _(
+            "\nInserisci i secondi per l'aggiornamento automatico (0-120, 0 = disattiva): "
+        ),
+        kind="i",
+        imin=0,
+        imax=120,
+        default=getattr(game_state, "refresh_interval", 0),
+    )
+    game_state.refresh_interval = secondi
+    print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=secondi))
+
+
+COMANDI_OROLOGIO = (".1", ".2", ".3", ".4", ".5", ".6")
+
+
+def comandi_orologio(comando, game_state):
+    """Comandi che riguardano gli orologi, uguali in tutte le modalita'.
+
+    Da punto uno a punto sei piu' le correzioni manuali. Restituisce vero
+    se il comando e' stato riconosciuto. Prima questi comandi vivevano in
+    quattro versioni, una per modalita', con testi diversi e alcune senza
+    suoni: chi passava dalla partita a Lichess o a Easyfish trovava
+    risposte diverse agli stessi tasti.
     """
+    if getattr(game_state, "ignore_clock", False) and (
+        comando in COMANDI_OROLOGIO or comando.startswith((".b+", ".b-", ".n+", ".n-"))
+    ):
+        Acusticator(["c4", 0.14, 0, config.VOLUME], kind=2, adsr=[0, 0, 100, 100])
+        print(_("Gli orologi sono disattivati."))
+        return True
+
     if comando == ".1":
         Acusticator(["a6", 0.14, -1, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
         report_white_time(game_state)
@@ -670,15 +744,12 @@ def comandi_orologio(comando, game_state):
 
     if comando == ".4":
         Acusticator(["f7", 0.14, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-        differenza = abs(game_state.white_remaining - game_state.black_remaining)
+        bianco, nero = _tempi_di(game_state)
+        differenza = abs(bianco - nero)
         if differenza < 1:
             print(_("I due orologi sono pari."))
             return True
-        avanti = (
-            _("Il bianco")
-            if game_state.white_remaining > game_state.black_remaining
-            else _("Il nero")
-        )
+        avanti = _("Il bianco") if bianco > nero else _("Il nero")
         print(
             _("{chi} e' in vantaggio di {quanto}").format(
                 chi=avanti, quanto=tempo.parlato(differenza)
@@ -686,8 +757,16 @@ def comandi_orologio(comando, game_state):
         )
         return True
 
+    if comando == ".5":
+        _stato_orologio(game_state)
+        return True
+
+    if comando == ".6":
+        _intervallo_aggiornamento(game_state)
+        return True
+
     if comando.startswith((".b+", ".b-", ".n+", ".n-")):
-        if not game_state.paused:
+        if not getattr(game_state, "paused", False):
             print(
                 _("Le correzioni di tempo si fanno in pausa, con il comando punto p.")
             )
