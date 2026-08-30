@@ -364,6 +364,10 @@ def download_games(username, token):
         ).format(n=massimo)
     )
 
+    # Il colore e' l'unico filtro che Lichess sa applicare per noi. La sua
+    # specifica, per questo endpoint, offre since, until, max, vs, rated,
+    # perfType, color e poco altro: non esistono parametri per la fascia
+    # Elo ne' per il codice ECO, che vanno quindi filtrati qui.
     url = f"https://lichess.org/api/games/user/{username}?pgnInJson=true&opening=true&max={massimo}"
     if "color" in filters:
         url += f"&color={filters['color']}"
@@ -456,8 +460,11 @@ def download_games(username, token):
                     matched += 1
 
                 if analyzed % 50 == 0:
+                    # Il ritorno carrello resta fuori da gettext: se una
+                    # traduzione lo perdesse, cambierebbe il comportamento.
                     sys.stdout.write(
-                        _("\rAnalizzate: {analyzed}, {matched} trovate.").format(
+                        "\r"
+                        + _("Analizzate: {analyzed}, {matched} trovate.").format(
                             analyzed=analyzed, matched=matched
                         )
                     )
@@ -467,9 +474,11 @@ def download_games(username, token):
         print(_("Scaricamento interrotto dalla rete: {e}").format(e=e))
 
     sys.stdout.write(
-        _("\rAnalizzate: {analyzed}, {matched} trovate.\n").format(
+        "\r"
+        + _("Analizzate: {analyzed}, {matched} trovate.").format(
             analyzed=analyzed, matched=matched
         )
+        + "\n"
     )
 
     if matched == 0:

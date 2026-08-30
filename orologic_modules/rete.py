@@ -2,6 +2,7 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
 import json
+import time
 import socket
 import urllib.error
 import urllib.parse
@@ -49,6 +50,38 @@ def _dettaglio_lichess(errore):
     return str(testo) if testo else ""
 
 
+# Dopo un 429 Lichess chiede di rallentare: fino a questo istante non si
+# manda nulla. La specifica dice che di norma basta aspettare un minuto.
+_riprendere_dopo = 0.0
+ATTESA_PREDEFINITA = 60.0
+
+
+def attesa_residua():
+    """Secondi che mancano prima di poter tornare a interrogare Lichess."""
+    return max(0.0, _riprendere_dopo - time.time())
+
+
+def _segna_limite_raggiunto(errore):
+    """Registra quanto aspettare, seguendo l'indicazione del server."""
+    global _riprendere_dopo
+    secondi = ATTESA_PREDEFINITA
+    intestazioni = getattr(errore, "headers", None)
+    if intestazioni:
+        indicazione = intestazioni.get("Retry-After")
+        try:
+            if indicazione:
+                secondi = max(1.0, float(indicazione))
+        except (TypeError, ValueError):
+            pass
+    _riprendere_dopo = time.time() + secondi
+
+
+def azzera_limite():
+    """Toglie il freno: serve alle prove e dopo un cambio di credenziali."""
+    global _riprendere_dopo
+    _riprendere_dopo = 0.0
+
+
 def _messaggio_http(errore):
     """Traduce un errore HTTP in una frase comprensibile."""
     codice = errore.code
@@ -64,12 +97,10 @@ def _messaggio_http(errore):
     if codice == 404:
         return _("Non trovato: l'indirizzo richiesto non esiste su Lichess.")
     if codice == 429:
-        attesa = errore.headers.get("Retry-After") if errore.headers else None
-        if attesa:
-            return _(
-                "Lichess sta limitando le richieste. Riprova fra {n} secondi."
-            ).format(n=attesa)
-        return _("Lichess sta limitando le richieste. Attendi qualche istante.")
+        _segna_limite_raggiunto(errore)
+        return _(
+            "Lichess sta limitando le richieste. Aspetto {n} secondi prima di riprovare."
+        ).format(n=int(attesa_residua()) or int(ATTESA_PREDEFINITA))
     if 500 <= codice < 600:
         return _(
             "Lichess ha un problema momentaneo (errore {c}). Riprova piu' tardi."
@@ -104,6 +135,12 @@ def apri(
     I dati si passano come dizionario da codificare in forma classica, oppure
     con dati_json quando il servizio pretende un corpo JSON.
     """
+    fermi = attesa_residua()
+    if fermi > 0:
+        # Lichess ha chiesto di rallentare: non si insiste, si aspetta.
+        return None, _(
+            "Lichess sta limitando le richieste: riprova fra {n} secondi."
+        ).format(n=int(fermi) + 1)
     richiesta = prepara(url, token=token, metodo=metodo, accetta=accetta)
     if dati_json is not None:
         corpo = json.dumps(dati_json).encode("utf-8")

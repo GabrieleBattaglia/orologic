@@ -4,6 +4,7 @@ import time
 import webbrowser
 
 import chess
+import chess.pgn
 
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
@@ -807,8 +808,6 @@ def menu_puzzle(db):
 
         import io
 
-        import chess.pgn
-
         last_move_san = None
         board = board_utils.CustomBoard()
 
@@ -1252,11 +1251,41 @@ def menu_guarda(db):
                 lichess_board.spectate_game(game_id, token)
 
 
-def get_active_games(token, silenzioso=True):
+# Le due domande che il menu fa a Lichess a ogni giro. La risposta resta
+# buona per qualche secondo: senza questo, tornando al menu dopo ogni voce
+# si aspettava la rete ogni volta.
+_DURATA_CACHE = 5.0
+_cache_rete = {}
+
+
+def _da_cache(chiave):
+    """Risposta ancora fresca per quella domanda, oppure nulla."""
+    voce = _cache_rete.get(chiave)
+    if voce and time.time() - voce[0] < _DURATA_CACHE:
+        return voce[1]
+    return None
+
+
+def _in_cache(chiave, valore):
+    _cache_rete[chiave] = (time.time(), valore)
+    return valore
+
+
+def scorda_cache_rete():
+    """Da usare quando la situazione e' cambiata di sicuro: login, logout,
+    partita appena accettata o abbandonata."""
+    _cache_rete.clear()
+
+
+def get_active_games(token, silenzioso=True, usa_cache=True):
     """Partite in corso. Interrogata a ogni giro di menu, quindi per scelta
     tace sugli errori se non le si chiede il contrario."""
     if not token:
         return []
+    if usa_cache:
+        pronte = _da_cache(("partite", token))
+        if pronte is not None:
+            return pronte
     dati, errore = rete.leggi_json(
         "https://lichess.org/api/account/playing", token=token
     )
@@ -1264,19 +1293,23 @@ def get_active_games(token, silenzioso=True):
         if not silenzioso:
             print(_("Partite in corso non recuperate. {motivo}").format(motivo=errore))
         return []
-    return dati.get("nowPlaying", [])
+    return _in_cache(("partite", token), dati.get("nowPlaying", []))
 
 
-def get_incoming_challenges(token, silenzioso=True):
+def get_incoming_challenges(token, silenzioso=True, usa_cache=True):
     """Sfide in arrivo, con la stessa regola di silenzio delle partite attive."""
     if not token:
         return []
+    if usa_cache:
+        pronte = _da_cache(("sfide", token))
+        if pronte is not None:
+            return pronte
     dati, errore = rete.leggi_json("https://lichess.org/api/challenge", token=token)
     if errore:
         if not silenzioso:
             print(_("Sfide in arrivo non recuperate. {motivo}").format(motivo=errore))
         return []
-    return dati.get("in", [])
+    return _in_cache(("sfide", token), dati.get("in", []))
 
 
 def accept_challenge(token, challenge_id):
@@ -1428,7 +1461,6 @@ def seek_game(token, params_dict):
     import msvcrt
     import sys
     import threading
-    import time
 
     payload = {
         "color": params_dict["color"],
@@ -1493,7 +1525,7 @@ def seek_game(token, params_dict):
     last_poll = start_time
     last_print = start_time
 
-    initial_games = {g["gameId"] for g in get_active_games(token)}
+    initial_games = {g["gameId"] for g in get_active_games(token, usa_cache=False)}
 
     while t.is_alive() or not stop_seek.is_set():
         if problemi:
@@ -1525,7 +1557,7 @@ def seek_game(token, params_dict):
 
         # 5 seconds poll
         if now - last_poll > 5:
-            current_games = get_active_games(token)
+            current_games = get_active_games(token, usa_cache=False)
             for g in current_games:
                 if g["gameId"] not in initial_games:
                     game_found = True
@@ -1667,8 +1699,6 @@ def menu_gioca(db):
                 challenge_id = resp["challenge"]["id"]
                 print(_("Sfida inviata! In attesa che l'avversario accetti..."))
 
-                import time
-
                 timeout = 60
                 start_time = time.time()
                 game_started = False
@@ -1688,7 +1718,7 @@ def menu_gioca(db):
                             print()
                             break
 
-                    active = get_active_games(token)
+                    active = get_active_games(token, usa_cache=False)
                     for game in active:
                         if game.get("gameId") == challenge_id:
                             print(_("\nSfida accettata!"))
@@ -1720,7 +1750,7 @@ def menu_gioca(db):
 
         elif scelta == "accetta":
             print(_("Controllo sfide in entrata..."))
-            challenges = get_incoming_challenges(token)
+            challenges = get_incoming_challenges(token, usa_cache=False)
             if not challenges:
                 print(_("Non hai sfide in attesa."))
                 continue
@@ -1759,7 +1789,7 @@ def menu_gioca(db):
 
         elif scelta == "riprendi":
             print(_("Cerco partite in corso..."))
-            games = get_active_games(token)
+            games = get_active_games(token, usa_cache=False)
             if not games:
                 print(_("Non hai partite attive."))
                 continue
@@ -1917,11 +1947,13 @@ def run():
                     game_scelto, token, secrets.get("lichess_username")
                 )
         elif scelta == "login":
+            scorda_cache_rete()
             new_profile = menu_login(db)
             if new_profile:
                 rating_info = format_ratings(new_profile.get("perfs", {}))
         elif scelta == "logout":
             if menu_logout(db):
+                scorda_cache_rete()
                 rating_info = ""
         elif scelta == "profilo":
             menu_profilo(db)
@@ -1954,7 +1986,7 @@ def run():
         elif scelta == "sfide":
             print(_("Controllo sfide in entrata..."))
             try:
-                challenges = get_incoming_challenges(token)
+                challenges = get_incoming_challenges(token, usa_cache=False)
             except Exception:
                 challenges = []
 

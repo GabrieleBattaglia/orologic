@@ -19,6 +19,13 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.14</h3>
+<h4>8.14.3 (31 agosto 2026)</h4>
+<ul>
+  <li>* [Lichess] Il menu non interroga più Lichess ad ogni singolo giro: la risposta su partite in corso e sfide resta valida per qualche secondo, e viene comunque riletta quando si sceglie una voce che annuncia un controllo, oppure dopo un login o un logout. Prima ogni ritorno al menu comportava due attese di rete.</li>
+  <li>* [Lichess] Quando Lichess chiede di rallentare le richieste, il programma smette davvero di interrogarlo per il tempo indicato dal server, oppure per un minuto se non lo indica, come prescrive la documentazione. Prima l'avviso veniva mostrato ma le richieste proseguivano.</li>
+  <li>* [Lichess] I dati della modalità osservatore viaggiano ora come dati strutturati e non più impacchettati in stringhe separate da barre verticali: un nome giocatore contenente quel carattere mandava in pezzi la lettura della partita.</li>
+  <li>* [Lichess] Il messaggio di avanzamento dello scaricamento tiene i caratteri di controllo fuori dalle stringhe da tradurre, così una traduzione non può alterarne il comportamento a schermo.</li>
+</ul>
 <h4>8.14.2 (31 agosto 2026)</h4>
 <ul>
   <li>* [Engine] Un motore UCI diverso da Stockfish non viene più scartato: le opzioni vengono impostate solo se il motore dichiara di conoscerle. Prima la presenza di "Skill Level", che è un'opzione propria di Stockfish, era data per scontata, e un motore per il resto perfettamente utilizzabile veniva rifiutato con un generico errore.</li>
