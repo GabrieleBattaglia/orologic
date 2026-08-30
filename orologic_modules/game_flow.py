@@ -633,6 +633,8 @@ def verifica_fine_partita(game_state):
 
 
 def _loop_principale_partita(game_state, eco_database, autosave_is_on):
+    # Qui c'e' un arbitro: puo' fermare gli orologi e correggere i tempi.
+    game_state.arbitro_presente = True
     last_eco_msg = ""
     last_valid_eco_entry = None
     current_turn_clock_before = None

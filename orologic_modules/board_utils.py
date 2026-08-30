@@ -343,6 +343,10 @@ class GameState:
         # Istante in cui gli orologi sono stati fermati: serve al
         # comando punto cinque per dire da quanto sono in pausa.
         self.paused_time_start = None
+        # Vero solo dove c'e' un arbitro che puo' fermare gli orologi e
+        # correggere i tempi a mano: partita arbitrata e modalita' Tempo.
+        # Contro il motore e su Lichess non ha senso.
+        self.arbitro_presente = False
         self.game_over = False
         self.descriptive_move_history = []
         self.move_history = []

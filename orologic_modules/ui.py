@@ -828,8 +828,11 @@ def comandi_orologio(comando, game_state):
     suoni: chi passava dalla partita a Lichess o a Easyfish trovava
     risposte diverse agli stessi tasti.
     """
+    correzione = comando.startswith((".b+", ".b-", ".n+", ".n-")) and getattr(
+        game_state, "arbitro_presente", False
+    )
     if getattr(game_state, "ignore_clock", False) and (
-        comando in COMANDI_OROLOGIO or comando.startswith((".b+", ".b-", ".n+", ".n-"))
+        comando in COMANDI_OROLOGIO or correzione
     ):
         Acusticator(["c4", 0.14, 0, config.VOLUME], kind=2, adsr=[0, 0, 100, 100])
         print(_("Gli orologi sono disattivati."))
@@ -875,6 +878,10 @@ def comandi_orologio(comando, game_state):
         return True
 
     if comando.startswith((".b+", ".b-", ".n+", ".n-")):
+        if not getattr(game_state, "arbitro_presente", False):
+            # Contro il motore e su Lichess i tempi non si correggono a
+            # mano: il comando non esiste, non e' solo vietato.
+            return False
         if not getattr(game_state, "paused", False):
             print(
                 _("Le correzioni di tempo si fanno in pausa, con il comando punto p.")
