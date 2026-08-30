@@ -21,6 +21,7 @@ import pyperclip
 
 from GBUtils import dgt, enter_escape, key, menu
 from orologic_modules import board_utils, engine
+from orologic_modules.config import _
 
 # ---------------------------------------------------------------------------
 # Entry point
@@ -211,12 +212,29 @@ def _carica_archivio():
     count = 0
     excluded_count = 0
     last_print = 0.0
+    # Se la lettura fallisce senza che il testo avanzi, il ciclo non
+    # finirebbe mai: dopo qualche errore di fila si smette.
+    letture_fallite = 0
+    MASSIMI_ERRORI = 5
 
     while True:
+        posizione = pgn_io.tell()
         try:
             game = chess.pgn.read_game(pgn_io)
-        except Exception:
+        except Exception as e:
+            if pgn_io.tell() > posizione:
+                # Il testo e' andato avanti: si salta questa partita e basta.
+                continue
+            letture_fallite += 1
+            if letture_fallite >= MASSIMI_ERRORI:
+                print(
+                    _(
+                        "Lettura interrotta: il PGN non e' leggibile da questo punto in poi. {errore}"
+                    ).format(errore=e)
+                )
+                break
             continue
+        letture_fallite = 0
         if game is None:
             break
 

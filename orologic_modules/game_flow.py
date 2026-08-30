@@ -632,6 +632,49 @@ def verifica_fine_partita(game_state):
     return False
 
 
+def salva_pgn_partita(pgn_str, nome_file):
+    """Scrive su disco il PGN della partita appena finita.
+
+    Se la cartella di sempre non si puo' usare, per disco pieno o permessi,
+    prova nella cartella personale invece di lasciare cadere il programma
+    con un errore: la partita e' appena stata giocata e non si rigioca.
+    Restituisce il percorso scritto, oppure nulla se non c'e' stato verso.
+    """
+    percorsi = [config.percorso_salvataggio(os.path.join("pgn", nome_file))]
+    percorsi.append(os.path.join(os.path.expanduser("~"), nome_file))
+    ultimo_errore = None
+    for percorso in percorsi:
+        try:
+            cartella = os.path.dirname(percorso)
+            if cartella:
+                os.makedirs(cartella, exist_ok=True)
+            with open(percorso, "w", encoding="utf-8") as f:
+                f.write(pgn_str)
+        except Exception as e:
+            ultimo_errore = e
+            continue
+        if percorso != percorsi[0]:
+            print(
+                _("La cartella di sempre non era scrivibile: {errore}").format(
+                    errore=ultimo_errore
+                )
+            )
+        print(_("PGN salvato come ") + percorso + ".")
+        return percorso
+    print(
+        _("Non sono riuscita a salvare il PGN su disco: {errore}").format(
+            errore=ultimo_errore
+        )
+    )
+    print(_("La partita resta negli appunti, incollala subito da qualche parte."))
+    Acusticator(
+        ["e3", 0.4, 0, config.VOLUME, "a2", 0.6, 0, config.VOLUME],
+        kind=3,
+        adsr=[1, 7, 100, 92],
+    )
+    return None
+
+
 def _loop_principale_partita(game_state, eco_database, autosave_is_on):
     # Qui c'e' un arbitro: puo' fermare gli orologi e correggere i tempi.
     game_state.arbitro_presente = True
@@ -904,11 +947,7 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
         timestamp=datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
     )
     sanitized_name = config.sanitize_filename(base_filename)
-    full_path = config.percorso_salvataggio(os.path.join("pgn", sanitized_name))
-    os.makedirs(os.path.dirname(full_path), exist_ok=True)
-    with open(full_path, "w", encoding="utf-8") as f:
-        f.write(pgn_str)
-    print(_("PGN salvato come ") + full_path + ".")
+    salva_pgn_partita(pgn_str, sanitized_name)
     ui.save_text_summary(
         game_state, game_state.descriptive_move_history, last_valid_eco_entry
     )
