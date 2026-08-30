@@ -198,7 +198,7 @@ DOT_COMMANDS = {
     ".b-": _("Sottrae tempo al bianco (in pausa)"),
     ".n+": _("Aggiunge tempo al nero (in pausa)"),
     ".n-": _("Sottrae tempo al nero (in pausa)"),
-    ".s": _("Scacchiera testuale"),
+    ".s oppure .b": _("Scacchiera testuale"),
     ".c": _("Commento mossa"),
     "-": _("Riepilogo dei pezzi Bianchi"),
     "+": _("Riepilogo dei pezzi Neri"),

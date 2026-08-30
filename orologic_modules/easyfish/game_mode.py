@@ -65,14 +65,14 @@ def _comandi_informativi(cmd, board, game_state, engine_instance):
     """
     if ui.comandi_orologio(cmd, game_state):
         return True
+    if ui.comandi_lettura(cmd, game_state, board=board):
+        return True
     elif cmd == ".a":
         lines = analysis_utils.get_lines_from_engine(
             board, engine_instance, orologic_engine.analysis_time, 1
         )
         for line in lines:
             print(line)
-    elif cmd == ".b":
-        print(CustomBoard(board.fen()))
     elif cmd == ".?":
         menu(MNGAME, show_only=True)
     elif cmd.startswith(".s") and len(cmd) > 2 and cmd[2:].isdigit():
@@ -610,28 +610,15 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                     elif _comandi_informativi(cmd, board, game_state, engine_instance):
                         pass
                     elif cmd == ".l":
-                        Acusticator(
-                            [900.0, 0.1, 0, 0.5, 440.0, 0.3, 0, 0.5],
-                            kind=1,
-                            adsr=[1, 0, 80, 19],
-                        )
-                        dummy_state = type("obj", (object,), {})()
-                        dummy_state.move_history = []
+                        # L'elenco si ricostruisce dal PGN, poi il riepilogo e' quello
+                        # di tutte le altre modalita'.
+                        mosse = []
                         node = current_node.root()
-                        # Ricostruiamo la history seguendo la variazione principale
                         while node != current_node and node.variations:
-                            move = node.variations[0].move
-                            dummy_state.move_history.append(node.board().san(move))
+                            mossa = node.variations[0].move
+                            mosse.append(node.board().san(mossa))
                             node = node.variations[0]
-                        from .. import ui
-
-                        summary = ui.GenerateMoveSummary(dummy_state)
-                        if summary:
-                            print(_("\nLista mosse giocate:\n"))
-                            for line in summary:
-                                print(line)
-                        else:
-                            print(_("Nessuna mossa ancora giocata."))
+                        ui.comandi_lettura(cmd, game_state, board=board, mosse=mosse)
                     elif cmd.startswith(".e"):
                         try:
                             elo_part = cmd[2:].strip()
