@@ -152,8 +152,8 @@ def handle_exploration_command(user_input, game_state):
 def _spectate_worker(url, token, q, stop_event):
     risposta, errore = rete.apri(url, token=token, timeout=rete.TIMEOUT_STREAM)
     if errore:
-        q.put(f"Error: {errore}")
-        q.put("EOF")
+        q.put({"tipo": "errore", "motivo": errore})
+        q.put({"tipo": "fine"})
         return
     try:
         with risposta as resp:
@@ -169,39 +169,56 @@ def _spectate_worker(url, token, q, stop_event):
                         w_rat = w.get("rating", "?")
                         b_name = b.get("user", {}).get("name", "Anonimo")
                         b_rat = b.get("rating", "?")
-                        q.put(f"Players:{w_name}|{w_rat}|{b_name}|{b_rat}")
+                        q.put(
+                            {
+                                "tipo": "giocatori",
+                                "bianco": w_name,
+                                "elo_bianco": w_rat,
+                                "nero": b_name,
+                                "elo_nero": b_rat,
+                            }
+                        )
 
                     variant = d.get("variant", {}).get("key")
                     if variant:
-                        q.put(f"Variant:{variant}")
+                        q.put({"tipo": "variante", "chiave": variant})
 
                     if "initialFen" in d:
-                        q.put(f"Start:{d['initialFen']}")
+                        q.put({"tipo": "inizio", "fen": d["initialFen"]})
                     elif "fen" in d and "lm" not in d:
-                        q.put(f"Start:{d['fen']}")
+                        q.put({"tipo": "inizio", "fen": d["fen"]})
 
                     if "clock" in d and isinstance(d["clock"], dict):
                         limit = d["clock"].get("limit")
                         if limit is not None:
-                            q.put(f"ClockInit:{limit}")
+                            q.put({"tipo": "tempo_iniziale", "secondi": limit})
 
                     wc = d.get("wc")
                     bc = d.get("bc")
                     if wc is not None or bc is not None:
-                        q.put(f"Clocks:{wc}|{bc}")
+                        q.put({"tipo": "orologi", "bianco": wc, "nero": bc})
 
                     if "lm" in d:
-                        wc = d.get("wc", "None")
-                        bc = d.get("bc", "None")
-                        q.put(f"Move:{d['lm']}|{wc}|{bc}")
+                        q.put(
+                            {
+                                "tipo": "mossa",
+                                "uci": d["lm"],
+                                "bianco": d.get("wc"),
+                                "nero": d.get("bc"),
+                            }
+                        )
 
                     if "status" in d and isinstance(d["status"], dict):
                         q.put(
-                            f"End:{d['status'].get('name', 'unknown')}|{d.get('winner', 'none')}"
+                            {
+                                "tipo": "esito",
+                                "stato": d["status"].get("name", "unknown"),
+                                "vincitore": d.get("winner"),
+                            }
                         )
     except Exception as e:
-        q.put(f"Error: {e}")
-    q.put("EOF")
+        q.put({"tipo": "errore", "motivo": e})
+    q.put({"tipo": "fine"})
 
 
 def async_spectator_loop(q, game_state):
@@ -258,35 +275,36 @@ def async_spectator_loop(q, game_state):
             last_refresh = time.time()
         try:
             msg = q.get_nowait()
-            if msg == "EOF":
+            tipo = msg.get("tipo") if isinstance(msg, dict) else None
+            if tipo == "fine":
                 sys.stdout.write(
                     "\n" + _("Partita terminata o connessione chiusa.") + "\n"
                 )
                 return None
-            elif msg.startswith("Error:"):
+            elif tipo == "errore":
                 sys.stdout.write(
                     "\n"
-                    + _("Errore durante lo streaming: {e}").format(e=msg[7:])
+                    + _("Errore durante lo streaming: {e}").format(
+                        e=msg.get("motivo", "")
+                    )
                     + "\n"
                 )
                 return None
-            elif msg.startswith("ClockInit:"):
-                limit = int(float(msg[10:]))
+            elif tipo == "tempo_iniziale":
+                limit = int(float(msg["secondi"]))
                 game_state.white_time = limit
                 game_state.black_time = limit
                 game_state.last_clock_sync = time.time()
-            elif msg.startswith("Clocks:"):
-                parts = msg[7:].split("|")
-                if len(parts) == 2:
-                    wc, bc = parts
-                    if wc not in ("None", "null", ""):
-                        game_state.white_time = int(float(wc))
-                    if bc not in ("None", "null", ""):
-                        game_state.black_time = int(float(bc))
-                    game_state.last_clock_sync = time.time()
-            elif msg.startswith("Move:"):
-                uci_move, wc, bc = msg[5:].split("|")
-                move = game_state.board.parse_uci(uci_move)
+            elif tipo == "orologi":
+                if msg.get("bianco") is not None:
+                    game_state.white_time = int(float(msg["bianco"]))
+                if msg.get("nero") is not None:
+                    game_state.black_time = int(float(msg["nero"]))
+                game_state.last_clock_sync = time.time()
+            elif tipo == "mossa":
+                wc = msg.get("bianco")
+                bc = msg.get("nero")
+                move = game_state.board.parse_uci(msg["uci"])
                 desc = board_utils.DescribeMove(move, game_state.board)
                 san_move = game_state.board.san(move)
 
@@ -331,13 +349,13 @@ def async_spectator_loop(q, game_state):
                         adsr=[0, 0, 100, 5],
                     )
                     refresh_line()
-            elif msg.startswith("Variant:"):
-                variant_name = msg[8:]
+            elif tipo == "variante":
+                variant_name = msg["chiave"]
                 game_state.variant = variant_name
                 if variant_name == "chess960":
                     game_state.board.chess960 = True
-            elif msg.startswith("Start:"):
-                fen = msg[6:]
+            elif tipo == "inizio":
+                fen = msg["fen"]
                 if fen == "start":
                     game_state.board.reset()
                     game_state.initial_fen = chess.STARTING_FEN
@@ -347,10 +365,9 @@ def async_spectator_loop(q, game_state):
                 if not game_state.started:
                     game_state.started = True
                 game_state.last_clock_sync = time.time()
-            elif msg.startswith("Players:"):
-                w, wr, b, br = msg[8:].split("|")
-                new_w = f"{w} ({wr})"
-                new_b = f"{b} ({br})"
+            elif tipo == "giocatori":
+                new_w = f"{msg['bianco']} ({msg['elo_bianco']})"
+                new_b = f"{msg['nero']} ({msg['elo_nero']})"
                 if game_state.white_player != new_w or game_state.black_player != new_b:
                     game_state.white_player = new_w
                     game_state.black_player = new_b
@@ -361,8 +378,9 @@ def async_spectator_loop(q, game_state):
                         )
                     )
                     refresh_line()
-            elif msg.startswith("End:"):
-                status_name, winner = msg[4:].split("|")
+            elif tipo == "esito":
+                status_name = msg.get("stato", "unknown")
+                winner = msg.get("vincitore")
                 status_tr = {
                     "mate": _("Scacco matto"),
                     "resign": _("Abbandono"),

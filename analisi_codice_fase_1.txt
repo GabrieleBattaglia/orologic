@@ -1,5 +1,5 @@
 Analisi del codice di Orologic, fase 1
-Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-31: chiuse le tappe da 1 a 8, restano la 9 pulizie finali e la 10 traduzioni. Risolti 118 rilievi sui 154 iniziali, piu' R156 sul riconoscimento delle aperture, aggiunto e risolto strada facendo. Non restano rilievi di gravita' alta. Due voci si sono rivelate false: R093, perche' le date di Lichess erano gia' nell'ora giusta, e il codice ora lo spiega per non farle correggere a torto. Fatta anche l'unificazione dei comandi chiesta da Gabriele: da punto uno a punto sei, scacchiera, materiale e lista mosse vivono ora solo in ui e si comportano allo stesso modo in tutte le modalita'. Le prove da fare a mano sono elencate in collaudo.txt.
+Stato dei lavori: questo file e' la lista di lavorazione. I rilievi risolti vengono rimossi, quindi il rapporto vuoto significa lavori conclusi. Ultimo aggiornamento 2026-08-31: chiuse le tappe da 1 a 8, restano la 9 pulizie finali e la 10 traduzioni. Risolti 124 rilievi sui 154 iniziali, piu' R156 sul riconoscimento delle aperture, aggiunto e risolto strada facendo. Non restano rilievi di gravita' alta. Due voci si sono rivelate false, e in entrambi i casi il codice ora spiega perche', per non farle correggere a torto: R093, perche' le date di Lichess erano gia' nell'ora giusta, e R091, perche' l'API di Lichess non offre alcun parametro per filtrare le partite per fascia Elo o per codice ECO, quindi quel filtro non puo' che restare locale. Fatta anche l'unificazione dei comandi chiesta da Gabriele: da punto uno a punto sei, scacchiera, materiale e lista mosse vivono ora solo in ui e si comportano allo stesso modo in tutte le modalita'. Le prove da fare a mano sono elencate in collaudo.txt.
 Progetto: orologic, versione analizzata 8.9.8
 Fase: 1, prima revisione del progetto
 Data: 2026-08-29
@@ -47,16 +47,8 @@ R059 gravita medio, categoria ottimizzazione, in board_utils.py:41-199 (B2-16)
 DescribeMove ricostruisce a mano la notazione SAN, disambiguazione compresa, per poi rianalizzarla con due espressioni regolari. Sono circa centosessanta righe che duplicano quello che board.san fa gia, ed e presente pure il fallback su board.san dentro l'except. Correzione: partire dalla SAN della libreria o lavorare direttamente sull'oggetto mossa.
 R062 gravita medio, categoria regole generali, in board_utils.py:322-330, game_flow.py:783,1442 (B2-20)
 Frasi costruite concatenando pezzi tradotti separatamente, per esempio nome giocatore piu entra in fase piu numero. L'ordine delle parole non e adattabile nelle altre lingue.
-R079 gravita medio, categoria ottimizzazione, in lichess_app.py:2087-2101 (B4-08)
-A ogni ritorno al menu principale vengono eseguite due chiamate di rete, partite attive e sfide in entrata, senza alcuna cache: il menu si blocca a ogni giro in attesa della rete.
-R080 gravita medio, categoria ottimizzazione, in lichess_app.py:1735-1790 (B4-09)
-La richiesta di seek viene ripetuta ogni secondo e le partite attive interrogate ogni cinque: traffico continuo verso Lichess con rischio concreto di superare i limiti di frequenza dell'API.
 R086 gravita medio, categoria ottimizzazione, in lichess_app.py:542-547 (B4-15)
 La classe DummyGameState esiste solo per confezionare una scacchiera nel formato che le funzioni di ui pretendono: sintomo che quelle funzioni dovrebbero accettare direttamente una scacchiera.
-R089 gravita medio, categoria ottimizzazione, in lichess_board.py:357-404 (B5-06)
-Il worker dell'osservazione impacchetta i dati in stringhe separate da barre verticali, che il consumatore deve poi ritagliare, mentre il worker della partita, nello stesso file, mette in coda direttamente i dizionari. Due approcci opposti, e quello a stringhe si rompe se un campo contiene il separatore.
-R091 gravita medio, categoria ottimizzazione, in lichess_profiler.py:343-350 (B5-08)
-Solo il filtro sul colore viene passato all'API. Risultato, fascia Elo e codice ECO sono applicati localmente dopo aver scaricato tutto, mentre Lichess offre parametri per restringere la richiesta alla fonte.
 R096 gravita medio, categoria DRY, in tempo_app.py:190-400 con game_flow.py:575-1070 (B6-04)
 Restano duplicati solo la pausa punto p e l'uscita punto q: i comandi da punto uno a punto sei, la scacchiera, il materiale e la lista mosse sono passati in ui.
 R097 gravita medio, categoria DRY, in tempo_app.py:14-30 con config.py:234-258 (B6-05)
@@ -101,12 +93,8 @@ R138 gravita basso, categoria fragilita, in lichess_app.py:1763,1774 (B4-06)
 Il messaggio di avanzamento della ricerca viene riscritto sulla stessa riga previa pulizia con ritorno carrello: tecnica voluta e corretta per il posizionamento del cursore e del display braille. Vale anche qui l'unico difetto tecnico: la larghezza fissa a settantanove colonne.
 R139 gravita basso, categoria fragilita, in lichess_app.py:1757,1786,1993 e lichess_stats.py:222-228 (B4-16)
 Accessi diretti alle chiavi delle risposte JSON dell'API, gameId, id, challenger name, e ai punti della storia Elo per posizione numerica: un cambio di formato dell'API produce eccezioni invece di un messaggio.
-R140 gravita basso, categoria ottimizzazione, in lichess_app.py:1708-1712, lichess_stats.py:73 (B4-17)
-Import di moduli gia importati in testa al file, eseguiti dentro le funzioni.
 R142 gravita basso, categoria fragilita, in lichess_board.py:365-366 e lichess_profiler.py:456 (B5-13)
 Accessi diretti alle chiavi delle risposte JSON, per esempio i due giocatori nello stream e il campo pgn di ogni partita scaricata: un formato inatteso produce un'eccezione al posto di un messaggio.
-R144 gravita basso, categoria regole generali, in lichess_profiler.py:435 (B5-15)
-Un ritorno carrello e inserito dentro la stringa affidata a gettext: se una traduzione lo perde, cambia il comportamento a schermo. Meglio tenere i caratteri di controllo fuori dal testo da tradurre.
 R146 gravita basso, categoria logica, in tempo_app.py:245-256 (B6-11)
 Nel confronto dei tempi, a parita esatta viene annunciato il nero in vantaggio di zero secondi, perche il ternario usa il maggiore stretto.
 R147 gravita basso, categoria ottimizzazione, in memoboard_app.py:41-45 (B6-12)
