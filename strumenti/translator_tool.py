@@ -2,6 +2,7 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
 import os
+import shutil
 import re
 import sys
 import time
@@ -77,6 +78,11 @@ def translate_po_file(po_file_path, target_lang):
             continue
 
     # Salvataggio
+    # Copia di sicurezza prima di sovrascrivere il catalogo.
+    try:
+        shutil.copy2(po_file_path, po_file_path + ".bak")
+    except OSError as e:
+        print(f"Copia di sicurezza non riuscita: {e}")
     po.save()
     print(f"\nLavoro completato! Tradotte {count} stringhe.")
     print(f"File salvato: {po_file_path}")

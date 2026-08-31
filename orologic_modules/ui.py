@@ -218,9 +218,19 @@ def EditLocalization():
     print(_("\nImpostazioni di lingua salvate con successo!"))
 
 
-def report_all_pieces(game_state, color):
+def scacchiera_di(origine):
+    """La scacchiera, venga essa da uno stato di partita o da sola.
+
+    Serve alle funzioni che leggono solo la posizione: chi le chiamava
+    da Orolichess e da Easyfish doveva prima confezionare una classe
+    finta con dentro la scacchiera, e ne esistevano tre versioni.
+    """
+    return getattr(origine, "board", origine)
+
+
+def report_all_pieces(origine, color):
     cols_dict = L10N.get("columns", {})
-    board = game_state.board
+    board = scacchiera_di(origine)
     pieces_map = {
         chess.PAWN: [],
         chess.KNIGHT: [],
@@ -319,7 +329,8 @@ def extended_piece_description(piece):
 format_pv_descriptively = board_utils.format_pv_descriptively
 
 
-def read_diagonal(game_state, base_column, direction_right):
+def read_diagonal(origine, base_column, direction_right):
+    board = scacchiera_di(origine)
     base_column = base_column.lower()
     if base_column not in "abcdefgh":
         print(_("Colonna base non valida."))
@@ -331,7 +342,7 @@ def read_diagonal(game_state, base_column, direction_right):
     base_descr = f"{cols_dict.get(base_column, base_column)} 1"
     while 0 <= file_index < 8 and 0 <= rank_index < 8:
         square = chess.square(file_index, rank_index)
-        piece = game_state.board.piece_at(square)
+        piece = board.piece_at(square)
         if piece:
             current_file = chr(ord("a") + file_index)
             descriptive_file = cols_dict.get(current_file, current_file)
@@ -356,7 +367,8 @@ def read_diagonal(game_state, base_column, direction_right):
         )
 
 
-def read_rank(game_state, rank_number):
+def read_rank(origine, rank_number):
+    board = scacchiera_di(origine)
     try:
         rank_int = int(rank_number)
         if not (1 <= rank_int <= 8):
@@ -369,7 +381,7 @@ def read_rank(game_state, rank_number):
     cols_dict = L10N.get("columns", {})
     for file_idx in range(8):
         square = chess.square(file_idx, rank_idx)
-        piece = game_state.board.piece_at(square)
+        piece = board.piece_at(square)
         if piece:
             file_letter = chr(ord("a") + file_idx)
             descriptive_file = cols_dict.get(file_letter, file_letter)
@@ -384,7 +396,8 @@ def read_rank(game_state, rank_number):
         print(_("La traversa {rank} e' vuota.").format(rank=rank_number))
 
 
-def read_file(game_state, file_letter):
+def read_file(origine, file_letter):
+    board = scacchiera_di(origine)
     file_letter = file_letter.lower()
     if file_letter not in "abcdefgh":
         print(_("Colonna non valida."))
@@ -395,7 +408,7 @@ def read_file(game_state, file_letter):
     descriptive_file = cols_dict.get(file_letter, file_letter)
     for rank_idx in range(8):
         square = chess.square(file_idx, rank_idx)
-        piece = game_state.board.piece_at(square)
+        piece = board.piece_at(square)
         if piece:
             report.append(
                 f"{descriptive_file} {rank_idx + 1}: {extended_piece_description(piece)}"
@@ -437,7 +450,7 @@ def _traversa_sonora():
     return sequenza
 
 
-def esplora_scacchiera(comando, game_state):
+def esplora_scacchiera(comando, origine):
     """Esegue i comandi di esplorazione della scacchiera.
 
     Restituisce vero se il comando e' stato riconosciuto. Prima questo blocco
@@ -447,17 +460,17 @@ def esplora_scacchiera(comando, game_state):
     """
     if comando.startswith("/"):
         Acusticator(_scala(-1, 0.75), kind=3, adsr=[0, 0, 100, 100])
-        read_diagonal(game_state, comando[1:2].strip(), True)
+        read_diagonal(origine, comando[1:2].strip(), True)
         return True
 
     if comando.startswith("\\"):
         Acusticator(_scala(1, -0.75), kind=3, adsr=[0, 0, 100, 100])
-        read_diagonal(game_state, comando[1:2].strip(), False)
+        read_diagonal(origine, comando[1:2].strip(), False)
         return True
 
     if comando == "+":
         Acusticator(["c4", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-        report_all_pieces(game_state, chess.BLACK)
+        report_all_pieces(origine, chess.BLACK)
         return True
 
     if comando.startswith(","):
@@ -483,27 +496,27 @@ def esplora_scacchiera(comando, game_state):
             kind=3,
             adsr=[20, 5, 70, 25],
         )
-        report_piece_positions(game_state, comando[1:2])
+        report_piece_positions(origine, comando[1:2])
         return True
 
     if comando.startswith("-"):
         parametro = comando[1:].strip()
         if not parametro:
             Acusticator(["c5", 0.07, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            report_all_pieces(game_state, chess.WHITE)
+            report_all_pieces(origine, chess.WHITE)
         elif len(parametro) == 1 and parametro.isalpha():
             Acusticator(_colonna_sonora(), kind=3, adsr=[0, 0, 100, 100])
-            read_file(game_state, parametro)
+            read_file(origine, parametro)
         elif len(parametro) == 1 and parametro.isdigit():
             traversa = int(parametro)
             if 1 <= traversa <= 8:
                 Acusticator(_traversa_sonora(), kind=3, adsr=[0, 0, 100, 100])
-                read_rank(game_state, traversa)
+                read_rank(origine, traversa)
             else:
                 print(_("Traversa non valida: usa un numero da 1 a 8."))
         elif len(parametro) == 2 and parametro[0].isalpha() and parametro[1].isdigit():
             Acusticator(["d#4", 0.7, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
-            read_square(game_state, parametro)
+            read_square(origine, parametro)
         else:
             print(_("Dopo il meno serve una colonna, una traversa o una casa."))
         return True
@@ -528,7 +541,8 @@ def _get_piece_descriptions_from_squareset(board, squareset):
     return descriptions
 
 
-def read_square(game_state, square_str):
+def read_square(origine, square_str):
+    board = scacchiera_di(origine)
     try:
         square = chess.parse_square(square_str)
     except Exception:
@@ -539,7 +553,7 @@ def read_square(game_state, square_str):
         if (chess.square_file(square) + chess.square_rank(square)) % 2 == 0
         else _("chiara")
     )
-    piece = game_state.board.piece_at(square)
+    piece = board.piece_at(square)
     final_parts = []
     if piece:
         base_msg = _("La casa {square} e' {color} e contiene {piece_desc}.").format(
@@ -548,18 +562,18 @@ def read_square(game_state, square_str):
             piece_desc=extended_piece_description(piece),
         )
         final_parts.append(base_msg)
-        defenders_squares = game_state.board.attackers(piece.color, square)
+        defenders_squares = board.attackers(piece.color, square)
         if defenders_squares:
             defender_descs = _get_piece_descriptions_from_squareset(
-                game_state.board, defenders_squares
+                board, defenders_squares
             )
             final_parts.append(
                 _("difesa da: {defenders}").format(defenders=", ".join(defender_descs))
             )
-        attackers_squares = game_state.board.attackers(not piece.color, square)
+        attackers_squares = board.attackers(not piece.color, square)
         if attackers_squares:
             attacker_descs = _get_piece_descriptions_from_squareset(
-                game_state.board, attackers_squares
+                board, attackers_squares
             )
             final_parts.append(
                 _("attaccata da: {attackers}").format(
@@ -571,20 +585,20 @@ def read_square(game_state, square_str):
             square=square_str.upper(), color=color_descr
         )
         final_parts.append(base_msg)
-        white_attackers_squares = game_state.board.attackers(chess.WHITE, square)
+        white_attackers_squares = board.attackers(chess.WHITE, square)
         if white_attackers_squares:
             attacker_descs = _get_piece_descriptions_from_squareset(
-                game_state.board, white_attackers_squares
+                board, white_attackers_squares
             )
             final_parts.append(
                 _("attaccata dal Bianco con: {attackers}").format(
                     attackers=", ".join(attacker_descs)
                 )
             )
-        black_attackers_squares = game_state.board.attackers(chess.BLACK, square)
+        black_attackers_squares = board.attackers(chess.BLACK, square)
         if black_attackers_squares:
             attacker_descs = _get_piece_descriptions_from_squareset(
-                game_state.board, black_attackers_squares
+                board, black_attackers_squares
             )
             final_parts.append(
                 _("attaccata dal Nero con: {attackers}").format(
@@ -594,7 +608,8 @@ def read_square(game_state, square_str):
     print(" ".join(final_parts).replace(" .", ".").strip() + ".")
 
 
-def report_piece_positions(game_state, piece_symbol):
+def report_piece_positions(origine, piece_symbol):
+    board = scacchiera_di(origine)
     try:
         piece = chess.Piece.from_symbol(piece_symbol)
     except Exception:
@@ -604,7 +619,7 @@ def report_piece_positions(game_state, piece_symbol):
     full_name = L10N["pieces"][piece_type_key]["name"]
     gender = L10N["pieces"][piece_type_key]["gender"]
     color_string = get_color_adjective(piece.color, gender)
-    squares = game_state.board.pieces(piece.piece_type, piece.color)
+    squares = board.pieces(piece.piece_type, piece.color)
     positions = []
     for square in squares:
         file_index = chess.square_file(square)
