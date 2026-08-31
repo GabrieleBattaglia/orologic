@@ -54,7 +54,7 @@ def format_date_italian(dt=None, include_time=True, include_day_name=True):
     elif isinstance(dt, str):
         try:
             dt = datetime.datetime.fromisoformat(dt)
-        except Exception:
+        except (TypeError, ValueError):
             return dt
     day_name = _giorni()[dt.weekday()] if include_day_name else ""
     day = dt.day
@@ -116,7 +116,7 @@ try:
     with open(DB_FILE, encoding="utf-8") as f:
         _db_data = json.load(f)
         VOLUME = _db_data.get("volume", 1.0)
-except Exception:
+except (OSError, ValueError, AttributeError):
     VOLUME = 1.0
 
 PIECE_VALUES = {

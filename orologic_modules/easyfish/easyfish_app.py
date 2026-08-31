@@ -285,7 +285,8 @@ def _comandi_analisi(cmd_clean, board, engine, number_command, info):
                     ShowStats(board, info[0])
                 elif isinstance(info, dict):
                     ShowStats(board, info)
-            except Exception as e:
+            # Contorno di Easyfish: si prosegue.
+            except Exception as e:  # noqa: BLE001
                 print(_("Errore analisi: {e}").format(e=e))
     elif cmd_clean == ".l":
         if info:
@@ -600,7 +601,8 @@ def _esegui():
                             .upper()
                         )
                         is_black = turn_choice == "N"
-                    except Exception:
+                    # Contorno di Easyfish: si prosegue.
+                    except Exception:  # noqa: BLE001
                         target_move = 1
                         is_black = False
 

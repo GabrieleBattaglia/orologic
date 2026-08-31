@@ -135,7 +135,7 @@ def EseguiAutosave(game_state):
         # Scrittura atomica: un'interruzione a meta' lasciava un file
         # troncato, e la partita non era piu' recuperabile.
         storage.scrivi_json(full_path, dati_partita, indent="\t")
-    except Exception as e:
+    except (OSError, TypeError, ValueError) as e:
         print(
             _("\n[Errore durante il salvataggio automatico: {error}]").format(error=e)
         )
@@ -584,7 +584,7 @@ def salva_pgn_partita(pgn_str, nome_file):
                 os.makedirs(cartella, exist_ok=True)
             with open(percorso, "w", encoding="utf-8") as f:
                 f.write(pgn_str)
-        except Exception as e:
+        except OSError as e:
             ultimo_errore = e
             continue
         if percorso != percorsi[0]:
@@ -826,7 +826,10 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 if autosave_is_on:
                     EseguiAutosave(game_state)
                     Acusticator(["f3", 0.012, 0, config.VOLUME], sync=True)
-            except Exception:
+            # Rete di sicurezza del ciclo di gioco: qualunque cosa vada
+            # storta nell'elaborazione di una mossa, la partita non deve
+            # cadere. Si mostrano le mosse legali e si torna al prompt.
+            except Exception:  # noqa: BLE001
                 illegal_result = ui.verbose_legal_moves_for_san(
                     game_state.board, move_san_only
                 )
@@ -888,7 +891,7 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
     try:
         pyperclip.copy(pgn_str)
         print(_("PGN copiato negli appunti."))
-    except Exception as e:
+    except (pyperclip.PyperclipException, OSError) as e:
         print(
             _("Errore durante la copia del PGN negli appunti: {error}").format(error=e)
         )
@@ -900,7 +903,7 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
             if os.path.exists(autosave_file_path):
                 os.remove(autosave_file_path)
                 print(_("File di salvataggio automatico eliminato."))
-        except Exception as e:
+        except OSError as e:
             print(
                 _(
                     "\n[Attenzione: impossibile eliminare il file di autosave: {error}]"

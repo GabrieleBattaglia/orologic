@@ -544,7 +544,9 @@ def read_square(origine, square_str):
     board = scacchiera_di(origine)
     try:
         square = chess.parse_square(square_str)
-    except Exception:
+    # Contorno dell'interfaccia: un errore qui non deve fermare
+    # quello che l'utente sta facendo.
+    except Exception:  # noqa: BLE001
         print(_("Casa non valida."))
         return
     color_descr = (
@@ -611,7 +613,9 @@ def report_piece_positions(origine, piece_symbol):
     board = scacchiera_di(origine)
     try:
         piece = chess.Piece.from_symbol(piece_symbol)
-    except Exception:
+    # Contorno dell'interfaccia: un errore qui non deve fermare
+    # quello che l'utente sta facendo.
+    except Exception:  # noqa: BLE001
         print(_("Non riconosciuto: inserisci R N B Q K P, r n b q k p"))
         return
     piece_type_key = chess.PIECE_NAMES[piece.piece_type].lower()
@@ -1087,7 +1091,9 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
         print(
             _("Riepilogo partita salvato come {filename}.").format(filename=full_path)
         )
-    except Exception as e:
+    # Contorno dell'interfaccia: un errore qui non deve fermare
+    # quello che l'utente sta facendo.
+    except Exception as e:  # noqa: BLE001
         print(
             _("Errore durante il salvataggio del riepilogo testuale: {error}").format(
                 error=e
@@ -1134,7 +1140,9 @@ def verbose_legal_moves_for_san(board, san_str):
                 if m.to_square == dest_square
                 and (m.promotion == promotion if promotion else True)
             ]
-        except Exception:
+        # Contorno dell'interfaccia: un errore qui non deve fermare
+        # quello che l'utente sta facendo.
+        except Exception:  # noqa: BLE001
             return _("Destinazione non riconosciuta.")
     if not legal_moves:
         return _("Nessuna mossa legale trovata.")

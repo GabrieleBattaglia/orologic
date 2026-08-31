@@ -20,7 +20,9 @@ def load_secrets():
     try:
         with open(SECRETS_FILE, encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    # Le risposte di Lichess possono cambiare forma: si rinuncia a
+    # questo dato e si prosegue.
+    except Exception:  # noqa: BLE001
         return {}
 
 
@@ -28,7 +30,9 @@ def save_secrets(secrets):
     try:
         with open(SECRETS_FILE, "w", encoding="utf-8") as f:
             json.dump(secrets, f, indent=4)
-    except Exception as e:
+    # Le risposte di Lichess possono cambiare forma: si rinuncia a
+    # questo dato e si prosegue.
+    except Exception as e:  # noqa: BLE001
         print(_("Errore salvataggio segreti: {e}").format(e=e))
 
 
@@ -79,7 +83,9 @@ def menu_login(db):
     key(_("Premi un tasto per aprire il browser e generare il token su Lichess..."))
     try:
         webbrowser.open("https://lichess.org/account/oauth/token")
-    except Exception:
+    # Le risposte di Lichess possono cambiare forma: si rinuncia a
+    # questo dato e si prosegue.
+    except Exception:  # noqa: BLE001
         print(
             _(
                 "Impossibile aprire il browser automaticamente. Vai manualmente su: https://lichess.org/account/oauth/token"
@@ -210,7 +216,9 @@ def format_iso_date(iso_str):
         iso_str = iso_str.split(".")[0].replace("Z", "")
         dt = datetime.datetime.fromisoformat(iso_str)
         return config.format_date_italian(dt)
-    except Exception:
+    # Le risposte di Lichess possono cambiare forma: si rinuncia a
+    # questo dato e si prosegue.
+    except Exception:  # noqa: BLE001
         return iso_str
 
 
@@ -826,7 +834,9 @@ def menu_puzzle(db):
                     last_move_san = board_utils.DescribeMove(
                         node.move, node.parent.board()
                     )
-            except Exception as e:
+            # Le risposte di Lichess possono cambiare forma: si rinuncia a
+            # questo dato e si prosegue.
+            except Exception as e:  # noqa: BLE001
                 print(_("Errore nel parsing del PGN: {e}").format(e=e))
                 # Fallback
                 if puz.get("fen"):
@@ -1859,7 +1869,9 @@ def run():
             try:
                 challenges = get_incoming_challenges(token)
                 num_challenges = len(challenges) if challenges else 0
-            except Exception:
+            # Le risposte di Lichess possono cambiare forma: si rinuncia a
+            # questo dato e si prosegue.
+            except Exception:  # noqa: BLE001
                 num_challenges = 0
         else:
             MENU_CHOICES["login"] = _("Login (Imposta API Token)")
@@ -1972,13 +1984,17 @@ def run():
             print(_("Apertura della casella postale nel browser..."))
             try:
                 webbrowser.open("https://lichess.org/inbox")
-            except Exception as e:
+            # Le risposte di Lichess possono cambiare forma: si rinuncia a
+            # questo dato e si prosegue.
+            except Exception as e:  # noqa: BLE001
                 print(_("Impossibile aprire il browser: {e}").format(e=e))
         elif scelta == "sfide":
             print(_("Controllo sfide in entrata..."))
             try:
                 challenges = get_incoming_challenges(token, usa_cache=False)
-            except Exception:
+            # Le risposte di Lichess possono cambiare forma: si rinuncia a
+            # questo dato e si prosegue.
+            except Exception:  # noqa: BLE001
                 challenges = []
 
             if not challenges:

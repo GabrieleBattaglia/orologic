@@ -153,7 +153,9 @@ class PygameBoardWindow:
             from .easyfish_app import show_output_on_board
 
             self.show_text_mode = show_output_on_board
-        except Exception:
+        # La finestra grafica gira in un thread suo: se pygame va in
+        # difficolta' si chiude la finestra, senza portarsi dietro il programma.
+        except Exception:  # noqa: BLE001, S110
             pass
         try:
             from pygame._sdl2 import Window
@@ -162,7 +164,9 @@ class PygameBoardWindow:
             win.maximize()
             pygame.event.pump()
             self.width, self.height = screen.get_size()
-        except Exception:
+        # La finestra grafica gira in un thread suo: se pygame va in
+        # difficolta' si chiude la finestra, senza portarsi dietro il programma.
+        except Exception:  # noqa: BLE001, S110
             pass
         title = f"Orologic V{self.version} SCACCHIERA DIDATTICA"
         pygame.display.set_caption(title)
@@ -253,5 +257,7 @@ class PygameBoardWindow:
                     screen.blit(text_surf, (rect.x + padding * 2, y_start))
                     y_start += line_spacing
             pygame.display.flip()
-        except Exception:
+        # La finestra grafica gira in un thread suo: se pygame va in
+        # difficolta' si chiude la finestra, senza portarsi dietro il programma.
+        except Exception:  # noqa: BLE001, S110
             pass

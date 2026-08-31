@@ -19,6 +19,10 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.15</h3>
+<h4>8.15.1 (1 settembre 2026)</h4>
+<ul>
+  <li>* [Core] Rivista la gestione degli errori in tutto il programma, come deciso con Gabriele. Nei punti in cui l'operazione protetta è precisa, ora si dichiara quale errore ci si aspetta: scrittura su disco, copia negli appunti, dialogo con il motore, lettura di una mossa. Nei punti in cui la cattura ampia è voluta, cioè le reti di sicurezza attorno alla partita in corso ed ai dati che arrivano dall'esterno, resta com'era ma con scritto accanto il motivo. Il controllo automatico su questo aspetto è ora attivo, quindi ogni nuova occorrenza va decisa consapevolmente.</li>
+</ul>
 <h4>8.15.0 (1 settembre 2026)</h4>
 <ul>
   <li>* [Core] La descrizione parlata delle mosse è stata riscritta: viene costruita direttamente dalla mossa e dalla posizione, invece di ricomporre la notazione algebrica per poi rileggerla con due espressioni regolari. Il testo pronunciato non cambia di una virgola, verificato su 4889 descrizioni tratte dalle partite salvate e dai casi rari costruiti apposta, arrocchi Fischer Random compresi.</li>

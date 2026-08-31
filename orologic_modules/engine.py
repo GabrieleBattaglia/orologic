@@ -28,7 +28,7 @@ def calculate_win_probability(score_obj, turn):
         # WDL dal punto di vista del giocatore di turno
         w = score_obj.pov(turn).wdl(model="lichess").expectation()
         return w
-    except Exception:
+    except (AttributeError, ValueError, ZeroDivisionError):
         # Fallback: Sigmoide sui CP (dal punto di vista del giocatore)
         cp = score_obj.pov(turn).score(mate_score=10000)
         if cp is None:
@@ -215,7 +215,11 @@ def InitEngine():
             ENGINE_NAME = ENGINE.id.get("name", "UCI Engine")
             print(_("Motore {n} pronto.").format(n=ENGINE_NAME))
             return True
-        except Exception as e:
+        except (
+            chess.engine.EngineError,
+            chess.engine.EngineTerminatedError,
+            OSError,
+        ) as e:
             print(_("Errore motore: {e}").format(e=e))
             ENGINE = None
             return False
@@ -227,7 +231,7 @@ def CloseEngine():
     if ENGINE:
         try:
             ENGINE.quit()
-        except Exception:
+        except (chess.engine.EngineError, chess.engine.EngineTerminatedError, OSError):
             pass
         ENGINE = None
 
@@ -334,7 +338,9 @@ def CalculateBest(board, bestmove=True, as_san=False):
             return best_line[0]
         else:
             return best_line
-    except Exception:
+    # L'analisi mette insieme motore, cache e calcoli: se qualcosa
+    # non riesce si rinuncia alla linea migliore, senza fermare tutto.
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -349,7 +355,8 @@ def CalculateWDL(board):
         if score and hasattr(score, "wdl"):
             wdl = score.wdl()
             return (wdl[0] / 10, wdl[1] / 10, wdl[2] / 10)
-    except Exception:
+    # Come sopra: senza valutazione si prosegue lo stesso.
+    except Exception:  # noqa: BLE001, S110
         pass
     return None
 
@@ -454,7 +461,7 @@ def SmartInspection(analysis_lines, board):
             try:
                 for move in pv_moves[:current_index]:
                     temp_board.push(move)
-            except Exception as push_err:
+            except (ValueError, AssertionError) as push_err:
                 print(_("\nErrore: {error}").format(error=push_err))
                 eval_str = "ERR_NAV"
                 continue
@@ -530,7 +537,9 @@ def LoadPGNFromClipboard():
         }
         c = menu(partite, p=_("Scegli partita: "), show=True, numbered=True)
         return (games[int(c) - 1], is_corrected) if c else None
-    except Exception:
+    # Il PGN da analizzare arriva dagli appunti e puo' essere
+    # qualsiasi cosa: si rinuncia e si torna al menu.
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -1149,7 +1158,7 @@ def AnalyzeGame(pgn_game, is_corrected=False):
             formatted_pgn = board_utils.format_pgn_comments(str(pgn_game))
             pyperclip.copy(formatted_pgn)
             print(_("PGN aggiornato negli appunti."))
-        except Exception:
+        except (pyperclip.PyperclipException, OSError):
             pass
 
 
@@ -1168,7 +1177,9 @@ def analyze_position_deep(board, limit, multipv_count=3):
                 results.append({"rank": i + 1, "move": pv[0], "score": score, "pv": pv})
         oaa_analysis_cache[cache_key] = results
         return results
-    except Exception:
+    # L'interrogazione del motore puo' fallire in molti modi, e in
+    # mezzo c'e' anche la conversione delle linee: senza analisi si prosegue.
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -1439,9 +1450,11 @@ def genera_sommario_analitico_txt(
         try:
             pyperclip.copy(full_text)
             print(_("Riepilogo copiato negli appunti."))
-        except Exception:
+        # La copia negli appunti e' un di piu': se non riesce, pazienza.
+        except Exception:  # noqa: BLE001, S110
             pass
-    except Exception as e:
+    # Il riepilogo testuale e' un di piu' rispetto al PGN gia' salvato.
+    except Exception as e:  # noqa: BLE001
         print(_("Errore salvataggio TXT: {e}").format(e=e))
 
 
@@ -1813,7 +1826,9 @@ def AnalisiAutomatica(pgn_game):
             w_after = calculate_win_probability(analysis_after[0]["score"], turn)
             move_acc = calculate_move_accuracy(w_before, w_after)
             accuracies[color_key].append(move_acc)
-        except Exception:
+        # Una singola mossa che non si riesce ad annotare non deve
+        # fermare l'analisi di tutta la partita.
+        except Exception:  # noqa: BLE001
             move_acc = 0.0
         CPL_STATISTICS_CAP = 1000
         classification, centipawn_loss, eval_after_move = _classifica_mossa(
@@ -1947,7 +1962,9 @@ def AnalisiAutomatica(pgn_game):
             accuracies,
         )
 
-    except Exception as e:
+    # Il salvataggio finale dice all'utente cosa non ha funzionato,
+    # invece di cadere dopo un'analisi che puo' essere durata minuti.
+    except Exception as e:  # noqa: BLE001
         print(_("Errore durante il salvataggio: {e}").format(e=e))
 
     print(_("Ritorno al menu principale."))

@@ -257,7 +257,9 @@ def generate_custom_svg(board, node=None, orientation=None, override_size=None):
         for d in arrows_pgn + circles_pgn:
             try:
                 svg_arrows.append(chess.svg.Arrow.from_pgn(d))
-            except Exception:
+            # La generazione di immagini e PDF passa per piu' librerie: se
+            # non riesce si avvisa, ma la partita resta.
+            except Exception:  # noqa: BLE001, S110
                 pass
 
     svg_data = chess.svg.board(
@@ -511,6 +513,8 @@ def export_board_pdf(board, node=None):
             ],
             kind=1,
         )
-    except Exception as e:
+    # La generazione di immagini e PDF passa per piu' librerie: se
+    # non riesce si avvisa, ma la partita resta.
+    except Exception as e:  # noqa: BLE001
         print(_("\nErrore durante la creazione del PDF: {e}").format(e=e))
         Acusticator(["c3", 0.3, 0, config.VOLUME], kind=2)

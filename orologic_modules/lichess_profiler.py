@@ -501,7 +501,8 @@ def download_games(username, token):
                 f.write(g["pgn"])
                 f.write("\n\n")
         print(_("\nFile salvato in: {f}").format(f=filepath))
-    except Exception as e:
+    # Come sopra.
+    except Exception as e:  # noqa: BLE001
         print(_("Errore nel salvataggio del file: {e}").format(e=e))
         return
 
@@ -692,7 +693,8 @@ def show_player_menu(username, secrets):
                             f"https://lichess.org/api/challenge/{challenge_id}/cancel",
                             token=token,
                         )
-                    except Exception:
+                    # Come sopra.
+                    except Exception:  # noqa: BLE001, S110
                         pass
         elif scelta == "segui":
             follow_player(username, token, follow=True)

@@ -235,7 +235,7 @@ def riepilogo_mosse(mosse):
             white_move = board_copy.parse_san(white_move_san)
             white_move_desc = DescribeMove(white_move, board_copy)
             board_copy.push(white_move)
-        except Exception as e:
+        except (ValueError, AssertionError) as e:
             white_move_desc = _("Errore bianco: {e}").format(e=e)
         if i + 1 < len(mosse):
             black_move_san = mosse[i + 1]
@@ -243,7 +243,7 @@ def riepilogo_mosse(mosse):
                 black_move = board_copy.parse_san(black_move_san)
                 black_move_desc = DescribeMove(black_move, board_copy)
                 board_copy.push(black_move)
-            except Exception as e:
+            except (ValueError, AssertionError) as e:
                 black_move_desc = _("Errore nero: {e}").format(e=e)
             summary.append(f"{move_number}. {white_move_desc}, {black_move_desc}")
         else:
@@ -441,7 +441,7 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
     try:
         with open(db_path, encoding="utf-8") as f:
             content = f.read()
-    except Exception as e:
+    except (OSError, UnicodeDecodeError) as e:
         print(
             _("Errore durante la lettura di {filename}: {error}").format(
                 filename=db_path, error=e
@@ -472,7 +472,7 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
                     san = board.san(move)
                     moves.append(san)
                     board.push(move)
-                except Exception:
+                except (ValueError, AssertionError):
                     parse_error = True
                     break
                 node = next_node
@@ -492,7 +492,10 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
                 eco_entries[final_epd].append(entry)
             elif parse_error:
                 skipped_count += 1
-        except Exception:
+        # Un archivio di aperture puo' contenere di tutto: qualunque cosa
+        # renda illeggibile una linea, si salta quella e si prosegue con
+        # le altre duemila.
+        except Exception:  # noqa: BLE001
             skipped_count += 1
             while True:
                 line = stream.readline()
@@ -698,7 +701,10 @@ def validate_and_clean_pgn(pgn_text):
 
         return games, False, is_corrected, msg, cleaned_text
 
-    except Exception as e:
+    # Il PGN arriva da fuori, spesso dagli appunti: qui si accetta che
+    # possa essere malformato in modi imprevedibili, e si risponde con un
+    # messaggio invece di far cadere il programma.
+    except Exception as e:  # noqa: BLE001
         return (
             None,
             True,

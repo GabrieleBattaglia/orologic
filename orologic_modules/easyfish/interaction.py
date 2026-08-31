@@ -479,7 +479,8 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
                         )
                         line_san = " ".join(GetPrincipalVariationSan(current_board, pv))
                         print(f"{i + 1}. {eval_str} {wdl_str}{line_san}")
-                except Exception as e:
+                # Contorno dell'editor: si prosegue.
+                except Exception as e:  # noqa: BLE001
                     print(_("Analisi fallita: {e}").format(e=e))
             else:
                 print(_("Motore non disponibile."))

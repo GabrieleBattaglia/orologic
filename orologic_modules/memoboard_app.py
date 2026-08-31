@@ -133,7 +133,8 @@ def load_scores():
                         default_structure[ex_name].append(rec)
 
         return _deduplicate_scores(default_structure)
-    except Exception as e:
+    # Un esercizio che va storto non deve far perdere i punteggi.
+    except Exception as e:  # noqa: BLE001
         # Senza questo avviso le classifiche sparivano in silenzio: il
         # primo salvataggio successivo le avrebbe cancellate per sempre.
         copia = storage.metti_da_parte(SCORES_FILE)
@@ -153,7 +154,8 @@ def save_scores(scores_data):
     try:
         cleaned_data = _deduplicate_scores(scores_data)
         storage.scrivi_json(SCORES_FILE, cleaned_data, indent=2)
-    except Exception as e:
+    # Un esercizio che va storto non deve far perdere i punteggi.
+    except Exception as e:  # noqa: BLE001
         print(_("Errore nel salvataggio dei punteggi: {e}").format(e=e))
 
 
@@ -1209,7 +1211,8 @@ def main():
         ):
             try:
                 os.remove(current_session_filepath)
-            except Exception:
+            # Un esercizio che va storto non deve far perdere i punteggi.
+            except Exception:  # noqa: BLE001, S110
                 pass
         current_session_filepath = target_path
 
@@ -1235,7 +1238,8 @@ def main():
                     filename=os.path.basename(current_session_filepath)
                 )
             )
-        except Exception as e:
+        # Un esercizio che va storto non deve far perdere i punteggi.
+        except Exception as e:  # noqa: BLE001
             print(_("Errore durante il salvataggio del report: {e}").format(e=e))
 
     print(

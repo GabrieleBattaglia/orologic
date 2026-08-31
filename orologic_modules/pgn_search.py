@@ -90,7 +90,9 @@ def _carica_archivio():
     """
     try:
         clipboard = pyperclip.paste()
-    except Exception:
+    # Gli archivi PGN arrivano da fuori e possono essere malformati
+    # in modi imprevedibili.
+    except Exception:  # noqa: BLE001
         print(_("Impossibile accedere agli appunti."))
         return None
 
@@ -107,7 +109,9 @@ def _carica_archivio():
         try:
             with open(clipboard, encoding="utf-8", errors="replace") as f:
                 pgn_text = f.read()
-        except Exception as e:
+        # Gli archivi PGN arrivano da fuori e possono essere malformati
+        # in modi imprevedibili.
+        except Exception as e:  # noqa: BLE001
             print(_("Errore nella lettura del file: {e}").format(e=e))
             return None
 
@@ -178,7 +182,9 @@ def _carica_archivio():
                 if downloaded > 0:
                     sys.stdout.write("\n")
                 pgn_text = b"".join(data).decode("utf-8", errors="replace")
-        except Exception as e:
+        # Gli archivi PGN arrivano da fuori e possono essere malformati
+        # in modi imprevedibili.
+        except Exception as e:  # noqa: BLE001
             sys.stdout.write("\n")
             if isinstance(e, urllib.error.HTTPError):
                 print(
@@ -220,7 +226,9 @@ def _carica_archivio():
         posizione = pgn_io.tell()
         try:
             game = chess.pgn.read_game(pgn_io)
-        except Exception as e:
+        # Gli archivi PGN arrivano da fuori e possono essere malformati
+        # in modi imprevedibili.
+        except Exception as e:  # noqa: BLE001
             if pgn_io.tell() > posizione:
                 # Il testo e' andato avanti: si salta questa partita e basta.
                 continue
@@ -853,7 +861,9 @@ def _ottieni_scacchiera_ramo(ramo_mosse):
     for m in ramo_mosse:
         try:
             board.push_san(m)
-        except Exception:
+        # Gli archivi PGN arrivano da fuori e possono essere malformati
+        # in modi imprevedibili.
+        except Exception:  # noqa: BLE001
             break
     return board
 
@@ -1115,7 +1125,9 @@ def _stampa_lista_rami(rami, board, info_list, filtri_attivi, giocatore_comune=N
         try:
             move_obj = board.parse_san(mossa)
             desc_mossa = board_utils.DescribeMove(move_obj, board)
-        except Exception:
+        # Gli archivi PGN arrivano da fuori e possono essere malformati
+        # in modi imprevedibili.
+        except Exception:  # noqa: BLE001
             desc_mossa = mossa
 
         stats_str = _formato_statistiche(
@@ -1284,7 +1296,9 @@ def _salva_pgn_filtrato(games, indici, filtri_attivi):
                 f.write("\n\n")
 
         print(_("Salvate {n} partite in: {path}").format(n=len(indici), path=percorso))
-    except Exception as e:
+    # Gli archivi PGN arrivano da fuori e possono essere malformati
+    # in modi imprevedibili.
+    except Exception as e:  # noqa: BLE001
         print(_("Errore nel salvataggio: {e}").format(e=e))
 
 

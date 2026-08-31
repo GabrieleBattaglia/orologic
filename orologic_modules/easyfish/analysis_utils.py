@@ -15,7 +15,9 @@ def GetPrincipalVariationSan(board, pv):
         try:
             san_moves.append(temp_board.san(move))
             temp_board.push(move)
-        except Exception:
+        # Il motore e' un processo separato che puo' non rispondere:
+        # senza analisi si prosegue.
+        except Exception:  # noqa: BLE001
             break
     return san_moves
 
@@ -44,7 +46,9 @@ def FormatAnalysisInfo(board, info):
                 wdl_pov.losses / 10 if hasattr(wdl_pov, "losses") else wdl_pov[2] / 10
             )
             wdl_str = f" WDL:{w:.0f}%-{d:.0f}%-{loss:.0f}%"
-        except Exception:
+        # Il motore e' un processo separato che puo' non rispondere:
+        # senza analisi si prosegue.
+        except Exception:  # noqa: BLE001, S110
             pass
 
     line_san = " ".join(GetPrincipalVariationSan(board, pv))
@@ -81,7 +85,9 @@ def RunAnalysis(board, engine, time_limit, multipv_count):
                 else:
                     results.append(formatted)
 
-    except Exception as e:
+    # Il motore e' un processo separato che puo' non rispondere:
+    # senza analisi si prosegue.
+    except Exception as e:  # noqa: BLE001
         results.append(_("Analisi fallita: {e}").format(e=e))
 
     return results

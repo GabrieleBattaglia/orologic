@@ -84,7 +84,9 @@ def _comandi_informativi(cmd, board, game_state, engine_instance):
                 # Disattiva limitazione Elo per usare Skill Level
                 try:
                     engine_instance.configure({"UCI_LimitStrength": False})
-                except Exception:
+                # Rete di sicurezza della partita contro il motore: un errore
+                # non deve far perdere la partita in corso.
+                except Exception:  # noqa: BLE001, S110
                     pass
                 engine_instance.configure({"Skill Level": new_skill})
                 Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1)
@@ -96,7 +98,9 @@ def _comandi_informativi(cmd, board, game_state, engine_instance):
             else:
                 Acusticator([400.0, 0.2, 0, config.VOLUME], kind=1)
                 print(_("Il livello deve essere compreso tra 0 e 20."))
-        except Exception as e:
+        # Rete di sicurezza della partita contro il motore: un errore
+        # non deve far perdere la partita in corso.
+        except Exception as e:  # noqa: BLE001
             print(_("Errore durante l'impostazione del livello: {e}").format(e=e))
     else:
         return False
@@ -545,9 +549,13 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
         # Forza attivazione WDL dal motore per l'analisi e gioco
         try:
             engine_instance.configure({"UCI_ShowWDL": True})
-        except Exception:
+        # Rete di sicurezza della partita contro il motore: un errore
+        # non deve far perdere la partita in corso.
+        except Exception:  # noqa: BLE001, S110
             pass
-    except Exception as e:
+    # Rete di sicurezza della partita contro il motore: un errore
+    # non deve far perdere la partita in corso.
+    except Exception as e:  # noqa: BLE001
         print(_("Errore lettura skill level: {e}").format(e=e))
 
     # Avvio dell'orologio, lo stesso usato dall'arbitraggio.
@@ -644,14 +652,18 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                                         "Forza del motore impostata a Rating Elo: {n}."
                                     ).format(n=new_elo)
                                 )
-                            except Exception:
+                            # Rete di sicurezza della partita contro il motore: un errore
+                            # non deve far perdere la partita in corso.
+                            except Exception:  # noqa: BLE001
                                 msg = _("Valore Elo non accettato dal motore.")
                                 if hasattr(opt, "min") and hasattr(opt, "max"):
                                     msg += _(
                                         " Range consentito per questo motore: {min}-{max}."
                                     ).format(min=opt.min, max=opt.max)
                                 print(msg)
-                        except Exception as e:
+                        # Rete di sicurezza della partita contro il motore: un errore
+                        # non deve far perdere la partita in corso.
+                        except Exception as e:  # noqa: BLE001
                             print(
                                 _("Errore durante l'impostazione dell'Elo: {e}").format(
                                     e=e
@@ -668,7 +680,9 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                                 print(_("Variante suggerita aggiunta all'albero."))
                             else:
                                 print(_("Nessuna linea trovata."))
-                        except Exception as e:
+                        # Rete di sicurezza della partita contro il motore: un errore
+                        # non deve far perdere la partita in corso.
+                        except Exception as e:  # noqa: BLE001
                             print(f"Err: {e}")
                     elif cmd == ".u":
                         steps = 0
@@ -790,7 +804,9 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                         game_state.game_over = True
                         break
 
-                except Exception as e:
+                # Rete di sicurezza della partita contro il motore: un errore
+                # non deve far perdere la partita in corso.
+                except Exception as e:  # noqa: BLE001
                     print(_("Errore motore: {e}").format(e=e))
                     break
 

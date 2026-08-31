@@ -12,16 +12,13 @@ target-version = "py311"
 [lint]
 # Oltre ai controlli di base si tengono accesi: bug probabili, semplificazioni,
 # ordine degli import, aggiornamenti di sintassi, sicurezza, date e gettext.
-select = ["E4", "E7", "E9", "F", "B", "SIM", "I", "UP", "S", "DTZ", "INT", "PIE", "PL", "RUF"]
+select = ["E4", "E7", "E9", "F", "B", "BLE", "SIM", "I", "UP", "S", "DTZ", "INT", "PIE", "PL", "RUF"]
 
 ignore = [
-    # Orologic e' un programma interattivo che gira per ore: un errore
-    # imprevisto in una singola operazione non deve far cadere la partita
-    # in corso. Le eccezioni larghe sono quasi sempre attorno a operazioni
-    # di contorno, salvataggi accessori, appunti, suoni, e il messaggio
-    # all'utente c'e'. Dove l'errore conta davvero e' gia' specifico.
-    "BLE001",
-    "S110",
+    # Le eccezioni larghe restano accese: dove servono davvero, come rete
+    # di sicurezza del ciclo di gioco o attorno a dati che arrivano da
+    # fuori, il punto porta scritto accanto il motivo. Ogni altra
+    # segnalazione e' un errore da dichiarare.
     # Le date sono locali per scelta: orologi da torneo, punteggi e nomi di
     # file parlano dell'ora dell'utente, non di quella universale. Verificato
     # a suo tempo che anche le date ricevute da Lichess arrivano gia' nel
