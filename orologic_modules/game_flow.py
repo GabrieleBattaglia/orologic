@@ -4,8 +4,6 @@
 import datetime
 import io
 import os
-import shutil
-import time
 
 import chess
 import chess.pgn
@@ -152,13 +150,7 @@ def async_arbitration_input(game_state, get_prompt):
     buf = []
 
     def refresh_line():
-        # Il ritorno carrello a inizio e fine riga e' voluto: porta il
-        # cursore di sistema sulla riga, cosi' il display braille la
-        # inquadra dall'inizio. La larghezza invece si chiede al
-        # terminale, perche' fissarla a settantanove colonne lasciava
-        # residui quando prompt e testo digitato erano piu' lunghi.
-        larghezza = shutil.get_terminal_size(fallback=(80, 24)).columns
-        sys.stdout.write("\r" + " " * max(1, larghezza - 1) + "\r")
+        ui.pulisci_riga()
         sys.stdout.write(get_prompt() + "".join(buf))
         sys.stdout.flush()
 
@@ -224,75 +216,6 @@ def comandi_di_lettura(cmd, game_state):
 
 
 _COMANDI_RISULTATO = (".1-0", ".0-1", ".1/2", ".*")
-
-
-def comandi_pausa(cmd, game_state):
-    """Ferma gli orologi e li rimette in moto.
-
-    L'istante in cui la pausa comincia sta nello stato della partita,
-    cosi' il comando punto cinque lo trova in tutte le modalita'.
-    """
-    if cmd != ".p":
-        return False
-    if getattr(game_state, "ignore_clock", False):
-        print(_("Gli orologi sono disattivati."))
-        return True
-    game_state.paused = not game_state.paused
-    if game_state.paused:
-        game_state.paused_time_start = time.time()
-        print(_("Orologi in pausa"))
-        Acusticator(
-            [
-                "c5",
-                0.1,
-                1,
-                config.VOLUME,
-                "g4",
-                0.1,
-                0.3,
-                config.VOLUME,
-                "e4",
-                0.1,
-                -0.3,
-                config.VOLUME,
-                "c4",
-                0.1,
-                -1,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[2, 8, 80, 10],
-        )
-    else:
-        pause_duration = (
-            time.time() - game_state.paused_time_start
-            if game_state.paused_time_start
-            else 0
-        )
-        Acusticator(
-            [
-                "c4",
-                0.1,
-                -1,
-                config.VOLUME,
-                "e4",
-                0.1,
-                -0.3,
-                config.VOLUME,
-                "g4",
-                0.1,
-                0.3,
-                config.VOLUME,
-                "c5",
-                0.1,
-                1,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[2, 8, 80, 10],
-        )
-        print(_("Pausa durata ") + board_utils.FormatTime(pause_duration))
-    return True
 
 
 def annulla_ultima_mossa(game_state):
@@ -754,7 +677,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
             if (
                 ui.comandi_orologio(cmd, game_state)
                 or comandi_di_lettura(cmd, game_state)
-                or comandi_pausa(cmd, game_state)
+                or ui.comandi_pausa(cmd, game_state)
             ):
                 pass
             elif cmd == ".q":

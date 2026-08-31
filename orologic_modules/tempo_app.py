@@ -11,22 +11,18 @@ from . import board_utils, clock, config, orologio, ui, version
 from .config import _
 from .game_flow import async_arbitration_input
 
-TEMPO_COMMANDS = {
-    ".1": _("Mostra il tempo rimanente del bianco"),
-    ".2": _("Mostra il tempo rimanente del nero"),
-    ".3": _("Mostra entrambi gli orologi"),
-    ".4": _("Confronta i tempi rimanenti e indica il vantaggio"),
-    ".5": _("Stato orologi/pausa"),
-    ".6": _("Modifica timing aggiornamento orologio"),
-    ".p": _("Pausa/Ripresa"),
-    ".b+": _("Aggiunge tempo al bianco (in pausa)"),
-    ".b-": _("Sottrae tempo al bianco (in pausa)"),
-    ".n+": _("Aggiunge tempo al nero (in pausa)"),
-    ".n-": _("Sottrae tempo al nero (in pausa)"),
-    ".q": _("Elimina l'ultimo input"),
-    ".": _("Termina sessione e mostra il riepilogo"),
-    ".?": _("Aiuto (mostra questa lista)"),
-}
+# I comandi che Tempo ha in comune con la partita si prendono dall'elenco
+# di config, cosi' le due descrizioni non possono divergere. Qui restano
+# solo le voci proprie della modalita'.
+_COMUNI = (".1", ".2", ".3", ".4", ".5", ".6", ".p", ".b+", ".b-", ".n+", ".n-")
+TEMPO_COMMANDS = {chiave: config.DOT_COMMANDS[chiave] for chiave in _COMUNI}
+TEMPO_COMMANDS.update(
+    {
+        ".q": _("Elimina l'ultimo input"),
+        ".": _("Termina sessione e mostra il riepilogo"),
+        ".?": _("Aiuto (mostra questa lista)"),
+    }
+)
 
 
 def StartTempo(clock_config):
@@ -105,7 +101,6 @@ def StartTempo(clock_config):
 def _loop_tempo(game_state, clock_config):
     """Loop principale della modalita' Tempo."""
     game_state.paused_time_start = None
-    total_paused_time = 0.0
     start_time = time.time()
 
     while not game_state.game_over:
@@ -189,64 +184,8 @@ def _loop_tempo(game_state, clock_config):
 
             elif ui.comandi_orologio(cmd, game_state):
                 pass
-            elif cmd == ".p":
-                game_state.paused = not game_state.paused
-                if game_state.paused:
-                    game_state.paused_time_start = time.time()
-                    print(_("Orologi in pausa"))
-                    Acusticator(
-                        [
-                            "c5",
-                            0.1,
-                            1,
-                            config.VOLUME,
-                            "g4",
-                            0.1,
-                            0.3,
-                            config.VOLUME,
-                            "e4",
-                            0.1,
-                            -0.3,
-                            config.VOLUME,
-                            "c4",
-                            0.1,
-                            -1,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 80, 10],
-                    )
-                else:
-                    pause_duration = (
-                        time.time() - game_state.paused_time_start
-                        if game_state.paused_time_start
-                        else 0
-                    )
-                    total_paused_time += pause_duration
-                    game_state.paused_time_start = None
-                    Acusticator(
-                        [
-                            "c4",
-                            0.1,
-                            -1,
-                            config.VOLUME,
-                            "e4",
-                            0.1,
-                            -0.3,
-                            config.VOLUME,
-                            "g4",
-                            0.1,
-                            0.3,
-                            config.VOLUME,
-                            "c5",
-                            0.1,
-                            1,
-                            config.VOLUME,
-                        ],
-                        kind=1,
-                        adsr=[2, 8, 80, 10],
-                    )
-                    print(_("Pausa durata ") + board_utils.FormatTime(pause_duration))
+            elif ui.comandi_pausa(cmd, game_state):
+                pass
             elif cmd == ".q":
                 if not game_state.move_history:
                     print(_("Nulla da eliminare."))
@@ -341,6 +280,10 @@ def _loop_tempo(game_state, clock_config):
     end_time = time.time()
     elapsed_real = end_time - start_time
 
+    # Il tempo passato fermi lo accumula ui.comandi_pausa dentro lo stato:
+    # qui si aggiunge solo l'ultima pausa, se la sessione finisce con gli
+    # orologi ancora fermi.
+    total_paused_time = getattr(game_state, "tempo_in_pausa", 0.0)
     if game_state.paused_time_start is not None:
         total_paused_time += end_time - game_state.paused_time_start
 

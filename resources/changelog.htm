@@ -19,6 +19,15 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.14</h3>
+<h4>8.14.6 (31 agosto 2026)</h4>
+<ul>
+  <li>* [Easyfish] Il volume dei suoni segue finalmente la regolazione fatta dal menu di Orologic. Era fissato nel codice in settantasette punti, per cui Easyfish suonava sempre alla stessa intensità qualunque fosse l'impostazione scelta.</li>
+  <li>* [Core] La pausa degli orologi esiste ora in un punto solo, condiviso fra partita arbitrata e modalità Tempo, che ne tenevano due copie. Il riepilogo finale di Tempo continua a riportare il tempo passato in pausa.</li>
+  <li>* [Core] L'elenco dei comandi della modalità Tempo attinge alle descrizioni della partita per le voci comuni: prima erano due elenchi separati e potevano divergere.</li>
+  <li>* [Core] La riga del prompt viene ripulita per tutta la larghezza del terminale in tutte le modalità, non più su 79 colonne fisse: erano diciotto punti, ora è una funzione sola.</li>
+  <li>* [Lichess] Le risposte di Lichess vengono lette con prudenza: una sfida senza nome dell'avversario, o una risposta di forma inattesa, non interrompono più l'operazione con un errore tecnico.</li>
+  <li>* [Memoboard] L'elenco delle case della scacchiera si costruisce in ordine, così gli esercizi sono ripetibili fra un avvio e l'altro.</li>
+</ul>
 <h4>8.14.5 (31 agosto 2026)</h4>
 <ul>
   <li>* [Engine] La ricerca automatica del motore guarda anche nelle sottocartelle. L'archivio di Stockfish si estrae in una cartella propria, per cui la ricerca non trovava nulla ed il motore andava configurato a mano dopo ogni scaricamento.</li>

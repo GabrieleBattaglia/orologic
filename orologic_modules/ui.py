@@ -3,6 +3,8 @@
 
 import datetime
 import os
+import shutil
+import sys
 import time
 
 import chess
@@ -710,6 +712,19 @@ def _intervallo_aggiornamento(game_state):
     print(_("Intervallo di aggiornamento impostato a {s} secondi.").format(s=secondi))
 
 
+def pulisci_riga():
+    """Ripulisce la riga corrente per tutta la larghezza del terminale.
+
+    Il ritorno carrello a inizio e fine e' voluto: porta il cursore di
+    sistema su questa riga, cosi' lo screen reader e il display braille la
+    inquadrano dall'inizio. La larghezza si chiede al terminale, perche'
+    fissarla a settantanove colonne lasciava residui sulle righe piu'
+    lunghe.
+    """
+    larghezza = shutil.get_terminal_size(fallback=(80, 24)).columns
+    sys.stdout.write("\r" + " " * max(1, larghezza - 1) + "\r")
+
+
 COMANDI_SCACCHIERA = (".s", ".b")
 
 
@@ -817,6 +832,81 @@ def comandi_lettura(comando, game_state, board=None, mosse=None):
         return True
 
     return False
+
+
+def comandi_pausa(cmd, game_state):
+    """Ferma gli orologi e li rimette in moto.
+
+    L'istante in cui la pausa comincia sta nello stato della partita, e
+    li' si accumula anche quanto tempo si e' passato fermi: la modalita'
+    Tempo lo usa per il riepilogo finale. Restituisce vero se il comando
+    e' stato riconosciuto.
+    """
+    if cmd != ".p":
+        return False
+    if getattr(game_state, "ignore_clock", False):
+        print(_("Gli orologi sono disattivati."))
+        return True
+    game_state.paused = not game_state.paused
+    if game_state.paused:
+        game_state.paused_time_start = time.time()
+        print(_("Orologi in pausa"))
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                1,
+                config.VOLUME,
+                "g4",
+                0.1,
+                0.3,
+                config.VOLUME,
+                "e4",
+                0.1,
+                -0.3,
+                config.VOLUME,
+                "c4",
+                0.1,
+                -1,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 80, 10],
+        )
+    else:
+        pause_duration = (
+            time.time() - game_state.paused_time_start
+            if game_state.paused_time_start
+            else 0
+        )
+        Acusticator(
+            [
+                "c4",
+                0.1,
+                -1,
+                config.VOLUME,
+                "e4",
+                0.1,
+                -0.3,
+                config.VOLUME,
+                "g4",
+                0.1,
+                0.3,
+                config.VOLUME,
+                "c5",
+                0.1,
+                1,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 80, 10],
+        )
+        game_state.tempo_in_pausa = (
+            getattr(game_state, "tempo_in_pausa", 0.0) + pause_duration
+        )
+        game_state.paused_time_start = None
+        print(_("Pausa durata ") + tempo.parlato(pause_duration))
+    return True
 
 
 COMANDI_OROLOGIO = (".1", ".2", ".3", ".4", ".5", ".6")

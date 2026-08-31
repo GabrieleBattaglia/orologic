@@ -42,11 +42,10 @@ mnu = {
 }
 
 
-board_set = set()
-for y in "12345678":
-    for x in "ABCDEFGH":
-        board_set.add(f"{x}{y}")
-board = list(board_set)
+# Le case si elencano in ordine: prima nascevano da un insieme, quindi
+# in ordine diverso a ogni avvio. Non cambiava nulla all'uso, perche' si
+# pescano a sorte, ma rendeva gli esercizi non ripetibili.
+board = [f"{colonna}{traversa}" for traversa in "12345678" for colonna in "ABCDEFGH"]
 
 diagonals = {
     "A1H8": ["A1", "B2", "C3", "D4", "E5", "F6", "G7", "H8"],

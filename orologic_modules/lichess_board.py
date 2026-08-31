@@ -166,8 +166,9 @@ def _spectate_worker(url, token, q, stop_event):
                 if line.strip():
                     d = json.loads(line.decode("utf-8"))
                     if "players" in d:
-                        w = d["players"]["white"]
-                        b = d["players"]["black"]
+                        giocatori = d.get("players") or {}
+                        w = giocatori.get("white") or {}
+                        b = giocatori.get("black") or {}
                         w_name = w.get("user", {}).get("name", "Anonimo")
                         w_rat = w.get("rating", "?")
                         b_name = b.get("user", {}).get("name", "Anonimo")
@@ -264,7 +265,7 @@ def async_spectator_loop(q, game_state):
             )
 
     def refresh_line():
-        sys.stdout.write("\r" + " " * 79 + "\r")
+        ui.pulisci_riga()
         sys.stdout.write(get_prompt() + "".join(buf))
         sys.stdout.flush()
 
@@ -329,7 +330,7 @@ def async_spectator_loop(q, game_state):
                     game_state.started = True
 
                 if game_state.is_live:
-                    sys.stdout.write("\r" + " " * 79 + "\r")
+                    ui.pulisci_riga()
                     sys.stdout.write(
                         _("{turn} gioca: {desc}\n").format(turn=turn_name, desc=desc)
                     )
@@ -374,7 +375,7 @@ def async_spectator_loop(q, game_state):
                 if game_state.white_player != new_w or game_state.black_player != new_b:
                     game_state.white_player = new_w
                     game_state.black_player = new_b
-                    sys.stdout.write("\r" + " " * 79 + "\r")
+                    ui.pulisci_riga()
                     sys.stdout.write(
                         _("Partita: {wp} vs {bp}\n").format(
                             wp=game_state.white_player, bp=game_state.black_player
@@ -405,7 +406,7 @@ def async_spectator_loop(q, game_state):
                 else:
                     winner_str = _("Nessun vincitore")
 
-                sys.stdout.write("\r" + " " * 79 + "\r")
+                ui.pulisci_riga()
                 sys.stdout.write(
                     _("\nPartita terminata: {s}. {w}.\n").format(
                         s=status_tr, w=winner_str
@@ -447,7 +448,7 @@ def async_spectator_loop(q, game_state):
         except queue.Empty:
             if not game_state.is_live and game_state.started:
                 game_state.is_live = True
-                sys.stdout.write("\r" + " " * 79 + "\r")
+                ui.pulisci_riga()
                 sys.stdout.write(_("La scacchiera e' pronta!\n"))
                 refresh_line()
 
@@ -686,7 +687,7 @@ def async_play_loop(q, game_state):
         return p
 
     def refresh_line():
-        sys.stdout.write("\r" + " " * 79 + "\r")
+        ui.pulisci_riga()
         sys.stdout.write(get_prompt() + "".join(buf))
         sys.stdout.flush()
 
@@ -780,7 +781,7 @@ def async_play_loop(q, game_state):
                     game_state.black_time = int(state.get("btime")) / 1000.0
                 game_state.last_clock_sync = time.time()
 
-                sys.stdout.write("\r" + " " * 79 + "\r")
+                ui.pulisci_riga()
                 sys.stdout.write(
                     _("Partita: {wp} vs {bp}\n").format(
                         wp=game_state.white_player, bp=game_state.black_player
@@ -851,7 +852,7 @@ def async_play_loop(q, game_state):
                         game_state.board.push(move)
                         game_state.move_history.append(san_move)
 
-                        sys.stdout.write("\r" + " " * 79 + "\r")
+                        ui.pulisci_riga()
                         sys.stdout.write(
                             _("{turn} gioca: {desc}\n").format(
                                 turn=turn_name, desc=desc
@@ -933,7 +934,7 @@ def async_play_loop(q, game_state):
                     else:
                         winner_str = _("Nessun vincitore")
 
-                    sys.stdout.write("\r" + " " * 79 + "\r")
+                    ui.pulisci_riga()
                     sys.stdout.write(
                         _("\nPartita terminata: {s}. {w}.\n").format(
                             s=status_tr, w=winner_str
@@ -969,7 +970,7 @@ def async_play_loop(q, game_state):
                     try:
                         move = game_state.board.parse_san(game_state.premove)
                         uci = move.uci()
-                        sys.stdout.write("\r" + " " * 79 + "\r")
+                        ui.pulisci_riga()
                         sys.stdout.write(
                             _("Eseguo premove: {m}...\n").format(m=game_state.premove)
                         )
@@ -979,7 +980,7 @@ def async_play_loop(q, game_state):
                             daemon=True,
                         ).start()
                     except Exception:
-                        sys.stdout.write("\r" + " " * 79 + "\r")
+                        ui.pulisci_riga()
                         sys.stdout.write(
                             _("La premove ({m}) non e' piu' valida.\n").format(
                                 m=game_state.premove
@@ -992,7 +993,7 @@ def async_play_loop(q, game_state):
                 user = msg.get("username", _("Sistema"))
                 text = msg.get("text", "")
                 if user.lower() != game_state.my_username.lower() and user != "lichess":
-                    sys.stdout.write("\r" + " " * 79 + "\r")
+                    ui.pulisci_riga()
                     sys.stdout.write(_("{u} dice: {t}\n").format(u=user, t=text))
                     Acusticator(
                         [800.0, 0.1, 0, config.VOLUME, 1200.0, 0.1, 0, config.VOLUME],
@@ -1006,7 +1007,7 @@ def async_play_loop(q, game_state):
                 game_state.claim_win_in_seconds = claim_in
                 game_state.opponent_gone_time = time.time()
                 if gone and not getattr(game_state, "opponent_gone_announced", False):
-                    sys.stdout.write("\r" + " " * 79 + "\r")
+                    ui.pulisci_riga()
                     sys.stdout.write(
                         _(
                             "L'avversario ha lasciato la partita. Puoi reclamare la vittoria (comando: claim).\n"
@@ -1021,7 +1022,7 @@ def async_play_loop(q, game_state):
                 elif not gone and game_state.opponent_gone_announced:
                     # Se l'avversario torna
                     game_state.opponent_gone_announced = False
-                    sys.stdout.write("\r" + " " * 79 + "\r")
+                    ui.pulisci_riga()
                     sys.stdout.write(_("L'avversario e' tornato in partita.\n"))
                     Acusticator(
                         [300.0, 0.2, 0, config.VOLUME, 400.0, 0.2, 0, config.VOLUME],
