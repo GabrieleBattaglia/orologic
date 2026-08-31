@@ -61,7 +61,8 @@ def PastePGNFromClipboard():
         if not games:
             return None
         return games[0], is_corrected
-    except Exception:
+    # Rete di sicurezza: un errore qui non deve fermare il programma.
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -214,8 +215,10 @@ def SaveGameToFile(game):
         try:
             pyperclip.copy(pgn_str)
             print(_("PGN copiato automaticamente negli appunti."))
-        except Exception:
+        # Rete di sicurezza: un errore qui non deve fermare il programma.
+        except Exception:  # noqa: BLE001, S110
             pass
 
-    except Exception as e:
+    # Rete di sicurezza: un errore qui non deve fermare il programma.
+    except Exception as e:  # noqa: BLE001
         print(_("Errore durante il salvataggio del file PGN: {e}").format(e=e))

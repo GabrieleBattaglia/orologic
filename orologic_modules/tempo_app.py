@@ -402,5 +402,6 @@ def _salva_report_tempo(
         with open(txt_path, "w", encoding="utf-8") as f:
             f.write(file_content)
         print(_("Report salvato in: {path}").format(path=txt_path))
-    except Exception as e:
+    # Contorno della modalita' Tempo: si prosegue.
+    except Exception as e:  # noqa: BLE001
         print(_("Errore nel salvataggio del report: {error}").format(error=e))

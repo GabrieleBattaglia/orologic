@@ -76,7 +76,9 @@ def save_lichess_game(game_state, result_str="*"):
                     )
                 )
                 return
-        except Exception:
+        # Come sopra: la partita online continua anche se un dato
+        # secondario non si legge.
+        except Exception:  # noqa: BLE001, S110
             pass  # Procedi con la ricostruzione manuale se il parsing fallisce
 
     # Ricostruzione manuale (Fallback)
@@ -142,7 +144,9 @@ def save_lichess_game(game_state, result_str="*"):
         print(
             _("La partita e' stata salvata nella cartella PGN (ricostruzione locale).")
         )
-    except Exception as e:
+    # Come sopra: la partita online continua anche se un dato
+    # secondario non si legge.
+    except Exception as e:  # noqa: BLE001
         print(_("Errore nel salvataggio della partita PGN: {e}").format(e=e))
 
 
@@ -219,7 +223,9 @@ def _spectate_worker(url, token, q, stop_event):
                                 "vincitore": d.get("winner"),
                             }
                         )
-    except Exception as e:
+    # Come sopra: la partita online continua anche se un dato
+    # secondario non si legge.
+    except Exception as e:  # noqa: BLE001
         q.put({"tipo": "errore", "motivo": e})
     q.put({"tipo": "fine"})
 
@@ -978,7 +984,9 @@ def async_play_loop(q, game_state):
                             args=(game_state.game_id, game_state.token, "move", uci),
                             daemon=True,
                         ).start()
-                    except Exception:
+                    # Come sopra: la partita online continua anche se un dato
+                    # secondario non si legge.
+                    except Exception:  # noqa: BLE001
                         ui.pulisci_riga()
                         sys.stdout.write(
                             _("La premove ({m}) non e' piu' valida.\n").format(

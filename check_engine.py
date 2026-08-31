@@ -28,7 +28,9 @@ def main():
     print(f"Trovato: {percorso}")
     try:
         uci = chess.engine.SimpleEngine.popen_uci(percorso)
-    except Exception as e:
+    # Diagnostica: interessa proprio sapere che il motore non parte,
+    # qualunque sia il motivo.
+    except Exception as e:  # noqa: BLE001
         print(f"Il motore non si avvia: {e}")
         return 1
     try:

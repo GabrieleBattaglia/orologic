@@ -72,7 +72,9 @@ def translate_po_file(po_file_path, target_lang):
                 # Piccolo delay per non farsi bannare dall'API gratuita
                 time.sleep(0.5)
 
-        except Exception as e:
+        # Strumento di sviluppo: si vuole vedere qualsiasi problema
+        # senza interrompere la traduzione delle altre stringhe.
+        except Exception as e:  # noqa: BLE001
             print(f"\nErrore durante la traduzione di '{original}': {e}")
             entry.msgstr = ""  # Previene crash di polib
             continue

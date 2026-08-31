@@ -468,16 +468,19 @@ def Main():
                 with open(autosave_file_path, encoding="utf-8") as f:
                     dati_partita = json.load(f)
                 game_flow.RiprendiPartita(dati_partita)
-            except Exception as e:
+            # Il file di ripresa puo' essere di una versione precedente o
+            # essere stato scritto a meta': in ogni caso si dice perche' e
+            # si riparte puliti, invece di non far partire il programma.
+            except Exception as e:  # noqa: BLE001
                 print(_("Impossibile ripristinare la partita: {e}").format(e=e))
                 try:
                     os.remove(autosave_file_path)
-                except Exception:
+                except OSError:
                     pass
         else:
             try:
                 os.remove(autosave_file_path)
-            except Exception:
+            except OSError:
                 pass
 
     # Loop Principale
