@@ -8,7 +8,7 @@ import chess.pgn
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
 from .. import engine as orologic_engine
-from .. import orologio, storage, tempo, ui
+from .. import config, orologio, storage, tempo, ui
 from ..board_utils import CustomBoard, DescribeMove, NormalizeMove
 from ..config import _
 from . import analysis_utils
@@ -88,14 +88,14 @@ def _comandi_informativi(cmd, board, game_state, engine_instance):
                 except Exception:
                     pass
                 engine_instance.configure({"Skill Level": new_skill})
-                Acusticator(["g5", 0.05, 0, 0.5], kind=1)
+                Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1)
                 print(
                     _(
                         "Livello di forza del motore impostato a {n} (Skill Level)."
                     ).format(n=new_skill)
                 )
             else:
-                Acusticator([400.0, 0.2, 0, 0.5], kind=1)
+                Acusticator([400.0, 0.2, 0, config.VOLUME], kind=1)
                 print(_("Il livello deve essere compreso tra 0 e 20."))
         except Exception as e:
             print(_("Errore durante l'impostazione del livello: {e}").format(e=e))
@@ -122,19 +122,19 @@ def _valuta_fine_partita(board, current_node, game_state):
                     "c5",
                     0.1,
                     -0.5,
-                    0.5,
+                    config.VOLUME,
                     "e5",
                     0.1,
                     0,
-                    0.5,
+                    config.VOLUME,
                     "g5",
                     0.1,
                     0.5,
-                    0.5,
+                    config.VOLUME,
                     "c6",
                     0.2,
                     0,
-                    0.5,
+                    config.VOLUME,
                 ],
                 kind=1,
                 adsr=[2, 8, 90, 0],
@@ -148,19 +148,19 @@ def _valuta_fine_partita(board, current_node, game_state):
                     "c5",
                     0.1,
                     -0.5,
-                    0.5,
+                    config.VOLUME,
                     "e5",
                     0.1,
                     0,
-                    0.5,
+                    config.VOLUME,
                     "g5",
                     0.1,
                     0.5,
-                    0.5,
+                    config.VOLUME,
                     "c6",
                     0.2,
                     0,
-                    0.5,
+                    config.VOLUME,
                 ],
                 kind=1,
                 adsr=[2, 8, 90, 0],
@@ -174,19 +174,19 @@ def _valuta_fine_partita(board, current_node, game_state):
                     "c5",
                     0.1,
                     -0.5,
-                    0.5,
+                    config.VOLUME,
                     "e5",
                     0.1,
                     0,
-                    0.5,
+                    config.VOLUME,
                     "g5",
                     0.1,
                     0.5,
-                    0.5,
+                    config.VOLUME,
                     "c6",
                     0.2,
                     0,
-                    0.5,
+                    config.VOLUME,
                 ],
                 kind=1,
                 adsr=[2, 8, 90, 0],
@@ -200,19 +200,19 @@ def _valuta_fine_partita(board, current_node, game_state):
                     "c5",
                     0.1,
                     -0.5,
-                    0.5,
+                    config.VOLUME,
                     "e5",
                     0.1,
                     0,
-                    0.5,
+                    config.VOLUME,
                     "g5",
                     0.1,
                     0.5,
-                    0.5,
+                    config.VOLUME,
                     "c6",
                     0.2,
                     0,
-                    0.5,
+                    config.VOLUME,
                 ],
                 kind=1,
                 adsr=[2, 8, 90, 0],
@@ -226,19 +226,19 @@ def _valuta_fine_partita(board, current_node, game_state):
                     "c5",
                     0.1,
                     -0.5,
-                    0.5,
+                    config.VOLUME,
                     "e5",
                     0.1,
                     0,
-                    0.5,
+                    config.VOLUME,
                     "g5",
                     0.1,
                     0.5,
-                    0.5,
+                    config.VOLUME,
                     "c6",
                     0.2,
                     0,
-                    0.5,
+                    config.VOLUME,
                 ],
                 kind=1,
                 adsr=[2, 8, 90, 0],
@@ -266,19 +266,19 @@ def _partita_finita_dopo_la_mossa(board, current_node, game_state):
                 "c5",
                 0.1,
                 -0.5,
-                0.5,
+                config.VOLUME,
                 "e5",
                 0.1,
                 0,
-                0.5,
+                config.VOLUME,
                 "g5",
                 0.1,
                 0.5,
-                0.5,
+                config.VOLUME,
                 "c6",
                 0.2,
                 0,
-                0.5,
+                config.VOLUME,
             ],
             kind=1,
             adsr=[2, 8, 90, 0],
@@ -294,19 +294,19 @@ def _partita_finita_dopo_la_mossa(board, current_node, game_state):
                 "c5",
                 0.1,
                 -0.5,
-                0.5,
+                config.VOLUME,
                 "e5",
                 0.1,
                 0,
-                0.5,
+                config.VOLUME,
                 "g5",
                 0.1,
                 0.5,
-                0.5,
+                config.VOLUME,
                 "c6",
                 0.2,
                 0,
-                0.5,
+                config.VOLUME,
             ],
             kind=1,
             adsr=[2, 8, 90, 0],
@@ -322,19 +322,19 @@ def _partita_finita_dopo_la_mossa(board, current_node, game_state):
                 "c5",
                 0.1,
                 -0.5,
-                0.5,
+                config.VOLUME,
                 "e5",
                 0.1,
                 0,
-                0.5,
+                config.VOLUME,
                 "g5",
                 0.1,
                 0.5,
-                0.5,
+                config.VOLUME,
                 "c6",
                 0.2,
                 0,
-                0.5,
+                config.VOLUME,
             ],
             kind=1,
             adsr=[2, 8, 90, 0],
@@ -350,19 +350,19 @@ def _partita_finita_dopo_la_mossa(board, current_node, game_state):
                 "c5",
                 0.1,
                 -0.5,
-                0.5,
+                config.VOLUME,
                 "e5",
                 0.1,
                 0,
-                0.5,
+                config.VOLUME,
                 "g5",
                 0.1,
                 0.5,
-                0.5,
+                config.VOLUME,
                 "c6",
                 0.2,
                 0,
-                0.5,
+                config.VOLUME,
             ],
             kind=1,
             adsr=[2, 8, 90, 0],
@@ -378,19 +378,19 @@ def _partita_finita_dopo_la_mossa(board, current_node, game_state):
                 "c5",
                 0.1,
                 -0.5,
-                0.5,
+                config.VOLUME,
                 "e5",
                 0.1,
                 0,
-                0.5,
+                config.VOLUME,
                 "g5",
                 0.1,
                 0.5,
-                0.5,
+                config.VOLUME,
                 "c6",
                 0.2,
                 0,
-                0.5,
+                config.VOLUME,
             ],
             kind=1,
             adsr=[2, 8, 90, 0],
@@ -406,19 +406,19 @@ def _partita_finita_dopo_la_mossa(board, current_node, game_state):
                 "c5",
                 0.1,
                 -0.5,
-                0.5,
+                config.VOLUME,
                 "e5",
                 0.1,
                 0,
-                0.5,
+                config.VOLUME,
                 "g5",
                 0.1,
                 0.5,
-                0.5,
+                config.VOLUME,
                 "c6",
                 0.2,
                 0,
-                0.5,
+                config.VOLUME,
             ],
             kind=1,
             adsr=[2, 8, 90, 0],
@@ -434,19 +434,19 @@ def _partita_finita_dopo_la_mossa(board, current_node, game_state):
                 "c5",
                 0.1,
                 -0.5,
-                0.5,
+                config.VOLUME,
                 "e5",
                 0.1,
                 0,
-                0.5,
+                config.VOLUME,
                 "g5",
                 0.1,
                 0.5,
-                0.5,
+                config.VOLUME,
                 "c6",
                 0.2,
                 0,
-                0.5,
+                config.VOLUME,
             ],
             kind=1,
             adsr=[2, 8, 90, 0],
@@ -643,7 +643,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                                 # Attiva limitazione Elo
                                 engine_instance.configure({"UCI_LimitStrength": True})
                                 engine_instance.configure({"UCI_Elo": new_elo})
-                                Acusticator(["b5", 0.05, 0, 0.5], kind=1)
+                                Acusticator(["b5", 0.05, 0, config.VOLUME], kind=1)
                                 print(
                                     _(
                                         "Forza del motore impostata a Rating Elo: {n}."
@@ -691,7 +691,19 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                             game_state.active_color = board.turn
                             if sharing_window and sharing_window.is_active():
                                 sharing_window.update_board(board, current_node)
-                            Acusticator(["c4", 0.1, -1, 0.5, "e4", 0.1, 0, 0.5], kind=1)
+                            Acusticator(
+                                [
+                                    "c4",
+                                    0.1,
+                                    -1,
+                                    config.VOLUME,
+                                    "e4",
+                                    0.1,
+                                    0,
+                                    config.VOLUME,
+                                ],
+                                kind=1,
+                            )
                             print(
                                 _("Annullate {n} semimosse. Tocca a te.").format(
                                     n=steps
@@ -719,7 +731,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                             orologio.aggiungi(game_state, False, game_state.black_inc)
 
                         game_state.active_color = board.turn
-                        Acusticator([1000.0, 0.05, 0, 0.5], kind=1)
+                        Acusticator([1000.0, 0.05, 0, config.VOLUME], kind=1)
                         print(DescribeMove(move, current_node.parent.board()))
 
                         # Controlli fine partita
@@ -728,10 +740,10 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                         ):
                             break
                     else:
-                        Acusticator([400.0, 0.2, 0, 0.5], kind=1)
+                        Acusticator([400.0, 0.2, 0, config.VOLUME], kind=1)
                         print(_("Mossa illegale."))
                 except ValueError:
-                    Acusticator([400.0, 0.2, 0, 0.5], kind=1)
+                    Acusticator([400.0, 0.2, 0, config.VOLUME], kind=1)
                     print(_("Input non valido."))
 
             # --- TURNO MOTORE ---
@@ -770,7 +782,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                             sharing_window.update_board(board, current_node)
 
                         game_state.active_color = board.turn
-                        Acusticator([1000.0, 0.05, 0, 0.5], kind=1)
+                        Acusticator([1000.0, 0.05, 0, config.VOLUME], kind=1)
                         print(DescribeMove(result.move, current_node.parent.board()))
 
                         # Controlli fine partita

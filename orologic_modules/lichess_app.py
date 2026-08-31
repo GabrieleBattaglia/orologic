@@ -1250,7 +1250,10 @@ def menu_guarda(db):
                 numbered=db.get("menu_numerati", False),
             )
             if canale_scelto != ".":
-                game_id = data[canale_scelto]["gameId"]
+                game_id = data[canale_scelto].get("gameId")
+                if not game_id:
+                    print(_("Lichess non ha indicato quale partita: riprova."))
+                    continue
                 lichess_board.spectate_game(game_id, token)
 
 
@@ -1532,13 +1535,13 @@ def seek_game(token, params_dict):
 
     while t.is_alive() or not stop_seek.is_set():
         if problemi:
-            sys.stdout.write("\r" + " " * 79 + "\r")
+            ui.pulisci_riga()
             print(_("Ricerca interrotta. {motivo}").format(motivo=problemi[0]))
             return None
         if msvcrt.kbhit():
             if msvcrt.getwch() == "\x1b":
                 stop_seek.set()
-                sys.stdout.write("\r" + " " * 79 + "\r")
+                ui.pulisci_riga()
                 print(_("Ricerca annullata."))
                 return None
 
@@ -1549,7 +1552,7 @@ def seek_game(token, params_dict):
             elapsed = int(now - start_time)
             mins = elapsed // 60
             secs = elapsed % 60
-            sys.stdout.write("\r" + " " * 79 + "\r")
+            ui.pulisci_riga()
             sys.stdout.write(
                 _(
                     "Ricerca avversario in corso da {m:02d}:{s:02d}... (Premi ESC per annullare)"
@@ -1604,7 +1607,7 @@ def seek_game(token, params_dict):
         print(_("Avversario trovato!"))
         return game_id
     else:
-        sys.stdout.write("\r" + " " * 79 + "\r")
+        ui.pulisci_riga()
         print(_("Ricerca terminata o interrotta."))
         return None
 
@@ -1661,7 +1664,11 @@ def menu_gioca(db):
             print(_("\nAvvio partita in corso..."))
             game_info = challenge_ai(token, level, params)
             if game_info:
-                print(_("Partita avviata! ID: {id}").format(id=game_info["id"]))
+                print(
+                    _("Partita avviata! ID: {id}").format(
+                        id=game_info.get("id", _("sconosciuto"))
+                    )
+                )
                 lichess_board.play_game(
                     game_info["id"], token, secrets.get("lichess_username")
                 )
@@ -1760,7 +1767,7 @@ def menu_gioca(db):
 
             for c in challenges:
                 c_id = c["id"]
-                challenger = c["challenger"]["name"]
+                challenger = c.get("challenger", {}).get("name", _("Anonimo"))
                 variant = c["variant"]["name"]
                 speed = c["speed"]
                 rated = _("Classificata") if c["rated"] else _("Amichevole")
@@ -1999,7 +2006,7 @@ def run():
 
             for c in challenges:
                 c_id = c["id"]
-                challenger = c["challenger"]["name"]
+                challenger = c.get("challenger", {}).get("name", _("Anonimo"))
                 variant = c["variant"]["name"]
                 speed = c["speed"]
                 rated = _("Classificata") if c["rated"] else _("Amichevole")
