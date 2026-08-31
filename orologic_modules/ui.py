@@ -8,7 +8,6 @@ import sys
 import time
 
 import chess
-
 from GBUtils import Acusticator, dgt, key
 from GBUtils import enter_escape as _enter_escape_gbutils
 

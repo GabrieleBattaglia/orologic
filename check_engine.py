@@ -11,6 +11,7 @@ versione: cosi' questo controllo dice la verita' su cosa fara' Orologic.
 import sys
 
 import chess.engine
+
 from orologic_modules import engine as motore_orologic
 
 

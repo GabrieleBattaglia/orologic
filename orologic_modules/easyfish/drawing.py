@@ -4,7 +4,6 @@
 import re
 
 import chess
-
 from GBUtils import Acusticator, dgt
 
 from .. import config, localizzazione

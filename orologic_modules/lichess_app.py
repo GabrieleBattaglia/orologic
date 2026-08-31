@@ -8,7 +8,6 @@ import webbrowser
 
 import chess
 import chess.pgn
-
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
 from . import board_utils, config, lichess_board, lichess_profiler, rete, storage, ui
@@ -19,7 +18,7 @@ SECRETS_FILE = percorso_salvataggio(os.path.join("settings", "secrets.json"))
 
 def load_secrets():
     try:
-        with open(SECRETS_FILE, "r", encoding="utf-8") as f:
+        with open(SECRETS_FILE, encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return {}
@@ -711,11 +710,10 @@ def get_last_moves_san(board, num=5):
         san = temp_board.san(m)
         if temp_board.turn == chess.WHITE:
             parts.append(f"{temp_board.fullmove_number}. {san}")
+        elif not parts:
+            parts.append(f"{temp_board.fullmove_number}... {san}")
         else:
-            if not parts:
-                parts.append(f"{temp_board.fullmove_number}... {san}")
-            else:
-                parts.append(san)
+            parts.append(san)
         temp_board.push(m)
     return " ".join(parts)
 
@@ -927,14 +925,7 @@ def menu_puzzle(db):
                     print(_("Tempo impiegato: {t}").format(t=time_str))
                 break
 
-            if (
-                user_input.startswith(".")
-                or user_input.startswith("/")
-                or user_input.startswith("\\")
-                or user_input.startswith("-")
-                or user_input.startswith(",")
-                or user_input == "+"
-            ):
+            if user_input.startswith((".", "/", "\\", "-", ",")) or user_input == "+":
                 continue
 
             try:
@@ -1529,12 +1520,11 @@ def seek_game(token, params_dict):
             ui.pulisci_riga()
             print(_("Ricerca interrotta. {motivo}").format(motivo=problemi[0]))
             return None
-        if msvcrt.kbhit():
-            if msvcrt.getwch() == "\x1b":
-                stop_seek.set()
-                ui.pulisci_riga()
-                print(_("Ricerca annullata."))
-                return None
+        if msvcrt.kbhit() and msvcrt.getwch() == "\x1b":
+            stop_seek.set()
+            ui.pulisci_riga()
+            print(_("Ricerca annullata."))
+            return None
 
         now = time.time()
 

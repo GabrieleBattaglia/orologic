@@ -8,7 +8,6 @@ import os
 import chess
 import chess.pgn
 import pyperclip
-
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
 from . import (
@@ -288,7 +287,7 @@ def annulla_ultima_mossa(game_state):
             # Senza questo, il riepilogo testuale di fine partita
             # conteneva la mossa annullata e sfalsava la numerazione.
             game_state.descriptive_move_history.pop()
-        print(_("Ultima mossa annullata: ") + undone_move_san)
+        print(_("Ultima mossa annullata: {mossa}").format(mossa=undone_move_san))
         return True
     return False
 
@@ -325,7 +324,7 @@ def assegna_risultato(cmd, game_state):
         result = "1/2-1/2"
     else:
         result = "*"
-    print(_("Risultato assegnato: ") + result)
+    print(_("Risultato assegnato: {risultato}").format(risultato=result))
     game_state.pgn_game.headers["Result"] = result
     game_state.game_over = True
 
@@ -357,7 +356,11 @@ def commenta_mossa(cmd, game_state):
                 kind=1,
                 adsr=[3, 7, 88, 2],
             )
-            print(_("Commento registrato per la mossa: ") + game_state.move_history[-1])
+            print(
+                _("Commento registrato per la mossa {mossa}").format(
+                    mossa=game_state.move_history[-1]
+                )
+            )
         else:
             print(_("Nessuna mossa da commentare."))
 
@@ -590,7 +593,7 @@ def salva_pgn_partita(pgn_str, nome_file):
                     errore=ultimo_errore
                 )
             )
-        print(_("PGN salvato come ") + percorso + ".")
+        print(_("PGN salvato come {percorso}.").format(percorso=percorso))
         return percorso
     print(
         _("Non sono riuscita a salvare il PGN su disco: {errore}").format(
@@ -758,8 +761,8 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                     hasattr(game_state, "cancelled_san_moves")
                     and game_state.cancelled_san_moves
                 ):
-                    undo_comment = _("Mosse annullate: ") + " ".join(
-                        game_state.cancelled_san_moves
+                    undo_comment = _("Mosse annullate: {mosse}").format(
+                        mosse=" ".join(game_state.cancelled_san_moves)
                     )
                     existing_comment = new_node.comment or ""
                     if existing_comment:
@@ -784,7 +787,11 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                                 variation=eco_entry["variation"]
                             )
                     if new_eco_msg and new_eco_msg != last_eco_msg:
-                        print(_("Apertura rilevata: ") + new_eco_msg)
+                        print(
+                            _("Apertura rilevata: {apertura}").format(
+                                apertura=new_eco_msg
+                            )
+                        )
                         Acusticator(["f7", 0.018, 0, config.VOLUME])
                         last_eco_msg = new_eco_msg
                         last_valid_eco_entry = current_entry_this_turn

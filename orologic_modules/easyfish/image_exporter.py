@@ -9,14 +9,13 @@ from xml.sax.saxutils import escape
 
 import chess
 import chess.svg
+from GBUtils import Acusticator, dgt
 from reportlab.graphics import renderPDF
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Spacer
 from svglib.svglib import svg2rlg
-
-from GBUtils import Acusticator, dgt
 
 from .. import config, storage
 from ..config import _

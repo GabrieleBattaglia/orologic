@@ -13,7 +13,6 @@ import chess.engine
 import chess.pgn
 import numpy as np
 import pyperclip
-
 from GBUtils import Acusticator, dgt, key, menu
 
 from . import board_utils, config, localizzazione, storage, ui, version
@@ -188,7 +187,7 @@ def InitEngine():
 
     cfg = db.get("engine_config", {})
     if not cfg:
-        p, e, unused_v = SearchForEngine()
+        p, e, _unused_v = SearchForEngine()
         if not (p and e):
             ENGINE = None
             ENGINE_NAME = "Nessuno"
@@ -330,12 +329,11 @@ def CalculateBest(board, bestmove=True, as_san=False):
                     )
                 Acusticator(["d6", 0.008, 1, config.VOLUME])
                 return descriptive_moves
+        elif bestmove:
+            Acusticator(["g5", 0.008, 1, config.VOLUME])
+            return best_line[0]
         else:
-            if bestmove:
-                Acusticator(["g5", 0.008, 1, config.VOLUME])
-                return best_line[0]
-            else:
-                return best_line
+            return best_line
     except Exception:
         return None
 
@@ -1156,7 +1154,6 @@ def AnalyzeGame(pgn_game, is_corrected=False):
 
 
 def analyze_position_deep(board, limit, multipv_count=3):
-    global oaa_analysis_cache
     fen = board.fen()
     cache_key = f"{fen}_{limit.time}_{limit.depth}_{limit.nodes}_{multipv_count}"
     if cache_key in oaa_analysis_cache:
@@ -1231,7 +1228,7 @@ def _stampa_albero_pgn(
         details.append(_("CPL: {c:.2f}").format(c=cpl / 100))
 
     if details:
-        line_content += " ({0})".format(", ".join(details))
+        line_content += " ({})".format(", ".join(details))
 
     if classif:
         label = classification_labels.get(classif, classif)
@@ -1542,8 +1539,8 @@ def _parametri_analisi_automatica(pgn_game, db):
             )
     else:
         mosse_da_saltare = dgt(
-            _(
-                f"Quante semimosse (ply) iniziali vuoi saltare? (INVIO per {mosse_da_saltare}) "
+            _("Quante semimosse iniziali vuoi saltare? (INVIO per {n}) ").format(
+                n=mosse_da_saltare
             ),
             kind="i",
             imin=0,
@@ -1717,7 +1714,6 @@ def AnalisiAutomatica(pgn_game):
     )
     start_time = time.time()
 
-    global oaa_analysis_cache
     oaa_analysis_cache.clear()
 
     # Assicuriamoci di essere alla radice

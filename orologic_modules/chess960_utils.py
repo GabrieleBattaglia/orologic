@@ -8,7 +8,6 @@ Espone funzioni per generare posizioni, configurare il motore e interagire con l
 import random
 
 import chess.engine
-
 from GBUtils import Acusticator, dgt
 
 from . import board_utils, config, localizzazione

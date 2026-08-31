@@ -9,7 +9,17 @@ import sys
 import time
 import warnings
 
-from dateutil.relativedelta import relativedelta
+from GBUtils import (
+    Acusticator,
+    Donazione,
+    dgt,
+    enter_escape,
+    key,
+    menu,
+    perform_update,
+    update_checker,
+)
+
 from orologic_modules import (
     board_utils,
     cleaner,
@@ -28,17 +38,6 @@ from orologic_modules import (
 )
 from orologic_modules.config import _, lingua_rilevata
 from orologic_modules.easyfish import easyfish_app
-
-from GBUtils import (
-    Acusticator,
-    Donazione,
-    dgt,
-    enter_escape,
-    key,
-    menu,
-    perform_update,
-    update_checker,
-)
 
 warnings.filterwarnings(
     "ignore", message="urllib3 .* doesn't match a supported version!"
@@ -466,7 +465,7 @@ def Main():
             )
         ):
             try:
-                with open(autosave_file_path, "r", encoding="utf-8") as f:
+                with open(autosave_file_path, encoding="utf-8") as f:
                     dati_partita = json.load(f)
                 game_flow.RiprendiPartita(dati_partita)
             except Exception as e:

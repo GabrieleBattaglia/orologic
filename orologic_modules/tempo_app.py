@@ -182,9 +182,9 @@ def _loop_tempo(game_state, clock_config):
                     ordered=False,
                 )
 
-            elif ui.comandi_orologio(cmd, game_state):
-                pass
-            elif ui.comandi_pausa(cmd, game_state):
+            elif ui.comandi_orologio(cmd, game_state) or ui.comandi_pausa(
+                cmd, game_state
+            ):
                 pass
             elif cmd == ".q":
                 if not game_state.move_history:

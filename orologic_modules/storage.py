@@ -167,7 +167,7 @@ def LoadDB():
     if not os.path.exists(config.DB_FILE):
         return dict(DEFAULT_DB)
     try:
-        with open(config.DB_FILE, "r", encoding="utf-8") as f:
+        with open(config.DB_FILE, encoding="utf-8") as f:
             dati = json.load(f)
     except (OSError, ValueError) as e:
         copia = _salva_copia_danneggiata()

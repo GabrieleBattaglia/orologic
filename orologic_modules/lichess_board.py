@@ -9,7 +9,6 @@ import threading
 import time
 
 import chess
-
 from GBUtils import Acusticator
 
 from . import board_utils, config, rete, tempo, ui
@@ -1029,9 +1028,8 @@ def async_play_loop(q, game_state):
                         kind=1,
                     )
                     refresh_line()
-                else:
-                    if gone:
-                        refresh_line()  # To update the prompt with [CLAIM]
+                elif gone:
+                    refresh_line()  # To update the prompt with [CLAIM]
         except queue.Empty:
             pass
 

@@ -3,7 +3,6 @@
 
 import chess
 import chess.engine
-
 from GBUtils import dgt, key, menu
 
 from .. import engine as orologic_engine
@@ -261,24 +260,22 @@ def BoardEditor(starting_fen=None, sharing_window=None):
                         print(_("Non puoi rimuovere il Re. Spostalo usando Ke4 o ke4."))
                     else:
                         tmp_board.remove_piece_at(square)
+                elif p_name.upper() == "K":
+                    color = chess.WHITE if p_name.isupper() else chess.BLACK
+                    old_sq = tmp_board.king(color)
+                    if old_sq is not None:
+                        tmp_board.remove_piece_at(old_sq)
+                    tmp_board.set_piece_at(square, chess.Piece(chess.KING, color))
+                elif existing_piece and existing_piece.piece_type == chess.KING:
+                    print(
+                        _("Casa occupata dal Re. Sposta prima il Re in {sq}.").format(
+                            sq=sq_str
+                        )
+                    )
                 else:
-                    if p_name.upper() == "K":
-                        color = chess.WHITE if p_name.isupper() else chess.BLACK
-                        old_sq = tmp_board.king(color)
-                        if old_sq is not None:
-                            tmp_board.remove_piece_at(old_sq)
-                        tmp_board.set_piece_at(square, chess.Piece(chess.KING, color))
-                    else:
-                        if existing_piece and existing_piece.piece_type == chess.KING:
-                            print(
-                                _(
-                                    "Casa occupata dal Re. Sposta prima il Re in {sq}."
-                                ).format(sq=sq_str)
-                            )
-                        else:
-                            color = chess.WHITE if p_name.isupper() else chess.BLACK
-                            p_type = chess.PIECE_SYMBOLS.index(p_name.lower())
-                            tmp_board.set_piece_at(square, chess.Piece(p_type, color))
+                    color = chess.WHITE if p_name.isupper() else chess.BLACK
+                    p_type = chess.PIECE_SYMBOLS.index(p_name.lower())
+                    tmp_board.set_piece_at(square, chess.Piece(p_type, color))
 
         except (ValueError, IndexError):
             print(_("Input non riconosciuto."))
@@ -337,11 +334,10 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
             b_curr = node.parent.board()
             if b_curr.turn == chess.WHITE:
                 current_str = f"{b_curr.fullmove_number}. {node.san()}"
+            elif p_node and p_node.move and p_node.parent.board().turn == chess.WHITE:
+                current_str = f"{node.san()}"
             else:
-                if p_node and p_node.move and p_node.parent.board().turn == chess.WHITE:
-                    current_str = f"{node.san()}"
-                else:
-                    current_str = f"{b_curr.fullmove_number}...{node.san()}"
+                current_str = f"{b_curr.fullmove_number}...{node.san()}"
         else:
             current_str = _("inizio")
 
@@ -350,11 +346,10 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
             b_next = current_board
             if b_next.turn == chess.WHITE:
                 next_str = f"{b_next.fullmove_number}. {v_node.san()}"
+            elif node.move and node.parent.board().turn == chess.WHITE:
+                next_str = f"{v_node.san()}"
             else:
-                if node.move and node.parent.board().turn == chess.WHITE:
-                    next_str = f"{v_node.san()}"
-                else:
-                    next_str = f"{b_next.fullmove_number}...{v_node.san()}"
+                next_str = f"{b_next.fullmove_number}...{v_node.san()}"
         else:
             next_str = game.headers.get("Result", _("fine"))
 
