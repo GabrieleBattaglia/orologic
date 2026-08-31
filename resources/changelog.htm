@@ -18,6 +18,13 @@ li { margin-bottom: 0.3em; }
 <body>
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
+<h3>Versione 8.15</h3>
+<h4>8.15.0 (1 settembre 2026)</h4>
+<ul>
+  <li>* [Core] La descrizione parlata delle mosse è stata riscritta: viene costruita direttamente dalla mossa e dalla posizione, invece di ricomporre la notazione algebrica per poi rileggerla con due espressioni regolari. Il testo pronunciato non cambia di una virgola, verificato su 4889 descrizioni tratte dalle partite salvate e dai casi rari costruiti apposta, arrocchi Fischer Random compresi.</li>
+  <li>* [L10N] Sette messaggi erano composti accostando un'etichetta tradotta ed un valore, forma che obbliga ogni lingua a mantenere l'ordine delle parole italiano. Ora sono frasi intere con il segnaposto all'interno. Corretta inoltre una domanda dell'analisi automatica che, per come era scritta, non sarebbe mai stata tradotta in nessuna lingua.</li>
+  <li>+ [Docs] Il progetto ha ora una configurazione esplicita del validatore, con le regole attive e, accanto a quelle spente, il motivo della scelta. Il controllo passa senza segnalazioni: da qui in avanti ogni segnalazione è un difetto vero.</li>
+</ul>
 <h3>Versione 8.14</h3>
 <h4>8.14.7 (31 agosto 2026)</h4>
 <ul>

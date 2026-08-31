@@ -4,11 +4,10 @@
 import chess
 import chess.engine
 import chess.pgn
-
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
-from .. import engine as orologic_engine
 from .. import config, orologio, storage, tempo, ui
+from .. import engine as orologic_engine
 from ..board_utils import CustomBoard, DescribeMove, NormalizeMove
 from ..config import _
 from . import analysis_utils

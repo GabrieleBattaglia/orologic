@@ -113,7 +113,7 @@ DB_FILE = percorso_salvataggio(os.path.join("settings", "orologic_db.json"))
 # per una lettura sola, di un file di pochi kilobyte, fatta una volta
 # all'avvio. Misurato: e' l'unica lettura durante l'import.
 try:
-    with open(DB_FILE, "r", encoding="utf-8") as f:
+    with open(DB_FILE, encoding="utf-8") as f:
         _db_data = json.load(f)
         VOLUME = _db_data.get("volume", 1.0)
 except Exception:

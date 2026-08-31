@@ -8,7 +8,6 @@ import re
 import chess
 import chess.engine
 import pyperclip
-
 from GBUtils import Acusticator, dgt, menu
 
 from .. import chess960_utils, config, ui
@@ -43,7 +42,6 @@ def custom_print(*args, **kwargs):
     text = sep.join(str(arg) for arg in args)
     if not text.strip():
         return
-    global sharing_window, show_output_on_board
     if show_output_on_board and sharing_window and sharing_window.is_active():
         sharing_window.update_text(text)
 
@@ -247,20 +245,19 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
     elif cmd in [".csb", ".csn", ".cst"]:
         if sharing_window is None or not sharing_window.is_active():
             print(_("Errore: devi prima avviare la condivisione con il comando .cs"))
-        else:
-            if cmd == ".csb":
-                sharing_window.set_orientation("white")
-                print(_("Orientamento scacchiera condivisa impostato: Bianco (fisso)."))
-            elif cmd == ".csn":
-                sharing_window.set_orientation("black")
-                print(_("Orientamento scacchiera condivisa impostato: Nero (fisso)."))
-            elif cmd == ".cst":
-                sharing_window.set_orientation("turn")
-                print(
-                    _(
-                        "Orientamento scacchiera condivisa impostato: in base al turno (dinamico)."
-                    )
+        elif cmd == ".csb":
+            sharing_window.set_orientation("white")
+            print(_("Orientamento scacchiera condivisa impostato: Bianco (fisso)."))
+        elif cmd == ".csn":
+            sharing_window.set_orientation("black")
+            print(_("Orientamento scacchiera condivisa impostato: Nero (fisso)."))
+        elif cmd == ".cst":
+            sharing_window.set_orientation("turn")
+            print(
+                _(
+                    "Orientamento scacchiera condivisa impostato: in base al turno (dinamico)."
                 )
+            )
     else:
         return False
     return True
@@ -679,7 +676,7 @@ def _esegui():
                     )
                 )
                 if not is_standard:
-                    fr_board, fr_fen, fr_num = (
+                    fr_board, fr_fen, _fr_num = (
                         chess960_utils.setup_fischer_random_board_interactive()
                     )
                     if fr_board is not None:

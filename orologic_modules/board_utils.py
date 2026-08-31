@@ -7,7 +7,6 @@ import re
 
 import chess
 import chess.pgn
-
 from GBUtils import Acusticator
 
 from . import config, localizzazione, orologio, tempo
@@ -64,164 +63,127 @@ def NormalizeMove(m):
         return m
 
 
+def _disambiguazione(board, move, tipo_pezzo):
+    """La parte di notazione che distingue due pezzi uguali sulla stessa casa.
+
+    Restituisce la colonna, la traversa o la casa intera di partenza,
+    oppure una stringa vuota se non serve distinguere niente.
+    """
+    origini = [
+        legale.from_square
+        for legale in board.legal_moves
+        if legale.to_square == move.to_square
+        and (pezzo := board.piece_at(legale.from_square))
+        and pezzo.piece_type == tipo_pezzo
+    ]
+    if len(origini) <= 1:
+        return ""
+    partenza = chess.square_name(move.from_square)
+    stessa_colonna = any(
+        sq != move.from_square
+        and chess.square_file(sq) == chess.square_file(move.from_square)
+        for sq in origini
+    )
+    if not stessa_colonna:
+        return partenza[0]
+    stessa_traversa = any(
+        sq != move.from_square
+        and chess.square_rank(sq) == chess.square_rank(move.from_square)
+        for sq in origini
+    )
+    return partenza[1] if not stessa_traversa else partenza
+
+
+def _pezzo_catturato(board, move):
+    """Il pezzo che la mossa porta via, tenendo conto della presa al varco."""
+    if board.is_en_passant(move):
+        colonna = chess.square_file(move.to_square)
+        traversa = chess.square_rank(move.from_square)
+        return board.piece_at(chess.square(colonna, traversa))
+    return board.piece_at(move.to_square)
+
+
+def _nome_pezzo(tipo):
+    """Il nome del pezzo nella lingua e nei termini scelti dall'utente."""
+    return localizzazione.L10N["pieces"][chess.PIECE_NAMES[tipo].lower()]["name"]
+
+
 def DescribeMove(move, board, annotation=None):
+    """Descrive a parole una mossa, come va detta a voce.
+
+    La descrizione si costruisce dai dati della mossa e della posizione.
+    Prima passava per la notazione algebrica, ricostruita a mano e poi
+    riletta con due espressioni regolari: centosessanta righe per tornare
+    ai dati che si avevano gia' in partenza.
+    """
     L10N = localizzazione.L10N
     if board.is_castling(move):
-        base_descr = (
-            L10N["moves"]["short_castle"]
-            if chess.square_file(move.to_square) > chess.square_file(move.from_square)
-            else L10N["moves"]["long_castle"]
-        )
+        corto = chess.square_file(move.to_square) > chess.square_file(move.from_square)
+        base_descr = L10N["moves"]["short_castle" if corto else "long_castle"]
     else:
-        san_base = ""
-        try:
-            piece_moved = board.piece_at(move.from_square)
-            is_capture = board.is_capture(move) or board.is_en_passant(move)
-            is_promo = move.promotion is not None
-            piece_symbol = ""
-            if piece_moved and piece_moved.piece_type != chess.PAWN:
-                piece_symbol = piece_moved.symbol().upper()
-            from_sq_str = chess.square_name(move.from_square)
-            to_sq_str = chess.square_name(move.to_square)
-            disambiguation = ""
-            if piece_symbol:
-                potential_origins = []
-                for legal_move in board.legal_moves:
-                    lm_piece = board.piece_at(legal_move.from_square)
-                    if (
-                        lm_piece
-                        and lm_piece.piece_type == piece_moved.piece_type
-                        and legal_move.to_square == move.to_square
-                    ):
-                        potential_origins.append(legal_move.from_square)
-                if len(potential_origins) > 1:
-                    file_disamb_needed = False
-                    for sq in potential_origins:
-                        if sq != move.from_square and chess.square_file(
-                            sq
-                        ) == chess.square_file(move.from_square):
-                            file_disamb_needed = True
-                            break
-                    if not file_disamb_needed:
-                        disambiguation = from_sq_str[0]
-                    else:
-                        rank_disamb_needed = False
-                        for sq in potential_origins:
-                            if sq != move.from_square and chess.square_rank(
-                                sq
-                            ) == chess.square_rank(move.from_square):
-                                rank_disamb_needed = True
-                                break
-                        if not rank_disamb_needed:
-                            disambiguation = from_sq_str[1]
-                        else:
-                            disambiguation = from_sq_str
-            promo_str = ""
-            if is_promo:
-                promo_piece_symbol = chess.piece_symbol(move.promotion).upper()
-                promo_str = f"={promo_piece_symbol}"
-            capture_char = "x" if is_capture else ""
-            if piece_symbol:
-                san_base = f"{piece_symbol}{disambiguation}{capture_char}{to_sq_str}{promo_str}"
-            else:
-                if is_capture:
-                    san_base = f"{from_sq_str[0]}{capture_char}{to_sq_str}{promo_str}"
-                else:
-                    san_base = f"{to_sq_str}{promo_str}"
-        except Exception:
-            try:
-                san_base = board.san(move).replace("!", "").replace("?", "")
-            except Exception:
-                san_base = _("Mossa da {from_sq} a {to_sq}").format(
-                    from_sq=chess.square_name(move.from_square),
-                    to_sq=chess.square_name(move.to_square),
-                )
-
-        pattern = re.compile(
-            r"^([RNBQK])?([a-h1-8]{1,2})?(x)?([a-h][1-8])(=([RNBQ]))?$"
-        )
-        pawn_pattern = re.compile(r"^([a-h])?(x)?([a-h][1-8])(=([RNBQ]))?$")
-        m = pattern.match(san_base)
-        if m and m.group(1):
-            piece_letter = m.group(1)
-            disamb = m.group(2) or ""
-            capture = m.group(3)
-            dest = m.group(4)
-            promo_letter = m.group(6)
-            piece_type = chess.PIECE_SYMBOLS.index(piece_letter.lower())
+        mosso = board.piece_at(move.from_square)
+        if mosso is None:
+            base_descr = _("Mossa da {from_sq} a {to_sq}").format(
+                from_sq=chess.square_name(move.from_square),
+                to_sq=chess.square_name(move.to_square),
+            )
         else:
-            m = pawn_pattern.match(san_base)
-            if m:
-                piece_letter = ""
-                disamb = m.group(1) or ""
-                capture = m.group(2)
-                dest = m.group(3)
-                promo_letter = m.group(5)
-                piece_type = chess.PAWN
-            else:
-                base_descr = san_base
-                piece_type = None
+            e_pedone = mosso.piece_type == chess.PAWN
+            cattura = board.is_capture(move) or board.is_en_passant(move)
+            arrivo = chess.square_name(move.to_square)
+            descr = _nome_pezzo(mosso.piece_type)
 
-        if piece_type is not None:
-            piece_type_key = chess.PIECE_NAMES[piece_type].lower()
-            piece_name = L10N["pieces"][piece_type_key]["name"]
-            descr = piece_name
-            if disamb:
-                if piece_type == chess.PAWN:
-                    descr += " {col}".format(col=L10N["columns"].get(disamb, disamb))
-                else:
-                    parts = [
-                        L10N["columns"].get(ch, ch) if ch.isalpha() else ch
-                        for ch in disamb
-                    ]
-                    descr += _(" di ") + "".join(parts)
-            if capture:
-                descr += " {capture_verb}".format(capture_verb=L10N["moves"]["capture"])
-                if board.is_en_passant(move):
-                    ep_square = move.to_square + (
-                        -8 if board.turn == chess.WHITE else 8
+            if e_pedone:
+                # Del pedone si dice la colonna di partenza solo quando
+                # mangia, perche' e' li' che serve a capire da dove viene.
+                if cattura:
+                    partenza = chess.square_name(move.from_square)[0]
+                    descr += " {col}".format(
+                        col=L10N["columns"].get(partenza, partenza)
                     )
-                    captured_piece = board.piece_at(ep_square)
-                else:
-                    captured_piece = board.piece_at(move.to_square)
-                if captured_piece:
-                    captured_type_key = chess.PIECE_NAMES[
-                        captured_piece.piece_type
-                    ].lower()
-                    captured_name = L10N["pieces"][captured_type_key]["name"]
-                    descr += f" {captured_name}"
+            else:
+                distinzione = _disambiguazione(board, move, mosso.piece_type)
+                if distinzione:
+                    parti = [
+                        L10N["columns"].get(c, c) if c.isalpha() else c
+                        for c in distinzione
+                    ]
+                    descr += _(" di ") + "".join(parti)
+
+            if cattura:
+                descr += " {capture_verb}".format(capture_verb=L10N["moves"]["capture"])
+                catturato = _pezzo_catturato(board, move)
+                if catturato:
+                    descr += f" {_nome_pezzo(catturato.piece_type)}"
                 if board.is_en_passant(move):
                     descr += " {ep}".format(ep=L10N["moves"]["en_passant"])
-                descr += " {prep} {file} {rank}".format(
-                    prep=L10N["moves"]["capture_on"],
-                    file=L10N["columns"].get(dest[0], dest[0]),
-                    rank=dest[1],
-                )
+                preposizione = L10N["moves"]["capture_on"]
             else:
-                descr += " {prep} {file} {rank}".format(
-                    prep=L10N["moves"]["move_to"],
-                    file=L10N["columns"].get(dest[0], dest[0]),
-                    rank=dest[1],
-                )
-            if promo_letter:
-                promo_type = chess.PIECE_SYMBOLS.index(promo_letter.lower())
-                promo_type_key = chess.PIECE_NAMES[promo_type].lower()
+                preposizione = L10N["moves"]["move_to"]
+
+            descr += " {prep} {file} {rank}".format(
+                prep=preposizione,
+                file=L10N["columns"].get(arrivo[0], arrivo[0]),
+                rank=arrivo[1],
+            )
+
+            if move.promotion is not None:
                 descr += " {promo_verb} {promo_name}".format(
                     promo_verb=L10N["moves"]["promotes_to"],
-                    promo_name=L10N["pieces"][promo_type_key]["name"],
+                    promo_name=_nome_pezzo(move.promotion),
                 )
             base_descr = descr
 
-    board_after = board.copy()
-    board_after.push(move)
-    final_descr = base_descr
-    if board_after.is_checkmate():
-        final_descr += " {checkmate}".format(checkmate=L10N["moves"]["checkmate"])
-    elif board_after.is_check():
-        final_descr += " {check}".format(check=L10N["moves"]["check"])
+    dopo = board.copy()
+    dopo.push(move)
+    finale = base_descr
+    if dopo.is_checkmate():
+        finale += " {checkmate}".format(checkmate=L10N["moves"]["checkmate"])
+    elif dopo.is_check():
+        finale += " {check}".format(check=L10N["moves"]["check"])
     if annotation and annotation in L10N["annotations"]:
-        final_descr += " ({a})".format(a=L10N["annotations"][annotation])
-    return final_descr
+        finale += " ({a})".format(a=L10N["annotations"][annotation])
+    return finale
 
 
 def prompt_partita(game_state):
@@ -468,7 +430,6 @@ _eco_database_cache = {}
 
 
 def LoadEcoDatabaseWithFEN(filename="eco.db"):
-    global _eco_database_cache
     db_path = config.resource_path(os.path.join("resources", filename))
     if db_path in _eco_database_cache:
         return _eco_database_cache[db_path]
@@ -478,7 +439,7 @@ def LoadEcoDatabaseWithFEN(filename="eco.db"):
         print(_("File {filename} non trovato.").format(filename=db_path))
         return eco_entries
     try:
-        with open(db_path, "r", encoding="utf-8") as f:
+        with open(db_path, encoding="utf-8") as f:
             content = f.read()
     except Exception as e:
         print(
@@ -807,15 +768,17 @@ def AnalizzaEStampaStatisticheTempo(game_state, color_filter=None):
         user_moves = []
         for idx in range(len(game_state.move_history)):
             is_white = idx % 2 == 0
-            if (is_white and color == chess.WHITE) or (
-                not is_white and color == chess.BLACK
+            if (
+                (
+                    (is_white and color == chess.WHITE)
+                    or (not is_white and color == chess.BLACK)
+                )
+                and hasattr(game_state, "move_times")
+                and idx < len(game_state.move_times)
             ):
-                if hasattr(game_state, "move_times") and idx < len(
-                    game_state.move_times
-                ):
-                    user_moves.append(
-                        (idx, game_state.move_history[idx], game_state.move_times[idx])
-                    )
+                user_moves.append(
+                    (idx, game_state.move_history[idx], game_state.move_times[idx])
+                )
 
         if not user_moves:
             continue

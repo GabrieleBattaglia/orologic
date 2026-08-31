@@ -21,8 +21,8 @@ from collections import defaultdict
 import chess
 import chess.pgn
 import pyperclip
-
 from GBUtils import dgt, enter_escape, key, menu
+
 from orologic_modules import board_utils, engine
 from orologic_modules.config import _
 
@@ -105,7 +105,7 @@ def _carica_archivio():
     if os.path.isfile(clipboard):
         print(_("Rilevato percorso file: {path}").format(path=clipboard))
         try:
-            with open(clipboard, "r", encoding="utf-8", errors="replace") as f:
+            with open(clipboard, encoding="utf-8", errors="replace") as f:
                 pgn_text = f.read()
         except Exception as e:
             print(_("Errore nella lettura del file: {e}").format(e=e))
@@ -769,15 +769,13 @@ def _applica_filtri(info_list, filtri):
 
         # Filtro anno dal
         yf = filtri.get("year_from")
-        if yf:
-            if info["Year"] is None or info["Year"] < yf:
-                continue
+        if yf and (info["Year"] is None or info["Year"] < yf):
+            continue
 
         # Filtro anno al
         yt = filtri.get("year_to")
-        if yt:
-            if info["Year"] is None or info["Year"] > yt:
-                continue
+        if yt and (info["Year"] is None or info["Year"] > yt):
+            continue
 
         # Filtro ECO
         feco = filtri.get("eco")
@@ -1223,11 +1221,10 @@ def _mosse_continuazione(game, ramo_mosse, max_mosse=5):
         fullmove = board.fullmove_number
         if board.turn == chess.WHITE:
             parti.append(f"{fullmove}. {san}")
+        elif not parti:
+            parti.append(f"{fullmove}... {san}")
         else:
-            if not parti:
-                parti.append(f"{fullmove}... {san}")
-            else:
-                parti.append(san)
+            parti.append(san)
         node = next_node
         count += 1
 

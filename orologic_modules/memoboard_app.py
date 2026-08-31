@@ -110,7 +110,7 @@ def load_scores():
     if not os.path.exists(SCORES_FILE):
         return default_structure
     try:
-        with open(SCORES_FILE, "r", encoding="utf-8") as f:
+        with open(SCORES_FILE, encoding="utf-8") as f:
             data = json.load(f)
 
         if not isinstance(data, dict):
@@ -231,8 +231,8 @@ def compute_time_stats(timeslist):
         chunk_size = n / 4.0
         chunks = []
         for i in range(4):
-            start_idx = int(round(i * chunk_size))
-            end_idx = int(round((i + 1) * chunk_size))
+            start_idx = round(i * chunk_size)
+            end_idx = round((i + 1) * chunk_size)
             if start_idx == end_idx:
                 end_idx = min(start_idx + 1, n)
             chunk = timeslist[start_idx:end_idx]
@@ -350,9 +350,8 @@ def report_and_update_scores(
     if time_stats_str:
         print(time_stats_str)
 
-    if exercises_played is not None:
-        if ex_label not in exercises_played:
-            exercises_played.append(ex_label)
+    if exercises_played is not None and ex_label not in exercises_played:
+        exercises_played.append(ex_label)
 
     # 1. Se le ripetizioni sono inferiori a MIN_REPETITIONS_FOR_LEADERBOARD
     if exercise_name != "mixed" and rpt < MIN_REPETITIONS_FOR_LEADERBOARD:
@@ -1286,7 +1285,7 @@ def main():
             rpt = min(rpt, 300)
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
-            score, scoreslist, duration, timeslist, wins, errors_list = ExColors(rpt)
+            score, _elenco, duration, timeslist, wins, errors_list = ExColors(rpt)
             if errors_list:
                 print(_("I tuoi errori"))
                 for err in errors_list:
@@ -1329,7 +1328,7 @@ def main():
             rpt = min(rpt, 300)
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
-            score, scoreslist, duration, timeslist, wins, errors_list = ExKnights(rpt)
+            score, _elenco, duration, timeslist, wins, errors_list = ExKnights(rpt)
             if errors_list:
                 print(_("I tuoi errori"))
                 for err in errors_list:
@@ -1372,7 +1371,7 @@ def main():
             rpt = min(rpt, 300)
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
-            score, scoreslist, duration, timeslist, wins, errors_list = ExBishops(rpt)
+            score, _elenco, duration, timeslist, wins, errors_list = ExBishops(rpt)
             if errors_list:
                 print(_("I tuoi errori"))
                 for err in errors_list:
@@ -1432,7 +1431,7 @@ def main():
             )
 
             key(prompt=_("Sei pronto per iniziare? Via!"))
-            score, scoreslist, duration, timeslist, wins, errors_list = ExMixed(100)
+            score, _scoreslist, duration, timeslist, wins, errors_list = ExMixed(100)
             rpt = 100
 
             print(_("SFIDA MISTA COMPLETATA!"))

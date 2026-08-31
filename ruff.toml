@@ -1,0 +1,91 @@
+# Orologic, configurazione del validatore ruff.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+
+# Qui si dichiara che cosa il progetto considera un difetto. Le regole
+# spente sotto non sono debito lasciato indietro: sono scelte prese
+# consapevolmente, con il motivo scritto accanto, cosi' chi esegue ruff
+# sa che ogni segnalazione rimasta e' un difetto vero da guardare.
+
+line-length = 88
+target-version = "py311"
+
+[lint]
+# Oltre ai controlli di base si tengono accesi: bug probabili, semplificazioni,
+# ordine degli import, aggiornamenti di sintassi, sicurezza, date e gettext.
+select = ["E4", "E7", "E9", "F", "B", "SIM", "I", "UP", "S", "DTZ", "INT", "PIE", "PL", "RUF"]
+
+ignore = [
+    # Orologic e' un programma interattivo che gira per ore: un errore
+    # imprevisto in una singola operazione non deve far cadere la partita
+    # in corso. Le eccezioni larghe sono quasi sempre attorno a operazioni
+    # di contorno, salvataggi accessori, appunti, suoni, e il messaggio
+    # all'utente c'e'. Dove l'errore conta davvero e' gia' specifico.
+    "BLE001",
+    "S110",
+    # Le date sono locali per scelta: orologi da torneo, punteggi e nomi di
+    # file parlano dell'ora dell'utente, non di quella universale. Verificato
+    # a suo tempo che anche le date ricevute da Lichess arrivano gia' nel
+    # fuso giusto.
+    "DTZ001",
+    "DTZ005",
+    "DTZ006",
+    # Gli if annidati restano dove separano condizioni di natura diversa e
+    # unirli renderebbe la riga piu' difficile da seguire a voce.
+    "SIM102",
+    # Il numero di argomenti e di rami di alcune funzioni interattive e'
+    # alto per natura: sono menu.
+    "PLR0911",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+    # Numeri come 8, 64 o 100 in un programma di scacchi sono le case
+    # della scacchiera e le percentuali, non valori da battezzare.
+    "PLR2004",
+    # I sottoprocessi lanciati sono il motore e l apertura di un file
+    # con il programma predefinito: percorsi decisi dal programma.
+    "S603",
+    "S606",
+    # L XML letto e' quello prodotto dal programma stesso per le
+    # immagini della scacchiera.
+    "S314",
+    # Riusare il nome della variabile di ciclo dopo averla ripulita e'
+    # piu' chiaro che inventarne un secondo.
+    "PLW2901",
+    # Alcuni import stanno dentro le funzioni per rompere cicli fra moduli,
+    # oppure per non pagare all'avvio il costo di librerie pesanti che
+    # servono solo a una modalita': pygame, reportlab, il motore.
+    "PLC0415",
+    # Il caso serve a mescolare esercizi e posizioni, non a proteggere
+    # segreti: random va benissimo.
+    "S311",
+    # Gli indirizzi aperti sono quelli di Lichess e di Stockfish, scritti
+    # nel codice, non stringhe che arrivano da fuori.
+    "S310",
+    # Il motore, i tempi e le cache sono uno solo per tutto il programma:
+    # vivono come variabili di modulo, e le funzioni che li cambiano lo
+    # dichiarano con global. E' la forma piu' semplice per un singolo
+    # motore condiviso da tutte le modalita'.
+    "PLW0603",
+    # Sopprimere un'eccezione con contextlib.suppress accorcia il codice
+    # ma nasconde il punto in cui puo' fallire: qui si preferisce vederlo.
+    "SIM105",
+    # Confronti ripetuti e forme condensate: piu' corti da scrivere, non
+    # piu' chiari da leggere ad alta voce.
+    "PLR1714",
+    "SIM108",
+    "RUF005",
+    # Il numero di parametri di alcune funzioni interattive rispecchia le
+    # opzioni che l'utente puo' scegliere.
+    "PLR0917",
+    # Le variabili di ciclo non usate hanno nomi che spiegano cosa si sta
+    # scorrendo: toglierle renderebbe il ciclo meno leggibile.
+    "B007",
+]
+
+[lint.per-file-ignores]
+# Gli strumenti di sviluppo non fanno parte del programma consegnato.
+"strumenti/*.py" = ["T201"]
+
+[format]
+# I sorgenti usano i fine riga di Windows, come tutto il resto del progetto.
+line-ending = "cr-lf"

@@ -7,7 +7,6 @@ import os
 import chess
 import chess.pgn
 import pyperclip
-
 from GBUtils import Acusticator, dgt, key
 
 from ..board_utils import format_pgn_comments, validate_and_clean_pgn

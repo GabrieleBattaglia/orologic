@@ -357,10 +357,8 @@ def run_stats(username, secrets):
 
                 span_days = (selected_pts[-1]["dt"] - selected_pts[0]["dt"]).days
                 usa_quartili = False
-                if (
-                    len(ratings_subset) >= 20
-                    or len(ratings_subset) >= 8
-                    and span_days >= 60
+                if len(ratings_subset) >= 20 or (
+                    len(ratings_subset) >= 8 and span_days >= 60
                 ):
                     usa_quartili = True
 
