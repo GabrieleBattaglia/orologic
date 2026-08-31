@@ -411,7 +411,7 @@ def Main():
         )
         if has_update:
             if dl_url:
-                print(_("\n*** AGGIORNAMENTO DISPONIBILE ***"))
+                print(_("\nAggiornamento disponibile."))
                 print(
                     _(
                         "E' disponibile la nuova versione {new_ver}! (Attuale: {curr_ver})"
@@ -437,7 +437,7 @@ def Main():
                             )
                         )
             else:
-                print(_("\n*** AGGIORNAMENTO DISPONIBILE ***"))
+                print(_("\nAggiornamento disponibile."))
                 print(
                     _(
                         "E' disponibile la nuova versione {new_ver}, ma i file di installazione non sono ancora pronti per il download."
@@ -458,7 +458,7 @@ def Main():
         os.path.join("settings", "autosave.json")
     )
     if db.get("autosave_enabled", False) and os.path.exists(autosave_file_path):
-        print(_("\n*** RIPRISTINO PARTITA ***"))
+        print(_("\nRipristino della partita."))
         if enter_escape(
             _(
                 "E' stata rilevata una partita di arbitraggio in sospeso. Desideri riprenderla? (INVIO per si', ESC per no): "
