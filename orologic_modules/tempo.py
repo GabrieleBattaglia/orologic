@@ -134,8 +134,13 @@ def da_testo(testo):
     return secondi if secondi >= 0 else None
 
 
-def fra_date(inizio, fine):
-    """Distanza fra due momenti detta a parole, dagli anni ai minuti."""
+def fra_date(inizio, fine, con_secondi=False):
+    """Distanza fra due momenti detta a parole, dagli anni ai minuti.
+
+    Con con_secondi si arriva anche a secondi e millisecondi: serve al
+    commiato, dove una sessione puo' essere durata pochi istanti e dire
+    "meno di un minuto" sarebbe povero.
+    """
     from dateutil.relativedelta import relativedelta
 
     differenza = relativedelta(fine, inizio)
@@ -170,8 +175,18 @@ def fra_date(inizio, fine):
             if differenza.minutes == 1
             else _("{n} minuti").format(n=differenza.minutes)
         )
+    if con_secondi:
+        if differenza.seconds:
+            parti.append(
+                _("1 secondo")
+                if differenza.seconds == 1
+                else _("{n} secondi").format(n=differenza.seconds)
+            )
+        millesimi = differenza.microseconds // 1000
+        if millesimi:
+            parti.append(_("{n} millisecondi").format(n=millesimi))
     if not parti:
-        return _("meno di un minuto")
+        return _("un istante") if con_secondi else _("meno di un minuto")
     if len(parti) == 1:
         return parti[0]
     return ", ".join(parti[:-1]) + _(" e ") + parti[-1]

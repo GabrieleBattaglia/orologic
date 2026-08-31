@@ -590,13 +590,9 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                 if not move_input:
                     continue
 
-                class DummyState:
-                    def __init__(self, board):
-                        self.board = board
-
                 from ..lichess_board import handle_exploration_command
 
-                if handle_exploration_command(move_input, DummyState(board)):
+                if handle_exploration_command(move_input, board):
                     continue
 
                 # Comandi

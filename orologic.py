@@ -604,28 +604,14 @@ def Main():
             clock.DeleteClock()
 
 
-if __name__ == "__main__":
-    t_start = datetime.datetime.now()
-    try:
-        Main()
-    except KeyboardInterrupt:
-        print(_("\nInterruzione richiesta, chiudo Orologic."))
-    t_end = datetime.datetime.now()
-    delta = relativedelta(t_end, t_start)
-    comp = []
-    if delta.days:
-        comp.append(_("{n} giorni").format(n=delta.days))
-    if delta.hours:
-        comp.append(_("{n} ore").format(n=delta.hours))
-    if delta.minutes:
-        comp.append(_("{n} minuti").format(n=delta.minutes))
-    if delta.seconds:
-        comp.append(_("{n} secondi").format(n=delta.seconds))
-    ms = delta.microseconds // 1000
-    if ms:
-        comp.append(_("{n} millisecondi").format(n=ms))
-    durata = ", ".join(comp) if comp else _("0 millisecondi")
+def saluta(inizio, fine=None):
+    """Saluta dicendo quante volte ci siamo visti e per quanto tempo.
 
+    La durata la scrive tempo.fra_date, come tutte le altre del
+    programma: prima questo blocco se la ricalcolava da solo.
+    """
+    fine = fine or datetime.datetime.now()
+    durata = tempo.fra_date(inizio, fine, con_secondi=True)
     db_f = storage.LoadDB()
     l_count = db_f.get("launch_count", _("sconosciuto"))
     print(
@@ -633,6 +619,15 @@ if __name__ == "__main__":
             "\nArrivederci da Orologic {v}.\nQuesta era la nostra {lc}a volta e ci siamo divertiti assieme per: {d}"
         ).format(v=version.VERSION, lc=l_count, d=durata)
     )
+
+
+if __name__ == "__main__":
+    t_start = datetime.datetime.now()
+    try:
+        Main()
+    except KeyboardInterrupt:
+        print(_("\nInterruzione richiesta, chiudo Orologic."))
+    saluta(t_start)
     Donazione(lang=lingua_rilevata)
     key(prompt=_("\nPremi un tasto per uscire..."), attesa=300)
     sys.exit(0)

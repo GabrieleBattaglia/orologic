@@ -108,7 +108,10 @@ PROGRAMMER = version.PROGRAMMER
 RELEASE_DATE = version.RELEASE_DATE
 DB_FILE = percorso_salvataggio(os.path.join("settings", "orologic_db.json"))
 
-# Caricamento Volume
+# Il volume si legge qui a mano, e non con storage.LoadDB, perche' storage
+# importa config: chiamarlo da qui creerebbe un intreccio fra i due moduli
+# per una lettura sola, di un file di pochi kilobyte, fatta una volta
+# all'avvio. Misurato: e' l'unica lettura durante l'import.
 try:
     with open(DB_FILE, "r", encoding="utf-8") as f:
         _db_data = json.load(f)

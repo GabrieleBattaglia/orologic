@@ -374,13 +374,9 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
 
         command = key(prompt=prompt)
 
-        class DummyState:
-            def __init__(self, board):
-                self.board = board
-
         from ..lichess_board import handle_exploration_command
 
-        if handle_exploration_command(command, DummyState(current_board)):
+        if handle_exploration_command(command, current_board):
             continue
 
         if command == "a":

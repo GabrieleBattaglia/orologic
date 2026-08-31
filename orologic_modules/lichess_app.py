@@ -500,13 +500,6 @@ def menu_amici(db):
             lichess_profiler.run_profiler(secrets)
 
 
-class DummyGameState:
-    def __init__(self, board):
-        self.board = board
-        self.white_player = _("Bianco")
-        self.black_player = _("Nero")
-
-
 def describe_board(board, last_move_san=None):
     turn = (
         _("Tocca al Bianco muovere.")
@@ -845,11 +838,9 @@ def menu_puzzle(db):
             board = board_utils.CustomBoard(puz["fen"])
             last_move_san = puz.get("lastMove")
 
-        game_state = DummyGameState(board)
-
         print("\n" + describe_board(board, last_move_san))
-        ui.report_all_pieces(game_state, not board.turn)
-        ui.report_all_pieces(game_state, board.turn)
+        ui.report_all_pieces(board, not board.turn)
+        ui.report_all_pieces(board, board.turn)
         Acusticator(
             [
                 "c5",
@@ -889,7 +880,7 @@ def menu_puzzle(db):
             if not user_input:
                 continue
 
-            if handle_exploration_command(user_input, game_state):
+            if handle_exploration_command(user_input, board):
                 if user_input.lower() != ".b" and user_input != ".?":
                     continue
 

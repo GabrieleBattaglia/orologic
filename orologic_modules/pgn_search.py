@@ -26,9 +26,7 @@ from GBUtils import dgt, enter_escape, key, menu
 from orologic_modules import board_utils, engine
 from orologic_modules.config import _
 
-# ---------------------------------------------------------------------------
 # Entry point
-# ---------------------------------------------------------------------------
 
 
 def run():
@@ -81,9 +79,7 @@ def run():
         )
 
 
-# ---------------------------------------------------------------------------
 # Caricamento archivio
-# ---------------------------------------------------------------------------
 
 
 def _carica_archivio():
@@ -310,9 +306,7 @@ def _carica_archivio():
     return games
 
 
-# ---------------------------------------------------------------------------
 # Estrazione info headers
-# ---------------------------------------------------------------------------
 
 
 def _estrai_info(games):
@@ -360,9 +354,7 @@ def _estrai_info(games):
     return info_list
 
 
-# ---------------------------------------------------------------------------
 # Statistiche
-# ---------------------------------------------------------------------------
 
 
 def _calcola_wdl(info_list, indici):
@@ -408,7 +400,7 @@ def _formato_statistiche(info_list, indici, filtri_attivi, giocatore_comune=None
 
     if ref_player:
         # Statistiche relative al giocatore cercato: + (vittorie), = (patte), - (sconfitte)
-        win = draw = loss = other = 0
+        win = draw = loss = 0
         ref = ref_player.lower()
         for i in indici:
             info = info_list[i]
@@ -425,17 +417,11 @@ def _formato_statistiche(info_list, indici, filtri_attivi, giocatore_comune=None
                     win += 1
                 elif is_black:
                     loss += 1
-                else:
-                    other += 1
             elif r == "0-1":
                 if is_black:
                     win += 1
                 elif is_white:
                     loss += 1
-                else:
-                    other += 1
-            else:
-                other += 1
 
         tot = len(indici)
         if tot == 0:
@@ -446,7 +432,7 @@ def _formato_statistiche(info_list, indici, filtri_attivi, giocatore_comune=None
         return _("+{pw:.0f}% ={pd:.0f}% -{pl:.0f}%").format(pw=pw, pd=pd, pl=pl)
     else:
         # Statistiche assolute del bianco e del nero
-        w = d = b = other = 0
+        w = d = b = 0
         for i in indici:
             r = info_list[i]["Result"]
             if r == "1-0":
@@ -455,8 +441,6 @@ def _formato_statistiche(info_list, indici, filtri_attivi, giocatore_comune=None
                 d += 1
             elif r == "0-1":
                 b += 1
-            else:
-                other += 1
         tot = len(indici)
         if tot == 0:
             return _("B:0% P:0% N:0%")
@@ -543,9 +527,7 @@ def _trova_giocatore_comune(info_list):
     return None
 
 
-# ---------------------------------------------------------------------------
 # Filtri
-# ---------------------------------------------------------------------------
 
 
 def _menu_filtri(games, info_list, totale):
@@ -809,9 +791,7 @@ def _applica_filtri(info_list, filtri):
     return indici
 
 
-# ---------------------------------------------------------------------------
 # Albero delle aperture
-# ---------------------------------------------------------------------------
 
 
 def _formatta_sequenza_mosse(mosse):
@@ -1163,9 +1143,7 @@ def _mostra_aiuto():
     print(_("  . = Esci dall'albero"))
 
 
-# ---------------------------------------------------------------------------
 # Pager partite
-# ---------------------------------------------------------------------------
 
 
 def _sfoglia_partite(games, indici, ramo_mosse, info_list):
@@ -1256,9 +1234,7 @@ def _mosse_continuazione(game, ramo_mosse, max_mosse=5):
     return " ".join(parti)
 
 
-# ---------------------------------------------------------------------------
 # Salvataggio PGN filtrato
-# ---------------------------------------------------------------------------
 
 
 def _salva_pgn_filtrato(games, indici, filtri_attivi):
@@ -1315,9 +1291,7 @@ def _salva_pgn_filtrato(games, indici, filtri_attivi):
         print(_("Errore nel salvataggio: {e}").format(e=e))
 
 
-# ---------------------------------------------------------------------------
 # Analisi
-# ---------------------------------------------------------------------------
 
 
 def _avvia_analisi(game):

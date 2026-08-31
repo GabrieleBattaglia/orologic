@@ -19,6 +19,13 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.14</h3>
+<h4>8.14.7 (31 agosto 2026)</h4>
+<ul>
+  <li>* [Core] I comandi di esplorazione e il riepilogo dei pezzi accettano ora direttamente una scacchiera. Orolichess ed Easyfish costruivano tre diverse classi fittizie al solo scopo di incartare la posizione nel formato che quelle funzioni pretendevano.</li>
+  <li>* [Core] Il commiato che saluta all'uscita è ora una funzione, e la durata della sessione viene detta dalla stessa formattazione usata ovunque nel programma, che sa arrivare fino ai millisecondi per le sessioni brevi.</li>
+  <li>* [Docs] Lo strumento di traduzione dei cataloghi si è spostato da resources a strumenti: stava nella cartella che viene inclusa per intero nel pacchetto distribuito, e finiva quindi fra i file consegnati a chi installa il programma. Le sue dipendenze sono ora dichiarate in requirements-dev.txt, e prima di riscrivere un catalogo ne salva una copia.</li>
+  <li>* [Core] Tolte diciotto righe di trattini usate come separatori nei commenti del sorgente, e un conteggio delle partite senza risultato che veniva calcolato ma mai mostrato.</li>
+</ul>
 <h4>8.14.6 (31 agosto 2026)</h4>
 <ul>
   <li>* [Easyfish] Il volume dei suoni segue finalmente la regolazione fatta dal menu di Orologic. Era fissato nel codice in settantasette punti, per cui Easyfish suonava sempre alla stessa intensità qualunque fosse l'impostazione scelta.</li>
