@@ -724,6 +724,10 @@ def _esegui():
                     game_state.board = board
                     if mod_in_exp:
                         is_modified = True
+                else:
+                    # Senza questa riga si restava zitti sulla posizione
+                    # finale, e sembrava di essere ancora nella partita.
+                    print(_("Ritorno al menu di Easyfish."))
 
             elif cmd == ".d":
                 if drawing_menu(game, node):

@@ -106,7 +106,9 @@ def sistema(radice="locales", prova=False):
         totale += len(cambiate)
     print()
     if prova:
-        print(f"Prova: sarebbero {totale} correzioni. Rilancia senza --prova per farle.")
+        print(
+            f"Prova: sarebbero {totale} correzioni. Rilancia senza --prova per farle."
+        )
     else:
         print(f"Termini di gioco sistemati: {totale}")
     return 0

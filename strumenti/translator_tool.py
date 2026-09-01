@@ -80,13 +80,9 @@ def _ripara_spazi(originale, tradotto):
         prima_originale = re.search(r"(.?)" + quotato, originale)
         dopo_originale = re.search(quotato + r"(.?)", originale)
         if prima_originale and prima_originale.group(1) == " ":
-            tradotto = re.sub(
-                r"(?<=[^\s])" + quotato, " " + segnaposto, tradotto
-            )
+            tradotto = re.sub(r"(?<=[^\s])" + quotato, " " + segnaposto, tradotto)
         if dopo_originale and dopo_originale.group(1) == " ":
-            tradotto = re.sub(
-                quotato + r"(?=[^\s])", segnaposto + " ", tradotto
-            )
+            tradotto = re.sub(quotato + r"(?=[^\s])", segnaposto + " ", tradotto)
     return tradotto
 
 
@@ -98,9 +94,7 @@ def _segnaposto_intatti(originale, tradotto):
     ciascuno deve essere identica: un {media:.0f} diventato {media:.Of}
     farebbe cadere il programma nel momento in cui quel messaggio esce.
     """
-    return sorted(SEGNAPOSTO.findall(originale)) == sorted(
-        SEGNAPOSTO.findall(tradotto)
-    )
+    return sorted(SEGNAPOSTO.findall(originale)) == sorted(SEGNAPOSTO.findall(tradotto))
 
 
 def traduci_stringa(traduttore, originale):
