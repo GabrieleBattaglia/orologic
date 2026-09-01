@@ -1,156 +1,72 @@
 Collaudo di Orologic durante il refactoring di fase 1
 Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto)
-Aperto il 2026-08-30, versione in lavorazione 8.13.0
-
+Aperto il 2026-08-30, ripulito il 2026-09-01 sulla versione 8.16.0
 A cosa serve questo file
 Elenca le prove da fare a mano, quelle che non si possono automatizzare
 perche' richiedono di giocare, ascoltare o interagire davvero. Sotto ogni voce
 c'e' una riga Esito, da riempire con ok oppure con la descrizione del problema.
-Quando il file sara' compilato, dedicheremo una sessione alle correzioni.
 Le voci restano qui finche' non sono verificate: una volta collaudate e
 sistemate si cancellano, come si fa con analisi_codice_fase_1.txt.
-
-Prova 1, partita contro il motore in Easyfish, la piu' importante
-E' l'unica parte toccata in profondita' che nessuna prova automatica copre.
-Da verificare: il tempo scorre solo per chi ha il tratto; l'incremento viene
-aggiunto dopo ogni mossa; la bandierina cade e viene annunciata; il comando
-punto u, che annulla la semimossa, non sballa gli orologi; i comandi punto uno,
-due, tre e cinque riportano tempi coerenti; se il motore e' impostato senza
-orologio, il tempo scorre solo quando tocca a te.
-Motivo: i tre thread orologio sono diventati uno solo, e in Easyfish i campi
-dei tempi sono stati rinominati.
+Stato al 2026-09-01. Il primo giro di collaudo e' stato fatto da Gabriele. Le
+prove superate, cioe' correzioni manuali del tempo, esplorazione della
+scacchiera nei tre contesti, personalizzazione dei nomi, aggiornamento del
+motore, lettura generale con lo screen reader, analisi di una partita e le
+quattro lingue, sono state tolte. Quello che non andava e' diventato un rilievo
+in analisi_codice_fase_1.txt, da R157 a R167. Le prove qui sotto vanno rifatte
+quando quei rilievi saranno corretti.
+Prova A, Easyfish contro il motore, la piu' importante
+Riguarda R157, R158, R159 e R160.
+Da verificare: punto cinque dice di chi e' il tratto senza andare in errore e
+nomina i due contendenti; punto sei o regola davvero l'aggiornamento
+automatico oppure dice chiaramente che in questa modalita' non si puo' fare; a
+tempo scaduto la partita si chiude da sola, senza aspettare che tu prema un
+tasto, non stampa la scacchiera e porta subito alla domanda sull'analisi;
+rispondendo no si torna al menu di Easyfish e lo si sente.
+Da verificare ancora, perche' al primo giro era tutto a posto e le correzioni
+toccano lo stesso ciclo: il tempo scorre solo per chi ha il tratto, l'incremento
+arriva dopo ogni mossa, punto u non sballa gli orologi, i comandi da punto uno
+a punto quattro dicono tempi coerenti.
 Esito:
-
-Prova 2, partita arbitrata con controlli a piu' fasi
-Creare un orologio con due o tre fasi, per esempio quaranta mosse in novanta
-minuti piu' trenta minuti per il resto, e verificare che il cambio di fase
-avvenga alla mossa giusta e che il tempo della nuova fase si sommi al residuo
-invece di sostituirlo. Provare poi l'annullamento con punto q a cavallo del
-cambio di fase.
-Motivo: prima la seconda fase durava una mossa sola e il tempo risparmiato
-andava perduto.
+Prova B, creazione dell'orologio e annullamento
+Riguarda R161 e R162.
+Creare un orologio e provare a dare un tempo di fase impossibile: 00:00:00, una
+riga vuota, del testo qualsiasi. Devono essere tutti rifiutati con una domanda
+ripetuta, e il minimo accettato deve essere di due secondi. Provare anche gli
+allarmi con un tempo scritto male.
+Poi, in partita, dare punto q senza essere in pausa e punto q alla prima mossa:
+in tutti e due i casi Orologic deve dire perche' non succede niente.
 Esito:
-
-Prova 3, correzioni manuali del tempo durante la partita
-Con la partita in pausa, aggiungere e togliere tempo a bianco e nero con i
-comandi punto b piu', punto b meno, punto n piu' e punto n meno, controllando
-che i valori risultanti siano esatti.
-Motivo: le modifiche ai tempi passano ora da una funzione protetta, per non
-accavallarsi con l'orologio che scorre.
+Prova C, allarmi
+Riguarda R163.
+Creare un orologio con cinque allarmi e verificare che ognuno annunci il proprio
+numero e abbia un suono diverso dagli altri, riconoscibile senza contare.
 Esito:
-
-Prova 4, allarmi
-Creare un orologio con uno o due allarmi e verificare che suonino al momento
-giusto, una sola volta ciascuno.
-Motivo: prima scattavano solo se il controllo cadeva in una finestra di un
-decimo di secondo, quindi potevano non suonare affatto.
+Prova D, Fischer Random
+Riguarda R164.
+Avviare una partita Fischer Random e controllare che non compaia piu' l'avviso
+sul motore che non accetta la variante: era un falso allarme, la libreria
+imposta l'opzione da sola. Verificare che gli arrocchi si facciano e che
+l'analisi del motore li valuti bene.
 Esito:
-
-Prova 5, esplorazione della scacchiera nei tre contesti
-Provare i comandi barra, barra rovesciata, meno, piu' e virgola durante una
-partita arbitrata, dentro Orolichess e in una partita giocata su Lichess,
-controllando che si comportino allo stesso modo e che le righe risultino
-comode da leggere sul display braille.
-Motivo: le tre copie del codice sono state sostituite da una sola, e le righe
-sono state riorganizzate in blocchi di circa quaranta caratteri.
+Prova E, storia Elo su Lichess
+Riguarda R165.
+Cercare un giocatore che non abbia partite classificate, per esempio Giovanna2,
+e controllare che Orologic dica che non c'e' ancora uno storico invece di dire
+che non e' riuscito a caricarlo. Cercare poi un nome inventato e controllare che
+il messaggio sia diverso e comprensibile.
 Esito:
-
-Prova 6, personalizzazione dei nomi
-Dal menu principale, comando nomi, cambiare qualche voce, comprese le nuove
-annotazioni, e verificare che il cambiamento si senta subito nelle descrizioni
-delle mosse, in Easyfish e nell'esplorazione, senza riavviare. Provare anche a
-chiudere a meta' con il punto.
-Motivo: i due dizionari divergenti sono diventati uno, e la personalizzazione
-ora copre tutta la grammatica di gioco.
+Prova F, lista mosse e linee di analisi
+Riguarda R166.
+Verificare che punto elle sia la lista delle mosse in tutte le modalita', menu
+di Easyfish compreso, e che le linee di analisi rispondano al comando nuovo,
+anche con il numero, per esempio punto a elle due. Controllare che l'aiuto e il
+manuale dicano la stessa cosa.
 Esito:
-
-Prova 7, Fischer Random inserito a mano
-Avviare una partita Fischer Random digitando la sequenza degli otto pezzi
-invece di chiederne una casuale, e verificare che l'arrocco sia possibile e che
-venga annunciato il numero della posizione. Provare anche una sequenza
-impossibile, per esempio otto torri, e controllare che venga rifiutata con un
-messaggio comprensibile.
-Motivo: prima la posizione digitata a mano nasceva senza diritti di arrocco.
+Prova G, schermata di benvenuto
+Riguarda R167.
+Controllare che l'eta' della versione sia giusta e che l'autore riporti il
+modello, cioe' ClaudIA seguito dal nome del modello e dalla modalita'.
 Esito:
-
-Prova 8, Lichess
-Fare login, giocare o osservare una partita, cercare un giocatore, scaricare
-partite indicando un tetto massimo e interrompendo con ESC. Verificare che i
-messaggi di errore siano comprensibili quando la rete manca o il token non e'
-valido, e che dopo il login le partite in corso compaiano subito nel menu.
-Motivo: tutte le chiamate hanno ora un timeout e messaggi parlanti; resta
-aperto il rilievo sul token non aggiornato nel menu, quindi quest'ultima parte
-potrebbe ancora non funzionare.
-Esito:
-
-Prova 9, aggiornamento del motore
-Se e quando esce una versione nuova di Stockfish, verificare che venga
-proposta e che l'installazione vada a buon fine, e che in caso di problemi il
-motore gia' installato resti utilizzabile.
-Motivo: il confronto di versione non funzionava mai, e la cartella del motore
-veniva svuotata prima del download.
-Esito:
-
-Prova 10, lettura generale con lo screen reader
-Girare per i menu e le schermate principali e segnalare ogni punto in cui la
-lettura risulti scomoda: righe troppo lunghe, informazioni ripetute, silenzi
-inattesi, testi rimasti in italiano dove servirebbe un'altra lingua.
-Motivo: separatori grafici, tabulazioni e tabelle incolonnate sono stati tolti
-in tutto il programma.
-Esito:
-
-Prova 11, i comandi da punto uno a punto sei nelle quattro modalita'
-Provare punto uno, due, tre, quattro, cinque e sei nella partita arbitrata, in
-Tempo, in Easyfish e in una partita su Lichess, verificando che dicano le stesse
-cose, con gli stessi suoni, e che punto cinque riconosca la pausa dove la pausa
-esiste. In Easyfish e su Lichess i suoni sono nuovi, prima non c'erano. Su
-Lichess punto uno e punto due annunciano il tempo senza la percentuale
-consumata, perche' li' le fasi non esistono: verificare che si capisca bene.
-Provare anche una partita con gli orologi disattivati e controllare l'avviso,
-che ora e' uno solo, "Gli orologi sono disattivati".
-Verificare anche che i comandi di correzione del tempo, punto b piu' e simili,
-rispondano solo in arbitraggio e in Tempo, mentre contro il motore e su Lichess
-non devono essere riconosciuti: li' non c'e' nessun arbitro che possa fermare
-gli orologi.
-Motivo: le quattro versioni diverse di questi comandi sono diventate una sola.
-Esito:
-
-Prova 12, scacchiera, materiale e lista mosse
-Provare punto esse e punto b nelle quattro modalita': devono fare la stessa
-cosa, cioe' mostrare la scacchiera. Verificare che in Easyfish punto esse
-seguito da una cifra continui a impostare il livello del motore, per esempio
-punto esse dieci, e che in partita punto b piu' e punto b meno continuino a
-correggere i tempi. Provare poi punto emme per il materiale e punto elle per la
-lista mosse, che ora esistono anche dove prima mancavano.
-Motivo: la scacchiera aveva un comando diverso a seconda della modalita'.
-Attenzione: nel menu di Easyfish, quello fuori dalla partita, punto elle sono
-ancora le linee di analisi e non la lista mosse. E' l'unico conflitto rimasto:
-va deciso se cambiarlo e come.
-Esito:
-
-Prova 13, analisi di una partita
-Aprire una partita in analisi e provare i comandi che sono usciti dal ciclo:
-le annotazioni, cioe' variante, commento manuale, commento con la mossa
-migliore, valutazione e cancellazione del commento; i comandi informativi, cioe'
-scacchiera, aiuto, tempo e numero di linee; e quelli che scrivono la valutazione
-nel prompt. Poi lanciare l'analisi automatica su una partita intera e
-controllare che i parametri chiesti all'inizio siano tutti quelli di prima e che
-il rapporto finale sia completo.
-Motivo: le due funzioni di analisi sono state spezzate in piu' parti.
-Esito:
-
-Prova 14, le quattro lingue
-Cambiare lingua dalle impostazioni e girare per i menu principali, poi giocare
-qualche mossa in arbitraggio. Da ascoltare con attenzione: i nomi dei pezzi
-nelle descrizioni delle mosse, che erano sbagliati in tutte le lingue e sono
-stati rifatti; i messaggi degli orologi; gli avvisi di fine partita. Segnalare
-ogni frase che suoni strana o che dica una cosa diversa da quella attesa,
-perche' 265 traduzioni ereditate dicevano tutt'altro rispetto all'italiano e,
-benche' siano state rifatte, la traduzione automatica va sempre riletta.
-Motivo: i cataloghi sono stati riallineati al programma e in gran parte
-riscritti.
-Esito:
-
 Difficolta' incontrate e note libere
 Scrivere qui sotto qualsiasi cosa non torni, anche se non rientra nelle prove
 elencate sopra.
