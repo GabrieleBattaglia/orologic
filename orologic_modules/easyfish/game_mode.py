@@ -27,6 +27,11 @@ class EasyfishGameState:
         self.human_color = None
         self.engine_has_clock = True
         self.ignore_clock = False
+        # I nomi servono agli annunci degli orologi, che sono quelli di
+        # tutte le altre modalita' e li danno per esistenti.
+        self.white_player = _("Bianco")
+        self.black_player = _("Nero")
+        self.refresh_interval = 0
 
 
 def ParseTimeInput(prompt_text):
@@ -56,6 +61,52 @@ def ParseTimeInput(prompt_text):
             print(_("Tempo non riconosciuto: usa ore:minuti:secondi oppure i secondi."))
             continue
         return secondi, incremento
+
+
+def _attendi_mossa(game_state, prompt):
+    """Aspetta la mossa dell'umano tenendo d'occhio la bandierina.
+
+    E' lo stesso ciclo dell'arbitraggio e di Tempo: restituisce nulla se
+    il tempo e' scaduto mentre si scriveva, cosi' la partita si chiude da
+    sola invece di aspettare che l'utente prema un tasto. Quando punto sei
+    ha acceso l'aggiornamento automatico, il prompt riporta anche i due
+    orologi, come nella partita arbitrata.
+    """
+    from ..game_flow import async_arbitration_input
+
+    def get_prompt():
+        intervallo = getattr(game_state, "refresh_interval", 0)
+        if intervallo <= 0 or game_state.ignore_clock:
+            return prompt
+        bianco = tempo.compatto(max(0.0, game_state.white_remaining))
+        nero = tempo.compatto(max(0.0, game_state.black_remaining))
+        return f"{bianco} {nero} {prompt}"
+
+    return async_arbitration_input(game_state, get_prompt)
+
+
+def _nomi_dei_contendenti(game_state, game_node, engine_instance):
+    """Da' un nome ai due lati, per gli annunci degli orologi.
+
+    Il motore si presenta da solo con il proprio nome, l'umano prende
+    quello del PGN. Senza questi due nomi il comando punto cinque non
+    saprebbe di chi annunciare il tratto.
+    """
+    nome_motore = _("il motore")
+    identita = getattr(engine_instance, "id", None)
+    if isinstance(identita, dict):
+        nome_motore = identita.get("name") or nome_motore
+    umano_e_bianco = game_state.human_color == chess.WHITE
+    intestazioni = game_node.root().headers
+    nome_umano = intestazioni.get("White" if umano_e_bianco else "Black", "")
+    if not nome_umano or nome_umano == "?":
+        nome_umano = _("Bianco") if umano_e_bianco else _("Nero")
+    if umano_e_bianco:
+        game_state.white_player = nome_umano
+        game_state.black_player = nome_motore
+    else:
+        game_state.white_player = nome_motore
+        game_state.black_player = nome_umano
 
 
 def _comandi_informativi(cmd, board, game_state, engine_instance):
@@ -541,6 +592,8 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
         game_state.white_inc = float(engine_inc) if engine_has_clock else 0
         print(_("Giochi col NERO."))
 
+    _nomi_dei_contendenti(game_state, game_node, engine_instance)
+
     try:
         db = storage.LoadDB()
         current_skill = db.get("engine_config", {}).get("skill_level", 20)
@@ -589,9 +642,15 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
 
             # --- TURNO UMANO ---
             if board.turn == game_state.human_color:
-                # Input
-                move_input = dgt(prompt=prompt, kind="s")
+                # Input. Si aspetta con il ciclo dell'arbitraggio e non con
+                # dgt: dgt sta ferma sull'input finche' non arriva Invio,
+                # quindi la bandierina cadeva senza che nessuno se ne
+                # accorgesse e l'aggiornamento automatico di punto sei non
+                # aveva modo di farsi sentire.
+                move_input = _attendi_mossa(game_state, prompt)
 
+                if move_input is None:
+                    continue
                 if game_state.flag_fallen:
                     continue
                 if not move_input:
@@ -606,6 +665,14 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                 if move_input.startswith("."):
                     cmd = move_input.lower()
                     if cmd == ".":
+                        # La conferma serve da quando l'attesa e' quella
+                        # dell'arbitraggio: li' ESC vale punto, e senza
+                        # domanda un tasto sbagliato farebbe perdere la
+                        # partita.
+                        if not enter_escape(
+                            _("Vuoi davvero abbandonare? (INVIO per si', ESC per no): ")
+                        ):
+                            continue
                         print(_("Hai abbandonato."))
                         game_state.game_over = True
                         # Assegna risultato (Umano perde)
@@ -837,9 +904,6 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
             current_node.root().headers["Result"] = res
 
     print(_("Risultato: {r}").format(r=res))
-    # Stampa Scacchiera Formattata
-    cb = CustomBoard()
-    cb.set_fen(board.fen())
-    print(cb)
-
+    # La scacchiera finale non si stampa piu' da sola: chi la vuole la
+    # chiede con punto s, come in tutte le altre modalita'.
     return current_node

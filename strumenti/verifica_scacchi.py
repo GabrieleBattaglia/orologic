@@ -24,19 +24,59 @@ except ImportError:
 # Per ogni termine italiano, le forme accettabili in ciascuna lingua.
 # La prima e' quella preferita, le altre sono varianti in uso.
 GLOSSARIO = {
-    "pedone": {"en": ["pawn"], "es": ["peón", "peon"], "fr": ["pion"], "pt": ["peão", "peao"]},
-    "pedoni": {"en": ["pawns"], "es": ["peones"], "fr": ["pions"], "pt": ["peões", "peoes"]},
-    "cavallo": {"en": ["knight"], "es": ["caballo"], "fr": ["cavalier"], "pt": ["cavalo"]},
-    "cavalli": {"en": ["knights"], "es": ["caballos"], "fr": ["cavaliers"], "pt": ["cavalos"]},
+    "pedone": {
+        "en": ["pawn"],
+        "es": ["peón", "peon"],
+        "fr": ["pion"],
+        "pt": ["peão", "peao"],
+    },
+    "pedoni": {
+        "en": ["pawns"],
+        "es": ["peones"],
+        "fr": ["pions"],
+        "pt": ["peões", "peoes"],
+    },
+    "cavallo": {
+        "en": ["knight"],
+        "es": ["caballo"],
+        "fr": ["cavalier"],
+        "pt": ["cavalo"],
+    },
+    "cavalli": {
+        "en": ["knights"],
+        "es": ["caballos"],
+        "fr": ["cavaliers"],
+        "pt": ["cavalos"],
+    },
     "alfiere": {"en": ["bishop"], "es": ["alfil"], "fr": ["fou"], "pt": ["bispo"]},
     "alfieri": {"en": ["bishops"], "es": ["alfiles"], "fr": ["fous"], "pt": ["bispos"]},
     "torre": {"en": ["rook"], "es": ["torre"], "fr": ["tour"], "pt": ["torre"]},
     "torri": {"en": ["rooks"], "es": ["torres"], "fr": ["tours"], "pt": ["torres"]},
-    "donna": {"en": ["queen"], "es": ["dama", "reina"], "fr": ["dame", "reine"], "pt": ["dama", "rainha"]},
-    "donne": {"en": ["queens"], "es": ["damas", "reinas"], "fr": ["dames", "reines"], "pt": ["damas", "rainhas"]},
+    "donna": {
+        "en": ["queen"],
+        "es": ["dama", "reina"],
+        "fr": ["dame", "reine"],
+        "pt": ["dama", "rainha"],
+    },
+    "donne": {
+        "en": ["queens"],
+        "es": ["damas", "reinas"],
+        "fr": ["dames", "reines"],
+        "pt": ["damas", "rainhas"],
+    },
     "re": {"en": ["king"], "es": ["rey"], "fr": ["roi"], "pt": ["rei"]},
-    "scacco": {"en": ["check"], "es": ["jaque"], "fr": ["échec", "echec"], "pt": ["xeque"]},
-    "matto": {"en": ["mate", "checkmate"], "es": ["mate"], "fr": ["mat"], "pt": ["mate"]},
+    "scacco": {
+        "en": ["check"],
+        "es": ["jaque"],
+        "fr": ["échec", "echec"],
+        "pt": ["xeque"],
+    },
+    "matto": {
+        "en": ["mate", "checkmate"],
+        "es": ["mate"],
+        "fr": ["mat"],
+        "pt": ["mate"],
+    },
     "arrocco corto": {
         "en": ["short castling", "kingside castling", "castles short"],
         "es": ["enroque corto"],
@@ -55,8 +95,18 @@ GLOSSARIO = {
         "fr": ["en passant", "prise en passant"],
         "pt": ["en passant", "captura en passant"],
     },
-    "patta": {"en": ["draw"], "es": ["tablas", "empate"], "fr": ["nulle", "partie nulle"], "pt": ["empate"]},
-    "stallo": {"en": ["stalemate"], "es": ["ahogado", "rey ahogado"], "fr": ["pat"], "pt": ["afogamento", "rei afogado"]},
+    "patta": {
+        "en": ["draw"],
+        "es": ["tablas", "empate"],
+        "fr": ["nulle", "partie nulle"],
+        "pt": ["empate"],
+    },
+    "stallo": {
+        "en": ["stalemate"],
+        "es": ["ahogado", "rey ahogado"],
+        "fr": ["pat"],
+        "pt": ["afogamento", "rei afogado"],
+    },
 }
 
 # A quale termine di gioco si riferisce ogni trappola: la parola sospetta
@@ -64,14 +114,33 @@ GLOSSARIO = {
 # situazione. "Andare berserk" tradotto "volverse loco" e' corretto, e non
 # c'entra niente con il matto.
 RIGUARDA = {
-    "tower": "torre", "horse": "cavall", "woman": "donna", "lady": "donna",
-    "ensign": "alfier", "standard bearer": "alfier", "crazy": "matto",
-    "mad": "matto", "chess set": "scacc", "tie": "patta", "stall": "stallo",
-    "loco": "matto", "mujer": "donna", "senora": "donna", "señora": "donna",
-    "abanderado": "alfier", "establo": "stallo", "folle": "matto",
-    "fou furieux": "matto", "femme": "donna", "cheval": "cavall",
-    "stalle": "stallo", "louco": "matto", "mulher": "donna",
-    "senhora": "donna", "cavalheiro": "cavall", "estabulo": "stallo",
+    "tower": "torre",
+    "horse": "cavall",
+    "woman": "donna",
+    "lady": "donna",
+    "ensign": "alfier",
+    "standard bearer": "alfier",
+    "crazy": "matto",
+    "mad": "matto",
+    "chess set": "scacc",
+    "tie": "patta",
+    "stall": "stallo",
+    "loco": "matto",
+    "mujer": "donna",
+    "senora": "donna",
+    "señora": "donna",
+    "abanderado": "alfier",
+    "establo": "stallo",
+    "folle": "matto",
+    "fou furieux": "matto",
+    "femme": "donna",
+    "cheval": "cavall",
+    "stalle": "stallo",
+    "louco": "matto",
+    "mulher": "donna",
+    "senhora": "donna",
+    "cavalheiro": "cavall",
+    "estabulo": "stallo",
     "estábulo": "stallo",
 }
 
@@ -159,16 +228,23 @@ def main():
         if not os.path.exists(percorso):
             continue
         sbagliati, trappole = controlla(percorso, lingua)
-        print(f"{lingua}: termini fuori posto {len(sbagliati)}, parole sospette {len(trappole)}")
+        print(
+            f"{lingua}: termini fuori posto {len(sbagliati)}, parole sospette {len(trappole)}"
+        )
         for italiano, tradotta, attesa in sbagliati:
-            print(f"   {italiano!r} tradotto {tradotta!r}, ci si aspetta qualcosa come {attesa!r}")
+            print(
+                f"   {italiano!r} tradotto {tradotta!r}, ci si aspetta qualcosa come {attesa!r}"
+            )
         for originale, tradotta, motivo in trappole[:8]:
             print(f"   {motivo}")
             print(f"      {originale[:50]!r} -> {tradotta[:50]!r}")
         problemi += len(sbagliati) + len(trappole)
     print()
-    print("Nessun termine di gioco fuori posto." if not problemi else
-          f"Da guardare a mano: {problemi} punti.")
+    print(
+        "Nessun termine di gioco fuori posto."
+        if not problemi
+        else f"Da guardare a mano: {problemi} punti."
+    )
     return 0
 
 

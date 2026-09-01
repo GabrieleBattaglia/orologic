@@ -90,7 +90,9 @@ def main():
             continue
         po, rotte, forma, sospette = controlla(percorso)
         tradotte = len(po.translated_entries())
-        print(f"{lingua}: {tradotte} tradotte, da tradurre {len(po.untranslated_entries())}")
+        print(
+            f"{lingua}: {tradotte} tradotte, da tradurre {len(po.untranslated_entries())}"
+        )
         print(
             f"   segnaposto rotti {len(rotte)}, forma da guardare {len(forma)}, "
             f"traduzioni sospette {len(sospette)}"

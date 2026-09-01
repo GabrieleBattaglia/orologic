@@ -3,8 +3,13 @@
 
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
-from . import board_utils, config, storage
+from . import board_utils, config, storage, tempo
 from .config import _
+
+# Sotto i due secondi una fase non e' giocabile: la bandierina cadrebbe
+# prima che l'orologio parta.
+TEMPO_MINIMO_FASE = 2
+TEMPO_MINIMO_ALLARME = 1
 
 # Volume gestito via config.VOLUME
 
@@ -42,6 +47,37 @@ class ClockConfig:
         }
 
 
+def _chiedi_durata(prompt, minimo=TEMPO_MINIMO_FASE):
+    """Chiede una durata e insiste finche' non e' utilizzabile.
+
+    Restituisce i secondi, oppure nulla se l'utente scrive un punto per
+    rinunciare. Prima bastava un errore di battitura per creare un
+    orologio con una fase da nessun secondo: il controllo cercava il
+    valore meno uno, che il modulo tempo non produce piu' da quando le
+    durate sono state unificate, e quindi non scattava mai.
+    """
+    while True:
+        risposta = dgt(prompt, kind="s").strip()
+        if risposta == ".":
+            return None
+        secondi = tempo.da_testo(risposta)
+        if secondi is None:
+            print(
+                _(
+                    "Tempo non riconosciuto: scrivilo come ore:minuti:secondi, minuti:secondi o secondi."
+                )
+            )
+            continue
+        if secondi < minimo:
+            print(
+                _("Tempo troppo breve: il minimo e' {quanto}.").format(
+                    quanto=tempo.parlato(minimo)
+                )
+            )
+            continue
+        return secondi
+
+
 def CreateClock():
     print(_("Creazione orologi"))
     name = dgt(_("Nome dell'orologio: "), kind="s", smin=1)
@@ -61,45 +97,51 @@ def CreateClock():
     same_time = same.strip().lower() not in ("n", "no")
     phases = []
     phase_count = 0
-    valid_data = True
     while phase_count < 4:
         phase = {}
         if same_time:
-            total_seconds = board_utils.ParseTime(
-                _("Tempo (hh:mm:ss) per fase {num}: ").format(num=phase_count + 1)
+            total_seconds = _chiedi_durata(
+                _("Tempo (hh:mm:ss) per fase {num}, punto per annullare: ").format(
+                    num=phase_count + 1
+                )
             )
+            if total_seconds is None:
+                print(_("Creazione dell'orologio annullata."))
+                return
             inc = dgt(
                 _("Incremento in secondi per fase {num}: ").format(num=phase_count + 1),
                 kind="i",
                 imin=0,
             )
-            if total_seconds == -1:
-                valid_data = False
             phase["white_time"] = phase["black_time"] = total_seconds
             phase["white_inc"] = phase["black_inc"] = inc
         else:
-            total_seconds_w = board_utils.ParseTime(
-                _("Tempo per il bianco (hh:mm:ss) fase {num}: ").format(
-                    num=phase_count + 1
-                )
+            total_seconds_w = _chiedi_durata(
+                _(
+                    "Tempo per il bianco (hh:mm:ss) fase {num}, punto per annullare: "
+                ).format(num=phase_count + 1)
             )
+            if total_seconds_w is None:
+                print(_("Creazione dell'orologio annullata."))
+                return
             inc_w = dgt(
                 _("Incremento per il bianco fase {num}: ").format(num=phase_count + 1),
                 kind="i",
                 imin=0,
             )
-            total_seconds_b = board_utils.ParseTime(
-                _("Tempo per il nero (hh:mm:ss) fase {num}: ").format(
-                    num=phase_count + 1
-                )
+            total_seconds_b = _chiedi_durata(
+                _(
+                    "Tempo per il nero (hh:mm:ss) fase {num}, punto per annullare: "
+                ).format(num=phase_count + 1)
             )
+            if total_seconds_b is None:
+                print(_("Creazione dell'orologio annullata."))
+                return
             inc_b = dgt(
                 _("Incremento per il nero fase {num}: ").format(num=phase_count + 1),
                 kind="i",
                 imin=0,
             )
-            if total_seconds_w == -1 or total_seconds_b == -1:
-                valid_data = False
             phase["white_time"] = total_seconds_w
             phase["black_time"] = total_seconds_b
             phase["white_inc"] = inc_w
@@ -126,27 +168,23 @@ def CreateClock():
         default=0,
     )
     for i in range(num_alarms):
-        alarm_input = dgt(
-            _("Inserisci il tempo (mm:ss) per l'allarme {num}: ").format(num=i + 1),
-            kind="s",
+        sec = _chiedi_durata(
+            _(
+                "Inserisci il tempo (mm:ss) per l'allarme {num}, punto per annullare: "
+            ).format(num=i + 1),
+            minimo=TEMPO_MINIMO_ALLARME,
         )
-        sec = board_utils.parse_mmss_to_seconds(alarm_input)
-        if sec == -1:
-            valid_data = False
+        if sec is None:
+            print(_("Creazione dell'orologio annullata."))
+            return
         alarms.append(sec)
         Acusticator(["f7", 0.09, 0, config.VOLUME, "d4", 0.07, 0, config.VOLUME])
     note = dgt(
         _("Inserisci una nota per l'orologio (opzionale): "), kind="s", default=""
     )
-    if not valid_data:
-        print(
-            _(
-                "\nErrore: uno o piu' orari inseriti non sono validi (formato errato o minuti/secondi > 59)."
-            )
-        )
-        print(_("L'orologio non e' stato creato."))
-        Acusticator(["a3", 0.5, 0, config.VOLUME], kind=2, adsr=[10, 10, 80, 20])
-        return
+    # Il controllo finale sui dati non serve piu': ogni durata viene
+    # verificata quando la si inserisce, e chi sbaglia se la vede
+    # richiedere subito invece di perdere tutto alla fine.
     Acusticator(
         [
             "f7",

@@ -18,6 +18,15 @@ li { margin-bottom: 0.3em; }
 <body>
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
+<h3>Versione 8.17</h3>
+<h4>8.17.0 (1 settembre 2026)</h4>
+<ul>
+  <li>* [Easyfish] Il comando punto cinque faceva cadere il programma in mezzo alla partita contro il motore, perché chiedeva i nomi dei giocatori ad uno stato che non li aveva. Ora i due contendenti hanno un nome anche qui, ed il motore si presenta con il proprio: "Orologio di Stockfish 17 in moto".</li>
+  <li>+ [Easyfish] La partita contro il motore aspetta la mossa con lo stesso ciclo dell'arbitraggio. Cambiano tre cose: a tempo scaduto la partita si chiude da sola, senza restare ferma finché non si preme un tasto, e la domanda sull'analisi arriva subito; l'aggiornamento automatico di punto sei funziona anche qui, con i due orologi in testa al prompt, mentre prima accettava il valore e non lo usava; ESC vale come il punto e chiede conferma prima di far abbandonare, perché un tasto premuto per sbaglio non deve far perdere la partita.</li>
+  <li>* [Easyfish] A partita finita non viene più stampata la scacchiera che nessuno ha chiesto: chi la vuole la chiama con punto s, come dappertutto. E rispondendo no alla domanda sull'analisi, ora viene detto che si torna al menu di Easyfish.</li>
+  <li>* [Core] La creazione di un orologio verifica ogni durata mentre la si inserisce. Prima un errore di battitura, una riga vuota o un tempo di fase pari a zero venivano accettati e finivano nel database: il controllo cercava un valore che il programma non produce più. Ora la domanda si ripete finché la risposta non è utilizzabile, il minimo è di due secondi per fase ed uno per gli allarmi, e con il punto si rinuncia.</li>
+  <li>* [Core] La schermata di benvenuto sbagliava l'età della versione, perché la data dell'ultimo rilascio era rimasta indietro di un mese.</li>
+</ul>
 <h3>Versione 8.16</h3>
 <h4>8.16.0 (1 settembre 2026)</h4>
 <ul>

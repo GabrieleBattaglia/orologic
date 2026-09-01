@@ -710,7 +710,10 @@ def _stato_orologio(game_state):
         bianco_muove = game_state.active_color in ("white", chess.WHITE)
     else:
         bianco_muove = game_state.board.turn == chess.WHITE
-    chi = game_state.white_player if bianco_muove else game_state.black_player
+    # Il nome si chiede a _nome_giocatore e non allo stato: quello di
+    # Easyfish non ha i due campi, e leggerli diritti faceva cadere il
+    # programma in mezzo alla partita contro il motore.
+    chi = _nome_giocatore(game_state, bianco_muove)
     print(_("Orologio di {player} in moto").format(player=chi))
 
 
