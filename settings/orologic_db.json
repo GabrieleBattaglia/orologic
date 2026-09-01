@@ -80,7 +80,7 @@
                 120,
                 45
             ],
-            "note": "Un'ora secca. Creato per il sociale ASCID, 11\u00b0 edizione."
+            "note": "Un'ora secca. Creato per il sociale ASCID, 11° edizione."
         },
         {
             "name": "Primavera2",
@@ -133,6 +133,78 @@
                 300
             ],
             "note": ""
+        },
+        {
+            "name": "TestFasi",
+            "same_time": true,
+            "phases": [
+                {
+                    "white_time": 300,
+                    "black_time": 300,
+                    "white_inc": 0,
+                    "black_inc": 0,
+                    "moves": 5
+                },
+                {
+                    "white_time": 600,
+                    "black_time": 600,
+                    "white_inc": 0,
+                    "black_inc": 0,
+                    "moves": 5
+                },
+                {
+                    "white_time": 0,
+                    "black_time": 0,
+                    "white_inc": 0,
+                    "black_inc": 0,
+                    "moves": 0
+                }
+            ],
+            "alarms": [],
+            "note": ""
+        },
+        {
+            "name": "TestFasi2",
+            "same_time": true,
+            "phases": [
+                {
+                    "white_time": 300,
+                    "black_time": 300,
+                    "white_inc": 0,
+                    "black_inc": 0,
+                    "moves": 5
+                },
+                {
+                    "white_time": 300,
+                    "black_time": 300,
+                    "white_inc": 0,
+                    "black_inc": 0,
+                    "moves": 0
+                }
+            ],
+            "alarms": [],
+            "note": ""
+        },
+        {
+            "name": "TestAlarms",
+            "same_time": true,
+            "phases": [
+                {
+                    "white_time": 120,
+                    "black_time": 120,
+                    "white_inc": 0,
+                    "black_inc": 0,
+                    "moves": 0
+                }
+            ],
+            "alarms": [
+                110,
+                100,
+                90,
+                80,
+                70
+            ],
+            "note": ""
         }
     ],
     "default_pgn": {
@@ -145,42 +217,38 @@
         "BlackElo": "1399"
     },
     "volume": 0.35,
-    "launch_count": 668,
+    "launch_count": 671,
     "localization": {
         "pieces": {
             "pawn": {
                 "name": "Pedone",
+                "pname": "Pedoni",
                 "gender": "m"
             },
             "knight": {
                 "name": "Cavallo",
+                "pname": "cavalli",
                 "gender": "m"
             },
             "bishop": {
                 "name": "Alfiere",
+                "pname": "alfieri",
                 "gender": "m"
             },
             "rook": {
                 "name": "Torre",
+                "pname": "torri",
                 "gender": "f"
             },
             "queen": {
                 "name": "Donna",
+                "pname": "donne",
                 "gender": "f"
             },
             "king": {
                 "name": "Re",
+                "pname": "re",
                 "gender": "m"
-            }
-        },
-        "adjectives": {
-            "white": {
-                "m": "bianco",
-                "f": "bianca"
-            },
-            "black": {
-                "m": "nero",
-                "f": "nera"
             }
         },
         "columns": {
@@ -193,19 +261,33 @@
             "g": "genova",
             "h": "hotel"
         },
+        "adjectives": {
+            "white": {
+                "m": "bianco",
+                "f": "bianca",
+                "mp": "bianchi",
+                "fp": "bianche"
+            },
+            "black": {
+                "m": "nero",
+                "f": "nera",
+                "mp": "neri",
+                "fp": "nere"
+            }
+        },
         "moves": {
-            "short_castle": "arrocco corto",
-            "long_castle": "arrocco lungo",
             "capture": "per",
             "capture_on": "in",
             "move": "va in",
             "move_to": "in",
-            "check": "scacco!",
-            "mate": "scacco matto",
-            "checkmate": "Matto!",
+            "en_passant": "al varco",
+            "short_castle": "arrocco corto",
+            "long_castle": "arrocco lungo",
             "promotion": "promuove a",
             "promotes_to": "promuove a",
-            "en_passant": "al varco"
+            "check": "scacco!",
+            "mate": "scacco matto",
+            "checkmate": "Matto!"
         },
         "annotations": {
             "!": "mossa forte",
@@ -236,7 +318,6 @@
     },
     "autosave_enabled": false,
     "menu_numerati": false,
-    "engine_path": "C:\\Users\\Utente\\AppData\\Local\\Orologic\\Engine\\stockfish\\stockfish-windows-x86-64-avx2.exe",
     "default_analysis_time": 2.0,
     "default_multipv": 1,
     "image_settings": {
@@ -314,6 +395,12 @@
             6
         ]
     },
-    "lichess_token": "",
-    "lichess_username": "Exylyan"
+    "db_version": 1,
+    "analysis_thresholds": {
+        "inesattezza": 50,
+        "errore": 100,
+        "svarione": 250,
+        "mossa_buona": 20,
+        "mossa_geniale_gap": 180
+    }
 }
