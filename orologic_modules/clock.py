@@ -292,7 +292,8 @@ def _scorri_a_blocchi(blocchi, quanti=OROLOGI_PER_SCHERMATA):
     Il pager di menu conta le voci a una riga e separa le pagine con una
     fila di trattini: qui ogni orologio occupa piu' righe e i separatori
     grafici non si leggono, quindi si contano i blocchi e lo si dice a
-    parole.
+    parole. Restituisce vero se si e' arrivati in fondo, falso se si e'
+    usciti con ESC.
     """
     totale = len(blocchi)
     mostrati = 0
@@ -304,14 +305,16 @@ def _scorri_a_blocchi(blocchi, quanti=OROLOGI_PER_SCHERMATA):
         primo = mostrati + 1
         mostrati += len(gruppo)
         if mostrati >= totale:
-            return
-        print(
-            _(
-                "Orologi {a} a {b} di {n}, ESC per uscire, un altro tasto continua"
-            ).format(a=primo, b=mostrati, n=totale)
-        )
-        if key() == "\x1b":
-            return
+            return True
+        # Il ritorno carrello in apertura e in chiusura porta il cursore
+        # di sistema su questa riga, cosi' lo screen reader e il display
+        # braille ci restano sopra mentre si decide se continuare.
+        avviso = _(
+            "Orologi {a} a {b} di {n}, ESC per uscire, un altro tasto continua"
+        ).format(a=primo, b=mostrati, n=totale)
+        if key("\r" + avviso + "\r") == "\x1b":
+            return False
+    return True
 
 
 def ViewClocks():
@@ -324,8 +327,10 @@ def ViewClocks():
         _descrivi_orologio(numero, orologio)
         for numero, orologio in enumerate(db["clocks"], 1)
     ]
-    _scorri_a_blocchi(blocchi)
-    key(_("\nPremi un tasto per tornare al menu..."))
+    # Chi esce con ESC ha gia' detto di voler tornare al menu: chiedergli
+    # un altro tasto sarebbe una domanda in piu' per niente.
+    if _scorri_a_blocchi(blocchi):
+        key(_("\nPremi un tasto per tornare al menu..."))
     Acusticator(["f7", 0.013, 0, config.VOLUME])
 
 

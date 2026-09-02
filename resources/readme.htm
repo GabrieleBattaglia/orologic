@@ -169,7 +169,7 @@ margin: 1em 0;
 
 <h4>2.1.1. Avviare una Partita</h4>
 <ol>
-    <li><strong>Seleziona un Orologio:</strong> Ti verrà prima chiesto di scegliere un orologio pre-configurato. Se non ne hai ancora creato uno, dovresti farlo prima usando l'opzione <code>crea</code>.</li>
+    <li><strong>Seleziona un Orologio:</strong> Ti verrà prima chiesto di scegliere un orologio pre-configurato. Se non ne hai ancora creato uno, dovresti farlo prima con <code>orologi</code> e poi <code>crea</code>.</li>
     <li><strong>Modalità di Gioco:</strong> Puoi scegliere tra una partita <strong>Standard</strong> o una <strong>Fischer Random (Chess960)</strong>.</li>
     <li><strong>Informazioni Giocatori:</strong> Ti verrà chiesto di inserire nomi e punteggi Elo per i giocatori Bianco e Nero, così come i dettagli dell'evento. Il programma salva le tue ultime immissioni come predefinite per la partita successiva.</li>
 </ol>
@@ -566,12 +566,14 @@ margin: 1em 0;
 <h3>2.8. Configurazione</h3>
 <p>Orologic è altamente personalizzabile.</p>
 
-<h4>2.8.1. Gestione Orologi (crea, vedi, elimina)</h4>
+<h4>2.8.1. Gestione Orologi (orologi)</h4>
+<p>La voce <code>orologi</code> del menu principale apre un sottomenu con le tre operazioni sugli orologi, che fino alla versione 8.18.0 stavano nel menu principale sparse fra le modalità di gioco. Si resta nel sottomenu finché non si digita il punto, così se ne possono fare più di una di seguito.</p>
 <ul>
-    <li><strong>crea:</strong> Ti guida nella creazione di un nuovo orologio, con fasi multiple, tempo base, incremento e allarmi sonori.</li>
-    <li><strong>vedi:</strong> Mostra una lista di tutti i tuoi orologi salvati.</li>
-    <li><strong>elimina:</strong> Ti permette di cancellare un orologio che non usi più.</li>
+    <li><strong>crea:</strong> Ti guida nella creazione di un nuovo orologio, con fasi multiple, tempo base, incremento e allarmi sonori. Ogni durata viene verificata mentre la inserisci: il minimo è di due secondi per fase e di un secondo per gli allarmi, e con il punto rinunci alla creazione.</li>
+    <li><strong>vedi:</strong> Elenca gli orologi salvati, uno alla volta e per esteso: numero e nome, la nota, se i due colori hanno lo stesso tempo, ogni fase con la sua durata, l'incremento e il numero di mosse, infine gli allarmi detti a parole. Si scorre tre orologi per schermata: premi un tasto qualsiasi per continuare oppure ESC per tornare indietro.</li>
+    <li><strong>elimina:</strong> Ti permette di cancellare un orologio che non usi più, chiedendo conferma prima di procedere.</li>
 </ul>
+<p>Gli allarmi hanno cinque voci diverse, una per ciascuno, così quando ne senti uno sai subito qual è: il messaggio a schermo dice il numero e il suono lo conferma. Il lato da cui arriva il suono, sinistra o destra, dice di chi è l'orologio che sta scendendo.</p>
 
 <h4>2.8.2. Configurazione Motore Scacchistico (motore)</h4>
 <p>Questo passaggio è fondamentale per abilitare le funzioni di analisi. Orologic ti guiderà nella configurazione iniziale, ma è importante capire come renderlo portatile e cosa significano i parametri tecnici.</p>
