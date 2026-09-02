@@ -231,7 +231,10 @@ def drawing_menu(game, node):
                 .upper()
                 .strip()
             )
-            if conf == "S":
+            # La lettera della conferma si traduce insieme al prompt: chi
+            # legge (Y/N) preme Y, e un confronto fisso con la S italiana
+            # gli avrebbe risposto no.
+            if conf == _("S"):
                 count = clear_all_drawings(game)
                 is_modified = True
                 print(

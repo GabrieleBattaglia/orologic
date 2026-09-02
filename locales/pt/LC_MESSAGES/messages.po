@@ -459,7 +459,7 @@ msgstr "Aviso: a pasta '{d}' contém {n} arquivos com mais de {days} dias."
 
 #: orologic_modules/cleaner.py:49
 msgid "Vuoi (v)edere la lista, (c)ancellarli, o (i)gnorare questo avviso?"
-msgstr "Deseja (ver) a lista, (c)excluí-los ou (i)ignorar este aviso?"
+msgstr "Quer (v) ver a lista, (c) apagá-los ou (i) ignorar este aviso?"
 
 #: orologic_modules/cleaner.py:52
 msgid "Scegli v, c oppure i: "
@@ -3574,12 +3574,12 @@ msgid ""
 "Avvio partita in corso..."
 msgstr ""
 "\n"
-"Iniciando a partida em andamento..."
+"Iniciando a partida..."
 
 #: orologic_modules/lichess_app.py:1659
 #, python-brace-format
 msgid "Partita avviata! ID: {id}"
-msgstr "Partida salvo em:{id}"
+msgstr "Partida iniciada! ID: {id}"
 
 #: orologic_modules/lichess_app.py:1668
 msgid "Recupero lista degli amici..."
@@ -3718,7 +3718,7 @@ msgstr "Estou procurando partidas atuais..."
 
 #: orologic_modules/lichess_app.py:1795
 msgid "Non hai partite attive."
-msgstr "Você não tem partidas ativos."
+msgstr "Você não tem partidas ativas."
 
 #: orologic_modules/lichess_app.py:1802
 #, python-brace-format
@@ -3747,14 +3747,12 @@ msgstr "Sair (remover token)"
 
 #: orologic_modules/lichess_app.py:1861
 msgid "Riprendi partita in sospeso (1 attiva)"
-msgstr "Retomar partida pendente (1 ativo)"
+msgstr "Retomar partida pendente (1 ativa)"
 
 #: orologic_modules/lichess_app.py:1865
 #, python-brace-format
 msgid "Riprendi partita in sospeso ({n} attive)"
-msgstr ""
-"Resumo da Partida por Orologic\n"
-" {n}"
+msgstr "Retomar partida pendente ({n} ativas)"
 
 #: orologic_modules/lichess_app.py:1877
 msgid "Login (Imposta API Token)"
@@ -3864,7 +3862,7 @@ msgid ""
 "La partita e' stata scaricata da Lichess, salvata nella cartella PGN e "
 "copiata negli appunti."
 msgstr ""
-"A partida foi baixado do Lichess, salvo na pasta PGN e copiado para a área "
+"A partida foi baixada do Lichess, salva na pasta PGN e copiada para a área "
 "de transferência."
 
 #: orologic_modules/lichess_board.py:128
@@ -3878,7 +3876,7 @@ msgstr ""
 
 #: orologic_modules/lichess_board.py:145
 msgid "La partita e' stata salvata nella cartella PGN (ricostruzione locale)."
-msgstr "A partida foi salvo na pasta PGN (reconstrução local)."
+msgstr "A partida foi salva na pasta PGN (reconstrução local)."
 
 #: orologic_modules/lichess_board.py:150
 #, python-brace-format
@@ -4511,11 +4509,14 @@ msgstr ""
 
 #: orologic_modules/lichess_profiler.py:324
 msgid "Vuoi partite giocate col (b)ianco, (n)ero o (e)ntrambi? (b/n/e): "
-msgstr "Você quer partidas com (brancos), (n)ero ou (ambos)? (p/c/e): "
+msgstr ""
+"Quer partidas jogadas com (b) as brancas, (n) as pretas ou (e) ambas? "
+"(b/n/e): "
 
 #: orologic_modules/lichess_profiler.py:333
 msgid "Risultato: (v)ittoria, (p)areggio, (s)confitta o (t)utte? (v/p/s/t): "
-msgstr "Resultado: (vitória), (p)areggio, (s)perda ou (todos)? (v/p/s/t): "
+msgstr ""
+"Resultado: (v) vitória, (p) empate, (s) derrota ou (t) todas? (v/p/s/t): "
 
 #: orologic_modules/lichess_profiler.py:341
 msgid ""
@@ -4643,7 +4644,7 @@ msgid ""
 "Il PGN della partita e' stato copiato negli appunti!"
 msgstr ""
 "\n"
-"O PGN da partida foi copiado para a área de transferência!"
+"O PGN da partida foi copiada para a área de transferência!"
 
 #: orologic_modules/lichess_profiler.py:607
 msgid "Ora verrai reindirizzato a Easyfish."
@@ -5229,7 +5230,7 @@ msgstr ""
 
 #: orologic_modules/memoboard_app.py:477
 msgid "s"
-msgstr "é"
+msgstr "s"
 
 #: orologic_modules/memoboard_app.py:480
 msgid ""
@@ -7613,7 +7614,7 @@ msgid ""
 "Menu Disegno (.d): [A]ggiungi, [L]ista, [C]ancella da questa mossa, [P]ulisci tutto, [.] Esci: "
 msgstr ""
 "\n"
-"Menu de desenho (.d): [A] Adicionar, [L] Listar, [C] Apagar deste lance, [P] Limpar tudo, [.] Sair: "
+"Menu de desenho (.d): [A] adicionar, [L] listar, [C] apagar deste lance, [P] limpar tudo, [.] sair: "
 
 #: orologic_modules/easyfish/drawing.py:135
 msgid "Inserisci casa (es. e4 per cerchio) o case (es. e4.f6 per freccia): "
@@ -7627,7 +7628,7 @@ msgstr "Formato inválido. Use e4 ou e4.f6"
 
 #: orologic_modules/easyfish/drawing.py:153
 msgid "Scegli colore: [V]erde, [R]osso, [B]lu, [G]iallo: "
-msgstr "Escolha a cor: [Verde], [R]ed, [B]lu, [Y]ellow: "
+msgstr "Escolha a cor: [V] verde, [R] vermelho, [B] azul, [G] amarelo: "
 
 #: orologic_modules/easyfish/drawing.py:162
 msgid "Colore non valido. Usato Verde come default."
@@ -8652,6 +8653,9 @@ msgstr "A janela de compartilhamento não fecha, deixo passar."
 #: orologic_modules/easyfish/utils.py:59
 msgid "Nessuno."
 msgstr "Ninguém."
+
+msgid "S"
+msgstr "S"
 
 #~ msgid "DEBUG: Analisi per FEN {fen} ha restituito risultato vuoto."
 #~ msgstr "DEBUG: A análise para FEN{fen}retornou um resultado em branco."

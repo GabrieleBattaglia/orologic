@@ -181,12 +181,16 @@ def image_settings_menu():
 
     shadow_choice = (
         dgt(
-            prompt=_("Attivare ombreggiatura pezzi? (S/N) [S]: "), kind="s", default="S"
+            prompt=_("Attivare ombreggiatura pezzi? (S/N) [S]: "),
+            kind="s",
+            default=_("S"),
         )
         .strip()
         .upper()
     )
-    settings["shadow"] = shadow_choice == "S"
+    # La lettera del si' si traduce con il prompt: chi legge (Y/N) preme
+    # Y, e il confronto con la S italiana gli avrebbe risposto no.
+    settings["shadow"] = shadow_choice == _("S")
 
     settings["size"] = dgt(
         prompt=_("\nDimensione immagine in pixel [{d}]: ").format(d=settings["size"]),

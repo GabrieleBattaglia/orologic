@@ -69,12 +69,21 @@ def main():
         f.write(f"Ritorno in italiano delle traduzioni {argomenti.lingua}.\n")
         f.write("Ogni voce riporta la frase originale e quella tornata indietro.\n")
         for numero, voce in enumerate(voci, 1):
-            try:
-                ritorno = traduttore.translate(voce.msgstr) or ""
-            # Il servizio di traduzione risponde in tanti modi diversi
-            # quando non ce la fa: qui si salta e si va avanti.
-            except Exception as errore:  # noqa: BLE001
-                f.write(f"\nERRORE {errore}\n  IT {voce.msgid}\n")
+            ritorno = None
+            for tentativo in range(3):
+                try:
+                    ritorno = traduttore.translate(voce.msgstr) or ""
+                    break
+                # Il servizio di traduzione risponde in tanti modi diversi
+                # quando non ce la fa, e spesso e' solo troppa fretta: si
+                # aspetta un po' di piu' e si riprova, invece di perdere
+                # la stringa.
+                except Exception as errore:  # noqa: BLE001
+                    if tentativo == 2:
+                        f.write(f"\nERRORE {errore}\n  IT {voce.msgid}\n")
+                    else:
+                        time.sleep(argomenti.pausa * 6 * (tentativo + 1))
+            if ritorno is None:
                 continue
             somiglianza = SequenceMatcher(
                 None, nocciolo(voce.msgid), nocciolo(ritorno)
