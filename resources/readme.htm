@@ -318,10 +318,11 @@ margin: 1em 0;
 <p>Durante una partita su Lichess, valgono quasi tutti i comandi della modalità Arbitraggio (<code>.1</code>, <code>.2</code>, ecc.), con l'aggiunta di:</p>
 <ul>
     <li><code>_[testo]</code>: Invia un messaggio in chat all'avversario (es. <code>_Buona partita</code>).</li>
-    <li><code>draw</code> / <code>resign</code> / <code>takeback</code>: Proponi patta, abbandona o chiedi di annullare l'ultima mossa.</li>
-    <li><code>claim</code>: Reclama la vittoria se l'avversario abbandona la connessione.</li>
-    <li><strong>Premoves:</strong> Se inserisci una mossa valida mentre tocca all'avversario, questa verrà memorizzata come "premove" e giocata istantaneamente appena il turno passerà a te.</li>
+    <li><code>draw</code> / <code>resign</code> / <code>takeback</code>: Proponi patta, abbandona o chiedi di annullare l'ultima mossa. Sono parole inglesi da scrivere così come sono, perché è il linguaggio con cui Orologic parla a Lichess: restano invariate anche se stai usando il programma in italiano. L'abbandono chiede conferma, la patta e il takeback vengono girati all'avversario, che è libero di rifiutarli.</li>
+    <li><code>claim</code>: Reclama la vittoria quando l'avversario si è scollegato. Non funziona subito: Lichess concede all'avversario un tempo per rientrare, e finché non è scaduto Orologic ti dice quanti secondi mancano. Quando il momento arriva, il prompt te lo segnala e ti basta scrivere <code>claim</code> per chiudere la partita a tuo favore.</li>
+    <li><strong>Premoves:</strong> Se inserisci una mossa valida mentre tocca all'avversario, questa verrà memorizzata come "premove" e giocata istantaneamente appena il turno passerà a te. È utilissima nei lampo: in una riconquista obbligata, o quando devi solo riprendere un pezzo, la premove ti fa risparmiare l'intero tempo di reazione. Se l'avversario gioca qualcosa che rende illegale la tua premove, Orologic te lo dice e la annulla, lasciandoti giocare normalmente.</li>
 </ul>
+<p>Un avvertimento che vale la pena di conoscere prima di trovarcisi: uscire dalla visuale della partita con il punto non equivale ad abbandonare. Se chiudi la finestra di gioco, su Lichess la partita resta in corso e il tuo orologio continua a scorrere: per lasciarla davvero devi scrivere <code>resign</code>. La differenza è ricordata anche dall'elenco dei comandi che ottieni con <code>.?</code>.</p>
 
 <h4>2.2.4. Storia Elo e Sonificazione (storia)</h4>
 <p>Questa funzionalità (disponibile dal menu principale di Orolichess per l'utente loggato, e dal sottomenu del Profilatore per qualsiasi altro giocatore cercato) ti permette di analizzare nel dettaglio l'evoluzione dell'Elo del giocatore nel tempo e di ascoltarla tramite sonificazione acustica.</p>
@@ -374,6 +375,19 @@ margin: 1em 0;
     </tbody>
 </table>
 
+<h5>Un esempio di sessione</h5>
+<p>Hai appena perso una partita e vuoi capire dove è girata. La copi negli appunti, entri in <code>analizza</code> e ti trovi sulla posizione iniziale.</p>
+<ol>
+    <li>Premi <code>f</code> per saltare alla fine e <code>j</code> per farti leggere le intestazioni: ti conferma che è la partita giusta.</li>
+    <li>Torni indietro con <code>s</code> fino al punto dove ricordi di esserti trovato bene, diciamo la quindicesima mossa. Se sai il numero, <code>k</code> ti ci porta diretto.</li>
+    <li>Premi <code>i</code> e imposti tre secondi di analisi, poi <code>o</code> e imposti tre linee: così il motore ti dà anche le alternative, che sono la parte istruttiva.</li>
+    <li>Premi <code>e</code>: il motore calcola e ti legge le tre migliori continuazioni con la loro valutazione. Se una ti incuriosisce, entri in Ispezione Smart e la percorri mossa per mossa con <code>d</code>, tornando indietro con <code>s</code>.</li>
+    <li>Vai avanti con <code>d</code> una mossa per volta e ripremi <code>e</code> quando vuoi il parere del motore. Il punto in cui la valutazione cambia di colpo è quello che cercavi.</li>
+    <li>Quando l'hai trovato, premi <code>z</code> per inserire la linea migliore come variante nel PGN, oppure <code>c</code> per scrivere un tuo commento, per esempio "qui dovevo giocare Rfe8 e restare pari".</li>
+    <li>Esci con <code>.</code>: Orologic ti chiede se salvare, e la partita commentata resta nella cartella <code>pgn</code> con dentro le tue annotazioni.</li>
+</ol>
+<p>Se invece vuoi il quadro completo senza cercare a mano, esci e lancia l'Analisi Automatica descritta nella sezione 2.1.5.1: passa in rassegna tutte le mosse e ti consegna un rapporto scritto.</p>
+
 <h4>2.3.1. Modalità Ispezione Smart</h4>
 <p>Dopo aver usato il comando <code>e</code>, puoi scegliere di ispezionare una linea in "Modalità Smart", navigandola mossa per mossa. I comandi sono: <code>d</code> (avanti), <code>s</code> (indietro), <code>r</code> (rivaluta), <code>.</code> (esci).</p>
 
@@ -394,6 +408,8 @@ margin: 1em 0;
     <li><code>.pg</code> o <code>.fg</code>: Incolla una partita PGN (o un codice FEN) precedentemente copiata nei tuoi appunti, per iniziare a lavorarci.</li>
     <li><code>.pt</code>: Permette di impostare o modificare i tag della partita (Evento, Giocatori, Luogo, Risultato).</li>
     <li>Qualsiasi mossa in formato SAN (es. <code>e4</code>, <code>Nf3</code>) viene aggiunta all'albero della partita. Se inserisci una mossa che devia dalla linea principale, Easyfish ti chiederà se vuoi sovrascrivere o creare una variante.</li>
+    <li><code>.v</code>: Annuncia che la prossima mossa che inserirai deve creare una variante, senza che Easyfish ti chieda nulla. Comodo quando sai già che stai per deviare.</li>
+    <li><code>.vm</code>: Promuove la variante in cui ti trovi a linea principale, scambiandola con quella che c'era prima. Serve quando, studiando, ti accorgi che la continuazione buona è quella che avevi messo fra parentesi: con questo comando diventa la linea che il PGN racconta per prima, e la vecchia principale scala a variante.</li>
     <li><code>.l</code>: Mostra la lista delle mosse giocate, ricostruita dalla partita fino al punto in cui ti trovi, varianti comprese. È lo stesso comando di tutte le altre modalità.</li>
     <li><code>.a#</code>: Chiede al motore di analizzare la posizione per il numero di secondi indicato (es. <code>.a5</code>).</li>
     <li><code>.al#</code>: Rilegge le linee trovate dall'ultima analisi, senza interrogare di nuovo il motore. Da solo dà la migliore, con un numero la scelta corrispondente (es. <code>.al2</code> per la seconda). Fino alla versione 8.17.0 questo comando era <code>.l</code>, che però altrove è la lista delle mosse: era l'ultimo comando rimasto con due significati diversi.</li>
@@ -619,6 +635,19 @@ margin: 1em 0;
     <li>Orologic caricherà immediatamente la partita in modalità <strong>Analisi</strong> permettendoti di esplorarla mossa dopo mossa o di avviare l'analisi automatica con Stockfish.</li>
 </ol>
 
+<h4>2.7.5. Un esempio completo: preparare una partita contro un avversario</h4>
+<p>Sabato giochi contro un avversario che sai essere iscritto a Lichess e vuoi sapere cosa gioca con il Nero contro <code>1. e4</code>. Ecco il giro completo.</p>
+<ol>
+    <li>Entra in <code>lichess</code>, scegli <strong>Cerca e Profila Giocatore</strong> e trova il suo nome. Dal sottomenu scegli di copiare l'URL delle sue partite e andare a Ricerca PGN: Orologic mette il link negli appunti e ti porta dove serve.</li>
+    <li>Orologic scarica le partite e ti mostra i megabyte che arrivano. Se ne ha migliaia e ti bastano le ultime, premi ESC: quello che è già arrivato viene elaborato lo stesso.</li>
+    <li>Nel Menu dei Filtri imposta <strong>Giocatore Nero</strong> con il suo nome e conferma. Da questo momento l'albero conterrà solo le partite in cui aveva i pezzi neri.</li>
+    <li>Entra nell'albero. Al primo livello vedrai le prime mosse del Bianco ordinate per frequenza. Premi il numero corrispondente a <code>1. e4</code> per scendere.</li>
+    <li>Ora l'elenco mostra le sue risposte. Il prompt ti dice quante partite ci sono sotto ogni ramo e come sono andate per lui, per esempio <code>+38% =25% -37%</code>: quella è la sua percentuale personale, non quella generale della posizione.</li>
+    <li>Scendi nella risposta che gioca più spesso e continua finché l'albero non si assottiglia. Quando arrivi a un ramo con poche partite, premi <code>0</code> per sfogliarle una per una, oppure <code>s</code> per salvare un PGN con le sole partite di quel ramo e studiartelo con calma.</li>
+    <li>Scegliendo una partita dall'elenco, Orologic la apre in modalità Analisi e puoi farti dire dal motore dove ha sbagliato.</li>
+</ol>
+<p>Lo stesso giro serve anche per studiare te stesso: filtra con il tuo nome e guarda dove il tuo rendimento crolla. Spesso la variante da ripassare salta fuori da sola.</p>
+
 <h3>2.8. Configurazione</h3>
 <p>Orologic è altamente personalizzabile.</p>
 
@@ -657,9 +686,12 @@ margin: 1em 0;
     <li><strong>Skill Level (0-20):</strong> Regola la forza del motore. <code>20</code> è la forza massima (invincibile), mentre valori bassi simulano errori umani, rendendo la sfida più equilibrata.</li>
     <li><strong>Move Overhead (ms):</strong> È un margine di sicurezza per il tempo. Serve a compensare i ritardi di comunicazione tra Orologic e il motore. Impostarlo a <code>500</code> garantisce che il motore non perda mai per il tempo a causa di rallentamenti del sistema (lag).</li>
 </ul>
+<p>Due parole su come scegliere la forza, perché è la domanda che ci si pone davvero. Lo Skill Level e il limite in Elo sono due modi diversi di indebolire il motore, e conviene usarne uno solo per volta: impostando l'Elo con <code>.e</code>, Orologic disattiva da sé lo Skill Level. Il limite in Elo è il più intuitivo, perché parla la lingua che conosci: chiedi 1500 e ti trovi davanti un avversario di quella forza. Tieni presente che ogni motore ha una soglia sotto la quale non scende, per Stockfish attorno ai 1320 punti: se ti serve un avversario più modesto, l'unica strada è lo Skill Level basso, che produce vere sviste invece di un gioco uniformemente più debole. Un buon punto di partenza è chiedere il tuo Elo meno duecento punti: perdere sempre non insegna niente, e vincere sempre nemmeno.</p>
 
 <h4>2.8.3. Personalizzazione Lingua e Nomi (nomi)</h4>
 <p>Questa opzione ti permette di personalizzare il linguaggio descrittivo usato dal programma: puoi cambiare i nomi dei pezzi (es. da "cavallo" a "destriero"), i nomi delle colonne (es. da "Ancona" ad "Apple") e i verbi usati per descrivere le mosse.</p>
+<p>Serve più di quanto sembri, perché queste parole le senti a ogni singola mossa e il modo di dirle è personale. Un esempio concreto: la descrizione predefinita di <code>Nxe5</code> suona "il Cavallo mangia il Pedone in Empoli 5". Se sei abituato all'alfabeto telefonico internazionale invece che a quello italiano, cambi i nomi delle colonne e diventa "Echo 5". Se preferisci "cattura" a "mangia", cambi il verbo. Se giochi con qualcuno che chiama la Donna Regina, cambi il nome del pezzo.</p>
+<p>Le modifiche valgono immediatamente, senza riavviare il programma: la prima mossa che descrivi dopo essere uscito da questo menu usa già le parole nuove. Vale anche per l'esplorazione della scacchiera e per i riepiloghi salvati nei file di testo. Se cambi idea, puoi scorrere le voci e rimettere quelle originali, oppure chiudere con il punto per uscire a metà lasciando immutato quello che non hai ancora toccato.</p>
 
 <h4>2.8.4. Impostazioni Generali (impostazioni)</h4>
 <p>Questa nuova sezione ti permette di configurare due comportamenti chiave del programma:</p>
