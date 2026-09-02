@@ -217,22 +217,30 @@ DOT_COMMANDS = {
 
 MENU_CHOICES = {
     "analizza": _("Modalita' analisi partita"),
-    "crea": _("Nuovo orologio"),
     "easyfish": _("Easyfish (Interfaccia Accessibile)"),
     "lichess": _("Orolichess (Integrazione Lichess)"),
     "memoboard": _("Memoboard (Allenamento alla cieca)"),
-    "elimina": _("Elimina orologio"),
     "arbitra": _("Inizia partita (Arbitraggio)"),
     "tempo": _("Tempo (Orologio nudo e crudo)"),
     "manuale": _("Guida app"),
     "novita": _("Novita' (changelog)"),
     "motore": _("Configurazione motore"),
     "nomi": _("Personalizzazione nomi"),
+    "orologi": _("Orologi (crea, vedi, elimina)"),
     "ricerca": _("Ricerca PGN"),
     "impostazioni": _("Impostazioni varie"),
-    "vedi": _("Vedi orologi"),
     "volume": _("Regolazione volume"),
     ".": _("Esci"),
+}
+
+# Le tre voci degli orologi stavano nel menu principale, sparse fra le
+# modalita' di gioco: raccolte qui si trovano subito e il menu
+# principale si accorcia di due voci.
+MENU_OROLOGI = {
+    "crea": _("Nuovo orologio"),
+    "vedi": _("Vedi orologi"),
+    "elimina": _("Elimina orologio"),
+    ".": _("Torna al menu principale"),
 }
 
 FILE_NAMES = {

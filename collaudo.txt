@@ -1,54 +1,36 @@
 Collaudo di Orologic durante il refactoring di fase 1
 Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto)
-Aperto il 2026-08-30, terzo giro il 2026-09-02 sulla versione 8.18.0
+Aperto il 2026-08-30, quarto giro il 2026-09-02 sulla versione 8.19.0
 A cosa serve questo file
 Elenca le prove da fare a mano, quelle che non si possono automatizzare
 perche' richiedono di giocare, ascoltare o interagire davvero. Sotto ogni voce
 c'e' una riga Esito, da riempire con ok oppure con la descrizione del problema.
-Le voci restano qui finche' non sono verificate: una volta collaudate e
-sistemate si cancellano, come si fa con analisi_codice_fase_1.txt.
-Qui restano solo le prove ancora da fare, sulla versione 8.18.0. Quelle superate
-e quelle che aspettavano una correzione sono state tolte.
-Attenzione: i messaggi nuovi delle versioni 8.17.0 e 8.18.0 esistono solo in
+Qui restano solo le prove ancora da fare, sulla versione 8.19.0. Quelle superate
+sono state tolte.
+Attenzione: i messaggi nuovi delle versioni da 8.17.0 in avanti esistono solo in
 italiano, quindi cambiando lingua si sentiranno in italiano finche' non saranno
 tradotti. Non e' un difetto da segnalare.
-Prova 1, allarmi
-Creare un orologio con cinque allarmi e verificare che ognuno annunci il proprio
-numero e abbia una voce diversa dagli altri, riconoscibile senza contare. Le
-cinque voci sono, nell'ordine: due note acute, un colpo di timbro con pausa in
-mezzo, una discesa, un tonfo grave, una salita. Il lato da cui arriva il suono
-dice ancora di chi e' l'orologio, sinistra il bianco e destra il nero.
+Prova 1, le due voci di allarme rifatte
+Creare un orologio con cinque allarmi e ascoltare il quarto e il quinto, gli
+unici cambiati. Il quarto ora e' un doppio colpo ruvido su un fa medio, non piu'
+il tonfo grave e brevissimo di prima. Il quinto e' la stessa salita di prima ma
+un'ottava piu' in alto e ripetuta due volte, per dare piu' urgenza. Da
+verificare che si sentano bene tutti e due e che restino distinguibili dai primi
+tre, che al collaudo precedente andavano bene.
 Esito:
-Prova 2, Fischer Random
-Avviare una partita Fischer Random e controllare che non compaia piu' l'avviso
-sul motore che non accetta la variante. Verificare che gli arrocchi si facciano
-e che l'analisi del motore li valuti bene.
+Prova 2, sottomenu degli orologi
+Dal menu principale, la voce orologi apre un sottomenu con crea, vedi ed
+elimina. Da verificare che il menu principale non abbia piu' quelle tre voci,
+che dal sottomenu si possano fare piu' operazioni di seguito senza uscire, che
+il punto riporti al menu principale e che la voce orologi abbia un suono suo.
 Esito:
-Prova 3, storia Elo su Lichess
-Cercare un giocatore senza partite classificate, per esempio Giovanna2, e
-chiedere la storia Elo: deve dire che quel giocatore non ha ancora uno storico,
-non che il caricamento e' fallito. Provare poi un nome inventato e controllare
-che il messaggio sia diverso e comprensibile.
-Esito:
-Prova 4, scarico delle partite da Lichess
-Cercare un giocatore e chiedere l'intero archivio con INVIO: non deve piu'
-chiedere quante partite scaricare al massimo, deve partire e prenderle tutte,
-dicendo che con ESC ci si puo' fermare tenendo quelle gia' arrivate. Rifare la
-prova con ESC, impostando i filtri: li' il tetto va chiesto come prima.
-Esito:
-Prova 5, lista mosse e linee di analisi
-Verificare che punto elle sia la lista delle mosse in tutte le modalita', menu
-di Easyfish compreso, e che le linee di analisi rispondano a punto a elle, anche
-con il numero, per esempio punto a elle due. Controllare che l'aiuto con punto
-domanda e il manuale dicano la stessa cosa.
-Esito:
-Prova 6, elenco degli orologi salvati
-Dal menu principale, vedere gli orologi. Ogni orologio ora si presenta con il
-numero e il nome, la nota, se i due colori hanno lo stesso tempo, ogni fase con
-durata, incremento e numero di mosse, e gli allarmi detti a parole. Si scorre
-tre orologi per volta, con l'avviso Orologi 1 a 3 di 12. Da verificare che la
-lettura sia comoda, che ESC esca davvero e che i dati corrispondano a quelli
-inseriti alla creazione.
+Prova 3, elenco degli orologi e suono di elimina
+Rifare l'elenco degli orologi, ora dentro il sottomenu. Da verificare che sulla
+riga che dice a che punto sei lo screen reader resti fermo, grazie al ritorno
+carrello, e che uscendo con ESC si torni subito al sottomenu senza la richiesta
+di un altro tasto, mentre scorrendo fino in fondo quella richiesta resta.
+Ascoltare poi il suono della voce elimina, ora a onda triangolare invece che
+quadra: da verificare che sia meno aggressivo e ancora riconoscibile.
 Esito:
 Difficolta' incontrate e note libere
 Scrivere qui sotto qualsiasi cosa non torni, anche se non rientra nelle prove

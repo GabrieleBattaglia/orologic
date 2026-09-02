@@ -370,10 +370,60 @@ TEMI_MENU = {
         kind=1,
         adsr=[0, 0, 100, 0],
     ),
+    # Onda triangolare e non quadra: la quadra su una nota grave e lunga
+    # risultava aggressiva, e questa voce si sente ogni volta che si entra
+    # nell'eliminazione, non solo quando si cancella davvero.
     "elimina": lambda: Acusticator(
-        [200.0, 0.5, 0, config.VOLUME], kind=2, adsr=[10, 10, 80, 10]
+        [200.0, 0.5, 0, config.VOLUME], kind=3, adsr=[10, 10, 80, 10]
+    ),
+    "orologi": lambda: Acusticator(
+        [
+            "c6",
+            0.08,
+            -0.4,
+            config.VOLUME,
+            "p",
+            0.06,
+            0,
+            0,
+            "g5",
+            0.08,
+            0.4,
+            config.VOLUME,
+        ],
+        kind=1,
+        adsr=[0, 0, 100, 0],
     ),
 }
+
+
+def menu_orologi():
+    """Sottomenu degli orologi: crea, vedi, elimina.
+
+    Le tre voci stavano nel menu principale in ordine sparso, fra le
+    modalita' di gioco: qui stanno insieme e ci si puo' fare piu' di una
+    cosa senza tornare indietro ogni volta.
+    """
+    while True:
+        db = storage.LoadDB()
+        scelta = menu(
+            config.MENU_OROLOGI,
+            show=True,
+            keyslist=True,
+            p=_("\nOrologi, scegli un'azione: "),
+            numbered=db.get("menu_numerati", False),
+        )
+        if scelta is None or scelta == ".":
+            return
+        if scelta == "crea":
+            _suona("crea")
+            clock.CreateClock()
+        elif scelta == "vedi":
+            _suona("vedi")
+            clock.ViewClocks()
+        elif scelta == "elimina":
+            _suona("elimina")
+            clock.DeleteClock()
 
 
 def _suona(voce):
@@ -529,9 +579,9 @@ def Main():
                 else:
                     engine.AnalyzeGame(pgn_da_analizzare, is_corrected=is_corrected)
 
-        elif scelta == "crea":
-            _suona("crea")
-            clock.CreateClock()
+        elif scelta == "orologi":
+            _suona("orologi")
+            menu_orologi()
 
         elif scelta == "easyfish":
             _suona("easyfish")
@@ -583,10 +633,6 @@ def Main():
             _suona("novita")
             OpenChangelog()
 
-        elif scelta == "vedi":
-            _suona("vedi")
-            clock.ViewClocks()
-
         elif scelta == "volume":
             print(_("\nRegolazione Volume"))
             print(_("Volume attuale: {vol:.0f}%").format(vol=config.VOLUME * 100))
@@ -600,10 +646,6 @@ def Main():
             time.sleep(0.3)
             Acusticator(["c6", 0.2, 0, config.VOLUME])
             print(_("Volume impostato a {vol:.0f}%").format(vol=config.VOLUME * 100))
-
-        elif scelta == "elimina":
-            _suona("elimina")
-            clock.DeleteClock()
 
 
 def saluta(inizio, fine=None):

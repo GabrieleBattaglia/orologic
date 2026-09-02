@@ -74,7 +74,10 @@ def _nome(stato, bianco):
 # Una voce diversa per ciascuno dei cinque allarmi, presa da
 # Acu_Collection.json di GBUtils. Si distinguono per timbro e andamento e
 # non per altezza, cosi' si riconoscono senza doverle contare: due note
-# acute, un colpo di timbro, una discesa, un tonfo grave, una salita.
+# acute, un colpo di timbro, una discesa, un doppio colpo ruvido, una
+# salita ripetuta. Le ultime due sono state rifatte dopo il collaudo: la
+# quarta partiva da un do quasi inudibile e durava un soffio, la quinta
+# non dava abbastanza urgenza per essere l'ultimo avviso.
 VOCI_ALLARME = (
     {"note": (("d6", 0.05), ("a#7", 0.1)), "kind": 1, "adsr": [0.002, 0, 100, 0.1]},
     {
@@ -83,8 +86,16 @@ VOCI_ALLARME = (
         "adsr": [0.002, 0, 100, 0.002],
     },
     {"note": (("f#6.c2", 0.17),), "kind": 1, "adsr": [0.002, 99.948, 0, 0.05]},
-    {"note": (("c1.f3", 0.09),), "kind": 4, "adsr": [0.001, 99.999, 0, 0]},
-    {"note": (("c4.g4", 0.3),), "kind": 1, "adsr": [0.05, 0, 100, 0.05]},
+    {
+        "note": (("f4", 0.12), ("p", 0.06), ("f4", 0.14)),
+        "kind": 4,
+        "adsr": [1, 10, 70, 20],
+    },
+    {
+        "note": (("c5.g5", 0.3), ("p", 0.06), ("c5.g5", 0.3)),
+        "kind": 1,
+        "adsr": [0.05, 0, 100, 0.05],
+    },
 )
 
 
