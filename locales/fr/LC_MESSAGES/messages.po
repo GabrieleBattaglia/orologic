@@ -416,7 +416,7 @@ msgstr "Variante Fischer Random 960 :"
 
 #: orologic_modules/chess960_utils.py:138
 msgid "Configurazione Fischer Random (Chess960)"
-msgstr "Configuration aléatoire Fischer (Chess960)"
+msgstr "Configuration Fischer Random (Chess960)"
 
 #: orologic_modules/chess960_utils.py:141
 msgid ""
@@ -885,8 +885,8 @@ msgstr "Calculer et ajouter la note à l'invite"
 #: orologic_modules/config.py:183
 msgid "Visualizza le percentuali Win Draw Lost nella posizione corrente"
 msgstr ""
-"Afficher les pourcentages de victoires, tirages au sort perdus dans votre "
-"position actuelle"
+"Afficher les pourcentages de victoires, nulles et défaites dans la position "
+"actuelle"
 
 #: orologic_modules/config.py:184
 msgid "Aggiungi il bilancio materiale al prompt"
@@ -1117,7 +1117,7 @@ msgstr "Accoupler à {moves}, {first_move}"
 #: orologic_modules/engine.py:332
 #, python-brace-format
 msgid "Matto in {moves}:"
-msgstr "Accouplement dans {moves} :"
+msgstr "Mat en {moves} :"
 
 #: orologic_modules/engine.py:365
 msgid "Linee disponibili:"
@@ -1140,7 +1140,7 @@ msgstr "Ligne vide, l’inspection se termine."
 #: orologic_modules/engine.py:414
 #, python-brace-format
 msgid "Mate in {moves}"
-msgstr "Accouplement dans {moves}"
+msgstr "Mat en {moves}"
 
 #: orologic_modules/engine.py:422
 msgid ""
@@ -1533,7 +1533,7 @@ msgstr "PGN mis à jour dans le presse-papiers."
 #: orologic_modules/engine.py:1220
 #, python-brace-format
 msgid "Matto in {m}"
-msgstr "Accouplement à {m}"
+msgstr "Mat à {m}"
 
 #: orologic_modules/engine.py:1237
 #, python-brace-format
@@ -1839,7 +1839,7 @@ msgstr ""
 #: orologic_modules/engine.py:1851
 #, python-brace-format
 msgid "[OAA: {cl}. Matto in {m}]"
-msgstr "[OAA : {cl}. Accouplement dans {m}]"
+msgstr "[OAA : {cl}. Mat en {m}]"
 
 #: orologic_modules/engine.py:1869
 #, python-brace-format
@@ -1854,7 +1854,7 @@ msgstr "[OAA : {cl}. Perte : {cpl:+.2f}]"
 #: orologic_modules/engine.py:1907
 #, python-brace-format
 msgid "[OAA: Alt: Matto in {m}]"
-msgstr "[OAA : Alt : Accouplement à {m}]"
+msgstr "[OAA : Alt : Mat à {m}]"
 
 #: orologic_modules/engine.py:1912
 #, python-brace-format
@@ -2083,27 +2083,27 @@ msgstr "Match nul !"
 #: orologic_modules/easyfish/game_mode.py:378
 #: orologic_modules/game_flow.py:443
 msgid "Patta per materiale insufficiente!"
-msgstr "Rabat pour manque de matériel !"
+msgstr "Nulle par manque de matériel !"
 
 #: orologic_modules/easyfish/game_mode.py:406
 #: orologic_modules/game_flow.py:470
 msgid "Patta per la regola delle 75 mosse!"
-msgstr "Tirage au sort pour la règle des 75 coups !"
+msgstr "Nulle par la règle des 75 coups !"
 
 #: orologic_modules/easyfish/game_mode.py:434
 #: orologic_modules/game_flow.py:497
 msgid "Patta per ripetizione della posizione (5 volte)!"
-msgstr "Tirage au sort pour la répétition de la position (5 fois) !"
+msgstr "Nulle par la répétition de la position (5 fois) !"
 
 #: orologic_modules/easyfish/game_mode.py:462
 #: orologic_modules/game_flow.py:524
 msgid "Patta per la regola delle 50 mosse!"
-msgstr "Tirage au sort pour la règle des 50 coups !"
+msgstr "Nulle par la règle des 50 coups !"
 
 #: orologic_modules/easyfish/game_mode.py:490
 #: orologic_modules/game_flow.py:551
 msgid "Patta per triplice ripetizione della posizione!"
-msgstr "Tirage au sort pour la triple répétition de la position !"
+msgstr "Nulle par la triple répétition de la position !"
 
 #: orologic_modules/game_flow.py:601
 #, python-brace-format
@@ -2123,7 +2123,8 @@ msgstr "Je n'ai pas pu enregistrer le PGN sur le disque : {errore}"
 #: orologic_modules/game_flow.py:612
 msgid "La partita resta negli appunti, incollala subito da qualche parte."
 msgstr ""
-"Le partie reste dans le presse-papier, collez-le immédiatement quelque part."
+"La partie reste dans le presse-papiers, collez-la immédiatement quelque "
+"part."
 
 #: orologic_modules/game_flow.py:636 orologic_modules/tempo_app.py:109
 msgid ""
@@ -2147,19 +2148,19 @@ msgstr "Choisissez, ENTRÉE ou ESC : "
 
 #: orologic_modules/game_flow.py:649
 msgid "Vince il Nero per tempo."
-msgstr "Les noirs gagnent à temps."
+msgstr "Les Noirs gagnent au temps."
 
 #: orologic_modules/game_flow.py:652
 msgid "Vince il Bianco per tempo."
-msgstr "Les blancs gagnent à temps."
+msgstr "Les Blancs gagnent au temps."
 
 #: orologic_modules/game_flow.py:660
 msgid ""
 "Partita continuata senza limiti di tempo. Usa i comandi .1-0, .0-1, .1/2, .*"
 " per terminare."
 msgstr ""
-"Le match s'est poursuivi sans limite de temps. Utilisez les commandes .1-0, "
-".0-1, .1/2, .* pour terminer."
+"La partie continue sans limite de temps. Utilisez les commandes .1-0, .0-1, "
+".1/2, .* pour terminer."
 
 #: orologic_modules/game_flow.py:708 orologic_modules/tempo_app.py:238
 msgid "Comando non riconosciuto."
@@ -2179,7 +2180,7 @@ msgstr " proposition de nulle"
 
 #: orologic_modules/game_flow.py:765 orologic_modules/localizzazione.py:76
 msgid "proposta di patta"
-msgstr "dessiner une proposition"
+msgstr "proposer nulle une proposition"
 
 #: orologic_modules/game_flow.py:773
 #, python-brace-format
@@ -2203,7 +2204,7 @@ msgstr ""
 #: orologic_modules/easyfish/game_mode.py:889
 #: orologic_modules/game_flow.py:861
 msgid "Partita terminata."
-msgstr "Partie terminé."
+msgstr "Partie terminée."
 
 #: orologic_modules/game_flow.py:868 orologic_modules/lichess_board.py:1213
 msgid ""
@@ -2638,7 +2639,7 @@ msgstr "Pertes : {l} ({p:.2f}%)"
 #: orologic_modules/lichess_app.py:336
 #, python-brace-format
 msgid "Patte: {d} ({p:.2f}%)"
-msgstr "Tirages : {d} ({p:.2f}%)"
+msgstr "Nulles : {d} ({p:.2f}%)"
 
 #: orologic_modules/lichess_app.py:339
 #, python-brace-format
@@ -2746,7 +2747,7 @@ msgstr "Message envoyé à {u} avec succès !"
 #: orologic_modules/lichess_app.py:440
 #, python-brace-format
 msgid "Messaggio non inviato a {u}. {motivo}"
-msgstr "Message non envoyé au {u}. {motivo}"
+msgstr "Message non envoyé à {u}. {motivo}"
 
 #: orologic_modules/lichess_app.py:448
 msgid ""
@@ -2813,19 +2814,19 @@ msgstr "C'est au tour des Noirs de bouger."
 
 #: orologic_modules/lichess_app.py:519
 msgid "Corto Bianco"
-msgstr "Court Blanc"
+msgstr "Petit roque blanc"
 
 #: orologic_modules/lichess_app.py:521
 msgid "Lungo Bianco"
-msgstr "Longue blanche"
+msgstr "Grand roque blanc"
 
 #: orologic_modules/lichess_app.py:523
 msgid "Corto Nero"
-msgstr "Court Noir"
+msgstr "Petit roque noir"
 
 #: orologic_modules/lichess_app.py:525
 msgid "Lungo Nero"
-msgstr "Longue noire"
+msgstr "Grand roque noir"
 
 #: orologic_modules/lichess_app.py:527
 #, python-brace-format
@@ -2839,7 +2840,7 @@ msgstr "Pas de droit de roque."
 #: orologic_modules/lichess_app.py:535
 #, python-brace-format
 msgid "Presa en passant possibile in {sq}."
-msgstr "Prise en passant possible dans {sq}."
+msgstr "Prise en passant possible en {sq}."
 
 #: orologic_modules/lichess_app.py:538
 #, python-brace-format
@@ -2848,11 +2849,11 @@ msgstr "Dernier coup joué : {m}"
 
 #: orologic_modules/lichess_app.py:585
 msgid "Esplora colonna"
-msgstr "Colonne Explorer"
+msgstr "Explorer la colonne"
 
 #: orologic_modules/lichess_app.py:586
 msgid "Esplora traversa"
-msgstr "Explorer la barre transversale"
+msgstr "Explorer la rangée"
 
 #: orologic_modules/lichess_app.py:587
 msgid "Dettagli su una casa (es. -e4)"
@@ -2868,7 +2869,7 @@ msgstr "Diagonale ascendante gauche"
 
 #: orologic_modules/lichess_app.py:591
 msgid "Mostra la scacchiera grafica"
-msgstr "Affiche la carte graphique"
+msgstr "Afficher l'échiquier graphique"
 
 #: orologic_modules/lichess_app.py:592
 msgid "Arrenditi o esci dal puzzle"
@@ -3124,8 +3125,8 @@ msgid ""
 "A quale Elo vuoi esercitarti? (es. 1800, oppure invio per mantenere il tuo):"
 " "
 msgstr ""
-"Dans quel Elo voulez-vous vous entraîner ? (par exemple 1800, ou envoyer "
-"pour conserver le vôtre) : "
+"À quel Elo voulez-vous vous entraîner ? (par exemple 1800, ou ENTRÉE pour "
+"conserver le vôtre) : "
 
 #: orologic_modules/lichess_app.py:778
 #, python-brace-format
@@ -3221,7 +3222,7 @@ msgstr ""
 #: orologic_modules/lichess_app.py:961
 #, python-brace-format
 msgid "Corretto! Hai giocato: {m}"
-msgstr "Correct! Vous avez joué : {m}"
+msgstr "Correct ! Vous avez joué : {m}"
 
 #: orologic_modules/lichess_app.py:997
 msgid "Mossa errata, riprova."
@@ -4247,7 +4248,7 @@ msgstr "Etes-vous sûr de vouloir démissionner ? (Entrée = Oui, Esc = Non) : 
 
 #: orologic_modules/lichess_board.py:1271
 msgid "Offerta di patta inviata."
-msgstr "Offre de tirage envoyée."
+msgstr "Offre de nulle envoyée."
 
 #: orologic_modules/lichess_board.py:1275
 msgid "Richiesta di annullamento mossa inviata."
@@ -4280,7 +4281,7 @@ msgstr ""
 
 #: orologic_modules/lichess_board.py:1312
 msgid "draw : Proponi patta"
-msgstr "tirage au sort : Proposer un tirage au sort"
+msgstr "nulle : Proposer un nulle"
 
 #: orologic_modules/lichess_board.py:1313
 msgid "resign : Abbandona la partita"
@@ -5869,7 +5870,7 @@ msgstr "  Victoires des Blancs : {n} ({p:.1f}%)"
 #: orologic_modules/pgn_search.py:475
 #, python-brace-format
 msgid "  Patte:           {n} ({p:.1f}%)"
-msgstr "  Tirages : {n} ({p:.1f}%)"
+msgstr "  Nulles :          {n} ({p:.1f}%)"
 
 #: orologic_modules/pgn_search.py:476
 #, python-brace-format
@@ -5879,7 +5880,7 @@ msgstr "  Victoires des Noirs : {n} ({p:.1f}%)"
 #: orologic_modules/pgn_search.py:479
 #, python-brace-format
 msgid "  Altre/ND:        {n} ({p:.1f}%)"
-msgstr "  Tirages : {n} ({p:.1f}%)"
+msgstr "  Autres/ND :       {n} ({p:.1f}%)"
 
 #: orologic_modules/pgn_search.py:499
 #, python-brace-format
@@ -6018,7 +6019,7 @@ msgstr "Victoire des Noirs (0-1)"
 
 #: orologic_modules/pgn_search.py:644
 msgid "Patta (1/2-1/2)"
-msgstr "Rabat (1/2-1/2)"
+msgstr "Nulle (1/2-1/2)"
 
 #: orologic_modules/pgn_search.py:645
 msgid "Qualsiasi risultato"
@@ -6842,7 +6843,7 @@ msgstr "Commentaire pour le déménagement douteux"
 
 #: orologic_modules/ui.py:92
 msgid "Commento per la proposta di patta"
-msgstr "Commentaire pour la proposition de tirage au sort"
+msgstr "Commentaire pour la proposition de nulle"
 
 #: orologic_modules/ui.py:93
 msgid "Termine per 'Svarione'"
@@ -7733,12 +7734,12 @@ msgstr "Échec et mat!"
 #: orologic_modules/easyfish/easyfish_app.py:170
 #: orologic_modules/easyfish/game_mode.py:256
 msgid "Patta per la regola delle 50/75 mosse!"
-msgstr "Tirage au sort pour la règle des 50/75 !"
+msgstr "Nulle par la règle des 50/75 !"
 
 #: orologic_modules/easyfish/easyfish_app.py:196
 #: orologic_modules/easyfish/game_mode.py:282
 msgid "Patta per ripetizione della posizione!"
-msgstr "Tirage au sort pour la répétition de la position !"
+msgstr "Nulle par la répétition de la position !"
 
 #: orologic_modules/easyfish/easyfish_app.py:231
 msgid ""
