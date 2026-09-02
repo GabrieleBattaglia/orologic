@@ -308,9 +308,13 @@ def download_games(username, token):
             "Premi INVIO per scaricare l'intero database, oppure ESC per impostare filtri di ricerca: "
         )
     ):
-        # Nessun filtro
+        # Nessun filtro e nessun tetto: chi chiede l'intero archivio lo
+        # vuole intero. Prima veniva chiesto lo stesso quante partite
+        # scaricare al massimo, il che contraddiceva la domanda appena
+        # fatta.
         filters = {}
         is_partial = False
+        massimo = None
     else:
         is_partial = True
         filters = {}
@@ -353,25 +357,35 @@ def download_games(username, token):
             if eco:
                 filters["eco"] = eco
 
+        massimo = dgt(
+            _("Quante partite scaricare al massimo? "),
+            kind="i",
+            imin=1,
+            imax=100000,
+            default=500,
+        )
+
     # Download
-    massimo = dgt(
-        _("Quante partite scaricare al massimo? "),
-        kind="i",
-        imin=1,
-        imax=100000,
-        default=500,
-    )
-    print(
-        _(
-            "Scaricamento in corso, al massimo {n} partite. Premi ESC per interrompere e tenere quelle gia' arrivate."
-        ).format(n=massimo)
-    )
+    if massimo is None:
+        print(
+            _(
+                "Scaricamento dell'intero archivio in corso. Con molte partite puo' volerci parecchio: premi ESC per interrompere e tenere quelle gia' arrivate."
+            )
+        )
+    else:
+        print(
+            _(
+                "Scaricamento in corso, al massimo {n} partite. Premi ESC per interrompere e tenere quelle gia' arrivate."
+            ).format(n=massimo)
+        )
 
     # Il colore e' l'unico filtro che Lichess sa applicare per noi. La sua
     # specifica, per questo endpoint, offre since, until, max, vs, rated,
     # perfType, color e poco altro: non esistono parametri per la fascia
     # Elo ne' per il codice ECO, che vanno quindi filtrati qui.
-    url = f"https://lichess.org/api/games/user/{username}?pgnInJson=true&opening=true&max={massimo}"
+    url = f"https://lichess.org/api/games/user/{username}?pgnInJson=true&opening=true"
+    if massimo is not None:
+        url += f"&max={massimo}"
     if "color" in filters:
         url += f"&color={filters['color']}"
 

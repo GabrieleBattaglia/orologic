@@ -8,7 +8,12 @@ from GBUtils import Acusticator, dgt, enter_escape, menu
 
 from .. import config, orologio, storage, tempo, ui
 from .. import engine as orologic_engine
-from ..board_utils import CustomBoard, DescribeMove, NormalizeMove
+from ..board_utils import (
+    CustomBoard,
+    DescribeMove,
+    NormalizeMove,
+    mosse_fino_al_nodo,
+)
 from ..config import _
 from . import analysis_utils
 from .constants import MNGAME
@@ -685,13 +690,12 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                     elif cmd == ".l":
                         # L'elenco si ricostruisce dal PGN, poi il riepilogo e' quello
                         # di tutte le altre modalita'.
-                        mosse = []
-                        node = current_node.root()
-                        while node != current_node and node.variations:
-                            mossa = node.variations[0].move
-                            mosse.append(node.board().san(mossa))
-                            node = node.variations[0]
-                        ui.comandi_lettura(cmd, game_state, board=board, mosse=mosse)
+                        ui.comandi_lettura(
+                            cmd,
+                            game_state,
+                            board=board,
+                            mosse=mosse_fino_al_nodo(current_node),
+                        )
                     elif cmd.startswith(".e"):
                         try:
                             elo_part = cmd[2:].strip()

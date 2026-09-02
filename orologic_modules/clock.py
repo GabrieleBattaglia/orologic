@@ -10,6 +10,9 @@ from .config import _
 # prima che l'orologio parta.
 TEMPO_MINIMO_FASE = 2
 TEMPO_MINIMO_ALLARME = 1
+# Tre orologi per schermata: di piu' scorrerebbero via prima che lo
+# screen reader finisca di leggerli.
+OROLOGI_PER_SCHERMATA = 3
 
 # Volume gestito via config.VOLUME
 
@@ -218,31 +221,110 @@ def CreateClock():
     print(_("Orologio creato e salvato."))
 
 
+def _durata_con_incremento(secondi, incremento):
+    """Durata detta a parole, con l'incremento se c'e'."""
+    if incremento:
+        return _("{t} piu' {i} di incremento").format(
+            t=tempo.parlato(secondi), i=tempo.parlato(incremento)
+        )
+    return tempo.parlato(secondi)
+
+
+def _descrivi_orologio(numero, orologio):
+    """Righe che descrivono un orologio, pensate per essere ascoltate.
+
+    Prima era una tabella con sigle e abbreviazioni, B=N F1:01:30:00+30,
+    che alla sintesi vocale non diceva quasi nulla e taceva del tutto il
+    numero di mosse per fase.
+    """
+    righe = [f"{numero}. {orologio['name']}"]
+    nota = (orologio.get("note") or "").strip()
+    if nota:
+        righe.append(f"  {nota}")
+    stesso_tempo = orologio.get("same_time", True)
+    righe.append(
+        _("  Tempo uguale per i due colori")
+        if stesso_tempo
+        else _("  Tempi distinti per bianco e nero")
+    )
+    for indice, fase in enumerate(orologio.get("phases", []), 1):
+        if stesso_tempo:
+            righe.append(
+                _("  fase {n}: {t}").format(
+                    n=indice,
+                    t=_durata_con_incremento(fase["white_time"], fase["white_inc"]),
+                )
+            )
+        else:
+            righe.append(
+                _("  fase {n}, bianco: {t}").format(
+                    n=indice,
+                    t=_durata_con_incremento(fase["white_time"], fase["white_inc"]),
+                )
+            )
+            righe.append(
+                _("  fase {n}, nero: {t}").format(
+                    n=indice,
+                    t=_durata_con_incremento(fase["black_time"], fase["black_inc"]),
+                )
+            )
+        mosse = fase.get("moves", 0)
+        righe.append(
+            _("  per: {n} mosse").format(n=mosse)
+            if mosse
+            else _("  per: tutte le mosse restanti")
+        )
+    allarmi = orologio.get("alarms") or []
+    if allarmi:
+        righe.append(
+            _("  allarmi a: {elenco}").format(
+                elenco=", ".join(tempo.parlato(a) for a in allarmi)
+            )
+        )
+    else:
+        righe.append(_("  nessun allarme"))
+    return righe
+
+
+def _scorri_a_blocchi(blocchi, quanti=OROLOGI_PER_SCHERMATA):
+    """Mostra i blocchi qualche pezzo per volta, aspettando un tasto.
+
+    Il pager di menu conta le voci a una riga e separa le pagine con una
+    fila di trattini: qui ogni orologio occupa piu' righe e i separatori
+    grafici non si leggono, quindi si contano i blocchi e lo si dice a
+    parole.
+    """
+    totale = len(blocchi)
+    mostrati = 0
+    while mostrati < totale:
+        gruppo = blocchi[mostrati : mostrati + quanti]
+        for righe in gruppo:
+            for riga in righe:
+                print(riga)
+        primo = mostrati + 1
+        mostrati += len(gruppo)
+        if mostrati >= totale:
+            return
+        print(
+            _(
+                "Orologi {a} a {b} di {n}, ESC per uscire, un altro tasto continua"
+            ).format(a=primo, b=mostrati, n=totale)
+        )
+        if key() == "\x1b":
+            return
+
+
 def ViewClocks():
     print(_("Orologi salvati"))
     db = storage.LoadDB()
     if not db.get("clocks"):
         print(_("Nessun orologio salvato."))
         return
-    choices = {}
-    STILE_MENU_NUMERICO = db.get("menu_numerati", False)
-    for c in db["clocks"]:
-        indicatore = "B=N" if c["same_time"] else "B/N"
-        fasi = "".join(
-            [
-                " F{n}:{t}+{i}".format(
-                    n=j + 1,
-                    t=board_utils.SecondsToHMS(p["white_time"]),
-                    i=p["white_inc"],
-                )
-                for j, p in enumerate(c["phases"])
-            ]
-        )
-        details = "{indicator}{phases}. Allarmi: ({num})".format(
-            indicator=indicatore, phases=fasi, num=len(c.get("alarms", []))
-        )
-        choices[c["name"]] = details + (f"\n  {c['note']}" if c.get("note") else "")
-    menu(choices, show_only=True, numbered=STILE_MENU_NUMERICO)
+    blocchi = [
+        _descrivi_orologio(numero, orologio)
+        for numero, orologio in enumerate(db["clocks"], 1)
+    ]
+    _scorri_a_blocchi(blocchi)
     key(_("\nPremi un tasto per tornare al menu..."))
     Acusticator(["f7", 0.013, 0, config.VOLUME])
 

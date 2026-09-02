@@ -1,75 +1,56 @@
 Collaudo di Orologic durante il refactoring di fase 1
 Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto)
-Aperto il 2026-08-30, ripulito il 2026-09-01 sulla versione 8.16.0
+Aperto il 2026-08-30, terzo giro il 2026-09-02 sulla versione 8.18.0
 A cosa serve questo file
 Elenca le prove da fare a mano, quelle che non si possono automatizzare
 perche' richiedono di giocare, ascoltare o interagire davvero. Sotto ogni voce
 c'e' una riga Esito, da riempire con ok oppure con la descrizione del problema.
 Le voci restano qui finche' non sono verificate: una volta collaudate e
 sistemate si cancellano, come si fa con analisi_codice_fase_1.txt.
-Stato al 2026-09-01. Il primo giro di collaudo e' stato fatto da Gabriele. Le
-prove superate, cioe' correzioni manuali del tempo, esplorazione della
-scacchiera nei tre contesti, personalizzazione dei nomi, aggiornamento del
-motore, lettura generale con lo screen reader, analisi di una partita e le
-quattro lingue, sono state tolte. Quello che non andava e' diventato un rilievo
-in analisi_codice_fase_1.txt, da R157 a R167. Le prove qui sotto vanno rifatte
-quando quei rilievi saranno corretti.
-Aggiornamento della sera del 2026-09-01, versione 8.17.0. Sono stati corretti
-R157, R158, R159, R160, R161 e R167, quindi le prove A, B e G sono pronte da
-rifare. Le prove C, D, E ed F aspettano ancora la correzione dei rilievi da
-R162 a R166.
-Prova A, Easyfish contro il motore, la piu' importante
-Riguarda R157, R158, R159 e R160.
-Da verificare: punto cinque dice di chi e' il tratto senza andare in errore e
-nomina i due contendenti; punto sei o regola davvero l'aggiornamento
-automatico oppure dice chiaramente che in questa modalita' non si puo' fare; a
-tempo scaduto la partita si chiude da sola, senza aspettare che tu prema un
-tasto, non stampa la scacchiera e porta subito alla domanda sull'analisi;
-rispondendo no si torna al menu di Easyfish e lo si sente.
-Da verificare ancora, perche' al primo giro era tutto a posto e le correzioni
-toccano lo stesso ciclo: il tempo scorre solo per chi ha il tratto, l'incremento
-arriva dopo ogni mossa, punto u non sballa gli orologi, i comandi da punto uno
-a punto quattro dicono tempi coerenti.
-Esito:
-Prova B, creazione dell'orologio e annullamento
-Riguarda R161 e R162.
-Creare un orologio e provare a dare un tempo di fase impossibile: 00:00:00, una
-riga vuota, del testo qualsiasi. Devono essere tutti rifiutati con una domanda
-ripetuta, e il minimo accettato deve essere di due secondi. Provare anche gli
-allarmi con un tempo scritto male.
-Poi, in partita, dare punto q senza essere in pausa e punto q alla prima mossa:
-in tutti e due i casi Orologic deve dire perche' non succede niente.
-Esito:
-Prova C, allarmi
-Riguarda R163.
+Stato al 2026-09-02, versione 8.18.0. Sono state tolte le prove superate nei due
+giri precedenti: Easyfish contro il motore, creazione dell'orologio e
+annullamento, schermata di benvenuto, piu' quelle del primo giro. I rilievi da
+R157 a R167 sono tutti corretti, quindi tutte le prove qui sotto sono pronte da
+fare. Attenzione: i messaggi nuovi delle versioni 8.17.0 e 8.18.0 esistono solo
+in italiano, quindi nelle altre lingue si sentiranno in italiano finche' non
+saranno tradotti.
+Prova 1, allarmi
 Creare un orologio con cinque allarmi e verificare che ognuno annunci il proprio
-numero e abbia un suono diverso dagli altri, riconoscibile senza contare.
+numero e abbia una voce diversa dagli altri, riconoscibile senza contare. Le
+cinque voci sono, nell'ordine: due note acute, un colpo di timbro con pausa in
+mezzo, una discesa, un tonfo grave, una salita. Il lato da cui arriva il suono
+dice ancora di chi e' l'orologio, sinistra il bianco e destra il nero.
 Esito:
-Prova D, Fischer Random
-Riguarda R164.
+Prova 2, Fischer Random
 Avviare una partita Fischer Random e controllare che non compaia piu' l'avviso
-sul motore che non accetta la variante: era un falso allarme, la libreria
-imposta l'opzione da sola. Verificare che gli arrocchi si facciano e che
-l'analisi del motore li valuti bene.
+sul motore che non accetta la variante. Verificare che gli arrocchi si facciano
+e che l'analisi del motore li valuti bene.
 Esito:
-Prova E, storia Elo su Lichess
-Riguarda R165.
-Cercare un giocatore che non abbia partite classificate, per esempio Giovanna2,
-e controllare che Orologic dica che non c'e' ancora uno storico invece di dire
-che non e' riuscito a caricarlo. Cercare poi un nome inventato e controllare che
-il messaggio sia diverso e comprensibile.
+Prova 3, storia Elo su Lichess
+Cercare un giocatore senza partite classificate, per esempio Giovanna2, e
+chiedere la storia Elo: deve dire che quel giocatore non ha ancora uno storico,
+non che il caricamento e' fallito. Provare poi un nome inventato e controllare
+che il messaggio sia diverso e comprensibile.
 Esito:
-Prova F, lista mosse e linee di analisi
-Riguarda R166.
+Prova 4, scarico delle partite da Lichess
+Cercare un giocatore e chiedere l'intero archivio con INVIO: non deve piu'
+chiedere quante partite scaricare al massimo, deve partire e prenderle tutte,
+dicendo che con ESC ci si puo' fermare tenendo quelle gia' arrivate. Rifare la
+prova con ESC, impostando i filtri: li' il tetto va chiesto come prima.
+Esito:
+Prova 5, lista mosse e linee di analisi
 Verificare che punto elle sia la lista delle mosse in tutte le modalita', menu
-di Easyfish compreso, e che le linee di analisi rispondano al comando nuovo,
-anche con il numero, per esempio punto a elle due. Controllare che l'aiuto e il
-manuale dicano la stessa cosa.
+di Easyfish compreso, e che le linee di analisi rispondano a punto a elle, anche
+con il numero, per esempio punto a elle due. Controllare che l'aiuto con punto
+domanda e il manuale dicano la stessa cosa.
 Esito:
-Prova G, schermata di benvenuto
-Riguarda R167.
-Controllare che l'eta' della versione sia giusta e che l'autore riporti il
-modello, cioe' ClaudIA seguito dal nome del modello e dalla modalita'.
+Prova 6, elenco degli orologi salvati
+Dal menu principale, vedere gli orologi. Ogni orologio ora si presenta con il
+numero e il nome, la nota, se i due colori hanno lo stesso tempo, ogni fase con
+durata, incremento e numero di mosse, e gli allarmi detti a parole. Si scorre
+tre orologi per volta, con l'avviso Orologi 1 a 3 di 12. Da verificare che la
+lettura sia comoda, che ESC esca davvero e che i dati corrispondano a quelli
+inseriti alla creazione.
 Esito:
 Difficolta' incontrate e note libere
 Scrivere qui sotto qualsiasi cosa non torni, anche se non rientra nelle prove
