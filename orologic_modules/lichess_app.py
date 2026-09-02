@@ -1905,7 +1905,9 @@ def run():
         if is_logged:
             username = secrets.get("lichess_username", _("Utente"))
             print(
-                _("OROLICHESS --- CONNESSO COME: {username}{rating}").format(
+                # I tre trattini erano l'ultimo separatore grafico rimasto
+                # nel programma: lo screen reader li legge uno per uno.
+                _("Orolichess, connesso come: {username}{rating}").format(
                     username=username, rating=rating_info
                 )
             )
