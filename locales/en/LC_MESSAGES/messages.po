@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-09-02 12:13+0200\n"
+"POT-Creation-Date: 2026-09-02 15:21+0200\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -45,7 +45,7 @@ msgstr "HI! Welcome, I'm Orologic and I have {age}."
 #, python-brace-format
 msgid ""
 "L'ultima versione e' la {version} ed e' stata rilasciata {release_date}."
-msgstr "The latest version is {version} and {release_date} has been released."
+msgstr "The latest version is {version} and was released on {release_date}."
 
 #: orologic.py:90
 #, python-brace-format
@@ -145,7 +145,7 @@ msgid "Impossibile ripristinare la partita: {e}"
 msgstr "Unable to restore game: {e}"
 
 #: orologic.py:545 orologic_modules/lichess_app.py:464
-#: orologic_modules/lichess_app.py:1919
+#: orologic_modules/lichess_app.py:1921
 msgid ""
 "\n"
 "Scegli un'azione: "
@@ -328,7 +328,7 @@ msgstr "Unexpected error parsing PGN: {error}"
 #: orologic_modules/easyfish/interaction.py:113
 #: orologic_modules/engine.py:1384 orologic_modules/game_flow.py:998
 #: orologic_modules/lichess_app.py:1385 orologic_modules/lichess_app.py:1801
-#: orologic_modules/lichess_app.py:1930 orologic_modules/lichess_board.py:21
+#: orologic_modules/lichess_app.py:1932 orologic_modules/lichess_board.py:21
 #: orologic_modules/lichess_board.py:555 orologic_modules/lichess_board.py:796
 #: orologic_modules/memoboard_app.py:962 orologic_modules/memoboard_app.py:963
 #: orologic_modules/memoboard_app.py:1157
@@ -346,7 +346,7 @@ msgstr "White"
 #: orologic_modules/easyfish/interaction.py:113
 #: orologic_modules/engine.py:1385 orologic_modules/game_flow.py:999
 #: orologic_modules/lichess_app.py:1385 orologic_modules/lichess_app.py:1801
-#: orologic_modules/lichess_app.py:1930 orologic_modules/lichess_board.py:22
+#: orologic_modules/lichess_app.py:1932 orologic_modules/lichess_board.py:22
 #: orologic_modules/lichess_board.py:556 orologic_modules/lichess_board.py:796
 #: orologic_modules/memoboard_app.py:962 orologic_modules/memoboard_app.py:965
 #: orologic_modules/memoboard_app.py:1157
@@ -395,7 +395,6 @@ msgid "la piu' veloce e' la {move}, {time}."
 msgstr "the fastest is {move}, {time}."
 
 #: orologic_modules/chess960_utils.py:63
-#, python-brace-format
 msgid ""
 "Attenzione: il motore non conosce la variante Fischer Random. Le analisi "
 "degli arrocchi saranno inattendibili."
@@ -1076,7 +1075,7 @@ msgstr ""
 #: orologic_modules/engine.py:216
 #, python-brace-format
 msgid "Motore {n} pronto."
-msgstr "{n} engine ready."
+msgstr "Engine {n} ready."
 
 #: orologic_modules/easyfish/game_mode.py:881 orologic_modules/engine.py:223
 #, python-brace-format
@@ -2537,7 +2536,7 @@ msgstr ""
 
 #: orologic_modules/lichess_app.py:283 orologic_modules/lichess_app.py:394
 #: orologic_modules/lichess_app.py:477 orologic_modules/lichess_app.py:1177
-#: orologic_modules/lichess_app.py:1972 orologic_modules/lichess_board.py:1179
+#: orologic_modules/lichess_app.py:1974 orologic_modules/lichess_board.py:1179
 #: orologic_modules/lichess_stats.py:164 orologic_modules/lichess_stats.py:174
 #: orologic_modules/lichess_stats.py:189 orologic_modules/lichess_stats.py:411
 msgid ""
@@ -3328,8 +3327,8 @@ msgid "Canali TV non recuperati. {motivo}"
 msgstr "TV channels not recovered. {motivo}"
 
 #: orologic_modules/lichess_app.py:1230 orologic_modules/lichess_app.py:1761
-#: orologic_modules/lichess_app.py:1800 orologic_modules/lichess_app.py:1929
-#: orologic_modules/lichess_app.py:2006 orologic_modules/lichess_board.py:741
+#: orologic_modules/lichess_app.py:1800 orologic_modules/lichess_app.py:1931
+#: orologic_modules/lichess_app.py:2008 orologic_modules/lichess_board.py:741
 #: orologic_modules/lichess_board.py:746
 #: orologic_modules/lichess_board.py:1086
 #: orologic_modules/lichess_profiler.py:547
@@ -3588,7 +3587,7 @@ msgid "{u} ({o})"
 msgstr "{u} ({o})"
 
 #: orologic_modules/lichess_app.py:1682 orologic_modules/lichess_app.py:1805
-#: orologic_modules/lichess_app.py:1939
+#: orologic_modules/lichess_app.py:1941
 #: orologic_modules/lichess_profiler.py:578
 msgid "Annulla"
 msgstr "Cancel"
@@ -3653,23 +3652,23 @@ msgid ""
 "corrispondenza."
 msgstr "Note: The challenge may remain valid on Lichess if it was by mail."
 
-#: orologic_modules/lichess_app.py:1753 orologic_modules/lichess_app.py:1992
+#: orologic_modules/lichess_app.py:1753 orologic_modules/lichess_app.py:1994
 msgid "Controllo sfide in entrata..."
 msgstr "Checking incoming challenges..."
 
-#: orologic_modules/lichess_app.py:1756 orologic_modules/lichess_app.py:2001
+#: orologic_modules/lichess_app.py:1756 orologic_modules/lichess_app.py:2003
 msgid "Non hai sfide in attesa."
 msgstr "You have no challenges waiting."
 
-#: orologic_modules/lichess_app.py:1764 orologic_modules/lichess_app.py:2009
+#: orologic_modules/lichess_app.py:1764 orologic_modules/lichess_app.py:2011
 msgid "Classificata"
 msgstr "Classified"
 
-#: orologic_modules/lichess_app.py:1764 orologic_modules/lichess_app.py:2009
+#: orologic_modules/lichess_app.py:1764 orologic_modules/lichess_app.py:2011
 msgid "Amichevole"
 msgstr "Friendly"
 
-#: orologic_modules/lichess_app.py:1766 orologic_modules/lichess_app.py:2011
+#: orologic_modules/lichess_app.py:1766 orologic_modules/lichess_app.py:2013
 #, python-brace-format
 msgid ""
 "\n"
@@ -3678,23 +3677,23 @@ msgstr ""
 "\n"
 "Challenge from {u} ({v}, {s}, {r})"
 
-#: orologic_modules/lichess_app.py:1772 orologic_modules/lichess_app.py:2017
+#: orologic_modules/lichess_app.py:1772 orologic_modules/lichess_app.py:2019
 msgid "Vuoi accettare questa sfida? (Invio = Si', Esc = No): "
 msgstr "Do you want to accept this challenge? (Enter = Yes, Esc = No): "
 
-#: orologic_modules/lichess_app.py:1774 orologic_modules/lichess_app.py:2019
+#: orologic_modules/lichess_app.py:1774 orologic_modules/lichess_app.py:2021
 msgid "Accetto la sfida..."
 msgstr "I accept the challenge..."
 
-#: orologic_modules/lichess_app.py:1776 orologic_modules/lichess_app.py:2021
+#: orologic_modules/lichess_app.py:1776 orologic_modules/lichess_app.py:2023
 msgid "Sfida accettata!"
 msgstr "Challenge accepted!"
 
-#: orologic_modules/lichess_app.py:1784 orologic_modules/lichess_app.py:2029
+#: orologic_modules/lichess_app.py:1784 orologic_modules/lichess_app.py:2031
 msgid "Impossibile accettare la sfida (potrebbe essere stata annullata)."
 msgstr "Unable to accept challenge (may have been cancelled)."
 
-#: orologic_modules/lichess_app.py:1788 orologic_modules/lichess_app.py:2033
+#: orologic_modules/lichess_app.py:1788 orologic_modules/lichess_app.py:2035
 msgid "Rifiuto la sfida..."
 msgstr "I refuse the challenge..."
 
@@ -3711,7 +3710,7 @@ msgstr "You have no active games."
 msgid "Contro {o} (Sei il {c})"
 msgstr "Against {o} (You are the {c})"
 
-#: orologic_modules/lichess_app.py:1811 orologic_modules/lichess_app.py:1945
+#: orologic_modules/lichess_app.py:1811 orologic_modules/lichess_app.py:1947
 msgid ""
 "\n"
 "Scegli la partita da riprendere: "
@@ -3795,33 +3794,33 @@ msgstr "Challenges Awaiting ({n})"
 msgid "Ritorna a Orologic (Esci)"
 msgstr "Return to Orologic (Exit)"
 
-#: orologic_modules/lichess_app.py:1908
+#: orologic_modules/lichess_app.py:1910
 #, python-brace-format
 msgid "Orolichess, connesso come: {username}{rating}"
 msgstr "Orolichess, logged in as: {username}{rating}"
 
-#: orologic_modules/lichess_app.py:1913
+#: orologic_modules/lichess_app.py:1915
 msgid "Orolichess, non connesso: scegli Login per iniziare"
 msgstr "Orolichess, not logged in: Choose Login to get started"
 
-#: orologic_modules/lichess_app.py:1924
+#: orologic_modules/lichess_app.py:1926
 msgid "Uscita da Orolichess in corso. Ritorno a orologic..."
 msgstr "Exiting Orolichess in progress. Return to clock..."
 
-#: orologic_modules/lichess_app.py:1934
+#: orologic_modules/lichess_app.py:1936
 msgid "Tocca a TE!"
 msgstr "It's your turn!"
 
-#: orologic_modules/lichess_app.py:1934
+#: orologic_modules/lichess_app.py:1936
 msgid "In attesa dell'avversario"
 msgstr "Waiting for the opponent"
 
-#: orologic_modules/lichess_app.py:1936
+#: orologic_modules/lichess_app.py:1938
 #, python-brace-format
 msgid "Contro {o} (Sei il {c}) - {t}"
 msgstr "Against {o} (You are the {c}) - {t}"
 
-#: orologic_modules/lichess_app.py:1971
+#: orologic_modules/lichess_app.py:1973
 msgid ""
 "\n"
 "Devi prima effettuare il login per vedere la storia Elo."
@@ -3829,11 +3828,11 @@ msgstr ""
 "\n"
 "You must first log in to view your Elo history."
 
-#: orologic_modules/lichess_app.py:1984
+#: orologic_modules/lichess_app.py:1986
 msgid "Apertura della casella postale nel browser..."
 msgstr "Opening your mailbox in your browser..."
 
-#: orologic_modules/lichess_app.py:1990
+#: orologic_modules/lichess_app.py:1992
 #, python-brace-format
 msgid "Impossibile aprire il browser: {e}"
 msgstr "Unable to open browser: {e}"
@@ -3923,7 +3922,7 @@ msgstr "End of variant"
 
 #: orologic_modules/lichess_board.py:404 orologic_modules/lichess_board.py:931
 msgid "Partita annullata"
-msgstr "Match cancelled"
+msgstr "Game cancelled"
 
 #: orologic_modules/lichess_board.py:408 orologic_modules/lichess_board.py:936
 msgid "Il Bianco vince"
@@ -4529,7 +4528,6 @@ msgid "Quante partite scaricare al massimo? "
 msgstr "How many games can you download at most? "
 
 #: orologic_modules/lichess_profiler.py:372
-#, python-brace-format
 msgid ""
 "Scaricamento dell'intero archivio in corso. Con molte partite puo' volerci "
 "parecchio: premi ESC per interrompere e tenere quelle gia' arrivate."
@@ -5796,7 +5794,7 @@ msgstr "Total games: {n}"
 
 #: orologic_modules/pgn_search.py:473
 msgid "Statistiche Risultati"
-msgstr "Statistics Results"
+msgstr "Results statistics"
 
 #: orologic_modules/pgn_search.py:474
 #, python-brace-format
@@ -7489,7 +7487,7 @@ msgstr "Empties the e4 square (if it does not contain a King)"
 
 #: orologic_modules/easyfish/constants.py:136
 msgid "Abbandona la partita"
-msgstr "Leave the game"
+msgstr "Resign the game"
 
 #: orologic_modules/easyfish/constants.py:137
 msgid "Mostra il tempo del Bianco"
@@ -7621,12 +7619,18 @@ msgid ""
 msgstr ""
 "Are you sure you want to delete ALL drawings in the entire PGN? (Y/N): "
 
-#: orologic_modules/easyfish/drawing.py:238
+#: orologic_modules/easyfish/drawing.py:237
+#: orologic_modules/easyfish/image_exporter.py:186
+#: orologic_modules/easyfish/image_exporter.py:193
+msgid "S"
+msgstr "Y"
+
+#: orologic_modules/easyfish/drawing.py:241
 #, python-brace-format
 msgid "Pulizia completata. Cancellati disegni in {n} mosse."
 msgstr "Cleaning completed. Deleted drawings in {n} moves."
 
-#: orologic_modules/easyfish/drawing.py:247
+#: orologic_modules/easyfish/drawing.py:250
 msgid "Scelta non valida."
 msgstr "Invalid choice."
 
@@ -8222,7 +8226,7 @@ msgstr "Highlight Last Move (Dark House)"
 
 #: orologic_modules/easyfish/image_exporter.py:169
 msgid "Colore Scacco Re"
-msgstr "Chess King suit"
+msgstr "King in check colour"
 
 #: orologic_modules/easyfish/image_exporter.py:173
 #, python-brace-format
@@ -8237,7 +8241,7 @@ msgstr ""
 msgid "Attivare ombreggiatura pezzi? (S/N) [S]: "
 msgstr "Enable piece shading? (Y/N) [Y]: "
 
-#: orologic_modules/easyfish/image_exporter.py:192
+#: orologic_modules/easyfish/image_exporter.py:196
 #, python-brace-format
 msgid ""
 "\n"
@@ -8246,7 +8250,7 @@ msgstr ""
 "\n"
 "Image size in pixels [{d}]: "
 
-#: orologic_modules/easyfish/image_exporter.py:201
+#: orologic_modules/easyfish/image_exporter.py:205
 msgid ""
 "\n"
 "Impostazioni immagine salvate correttamente."
@@ -8254,7 +8258,7 @@ msgstr ""
 "\n"
 "Image settings saved successfully."
 
-#: orologic_modules/easyfish/image_exporter.py:408
+#: orologic_modules/easyfish/image_exporter.py:412
 msgid ""
 "\n"
 "Inserisci un nome per il file (max 50 car.): "
@@ -8262,7 +8266,7 @@ msgstr ""
 "\n"
 "Enter a name for the file (max 50 characters): "
 
-#: orologic_modules/easyfish/image_exporter.py:424
+#: orologic_modules/easyfish/image_exporter.py:428
 msgid ""
 "\n"
 "Inserisci un commento per il PDF: "
@@ -8270,12 +8274,12 @@ msgstr ""
 "\n"
 "Enter a comment for the PDF: "
 
-#: orologic_modules/easyfish/image_exporter.py:430
+#: orologic_modules/easyfish/image_exporter.py:434
 #, python-brace-format
 msgid "Generata con Orologic v.{v}, {a}, {d}"
 msgstr "Generated with Orologic v.{v}, {a}, {d}"
 
-#: orologic_modules/easyfish/image_exporter.py:498
+#: orologic_modules/easyfish/image_exporter.py:502
 #, python-brace-format
 msgid ""
 "\n"
@@ -8284,7 +8288,7 @@ msgstr ""
 "\n"
 "PDF document saved in: {p}"
 
-#: orologic_modules/easyfish/image_exporter.py:519
+#: orologic_modules/easyfish/image_exporter.py:523
 #, python-brace-format
 msgid ""
 "\n"
@@ -8603,9 +8607,6 @@ msgstr "The sharing window doesn't close, I let it go."
 #: orologic_modules/easyfish/utils.py:59
 msgid "Nessuno."
 msgstr "Nobody."
-
-msgid "S"
-msgstr "Y"
 
 #~ msgid "Imposta le info di default per il PGN"
 #~ msgstr "Set default PGN info"

@@ -18,6 +18,17 @@ li { margin-bottom: 0.3em; }
 <body>
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
+<h3>Versione 8.20</h3>
+<h4>8.20.0 (2 settembre 2026)</h4>
+<ul>
+  <li>* [L10N] Revisione completa dei quattro cataloghi, riga per riga. Erano molto peggio di quanto sembrasse: centinaia di messaggi dicevano una cosa diversa da quella italiana, in un buon spagnolo o portoghese che non destava sospetti. Diciotto domande spagnole diverse chiedevano tutte "vuoi analizzare la partita?", compresa quella per abbandonare: chi voleva abbandonare premeva Invio credendo di rispondere a quella domanda. "Tocca a te" diceva "attaccata da", "Vittoria a tavolino" diceva "perdere la vittoria", "Ultimo accesso" diceva "ultima mossa annullata", "Numero di mosse giocate" diceva "ultima mossa". In portoghese "Tocca al Bianco muovere" annunciava che il tempo del Bianco era scaduto.</li>
+  <li>* [L10N] Corretti due difetti che rendevano inutilizzabili alcuni comandi fuori dall'italiano. Le lettere da premere erano state tradotte: nel menu dei colori l'inglese diceva [G]reen e chi premeva G otteneva il giallo, perché per il programma G è l'iniziale di giallo; nel filtro delle partite scaricate le tre lingue indicavano tasti che il codice non riconosce. E due conferme confrontavano una S fissa mentre il messaggio diceva di premere Y o O, quindi la cancellazione dei disegni e l'ombreggiatura dei pezzi rispondevano sempre no.</li>
+  <li>* [L10N] I cinquanta temi tattici dei puzzle erano sbagliati quasi tutti in tutte e quattro le lingue, perché i nomi dei pezzi sono stati letti come nomi di persona: il finale di alfieri era il finale di un signor Alfieri, quello di torri di un signor Torri, l'ala di donna l'ala di una signora Donna. Il matto affogato era "un imbecille è annegato", l'inchiodatura era "Magnífico" in spagnolo e "Nailing" in inglese, l'infilata era "filettato" come una vite. In spagnolo e portoghese "Matto in 1", "Matto in 2" e gli altri perdevano il numero.</li>
+  <li>* [L10N] Uniformati i termini di gioco, che convivevano in due o tre versioni dentro lo stesso catalogo: mossa ora è sempre jugada, coup e lance; partita non è più juego, jogo o jeu; la scacchiera in francese era stata tradotta come quadro, asse di legno, vassoio e perfino scheda video, in portoghese come quadro e placa. In francese la patta era diventata un sorteggio e il matto un accoppiamento.</li>
+  <li>* [L10N] In portoghese centotrenta stringhe avevano i segnaposto appiccicati alle parole, tipo "Motor{n}pronto", perché il traduttore aveva mangiato gli spazi. Il nome Orologic era stato tradotto in quattordici stringhe. I prompt per personalizzare i nomi dei pezzi al plurale erano identici a quelli del singolare in spagnolo e portoghese.</li>
+  <li>* [Core] Tolto l'ultimo separatore grafico rimasto nel programma, i tre trattini nella riga di stato di Orolichess: lo screen reader li legge uno per uno.</li>
+  <li>+ [Docs] Aggiunto uno strumento di controllo che riporta ogni traduzione in italiano e segnala quelle che tornano indietro dicendo un'altra cosa. È quello che ha trovato la maggior parte di questi errori, e nessun controllo formale avrebbe potuto: le frasi erano scritte bene, dicevano solo il falso.</li>
+</ul>
 <h3>Versione 8.19</h3>
 <h4>8.19.0 (2 settembre 2026)</h4>
 <ul>
