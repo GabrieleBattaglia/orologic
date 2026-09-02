@@ -4,12 +4,17 @@ block_cipher = None
 
 a = Analysis(
     ['orologic.py'],
-    pathex=[],
+    # GBUtils non sta nei pacchetti installati ma accanto al progetto: senza
+    # questo percorso PyInstaller non lo troverebbe.
+    pathex=[r'E:\git\mine\GBUtils'],
     binaries=[],
     datas=[
         ('locales', 'locales'),
         ('resources', 'resources'),
     ],
+    # Qui vanno le librerie che PyInstaller non trova da solo, cioe' quelle
+    # importate dentro le funzioni invece che in testa al file, e quelle che
+    # caricano pezzi di se stesse a runtime.
     hiddenimports=[
         'scipy.signal',
         'sounddevice',
@@ -17,7 +22,17 @@ a = Analysis(
         'dateutil',
         'dateutil.relativedelta',
         'chess',
-        'requests',
+        'chess.engine',
+        'chess.pgn',
+        'GBUtils',
+        'pygame',
+        'pyperclip',
+        'reportlab',
+        'reportlab.graphics',
+        'reportlab.lib.pagesizes',
+        'reportlab.platypus',
+        'svglib',
+        'svglib.svglib',
     ],
     hookspath=[],
     hooksconfig={},
