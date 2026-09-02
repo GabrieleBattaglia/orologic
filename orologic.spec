@@ -1,6 +1,17 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from pathlib import Path
+
 block_cipher = None
+
+# Delle traduzioni al programma servono soltanto i cataloghi compilati: i
+# .po sono il testo su cui si lavora, e accanto a loro restano le copie di
+# sicurezza e i rapporti degli strumenti di verifica, che nel pacchetto
+# pubblico non c'entrano niente.
+cataloghi = [
+    (str(percorso), str(percorso.parent))
+    for percorso in Path("locales").rglob("*.mo")
+]
 
 a = Analysis(
     ['orologic.py'],
@@ -8,9 +19,10 @@ a = Analysis(
     # questo percorso PyInstaller non lo troverebbe.
     pathex=[r'E:\git\mine\GBUtils'],
     binaries=[],
-    datas=[
-        ('locales', 'locales'),
-        ('resources', 'resources'),
+    datas=cataloghi + [
+        ('resources/readme.htm', 'resources'),
+        ('resources/changelog.htm', 'resources'),
+        ('resources/eco.db', 'resources'),
     ],
     # Qui vanno le librerie che PyInstaller non trova da solo, cioe' quelle
     # importate dentro le funzioni invece che in testa al file, e quelle che
