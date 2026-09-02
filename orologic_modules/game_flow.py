@@ -69,7 +69,7 @@ def RiprendiPartita(dati_partita):
         game_state.pgn_game = chess.pgn.Game.from_board(game_state.board)
         game_state.pgn_node = game_state.pgn_game.end()
     game_state.paused = True
-    chess960_utils.configure_engine_for_chess960(engine.ENGINE, e_chess960)
+    chess960_utils.verifica_motore_chess960(engine.ENGINE, e_chess960)
     orologio.avvia(game_state)
     db = storage.LoadDB()
     autosave_is_on = db.get("autosave_enabled", False)
@@ -223,73 +223,82 @@ def annulla_ultima_mossa(game_state):
     Disfa anche quanto la mossa aveva prodotto: incremento, contatore
     delle mosse ed eventuale passaggio di fase. Restituisce vero se
     c'era davvero una mossa da annullare.
+
+    Quando non si puo' fare, lo dice: prima taceva, e l'arbitro non
+    capiva se aveva sbagliato tasto o se non era successo nulla.
     """
-    if game_state.paused and game_state.move_history:
-        Acusticator(
-            [
-                "c5",
-                0.1,
-                1,
-                config.VOLUME,
-                "g4",
-                0.1,
-                0.3,
-                config.VOLUME,
-                "e4",
-                0.1,
-                -0.3,
-                config.VOLUME,
-                "c4",
-                0.1,
-                -1,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[2, 8, 80, 10],
+    if not game_state.paused:
+        Acusticator(["b3", 0.2, 0, config.VOLUME], kind=2)
+        print(
+            _(
+                "Per annullare una mossa bisogna prima fermare gli orologi con il comando punto p."
+            )
         )
-        undone_move_san = game_state.move_history.pop()
-        game_state.board.pop()
-        current_node = game_state.pgn_node
-        parent = current_node.parent
-        if current_node in parent.variations:
-            parent.variations.remove(current_node)
-        game_state.pgn_node = parent
-        game_state.cancelled_san_moves.insert(0, undone_move_san)
-        # Il tratto torna a chi aveva mosso, poi si disfa quanto
-        # la mossa aveva prodotto: incremento, contatore delle
-        # mosse ed eventuale passaggio di fase.
-        game_state.active_color = (
-            "white" if game_state.active_color == "black" else "black"
+        return False
+    if not game_state.move_history:
+        Acusticator(["b3", 0.2, 0, config.VOLUME], kind=2)
+        print(_("Non c'e' nessuna mossa da annullare."))
+        return False
+    Acusticator(
+        [
+            "c5",
+            0.1,
+            1,
+            config.VOLUME,
+            "g4",
+            0.1,
+            0.3,
+            config.VOLUME,
+            "e4",
+            0.1,
+            -0.3,
+            config.VOLUME,
+            "c4",
+            0.1,
+            -1,
+            config.VOLUME,
+        ],
+        kind=1,
+        adsr=[2, 8, 80, 10],
+    )
+    undone_move_san = game_state.move_history.pop()
+    game_state.board.pop()
+    current_node = game_state.pgn_node
+    parent = current_node.parent
+    if current_node in parent.variations:
+        parent.variations.remove(current_node)
+    game_state.pgn_node = parent
+    game_state.cancelled_san_moves.insert(0, undone_move_san)
+    # Il tratto torna a chi aveva mosso, poi si disfa quanto
+    # la mossa aveva prodotto: incremento, contatore delle
+    # mosse ed eventuale passaggio di fase.
+    game_state.active_color = "white" if game_state.active_color == "black" else "black"
+    fasi = game_state.clock_config["phases"]
+    if game_state.active_color == "white":
+        orologio.aggiungi(game_state, True, -fasi[game_state.white_phase]["white_inc"])
+    else:
+        orologio.aggiungi(
+            game_state,
+            False,
+            -fasi[game_state.black_phase]["black_inc"],
         )
-        fasi = game_state.clock_config["phases"]
+    tempo_di_fase = game_state.annulla_mossa()
+    if tempo_di_fase:
         if game_state.active_color == "white":
-            orologio.aggiungi(
-                game_state, True, -fasi[game_state.white_phase]["white_inc"]
-            )
+            orologio.aggiungi(game_state, True, -tempo_di_fase)
         else:
-            orologio.aggiungi(
-                game_state,
-                False,
-                -fasi[game_state.black_phase]["black_inc"],
-            )
-        tempo_di_fase = game_state.annulla_mossa()
-        if tempo_di_fase:
-            if game_state.active_color == "white":
-                orologio.aggiungi(game_state, True, -tempo_di_fase)
-            else:
-                orologio.aggiungi(game_state, False, -tempo_di_fase)
-            print(_("Rientro nella fase precedente, tolto il tempo aggiunto."))
-        if game_state.move_times:
-            game_state.move_times.pop()
-        if game_state.clocks_history:
-            game_state.clocks_history.pop()
-        if game_state.descriptive_move_history:
-            # Senza questo, il riepilogo testuale di fine partita
-            # conteneva la mossa annullata e sfalsava la numerazione.
-            game_state.descriptive_move_history.pop()
-        print(_("Ultima mossa annullata: {mossa}").format(mossa=undone_move_san))
-        return True
-    return False
+            orologio.aggiungi(game_state, False, -tempo_di_fase)
+        print(_("Rientro nella fase precedente, tolto il tempo aggiunto."))
+    if game_state.move_times:
+        game_state.move_times.pop()
+    if game_state.clocks_history:
+        game_state.clocks_history.pop()
+    if game_state.descriptive_move_history:
+        # Senza questo, il riepilogo testuale di fine partita
+        # conteneva la mossa annullata e sfalsava la numerazione.
+        game_state.descriptive_move_history.pop()
+    print(_("Ultima mossa annullata: {mossa}").format(mossa=undone_move_san))
+    return True
 
 
 def assegna_risultato(cmd, game_state):
@@ -932,7 +941,7 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
                 print(_("Impossibile inizializzare il motore. Analisi annullata."))
                 return
             engine.cache_analysis.clear()
-            chess960_utils.configure_engine_for_chess960(
+            chess960_utils.verifica_motore_chess960(
                 engine.ENGINE,
                 game_state.pgn_game.headers.get("Variant", "") == "Chess960",
             )
@@ -1102,9 +1111,9 @@ def StartGame(clock_config):
         chess960_utils.setup_pgn_headers_chess960(
             game_state.pgn_game, starting_board, starting_fen, numero_posizione
         )
-        chess960_utils.configure_engine_for_chess960(engine.ENGINE, True)
+        chess960_utils.verifica_motore_chess960(engine.ENGINE, True)
     else:
-        chess960_utils.configure_engine_for_chess960(engine.ENGINE, False)
+        chess960_utils.verifica_motore_chess960(engine.ENGINE, False)
     game_state.white_player = white_player
     game_state.black_player = black_player
     game_state.pgn_game.headers["White"] = white_player

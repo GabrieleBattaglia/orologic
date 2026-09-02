@@ -220,6 +220,22 @@ def GenerateMoveSummary(game_state):
     return riepilogo_mosse(game_state.move_history)
 
 
+def mosse_fino_al_nodo(nodo):
+    """Mosse che portano dall'inizio della partita a questo nodo.
+
+    Serve dove le mosse non stanno in uno stato di partita ma solo
+    nell'albero del PGN, come in Easyfish. Si risale di padre in padre,
+    cosi' l'elenco e' giusto anche dentro una variante.
+    """
+    catena = []
+    corrente = nodo
+    while corrente is not None and corrente.parent is not None:
+        catena.append(corrente)
+        corrente = corrente.parent
+    catena.reverse()
+    return [passo.parent.board().san(passo.move) for passo in catena]
+
+
 def riepilogo_mosse(mosse):
     """Riepilogo discorsivo a partire dal solo elenco delle mosse.
 

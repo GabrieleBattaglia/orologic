@@ -71,8 +71,36 @@ def _nome(stato, bianco):
     return getattr(stato, "white_player" if bianco else "black_player", predefinito)
 
 
-def _suona_allarme(bianco):
-    Acusticator(["c4", 0.2, -0.75 if bianco else 0.75, config.VOLUME])
+# Una voce diversa per ciascuno dei cinque allarmi, presa da
+# Acu_Collection.json di GBUtils. Si distinguono per timbro e andamento e
+# non per altezza, cosi' si riconoscono senza doverle contare: due note
+# acute, un colpo di timbro, una discesa, un tonfo grave, una salita.
+VOCI_ALLARME = (
+    {"note": (("d6", 0.05), ("a#7", 0.1)), "kind": 1, "adsr": [0.002, 0, 100, 0.1]},
+    {
+        "note": (("d4", 0.05), ("p", 0.05), ("f3", 0.1), ("p", 0.05), ("d#6", 0.05)),
+        "kind": 2,
+        "adsr": [0.002, 0, 100, 0.002],
+    },
+    {"note": (("f#6.c2", 0.17),), "kind": 1, "adsr": [0.002, 99.948, 0, 0.05]},
+    {"note": (("c1.f3", 0.09),), "kind": 4, "adsr": [0.001, 99.999, 0, 0]},
+    {"note": (("c4.g4", 0.3),), "kind": 1, "adsr": [0.05, 0, 100, 0.05]},
+)
+
+
+def _suona_allarme(numero, bianco):
+    """Fa sentire la voce dell'allarme, dal lato di chi lo riceve.
+
+    Prima erano tutti la stessa nota, e con piu' di un allarme non si
+    capiva quale fosse suonato.
+    """
+    voce = VOCI_ALLARME[(numero - 1) % len(VOCI_ALLARME)]
+    lato = -0.75 if bianco else 0.75
+    partitura = []
+    for altezza, durata in voce["note"]:
+        volume = 0 if altezza == "p" else config.VOLUME
+        partitura.extend([altezza, durata, lato, volume])
+    Acusticator(partitura, kind=voce["kind"], adsr=voce["adsr"])
 
 
 def _suona_bandierina():
@@ -120,18 +148,19 @@ def _ciclo(stato):
                 if _deve_scorrere(stato, bianco):
                     _imposta_residuo(stato, bianco, _residuo(stato, bianco) - trascorso)
                     chiave_colore = "white" if bianco else "black"
-                    for soglia in allarmi:
+                    for numero, soglia in enumerate(allarmi, 1):
                         if (chiave_colore, soglia) in suonati:
                             continue
                         if _residuo(stato, bianco) <= soglia:
                             suonati.add((chiave_colore, soglia))
                             print(
-                                _("Allarme, {chi} e' sceso a {quanto}").format(
+                                _("Allarme {n}, {chi} e' sceso a {quanto}").format(
+                                    n=numero,
                                     chi=_nome(stato, bianco),
                                     quanto=tempo.mmss_parlato(soglia),
                                 )
                             )
-                            _suona_allarme(bianco)
+                            _suona_allarme(numero, bianco)
 
             scaduto = not stato.ignore_clock and (
                 stato.white_remaining <= 0 or stato.black_remaining <= 0

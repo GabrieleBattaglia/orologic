@@ -354,6 +354,9 @@ margin: 1em 0;
     <li><code>.pg</code> o <code>.fg</code>: Incolla una partita PGN (o un codice FEN) precedentemente copiata nei tuoi appunti, per iniziare a lavorarci.</li>
     <li><code>.pt</code>: Permette di impostare o modificare i tag della partita (Evento, Giocatori, Luogo, Risultato).</li>
     <li>Qualsiasi mossa in formato SAN (es. <code>e4</code>, <code>Nf3</code>) viene aggiunta all'albero della partita. Se inserisci una mossa che devia dalla linea principale, Easyfish ti chiederà se vuoi sovrascrivere o creare una variante.</li>
+    <li><code>.l</code>: Mostra la lista delle mosse giocate, ricostruita dalla partita fino al punto in cui ti trovi, varianti comprese. È lo stesso comando di tutte le altre modalità.</li>
+    <li><code>.a#</code>: Chiede al motore di analizzare la posizione per il numero di secondi indicato (es. <code>.a5</code>).</li>
+    <li><code>.al#</code>: Rilegge le linee trovate dall'ultima analisi, senza interrogare di nuovo il motore. Da solo dà la migliore, con un numero la scelta corrispondente (es. <code>.al2</code> per la seconda). Fino alla versione 8.17.0 questo comando era <code>.l</code>, che però altrove è la lista delle mosse: era l'ultimo comando rimasto con due significati diversi.</li>
 </ul>
 
 <h4>2.4.2. Editor della Scacchiera (.be)</h4>

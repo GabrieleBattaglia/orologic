@@ -18,6 +18,17 @@ li { margin-bottom: 0.3em; }
 <body>
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
+<h3>Versione 8.18</h3>
+<h4>8.18.0 (2 settembre 2026)</h4>
+<ul>
+  <li>+ [Core] L'elenco degli orologi salvati non è più una tabella di sigle ma una descrizione da ascoltare: nome, nota, se i due colori hanno lo stesso tempo, poi ogni fase con la sua durata, l'incremento e il numero di mosse, che prima non veniva detto affatto, e infine gli allarmi a parole. Gli orologi scorrono tre per schermata, con l'avviso "Orologi 1 a 3 di 15, ESC per uscire": il pager di menu non andava bene qui, perché conta le voci a una riga e separa le pagine con una fila di trattini che lo screen reader non legge.</li>
+  <li>* [Lichess] Chiedendo di scaricare l'intero archivio di un giocatore, Orologic domandava subito dopo quante partite scaricare al massimo, contraddicendo la domanda appena fatta. Ora il tetto si chiede solo a chi sceglie i filtri: chi vuole tutto ottiene tutto, e con ESC può sempre fermarsi tenendo le partite già arrivate.</li>
+  <li>* [Lichess] Un giocatore senza partite classificate non ha una storia Elo, e Lichess lo dice rispondendo con un elenco vuoto. Orologic lo scambiava per un guasto e diceva di non essere riuscito a caricarla: ora distingue i due casi e spiega qual è.</li>
+  <li>* [Easyfish] Le linee di analisi passano da <code>.l</code> a <code>.al</code>, che accetta il numero come prima (<code>.al2</code> per la seconda scelta). Il comando <code>.l</code> è ora la lista delle mosse in ogni modalità, menu compreso: era l'ultimo comando rimasto con due significati diversi.</li>
+  <li>* [Core] Gli allarmi hanno cinque voci diverse, prese dalla collezione sonora di GBUtils, e il messaggio dice quale allarme è scattato. Prima erano tutti la stessa nota e, impostandone più di uno, non si capiva quale fosse suonato.</li>
+  <li>* [Core] Il comando <code>.q</code> taceva quando non poteva agire. Ora dice se bisogna prima fermare gli orologi con <code>.p</code> oppure se non c'è nessuna mossa da annullare.</li>
+  <li>* [Core] Tolto un falso allarme sulla variante Fischer Random. Il messaggio "il motore non accetta la variante" non veniva dal motore ma dalla libreria python-chess, che quell'opzione la gestisce da sé impostandola a ogni posizione: le analisi degli arrocchi erano corrette. Ora si controlla soltanto che il motore la conosca davvero, e l'avviso compare solo in quel caso.</li>
+</ul>
 <h3>Versione 8.17</h3>
 <h4>8.17.0 (1 settembre 2026)</h4>
 <ul>

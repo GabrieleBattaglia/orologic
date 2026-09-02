@@ -7,7 +7,6 @@ Espone funzioni per generare posizioni, configurare il motore e interagire con l
 
 import random
 
-import chess.engine
 from GBUtils import Acusticator, dgt
 
 from . import board_utils, config, localizzazione
@@ -40,28 +39,32 @@ def get_starting_board(pos_num):
     return board, board.fen()
 
 
-def configure_engine_for_chess960(engine_instance, enable=True):
-    """Configura l'opzione UCI_Chess960 sull'istanza del motore.
+def verifica_motore_chess960(engine_instance, e_chess960=True):
+    """Guarda se il motore sa giocare a Fischer Random, senza toccarlo.
 
-    Se il motore non accetta l'opzione lo dice, perche' senza di essa le
-    analisi di una partita Fischer Random sbagliano gli arrocchi.
+    Non c'e' niente da configurare: UCI_Chess960 e' una delle opzioni che
+    python-chess si tiene per se' e imposta a ogni posizione, leggendo il
+    flag chess960 della scacchiera. Scriverla a mano sollevava un errore,
+    cannot set UCI_Chess960 which is automatically managed, che sembrava
+    un rifiuto del motore e spaventava senza motivo: le analisi erano
+    invece corrette. Qui si controlla soltanto che il motore dichiari
+    quell'opzione, perche' un motore che non ce l'ha la variante non la
+    sa giocare davvero.
     Args:
         engine_instance: Istanza del motore chess.engine.
-        enable: True per abilitare Chess960, False per disabilitare.
+        e_chess960: vero se la partita in corso e' una Fischer Random.
     """
-    if engine_instance is None:
+    if engine_instance is None or not e_chess960:
         return False
-    try:
-        engine_instance.configure({"UCI_Chess960": enable})
-        return True
-    except (chess.engine.EngineError, chess.engine.EngineTerminatedError) as e:
-        if enable:
-            print(
-                _(
-                    "Attenzione: il motore non accetta la variante Fischer Random ({motivo}). Le analisi degli arrocchi saranno inattendibili."
-                ).format(motivo=e)
+    opzioni = getattr(engine_instance, "options", None)
+    if opzioni is not None and "UCI_Chess960" not in opzioni:
+        print(
+            _(
+                "Attenzione: il motore non conosce la variante Fischer Random. Le analisi degli arrocchi saranno inattendibili."
             )
+        )
         return False
+    return True
 
 
 def describe_960_position(board, pos_number=None):

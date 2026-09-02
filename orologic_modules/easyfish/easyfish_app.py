@@ -14,7 +14,13 @@ from .. import chess960_utils, config, ui
 from .. import engine as orologic_engine
 
 # DRY: Uso le utility di Orologic
-from ..board_utils import CustomBoard, DescribeMove, GameState, NormalizeMove
+from ..board_utils import (
+    CustomBoard,
+    DescribeMove,
+    GameState,
+    NormalizeMove,
+    mosse_fino_al_nodo,
+)
 from ..config import _
 from . import game_mode
 from .constants import MNMAIN
@@ -266,8 +272,10 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
 def _comandi_analisi(cmd_clean, board, engine, number_command, info):
     """Analizza la posizione e rilegge le linee gia' trovate.
 
-    Restituisce il risultato dell'analisi, che il comando punto elle
-    riusa senza interrogare di nuovo il motore.
+    Restituisce il risultato dell'analisi, che il comando punto a elle
+    riusa senza interrogare di nuovo il motore. Le linee stavano su punto
+    elle, che pero' in tutte le altre modalita' e' la lista delle mosse:
+    era l'ultimo comando rimasto con due significati diversi.
     """
     if cmd_clean == ".a":
         if not engine:
@@ -288,7 +296,7 @@ def _comandi_analisi(cmd_clean, board, engine, number_command, info):
             # Contorno di Easyfish: si prosegue.
             except Exception as e:  # noqa: BLE001
                 print(_("Errore analisi: {e}").format(e=e))
-    elif cmd_clean == ".l":
+    elif cmd_clean == ".al":
         if info:
             idx = number_command - 1 if number_command > 0 else 0
             idx = max(idx, 0)
@@ -689,12 +697,12 @@ def _esegui():
                         chess960_utils.setup_pgn_headers_chess960(game, board, fr_fen)
                         game_state.board = board
                         is_modified = False
-                        chess960_utils.configure_engine_for_chess960(engine, True)
+                        chess960_utils.verifica_motore_chess960(engine, True)
                     else:
                         print(_("Configurazione Fischer Random annullata."))
                         continue
                 else:
-                    chess960_utils.configure_engine_for_chess960(engine, False)
+                    chess960_utils.verifica_motore_chess960(engine, False)
 
                 # Avvio partita contro il motore
                 final_node = game_mode.StartEngineGame(
@@ -849,8 +857,15 @@ def _esegui():
                     print(_("Nuova partita avviata dalla posizione editata."))
                     print(board)
 
-            elif cmd_clean in (".a", ".l"):
+            elif cmd_clean in (".a", ".al"):
                 info = _comandi_analisi(cmd_clean, board, engine, number_command, info)
+
+            elif cmd_clean == ".l":
+                # La lista delle mosse e' quella di tutte le altre
+                # modalita': qui le mosse si ricostruiscono dal PGN.
+                ui.comandi_lettura(
+                    ".l", game, board=board, mosse=mosse_fino_al_nodo(node)
+                )
 
             else:
                 print(

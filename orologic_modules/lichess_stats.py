@@ -158,8 +158,19 @@ def print_wrapped_dea(label, dea_str):
 def run_stats(username, secrets):
     print(_("\nRecupero storia Elo per {u} in corso...").format(u=username))
     history_data = fetch_rating_history(username)
+    if history_data is None:
+        # Il motivo lo ha gia' detto fetch_rating_history, che conosce
+        # l'errore vero: qui si lascia solo il tempo di leggerlo.
+        enter_escape(_("\nPremi Invio per continuare..."))
+        return
     if not history_data:
-        print(_("Impossibile caricare la storia Elo del giocatore."))
+        # Elenco vuoto non vuol dire guasto: Lichess risponde cosi' per chi
+        # non ha ancora giocato partite classificate.
+        print(
+            _(
+                "{u} non ha ancora una storia Elo: Lichess non registra partite classificate per questo giocatore."
+            ).format(u=username)
+        )
         enter_escape(_("\nPremi Invio per continuare..."))
         return
 
