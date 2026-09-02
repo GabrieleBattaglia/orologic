@@ -49,7 +49,18 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    # Entrano nel pacchetto perche' installate nell'ambiente, non perche'
+    # servano: sono cinquanta megabyte che ogni utente scaricherebbe per
+    # niente. Verificato che reportlab e svglib, cioe' l'esportazione in
+    # PDF, funzionino senza.
+    excludes=[
+        'jedi',
+        'matplotlib',
+        'pandas',
+        'IPython',
+        'notebook',
+        'tkinter',
+    ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
