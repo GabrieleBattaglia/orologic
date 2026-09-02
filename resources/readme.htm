@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 8.9.8 - sabato 1 agosto 2026 - 11:00)</h1>
+<h1>Guida Utente di Orologic (Versione 8.20.0 - mercoledì 2 settembre 2026)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -159,6 +159,43 @@ margin: 1em 0;
 1RNBQKBNR
  abcdefgh</code></pre>
 
+<h3>1.6. La Prima Volta che Apri Orologic</h3>
+<p>Se è la prima volta che avvii il programma, questa sezione ti dice in che ordine fare le cose. Non serve leggere tutto il resto della guida per cominciare: bastano pochi minuti.</p>
+
+<h4>1.6.1. Cosa vedi appena parte</h4>
+<p>All'avvio Orologic ti saluta dicendo la propria età, il numero di versione e quanto tempo è passato dall'ultimo aggiornamento. Poi resta in attesa. Da qui, il tasto che ti serve è uno solo: il punto interrogativo seguito da Invio, che apre il menu principale. Tutto quello che il programma sa fare parte da lì.</p>
+<p>Nel menu ti muovi scrivendo le prime lettere della voce che ti interessa: appena quello che hai scritto basta a distinguerla dalle altre, viene scelta da sola. Se preferisci i numeri, puoi passare al menu numerato dalla voce <code>impostazioni</code>.</p>
+
+<h4>1.6.2. In che ordine configurare</h4>
+<p>Ci sono due cose da fare una volta sola, e conviene farle subito perché quasi tutto il resto le dà per scontate.</p>
+<ol>
+    <li><strong>Crea almeno un orologio.</strong> Vai su <code>orologi</code> e poi su <code>crea</code>. Un orologio è semplicemente un controllo di tempo con un nome: quanto tempo hanno i giocatori, quanto se ne aggiunge dopo ogni mossa, e a che punto vuoi essere avvisato. Senza almeno un orologio non puoi né arbitrare una partita né usare la modalità Tempo. Se non sai da dove partire, creane uno da quindici minuti con dieci secondi di incremento e chiamalo "rapida": va bene per la maggior parte delle partite amichevoli.</li>
+    <li><strong>Configura il motore, se ti serve.</strong> Vai su <code>motore</code>. Serve solo se vuoi giocare contro il computer, analizzare le tue partite o usare Easyfish. Per arbitrare una partita fra due persone non serve. Orologic può scaricare Stockfish da solo, oppure puoi indicargli dove si trova se ce l'hai già.</li>
+</ol>
+<p>Il resto si configura quando ti serve: il volume degli effetti sonori con <code>volume</code>, i nomi dei pezzi e delle colonne con <code>nomi</code>, il collegamento a Lichess la prima volta che entri in <code>lichess</code>.</p>
+
+<h4>1.6.3. Una prima partita, per capire come funziona</h4>
+<p>Il modo più rapido per farsi un'idea è arbitrare una partita finta, da soli, e chiuderla dopo poche mosse.</p>
+<ol>
+    <li>Dal menu scegli <code>arbitra</code>.</li>
+    <li>Scegli l'orologio che hai appena creato e rispondi alle domande su nomi e punteggi dei due giocatori; puoi premere Invio per accettare quello che ti propone.</li>
+    <li>Quando gli orologi partono, scrivi <code>e4</code> e premi Invio: Orologic ti descrive la mossa a voce e passa il turno al Nero.</li>
+    <li>Scrivi <code>e5</code>, poi <code>Nf3</code>, poi <code>Nc6</code>.</li>
+    <li>Prova qualche comando: <code>.3</code> ti dice i tempi di entrambi, <code>.s</code> ti mostra la scacchiera, <code>.l</code> ti rilegge le mosse fatte.</li>
+    <li>Chiudi con <code>.1/2</code>, che assegna la patta e termina la partita.</li>
+</ol>
+<p>A questo punto Orologic salva il file PGN, ti copia la partita negli appunti e ti chiede se vuoi analizzarla. Hai già usato, senza accorgertene, quasi tutto quello che serve per una partita vera.</p>
+
+<h4>1.6.4. Dove finiscono i tuoi file</h4>
+<p>Orologic tiene tutto in cartelle accanto al programma, senza sparpagliare niente altrove nel computer:</p>
+<ul>
+    <li><code>pgn</code>: le partite salvate, nel formato standard che qualsiasi altro programma di scacchi sa leggere.</li>
+    <li><code>txt</code>: i riepiloghi discorsivi delle partite e i report di Memoboard e della modalità Tempo.</li>
+    <li><code>images</code>: le immagini delle posizioni esportate in PDF.</li>
+    <li><code>settings</code>: gli orologi che hai creato, le tue preferenze e, se ti colleghi a Lichess, il token di accesso. Questa è la cartella da portarti dietro se cambi computer.</li>
+</ul>
+<p>Una volta all'anno Orologic ti avvisa se in <code>pgn</code>, <code>txt</code> o <code>images</code> ci sono file più vecchi di dodici mesi, e ti lascia decidere se guardarli, cancellarli o tenerli: è la pulizia descritta nella sezione 1.4.</p>
+
 <hr>
 
 <h2>2. Opzioni del Menu Principale</h2>
@@ -188,6 +225,7 @@ margin: 1em 0;
     </li>
     <li><strong>Annulla:</strong> Digita <code>.</code> e premi Invio per tornare indietro e scegliere la modalità Standard.</li>
 </ul>
+<p>Comunque tu abbia scelto la posizione, Orologic ti dice il suo numero di riferimento, da 0 a 959, e lo scrive nel file PGN salvato a fine partita, nell'intestazione <code>Chess960Position</code>. È il modo in cui i giocatori si scambiano le posizioni Fischer Random: dire "la 518" è più pratico che dettare otto lettere, e chiunque riapra il tuo PGN ritrova esattamente quella disposizione. Nell'intestazione finiscono anche il tag <code>Variant</code> con il valore <code>Chess960</code> e la posizione completa in formato FEN.</p>
 
 <h4>2.1.2. Durante la Partita: Inserire le Mosse</h4>
 <p>Le mosse vengono inserite utilizzando la <strong>Notazione Algebrica Standard (SAN)</strong>. Esempi:</p>
@@ -204,19 +242,21 @@ margin: 1em 0;
     <tbody>
         <tr><td><code>.1</code> / <code>.2</code> / <code>.3</code></td><td>Mostra il tempo del Bianco / del Nero / di entrambi.</td></tr>
         <tr><td><code>.4</code></td><td>Confronta i tempi e indica il vantaggio.</td></tr>
-        <tr><td><code>.5</code></td><td>Indica quale orologio è in moto o la durata della pausa.</td></tr>
-        <tr><td><code>.6</code></td><td>Modifica l'intervallo di aggiornamento automatico degli orologi (0-120 secondi, 0 = disattivo).</td></tr>
+        <tr><td><code>.5</code></td><td>Dice di chi è il tratto, nominando il giocatore, oppure da quanto tempo gli orologi sono fermi se sei in pausa.</td></tr>
+        <tr><td><code>.6</code></td><td>Imposta ogni quanti secondi Orologic ripete da solo la situazione, da 0 a 120 (0 disattiva). Con l'aggiornamento acceso, i due orologi compaiono anche in testa alla riga dove scrivi.</td></tr>
         <tr><td><code>.l</code></td><td>Mostra la lista delle mosse giocate.</td></tr>
         <tr><td><code>.m</code></td><td>Mostra il valore del materiale per ciascun giocatore.</td></tr>
         <tr><td><code>.p</code></td><td>Mette in pausa o riavvia gli orologi.</td></tr>
-        <tr><td><code>.q</code></td><td>Annulla l'ultima mossa (solo in pausa).</td></tr>
-        <tr><td><code>.b+</code>/<code>.b-</code>/<code>.n+</code>/<code>.n-</code></td><td>Aggiunge/sottrae tempo al Bianco (b) o al Nero (n). Es: <code>.b+60</code>. Solo in pausa.</td></tr>
+        <tr><td><code>.q</code></td><td>Annulla l'ultima mossa, ma solo a orologi fermi. Se lo dai mentre il tempo scorre, Orologic ti dice di premere prima <code>.p</code>; se non ci sono mosse da annullare, te lo dice.</td></tr>
+        <tr><td><code>.b+</code>/<code>.b-</code>/<code>.n+</code>/<code>.n-</code></td><td>Aggiunge o sottrae tempo al Bianco (b) o al Nero (n), sempre a orologi fermi. Es: <code>.b+60</code> dà un minuto al Bianco. Sono comandi da arbitro: rispondono qui e nella modalità Tempo, mentre contro il motore e su Lichess non esistono, perché lì non c'è nessun arbitro che possa fermare gli orologi.</td></tr>
         <tr><td><code>.s</code> oppure <code>.b</code></td><td>Mostra la scacchiera testuale. I due comandi sono equivalenti in tutte le modalita'.</td></tr>
         <tr><td><code>.c [commento]</code></td><td>Aggiunge un commento alla mossa corrente. Es: <code>.c Mossa chiave</code>.</td></tr>
         <tr><td><code>.1-0</code> / <code>.0-1</code> / <code>.1/2</code> / <code>.*</code></td><td>Assegna la vittoria al Bianco / al Nero / patta / risultato indefinito e termina la partita.</td></tr>
         <tr><td><code>.?</code></td><td>Mostra questa lista di comandi.</td></tr>
     </tbody>
 </table>
+
+<p>I comandi da <code>.1</code> a <code>.6</code> valgono, con le stesse parole e gli stessi suoni, in tutte le modalità che hanno un orologio: la partita arbitrata, la modalità Tempo, la partita contro il motore in Easyfish e le partite su Lichess. Su Lichess <code>.1</code> e <code>.2</code> dicono il tempo senza la percentuale consumata, perché lì le fasi non esistono. Se hai avviato una partita con gli orologi disattivati, questi sei comandi rispondono tutti allo stesso modo, "Gli orologi sono disattivati", invece di dare numeri che non vogliono dire niente.</p>
 
 <h4>2.1.4. Comandi di Ispezione della Scacchiera</h4>
 <p>Puoi anche ispezionare la scacchiera con questi comandi:</p>
@@ -269,7 +309,7 @@ margin: 1em 0;
     <li><strong>Profilo e Statistiche:</strong> Visualizza il tuo rating nelle varie cadenze (Blitz, Rapid, Classical, ecc.) e i tuoi progressi.</li>
     <li><strong>Puzzle:</strong> Risolvi i puzzle di Lichess. Orologic ti presenterà la posizione e dovrai trovare la mossa corretta.</li>
     <li><strong>Amici:</strong> Vedi chi dei tuoi amici è online e cosa sta facendo.</li>
-    <li><strong>Cerca e Profila Giocatore:</strong> Usa l'autocompletamento per trovare qualsiasi giocatore su Lichess. Puoi leggerne il profilo completo (con percentuali e tempi di gioco), inviargli messaggi, seguirlo e soprattutto <strong>scaricare e filtrare il suo database di partite</strong> (per colore, risultato, Elo ed ECO). Le partite filtrate possono essere analizzate immediatamente con Easyfish.</li>
+    <li><strong>Cerca e Profila Giocatore:</strong> Usa l'autocompletamento per trovare qualsiasi giocatore su Lichess. Puoi leggerne il profilo completo (con percentuali e tempi di gioco), inviargli messaggi, seguirlo e soprattutto <strong>scaricare e filtrare il suo database di partite</strong> (per colore, risultato, Elo ed ECO). Le partite filtrate possono essere analizzate immediatamente con Easyfish. Quando chiedi lo scarico, Orologic ti domanda prima se vuoi l'archivio intero oppure impostare dei filtri: se scegli l'archivio intero lo prende tutto, senza chiederti quante partite fermarti a prendere, e ti avvisa che con un giocatore molto attivo può volerci parecchio; premendo ESC in qualsiasi momento interrompi lo scarico e tieni le partite già arrivate. Il tetto massimo di partite viene chiesto solo se scegli i filtri.</li>
     <li><strong>Gioca Online:</strong> Puoi sfidare i Bot di Lichess, i tuoi amici, o cercare una partita contro avversari casuali (Seek) definendo tempo e variante.</li>
     <li><strong>Osserva (Spectate):</strong> Guarda le partite in corso dei Grandi Maestri o dei tuoi amici, con la possibilità di ispezionare la scacchiera e ascoltare i tempi in tempo reale.</li>
 </ul>
@@ -286,7 +326,7 @@ margin: 1em 0;
 <h4>2.2.4. Storia Elo e Sonificazione (storia)</h4>
 <p>Questa funzionalità (disponibile dal menu principale di Orolichess per l'utente loggato, e dal sottomenu del Profilatore per qualsiasi altro giocatore cercato) ti permette di analizzare nel dettaglio l'evoluzione dell'Elo del giocatore nel tempo e di ascoltarla tramite sonificazione acustica.</p>
 <ul>
-    <li><strong>Varianti supportate:</strong> Consente di selezionare una qualsiasi variante in cui il giocatore possiede uno storico (es. Classical, Blitz, Rapid, Correspondence, Puzzle).</li>
+    <li><strong>Varianti supportate:</strong> Consente di selezionare una qualsiasi variante in cui il giocatore possiede uno storico (es. Classical, Blitz, Rapid, Correspondence, Puzzle). Se il giocatore che hai cercato non ha ancora giocato partite classificate, Lichess non ha nulla da mostrare e Orologic te lo dice chiaramente: non è un errore di collegamento, è semplicemente uno storico che non esiste ancora.</li>
     <li><strong>Statistiche Avanzate:</strong> Calcola per l'intero periodo selezionato (ed anche diviso in quattro quartili di tempo Q1, Q2, Q3, Q4 con le loro durate in anni, mesi e giorni):
         <ul>
             <li><strong>Minimo / Massimo / Media:</strong> I valori minimi, massimi e medi raggiunti.</li>
@@ -357,6 +397,11 @@ margin: 1em 0;
     <li><code>.l</code>: Mostra la lista delle mosse giocate, ricostruita dalla partita fino al punto in cui ti trovi, varianti comprese. È lo stesso comando di tutte le altre modalità.</li>
     <li><code>.a#</code>: Chiede al motore di analizzare la posizione per il numero di secondi indicato (es. <code>.a5</code>).</li>
     <li><code>.al#</code>: Rilegge le linee trovate dall'ultima analisi, senza interrogare di nuovo il motore. Da solo dà la migliore, con un numero la scelta corrispondente (es. <code>.al2</code> per la seconda). Fino alla versione 8.17.0 questo comando era <code>.l</code>, che però altrove è la lista delle mosse: era l'ultimo comando rimasto con due significati diversi.</li>
+    <li><code>.k#</code>: Salta direttamente alla mossa numero indicato, per esempio <code>.k12</code> ti porta alla dodicesima. Comodo quando stai studiando una partita lunga e vuoi tornare a un punto preciso senza scorrerla tutta.</li>
+    <li><code>.bm</code>: Dice il bilancio del materiale, cioè quanto vale quello che resta sulla scacchiera per ciascun colore e chi è in vantaggio. È lo stesso di <code>.m</code> nelle altre modalità.</li>
+    <li><code>.gp</code> e <code>.gf</code>: Copiano negli appunti la partita in formato PGN oppure la sola posizione corrente in formato FEN. Servono per portare quello che stai facendo dentro un altro programma, o per incollarlo in un messaggio.</li>
+    <li><code>.i</code> e <code>.ii</code>: <code>.i</code> salva l'immagine della posizione corrente in un file PDF, dentro la cartella <code>images</code>; <code>.ii</code> apre le impostazioni di quell'immagine, dove scegli i colori dei pezzi e delle case, la dimensione, se evidenziare l'ultima mossa e se disegnare l'ombra sotto i pezzi. Servono a chi vuole stampare una posizione o mandarla a un allievo vedente.</li>
+    <li><code>_</code> seguito dal testo: Aggiunge un commento alla mossa in cui ti trovi, per esempio <code>_qui il Nero perde il filo</code>. Il commento entra nel PGN e viene riletto quando ripassi da quella mossa. È lo stesso trattino basso che compare nel riquadro sotto la scacchiera condivisa, se hai acceso <code>.cso</code>.</li>
 </ul>
 
 <h4>2.4.2. Editor della Scacchiera (.be)</h4>
@@ -418,8 +463,18 @@ margin: 1em 0;
 <ul>
     <li><code>.s#</code> (es. <code>.s15</code>): modifica il livello di difficoltà (Skill Level) del motore da 0 a 20 al volo.</li>
     <li><code>.e#</code> (es. <code>.e1200</code>): imposta la forza del motore indicando direttamente un punteggio Elo. Orologic verificherà se il motore supporta questa funzione e applicherà il limite (ogni motore ha un suo range minimo/massimo, ad esempio Stockfish 16 parte da 1320 Elo).</li>
+    <li><code>.l</code>: mostra la lista delle mosse giocate fin lì, come in tutte le altre modalità.</li>
 </ul>
-<p>Al termine della partita contro il motore, Orologic annuncerà il risultato e ti chiederà direttamente se desideri analizzare la partita, permettendoti di avviarne subito l'esplorazione (<code>.e</code>) in modo del tutto coerente con quanto avviene a fine arbitraggio.</p>
+<p>Valgono anche tutti i comandi degli orologi, da <code>.1</code> a <code>.6</code>, descritti nella sezione 2.1.3. Non valgono invece le correzioni manuali del tempo, <code>.b+</code> e le sue compagne: qui non c'è un arbitro, e i due orologi devono scorrere per conto loro.</p>
+
+<h5>Cosa succede quando scade il tempo</h5>
+<p>Se la bandierina cade mentre stai pensando, la partita si chiude da sola: non devi premere niente per accorgertene. Orologic annuncia il tempo scaduto, assegna il risultato e ti porta subito alla domanda sull'analisi. Rispondendo di no torni al menu di Easyfish, e te lo dice.</p>
+
+<div class="note">
+    <p><strong>Attenzione al tasto ESC.</strong> Durante la partita contro il motore, ESC vale come il punto, cioè come la richiesta di abbandonare. Per non farti perdere una partita con un tasto premuto per sbaglio, Orologic ti chiede sempre conferma prima di registrare l'abbandono: rispondi con ESC a quella domanda e la partita continua.</p>
+</div>
+
+<p>Al termine della partita contro il motore, Orologic annuncerà il risultato e ti chiederà direttamente se desideri analizzare la partita, permettendoti di avviarne subito l'esplorazione (<code>.e</code>) in modo del tutto coerente con quanto avviene a fine arbitraggio. La scacchiera non viene stampata da sola: se vuoi rivedere la posizione finale la chiedi con <code>.s</code>.</p>
 
 <h4>2.4.4. Modalità Esploratore (.e)</h4>
 <p>Il comando <code>.e</code> apre l'Esploratore di Varianti. Un ambiente ottimizzato per navigare PGN complessi. Il prompt cambierà per indicarti il livello della variante (es. <code>Lvl0</code> per la linea principale, <code>Lvl1</code>, <code>Lvl2</code>).</p>
@@ -497,7 +552,8 @@ margin: 1em 0;
 </ul>
 <p>All'avvio della modalità <code>tempo</code>, il programma ti chiederà di selezionare uno degli orologi configurati. Subito dopo la selezione dell'orologio e prima del countdown iniziale, potrai inserire una <strong>nota testuale di sessione</strong> (tramite <code>dgt()</code>, con un limite massimo di 250 caratteri). Questa nota verrà registrata ed inserita all'inizio del file di report testuale salvato all'uscita.</p>
 <p>Dopodiché, gli orologi si avvieranno. Oltre ai normali comandi di ispezione e configurazione del tempo, in questa modalità è disponibile il comando speciale <strong><code>.q</code> (Annulla ultimo inserimento)</strong>. Il comando <code>.q</code> rimuove l'ultimo input memorizzato in cronologia, inverte il turno di gioco corretto e restituisce il tempo scalato comprensivo di eventuali incrementi accumulati. Il comando non può essere usato se la lista mosse è vuota.</p>
-<p>Potrai controllare la sessione utilizzando i comandi con il punto (<code>.</code>) per visualizzare il tempo rimanente (<code>.1</code>, <code>.2</code>, <code>.3</code>), mettere in pausa o riprendere il timer (<code>.p</code>), oppure regolare il tempo residuo per ciascun giocatore (<code>.b+</code>, <code>.b-</code>, <code>.n+</code>, <code>.n-</code>) se necessario.</p>
+<p>Potrai controllare la sessione utilizzando i comandi con il punto (<code>.</code>) per visualizzare il tempo rimanente (<code>.1</code>, <code>.2</code>, <code>.3</code>), mettere in pausa o riprendere il timer (<code>.p</code>), oppure regolare il tempo residuo per ciascun giocatore (<code>.b+</code>, <code>.b-</code>, <code>.n+</code>, <code>.n-</code>) se necessario. Valgono tutti i comandi degli orologi descritti nella sezione 2.1.3, compresi <code>.4</code> per il confronto dei tempi, <code>.5</code> per sapere di chi è il tratto e <code>.6</code> per l'aggiornamento automatico. In qualsiasi momento <code>.?</code> ti ripete l'elenco dei comandi validi qui.</p>
+<p>Un esempio di come si usa. Stai arbitrando una partita fra due amici su una scacchiera vera e non vuoi trascrivere le mosse. Scegli un orologio, per esempio quindici minuti con dieci secondi di incremento, scrivi come nota "amichevole del giovedì" e parti. A ogni mossa premi Invio su una riga vuota: Orologic registra una <code>x</code>, passa il turno all'altro e aggiunge l'incremento a chi ha appena mosso. Se ti interessa annotare qualcosa, invece della riga vuota scrivi quello che vuoi, per esempio "il Bianco offre patta". Se sbagli e passi il turno per errore, <code>.q</code> annulla l'ultimo inserimento e restituisce il tempo, incremento compreso.</p>
 <p>Al termine della sessione (premendo <code>.</code>), Orologic genererà e salverà un file di report testuale nella cartella <code>txt</code> con la data e l'ora correnti.</p>
 
 <h3>2.7. Ricerca PGN (ricerca)</h3>
@@ -618,19 +674,37 @@ margin: 1em 0;
 <h3>2.9. Apri Manuale (manuale)</h3>
 <p>Questo comando apre questa guida nel tuo browser web predefinito.</p>
 
-<h3>2.10. Esci dall'Applicazione (.)</h3>
+<h3>2.10. Novità (novita)</h3>
+<p>Apre nel browser il registro delle modifiche, cioè l'elenco di tutto quello che è cambiato in ogni versione di Orologic, dalla più recente alla più vecchia. Ogni voce dice se è una funzione nuova o una correzione, in quale parte del programma interviene e, quando serve, perché è stata fatta. È il posto dove guardare dopo un aggiornamento, per sapere che cosa troverai di diverso.</p>
+
+<h3>2.11. Esci dall'Applicazione (.)</h3>
 <p>Digitando <code>.</code> e premendo Invio dal menu principale chiuderà Orologic.</p>
 
 ---
 
-<h2>3. Contatti e Supporto</h2>
+<h2>3. Piccolo Glossario</h2>
+<p>Le sigle e i termini tecnici che ricorrono in questa guida e dentro il programma. Non sono termini di scacchi, che diamo per conosciuti, ma nomi di formati, di tecnologie e di misure che è comodo avere spiegati una volta sola.</p>
+<ul>
+    <li><strong>PGN</strong> (Portable Game Notation): il formato standard con cui si scrivono le partite. È un file di testo che contiene le intestazioni fra parentesi quadre, come i nomi dei giocatori e la data, e poi l'elenco delle mosse. Lo leggono tutti i programmi di scacchi e tutti i siti, quindi una partita salvata da Orologic la puoi aprire ovunque.</li>
+    <li><strong>FEN</strong> (Forsyth-Edwards Notation): una riga di testo che descrive una singola posizione, non una partita intera. Contiene la disposizione dei pezzi, di chi è il tratto, i diritti di arrocco e poco altro. Serve quando vuoi far vedere a qualcuno una posizione precisa senza mandargli tutta la partita.</li>
+    <li><strong>SAN</strong> (Standard Algebraic Notation): il modo normale di scrivere le mosse, quello che trovi sui libri e sulle riviste: <code>e4</code>, <code>Nf3</code>, <code>O-O</code>. È come Orologic si aspetta che tu inserisca le mosse.</li>
+    <li><strong>Motore UCI</strong>: un programma separato che calcola le mosse migliori, come Stockfish. UCI è il linguaggio con cui Orologic gli parla: qualsiasi motore che parli UCI può essere usato al posto di Stockfish.</li>
+    <li><strong>Centipedone</strong>: l'unità con cui il motore misura il vantaggio. Cento centipedoni valgono un pedone, quindi una valutazione di +250 vuol dire che il Bianco sta due pedoni e mezzo meglio. Il segno più è sempre a favore del Bianco.</li>
+    <li><strong>MultiPV</strong>: quante linee alternative vuoi che il motore ti mostri. Con MultiPV a 1 il motore dice solo la mossa che ritiene migliore; alzandolo a 3 ti dà anche la seconda e la terza scelta, che spesso sono più istruttive.</li>
+    <li><strong>WDL</strong> (Win Draw Loss): le tre percentuali con cui il motore stima quanto è probabile che la posizione finisca in vittoria, patta o sconfitta. Sono spesso più parlanti della valutazione in centipedoni: +150 in un finale semplice può valere una patta quasi certa.</li>
+    <li><strong>Token API</strong>: una lunga sequenza di caratteri che Lichess ti dà per far entrare Orologic nel tuo account senza che tu debba scrivergli la password. Va tenuto riservato come una password, e si può revocare da Lichess in qualsiasi momento.</li>
+    <li><strong>Sonificazione</strong>: la trasformazione di una serie di numeri in suoni, in modo da poterne cogliere l'andamento con l'orecchio invece che con gli occhi. Orologic la usa per la storia del tuo punteggio Elo: un punteggio che sale diventa un suono che sale.</li>
+    <li><strong>Screen reader</strong>: il programma che legge a voce quello che appare sullo schermo, come NVDA o JAWS. Orologic è pensato per essere usato con uno di questi, e ogni sua scelta di forma, dai messaggi brevi all'assenza di cornici grafiche, viene da lì.</li>
+</ul>
+
+<h2>4. Contatti e Supporto</h2>
 <p>Per aiuto, segnalazioni di bug, suggerimenti, o se sei interessato a diventare un traduttore o beta tester, per favore contatta l'autore:</p>
 <ul>
     <li><strong>Gabriele Battaglia</strong></li>
     <li>Email: <code>gabriele.battaglia@gmail.com</code></li>
 </ul>
 
-<h2>4. Ringraziamenti</h2>
+<h2>5. Ringraziamenti</h2>
 <p>Un enorme grazie a tutti coloro che hanno contribuito a questo progetto con test, feedback e supporto.</p>
 <ul>
     <li>Le IA che hanno collaborato al codice: come ChatGPT e il bellissimo Gemini;</li>
@@ -643,7 +717,7 @@ margin: 1em 0;
     <li>Romana Trapletti, per essere stata l'ispiratrice della funzione di condivisione della scacchiera;</li>
 </ul>
 
-<h2>5. Sostieni il Progetto</h2>
+<h2>6. Sostieni il Progetto</h2>
 <p>Se ti piace Orologic o lo trovi utile, per favore considera di sostenere il suo sviluppo con una donazione. Il tuo supporto aiuta a coprire i costi e incoraggia futuri aggiornamenti e nuove funzionalità.</p>
 <p>Puoi fare una donazione tramite PayPal a:</p>
 <p><strong><code>gabriele.battaglia@gmail.com</code></strong></p>
