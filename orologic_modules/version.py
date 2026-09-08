@@ -8,5 +8,5 @@ BIRTH_DATE = datetime.datetime(2025, 2, 14, 10, 16)
 VERSION = "8.21.0"
 # La data va aggiornata insieme al numero di versione: la schermata di
 # benvenuto ne calcola l'eta' e, se resta indietro, mente.
-RELEASE_DATE = datetime.datetime(2026, 9, 8, 12, 0)
+RELEASE_DATE = datetime.datetime(2026, 9, 8, 13, 35)
 PROGRAMMER = "Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Fable 5.1, modalita' auto)"
