@@ -137,7 +137,10 @@ def _suona_bandierina():
 
 def _ciclo(stato):
     """Consuma il tempo di chi ha il tratto e avvisa quando serve."""
-    ultimo = time.time()
+    # L'orologio monotono non risente delle correzioni all'ora di sistema:
+    # con time.time, un aggiustamento di Windows durante la partita entrava
+    # nel tempo di chi aveva il tratto.
+    ultimo = time.monotonic()
     allarmi = []
     if getattr(stato, "clock_config", None):
         allarmi = stato.clock_config.get("alarms", []) or []
@@ -148,7 +151,7 @@ def _ciclo(stato):
         }
 
     while not stato.game_over:
-        adesso = time.time()
+        adesso = time.monotonic()
         trascorso = adesso - ultimo
         ultimo = adesso
 

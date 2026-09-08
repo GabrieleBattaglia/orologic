@@ -1041,11 +1041,13 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
     header_text += _("Nero: {black} ({elo})\n").format(
         black=headers.get("Black", _("N/D")), elo=headers.get("BlackElo", _("N/A"))
     )
+    # I tempi finali si leggono dalla partita, non dal PGN: i tag WhiteClock e
+    # BlackClock, per la convenzione, dicono gli orologi all'inizio del gioco.
     header_text += _("Tempo finale Bianco: {clock}\n").format(
-        clock=headers.get("WhiteClock", _("N/D"))
+        clock=tempo.orologio(game_state.white_remaining)
     )
     header_text += _("Tempo finale Nero: {clock}\n").format(
-        clock=headers.get("BlackClock", _("N/D"))
+        clock=tempo.orologio(game_state.black_remaining)
     )
     header_text += _("Controllo del Tempo: {tc}\n").format(
         tc=headers.get("TimeControl", _("N/D"))

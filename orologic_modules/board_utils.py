@@ -49,18 +49,28 @@ def CalculateMaterial(board):
     return w, b
 
 
+# L'arrocco come lo scrive la gente: due o tre segni fra o, O e zero, con o
+# senza trattini. Nessuna mossa legittima comincia con una o o con uno zero,
+# quindi il riconoscimento non toglie niente al resto della notazione.
+_ARROCCO = re.compile(r"^[oO0]-?[oO0](-?[oO0])?")
+
+
 def NormalizeMove(m):
+    """Riporta la mossa scritta dall'utente alla forma che python-chess accetta.
+
+    python-chess riconosce l'arrocco solo come O-O oppure 0-0: qui si accettano
+    anche oo, OO, 00, ooo e le forme miste, con qualunque combinazione di
+    trattini, come fanno altri programmi. Il suffisso di annotazione resta
+    attaccato. Le lettere minuscole dei pezzi diventano maiuscole.
+    """
     m = m.strip()
-    if m.lower().startswith("o-o-o") or m.lower().startswith("0-0-0"):
-        suffix = m[len("o-o-o") :]
-        return "O-O-O" + suffix
-    elif m.lower().startswith("o-o") or m.lower().startswith("0-0"):
-        suffix = m[len("o-o") :]
-        return "O-O" + suffix
-    elif m and m[0] in "rnkq" and m[0].islower():
+    arrocco = _ARROCCO.match(m)
+    if arrocco:
+        forma = "O-O-O" if arrocco.group(1) else "O-O"
+        return forma + m[arrocco.end() :]
+    if m and m[0] in "rnkq" and m[0].islower():
         return m[0].upper() + m[1:]
-    else:
-        return m
+    return m
 
 
 def _disambiguazione(board, move, tipo_pezzo):

@@ -6,7 +6,21 @@
 # durata poteva uscire come 1 ora, 5 minuti, 3 secondi oppure 1 ore, 5 minuti e
 # 3 secondi a seconda di chi la stampava.
 
+import math
+
 from .config import _
+
+
+def intero(secondi):
+    """Secondi arrotondati all'intero piu' vicino, con il mezzo verso l'alto.
+
+    E' la regola con cui si scrivono i tag del PGN e con cui la partita
+    misura il tempo speso per una mossa: usando la stessa nei due posti, il
+    residuo precedente meno il tempo speso piu' l'incremento torna esattamente
+    il residuo scritto. Il round di Python porta il mezzo al pari e romperebbe
+    il conto con gli incrementi dispari.
+    """
+    return math.floor(float(secondi or 0) + 0.5)
 
 
 def parlato(secondi):
@@ -65,15 +79,17 @@ def compatto(secondi):
 
 
 def pgn(secondi):
-    """Durata nel formato dei tag PGN clk ed emt."""
-    totale = max(0, int(secondi or 0))
+    """Durata nel formato dei tag PGN clk ed emt: sempre ore:minuti:secondi.
+
+    La convenzione Enhanced PGN vuole h:mm:ss, ed e' l'unica forma che
+    python-chess, ChessBase e gli altri programmi riconoscono. La forma
+    compatta di prima, 15:08 oppure 1, veniva ignorata da chiunque provasse a
+    leggere i tempi, e i secondi erano troncati invece che arrotondati.
+    """
+    totale = max(0, intero(secondi))
     ore, resto = divmod(totale, 3600)
     minuti, sec = divmod(resto, 60)
-    if ore:
-        return f"{ore}:{minuti:02d}:{sec:02d}"
-    if minuti:
-        return f"{minuti}:{sec:02d}"
-    return f"{sec}"
+    return f"{ore}:{minuti:02d}:{sec:02d}"
 
 
 def da_hms(testo):

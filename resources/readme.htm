@@ -231,6 +231,7 @@ margin: 1em 0;
 <p>Le mosse vengono inserite utilizzando la <strong>Notazione Algebrica Standard (SAN)</strong>. Esempi:</p>
 <ul>
     <li><code>e4</code>, <code>Nf3</code>, <code>O-O</code> (arrocco corto), <code>O-O-O</code> (arrocco lungo), <code>dxe5</code> (cattura), <code>e8=Q</code> (promozione).</li>
+    <li>Per l'arrocco valgono anche le forme brevi che usano altri programmi: <code>oo</code>, <code>OO</code>, <code>00</code> per il corto e <code>ooo</code>, <code>OOO</code>, <code>000</code> per il lungo, con o senza trattini e in qualunque combinazione di maiuscole, minuscole e zeri. Orologic le riconduce da solo a <code>O-O</code> e <code>O-O-O</code>, anche quando c'è un'annotazione attaccata, come <code>oo!</code>.</li>
 </ul>
 <p>Puoi anche aggiungere annotazioni direttamente alla tua mossa: <code>!</code> (buona), <code>?</code> (cattiva), <code>!!</code> (brillante), <code>??</code> (errore grave), <code>!?</code> (interessante), <code>?!</code> (dubbia). Esempio: <code>Nf3!</code>. Usa <code>=</code> per proporre la patta. Esempio: <code>Qd2=</code>.</p>
 
@@ -251,7 +252,7 @@ margin: 1em 0;
         <tr><td><code>.b+</code>/<code>.b-</code>/<code>.n+</code>/<code>.n-</code></td><td>Aggiunge o sottrae tempo al Bianco (b) o al Nero (n), sempre a orologi fermi. Es: <code>.b+60</code> dà un minuto al Bianco. Sono comandi da arbitro: rispondono qui e nella modalità Tempo, mentre contro il motore e su Lichess non esistono, perché lì non c'è nessun arbitro che possa fermare gli orologi.</td></tr>
         <tr><td><code>.s</code> oppure <code>.b</code></td><td>Mostra la scacchiera testuale. I due comandi sono equivalenti in tutte le modalita'.</td></tr>
         <tr><td><code>.c [commento]</code></td><td>Aggiunge un commento alla mossa corrente. Es: <code>.c Mossa chiave</code>.</td></tr>
-        <tr><td><code>.1-0</code> / <code>.0-1</code> / <code>.1/2</code> / <code>.*</code></td><td>Assegna la vittoria al Bianco / al Nero / patta / risultato indefinito e termina la partita.</td></tr>
+        <tr><td><code>.1-0</code> / <code>.0-1</code> / <code>.1/2</code> / <code>.*</code></td><td>Assegna la vittoria al Bianco / al Nero / patta / risultato indefinito e termina la partita. I primi tre si possono scrivere anche senza trattino e senza barra: <code>.10</code>, <code>.01</code> e <code>.12</code>.</td></tr>
         <tr><td><code>.?</code></td><td>Mostra questa lista di comandi.</td></tr>
     </tbody>
 </table>
@@ -297,7 +298,7 @@ margin: 1em 0;
     <li><strong>Suddivisione della partita in 4 fasi (Quartili):</strong> Le mosse della partita vengono suddivise in 4 quartili temporali. Per ciascun quartile viene mostrato il tempo cumulativo consumato e la relativa incidenza percentuale sul tempo totale di riflessione.</li>
     <li><strong>Mossa più lenta e mossa più veloce:</strong> Identificazione immediata delle singole mosse estreme con il relativo tempo speso formulato in lingua italiana.</li>
 </ul>
-<p>Infine, ti verrà chiesto se desideri salvare i tempi di riflessione all'interno del file PGN. Rispondendo con INVIO, il file PGN conterrà le annotazioni del tempo effettivo impiegato (tag <code>%clk</code>) per ciascuna mossa, garantendo la compatibilità con i lettori PGN standard.</p>
+<p>Infine, ti verrà chiesto se desideri salvare i tempi di riflessione all'interno del file PGN. Rispondendo con INVIO, ogni mossa riceve nel commento due annotazioni scritte come ore:minuti:secondi: il tempo rimasto sull'orologio dopo la mossa, tag <code>%clk</code>, e il tempo impiegato per giocarla, tag <code>%emt</code>. Sono le convenzioni che ChessBase, Lichess, python-chess e gli altri programmi riconoscono, e i due valori tornano fra loro: il tempo rimasto prima, meno quello impiegato, più l'incremento, dà il tempo rimasto dopo.</p>
 <h3>2.2. Orolichess: Integrazione Lichess (lichess)</h3>
 <p>Orolichess ti permette di connettere Orologic al tuo account Lichess per giocare online, gestire il tuo profilo e risolvere puzzle, il tutto tramite l'interfaccia accessibile del programma.</p>
 

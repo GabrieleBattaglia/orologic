@@ -251,7 +251,7 @@ def _loop_tempo(game_state, clock_config):
             # Se l'utente preme invio a vuoto, viene salvato "x"
             mossa_str = user_input if user_input != "" else "x"
 
-            Acusticator([1000.0, 0.01, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0])
+            Acusticator(["f5", 0.01, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0])
 
             # Aggiungiamo alla cronologia temporanea
             game_state.move_history.append(mossa_str)

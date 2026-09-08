@@ -18,6 +18,16 @@ li { margin-bottom: 0.3em; }
 <body>
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
+<h3>Versione 8.21</h3>
+<h4>8.21.0 (8 settembre 2026)</h4>
+<ul>
+  <li>+ [Core] L'arrocco si può scrivere anche come lo scrive la gente: <code>oo</code>, <code>OO</code>, <code>00</code> per il corto e <code>ooo</code>, <code>OOO</code>, <code>000</code> per il lungo, con o senza trattini, in qualunque miscela di lettere e zeri, anche con un'annotazione attaccata. Il risultato si assegna anche senza trattino e senza barra: <code>.10</code>, <code>.01</code> e <code>.12</code>. Richiesta di Luca D., issue 44. L'aiuto in linea del punto interrogativo ora elenca anche i comandi di risultato, che mancavano.</li>
+  <li>* [PGN] I tempi salvati nel PGN sono ora nel formato che gli altri programmi capiscono. I tag <code>clk</code> ed <code>emt</code> uscivano come 15:08 e 1, mentre la convenzione vuole sempre ore:minuti:secondi: python-chess, ChessBase e gli altri lettori li ignoravano. Segnalazione di Luca D., issue 43.</li>
+  <li>* [PGN] I tag <code>clk</code> ed <code>emt</code> tornano fra loro: tempo rimasto prima, meno tempo impiegato, più incremento dà esattamente il tempo rimasto dopo. Prima i due valori venivano troncati ciascuno per conto suo e letti in tre istanti diversi della stessa mossa, con scarti di uno o due secondi. Ora gli orologi si fotografano una volta sola nell'istante in cui la mossa è accettata, il tratto passa subito, e anche la mossa di matto riceve i suoi tempi, che prima restava senza.</li>
+  <li>* [PGN] Tolti i tag <code>WhiteClock</code> e <code>BlackClock</code>: per la convenzione indicano gli orologi all'inizio del gioco nelle partite aggiornate, e metterci i residui finali li faceva leggere al contrario. I tempi finali restano nel riepilogo testuale e nell'ultimo <code>clk</code> di ciascun colore.</li>
+  <li>* [Core] Il thread degli orologi misura il tempo con l'orologio monotono del sistema: una correzione dell'ora di Windows durante la partita non entra più nel tempo di chi ha il tratto.</li>
+  <li>* [Audio] Dopo il salvataggio automatico di ogni mossa il programma non aspetta più che il suono di conferma sia uscito dalle casse, un'attesa che valeva da un decimo a mezzo secondo a seconda della scheda audio. Il suono della mossa scende da 1000 a 700 hertz, così i tre suoni che possono sovrapporsi, conferma del salvataggio, mossa e apertura trovata, stanno a due ottave l'uno dall'altro e si distinguono anche insieme. Segnalazione di Valeria S., issue 42, da confermare all'ascolto.</li>
+</ul>
 <h3>Versione 8.20</h3>
 <h4>8.20.3 (3 settembre 2026)</h4>
 <ul>

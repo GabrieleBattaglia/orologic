@@ -18,6 +18,7 @@ from . import (
     engine,
     orologio,
     storage,
+    tempo,
     ui,
     version,
 )
@@ -215,6 +216,8 @@ def comandi_di_lettura(cmd, game_state):
 
 
 _COMANDI_RISULTATO = (".1-0", ".0-1", ".1/2", ".*")
+# Le forme brevi che altri programmi accettano: senza trattino ne' barra.
+_RISULTATI_BREVI = {".10": ".1-0", ".01": ".0-1", ".12": ".1/2"}
 
 
 def annulla_ultima_mossa(game_state):
@@ -379,11 +382,12 @@ def verifica_fine_partita(game_state):
 
     Matto, stallo, materiale insufficiente, ripetizione e le altre
     patte. Restituisce vero quando la partita e' finita, cosi' il ciclo
-    si ferma senza passare il tratto.
+    si ferma. Il tratto e' gia' passato quando si arriva qui, quindi il
+    vincitore si legge dalla scacchiera: chi deve muovere e' il mattato.
     """
     if game_state.board.is_checkmate():
         game_state.game_over = True
-        result = "1-0" if game_state.active_color == "white" else "0-1"
+        result = "0-1" if game_state.board.turn == chess.WHITE else "1-0"
         game_state.pgn_game.headers["Result"] = result
         winner = game_state.black_player if result == "0-1" else game_state.white_player
         print(_("Scacco matto! Vince {winner}.").format(winner=winner))
@@ -685,6 +689,7 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
         if user_input.startswith("."):
             u = user_input.strip()
             cmd = u.rstrip(".").lower()
+            cmd = _RISULTATI_BREVI.get(cmd, cmd)
 
             if (
                 ui.comandi_orologio(cmd, game_state)
@@ -724,35 +729,55 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 move_san_only = raw_input[: -len(annotation_suffix)].strip()
             try:
                 move = game_state.board.parse_san(move_san_only)
+                mosso_bianco = game_state.active_color == "white"
                 board_copy = game_state.board.copy()
                 description = board_utils.DescribeMove(
                     move, board_copy, annotation=annotation_suffix
                 )
+                san_move_base = game_state.board.san(move)
+                san_move_base = san_move_base.replace("!", "").replace("?", "")
+                # La mossa e' accettata: gli orologi si fotografano adesso,
+                # in un colpo solo sotto il lucchetto, e il tratto passa
+                # subito dopo. Prima il tempo speso si leggeva qui, il
+                # residuo dopo la ricerca dell'apertura e le stampe, e
+                # l'incremento piu' tardi ancora: i tag clk ed emt del PGN
+                # uscivano da tre istanti diversi e non tornavano fra loro.
+                # Le due letture si arrotondano con la stessa regola dei
+                # tag, cosi' residuo precedente meno tempo speso piu'
+                # incremento da' esattamente il residuo scritto.
+                fasi = game_state.clock_config["phases"]
+                if mosso_bianco:
+                    incremento = fasi[game_state.white_phase]["white_inc"]
+                else:
+                    incremento = fasi[game_state.black_phase]["black_inc"]
+                with orologio.blocco():
+                    dopo = (
+                        game_state.white_remaining
+                        if mosso_bianco
+                        else game_state.black_remaining
+                    )
+                    prima = (
+                        dopo
+                        if current_turn_clock_before is None
+                        else (current_turn_clock_before)
+                    )
+                    time_spent = max(0, tempo.intero(prima) - tempo.intero(dopo))
+                    residuo = orologio.aggiungi(game_state, mosso_bianco, incremento)
+                game_state.board.push(move)
+                game_state.switch_turn()
+                current_turn_clock_before = None
                 game_state.descriptive_move_history.append(description)
-                Acusticator(
-                    [1000.0, 0.01, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0]
-                )
-                if game_state.active_color == "white":
+                # Fa cinque: due ottave sopra la conferma del salvataggio, fa
+                # tre, e due sotto l'apertura trovata, fa sette. I tre suoni
+                # possono sovrapporsi e cosi' si distinguono anche insieme.
+                Acusticator(["f5", 0.01, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0])
+                if mosso_bianco:
                     print(game_state.white_player + ": " + description)
                 else:
                     print(game_state.black_player + ": " + description)
-                san_move_base = game_state.board.san(move)
-                san_move_base = san_move_base.replace("!", "").replace("?", "")
-                game_state.board.push(move)
                 game_state.move_history.append(san_move_base)
-
-                # Calculate time spent on this move
-                if game_state.active_color == "white":
-                    time_after = game_state.white_remaining
-                else:
-                    time_after = game_state.black_remaining
-
-                if current_turn_clock_before is not None:
-                    time_spent = max(0.0, current_turn_clock_before - time_after)
-                else:
-                    time_spent = 0.0
-
                 game_state.move_times.append(time_spent)
+                game_state.clocks_history.append(residuo)
                 new_node = game_state.pgn_node.add_variation(move)
                 if annotation_suffix:
                     if annotation_suffix == "=":
@@ -808,33 +833,14 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         last_eco_msg = ""
                 if verifica_fine_partita(game_state):
                     break
-                if game_state.active_color == "white":
-                    orologio.aggiungi(
-                        game_state,
-                        True,
-                        game_state.clock_config["phases"][game_state.white_phase][
-                            "white_inc"
-                        ],
-                    )
-                else:
-                    orologio.aggiungi(
-                        game_state,
-                        False,
-                        game_state.clock_config["phases"][game_state.black_phase][
-                            "black_inc"
-                        ],
-                    )
-
-                if game_state.active_color == "white":
-                    game_state.clocks_history.append(game_state.white_remaining)
-                else:
-                    game_state.clocks_history.append(game_state.black_remaining)
-
-                game_state.switch_turn()
-                current_turn_clock_before = None
                 if autosave_is_on:
                     EseguiAutosave(game_state)
-                    Acusticator(["f3", 0.012, 0, config.VOLUME], sync=True)
+                    # Senza sync: l'attesa che il suono uscisse dalle casse
+                    # bloccava il prompt da un decimo a mezzo secondo per
+                    # mossa, secondo la scheda audio. Serviva quando ogni
+                    # suono era uno stream a se'; con il mixer i suoni si
+                    # sommano da soli.
+                    Acusticator(["f3", 0.012, 0, config.VOLUME])
             # Rete di sicurezza del ciclo di gioco: qualunque cosa vada
             # storta nell'elaborazione di una mossa, la partita non deve
             # cadere. Si mostrano le mosse legali e si torna al prompt.
@@ -852,12 +858,10 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
 
 
 def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
-    game_state.pgn_game.headers["WhiteClock"] = board_utils.FormatClock(
-        game_state.white_remaining
-    )
-    game_state.pgn_game.headers["BlackClock"] = board_utils.FormatClock(
-        game_state.black_remaining
-    )
+    # I tag WhiteClock e BlackClock non si scrivono piu': per la convenzione
+    # Enhanced PGN indicano gli orologi all'inizio del gioco, nelle partite
+    # aggiornate, e metterci i residui finali li faceva leggere al contrario.
+    # I tempi finali stanno nell'ultimo clk di ciascun colore e nel riepilogo.
     print(_("Partita terminata."))
 
     if len(game_state.move_history) >= 8:

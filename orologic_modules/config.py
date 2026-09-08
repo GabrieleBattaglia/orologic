@@ -212,6 +212,10 @@ DOT_COMMANDS = {
     "\\[col]": _("Esplora diagonale alto-sinistra"),
     "-[col|trv|casa]": _("Esplora colonna, traversa o casa"),
     ",[P,N,B,R,Q,K]": _("Posizioni di un pezzo specifico"),
+    ".1-0 .0-1 .1/2 .*": _(
+        "Assegna il risultato e chiude la partita; valgono anche .10, .01 e .12"
+    ),
+    "oo / ooo": _("Arrocco corto o lungo; valgono anche O-O, 0-0 e le forme lunghe"),
     ".?": _("Aiuto"),
 }
 

@@ -954,9 +954,7 @@ def menu_puzzle(db):
                     continue
 
             if move == mossa_corretta_move:
-                Acusticator(
-                    [1000.0, 0.01, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0]
-                )
+                Acusticator(["f5", 0.01, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0])
                 desc_move = board_utils.DescribeMove(move, board)
                 print(_("Corretto! Hai giocato: {m}").format(m=desc_move))
                 board.push(move)
