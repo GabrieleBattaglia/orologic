@@ -14,10 +14,9 @@ from GBUtils import (
     Donazione,
     dgt,
     enter_escape,
+    gestisci_aggiornamento,
     key,
     menu,
-    perform_update,
-    update_checker,
 )
 
 from orologic_modules import (
@@ -437,6 +436,28 @@ def _incrementa_lanci(db):
     db["launch_count"] = db.get("launch_count", 0) + 1
 
 
+# Le frasi che gestisci_aggiornamento di GBUtils dice durante l'aggiornamento.
+# Stanno qui soltanto perche' pybabel le estragga nei cataloghi: il file
+# babel.cfg guarda i sorgenti di Orologic e non la libreria. Devono restare
+# identiche, carattere per carattere, a quelle scritte in GBUtils, altrimenti
+# la traduzione non viene trovata e l'utente sente l'italiano.
+FRASI_AGGIORNAMENTO_GBUTILS = (
+    _("Controllo aggiornamenti."),
+    _("Hai gia' l'ultima versione,"),
+    _("Controllo non riuscito, si prosegue."),
+    _("Disponibile la versione"),
+    _("ma il pacchetto non e' ancora pronto."),
+    _("Tu hai la"),
+    _("Novita' di questa versione:"),
+    _("Novita'"),
+    _("Vuoi aggiornare adesso?"),
+    _("Aggiornamento rimandato."),
+    _("Scarico l'aggiornamento."),
+    _("Aggiornamento pronto, il programma si chiude per applicarlo."),
+    _("Aggiornamento non riuscito, si prosegue con questa versione."),
+)
+
+
 def Main():
     # Il motore va chiuso comunque vada: uscita dal menu, eccezione o
     # interruzione da tastiera. Senza questo, Stockfish resterebbe in
@@ -451,51 +472,14 @@ def Main():
     # Pulizia vecchi file
     cleaner.check_and_clean_old_files(days=365)
 
-    # Auto-Updater
-    if getattr(sys, "frozen", False):
-        api_url = (
-            "https://api.github.com/repos/GabrieleBattaglia/orologic/releases/latest"
-        )
-        has_update, new_ver, dl_url, _changelog = update_checker(
-            version.VERSION, api_url
-        )
-        if has_update:
-            if dl_url:
-                print(_("\nAggiornamento disponibile."))
-                print(
-                    _(
-                        "E' disponibile la nuova versione {new_ver}! (Attuale: {curr_ver})"
-                    ).format(new_ver=new_ver, curr_ver=version.VERSION)
-                )
-                if enter_escape(
-                    _(
-                        "Desideri scaricare e installare l'aggiornamento ora? (INVIO per si', ESC per ignorare): "
-                    )
-                ):
-                    print(_("Download dell'aggiornamento in corso. Attendere prego..."))
-                    if perform_update(dl_url, "orologic"):
-                        print(
-                            _(
-                                "Aggiornamento pronto. Orologic si chiudera' per l'installazione..."
-                            )
-                        )
-                        sys.exit(0)
-                    else:
-                        print(
-                            _(
-                                "Si e' verificato un errore durante la preparazione dell'aggiornamento."
-                            )
-                        )
-            else:
-                print(_("\nAggiornamento disponibile."))
-                print(
-                    _(
-                        "E' disponibile la nuova versione {new_ver}, ma i file di installazione non sono ancora pronti per il download."
-                    ).format(new_ver=new_ver)
-                )
-                print(_("Riprova piu' tardi."))
-        elif new_ver is None:
-            print(_("\nImpossibile verificare gli aggiornamenti."))
+    # Aggiornamento automatico: la conversazione la conduce GBUtils, che
+    # da sorgente tace e dal pacchetto compilato controlla, mostra le
+    # novita' una pagina alla volta, chiede e scarica. Le sue frasi sono in
+    # italiano e passano dal catalogo tramite traduci; restituisce vero
+    # solo quando il programma deve chiudersi per farsi sostituire.
+    api_url = "https://api.github.com/repos/GabrieleBattaglia/orologic/releases/latest"
+    if gestisci_aggiornamento("orologic", version.VERSION, api_url, traduci=_):
+        sys.exit(0)
 
     # Inizializzazione Motore (se configurato)
     if engine.InitEngine():
