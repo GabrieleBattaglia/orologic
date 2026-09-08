@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-09-08 13:09+0200\n"
+"POT-Creation-Date: 2026-09-08 13:22+0200\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -18,50 +18,50 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: orologic.py:50
+#: orologic.py:49
 #, python-brace-format
 msgid "{cosa} non trovato in {dove}"
 msgstr "{cosa} not found in {dove}"
 
-#: orologic.py:62
+#: orologic.py:61
 #, python-brace-format
 msgid "Non riesco ad aprire {cosa}: {motivo}"
 msgstr "I can't open {cosa}: {motivo}"
 
-#: orologic.py:69
+#: orologic.py:68
 msgid "il manuale"
 msgstr "the manual"
 
-#: orologic.py:73
+#: orologic.py:72
 msgid "il changelog"
 msgstr "the changelog"
 
-#: orologic.py:80
+#: orologic.py:79
 #, python-brace-format
 msgid "Ciao! Benvenuto, sono Orologic e ho {age}."
 msgstr "HI! Welcome, I'm Orologic and I have {age}."
 
-#: orologic.py:83
+#: orologic.py:82
 #, python-brace-format
 msgid ""
 "L'ultima versione e' la {version} ed e' stata rilasciata {release_date}."
 msgstr "The latest version is {version} and was released on {release_date}."
 
-#: orologic.py:89
+#: orologic.py:88
 #, python-brace-format
 msgid "Cioe' {release_ago} fa."
 msgstr "That is {release_ago} ago."
 
-#: orologic.py:90
+#: orologic.py:89
 #, python-brace-format
 msgid "Autore: {autore}"
 msgstr "Author: {autore}"
 
-#: orologic.py:91
+#: orologic.py:90
 msgid "Digita punto interrogativo per il menu."
 msgstr "Type question mark for menu."
 
-#: orologic.py:412
+#: orologic.py:411
 msgid ""
 "\n"
 "Orologi, scegli un'azione: "
@@ -69,59 +69,136 @@ msgstr ""
 "\n"
 "Clocks, choose an action: "
 
-#: orologic.py:445
+#: orologic.py:434 orologic_modules/easyfish/interaction.py:142
+#: orologic_modules/easyfish/interaction.py:151
+#: orologic_modules/easyfish/interaction.py:160
+#: orologic_modules/easyfish/interaction.py:169
+msgid "attivo"
+msgstr "active"
+
+#: orologic.py:434
+msgid "non attivo"
+msgstr "not active"
+
+#: orologic.py:435
+msgid "numeri"
+msgstr "numbers"
+
+#: orologic.py:435
+msgid "parole"
+msgstr "words"
+
+#: orologic.py:437
+msgid "Analisi: tempo, linee e soglie di giudizio"
+msgstr "Analysis: time, lines and judgement thresholds"
+
+#: orologic.py:438
+#, python-brace-format
+msgid "Motore scacchistico: {nome}"
+msgstr "Chess engine: {nome}"
+
+#: orologic.py:439
+msgid "Nomi dei pezzi, delle colonne e delle mosse"
+msgstr "Names of pieces, files and moves"
+
+#: orologic.py:440
+#, python-brace-format
+msgid "Salvataggio automatico: {stato}"
+msgstr "Autosave: {stato}"
+
+#: orologic.py:441
+#, python-brace-format
+msgid "Stile dei menu: {stato}"
+msgstr "Menu style: {stato}"
+
+#: orologic.py:442
+#, python-brace-format
+msgid "Volume dei suoni: {vol} su 100"
+msgstr "Sound volume: {vol} out of 100"
+
+#: orologic.py:445 orologic_modules/config.py:248
+#: orologic_modules/easyfish/constants.py:116
+#: orologic_modules/easyfish/drawing.py:17
+msgid "Torna al menu principale"
+msgstr "Return to the main menu"
+
+#: orologic.py:463
+msgid ""
+"\n"
+"Impostazioni, scegli una voce: "
+msgstr ""
+"\n"
+"Settings, choose an item: "
+
+#: orologic.py:478
+msgid "Salvataggio automatico attivo."
+msgstr "Autosave on."
+
+#: orologic.py:480
+msgid "Salvataggio automatico non attivo."
+msgstr "Autosave off."
+
+#: orologic.py:483
+msgid "I menu sono a numeri."
+msgstr "Menus are numbered."
+
+#: orologic.py:485
+msgid "I menu sono a parole."
+msgstr "Menus are by words."
+
+#: orologic.py:507
 msgid "Controllo aggiornamenti."
 msgstr "Checking for updates."
 
-#: orologic.py:446
+#: orologic.py:508
 msgid "Hai gia' l'ultima versione,"
 msgstr "You already have the latest version,"
 
-#: orologic.py:447
+#: orologic.py:509
 msgid "Controllo non riuscito, si prosegue."
 msgstr "Check failed, moving on."
 
-#: orologic.py:448
+#: orologic.py:510
 msgid "Disponibile la versione"
 msgstr "New version available:"
 
-#: orologic.py:449
+#: orologic.py:511
 msgid "ma il pacchetto non e' ancora pronto."
 msgstr "but the package is not ready yet."
 
-#: orologic.py:450
+#: orologic.py:512
 msgid "Tu hai la"
 msgstr "You have"
 
-#: orologic.py:451
+#: orologic.py:513
 msgid "Novita' di questa versione:"
 msgstr "What's new in this version:"
 
-#: orologic.py:452
+#: orologic.py:514
 msgid "Novita'"
 msgstr "What's new"
 
-#: orologic.py:453
+#: orologic.py:515
 msgid "Vuoi aggiornare adesso?"
 msgstr "Update now?"
 
-#: orologic.py:454
+#: orologic.py:516
 msgid "Aggiornamento rimandato."
 msgstr "Update postponed."
 
-#: orologic.py:455
+#: orologic.py:517
 msgid "Scarico l'aggiornamento."
 msgstr "Downloading the update."
 
-#: orologic.py:456
+#: orologic.py:518
 msgid "Aggiornamento pronto, il programma si chiude per applicarlo."
 msgstr "Update ready, the program will close to apply it."
 
-#: orologic.py:457
+#: orologic.py:519
 msgid "Aggiornamento non riuscito, si prosegue con questa versione."
 msgstr "Update failed, continuing with this version."
 
-#: orologic.py:495
+#: orologic.py:557
 msgid ""
 "\n"
 "Ripristino della partita."
@@ -129,7 +206,7 @@ msgstr ""
 "\n"
 "Resetting the game."
 
-#: orologic.py:498
+#: orologic.py:560
 msgid ""
 "E' stata rilevata una partita di arbitraggio in sospeso. Desideri "
 "riprenderla? (INVIO per si', ESC per no): "
@@ -137,12 +214,12 @@ msgstr ""
 "A pending referee match has been detected. Do you want to take it back? "
 "(ENTER for yes, ESC for no): "
 
-#: orologic.py:509
+#: orologic.py:571
 #, python-brace-format
 msgid "Impossibile ripristinare la partita: {e}"
 msgstr "Unable to restore game: {e}"
 
-#: orologic.py:529 orologic_modules/lichess_app.py:464
+#: orologic.py:591 orologic_modules/lichess_app.py:464
 #: orologic_modules/lichess_app.py:1919
 msgid ""
 "\n"
@@ -151,7 +228,7 @@ msgstr ""
 "\n"
 "Choose an action: "
 
-#: orologic.py:540
+#: orologic.py:602
 msgid ""
 "\n"
 "Caricamento partita dagli appunti..."
@@ -159,7 +236,7 @@ msgstr ""
 "\n"
 "Loading game from clipboard..."
 
-#: orologic.py:547 orologic_modules/game_flow.py:934
+#: orologic.py:609 orologic_modules/game_flow.py:934
 #: orologic_modules/pgn_search.py:1321
 msgid ""
 "Il motore scacchistico non e' configurato. Vuoi configurarlo ora? (INVIO per"
@@ -168,44 +245,22 @@ msgstr ""
 "The chess engine is not configured. Do you want to set it up now? (ENTER for"
 " yes, ESC for no): "
 
-#: orologic.py:553 orologic_modules/game_flow.py:945
+#: orologic.py:615 orologic_modules/game_flow.py:945
 #: orologic_modules/pgn_search.py:1327
 msgid "Impossibile inizializzare il motore. Analisi annullata."
 msgstr "Could not initialize engine. Analysis cancelled."
 
-#: orologic.py:559 orologic_modules/game_flow.py:953
+#: orologic.py:621 orologic_modules/game_flow.py:953
 #: orologic_modules/pgn_search.py:1333
 msgid "Desideri l'analisi automatica? (INVIO per si', ESC per manuale): "
 msgstr "Do you want automatic analysis? (ENTER for yes, ESC for manual): "
 
-#: orologic.py:621
-msgid ""
-"\n"
-"Regolazione Volume"
-msgstr ""
-"\n"
-"Volume adjustment"
-
-#: orologic.py:622
-#, python-brace-format
-msgid "Volume attuale: {vol:.0f}%"
-msgstr "Current volume: {vol:.0f}%"
-
-#: orologic.py:624
-msgid "Inserisci nuovo volume (0-100): "
-msgstr "Insert new volume (0-100): "
-
-#: orologic.py:632
-#, python-brace-format
-msgid "Volume impostato a {vol:.0f}%"
-msgstr "Volume set to {vol:.0f}%"
-
-#: orologic.py:644 orologic_modules/easyfish/drawing.py:68
+#: orologic.py:684 orologic_modules/easyfish/drawing.py:68
 #: orologic_modules/lichess_app.py:1658
 msgid "sconosciuto"
 msgstr "unknown"
 
-#: orologic.py:647
+#: orologic.py:687
 #, python-brace-format
 msgid ""
 "\n"
@@ -216,7 +271,7 @@ msgstr ""
 "Goodbye from Orologic {v}.\n"
 "This was our {lc}th time and we had fun together for: {d}"
 
-#: orologic.py:657
+#: orologic.py:697
 msgid ""
 "\n"
 "Interruzione richiesta, chiudo Orologic."
@@ -224,7 +279,7 @@ msgstr ""
 "\n"
 "Interruption requested, I am closing Orologic."
 
-#: orologic.py:660
+#: orologic.py:700
 msgid ""
 "\n"
 "Premi un tasto per uscire..."
@@ -1028,49 +1083,32 @@ msgid "Novita' (changelog)"
 msgstr "News (changelog)"
 
 #: orologic_modules/config.py:231
-msgid "Configurazione motore"
-msgstr "Engine configuration"
-
-#: orologic_modules/config.py:232
-msgid "Personalizzazione nomi"
-msgstr "Personalization of names"
-
-#: orologic_modules/config.py:233
 msgid "Orologi (crea, vedi, elimina)"
 msgstr "Clocks (create, view, delete)"
 
-#: orologic_modules/config.py:234 orologic_modules/pgn_search.py:34
+#: orologic_modules/config.py:232 orologic_modules/pgn_search.py:34
 msgid "Ricerca PGN"
 msgstr "PGN search"
 
-#: orologic_modules/config.py:235
-msgid "Impostazioni varie"
-msgstr "Various settings"
-
-#: orologic_modules/config.py:236
-msgid "Regolazione volume"
-msgstr "Volume adjustment"
-
 #: orologic_modules/config.py:237
+msgid "Impostazioni (motore, nomi, analisi, volume)"
+msgstr "Settings (engine, names, analysis, volume)"
+
+#: orologic_modules/config.py:238
 msgid "Esci"
 msgstr "Exit"
 
-#: orologic_modules/config.py:244
+#: orologic_modules/config.py:245
 msgid "Nuovo orologio"
 msgstr "New clock"
 
-#: orologic_modules/config.py:245
+#: orologic_modules/config.py:246
 msgid "Vedi orologi"
 msgstr "See clocks"
 
-#: orologic_modules/config.py:246
+#: orologic_modules/config.py:247
 msgid "Elimina orologio"
 msgstr "Delete clock"
-
-#: orologic_modules/config.py:247 orologic_modules/easyfish/constants.py:116
-#: orologic_modules/easyfish/drawing.py:17
-msgid "Torna al menu principale"
-msgstr "Return to the main menu"
 
 #: orologic_modules/engine.py:174
 #, python-brace-format
@@ -7163,51 +7201,39 @@ msgstr "No legal moves found."
 msgid "{i}. {desc}"
 msgstr "{i}. {desc}"
 
-#: orologic_modules/ui.py:1170
+#: orologic_modules/ui.py:1179
+#, python-brace-format
+msgid "Volume attuale: {vol:.0f}%"
+msgstr "Current volume: {vol:.0f}%"
+
+#: orologic_modules/ui.py:1180
+msgid "Inserisci nuovo volume (0-100): "
+msgstr "Insert new volume (0-100): "
+
+#: orologic_modules/ui.py:1187
+#, python-brace-format
+msgid "Volume impostato a {vol:.0f}%"
+msgstr "Volume set to {vol:.0f}%"
+
+#: orologic_modules/ui.py:1202
 msgid ""
 "\n"
-"Modifica impostazioni varie di Orologic\n"
+"Impostazioni dell'analisi\n"
 msgstr ""
 "\n"
-"Various Orologic settigns\n"
+"Analysis settings\n"
 
-#: orologic_modules/ui.py:1174
-#, python-brace-format
-msgid "Salvataggio automatico: [{status}]. Premi Invio per cambiare: "
-msgstr "Autosave: [{status}]. Press Enter to change: "
-
-#: orologic_modules/ui.py:1175
-msgid "Attivo"
-msgstr "Active"
-
-#: orologic_modules/ui.py:1175
-msgid "Non attivo"
-msgstr "Not active"
-
-#: orologic_modules/ui.py:1184
-#, python-brace-format
-msgid "Stile menu: [{status}]. Premi Invio per cambiare: "
-msgstr "Menu style: [{status}]. Press Enter to change: "
-
-#: orologic_modules/ui.py:1185
-msgid "Numeri"
-msgstr "Numbers"
-
-#: orologic_modules/ui.py:1185
-msgid "Parole"
-msgstr "Words"
-
-#: orologic_modules/ui.py:1195
+#: orologic_modules/ui.py:1206
 #, python-brace-format
 msgid "Tempo analisi default (sec) [{cur}]: "
 msgstr "Default analysis time (sec) [{cur}]: "
 
-#: orologic_modules/ui.py:1208
+#: orologic_modules/ui.py:1219
 #, python-brace-format
 msgid "Linee analisi default (multipv) [{cur}]: "
 msgstr "Default analysis lines (multipv) [{cur}]: "
 
-#: orologic_modules/ui.py:1225
+#: orologic_modules/ui.py:1236
 #, python-brace-format
 msgid ""
 "\n"
@@ -7216,7 +7242,7 @@ msgstr ""
 "\n"
 "Current Analysis Thresholds: {i}cp Inaccuracy, {e}cp Error, {s}cp Error"
 
-#: orologic_modules/ui.py:1234
+#: orologic_modules/ui.py:1245
 msgid ""
 "Vuoi modificare le soglie di analisi? (INVIO per modificare, ESC per "
 "mantenere): "
@@ -7224,32 +7250,32 @@ msgstr ""
 "Do you want to change the analysis thresholds? (ENTER to modify, ESC to "
 "maintain): "
 
-#: orologic_modules/ui.py:1237
+#: orologic_modules/ui.py:1248
 msgid "Inserisci le nuove soglie in centipawn (cp)."
 msgstr "Enter new thresholds in centipawn (cp)."
 
-#: orologic_modules/ui.py:1239
+#: orologic_modules/ui.py:1250
 #, python-brace-format
 msgid "Soglia Inesattezza [{cur}]: "
 msgstr "Inaccuracy Threshold [{cur}]: "
 
-#: orologic_modules/ui.py:1246
+#: orologic_modules/ui.py:1257
 #, python-brace-format
 msgid "Soglia Errore [{cur}]: "
 msgstr "Error Threshold [{cur}]: "
 
-#: orologic_modules/ui.py:1253
+#: orologic_modules/ui.py:1264
 #, python-brace-format
 msgid "Soglia Svarione [{cur}]: "
 msgstr "Svarione Threshold [{cur}]: "
 
-#: orologic_modules/ui.py:1265
+#: orologic_modules/ui.py:1276
 msgid "Soglie analisi aggiornate."
 msgstr "Updated analysis thresholds."
 
-#: orologic_modules/ui.py:1269
-msgid "Impostazioni aggiornate"
-msgstr "Updated settings"
+#: orologic_modules/ui.py:1280
+msgid "Impostazioni dell'analisi aggiornate."
+msgstr "Analysis settings updated."
 
 #: orologic_modules/easyfish/analysis_utils.py:68
 #: orologic_modules/easyfish/interaction.py:486
@@ -8427,13 +8453,6 @@ msgstr "All castling rights have been removed."
 #: orologic_modules/easyfish/interaction.py:135
 msgid "Formato non valido. Usa combinazioni di KQkq o -."
 msgstr "Invalid format. Use combinations of KQkq or -."
-
-#: orologic_modules/easyfish/interaction.py:142
-#: orologic_modules/easyfish/interaction.py:151
-#: orologic_modules/easyfish/interaction.py:160
-#: orologic_modules/easyfish/interaction.py:169
-msgid "attivo"
-msgstr "active"
 
 #: orologic_modules/easyfish/interaction.py:142
 #: orologic_modules/easyfish/interaction.py:151
@@ -10768,3 +10787,38 @@ msgstr "Nobody."
 #~ msgstr ""
 #~ "\n"
 #~ "Unable to check for updates."
+
+#~ msgid ""
+#~ "\n"
+#~ "Regolazione Volume"
+#~ msgstr ""
+#~ "\n"
+#~ "Volume adjustment"
+
+#~ msgid "Configurazione motore"
+#~ msgstr "Engine configuration"
+
+#~ msgid "Personalizzazione nomi"
+#~ msgstr "Personalization of names"
+
+#~ msgid "Impostazioni varie"
+#~ msgstr "Various settings"
+
+#~ msgid "Regolazione volume"
+#~ msgstr "Volume adjustment"
+
+#~ msgid ""
+#~ "\n"
+#~ "Modifica impostazioni varie di Orologic\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Various Orologic settigns\n"
+
+#~ msgid "Salvataggio automatico: [{status}]. Premi Invio per cambiare: "
+#~ msgstr "Autosave: [{status}]. Press Enter to change: "
+
+#~ msgid "Attivo"
+#~ msgstr "Active"
+
+#~ msgid "Stile menu: [{status}]. Premi Invio per cambiare: "
+#~ msgstr "Menu style: [{status}]. Press Enter to change: "

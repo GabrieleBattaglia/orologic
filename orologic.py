@@ -6,13 +6,11 @@ import datetime
 import json
 import os
 import sys
-import time
 import warnings
 
 from GBUtils import (
     Acusticator,
     Donazione,
-    dgt,
     enter_escape,
     gestisci_aggiornamento,
     key,
@@ -425,6 +423,69 @@ def menu_orologi():
             clock.DeleteClock()
 
 
+def _voci_impostazioni(db):
+    """Le voci del sottomenu impostazioni, con lo stato attuale nell'etichetta.
+
+    Chi ascolta il menu sa gia' com'e' messa ogni cosa senza doverci
+    entrare: gli interruttori si girano scegliendo la voce, e al giro dopo
+    il menu dice il valore nuovo.
+    """
+    salvataggio = _("attivo") if db.get("autosave_enabled") else _("non attivo")
+    stile = _("numeri") if db.get("menu_numerati") else _("parole")
+    return {
+        "analisi": _("Analisi: tempo, linee e soglie di giudizio"),
+        "motore": _("Motore scacchistico: {nome}").format(nome=engine.ENGINE_NAME),
+        "nomi": _("Nomi dei pezzi, delle colonne e delle mosse"),
+        "salvataggio": _("Salvataggio automatico: {stato}").format(stato=salvataggio),
+        "stile": _("Stile dei menu: {stato}").format(stato=stile),
+        "volume": _("Volume dei suoni: {vol} su 100").format(
+            vol=round(config.VOLUME * 100)
+        ),
+        ".": _("Torna al menu principale"),
+    }
+
+
+def menu_impostazioni():
+    """Sottomenu delle impostazioni: analisi, motore, nomi, interruttori, volume.
+
+    Prima motore, nomi e volume stavano nel menu principale, e il resto era
+    un'unica sequenza di domande da attraversare tutta per cambiare una
+    cosa sola. Qui ogni voce fa una cosa, e si resta nel sottomenu finche'
+    non si digita il punto, come per gli orologi.
+    """
+    while True:
+        db = storage.LoadDB()
+        scelta = menu(
+            _voci_impostazioni(db),
+            show=True,
+            keyslist=True,
+            p=_("\nImpostazioni, scegli una voce: "),
+            numbered=db.get("menu_numerati", False),
+        )
+        if scelta is None or scelta == ".":
+            return
+        if scelta == "analisi":
+            ui.ImpostazioniAnalisi()
+        elif scelta == "motore":
+            _suona("motore")
+            engine.MenuMotore()
+        elif scelta == "nomi":
+            _suona("nomi")
+            ui.EditLocalization()
+        elif scelta == "salvataggio":
+            if ui.alterna_impostazione("autosave_enabled"):
+                print(_("Salvataggio automatico attivo."))
+            else:
+                print(_("Salvataggio automatico non attivo."))
+        elif scelta == "stile":
+            if ui.alterna_impostazione("menu_numerati"):
+                print(_("I menu sono a numeri."))
+            else:
+                print(_("I menu sono a parole."))
+        elif scelta == "volume":
+            ui.RegolaVolume()
+
+
 def _suona(voce):
     """Esegue il tema sonoro della voce di menu, se ne ha uno."""
     tema = TEMI_MENU.get(voce)
@@ -579,21 +640,13 @@ def Main():
             _suona("memoboard")
             memoboard_app.main()
 
-        elif scelta == "motore":
-            _suona("motore")
-            engine.MenuMotore()
-
         elif scelta == "ricerca":
             _suona("ricerca")
             pgn_search.run()
 
-        elif scelta == "nomi":
-            _suona("nomi")
-            ui.EditLocalization()
-
         elif scelta == "impostazioni":
             _suona("impostazioni")
-            ui.Impostazioni()
+            menu_impostazioni()
 
         elif scelta == "arbitra":
             _suona("arbitra")
@@ -616,20 +669,6 @@ def Main():
         elif scelta == "novita":
             _suona("novita")
             OpenChangelog()
-
-        elif scelta == "volume":
-            print(_("\nRegolazione Volume"))
-            print(_("Volume attuale: {vol:.0f}%").format(vol=config.VOLUME * 100))
-            new_vol = dgt(
-                _("Inserisci nuovo volume (0-100): "), kind="i", imin=0, imax=100
-            )
-            old_v = config.VOLUME
-            config.VOLUME = new_vol / 100.0
-            db = storage.SetValue("volume", config.VOLUME)
-            Acusticator(["c5", 0.2, 0, old_v], sync=True)
-            time.sleep(0.3)
-            Acusticator(["c6", 0.2, 0, config.VOLUME])
-            print(_("Volume impostato a {vol:.0f}%").format(vol=config.VOLUME * 100))
 
 
 def saluta(inizio, fine=None):

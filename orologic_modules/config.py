@@ -228,12 +228,13 @@ MENU_CHOICES = {
     "tempo": _("Tempo (Orologio nudo e crudo)"),
     "manuale": _("Guida app"),
     "novita": _("Novita' (changelog)"),
-    "motore": _("Configurazione motore"),
-    "nomi": _("Personalizzazione nomi"),
     "orologi": _("Orologi (crea, vedi, elimina)"),
     "ricerca": _("Ricerca PGN"),
-    "impostazioni": _("Impostazioni varie"),
-    "volume": _("Regolazione volume"),
+    # Motore, nomi e volume stavano qui, sparsi fra le modalita' di gioco:
+    # ora stanno nel sottomenu delle impostazioni, insieme a cio' che
+    # prima era un'unica sequenza di domande. Le voci del sottomenu le
+    # costruisce orologic.py, perche' dicono lo stato attuale.
+    "impostazioni": _("Impostazioni (motore, nomi, analisi, volume)"),
     ".": _("Esci"),
 }
 

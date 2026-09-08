@@ -165,15 +165,15 @@ margin: 1em 0;
 <h4>1.6.1. Cosa vedi appena parte</h4>
 <p>All'avvio Orologic ti saluta dicendo la propria età, il numero di versione e quanto tempo è passato dall'ultimo aggiornamento. Poi resta in attesa. Da qui, il tasto che ti serve è uno solo: il punto interrogativo seguito da Invio, che apre il menu principale. Tutto quello che il programma sa fare parte da lì.</p>
 <p>Subito dopo il saluto, la versione compilata controlla se su GitHub c'è una versione più nuova. Se c'è, te lo dice, ti legge le novità di quella versione una pagina alla volta, Invio per la pagina seguente e la lettera e per smettere, e poi ti chiede se vuoi aggiornare: Invio per sì, Esc per rimandare. Se accetti, ti annuncia lo scaricamento ogni dieci per cento, poi si chiude e si riavvia da solo nella versione nuova. Se il controllo non riesce, per esempio senza connessione, te lo dice in una riga e prosegue.</p>
-<p>Nel menu ti muovi scrivendo le prime lettere della voce che ti interessa: appena quello che hai scritto basta a distinguerla dalle altre, viene scelta da sola. Se preferisci i numeri, puoi passare al menu numerato dalla voce <code>impostazioni</code>.</p>
+<p>Nel menu ti muovi scrivendo le prime lettere della voce che ti interessa: appena quello che hai scritto basta a distinguerla dalle altre, viene scelta da sola. Se preferisci i numeri, puoi passare al menu numerato dalla voce <code>stile</code> del sottomenu <code>impostazioni</code>.</p>
 
 <h4>1.6.2. In che ordine configurare</h4>
 <p>Ci sono due cose da fare una volta sola, e conviene farle subito perché quasi tutto il resto le dà per scontate.</p>
 <ol>
     <li><strong>Crea almeno un orologio.</strong> Vai su <code>orologi</code> e poi su <code>crea</code>. Un orologio è semplicemente un controllo di tempo con un nome: quanto tempo hanno i giocatori, quanto se ne aggiunge dopo ogni mossa, e a che punto vuoi essere avvisato. Senza almeno un orologio non puoi né arbitrare una partita né usare la modalità Tempo. Se non sai da dove partire, creane uno da quindici minuti con dieci secondi di incremento e chiamalo "rapida": va bene per la maggior parte delle partite amichevoli.</li>
-    <li><strong>Configura il motore, se ti serve.</strong> Vai su <code>motore</code>. Serve solo se vuoi giocare contro il computer, analizzare le tue partite o usare Easyfish. Per arbitrare una partita fra due persone non serve. Orologic può scaricare Stockfish da solo, oppure puoi indicargli dove si trova se ce l'hai già.</li>
+    <li><strong>Configura il motore, se ti serve.</strong> Vai su <code>impostazioni</code> e poi su <code>motore</code>. Serve solo se vuoi giocare contro il computer, analizzare le tue partite o usare Easyfish. Per arbitrare una partita fra due persone non serve. Orologic può scaricare Stockfish da solo, oppure puoi indicargli dove si trova se ce l'hai già.</li>
 </ol>
-<p>Il resto si configura quando ti serve: il volume degli effetti sonori con <code>volume</code>, i nomi dei pezzi e delle colonne con <code>nomi</code>, il collegamento a Lichess la prima volta che entri in <code>lichess</code>.</p>
+<p>Il resto si configura quando ti serve: il volume degli effetti sonori e i nomi dei pezzi e delle colonne stanno nel sottomenu <code>impostazioni</code>, alle voci <code>volume</code> e <code>nomi</code>; il collegamento a Lichess si fa la prima volta che entri in <code>lichess</code>.</p>
 
 <h4>1.6.3. Una prima partita, per capire come funziona</h4>
 <p>Il modo più rapido per farsi un'idea è arbitrare una partita finta, da soli, e chiuderla dopo poche mosse.</p>
@@ -662,10 +662,21 @@ margin: 1em 0;
 </ul>
 <p>Gli allarmi hanno cinque voci diverse, una per ciascuno, così quando ne senti uno sai subito qual è: il messaggio a schermo dice il numero e il suono lo conferma. Il lato da cui arriva il suono, sinistra o destra, dice di chi è l'orologio che sta scendendo.</p>
 
-<h4>2.8.2. Configurazione Motore Scacchistico (motore)</h4>
+<h4>2.8.2. Il sottomenu Impostazioni (impostazioni)</h4>
+<p>La voce <code>impostazioni</code> del menu principale apre un sottomenu che raccoglie tutto quello che si configura una volta e si cambia di rado. Fino alla versione 8.20 il motore, i nomi e il volume stavano nel menu principale, e le altre impostazioni erano un'unica sequenza di domande da attraversare tutta per cambiarne una sola. Come per gli orologi, si resta nel sottomenu finché non si digita il punto, così si possono sistemare più cose di seguito. Le voci sono sei. Le due che sono interruttori dicono nell'etichetta com'è messa la cosa in quel momento, per esempio "Salvataggio automatico: non attivo": sceglierle basta a cambiare stato, senza domande in più, e al giro dopo il menu dice il valore nuovo. Anche il motore e il volume si presentano con il loro stato, cioè il nome del motore in uso e il volume su cento.</p>
+<ul>
+    <li><strong>analisi:</strong> tempo, linee e soglie di giudizio dell'analisi, sezione 2.8.5.</li>
+    <li><strong>motore:</strong> ricerca, scaricamento e configurazione del motore scacchistico, sezione 2.8.3.</li>
+    <li><strong>nomi:</strong> i nomi dei pezzi, delle colonne e delle mosse, sezione 2.8.4.</li>
+    <li><strong>salvataggio:</strong> accende o spegne il salvataggio automatico, sezione 2.8.6.</li>
+    <li><strong>stile:</strong> menu a parole o a numeri, sezione 2.8.6.</li>
+    <li><strong>volume:</strong> il volume dei suoni, sezione 2.8.7.</li>
+</ul>
+
+<h4>2.8.3. Motore scacchistico (impostazioni, motore)</h4>
 <p>Questo passaggio è fondamentale per abilitare le funzioni di analisi. Orologic ti guiderà nella configurazione iniziale, ma è importante capire come renderlo portatile e cosa significano i parametri tecnici.</p>
 
-<h5>2.8.2.1. Portabilità e Gestione Percorsi (Relativi vs Assoluti)</h5>
+<h5>2.8.3.1. Portabilità e Gestione Percorsi (Relativi vs Assoluti)</h5>
 <p>Orologic gestisce in modo intelligente il percorso del motore scacchistico per garantire la massima portabilità:</p>
 <ul>
     <li><strong>Percorso Relativo (Consigliato per chiavette USB e portabilità):</strong> Se il motore si trova nello stesso disco/drive di Orologic (ad esempio nella cartella <code>engine</code> all'interno del programma), Orologic salverà un percorso relativo. Questo ti permette di spostare l'intera cartella di Orologic o utilizzarla da una chiavetta USB su diversi computer senza dover riconfigurare il motore.</li>
@@ -680,7 +691,7 @@ margin: 1em 0;
 </ol>
 <p>Orologic rileverà automaticamente che il motore si trova nello stesso drive e confermerà il salvataggio in modalità relativa portabile.</p>
 
-<h5>2.8.2.2. Spiegazione dei Parametri UCI</h5>
+<h5>2.8.3.2. Spiegazione dei Parametri UCI</h5>
 <p>Durante la configurazione, ti verranno chiesti alcuni valori. Ecco una guida per impostarli correttamente:</p>
 <ul>
     <li><strong>Hash (Memoria):</strong> Indica quanta RAM dedicare al motore per memorizzare le posizioni analizzate. Valori comuni sono 128 o 256 MB. Più memoria permette analisi più veloci su tempi lunghi.</li>
@@ -690,20 +701,22 @@ margin: 1em 0;
 </ul>
 <p>Due parole su come scegliere la forza, perché è la domanda che ci si pone davvero. Lo Skill Level e il limite in Elo sono due modi diversi di indebolire il motore, e conviene usarne uno solo per volta: impostando l'Elo con <code>.e</code>, Orologic disattiva da sé lo Skill Level. Il limite in Elo è il più intuitivo, perché parla la lingua che conosci: chiedi 1500 e ti trovi davanti un avversario di quella forza. Tieni presente che ogni motore ha una soglia sotto la quale non scende, per Stockfish attorno ai 1320 punti: se ti serve un avversario più modesto, l'unica strada è lo Skill Level basso, che produce vere sviste invece di un gioco uniformemente più debole. Un buon punto di partenza è chiedere il tuo Elo meno duecento punti: perdere sempre non insegna niente, e vincere sempre nemmeno.</p>
 
-<h4>2.8.3. Personalizzazione Lingua e Nomi (nomi)</h4>
+<h4>2.8.4. Nomi dei pezzi, delle colonne e delle mosse (impostazioni, nomi)</h4>
 <p>Questa opzione ti permette di personalizzare il linguaggio descrittivo usato dal programma: puoi cambiare i nomi dei pezzi (es. da "cavallo" a "destriero"), i nomi delle colonne (es. da "Ancona" ad "Apple") e i verbi usati per descrivere le mosse.</p>
 <p>Serve più di quanto sembri, perché queste parole le senti a ogni singola mossa e il modo di dirle è personale. Un esempio concreto: la descrizione predefinita di <code>Nxe5</code> suona "il Cavallo mangia il Pedone in Empoli 5". Se sei abituato all'alfabeto telefonico internazionale invece che a quello italiano, cambi i nomi delle colonne e diventa "Echo 5". Se preferisci "cattura" a "mangia", cambi il verbo. Se giochi con qualcuno che chiama la Donna Regina, cambi il nome del pezzo.</p>
 <p>Le modifiche valgono immediatamente, senza riavviare il programma: la prima mossa che descrivi dopo essere uscito da questo menu usa già le parole nuove. Vale anche per l'esplorazione della scacchiera e per i riepiloghi salvati nei file di testo. Se cambi idea, puoi scorrere le voci e rimettere quelle originali, oppure chiudere con il punto per uscire a metà lasciando immutato quello che non hai ancora toccato.</p>
 
-<h4>2.8.4. Impostazioni Generali (impostazioni)</h4>
-<p>Questa nuova sezione ti permette di configurare due comportamenti chiave del programma:</p>
+<h4>2.8.5. Impostazioni dell'analisi (impostazioni, analisi)</h4>
+<p>Tre cose che valgono per ogni analisi con il motore. Il <strong>tempo di analisi</strong>, in secondi per posizione, da un decimo a trecento: più è alto, più l'analisi è profonda e lenta. Le <strong>linee</strong>, cioè quante varianti il motore propone per ogni posizione, da una a venti. Le <strong>soglie di giudizio</strong>, in centesimi di pedone: quanto deve costare una mossa perché venga chiamata inesattezza, errore o svarione. I valori attuali sono proposti fra parentesi quadre, e Invio li conferma.</p>
+
+<h4>2.8.6. Salvataggio automatico e stile dei menu (impostazioni, salvataggio e stile)</h4>
 <ul>
-    <li><strong>Salvataggio Automatico:</strong> Puoi attivare o disattivare il salvataggio automatico del PGN dopo ogni mossa durante una partita. Questo previene la perdita di dati in caso di problemi.</li>
-    <li><strong>Stile Menu:</strong> Puoi scegliere se navigare nei menu usando le parole chiave (default) o i numeri.</li>
+    <li><strong>Salvataggio automatico:</strong> se è attivo, durante una partita arbitrata Orologic salva la situazione dopo ogni mossa, e al prossimo avvio ti chiede se riprenderla da dove era rimasta. Previene la perdita della partita se il programma o il computer si chiudono all'improvviso.</li>
+    <li><strong>Stile dei menu:</strong> a parole, che è il modo predefinito e si sceglie scrivendo le prime lettere della voce, oppure a numeri.</li>
 </ul>
 
-<h4>2.8.5. Regolazione Volume Audio (volume)</h4>
-<p>Questa opzione ti permette di impostare il volume degli effetti sonori da 0 (muto) a 100 (massimo).</p>
+<h4>2.8.7. Volume dei suoni (impostazioni, volume)</h4>
+<p>Imposta il volume degli effetti sonori da 0, muto, a 100. Orologic fa sentire una nota al volume vecchio e una al volume nuovo, così il confronto è immediato.</p>
 
 <h3>2.9. Apri Manuale (manuale)</h3>
 <p>Questo comando apre questa guida nel tuo browser web predefinito.</p>

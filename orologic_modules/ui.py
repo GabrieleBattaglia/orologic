@@ -8,7 +8,7 @@ import sys
 import time
 
 import chess
-from GBUtils import Acusticator, dgt, key
+from GBUtils import Acusticator, dgt
 from GBUtils import enter_escape as _enter_escape_gbutils
 
 from . import board_utils, config, localizzazione, orologio, storage, tempo, version
@@ -1161,34 +1161,45 @@ def verbose_legal_moves_for_san(board, san_str):
     )
 
 
-def Impostazioni():
+def alterna_impostazione(chiave):
+    """Inverte un'impostazione si'/no e la salva. Restituisce il nuovo valore.
+
+    Serve alle voci del sottomenu impostazioni che sono interruttori:
+    scegliere la voce basta, senza una domanda in piu'.
+    """
+    db = storage.LoadDB()
+    nuovo = not db.get(chiave, False)
+    storage.SetValue(chiave, nuovo)
+    Acusticator(["f7", 0.09, 0, config.VOLUME, "d4", 0.07, 0, config.VOLUME])
+    return nuovo
+
+
+def RegolaVolume():
+    """Chiede il volume dei suoni e lo fa sentire prima e dopo il cambio."""
+    print(_("Volume attuale: {vol:.0f}%").format(vol=config.VOLUME * 100))
+    nuovo = dgt(_("Inserisci nuovo volume (0-100): "), kind="i", imin=0, imax=100)
+    vecchio = config.VOLUME
+    config.VOLUME = nuovo / 100.0
+    storage.SetValue("volume", config.VOLUME)
+    Acusticator(["c5", 0.2, 0, vecchio], sync=True)
+    time.sleep(0.3)
+    Acusticator(["c6", 0.2, 0, config.VOLUME])
+    print(_("Volume impostato a {vol:.0f}%").format(vol=config.VOLUME * 100))
+
+
+def ImpostazioniAnalisi():
+    """Tempo, linee e soglie di giudizio dell'analisi con il motore.
+
+    Era la coda di un'unica sequenza di domande che cominciava con il
+    salvataggio automatico e lo stile dei menu: quelli sono diventati
+    interruttori del sottomenu, e qui resta solo cio' che riguarda l'analisi.
+    """
     from . import engine
 
     # Il database si carica qui e si salva in coda: durante le domande nulla
     # altro puo' scriverlo, quindi la copia in memoria resta quella buona.
     db = storage.LoadDB()
-    print(_("\nModifica impostazioni varie di Orologic\n"))
-    autosave_enabled = db.get("autosave_enabled", False)
-    if (
-        key(
-            _("Salvataggio automatico: [{status}]. Premi Invio per cambiare: ").format(
-                status=_("Attivo") if autosave_enabled else _("Non attivo")
-            )
-        ).strip()
-        == ""
-    ):
-        db["autosave_enabled"] = not autosave_enabled
-    menu_numerati = db.get("menu_numerati", False)
-    if (
-        key(
-            _("Stile menu: [{status}]. Premi Invio per cambiare: ").format(
-                status=_("Numeri") if menu_numerati else _("Parole")
-            )
-        ).strip()
-        == ""
-    ):
-        db["menu_numerati"] = not menu_numerati
-
+    print(_("\nImpostazioni dell'analisi\n"))
     # Impostazioni Analisi Default
     cur_time = db.get("default_analysis_time", 1.0)
     new_time = dgt(
@@ -1266,4 +1277,4 @@ def Impostazioni():
         Acusticator(["f7", 0.09, 0, config.VOLUME, "d4", 0.07, 0, config.VOLUME])
 
     storage.SaveDB(db)
-    print(_("Impostazioni aggiornate"))
+    print(_("Impostazioni dell'analisi aggiornate."))
