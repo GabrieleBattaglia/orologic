@@ -3,10 +3,13 @@
 
 import json
 import socket
+import ssl
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+
+from GBUtils import contesto_ssl
 
 from .config import _
 
@@ -115,6 +118,10 @@ def _messaggio_urlerror(errore, secondi):
         return _("Nessuna risposta entro {n} secondi.").format(n=int(secondi))
     if isinstance(motivo, socket.gaierror):
         return _("Server non raggiungibile: controlla la connessione a internet.")
+    if isinstance(motivo, ssl.SSLCertVerificationError):
+        return _("Il certificato del server non e' stato accettato: {motivo}").format(
+            motivo=getattr(motivo, "verify_message", motivo)
+        )
     return _("Connessione non riuscita: {motivo}").format(motivo=motivo)
 
 
@@ -148,7 +155,13 @@ def apri(
     else:
         corpo = urllib.parse.urlencode(dati).encode("utf-8") if dati else None
     try:
-        return urllib.request.urlopen(richiesta, data=corpo, timeout=timeout), None
+        # Il contesto di GBUtils verifica con l'archivio di sistema e con
+        # certifi insieme: con il solo archivio, su un PC dove Windows non
+        # aveva ancora scaricato la radice di GitHub, il controllo del motore
+        # falliva con un errore di certificato.
+        return urllib.request.urlopen(
+            richiesta, data=corpo, timeout=timeout, context=contesto_ssl()
+        ), None
     except urllib.error.HTTPError as e:
         return None, _messaggio_http(e)
     except urllib.error.URLError as e:

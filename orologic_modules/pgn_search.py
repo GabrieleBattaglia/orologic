@@ -21,7 +21,7 @@ from collections import defaultdict
 import chess
 import chess.pgn
 import pyperclip
-from GBUtils import dgt, enter_escape, key, menu
+from GBUtils import contesto_ssl, dgt, enter_escape, key, menu
 
 from orologic_modules import board_utils, engine
 from orologic_modules.config import _
@@ -130,7 +130,9 @@ def _carica_archivio():
             if token and "lichess.org" in clipboard.lower():
                 req.add_header("Authorization", f"Bearer {token}")
 
-            with urllib.request.urlopen(req, timeout=30) as resp:
+            with urllib.request.urlopen(
+                req, timeout=30, context=contesto_ssl()
+            ) as resp:
                 # Scarica a blocchi di 64KB per mostrare il progresso ed evitare freeze
                 chunk_size = 65536
                 data = []
