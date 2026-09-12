@@ -5,9 +5,14 @@ import datetime
 import json
 import os
 import re
-import sys
 
 from GBUtils import polipo
+
+# I percorsi stanno in percorsi.py, nella radice del progetto: e' quella la
+# cartella a cui si riferiscono, e le funzioni di GBUtils rispondono la
+# cartella del modulo che le chiama. I due nomi restano esposti da qui,
+# perche' sono quelli con cui trentatre' punti del programma li chiedono.
+from percorsi import percorso_salvataggio, resource_path
 
 from . import version
 
@@ -64,28 +69,6 @@ def format_date_italian(dt=None, include_time=True, include_day_name=True):
     if include_time:
         return f"{date_str} - {dt.strftime('%H:%M')}"
     return date_str
-
-
-# Radice dell'applicazione: la cartella che contiene orologic.py, cioe' quella
-# sopra orologic_modules. Ricavarla dal file sorgente invece che dalla directory
-# di lavoro fa si' che salvataggi e risorse si trovino sempre nella stessa
-# cartella, da qualunque posto venga lanciato il programma.
-RADICE_APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-def resource_path(relative_path):
-    """Percorso di una risorsa inclusa nel pacchetto (manuale, changelog, eco.db)."""
-    base_path = getattr(sys, "_MEIPASS", None) or RADICE_APP
-    return os.path.join(base_path, relative_path)
-
-
-def percorso_salvataggio(relative_path):
-    """Percorso di lettura e scrittura dei dati dell'utente (pgn, txt, settings)."""
-    if getattr(sys, "frozen", False):
-        base_path = os.path.dirname(sys.executable)
-    else:
-        base_path = RADICE_APP
-    return os.path.join(base_path, relative_path)
 
 
 # Cartelle passate a polipo in forma assoluta: senza di questo, GBUtils le
