@@ -15,7 +15,8 @@ programma, e una funzione di GBUtils risponde la cartella del modulo che la
 chiama. Tenerlo qui rende Orologic uguale agli altri progetti del parco
 software, che sono piatti e non hanno questo problema.
 
-Due regole, prese dal memorandum sui percorsi in docs. Cio' che il programma
+Due regole, che stanno scritte per esteso nelle docstring di
+cartella_applicazione e percorso_risorsa di GBUtils. Cio' che il programma
 scrive, cioe' pgn, txt, impostazioni e database, sta accanto al programma:
 accanto all'eseguibile quando e' compilato, accanto ai sorgenti altrimenti.
 Cio' che il programma legge soltanto, cioe' i cataloghi delle traduzioni, il
