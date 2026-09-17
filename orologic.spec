@@ -4,6 +4,10 @@ from pathlib import Path
 
 block_cipher = None
 
+# Il percorso di GBUtils si ricava dalla posizione di questo file, cosi' la
+# compilazione riesce anche su una macchina dove i repository stanno altrove.
+GBUTILS_DIR = str(Path(SPECPATH, '..', 'GBUtils').resolve())
+
 # Delle traduzioni al programma servono soltanto i cataloghi compilati: i
 # .po sono il testo su cui si lavora, e accanto a loro restano le copie di
 # sicurezza e i rapporti degli strumenti di verifica, che nel pacchetto
@@ -17,7 +21,7 @@ a = Analysis(
     ['orologic.py'],
     # GBUtils non sta nei pacchetti installati ma accanto al progetto: senza
     # questo percorso PyInstaller non lo troverebbe.
-    pathex=[r'E:\git\mine\GBUtils'],
+    pathex=[GBUTILS_DIR],
     binaries=[],
     datas=cataloghi + [
         ('resources/readme.htm', 'resources'),
