@@ -5,8 +5,8 @@ import datetime
 
 # QC
 BIRTH_DATE = datetime.datetime(2025, 2, 14, 10, 16)
-VERSION = "8.21.2"
+VERSION = "8.21.5"
 # La data va aggiornata insieme al numero di versione: la schermata di
 # benvenuto ne calcola l'eta' e, se resta indietro, mente.
-RELEASE_DATE = datetime.datetime(2026, 9, 17, 9, 0)
-PROGRAMMER = "Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, UltraCode)"
+RELEASE_DATE = datetime.datetime(2026, 9, 26, 21, 20)
+PROGRAMMER = "Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, UltraCode)"

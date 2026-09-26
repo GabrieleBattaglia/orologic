@@ -15,19 +15,33 @@ API_RELEASE = (
 # Il download del motore e' un file di parecchi megabyte: serve piu' respiro
 # della normale interrogazione di un'API.
 TIMEOUT_DOWNLOAD = 120.0
+# I pacchetti per Windows a 64 bit, in ordine di preferenza. Dalla 19
+# Stockfish pubblica un solo eseguibile universale, che riconosce da se' le
+# istruzioni del processore; fino alla 18 le varianti erano separate e si
+# sceglieva AVX2. Cercare soltanto avx2 ha reso la 19 invisibile.
+PACCHETTI_WINDOWS = ("windows-x86-64-universal", "windows-x86-64-avx2")
 
 
 def _asset_windows(dati):
-    """Cerca fra gli allegati della release quello per Windows AVX2."""
-    for asset in dati.get("assets", []):
-        nome = asset.get("name", "").lower()
-        if "windows" in nome and "avx2" in nome and nome.endswith(".zip"):
-            return asset.get("browser_download_url"), nome
+    """Cerca fra gli allegati della release il pacchetto per Windows a 64 bit."""
+    allegati = [
+        (asset.get("name", "").lower(), asset.get("browser_download_url"))
+        for asset in dati.get("assets", [])
+    ]
+    for cercato in PACCHETTI_WINDOWS:
+        for nome, url in allegati:
+            if cercato in nome and nome.endswith(".zip") and url:
+                return url, nome
     return None, None
 
 
+def _nome_release(dati):
+    """Il nome leggibile della release, Stockfish 19, invece del tag sf_19."""
+    return dati.get("name") or dati.get("tag_name") or "?"
+
+
 def GetLatestStockfishURL():
-    """Indirizzo dell'ultima versione di Stockfish per Windows AVX2."""
+    """Indirizzo dell'ultima versione di Stockfish per Windows a 64 bit."""
     print(_("Controllo ultima versione su GitHub..."))
     dati, errore = rete.leggi_json(API_RELEASE)
     if errore:
@@ -35,7 +49,7 @@ def GetLatestStockfishURL():
             _("Controllo della versione non riuscito. {motivo}").format(motivo=errore)
         )
         return None
-    print(_("Ultima versione trovata: {v}").format(v=dati.get("tag_name", "?")))
+    print(_("Ultima versione trovata: {v}").format(v=_nome_release(dati)))
     url, nome = _asset_windows(dati)
     if not url:
         print(_("Nessun pacchetto compatibile nell'ultima release."))
@@ -213,14 +227,23 @@ def CheckForStockfishUpdatesSilent():
     if not remota or remota <= locale:
         return
 
+    nuova = _nome_release(dati)
     url, _nome = _asset_windows(dati)
     if not url:
+        # Senza un pacchetto riconosciuto l'aggiornamento non si puo'
+        # proporre, ma va detto: e' questo silenzio che ha nascosto la 19,
+        # pubblicata con un nome di pacchetto nuovo.
+        print(
+            _("E' uscito {nuova}, ma non riconosco il suo pacchetto per Windows.").format(
+                nuova=nuova
+            )
+        )
         return
 
     print(_("Aggiornamento del motore disponibile."))
     print(
-        _("Nuova versione di Stockfish: {new}, installata: {curr}").format(
-            new=tag, curr=engine.ENGINE_NAME
+        _("Versione nuova: {new}. Installata: {curr}.").format(
+            new=nuova, curr=engine.ENGINE_NAME
         )
     )
     if not enter_escape(

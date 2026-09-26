@@ -85,7 +85,9 @@ lingua_rilevata, _ = polipo(
     config_path=CARTELLA_SETTINGS,
 )
 
-STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip"
+# Ripiego per quando l'API di GitHub non risponde. Dalla 19 il pacchetto
+# AVX2 non esiste piu': al suo posto c'e' l'eseguibile universale.
+STOCKFISH_DOWNLOAD_URL = "https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-universal.zip"
 VERSION = version.VERSION
 PROGRAMMER = version.PROGRAMMER
 RELEASE_DATE = version.RELEASE_DATE
