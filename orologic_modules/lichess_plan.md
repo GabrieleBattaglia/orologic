@@ -17,9 +17,6 @@ Orolichess è un modulo nativo per `orologic` che permette agli utenti di interf
 7. Gioca una partita
 8. Esci (ritorna a orologic)
 
-## Roadmap di Sviluppo
-- [ ] FASE 9: Tornei (partecipazione, visualizzazione classifiche e sfide di torneo).
-
 ## Dettagli Implementativi
 ### Login
 Il login utilizza un **Personal API Token** generato dall'utente sul sito di Lichess (OAuth token page). Il token viene validato chiamando l'endpoint `/api/account`. Una volta convalidato, token e username vengono salvati in `orologic_db.json`. L'interfaccia mostra automaticamente il punteggio Elo aggiornato per le modalità principali (Rapid, Blitz, Classical).
