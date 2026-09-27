@@ -18,15 +18,6 @@ Orolichess è un modulo nativo per `orologic` che permette agli utenti di interf
 8. Esci (ritorna a orologic)
 
 ## Roadmap di Sviluppo
-- [x] FASE 1: Setup dell'infrastruttura di base (menu principale, entry point integrato in orologic).
-- [x] FASE 2: Implementazione Login/Logout (gestione del token API personale di Lichess).
-- [x] FASE 2.5: Miglioramenti UX (Menu dinamico, visualizzazione Elo al lancio).
-- [x] FASE 3: Lettura e visualizzazione dettagliata del Profilo utente (Dati generali ed Elo). Nota: modifica disabilitata per limiti API.
-- [x] FASE 4: Visualizzazione super ricca delle Statistiche (separata dal Profilo).
-- [x] FASE 5: Gestione Amici (Aggiunta/Rimozione seguiti, messaggistica).
-- [x] FASE 6: Visualizzazione e interazione con i Puzzle.
-- [x] FASE 7: Guarda una partita (streaming o caricamento PGN).
-- [x] FASE 8: Gioca una partita (interfaccia di gioco da terminale/audio, premoves, orologi, claim, chat, PGN).
 - [ ] FASE 9: Tornei (partecipazione, visualizzazione classifiche e sfide di torneo).
 
 ## Dettagli Implementativi

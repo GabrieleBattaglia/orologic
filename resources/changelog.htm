@@ -19,7 +19,7 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.21</h3>
-<h4>8.21.5 (26 settembre 2026)</h4>
+<h4>8.21.5 (27 settembre 2026)</h4>
 <ul>
   <li>* [Engine] Orologic torna ad accorgersi delle versioni nuove di Stockfish. Dalla 19, uscita il 5 settembre 2026, Stockfish pubblica per Windows un solo eseguibile universale, che riconosce da sé le istruzioni del processore, al posto delle varianti AVX2, BMI2 e simili. Orologic cercava soltanto quella AVX2, non la trovava e taceva: adesso sceglie l'universale, e l'AVX2 resta come ripiego per le release più vecchie. La stessa causa faceva fallire anche lo scaricamento del motore dal menu impostazioni, motore, voce <code>s</code>, che finiva su un indirizzo non più esistente. L'eseguibile universale ha anche un vantaggio: parte pure sui processori più vecchi, dove quello AVX2 non partiva. Issue 51.</li>
   <li>* [Engine] Se una release di Stockfish non contiene un pacchetto per Windows che Orologic riconosce, all'avvio lo dice, per esempio «È uscito Stockfish 20, ma non riconosco il suo pacchetto per Windows», invece di tacere come è successo con la 19.</li>
