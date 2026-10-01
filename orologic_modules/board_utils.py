@@ -348,6 +348,10 @@ class GameState:
         self.black_player = ""
         self.ignore_clock = False
         self.flag_fallen = False
+        # Secondi che l'orologio ha corso davvero in questa partita, bianco
+        # piu' nero: li accumula il thread di orologio e a fine partita
+        # finiscono nel tachimetro dell'orologio salvato.
+        self.tempo_corso = 0.0
         self.refresh_interval = 0
         self.move_times = []
         self.clocks_history = []

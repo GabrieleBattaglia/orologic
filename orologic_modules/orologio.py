@@ -160,7 +160,14 @@ def _ciclo(stato):
             if in_corso:
                 bianco = _e_bianco(stato)
                 if _deve_scorrere(stato, bianco):
-                    _imposta_residuo(stato, bianco, _residuo(stato, bianco) - trascorso)
+                    prima = _residuo(stato, bianco)
+                    _imposta_residuo(stato, bianco, prima - trascorso)
+                    # Il tachimetro dell'orologio salvato conta il tempo
+                    # corso davvero: nel passo in cui cade la bandierina il
+                    # residuo scende sotto zero, e quell'avanzo non e' corso.
+                    stato.tempo_corso = getattr(stato, "tempo_corso", 0.0) + max(
+                        0.0, min(trascorso, prima)
+                    )
                     chiave_colore = "white" if bianco else "black"
                     for numero, soglia in enumerate(allarmi, 1):
                         if (chiave_colore, soglia) in suonati:

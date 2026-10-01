@@ -1,6 +1,7 @@
 # Orologic, modulo storage: accesso al database delle impostazioni.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
+import datetime
 import json
 import os
 import time
@@ -68,8 +69,34 @@ def _normalizza_fase(fase):
     return pulita
 
 
+def data_di_adesso():
+    """Il momento attuale come lo salva il database: data e ora ai minuti."""
+    return datetime.datetime.now().isoformat(timespec="minutes")
+
+
+def _data_di_creazione(valore):
+    """Restituisce la data di creazione se leggibile, altrimenti quella di adesso.
+
+    Gli orologi nati prima del tachimetro non la conoscono: prendono il
+    momento in cui il database viene letto la prima volta, che LoadDB
+    salva subito, cosi' da quel giorno in poi resta quella.
+    """
+    if isinstance(valore, str):
+        try:
+            if datetime.datetime.fromisoformat(valore).tzinfo is None:
+                return valore
+        except ValueError:
+            pass
+    return data_di_adesso()
+
+
 def _normalizza_orologio(orologio):
-    """Completa un orologio salvato. Restituisce None se non e' recuperabile."""
+    """Completa un orologio salvato. Restituisce None se non e' recuperabile.
+
+    Data di creazione e secondi di corsa li scrive il programma, senza
+    chiederli all'utente: qui si garantisce solo che ci siano e che siano
+    leggibili.
+    """
     if not isinstance(orologio, dict):
         return None
     nome = orologio.get("name")
@@ -90,16 +117,20 @@ def _normalizza_orologio(orologio):
         "phases": [_normalizza_fase(f) for f in fasi],
         "alarms": [a for a in allarmi if isinstance(a, (int, float))],
         "note": nota,
+        "created": _data_di_creazione(orologio.get("created")),
+        "run_seconds": max(0, int(_numero(orologio.get("run_seconds"), 0))),
     }
 
 
 def _normalizza(db):
     """Garantisce chiavi e tipi attesi, conservando tutto il resto.
 
-    Restituisce la coppia (db normalizzato, numero di orologi scartati).
+    Restituisce la terna (db normalizzato, numero di orologi scartati,
+    numero di orologi a cui sono stati completati data di creazione o
+    secondi di corsa).
     """
     if not isinstance(db, dict):
-        return dict(DEFAULT_DB), 0
+        return dict(DEFAULT_DB), 0, 0
     for chiave in CHIAVI_OBSOLETE:
         db.pop(chiave, None)
     for chiave, ripiego in DEFAULT_DB.items():
@@ -127,14 +158,20 @@ def _normalizza(db):
         orologi = []
     validi = []
     scartati = 0
+    completati = 0
     for orologio in orologi:
         normalizzato = _normalizza_orologio(orologio)
         if normalizzato is None:
             scartati += 1
-        else:
-            validi.append(normalizzato)
+            continue
+        completato = normalizzato["created"] != orologio.get("created") or (
+            normalizzato["run_seconds"] != orologio.get("run_seconds")
+        )
+        if completato:
+            completati += 1
+        validi.append(normalizzato)
     db["clocks"] = validi
-    return db, scartati
+    return db, scartati, completati
 
 
 def metti_da_parte(percorso):
@@ -188,13 +225,18 @@ def LoadDB():
         else:
             print(_("Attenzione: non sono riuscita a metterne da parte una copia."))
         return dict(DEFAULT_DB)
-    db, scartati = _normalizza(dati)
+    db, scartati, completati = _normalizza(dati)
     if scartati:
         print(
             _("Ho ignorato {numero} orologi salvati perche' incompleti.").format(
                 numero=scartati
             )
         )
+    if completati:
+        # Gli orologi nati prima del tachimetro hanno appena ricevuto data
+        # di creazione e secondi di corsa: si salvano subito, una volta
+        # sola, altrimenti la data cambierebbe a ogni lettura.
+        SaveDB(db)
     return db
 
 

@@ -279,6 +279,8 @@ def _loop_tempo(game_state, clock_config):
     # --- RIEPILOGO FINALE ---
     end_time = time.time()
     elapsed_real = end_time - start_time
+    # Il tempo corso nella sessione va nel tachimetro dell'orologio usato.
+    clock.registra_corsa(game_state)
 
     # Il tempo passato fermi lo accumula ui.comandi_pausa dentro lo stato:
     # qui si aggiunge solo l'ultima pausa, se la sessione finisce con gli

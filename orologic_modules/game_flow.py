@@ -50,6 +50,12 @@ def RiprendiPartita(dati_partita):
     game_state.clocks_history = dati_partita.get(
         "clocks_history", [0.0] * len(game_state.move_history)
     )
+    # Il tempo gia' corso prima dell'interruzione viaggia nel salvataggio:
+    # la sessione caduta non ha potuto scriverlo nel tachimetro, lo fara'
+    # questa a fine partita, insieme al proprio.
+    corsa = dati_partita.get("tempo_corso", 0.0)
+    if isinstance(corsa, (int, float)) and corsa > 0:
+        game_state.tempo_corso = float(corsa)
     try:
         pgn_io = io.StringIO(dati_partita["pgn_string"])
         game_state.pgn_game = chess.pgn.read_game(pgn_io)
@@ -131,6 +137,7 @@ def EseguiAutosave(game_state):
         "clocks_history": getattr(game_state, "clocks_history", []),
         "chess960": bool(getattr(game_state.board, "chess960", False)),
         "starting_fen": game_state.pgn_game.headers.get("FEN", ""),
+        "tempo_corso": getattr(game_state, "tempo_corso", 0.0),
     }
     try:
         # Scrittura atomica: un'interruzione a meta' lasciava un file
@@ -908,6 +915,11 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
         print(
             _("Errore durante la copia del PGN negli appunti: {error}").format(error=e)
         )
+    # Il tachimetro si aggiorna insieme alla cancellazione del salvataggio
+    # automatico: finche' quello esiste la partita si puo' riprendere, e il
+    # tempo corso viaggia dentro di lui. Scriverlo prima, a chi chiude il
+    # programma alle domande qui sopra e poi riprende, lo conterebbe due volte.
+    clock.registra_corsa(game_state)
     if autosave_is_on:
         try:
             autosave_file_path = config.percorso_salvataggio(

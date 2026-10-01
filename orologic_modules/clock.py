@@ -1,10 +1,13 @@
 # Orologic, orologi: creazione e modifica dei controlli di tempo.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
+import datetime
+
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
 from . import board_utils, config, storage, tempo
 from .config import _
+from .orologio import blocco as blocco_dei_tempi
 
 # Sotto i due secondi una fase non e' giocabile: la bandierina cadrebbe
 # prima che l'orologio parta.
@@ -39,6 +42,10 @@ class ClockConfig:
         self.phases = phases
         self.alarms = alarms
         self.note = note
+        # Data di creazione e tachimetro li scrive il programma: l'utente
+        # non li sceglie e non li modifica, li legge soltanto nella scheda.
+        self.created = storage.data_di_adesso()
+        self.run_seconds = 0
 
     def to_dict(self):
         return {
@@ -47,7 +54,36 @@ class ClockConfig:
             "phases": self.phases,
             "alarms": self.alarms,
             "note": self.note,
+            "created": self.created,
+            "run_seconds": self.run_seconds,
         }
+
+
+def registra_corsa(stato):
+    """Somma al tachimetro dell'orologio salvato il tempo corso in partita.
+
+    Il conto della partita si azzera mentre lo si prende, sotto il
+    lucchetto dei tempi: se la partita passa da qui una seconda volta, non
+    aggiunge niente. Se la partita non usa un orologio salvato, o se
+    l'orologio nel frattempo e' stato eliminato, il database non si tocca.
+    """
+    with blocco_dei_tempi():
+        corsa = getattr(stato, "tempo_corso", 0.0)
+        stato.tempo_corso = 0.0
+    secondi = round(corsa)
+    nome = (getattr(stato, "clock_config", None) or {}).get("name")
+    if secondi <= 0 or not nome:
+        return
+    if not any(c["name"] == nome for c in storage.LoadDB().get("clocks", [])):
+        return
+
+    def somma(db_aggiornato):
+        for orologio_salvato in db_aggiornato.get("clocks", []):
+            if orologio_salvato["name"] == nome:
+                orologio_salvato["run_seconds"] += secondi
+                return
+
+    storage.UpdateDB(somma)
 
 
 def _chiedi_durata(prompt, minimo=TEMPO_MINIMO_FASE):
@@ -283,6 +319,28 @@ def _descrivi_orologio(numero, orologio):
         )
     else:
         righe.append(_("  nessun allarme"))
+    try:
+        creato = datetime.datetime.fromisoformat(orologio.get("created") or "")
+    except (TypeError, ValueError):
+        creato = None
+    if creato is not None:
+        # Come Orologic dice la propria eta' all'avvio: la data per esteso
+        # e, a parole, quanto tempo e' passato da allora.
+        adesso = datetime.datetime.now()
+        righe.append(
+            _("  creato {data}, ha {eta}").format(
+                data=config.format_date_italian(creato),
+                eta=tempo.fra_date(min(creato, adesso), adesso),
+            )
+        )
+    corsa = orologio.get("run_seconds", 0)
+    righe.append(
+        _("  Tachimetro: questo orologio ha corso per 1 secondo.")
+        if corsa == 1
+        else _("  Tachimetro: questo orologio ha corso per {n} secondi.").format(
+            n=corsa
+        )
+    )
     return righe
 
 
