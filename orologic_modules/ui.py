@@ -8,6 +8,7 @@ import sys
 import time
 
 import chess
+import pyperclip
 from GBUtils import Acusticator, dgt
 from GBUtils import enter_escape as _enter_escape_gbutils
 
@@ -25,6 +26,22 @@ L10N = localizzazione.L10N
 # La conferma con INVIO o ESC e' un'utilita' di GBUtils: qui ne esisteva
 # una seconda versione, e nello stesso file se ne usavano tutte e due.
 enter_escape = _enter_escape_gbutils
+
+
+def copia_negli_appunti(testo, conferma):
+    """Copia il testo negli appunti e lo dice con la frase conferma.
+
+    Se gli appunti non rispondono, per esempio perche' un altro programma li
+    tiene occupati, pyperclip solleva un'eccezione: qui la si dice a parole
+    invece di far cadere il programma. Restituisce vero se la copia e' riuscita.
+    """
+    try:
+        pyperclip.copy(testo)
+    except (pyperclip.PyperclipException, OSError) as e:
+        print(_("Errore durante la copia negli appunti: {error}").format(error=e))
+        return False
+    print(conferma)
+    return True
 
 
 def EditLocalization():

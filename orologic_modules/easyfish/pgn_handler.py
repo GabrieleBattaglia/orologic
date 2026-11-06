@@ -11,6 +11,7 @@ import chess.pgn
 import pyperclip
 from GBUtils import Acusticator, dgt, key, menu
 
+from .. import ui
 from ..board_utils import format_pgn_comments, validate_and_clean_pgn
 from ..config import _, maiuscole_nomi, percorso_salvataggio, sanitize_filename
 from .constants import (
@@ -26,9 +27,7 @@ def CopyPGNToClipboard(game):
     """Copia la partita corrente negli appunti in formato PGN."""
     exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
     game.accept(exporter)
-    pgn_string = str(exporter)
-    pyperclip.copy(pgn_string)
-    print(_("PGN copiato negli appunti."))
+    ui.copia_negli_appunti(str(exporter), _("PGN copiato negli appunti."))
 
 
 def PastePGNFromClipboard():

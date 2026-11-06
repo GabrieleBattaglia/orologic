@@ -251,8 +251,18 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
         if sharing_window and sharing_window.is_active():
             sharing_window.trigger_update()
     elif cmd == ".gf":
-        pyperclip.copy(board.fen())
-        print(_("Partita in FEN. Copiata negli appunti"))
+        ui.copia_negli_appunti(board.fen(), _("Partita in FEN. Copiata negli appunti"))
+    elif cmd == ".gb":
+        # La stessa griglia di .s, girata dal lato di chi ha il tratto, poi il
+        # tratto a parole e il FEN, per chi la vuole portare in un programma.
+        if board.turn == chess.WHITE:
+            tratto = _("Tocca al Bianco muovere.")
+        else:
+            tratto = _("Tocca al Nero muovere.")
+        ui.copia_negli_appunti(
+            f"{CustomBoard(board.fen())}\n{tratto}\n{board.fen()}\n",
+            _("Scacchiera copiata negli appunti, con il tratto e il FEN."),
+        )
     elif cmd in [".csb", ".csn", ".cst"]:
         if sharing_window is None or not sharing_window.is_active():
             print(_("Errore: devi prima avviare la condivisione con il comando .cs"))
