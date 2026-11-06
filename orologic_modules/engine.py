@@ -108,6 +108,12 @@ analysis_time = 1.0
 multipv = 3
 cache_analysis = {}
 oaa_analysis_cache = {}
+# La forza con cui il motore gioca contro l'utente in Easyfish. Le opzioni
+# UCI restano impostate da una partita all'altra finche' il motore non si
+# riavvia, quindi lo stato sta qui, accanto al motore, e InitEngine lo
+# riporta al livello della configurazione. tipo vale "livello" per .s,
+# "elo" per .e e "lichess" per .f; profondita' e' il limite di .p.
+forza = {"tipo": "livello", "valore": 20, "profondita": None}
 
 
 # I percorsi passano tutti da config: una sola definizione per l'intero
@@ -212,6 +218,9 @@ def InitEngine():
         try:
             ENGINE = chess.engine.SimpleEngine.popen_uci(path)
             _configura_opzioni(cfg)
+            forza.update(
+                tipo="livello", valore=cfg.get("skill_level", 20), profondita=None
+            )
             ENGINE_NAME = ENGINE.id.get("name", "UCI Engine")
             print(_("Motore {n} pronto.").format(n=ENGINE_NAME))
             return True

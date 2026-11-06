@@ -486,10 +486,39 @@ margin: 1em 0;
 <p>Inoltre, l'incremento di tempo può essere specificato direttamente assieme al tempo principale separandolo con il segno <code>+</code> (es. <code>01:15:00+10</code>, <code>20:00+15</code>, o <code>400+5</code>), eliminando così la necessità di una richiesta separata per l'incremento.</p>
 <p>Durante la partita valgono tutti i controlli (matto, stallo, ripetizioni) e puoi impartire istruzioni extra:</p>
 <ul>
-    <li><code>.s#</code> (es. <code>.s15</code>): modifica il livello di difficoltà (Skill Level) del motore da 0 a 20 al volo.</li>
-    <li><code>.e#</code> (es. <code>.e1200</code>): imposta la forza del motore indicando direttamente un punteggio Elo. Orologic verificherà se il motore supporta questa funzione e applicherà il limite (ogni motore ha un suo range minimo/massimo, ad esempio Stockfish 16 parte da 1320 Elo).</li>
+    <li><code>.s#</code>, <code>.e#</code>, <code>.f#</code> e <code>.p#</code>: scelgono la forza del motore, in quattro modi diversi spiegati qui sotto.</li>
     <li><code>.l</code>: mostra la lista delle mosse giocate fin lì, come in tutte le altre modalità.</li>
 </ul>
+
+<h5>Scegliere la forza del motore</h5>
+<p>Hai quattro comandi per decidere quanto forte gioca il motore. Si danno a partita in corso, anche prima della prima mossa, e la forza scelta resta per le partite seguenti, finché non la cambi o non riavvii il motore. All'inizio di ogni partita Orologic ti dice con che forza gioca.</p>
+<ul>
+    <li><code>.s#</code>, il livello di abilità da 0 a 20, per esempio <code>.s10</code>. È lo Skill Level di Stockfish: a ogni mossa il motore mette a confronto alcune mosse buone e, tanto più spesso quanto più il livello è basso, ne sceglie una peggiore della migliore. Non è una scala in punti: dice soltanto più forte o più debole.</li>
+    <li><code>.e#</code>, la forza in punti Elo, per esempio <code>.e1500</code>. Stockfish accetta da 1320 a 3190, e sceglie da sé il livello di abilità corrispondente. Attenzione a cosa sono quei punti: secondo il codice di Stockfish appartengono alla scala CCRL Blitz, cioè a partite fra motori, tarate contro il motore Stash, e non sono punti FIDE o di Lichess di giocatori in carne e ossa. Un 1500 di Stockfish non è quindi un giocatore da 1500 del tuo circolo. Serve però per misurarti contro un numero preciso, ed è l'unico modo in cui la partita entra nel tuo punteggio contro il motore, descritto più sotto.</li>
+    <li><code>.f#</code>, gli otto livelli del computer di Lichess, per esempio <code>.f3</code>. Vengono da fishnet, il programma con cui Lichess fa giocare Stockfish, e ogni livello unisce tre cose: abilità, profondità massima e tempo per mossa, come nella tabella qui sotto.</li>
+    <li><code>.p#</code>, la profondità massima della ricerca in semimosse, per esempio <code>.p5</code>; <code>.p0</code> toglie il limite. Si somma agli altri comandi, e con un livello di Lichess prende il posto della profondità del livello. Più è bassa, meno lontano vede il motore: a profondità 1 o 2 non si accorge di una minaccia che arriva fra tre mosse. Contro il motore non c'è pausa degli orologi, quindi qui <code>.p</code> seguito da un numero è sempre la profondità.</li>
+</ul>
+<table>
+    <caption>I livelli di Lichess in Orologic</caption>
+    <thead><tr><th>Livello</th><th>Abilità su Lichess</th><th>Abilità in Orologic</th><th>Profondità</th><th>Tempo per mossa</th></tr></thead>
+    <tbody>
+        <tr><td>1</td><td>-9</td><td>0</td><td>1, su Lichess 5</td><td>50 millisecondi</td></tr>
+        <tr><td>2</td><td>-5</td><td>0</td><td>2, su Lichess 5</td><td>100 millisecondi</td></tr>
+        <tr><td>3</td><td>-1</td><td>0</td><td>3, su Lichess 5</td><td>150 millisecondi</td></tr>
+        <tr><td>4</td><td>3</td><td>3</td><td>5</td><td>200 millisecondi</td></tr>
+        <tr><td>5</td><td>7</td><td>7</td><td>5</td><td>300 millisecondi</td></tr>
+        <tr><td>6</td><td>11</td><td>11</td><td>8</td><td>400 millisecondi</td></tr>
+        <tr><td>7</td><td>16</td><td>16</td><td>13</td><td>500 millisecondi</td></tr>
+        <tr><td>8</td><td>20</td><td>20</td><td>22</td><td>1 secondo</td></tr>
+    </tbody>
+</table>
+<p>I livelli da 1 a 3 sono un'approssimazione. Su Lichess usano un'abilità sotto lo zero, che esiste soltanto in Fairy-Stockfish, la versione modificata che il sito adopera; Stockfish ufficiale non scende sotto lo zero, e qui quei tre livelli tengono l'abilità a 0 e abbassano invece la profondità. Nessuno ha misurato quanto somiglino agli originali, e quando li scegli Orologic te lo ricorda. Anche i punteggi che si leggono in giro per i livelli di Lichess, per esempio 800 per il primo e trecento in più per ogni livello, sono stime di appassionati, non dati del sito.</p>
+<p>Il tempo conta quanto i comandi. Con un livello di Lichess il motore pensa al massimo il tempo del livello, anche in una partita a orologio. Con <code>.s</code> ed <code>.e</code> pensa quanto gli concedono l'orologio o i secondi per mossa scelti all'inizio, e più tempo ha, meglio gioca.</p>
+
+<h5>Il tuo punteggio contro il motore</h5>
+<p>Ogni partita giocata contro un motore impostato con <code>.e</code> aggiorna un tuo punteggio Elo, che resta salvato fra una sessione e l'altra. Serve a seguire i progressi: scegli un avversario, per esempio <code>.e1500</code>, giochi, e partita dopo partita il punteggio si avvicina alla tua forza contro quel motore. Alla prima partita Orologic ti chiede da quale punteggio partire, 1500 se premi INVIO. Il calcolo è quello della FIDE: il risultato atteso dipende dalla differenza fra te e il motore, contata al massimo come 400 punti, e il coefficiente K vale 40 per le prime 30 partite, poi 20, e 10 da 2400 in su.</p>
+<p>A fine partita senti il punteggio nuovo con la variazione, le partite vinte, patte e perse, la percentuale dei punti fatti, il massimo e il minimo, e un suono sale o scende con il punteggio. All'inizio di una partita con <code>.e</code> senti il punteggio attuale.</p>
+<p>Perché il numero dica qualcosa, la partita conta solo se è leale: deve partire dalla posizione iniziale e finire con un risultato, senza mosse ritirate con <code>.u</code>, senza profondità limitata con <code>.p</code> e senza cambi di forza dopo la prima mossa. Quando una partita giocata con <code>.e</code> non conta, Orologic ti dice perché. Con <code>.s</code> e <code>.f</code> la partita non conta mai, perché il motore non ha un punteggio da opporti. Ricorda infine che è un punteggio contro Stockfish, sulla sua scala: ti dice se migliori, non quanto varresti in un torneo.</p>
 <p>Valgono anche tutti i comandi degli orologi, da <code>.1</code> a <code>.6</code>, descritti nella sezione 2.1.3. Non valgono invece le correzioni manuali del tempo, <code>.b+</code> e le sue compagne: qui non c'è un arbitro, e i due orologi devono scorrere per conto loro.</p>
 
 <h5>Cosa succede quando scade il tempo</h5>
@@ -706,7 +735,7 @@ margin: 1em 0;
     <li><strong>Skill Level (0-20):</strong> Regola la forza del motore. <code>20</code> è la forza massima (invincibile), mentre valori bassi simulano errori umani, rendendo la sfida più equilibrata.</li>
     <li><strong>Move Overhead (ms):</strong> È un margine di sicurezza per il tempo. Serve a compensare i ritardi di comunicazione tra Orologic e il motore. Impostarlo a <code>500</code> garantisce che il motore non perda mai per il tempo a causa di rallentamenti del sistema (lag).</li>
 </ul>
-<p>Due parole su come scegliere la forza, perché è la domanda che ci si pone davvero. Lo Skill Level e il limite in Elo sono due modi diversi di indebolire il motore, e conviene usarne uno solo per volta: impostando l'Elo con <code>.e</code>, Orologic disattiva da sé lo Skill Level. Il limite in Elo è il più intuitivo, perché parla la lingua che conosci: chiedi 1500 e ti trovi davanti un avversario di quella forza. Tieni presente che ogni motore ha una soglia sotto la quale non scende, per Stockfish attorno ai 1320 punti: se ti serve un avversario più modesto, l'unica strada è lo Skill Level basso, che produce vere sviste invece di un gioco uniformemente più debole. Un buon punto di partenza è chiedere il tuo Elo meno duecento punti: perdere sempre non insegna niente, e vincere sempre nemmeno.</p>
+<p>Lo Skill Level scritto qui è quello con cui il motore parte. In partita lo si cambia con i comandi descritti nella sezione 2.4.3, "Scegliere la forza del motore", dove sono spiegati anche il limite in Elo, i livelli di Lichess, la profondità e le loro differenze. Due cose da tenere presenti: l'Elo di Stockfish non scende sotto i 1320 punti, e per un avversario più modesto restano lo Skill Level basso, i primi livelli di Lichess o una profondità ridotta; e quei punti sono di motori contro motori, non di giocatori. Un buon punto di partenza resta un avversario un po' più debole di te: perdere sempre non insegna niente, e vincere sempre nemmeno.</p>
 
 <h4>2.8.4. Nomi dei pezzi, delle colonne e delle mosse (impostazioni, nomi)</h4>
 <p>Questa opzione ti permette di personalizzare il linguaggio descrittivo usato dal programma: puoi cambiare i nomi dei pezzi (es. da "cavallo" a "destriero"), i nomi delle colonne (es. da "Ancona" ad "Apple") e i verbi usati per descrivere le mosse.</p>

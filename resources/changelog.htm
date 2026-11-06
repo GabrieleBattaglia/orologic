@@ -18,6 +18,29 @@ li { margin-bottom: 0.3em; }
 <body>
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
+<h3>Versione 8.30</h3>
+<h4>8.30.2 (6 novembre 2026)</h4>
+<ul>
+  <li>* [Easyfish] L'aiuto della partita contro il motore dice che <code>.s</code> va da 0 a 20, come accetta davvero, e non da 1. Il manuale non promette più che con <code>.e1500</code> si gioca contro un avversario umano da 1500: spiega che i punti di Stockfish sono della scala CCRL Blitz, cioè di motori contro motori.</li>
+</ul>
+<h4>8.30.1 (6 novembre 2026)</h4>
+<ul>
+  <li>* [Easyfish] All'inizio della partita contro il motore Orologic dice la forza con cui il motore gioca davvero, livello, Elo o livello di Lichess, con la profondità se è limitata. Prima leggeva il livello scritto nelle impostazioni, anche quando un <code>.e</code> della partita precedente lo aveva cambiato.</li>
+</ul>
+<h4>8.30.0 (6 novembre 2026)</h4>
+<ul>
+  <li>+ [Easyfish] Il tuo punteggio contro il motore: ogni partita leale contro un motore impostato con <code>.e</code> aggiorna un tuo Elo, calcolato come fa la FIDE, salvato fra una sessione e l'altra, con partite vinte, patte e perse, percentuale dei punti, massimo e minimo, e un suono che sale o scende. Leale vuol dire dalla posizione iniziale, con un risultato, senza ritiri, senza profondità limitata e senza cambi di forza dopo la prima mossa; quando non conta, Orologic dice perché. Su richiesta di Marcos, che voleva seguire i suoi progressi.</li>
+</ul>
+<h3>Versione 8.29</h3>
+<h4>8.29.0 (6 novembre 2026)</h4>
+<ul>
+  <li>+ [Easyfish] I comandi da <code>.f1</code> a <code>.f8</code> impostano uno degli otto livelli del computer di Lichess, con abilità, profondità e tempo per mossa presi da fishnet, il programma del sito. I livelli da 1 a 3 sono approssimati, perché su Lichess usano un'abilità sotto lo zero che Stockfish ufficiale non ha, e Orologic lo dice. Si aggiungono a <code>.s</code> ed <code>.e</code>, che restano come sono.</li>
+</ul>
+<h3>Versione 8.28</h3>
+<h4>8.28.0 (6 novembre 2026)</h4>
+<ul>
+  <li>+ [Easyfish] Il comando <code>.p</code> seguito da un numero limita la profondità della ricerca del motore nella partita contro di lui, per esempio <code>.p5</code>; <code>.p0</code> toglie il limite. Vale insieme a livello, Elo e tempo, come chiedeva Marcos.</li>
+</ul>
 <h3>Versione 8.27</h3>
 <h4>8.27.2 (6 novembre 2026)</h4>
 <ul>

@@ -150,7 +150,9 @@ MNGAME = {
     ".b": _("Mostra la scacchiera"),
     ".u": _("Annulla ultima semimossa (Undo)"),
     ".v": _("Aggiunge variante suggerita dal motore all'albero"),
-    ".s#": _("Imposta il livello di forza del motore da 1 a 20 (es. .s10)"),
-    ".e#": _("Imposta la forza del motore tramite Rating Elo (es. .e1200)"),
+    ".s#": _("Imposta il livello di forza del motore da 0 a 20 (es. .s10)"),
+    ".e#": _("Imposta la forza del motore tramite Rating Elo (es. .e1500)"),
+    ".f#": _("Imposta uno degli otto livelli di Lichess, da 1 a 8 (es. .f3)"),
+    ".p#": _("Limita la profondita' della ricerca del motore (es. .p5, .p0 toglie)"),
     ".?": _("Mostra questo menu"),
 }

@@ -6,7 +6,7 @@ import chess.engine
 import chess.pgn
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
-from .. import config, orologio, storage, tempo, ui
+from .. import config, orologio, tempo, ui
 from .. import engine as orologic_engine
 from ..board_utils import (
     CustomBoard,
@@ -15,7 +15,7 @@ from ..board_utils import (
     mosse_fino_al_nodo,
 )
 from ..config import _
-from . import analysis_utils
+from . import analysis_utils, punteggio_motore
 from .constants import MNGAME
 from .utils import suona_annulla
 
@@ -38,6 +38,171 @@ class EasyfishGameState:
         self.white_player = _("Bianco")
         self.black_player = _("Nero")
         self.refresh_interval = 0
+        # Per il punteggio contro il motore: una partita conta solo se
+        # comincia dalla posizione iniziale, senza ritiri di mosse e senza
+        # cambi di forza dopo la prima mossa.
+        self.mosse_iniziali = 0
+        self.dalla_posizione_iniziale = False
+        self.ritiri = 0
+        self.forza_cambiata = False
+
+
+# Gli otto livelli di Lichess, dalla tabella di fishnet, il programma che fa
+# giocare Stockfish sul sito: abilita', profondita' e secondi per mossa.
+# Lichess usa Fairy-Stockfish, che accetta abilita' negative, -9, -5 e -1 per
+# i primi tre livelli; Stockfish ufficiale parte da zero, quindi qui quei tre
+# sono un'approssimazione, con abilita' zero e la profondita' abbassata da 5
+# a 1, 2 e 3.
+LIVELLI_LICHESS = {
+    1: (0, 1, 0.05),
+    2: (0, 2, 0.1),
+    3: (0, 3, 0.15),
+    4: (3, 5, 0.2),
+    5: (7, 5, 0.3),
+    6: (11, 8, 0.4),
+    7: (16, 13, 0.5),
+    8: (20, 22, 1.0),
+}
+LIVELLI_APPROSSIMATI = (1, 2, 3)
+
+
+def _limiti_della_forza():
+    """Profondita' e secondi per mossa che la forza scelta impone al motore.
+
+    La profondita' di .p vale sempre; un livello di Lichess porta anche la
+    sua, se .p non ne ha messa una, e il suo tempo per mossa.
+    """
+    forza = orologic_engine.forza
+    profondita = forza["profondita"]
+    tempo = None
+    if forza["tipo"] == "lichess":
+        _abilita, profondita_livello, tempo = LIVELLI_LICHESS[forza["valore"]]
+        if profondita is None:
+            profondita = profondita_livello
+    return profondita, tempo
+
+
+def descrivi_forza():
+    """La forza con cui il motore gioca, in una riga."""
+    forza = orologic_engine.forza
+    if forza["tipo"] == "elo":
+        riga = _("Forza del motore: Elo {n}.").format(n=forza["valore"])
+    elif forza["tipo"] == "lichess":
+        riga = _("Forza del motore: livello {n} di Lichess.").format(n=forza["valore"])
+    else:
+        riga = _("Forza del motore: livello {n} di 20.").format(n=forza["valore"])
+    if forza["profondita"]:
+        riga += " " + _("Profondita' massima: {d} semimosse.").format(
+            d=forza["profondita"]
+        )
+    return riga
+
+
+def _segna_cambio_di_forza(board, game_state):
+    """Un cambio di forza dopo la prima mossa toglie la partita dal punteggio:
+    il motore avrebbe giocato una parte della partita a un'altra forza."""
+    if len(board.move_stack) > game_state.mosse_iniziali:
+        game_state.forza_cambiata = True
+
+
+def _imposta_livello_lichess(cmd, board, game_state, engine_instance):
+    """Comando .f: uno degli otto livelli di Lichess."""
+    if not cmd[2:].isdigit() or int(cmd[2:]) not in LIVELLI_LICHESS:
+        Acusticator([400.0, 0.2, 0, config.VOLUME], kind=1)
+        print(_("Il livello di Lichess va da 1 a 8, per esempio .f3."))
+        return
+    livello = int(cmd[2:])
+    abilita, profondita, tempo = LIVELLI_LICHESS[livello]
+    try:
+        if "UCI_LimitStrength" in engine_instance.options:
+            engine_instance.configure({"UCI_LimitStrength": False})
+        engine_instance.configure({"Skill Level": abilita})
+    # Rete di sicurezza della partita contro il motore: un errore
+    # non deve far perdere la partita in corso.
+    except Exception as e:  # noqa: BLE001
+        print(_("Errore durante l'impostazione del livello: {e}").format(e=e))
+        return
+    orologic_engine.forza.update(tipo="lichess", valore=livello)
+    _segna_cambio_di_forza(board, game_state)
+    Acusticator.play("orologic_forza_lichess", volume=config.VOLUME)
+    print(
+        _(
+            "Forza del motore impostata al livello {n} di Lichess: abilita' {s}, "
+            "profondita' {d}, {ms} millisecondi per mossa."
+        ).format(n=livello, s=abilita, d=profondita, ms=round(tempo * 1000))
+    )
+    if livello in LIVELLI_APPROSSIMATI:
+        print(
+            _(
+                "E' un'approssimazione: su Lichess questo livello usa un'abilita' "
+                "sotto lo zero, che Stockfish ufficiale non ha."
+            )
+        )
+
+
+def _imposta_profondita(cmd, board, game_state):
+    """Comando .p: la profondita' massima della ricerca, 0 per toglierla."""
+    if not cmd[2:].isdigit() or int(cmd[2:]) > 99:
+        Acusticator([400.0, 0.2, 0, config.VOLUME], kind=1)
+        print(_("La profondita' va da 1 a 99, per esempio .p5, oppure .p0 per toglierla."))
+        return
+    profondita = int(cmd[2:]) or None
+    orologic_engine.forza["profondita"] = profondita
+    _segna_cambio_di_forza(board, game_state)
+    Acusticator.play("orologic_profondita", volume=config.VOLUME)
+    if profondita:
+        print(_("Profondita' massima del motore: {d} semimosse.").format(d=profondita))
+    else:
+        print(_("Profondita' del motore senza limite."))
+
+
+def _aggiorna_punteggio(risultato, game_state):
+    """Alla fine della partita, il punteggio dell'utente contro il motore.
+
+    Conta solo contro un motore impostato con .e, e solo se la partita e'
+    leale: dalla posizione iniziale, con un risultato, senza ritiri, senza
+    profondita' limitata e senza cambi di forza dopo la prima mossa. Quando
+    non conta lo dice, e dice perche', ma solo se l'Elo era in gioco.
+    """
+    forza = orologic_engine.forza
+    if forza["tipo"] != "elo" or risultato not in ("1-0", "0-1", "1/2-1/2"):
+        return
+    motivo = None
+    if not game_state.dalla_posizione_iniziale:
+        motivo = _("la partita non partiva dalla posizione iniziale.")
+    elif game_state.ritiri:
+        motivo = _("hai ritirato delle mosse.")
+    elif forza["profondita"]:
+        motivo = _("la profondita' del motore era limitata.")
+    elif game_state.forza_cambiata:
+        motivo = _("la forza del motore e' cambiata durante la partita.")
+    if motivo:
+        print(_("Partita non conteggiata nel tuo punteggio: {motivo}").format(motivo=motivo))
+        return
+    if risultato == "1/2-1/2":
+        punti = 0.5
+    else:
+        vince_il_bianco = risultato == "1-0"
+        punti = 1 if vince_il_bianco == (game_state.human_color == chess.WHITE) else 0
+    partenza = punteggio_motore.PUNTEGGIO_DI_PARTENZA
+    if punteggio_motore.leggi() is None:
+        partenza = dgt(
+            _(
+                "Prima partita per il tuo punteggio contro il motore: da quale "
+                "punteggio parti? (INVIO per 1500): "
+            ),
+            kind="i",
+            imin=100,
+            imax=3500,
+            default=punteggio_motore.PUNTEGGIO_DI_PARTENZA,
+        )
+    dati, variazione = punteggio_motore.registra(punti, forza["valore"], partenza)
+    if variazione > 0:
+        Acusticator.play("orologic_punteggio_sale", volume=config.VOLUME)
+    elif variazione < 0:
+        Acusticator.play("orologic_punteggio_scende", volume=config.VOLUME)
+    for riga in punteggio_motore.righe_dopo_la_partita(dati, variazione):
+        print(riga)
 
 
 def ParseTimeInput(prompt_text):
@@ -146,6 +311,8 @@ def _comandi_informativi(cmd, board, game_state, engine_instance):
                 except Exception:  # noqa: BLE001, S110
                     pass
                 engine_instance.configure({"Skill Level": new_skill})
+                orologic_engine.forza.update(tipo="livello", valore=new_skill)
+                _segna_cambio_di_forza(board, game_state)
                 Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1)
                 print(
                     _(
@@ -159,6 +326,10 @@ def _comandi_informativi(cmd, board, game_state, engine_instance):
         # non deve far perdere la partita in corso.
         except Exception as e:  # noqa: BLE001
             print(_("Errore durante l'impostazione del livello: {e}").format(e=e))
+    elif cmd.startswith(".f") and len(cmd) > 2:
+        _imposta_livello_lichess(cmd, board, game_state, engine_instance)
+    elif cmd.startswith(".p") and len(cmd) > 2:
+        _imposta_profondita(cmd, board, game_state)
     else:
         return False
     return True
@@ -580,6 +751,8 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     board = game_node.board()
     game_state.active_color = board.turn
     game_state.engine_has_clock = engine_has_clock
+    game_state.mosse_iniziali = len(board.move_stack)
+    game_state.dalla_posizione_iniziale = board.fen() == chess.STARTING_FEN
 
     # Scelta del colore
     is_white = enter_escape(_("Vuoi giocare col bianco (INVIO) o col nero (ESCAPE)?: "))
@@ -600,22 +773,21 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
 
     _nomi_dei_contendenti(game_state, game_node, engine_instance)
 
+    # La forza che il motore ha davvero adesso: prima si leggeva il livello
+    # scritto nelle impostazioni, anche quando .e lo aveva cambiato nella
+    # partita precedente.
+    print(descrivi_forza())
+    if orologic_engine.forza["tipo"] == "elo":
+        dati = punteggio_motore.leggi()
+        if dati:
+            print(punteggio_motore.riga_attuale(dati))
+    # Forza attivazione WDL dal motore per l'analisi e gioco
     try:
-        db = storage.LoadDB()
-        current_skill = db.get("engine_config", {}).get("skill_level", 20)
-        print(_("Livello forza motore (Skill Level): {s}").format(s=current_skill))
-
-        # Forza attivazione WDL dal motore per l'analisi e gioco
-        try:
-            engine_instance.configure({"UCI_ShowWDL": True})
-        # Rete di sicurezza della partita contro il motore: un errore
-        # non deve far perdere la partita in corso.
-        except Exception:  # noqa: BLE001, S110
-            pass
+        engine_instance.configure({"UCI_ShowWDL": True})
     # Rete di sicurezza della partita contro il motore: un errore
     # non deve far perdere la partita in corso.
-    except Exception as e:  # noqa: BLE001
-        print(_("Errore lettura skill level: {e}").format(e=e))
+    except Exception:  # noqa: BLE001, S110
+        pass
 
     # Avvio dell'orologio, lo stesso usato dall'arbitraggio.
     orologio.avvia(game_state)
@@ -718,6 +890,8 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                                 # Attiva limitazione Elo
                                 engine_instance.configure({"UCI_LimitStrength": True})
                                 engine_instance.configure({"UCI_Elo": new_elo})
+                                orologic_engine.forza.update(tipo="elo", valore=new_elo)
+                                _segna_cambio_di_forza(board, game_state)
                                 Acusticator(["b5", 0.05, 0, config.VOLUME], kind=1)
                                 print(
                                     _(
@@ -767,6 +941,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                                 steps += 1
 
                         if steps > 0:
+                            game_state.ritiri += 1
                             current_node = temp_node
                             board = current_node.board()
                             game_state.active_color = board.turn
@@ -817,18 +992,25 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
 
             # --- TURNO MOTORE ---
             else:
-                limit = None
+                # La profondita' di .p, o quella di un livello di Lichess,
+                # vale in ogni modalita'; il tempo per mossa di un livello di
+                # Lichess fa parte del livello e prende il posto di quello
+                # scelto all'inizio, mentre a orologio il motore pensa al
+                # massimo quel tanto, e l'orologio scorre comunque.
+                profondita, tempo_livello = _limiti_della_forza()
                 if engine_limit_type == "game":
                     limit = chess.engine.Limit(
                         white_clock=game_state.white_remaining,
                         black_clock=game_state.black_remaining,
                         white_inc=game_state.white_inc,
                         black_inc=game_state.black_inc,
+                        depth=profondita,
+                        time=tempo_livello,
                     )
-                elif engine_limit_type == "move":
-                    limit = chess.engine.Limit(time=engine_time)
                 else:
-                    limit = chess.engine.Limit(time=engine_time)
+                    limit = chess.engine.Limit(
+                        time=tempo_livello or engine_time, depth=profondita
+                    )
 
                 try:
                     result = engine_instance.play(board, limit)
@@ -897,6 +1079,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
             current_node.root().headers["Result"] = res
 
     print(_("Risultato: {r}").format(r=res))
+    _aggiorna_punteggio(res, game_state)
     # La scacchiera finale non si stampa piu' da sola: chi la vuole la
     # chiede con punto s, come in tutte le altre modalita'.
     return current_node
