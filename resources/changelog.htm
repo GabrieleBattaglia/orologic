@@ -19,6 +19,10 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.25</h3>
+<h4>8.25.1 (6 novembre 2026)</h4>
+<ul>
+  <li>* [Easyfish] Dopo una mossa, <code>.al</code> non fa più cadere Easyfish. Rileggeva le linee dell'ultima analisi sulla scacchiera nuova, dove le loro mosse non erano più legali: prima annunciava mosse senza senso, per esempio «best cxc5», poi il programma si interrompeva. Ora dice che l'ultima analisi riguarda un'altra posizione e chiede di rifarla con <code>.a</code>.</li>
+</ul>
 <h4>8.25.0 (6 novembre 2026)</h4>
 <ul>
   <li>+ [Easyfish] Il comando <code>.ac</code> scrive nel commento della mossa l'esito dell'analisi, accodato al commento che c'è: valutazione, mossa migliore e prime dieci semimosse della linea principale, per esempio <code>[Val: +0.34] [BM: 2. Cavallo in Firenze 3] [Linea: 2. Nf3 Nc6 3. Bb5 Nf6 4. O-O]</code>. Da solo riusa l'ultima analisi di <code>.a</code>, se è della posizione corrente, altrimenti ne fa una di un secondo; <code>.ac5</code> ne fa sempre una nuova di cinque secondi. La forma è quella di <code>x</code> e <code>v</code> nella modalità Analisi.</li>

@@ -305,7 +305,14 @@ def _comandi_analisi(cmd_clean, board, engine, number_command, info, info_fen):
             except Exception as e:  # noqa: BLE001
                 print(_("Errore analisi: {e}").format(e=e))
     elif cmd_clean == ".al":
-        if info:
+        # Le linee valgono solo per la posizione analizzata: dopo una mossa
+        # le loro mosse non sono piu' legali, e python-chess, chiamato a
+        # scriverle, faceva cadere Easyfish.
+        if info and info_fen != board.fen():
+            print(
+                _("L'ultima analisi riguarda un'altra posizione: rifalla con .a")
+            )
+        elif info:
             idx = number_command - 1 if number_command > 0 else 0
             idx = max(idx, 0)
             current_info_list = info if isinstance(info, list) else [info]
