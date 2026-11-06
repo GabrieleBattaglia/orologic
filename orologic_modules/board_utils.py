@@ -49,6 +49,67 @@ def CalculateMaterial(board):
     return w, b
 
 
+def _valore(pezzo):
+    return config.PIECE_VALUES.get(pezzo.symbol().upper(), 0)
+
+
+def inchiodatura(board, casa):
+    """Dice se il pezzo nella casa e' inchiodato, e da chi.
+
+    Restituisce la casa del pezzo che inchioda e quella del pezzo che sta
+    dietro, oppure None. Assoluta quando dietro c'e' il re: il pezzo non puo'
+    lasciare la linea. Relativa quando dietro c'e' una donna o una torre che
+    vale piu' del pezzo inchiodato e piu' di chi lo inchioda: muovendosi, il
+    pezzo la scoprirebbe a una cattura che guadagna materiale. Le assolute
+    vengono prima, perche' sono una regola e non una minaccia.
+    """
+    pezzo = board.piece_at(casa)
+    if pezzo is None or pezzo.piece_type == chess.KING:
+        return None
+    trovate = []
+    for attaccante in board.attackers(not pezzo.color, casa):
+        if board.piece_type_at(attaccante) not in (chess.BISHOP, chess.ROOK, chess.QUEEN):
+            continue
+        # Si prosegue oltre la casa, nella direzione da cui arriva l'attacco,
+        # fino al primo pezzo: e' quello che il pezzo inchiodato copre.
+        passo_colonna = (chess.square_file(casa) > chess.square_file(attaccante)) - (
+            chess.square_file(casa) < chess.square_file(attaccante)
+        )
+        passo_traversa = (chess.square_rank(casa) > chess.square_rank(attaccante)) - (
+            chess.square_rank(casa) < chess.square_rank(attaccante)
+        )
+        colonna = chess.square_file(casa) + passo_colonna
+        traversa = chess.square_rank(casa) + passo_traversa
+        while 0 <= colonna < 8 and 0 <= traversa < 8:
+            dietro = chess.square(colonna, traversa)
+            coperto = board.piece_at(dietro)
+            if coperto:
+                if coperto.color == pezzo.color:
+                    if coperto.piece_type == chess.KING:
+                        return attaccante, dietro
+                    if (
+                        coperto.piece_type in (chess.ROOK, chess.QUEEN)
+                        and _valore(coperto) > _valore(pezzo)
+                        and _valore(coperto) > _valore(board.piece_at(attaccante))
+                    ):
+                        trovate.append((attaccante, dietro))
+                break
+            colonna += passo_colonna
+            traversa += passo_traversa
+    return trovate[0] if trovate else None
+
+
+def bloccato_da_inchiodatura(board, casa, verso):
+    """Vero se il pezzo nella casa e' inchiodato e l'inchiodatura gli impedisce
+    di raggiungere la casa verso: lungo la linea dell'inchiodatura, compresa
+    la cattura di chi inchioda, puo' ancora muovere."""
+    trovata = inchiodatura(board, casa)
+    if trovata is None:
+        return False
+    attaccante, dietro = trovata
+    return verso not in chess.SquareSet.ray(attaccante, dietro)
+
+
 # L'arrocco come lo scrive la gente: due o tre segni fra o, O e zero, con o
 # senza trattini. Nessuna mossa legittima comincia con una o o con uno zero,
 # quindi il riconoscimento non toglie niente al resto della notazione.

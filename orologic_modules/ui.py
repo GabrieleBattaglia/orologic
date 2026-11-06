@@ -289,12 +289,35 @@ def report_all_pieces(origine, color):
                 file_letter = chess.square_name(sq)[0]
                 rank = chess.square_name(sq)[1]
                 descriptive_file = cols_dict.get(file_letter, file_letter)
-                positions.append(f"{descriptive_file} {rank}")
+                positions.append(
+                    f"{descriptive_file} {rank}" + _segno_inchiodatura(board, sq)
+                )
 
             stampa_elenco(positions, intestazione=display_name.capitalize() + ":")
 
     if not found_any:
         print(_("Nessun pezzo rimasto!"))
+
+
+def _inchiodato(piece):
+    """L'aggettivo accordato al pezzo: inchiodato, o inchiodata per torre e
+    donna, secondo il genere che il dizionario dei nomi da' al pezzo."""
+    if localizzazione.genere_pezzo(piece.piece_type) == "f":
+        return _("inchiodata")
+    return _("inchiodato")
+
+
+def _segno_inchiodatura(board, casa, verso=None):
+    """Il segno fra parentesi negli elenchi, per esempio Firenze 3
+    (inchiodato), oppure niente. Con verso, solo se l'inchiodatura impedisce
+    al pezzo proprio quella casa: lungo la linea puo' ancora prendere."""
+    if verso is None:
+        bloccato = board_utils.inchiodatura(board, casa) is not None
+    else:
+        bloccato = board_utils.bloccato_da_inchiodatura(board, casa, verso)
+    if not bloccato:
+        return ""
+    return f" ({_inchiodato(board.piece_at(casa))})"
 
 
 def get_color_adjective(piece_color, gender, plural=False):
@@ -540,21 +563,28 @@ def esplora_scacchiera(comando, origine):
     return False
 
 
-def _get_piece_descriptions_from_squareset(board, squareset):
+def _get_piece_descriptions_from_squareset(board, squareset, verso=None):
+    """Descrive i pezzi delle case date. Con verso, la casa che difendono o
+    attaccano, segnala quelli che l'inchiodatura tiene lontani da li':
+    board.attackers di python-chess non ne tiene conto."""
     descriptions = []
     for sq in squareset:
         piece = board.piece_at(sq)
         if piece:
-            piece_desc = extended_piece_description(piece)
-            sq_name = chess.square_name(sq)
-            col_name = L10N["columns"].get(sq_name[0].lower(), sq_name[0])
-            rank_name = sq_name[1]
-            descriptions.append(
-                _("{piece_desc} in {col_name} {rank_name}").format(
-                    piece_desc=piece_desc, col_name=col_name, rank_name=rank_name
-                )
-            )
+            descriptions.append(_descrivi_pezzo_in(board, sq))
+            if verso is not None:
+                descriptions[-1] += _segno_inchiodatura(board, sq, verso)
     return descriptions
+
+
+def _descrivi_pezzo_in(board, sq):
+    """Pezzo e casa, per esempio Alfiere nero in Bari 4."""
+    sq_name = chess.square_name(sq)
+    return _("{piece_desc} in {col_name} {rank_name}").format(
+        piece_desc=extended_piece_description(board.piece_at(sq)),
+        col_name=L10N["columns"].get(sq_name[0].lower(), sq_name[0]),
+        rank_name=sq_name[1],
+    )
 
 
 def read_square(origine, square_str):
@@ -580,10 +610,21 @@ def read_square(origine, square_str):
             piece_desc=extended_piece_description(piece),
         )
         final_parts.append(base_msg)
+        trovata = board_utils.inchiodatura(board, square)
+        if trovata:
+            chi_inchioda, dietro = trovata
+            final_parts.append(
+                _("{inchiodato} da: {pinner}, contro: {behind}").format(
+                    inchiodato=_inchiodato(piece).capitalize(),
+                    pinner=_descrivi_pezzo_in(board, chi_inchioda),
+                    behind=_descrivi_pezzo_in(board, dietro),
+                )
+                + "."
+            )
         defenders_squares = board.attackers(piece.color, square)
         if defenders_squares:
             defender_descs = _get_piece_descriptions_from_squareset(
-                board, defenders_squares
+                board, defenders_squares, verso=square
             )
             final_parts.append(
                 _("difesa da: {defenders}").format(defenders=", ".join(defender_descs))
@@ -591,7 +632,7 @@ def read_square(origine, square_str):
         attackers_squares = board.attackers(not piece.color, square)
         if attackers_squares:
             attacker_descs = _get_piece_descriptions_from_squareset(
-                board, attackers_squares
+                board, attackers_squares, verso=square
             )
             final_parts.append(
                 _("attaccata da: {attackers}").format(
@@ -606,7 +647,7 @@ def read_square(origine, square_str):
         white_attackers_squares = board.attackers(chess.WHITE, square)
         if white_attackers_squares:
             attacker_descs = _get_piece_descriptions_from_squareset(
-                board, white_attackers_squares
+                board, white_attackers_squares, verso=square
             )
             final_parts.append(
                 _("attaccata dal Bianco con: {attackers}").format(
@@ -616,7 +657,7 @@ def read_square(origine, square_str):
         black_attackers_squares = board.attackers(chess.BLACK, square)
         if black_attackers_squares:
             attacker_descs = _get_piece_descriptions_from_squareset(
-                board, black_attackers_squares
+                board, black_attackers_squares, verso=square
             )
             final_parts.append(
                 _("attaccata dal Nero con: {attackers}").format(
@@ -646,7 +687,7 @@ def report_piece_positions(origine, piece_symbol):
         rank = chess.square_rank(square) + 1
         file_letter = chr(ord("a") + file_index)
         descriptive_file = L10N["columns"].get(file_letter, file_letter)
-        positions.append(f"{descriptive_file} {rank}")
+        positions.append(f"{descriptive_file} {rank}" + _segno_inchiodatura(board, square))
     if positions:
         stampa_elenco(
             positions,

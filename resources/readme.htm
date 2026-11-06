@@ -269,8 +269,10 @@ margin: 1em 0;
         <tr><td><code>\[col]</code></td><td>Mostra i pezzi sulla diagonale alto-sinistra (es. <code>\f</code> per f1-a6).</td></tr>
         <tr><td><code>-[col|trv|casa]</code></td><td>Mostra i pezzi su una colonna, traversa o casa specifica (es. <code>-e</code>, <code>-4</code>, <code>-e4</code>).</td></tr>
         <tr><td><code>,[SimboloPezzo]</code></td><td>Mostra la posizione dei pezzi specificati (maiuscolo per Bianco, minuscolo per Nero). Es. <code>,Q</code>, <code>,n</code>.</td></tr>
+        <tr><td><code>-</code> e <code>+</code></td><td>Da soli, elencano tutti i pezzi bianchi o tutti i pezzi neri, raggruppati per tipo.</td></tr>
     </tbody>
 </table>
+<p>Le inchiodature si sentono in tutti questi comandi. Quando descrivi una casa con <code>-e4</code> e il pezzo che la occupa è inchiodato, Orologic dice da chi e contro che cosa, per esempio «Inchiodato da: Alfiere nero in Bologna 4, contro: Re bianco in Empoli 1». Riconosce l'inchiodatura al re, quella per cui il pezzo non può lasciare la linea, e quella a una donna o a una torre che vale più del pezzo inchiodato e di chi lo inchioda: lì il pezzo può muovere, ma scoprirebbe un pezzo più prezioso. Fra i difensori e gli attaccanti della casa, accanto a un pezzo compare <code>(inchiodato)</code> quando l'inchiodatura gli impedisce di arrivare proprio lì; lungo la linea dell'inchiodatura, compresa la cattura di chi inchioda, può ancora muovere, e allora non viene segnalato. Negli elenchi di <code>-</code>, <code>+</code> e della virgola basta la parola fra parentesi, per esempio <code>Cavallo: Como 3 (inchiodato)</code>: i dettagli li dà la descrizione della casa.</p>
 
 <h4>2.1.5. Fine Partita</h4>
 <p>La partita termina automaticamente per scacco matto, stallo o altre condizioni di patta. Alla fine, Orologic:</p>
