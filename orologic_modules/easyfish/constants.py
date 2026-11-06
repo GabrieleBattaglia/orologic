@@ -66,6 +66,9 @@ MNMAIN = {
     "_[commento]": _("Aggiungi un commento alla mossa corrente"),
     ".a#": _("Analizza la posizione per # secondi"),
     ".al#": _("Vedi Linea/e di Analisi"),
+    ".ac#": _(
+        "Scrivi nel commento valutazione, mossa migliore e linea; con # nuova analisi"
+    ),
     ".b": _("Mostra la scacchiera"),
     ".be": _("Editor della scacchiera"),
     ".bm": _("Bilancio materiale"),

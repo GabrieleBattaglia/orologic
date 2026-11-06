@@ -19,7 +19,10 @@ from ..board_utils import (
     DescribeMove,
     GameState,
     NormalizeMove,
+    accoda_commento,
+    format_pv_descriptively,
     mosse_fino_al_nodo,
+    testo_valutazione,
 )
 from ..config import _
 from . import game_mode
@@ -271,13 +274,15 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
     return True
 
 
-def _comandi_analisi(cmd_clean, board, engine, number_command, info):
+def _comandi_analisi(cmd_clean, board, engine, number_command, info, info_fen):
     """Analizza la posizione e rilegge le linee gia' trovate.
 
     Restituisce il risultato dell'analisi, che il comando punto a elle
-    riusa senza interrogare di nuovo il motore. Le linee stavano su punto
-    elle, che pero' in tutte le altre modalita' e' la lista delle mosse:
-    era l'ultimo comando rimasto con due significati diversi.
+    riusa senza interrogare di nuovo il motore, e il FEN della posizione
+    analizzata, che serve a .ac per sapere se quel risultato vale ancora.
+    Le linee stavano su punto elle, che pero' in tutte le altre modalita' e'
+    la lista delle mosse: era l'ultimo comando rimasto con due significati
+    diversi.
     """
     if cmd_clean == ".a":
         if not engine:
@@ -291,6 +296,7 @@ def _comandi_analisi(cmd_clean, board, engine, number_command, info):
                     board, limit, multipv=orologic_engine.multipv
                 )
                 info = info_result
+                info_fen = board.fen()
                 if isinstance(info, list):
                     ShowStats(board, info[0])
                 elif isinstance(info, dict):
@@ -317,7 +323,58 @@ def _comandi_analisi(cmd_clean, board, engine, number_command, info):
             ShowStats(board, current_info_list[idx])
         else:
             print(_("Prima devi eseguire l'analisi con il comando .a"))
-    return info
+    return info, info_fen
+
+
+# Quante semimosse della linea principale entrano nel commento di .ac: la
+# linea intera di un'analisi lunga sarebbe troppo da rileggere.
+LINEA_SEMIMOSSE = 10
+
+
+def _analisi_nel_commento(board, node, engine, secondi, info, info_fen):
+    """Comando .ac: scrive nel commento della mossa valutazione, mossa
+    migliore e linea principale, nella forma di x e v della modalita' Analisi.
+
+    Senza numero riusa l'ultima analisi, se e' di questa posizione; se non lo
+    e', o con un numero, ne fa una nuova, di un secondo o dei secondi scritti.
+    Restituisce l'analisi, il suo FEN e vero se il commento e' cambiato.
+    """
+    if not engine:
+        print(_("Motore non caricato in Orologic."))
+        return info, info_fen, False
+    if secondi > 0 or not info or info_fen != board.fen():
+        sec = secondi if secondi > 0 else 1
+        print(_("Analisi posizione corrente per {s} secondi.").format(s=sec))
+        try:
+            info = engine.analyse(
+                board,
+                chess.engine.Limit(time=sec),
+                multipv=orologic_engine.multipv,
+            )
+            info_fen = board.fen()
+        # Contorno di Easyfish: si prosegue.
+        except Exception as e:  # noqa: BLE001
+            print(_("Errore analisi: {e}").format(e=e))
+            return info, info_fen, False
+    migliore = info[0] if isinstance(info, list) else info
+    pv = migliore.get("pv", [])
+    score = migliore.get("score")
+    if not pv or score is None:
+        print(_("Nessuna linea trovata."))
+        return info, info_fen, False
+    annotazione = " ".join(
+        (
+            _("[Val: {ev}]").format(ev=testo_valutazione(score)),
+            _("[BM: {bm}]").format(bm=format_pv_descriptively(board, pv[:1])),
+            _("[Linea: {linea}]").format(
+                linea=board.variation_san(pv[:LINEA_SEMIMOSSE])
+            ),
+        )
+    )
+    accoda_commento(node, annotazione)
+    print(annotazione)
+    print(_("Commento registrato."))
+    return info, info_fen, True
 
 
 def _apri_condivisione(board, node, sharing_window):
@@ -495,6 +552,7 @@ def _esegui(partita=None):
 
     # State
     info = {}
+    info_fen = None
     fen_from_clip = ""
     is_modified = False
     last_checked_state = None
@@ -923,7 +981,16 @@ def _esegui(partita=None):
                     print(board)
 
             elif cmd_clean in (".a", ".al"):
-                info = _comandi_analisi(cmd_clean, board, engine, number_command, info)
+                info, info_fen = _comandi_analisi(
+                    cmd_clean, board, engine, number_command, info, info_fen
+                )
+
+            elif cmd_clean == ".ac":
+                info, info_fen, scritto = _analisi_nel_commento(
+                    board, node, engine, number_command, info, info_fen
+                )
+                if scritto:
+                    is_modified = True
 
             elif cmd_clean == ".l":
                 # La lista delle mosse e' quella di tutte le altre
