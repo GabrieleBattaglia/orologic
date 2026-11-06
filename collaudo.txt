@@ -1,9 +1,31 @@
 Collaudo di Orologic 8.31.3, le novita' del 6 novembre 2026
 Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, UltraCode)
 Prima: Orologic dai sorgenti, con GBUtils V245 o successiva.
-Prima: su PC-BATTAGLIA manca il motore, la cartella engine: installalo dal menu del motore di Orologic.
 Prova 1, il PGN di fine partita su Lichess
 Passo 1: gioca o osserva una partita su Orolichess fino alla fine, e alla domanda sui tempi rispondi ESC.
+Ho guardato una partita su lichess ma ho ottenuto questo tb dopo molte mosse.
+00:08 00:14 55... Kc2>Traceback (most recent call last):                                                                                            
+  File "E:\git\Mine\orologic\orologic.py", line 694, in <module>                                                                                    
+    Main()                                                                                                                                          
+    ~~~~^^                                                                                                                                          
+  File "E:\git\Mine\orologic\orologic.py", line 637, in Main                                                                                        
+    lichess_app.run()                                                                                                                               
+    ~~~~~~~~~~~~~~~^^                                                                                                                               
+  File "E:\git\Mine\orologic\orologic_modules\lichess_app.py", line 1992, in run                                                                    
+    menu_guarda(db)                                                                                                                                 
+    ~~~~~~~~~~~^^^^                                                                                                                                 
+  File "E:\git\Mine\orologic\orologic_modules\lichess_app.py", line 1258, in menu_guarda                                                            
+    lichess_board.spectate_game(game_id, token)                                                                                                     
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^                                                                                                     
+  File "E:\git\Mine\orologic\orologic_modules\lichess_board.py", line 514, in spectate_game                                                         
+    user_input = async_spectator_loop(q, game_state)                                                                                                
+  File "E:\git\Mine\orologic\orologic_modules\lichess_board.py", line 323, in async_spectator_loop                                                  
+    move = game_state.board.parse_uci(msg["uci"])                                                                                                   
+  File "C:\Users\GBattaglia\.pyenv\pyenv-win\versions\3.14.7\Lib\site-packages\chess\__init__.py", line 3267, in parse_uci                          
+    raise IllegalMoveError(f"illegal uci: {uci!r} in {self.fen()}")                                                                                 
+chess.IllegalMoveError: illegal uci: 'f7f8' in 8/5P2/3N4/4R3/8/2P5/2k3K1/8 w - - 1 56                                                               
+ 
+	
 Domanda 1: il PGN nella cartella pgn e negli appunti ha solo tag, mosse e risultato, senza commenti?
 Passo 2: gioca un'altra partita e alla domanda sui tempi mossa nel PGN rispondi INVIO.
 Domanda 2: ogni mossa ha il suo [%clk] e nient'altro?
