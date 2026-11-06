@@ -10,7 +10,16 @@ import chess
 import chess.pgn
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
-from . import board_utils, config, lichess_board, lichess_profiler, rete, storage, ui
+from . import (
+    board_utils,
+    config,
+    lichess_board,
+    lichess_profiler,
+    lichess_tornei,
+    rete,
+    storage,
+    ui,
+)
 from .config import _, percorso_salvataggio
 
 SECRETS_FILE = percorso_salvataggio(os.path.join("settings", "secrets.json"))
@@ -1888,6 +1897,7 @@ def run():
                 "cerca": _("Cerca e Profila Giocatore"),
                 "guarda": _("Guarda una partita"),
                 "gioca": _("Gioca una partita"),
+                "tornei": _("Tornei arena"),
             }
         )
 
@@ -1980,6 +1990,8 @@ def run():
             menu_guarda(db)
         elif scelta == "gioca":
             menu_gioca(db)
+        elif scelta == "tornei":
+            lichess_tornei.menu_tornei(db, token)
         elif scelta == "messaggi":
             print(_("Apertura della casella postale nel browser..."))
             try:
