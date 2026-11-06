@@ -590,9 +590,9 @@ def _comandi_annotazione(cmd, current_node):
     elif cmd == "x":
         bm = CalculateBest(current_node.board(), as_san=True)
         if bm:
-            current_node.comment = (current_node.comment or "").strip() + _(
-                " {{BM: {bm}}}"
-            ).format(bm=bm[0])
+            board_utils.accoda_commento(
+                current_node, _("[BM: {bm}]").format(bm=bm[0])
+            )
             saved = True
             print(_("\nCommento aggiunto."))
             Acusticator(["a5", 0.1, 0, config.VOLUME], kind=1, adsr=[2, 5, 90, 5])
@@ -640,10 +640,10 @@ def _comandi_annotazione(cmd, current_node):
     elif cmd == "v":
         score = CalculateEvaluation(current_node.board())
         if score:
-            ev = score.white().score(mate_score=30000)
-            current_node.comment = (current_node.comment or "").strip() + _(
-                " {{Val: {ev:+.2f}}}"
-            ).format(ev=ev / 100)
+            board_utils.accoda_commento(
+                current_node,
+                _("[Val: {ev}]").format(ev=board_utils.testo_valutazione(score)),
+            )
             saved = True
             print(_("\nValutazione commentata."))
             Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1, adsr=[2, 5, 90, 5])

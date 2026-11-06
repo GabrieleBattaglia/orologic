@@ -278,6 +278,27 @@ def riepilogo_mosse(mosse):
     return summary
 
 
+def accoda_commento(nodo, testo):
+    """Aggiunge un'annotazione in fondo al commento del nodo, con uno spazio
+    in mezzo e senza spazi ai bordi.
+
+    Le annotazioni di Orologic stanno fra quadre, [Val: +0.35]: una graffa
+    chiuderebbe il commento del PGN, e al salvataggio python-chess la toglie.
+    """
+    nodo.comment = f"{(nodo.comment or '').strip()} {testo}".strip()
+
+
+def testo_valutazione(score):
+    """La valutazione dal punto di vista del Bianco, nella forma dei commenti:
+    +0.35, oppure M3 e -M3 quando il matto e' del Bianco o del Nero. Prima il
+    matto usciva come +300.00, un numero che non dice niente."""
+    bianco = score.white()
+    if bianco.is_mate():
+        mosse = bianco.mate()
+        return ("-" if mosse < 0 else "") + _("M{m}").format(m=abs(mosse))
+    return f"{bianco.score() / 100:+.2f}"
+
+
 def format_pgn_comments(pgn_str):
     def repl(match):
         return "{\n" + match.group(1).strip() + "\n}"

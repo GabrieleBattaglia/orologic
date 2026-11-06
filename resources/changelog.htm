@@ -19,6 +19,10 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.24</h3>
+<h4>8.24.1 (6 novembre 2026)</h4>
+<ul>
+  <li>* [Analisi] I commenti che aggiungono <code>x</code> e <code>v</code>, la mossa migliore e la valutazione, stanno adesso fra parentesi quadre, <code>[BM: Nf3]</code> e <code>[Val: +0.35]</code>, come quelli dell'analisi automatica. Prima stavano fra graffe, che nel PGN chiudono il commento: al salvataggio le graffe finali sparivano, e la partita riportava <code>{BM: Nf3 {Val: +0.35</code>. Un matto si legge ora <code>M3</code>, o <code>-M3</code> se è del Nero, invece di un +300.00 che non diceva niente.</li>
+</ul>
 <h4>8.24.0 (6 novembre 2026)</h4>
 <ul>
   <li>+ [Easyfish] Il comando <code>.u</code> del prompt principale ritira la mossa in cui ti trovi e torna alla posizione precedente: serve soprattutto dopo un errore di battitura, e la mossa appena scritta sparisce subito. Se la mossa ha già un seguito, varianti comprese, Easyfish dice quante semimosse spariranno con lei e chiede conferma. Il suono è lo stesso di <code>.u</code> nella partita contro il motore.</li>
