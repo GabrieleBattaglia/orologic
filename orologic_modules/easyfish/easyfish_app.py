@@ -405,13 +405,31 @@ def _stampa_deviata():
         builtins.print = originale
 
 
-def run():
-    """Avvia Easyfish, riportando la stampa alla normalita' all'uscita."""
+def _apri_partita(game):
+    """La scacchiera e il nodo finale di una partita da aprire in Easyfish.
+
+    Serve a .pg e alle partite che arrivano da altri moduli: in tutti e due i
+    casi ci si ritrova sull'ultima mossa della linea principale.
+    """
+    board = CustomBoard()
+    if "FEN" in game.headers:
+        board.set_fen(game.headers["FEN"])
+    for move in game.mainline_moves():
+        board.push(move)
+    return board, game.end()
+
+
+def run(partita=None):
+    """Avvia Easyfish, riportando la stampa alla normalita' all'uscita.
+
+    partita, se c'e', e' un chess.pgn.Game che Easyfish apre subito, come
+    dopo .pg: cosi' arrivano le partite scelte nel profilatore di Lichess.
+    """
     with _stampa_deviata():
-        _esegui()
+        _esegui(partita)
 
 
-def _esegui():
+def _esegui(partita=None):
     global sharing_window, show_output_on_board
     print(
         _(
@@ -443,6 +461,11 @@ def _esegui():
     # New Game
     board = CustomBoard()
     game, node = InitNewPGN(board)
+    if partita is not None:
+        game = partita
+        board, node = _apri_partita(game)
+        print(_("Nuova partita caricata."))
+        print(board)
 
     # DRY: GameState
     fake_clock = {
@@ -788,13 +811,7 @@ def _esegui():
                     if is_modified:
                         SaveGameToFile(game)
                     game = loaded_game
-                    node = game
-                    board = CustomBoard()
-                    if "FEN" in game.headers:
-                        board.set_fen(game.headers["FEN"])
-                    for move in game.mainline_moves():
-                        board.push(move)
-                    node = game.end()
+                    board, node = _apri_partita(game)
                     game_state.board = board
                     is_modified = is_corrected
                     print(_("Nuova partita caricata."))

@@ -2,6 +2,7 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
 import datetime
+import io
 import json
 import msvcrt
 import os
@@ -9,6 +10,7 @@ import sys
 import urllib.parse
 import urllib.request
 
+import chess.pgn
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
 from . import config, rete, storage
@@ -514,7 +516,13 @@ def download_games(username, token):
             for g in downloaded_games:
                 f.write(g["pgn"])
                 f.write("\n\n")
-        print(_("\nFile salvato in: {f}").format(f=filepath))
+        # Il nome del file a parte, senza il percorso intero: la cartella e'
+        # sempre la stessa, e un percorso lungo nasconde l'informazione.
+        if matched == 1:
+            salvate = _("Salvata 1 partita nella cartella pgn, nel file {f}.")
+        else:
+            salvate = _("Salvate {n} partite nella cartella pgn, nel file {f}.")
+        print(salvate.format(n=matched, f=filename))
     # Come sopra.
     except Exception as e:  # noqa: BLE001
         print(_("Errore nel salvataggio del file: {e}").format(e=e))
@@ -602,18 +610,25 @@ def choose_game_for_analysis(games_list):
             pgn_str = selected_game["pgn"]
             import pyperclip
 
-            pyperclip.copy(pgn_str)
-            print(_("\nIl PGN della partita e' stato copiato negli appunti!"))
-            print(_("Ora verrai reindirizzato a Easyfish."))
-            print(
-                _(
-                    "Premi Invio per continuare e, quando sarai nel menu principale di Easyfish, digita '.pg' per incollare e analizzare la partita."
+            # Easyfish riceve la partita gia' caricata: prima la trovava solo
+            # chi sapeva di doverla incollare con .pg. La copia negli appunti
+            # resta per chi la vuole portare in un altro programma.
+            try:
+                pyperclip.copy(pgn_str)
+                print(_("\nIl PGN della partita e' stato copiato negli appunti!"))
+            except (pyperclip.PyperclipException, OSError) as e:
+                print(
+                    _(
+                        "Errore durante la copia del PGN negli appunti: {error}"
+                    ).format(error=e)
                 )
-            )
-            input()
+            if not enter_escape(
+                _("Vuoi aprirla in Easyfish? (INVIO per si', ESC per no): ")
+            ):
+                continue
             from .easyfish import easyfish_app
 
-            easyfish_app.run()
+            easyfish_app.run(chess.pgn.read_game(io.StringIO(pgn_str)))
             break
 
 
