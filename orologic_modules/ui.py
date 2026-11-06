@@ -740,7 +740,7 @@ def _report_tempo(game_state, bianco):
     print(
         etichetta
         + tempo.parlato(residuo)
-        + _(", consumato il {p:.0f} per cento").format(p=percentuale)
+        + _(", consumato il {p:.0f}%").format(p=percentuale)
     )
 
 

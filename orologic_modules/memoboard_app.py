@@ -290,11 +290,11 @@ def format_time_stats_string(time_stats):
             if idx == 1:
                 confronto = _("e' il riferimento")
             elif pct_var > 0:
-                confronto = _("cioe' {p:.0f} per cento piu' lento del primo").format(
+                confronto = _("cioe' {p:.0f}% piu' lento del primo").format(
                     p=pct_var
                 )
             elif pct_var < 0:
-                confronto = _("cioe' {p:.0f} per cento piu' rapido del primo").format(
+                confronto = _("cioe' {p:.0f}% piu' rapido del primo").format(
                     p=abs(pct_var)
                 )
             else:
@@ -641,7 +641,7 @@ def show_leaderboard(all_scores):
             )
             print(
                 _(
-                    "{pmin:.0f} al minuto, {acc:.0f} per cento di risposte esatte."
+                    "{pmin:.0f} al minuto, risposte esatte {acc:.0f}%."
                 ).format(pmin=item.get("score_per_minute", 0), acc=precisione)
             )
             print(
@@ -681,7 +681,7 @@ def show_leaderboard(all_scores):
             )
             print(
                 _(
-                    "{reps} domande, {acc:.0f} per cento esatte, media {avg:.1f} secondi."
+                    "{reps} domande, esatte {acc:.0f}%, media {avg:.1f} secondi."
                 ).format(
                     reps=reps, acc=precisione, avg=item.get("average_time_per_guess", 0)
                 )

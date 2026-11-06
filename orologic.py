@@ -438,7 +438,7 @@ def _voci_impostazioni(db):
         "nomi": _("Nomi dei pezzi, delle colonne e delle mosse"),
         "salvataggio": _("Salvataggio automatico: {stato}").format(stato=salvataggio),
         "stile": _("Stile dei menu: {stato}").format(stato=stile),
-        "volume": _("Volume dei suoni: {vol} su 100").format(
+        "volume": _("Volume dei suoni: {vol}%").format(
             vol=round(config.VOLUME * 100)
         ),
         ".": _("Torna al menu principale"),

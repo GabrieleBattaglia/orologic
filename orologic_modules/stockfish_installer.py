@@ -98,7 +98,7 @@ def _scarica_file(url, destinazione):
                     percentuale = scaricato * 100 // totale
                     if percentuale >= prossimo_avviso:
                         print(
-                            _("Scaricato il {p} per cento.").format(p=prossimo_avviso)
+                            _("Scaricato il {p}%.").format(p=prossimo_avviso)
                         )
                         prossimo_avviso += 25
     except OSError as e:

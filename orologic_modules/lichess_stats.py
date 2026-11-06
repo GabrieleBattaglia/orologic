@@ -102,7 +102,7 @@ def formatta_stats_globale(title, stats):
         mean=stats["mean"],
     )
     line2 = _(
-        "Variabilita' {cv:.0f} per cento, tendenza {trend:.2f} punti a partita, valore piu' frequente {mode}"
+        "Variabilita' {cv:.0f}%, tendenza {trend:.2f} punti a partita, valore piu' frequente {mode}"
     ).format(cv=stats["cv"], trend=stats["trend"], mode=stats["mode"])
     return f"{line1}\n{line2}"
 
@@ -119,7 +119,7 @@ def formatta_stats_quartile(title, stats):
         durata=durata_str,
     )
     line2 = _(
-        "Minimo {min}, massimo {max}, media {mean:.0f}, variabilita' {cv:.0f} per cento, tendenza {trend:.2f}, piu' frequente {mode}"
+        "Minimo {min}, massimo {max}, media {mean:.0f}, variabilita' {cv:.0f}%, tendenza {trend:.2f}, piu' frequente {mode}"
     ).format(
         min=stats["min"],
         max=stats["max"],
