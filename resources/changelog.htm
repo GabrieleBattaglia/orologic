@@ -19,6 +19,10 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.22</h3>
+<h4>8.22.1 (6 novembre 2026)</h4>
+<ul>
+  <li>* [Lichess] Al termine di una partita su Lichess, giocata o osservata, il PGN salvato nella cartella pgn e copiato negli appunti è quello pulito: i tag che Lichess mette di solito, la lista delle mosse e il risultato. Prima ogni mossa portava nel commento il tempo dell'orologio, tag <code>%clk</code>, e c'erano anche le valutazioni, le varianti suggerite e i commenti testuali dell'analisi di Lichess, come «Inaccuracy. Qd2 was best.». I tempi compaiono soltanto se, a fine partita, rispondi di sì alla domanda «Desideri salvare i tempi mossa nel PGN?».</li>
+</ul>
 <h4>8.22.0 (1 ottobre 2026)</h4>
 <ul>
   <li>+ [Core] Ogni orologio salvato ha adesso una data di nascita e un tachimetro. La scheda dell'orologio, nel menu orologi alla voce <code>vedi</code>, dice quando è stato creato e quanto tempo ha, nella stessa forma in cui Orologic dice la propria età all'avvio, e quanto ha corso: «Tachimetro: questo orologio ha corso per 5400 secondi.» Il tachimetro somma il tempo che l'orologio ha consumato davvero, bianco più nero, compreso quello arrivato dagli incrementi, e non il tempo previsto dal controllo: le pause e il gioco senza orologio dopo la caduta della bandierina non contano. Si aggiorna alla fine di ogni partita arbitrata e di ogni sessione Tempo; una partita interrotta e poi ripresa dal salvataggio automatico conta per intero, una volta sola. Gli orologi creati prima di questa versione prendono come data di nascita il momento del primo avvio della 8.22.0 e partono da zero secondi. Le frasi nuove della scheda, per ora, sono soltanto in italiano. Issue 60.</li>

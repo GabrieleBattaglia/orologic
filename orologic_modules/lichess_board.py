@@ -57,7 +57,14 @@ def save_lichess_game(game_state, result_str="*"):
     pgn_text = ""
     # Se abbiamo un game_id, proviamo a scaricare il PGN completo e ufficiale da Lichess
     if hasattr(game_state, "game_id") and game_state.game_id:
-        url = f"https://lichess.org/game/export/{game_state.game_id}?clocks=true&evals=true&literate=true"
+        # Lichess, se non gli si dice altro, scrive nei commenti tempi e
+        # valutazioni. Si chiede il PGN pulito, con tag, mosse e risultato,
+        # e i tempi soltanto se l'utente ha scelto di salvarli.
+        tempi = "true" if getattr(game_state, "save_clock_times", False) else "false"
+        url = (
+            f"https://lichess.org/game/export/{game_state.game_id}"
+            f"?clocks={tempi}&evals=false&literate=false"
+        )
         pgn_text, errore = rete.leggi(url, token=getattr(game_state, "token", None))
         if errore:
             # Si prosegue con la ricostruzione locale, ma l'utente sa perche'.
