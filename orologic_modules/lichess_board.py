@@ -45,6 +45,48 @@ class SpectatorGameState:
 format_time = tempo.parlato
 
 
+def _aggiorna_orologi(game_state, bianco, nero):
+    """I tempi che lo stream manda con la mossa. Una partita senza orologio,
+    per corrispondenza o senza limite, non li manda: prima il confronto era
+    con la stringa "None", e il valore vuoto vero finiva in int(float(None))."""
+    if bianco not in (None, "None"):
+        game_state.white_time = int(float(bianco))
+    if nero not in (None, "None"):
+        game_state.black_time = int(float(nero))
+    game_state.last_clock_sync = time.time()
+
+
+def mossa_dallo_stream(board, uci, fen=None):
+    """La mossa annunciata dallo stream di una partita osservata.
+
+    Il campo lm di Lichess porta le due case da evidenziare, non la mossa
+    intera: in una promozione manca il pezzo, f7f8 invece di f7f8q, e
+    python-chess la rifiutava facendo cadere Orologic. Il pezzo si ricava
+    dalla posizione che arriva insieme alla mossa, e se manca si prende la
+    donna. Restituisce None per una mossa che non si riconosce.
+    """
+    try:
+        return board.parse_uci(uci)
+    except ValueError:
+        pass
+    try:
+        da, a = chess.parse_square(uci[:2]), chess.parse_square(uci[2:4])
+    except (ValueError, TypeError):
+        return None
+    candidate = [m for m in board.legal_moves if m.from_square == da and m.to_square == a]
+    if fen:
+        disposizione = fen.split(" ")[0]
+        for mossa in candidate:
+            prova = board.copy(stack=False)
+            prova.push(mossa)
+            if prova.board_fen() == disposizione:
+                return mossa
+    for mossa in candidate:
+        if mossa.promotion == chess.QUEEN:
+            return mossa
+    return candidate[0] if candidate else None
+
+
 def save_lichess_game(game_state, result_str="*"):
     import io
 
@@ -217,6 +259,7 @@ def _spectate_worker(url, token, q, stop_event):
                             {
                                 "tipo": "mossa",
                                 "uci": d["lm"],
+                                "fen": d.get("fen"),
                                 "bianco": d.get("wc"),
                                 "nero": d.get("bc"),
                             }
@@ -320,7 +363,25 @@ def async_spectator_loop(q, game_state):
             elif tipo == "mossa":
                 wc = msg.get("bianco")
                 bc = msg.get("nero")
-                move = game_state.board.parse_uci(msg["uci"])
+                move = mossa_dallo_stream(game_state.board, msg["uci"], msg.get("fen"))
+                if move is None:
+                    # Una mossa che non si riconosce non deve chiudere la
+                    # visuale: la scacchiera torna alla posizione di Lichess.
+                    ui.pulisci_riga()
+                    sys.stdout.write(
+                        _(
+                            "Mossa {uci} non riconosciuta: la scacchiera torna alla posizione di Lichess."
+                        ).format(uci=msg["uci"])
+                        + "\n"
+                    )
+                    if msg.get("fen"):
+                        try:
+                            game_state.board.set_fen(msg["fen"])
+                        except ValueError:
+                            pass
+                    _aggiorna_orologi(game_state, wc, bc)
+                    refresh_line()
+                    continue
                 desc = board_utils.DescribeMove(move, game_state.board)
                 san_move = game_state.board.san(move)
 
@@ -333,11 +394,7 @@ def async_spectator_loop(q, game_state):
 
                 game_state.board.push(move)
                 game_state.move_history.append(san_move)
-                if wc != "None":
-                    game_state.white_time = int(float(wc))
-                if bc != "None":
-                    game_state.black_time = int(float(bc))
-                game_state.last_clock_sync = time.time()
+                _aggiorna_orologi(game_state, wc, bc)
                 if not game_state.started:
                     game_state.started = True
 

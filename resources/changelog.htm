@@ -19,6 +19,14 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.31</h3>
+<h4>8.31.5 (6 novembre 2026)</h4>
+<ul>
+  <li>* [Lichess] Una partita osservata senza orologio, per corrispondenza o senza limite di tempo, non fa più cadere Orologic alla prima mossa: i tempi che Lichess non manda vengono ignorati.</li>
+</ul>
+<h4>8.31.4 (6 novembre 2026)</h4>
+<ul>
+  <li>* [Lichess] Guardando una partita, una promozione non fa più cadere Orologic. Lichess annuncia l'ultima mossa con le sole due case, per esempio f7f8, senza dire il pezzo: ora Orologic lo ricava dalla posizione che Lichess manda insieme, e se una mossa proprio non si riconosce la scacchiera torna alla posizione di Lichess invece di chiudere la visuale. Grazie al collaudo di Gabriele, che l'ha visto succedere al cinquantacinquesimo tratto.</li>
+</ul>
 <h4>8.31.3 (6 novembre 2026)</h4>
 <ul>
   <li>* [L10N] Inglese, spagnolo, francese e portoghese sono stati riletti per intero, voce per voce contro l'italiano, e corretti dove dicevano altro: 1209 traduzioni, da 206 in inglese a 352 in portoghese. Le più gravi erano traduzioni di un'altra frase, come «Abilitare il portamento?» diventato «Eliminare il commento?», e termini di gioco sbagliati: la partita resa «match», la casa resa «house» o «maison», la mossa resa «trasloco», il motore reso «motor» in inglese e «mecanismo» in portoghese, Stockfish diventato «pesce secco». Tornano in inglese i comandi che Orologic accetta soltanto così, cioè <code>claim</code>, <code>resign</code>, <code>.cso on</code> e <code>.cso off</code>, e le lettere dei pezzi; i prompt chiedono di nuovo INVIO ed ESC dove si erano trasformati in sì o no da scrivere. Lo spagnolo dà del tu ovunque, come il resto del programma.</li>
