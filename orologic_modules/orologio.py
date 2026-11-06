@@ -71,31 +71,20 @@ def _nome(stato, bianco):
     return getattr(stato, "white_player" if bianco else "black_player", predefinito)
 
 
-# Una voce diversa per ciascuno dei cinque allarmi, presa da
+# Una voce diversa per ciascuno dei cinque allarmi, chiamata per nome da
 # Acu_Collection.json di GBUtils. Si distinguono per timbro e andamento e
 # non per altezza, cosi' si riconoscono senza doverle contare: due note
 # acute, un colpo di timbro, una discesa, un doppio colpo ruvido, una
-# salita ripetuta. Le ultime due sono state rifatte dopo il collaudo: la
-# quarta partiva da un do quasi inudibile e durava un soffio, la quinta
-# non dava abbastanza urgenza per essere l'ultimo avviso.
+# salita ripetuta. Le ultime due sono state rifatte dopo il collaudo, e
+# nella collezione portano il nome di Orologic. Prima le note stavano
+# scritte qui: se Gabriele cambiava un preset con Acu_Maker, l'allarme
+# restava quello vecchio, e nella collezione Orologic non poteva firmarli.
 VOCI_ALLARME = (
-    {"note": (("d6", 0.05), ("a#7", 0.1)), "kind": 1, "adsr": [0.002, 0, 100, 0.1]},
-    {
-        "note": (("d4", 0.05), ("p", 0.05), ("f3", 0.1), ("p", 0.05), ("d#6", 0.05)),
-        "kind": 2,
-        "adsr": [0.002, 0, 100, 0.002],
-    },
-    {"note": (("f#6.c2", 0.17),), "kind": 1, "adsr": [0.002, 99.948, 0, 0.05]},
-    {
-        "note": (("f4", 0.12), ("p", 0.06), ("f4", 0.14)),
-        "kind": 4,
-        "adsr": [1, 10, 70, 20],
-    },
-    {
-        "note": (("c5.g5", 0.3), ("p", 0.06), ("c5.g5", 0.3)),
-        "kind": 1,
-        "adsr": [0.05, 0, 100, 0.05],
-    },
+    "notifica_ui_1",
+    "timbratura",
+    "laser_da_gioco_1",
+    "orologic_allarme_4",
+    "orologic_allarme_5",
 )
 
 
@@ -103,15 +92,13 @@ def _suona_allarme(numero, bianco):
     """Fa sentire la voce dell'allarme, dal lato di chi lo riceve.
 
     Prima erano tutti la stessa nota, e con piu' di un allarme non si
-    capiva quale fosse suonato.
+    capiva quale fosse suonato. I preset stanno al centro e play li
+    sposta del lato chiesto; il volume dell'utente prende il posto della
+    base su cui la collezione scrive i suoi scarti, che qui valgono zero.
     """
     voce = VOCI_ALLARME[(numero - 1) % len(VOCI_ALLARME)]
     lato = -0.75 if bianco else 0.75
-    partitura = []
-    for altezza, durata in voce["note"]:
-        volume = 0 if altezza == "p" else config.VOLUME
-        partitura.extend([altezza, durata, lato, volume])
-    Acusticator(partitura, kind=voce["kind"], adsr=voce["adsr"])
+    Acusticator.play(voce, volume=config.VOLUME, pan=lato)
 
 
 def _suona_bandierina():

@@ -27,6 +27,10 @@ a = Analysis(
         ('resources/readme.htm', 'resources'),
         ('resources/changelog.htm', 'resources'),
         ('resources/eco.db', 'resources'),
+        # La collezione dei suoni, da cui gli allarmi dell'orologio prendono
+        # le loro voci per nome: da compilato Acusticator la cerca nella
+        # radice del pacchetto, e senza gli allarmi resterebbero muti.
+        (str(Path(GBUTILS_DIR, 'Acu_Collection.json')), '.'),
     ],
     # Qui vanno le librerie che PyInstaller non trova da solo, cioe' quelle
     # importate dentro le funzioni invece che in testa al file, e quelle che
