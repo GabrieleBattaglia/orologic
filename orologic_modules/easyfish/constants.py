@@ -85,6 +85,7 @@ MNMAIN = {
     ".cst": _("Ripristina orientamento scacchiera condivisa in base al turno"),
     ".cso": _("Attiva/Disattiva visualizzazione output di testo sotto la scacchiera"),
     ".k#": _("Vai alla mossa numero #"),
+    ".pa": _("Apri una partita salvata nella cartella pgn"),
     ".pg": _("PGN in Partita. Incolla dagli appunti"),
     ".l": _("Visualizza la lista delle mosse giocate"),
     ".n": _("Nuova partita da zero"),

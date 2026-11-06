@@ -34,6 +34,7 @@ from .pgn_handler import (
     InitNewPGN,
     PastePGNFromClipboard,
     SaveGameToFile,
+    ScegliPartitaDallaCartella,
 )
 from .sharing_window import PygameBoardWindow
 
@@ -818,6 +819,21 @@ def _esegui(partita=None):
                     print(board)
                 else:
                     print(_("PGN non valido o appunti vuoti."))
+
+            elif cmd == ".pa":
+                scelta = ScegliPartitaDallaCartella()
+                if scelta is not None:
+                    # Come .pg: la partita modificata si salva in un file
+                    # nuovo, quindi aprirne un'altra non fa perdere niente.
+                    if is_modified:
+                        print(_("Salvataggio partita in corso..."))
+                        SaveGameToFile(game)
+                    game = scelta
+                    board, node = _apri_partita(game)
+                    game_state.board = board
+                    is_modified = False
+                    print(_("Nuova partita caricata."))
+                    print(board)
 
             elif cmd == ".fg":
                 fen_from_clip = pyperclip.paste()

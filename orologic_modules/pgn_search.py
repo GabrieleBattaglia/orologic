@@ -53,7 +53,7 @@ def run():
             return
 
     # Estrai info headers da ogni partita
-    info_list = _estrai_info(games)
+    info_list = estrai_info(games)
 
     # Mostra statistiche generali
     _mostra_statistiche(totale, info_list)
@@ -319,8 +319,12 @@ def _carica_archivio():
 # Estrazione info headers
 
 
-def _estrai_info(games):
+def estrai_info(games):
     """Estrae gli headers rilevanti da ogni partita.
+
+    Accetta partite intere oppure le sole intestazioni lette con
+    chess.pgn.read_headers: Easyfish, con .pa, filtra cosi' i file da
+    molte partite senza leggerne le mosse.
 
     Returns:
         list[dict] con chiavi: White, Black, Result, WhiteElo, BlackElo,
@@ -328,7 +332,7 @@ def _estrai_info(games):
     """
     info_list = []
     for g in games:
-        h = g.headers
+        h = getattr(g, "headers", g)
         year = None
         date_str = h.get("Date", "????.??.??")
         if date_str and len(date_str) >= 4:
@@ -554,7 +558,7 @@ def _menu_filtri(games, info_list, totale):
     stile_numerato = db.get("menu_numerati", False)
 
     while True:
-        indici = _applica_filtri(info_list, filtri)
+        indici = applica_filtri(info_list, filtri)
         n_filtrate = len(indici)
         pct = (n_filtrate / totale) * 100 if totale > 0 else 0.0
 
@@ -717,7 +721,7 @@ def _menu_filtri(games, info_list, totale):
                 del filtri["eco"]
 
 
-def _applica_filtri(info_list, filtri):
+def applica_filtri(info_list, filtri):
     """Applica i filtri correnti e restituisce gli indici delle partite valide.
 
     Returns:
@@ -786,6 +790,20 @@ def _applica_filtri(info_list, filtri):
         yt = filtri.get("year_to")
         if yt and (info["Year"] is None or info["Year"] > yt):
             continue
+
+        # Filtri per data, nella forma PGN 2026.10.01, confrontati con la
+        # precisione scritta: 2026.10 come data finale comprende tutto
+        # ottobre. Una data ignota, coi punti interrogativi, non passa.
+        df = filtri.get("date_from")
+        if df:
+            parte = info["Date"][: len(df)]
+            if "?" in parte or parte < df:
+                continue
+        dt = filtri.get("date_to")
+        if dt:
+            parte = info["Date"][: len(dt)]
+            if "?" in parte or parte > dt:
+                continue
 
         # Filtro ECO
         feco = filtri.get("eco")
