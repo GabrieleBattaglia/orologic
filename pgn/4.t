@@ -1,0 +1,15 @@
+[Event "Scacchi alle terme 2"]
+[Site "Abano (PD)"]
+[Date "2026.11.02"]
+[Round "4"]
+[White "Battaglia, Gabriele"]
+[Black "Zenini, Simone"]
+[Result "0-1"]
+[WhiteElo "1635"]
+[BlackElo "1639"]
+[TimeControl "6300"]
+[Annotator "Orologic V8.22.0 by Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, UltraCode)"]
+[ECO "A13"]
+[Opening "English opening"]
+
+1. c4 e6 2. Nc3 b6 3. Nf3 Bb7 4. e4 Ne7 5. d4 d5 6. e5 Nbc6 7. cxd5 Nxd5 8. Bc4 Nde7 9. O-O Na5 10. Be2 Nf5 11. Be3 Bb4 12. Qa4+ Nc6 13. Rac1 O-O 14. a3 Be7 15. Ba6 Bxa6 16. Qxa6 Ncxd4 17. Nxd4 Nxd4 18. Rfd1 c5 19. Qa4 Bg5 20. f4 Be7 21. Bxd4 cxd4 22. Rxd4 Bc5 23. Rd1 Bxd4+ 24. Rxd4 Qc8 25. Kh1 Rd8 26. Rc4 Qd7 27. Rd4 Qxd4 0-1

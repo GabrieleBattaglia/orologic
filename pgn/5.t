@@ -1,0 +1,16 @@
+[Event "Scacchi alle terme 2"]
+[Site "Abano (PD)"]
+[Date "2026.11.02"]
+[Round "5"]
+[White "Marinò, Giuseppe"]
+[Black "Battaglia, Gabriele"]
+[Result "0-1"]
+[WhiteElo "?"]
+[BlackElo "1635"]
+[TimeControl "6300"]
+[Annotator "Orologic V8.22.0 by Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, UltraCode)"]
+[ECO "A04"]
+[Opening "Reti"]
+[Variation "Wade defence"]
+
+1. e4 d6 2. Nf3 Bg4 3. Bc4 Nf6 4. d3 Nc6 5. c3 e6 6. Bg5 Be7 7. Nbd2 O-O 8. O-O Ne5 9. Bxf6 Bxf6 10. d4 Nxc4 11. Nxc4 Qd7 12. Ncd2 Rfd8 13. Re1 e5 14. d5 c6 15. dxc6 bxc6 16. h3 Bh5 17. Qc2 Rac8 18. Rad1 Qb7 19. Rb1 d5 20. Qb3 Qa8 21. exd5 Rxd5 22. Ne4 Be7 23. c4 Rdd8 24. Nxe5 f6 25. Ng4 Re8 26. Nd6 Bxd6 27. Rxe8+ Rxe8 28. c5+ Bf7 29. Nxf6+ gxf6 0-1
