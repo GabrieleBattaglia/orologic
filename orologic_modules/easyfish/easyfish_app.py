@@ -8,7 +8,7 @@ import re
 import chess
 import chess.engine
 import pyperclip
-from GBUtils import Acusticator, dgt, menu
+from GBUtils import Acusticator, dgt, enter_escape, menu
 
 from .. import chess960_utils, config, ui
 from .. import engine as orologic_engine
@@ -37,6 +37,7 @@ from .pgn_handler import (
     ScegliPartitaDallaCartella,
 )
 from .sharing_window import PygameBoardWindow
+from .utils import suona_annulla
 
 _orig_print = builtins.print
 show_output_on_board = False
@@ -406,6 +407,17 @@ def _stampa_deviata():
         builtins.print = originale
 
 
+def _semimosse_dopo(node):
+    """Quante semimosse, varianti comprese, vengono dopo questo nodo."""
+    conto = 0
+    da_visitare = list(node.variations)
+    while da_visitare:
+        figlio = da_visitare.pop()
+        conto += 1
+        da_visitare.extend(figlio.variations)
+    return conto
+
+
 def _apri_partita(game):
     """La scacchiera e il nodo finale di una partita da aprire in Easyfish.
 
@@ -445,8 +457,6 @@ def _esegui(partita=None):
         db = LoadDB()
         cfg = db.get("engine_config", {})
         if not cfg or not cfg.get("engine_path"):
-            from GBUtils import enter_escape
-
             if enter_escape(
                 _(
                     "Il motore scacchistico non e' configurato, ma e' necessario per Easyfish. Vuoi configurarlo ora? (INVIO per si', ESC per no): "
@@ -702,8 +712,6 @@ def _esegui(partita=None):
                     is_modified = True
 
             elif cmd == ".g":
-                from GBUtils import enter_escape
-
                 is_standard = enter_escape(
                     _(
                         "Vuoi giocare alla variante standard (scacchi standard)? (INVIO per si', ESC per no): "
@@ -737,8 +745,6 @@ def _esegui(partita=None):
                 board = node.board()  # Ricrea board dallo stato finale
                 game_state.board = board
                 is_modified = True
-                from GBUtils import enter_escape
-
                 print(
                     _(
                         "\nSuggerimento: puoi esplorare e analizzare la partita appena conclusa."
@@ -819,6 +825,32 @@ def _esegui(partita=None):
                     print(board)
                 else:
                     print(_("PGN non valido o appunti vuoti."))
+
+            elif cmd == ".u":
+                # Si ritira la mossa in cui ci si trova, con il suo seguito.
+                # Senza seguito, il caso dell'errore di battitura, sparisce
+                # subito; con un seguito si chiede, perche' si perde di piu'.
+                seguito = _semimosse_dopo(node)
+                if seguito == 1:
+                    domanda = _(
+                        "La mossa ha un seguito di 1 semimossa, che sparira' "
+                        "con lei. Confermi? (INVIO per si', ESC per no): "
+                    )
+                else:
+                    domanda = _(
+                        "La mossa ha un seguito di {n} semimosse, che "
+                        "spariranno con lei. Confermi? (INVIO per si', "
+                        "ESC per no): "
+                    ).format(n=seguito)
+                if not node.parent:
+                    print(_("Impossibile eliminare l'inizio della partita."))
+                elif seguito == 0 or enter_escape(domanda):
+                    node.parent.variations.remove(node)
+                    node = node.parent
+                    board.pop()
+                    is_modified = True
+                    suona_annulla()
+                    print(_("Mossa/Variante eliminata. Tornati indietro."))
 
             elif cmd == ".pa":
                 scelta = ScegliPartitaDallaCartella()
@@ -962,8 +994,6 @@ def _esegui(partita=None):
                 else:
                     if node.variations:
                         # Divergenza: chiediamo cosa fare
-                        from ..ui import enter_escape
-
                         print(_("Mossa diversa trovata."))
                         scelta = enter_escape(
                             _("Sovrascrivi linea (Invio) o Aggiungi Variante (Esc)? ")

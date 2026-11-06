@@ -17,6 +17,7 @@ from ..board_utils import (
 from ..config import _
 from . import analysis_utils
 from .constants import MNGAME
+from .utils import suona_annulla
 
 
 class EasyfishGameState:
@@ -771,19 +772,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                             game_state.active_color = board.turn
                             if sharing_window and sharing_window.is_active():
                                 sharing_window.update_board(board, current_node)
-                            Acusticator(
-                                [
-                                    "c4",
-                                    0.1,
-                                    -1,
-                                    config.VOLUME,
-                                    "e4",
-                                    0.1,
-                                    0,
-                                    config.VOLUME,
-                                ],
-                                kind=1,
-                            )
+                            suona_annulla()
                             print(
                                 _("Annullate {n} semimosse. Tocca a te.").format(
                                     n=steps

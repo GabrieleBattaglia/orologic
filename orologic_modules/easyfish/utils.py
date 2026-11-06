@@ -2,13 +2,24 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
 import chess
+from GBUtils import Acusticator
 
-from .. import board_utils, localizzazione
+from .. import board_utils, config, localizzazione
 from ..config import _
 
 # Il conteggio del materiale e' quello di board_utils, valido per tutto
 # il programma.
 CalculateMaterial = board_utils.CalculateMaterial
+
+
+def suona_annulla():
+    """Il suono del ritiro di una mossa, uguale al prompt principale e nella
+    partita contro il motore: due note che salgono, da sinistra al centro.
+    Il volume si legge a ogni chiamata, perche' l'utente lo puo' cambiare."""
+    Acusticator(
+        ["c4", 0.1, -1, config.VOLUME, "e4", 0.1, 0, config.VOLUME],
+        kind=1,
+    )
 
 
 def InsertedCounter(board):

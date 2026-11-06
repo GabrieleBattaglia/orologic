@@ -90,6 +90,7 @@ MNMAIN = {
     ".l": _("Visualizza la lista delle mosse giocate"),
     ".n": _("Nuova partita da zero"),
     ".pt": _("Imposta i Tag PGN per la partita corrente"),
+    ".u": _("Annulla ultima semimossa (Undo)"),
     ".v": _("Inizia una nuova variante (al prossimo inserimento mossa)"),
     ".vm": _("Promuovi la variante corrente a linea principale"),
     ",[pezzo]": _("Nome di un pezzo per localizzarlo"),
