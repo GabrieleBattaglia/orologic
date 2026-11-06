@@ -1244,6 +1244,15 @@ def show_post_game_report(game_id, token, username):
 
 
 def play_game(game_id, token, username):
+    """Gioca una partita su Lichess. Durante la partita gli avvisi delle sfide
+    in arrivo sono solo un suono, per non coprire le mosse."""
+    from . import lichess_eventi
+
+    with lichess_eventi.solo_suono():
+        return _gioca_partita(game_id, token, username)
+
+
+def _gioca_partita(game_id, token, username):
     url_partita = f"https://lichess.org/api/board/game/stream/{game_id}"
 
     q = queue.Queue()

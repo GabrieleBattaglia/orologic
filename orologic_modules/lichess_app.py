@@ -14,6 +14,7 @@ from . import (
     board_utils,
     config,
     lichess_board,
+    lichess_eventi,
     lichess_profiler,
     lichess_tornei,
     rete,
@@ -1759,43 +1760,7 @@ def menu_gioca(db):
                     )
 
         elif scelta == "accetta":
-            print(_("Controllo sfide in entrata..."))
-            challenges = get_incoming_challenges(token, usa_cache=False)
-            if not challenges:
-                print(_("Non hai sfide in attesa."))
-                continue
-
-            for c in challenges:
-                c_id = c["id"]
-                challenger = c.get("challenger", {}).get("name", _("Anonimo"))
-                variant = c["variant"]["name"]
-                speed = c["speed"]
-                rated = _("Classificata") if c["rated"] else _("Amichevole")
-                print(
-                    _("\nSfida da {u} ({v}, {s}, {r})").format(
-                        u=challenger, v=variant, s=speed, r=rated
-                    )
-                )
-
-                if enter_escape(
-                    _("Vuoi accettare questa sfida? (Invio = Si', Esc = No): ")
-                ):
-                    print(_("Accetto la sfida..."))
-                    if accept_challenge(token, c_id):
-                        print(_("Sfida accettata!"))
-                        lichess_board.play_game(
-                            c_id, token, secrets.get("lichess_username")
-                        )
-                        break
-                    else:
-                        print(
-                            _(
-                                "Impossibile accettare la sfida (potrebbe essere stata annullata)."
-                            )
-                        )
-                else:
-                    print(_("Rifiuto la sfida..."))
-                    decline_challenge(token, c_id)
+            rispondi_alle_sfide(token, secrets.get("lichess_username"))
 
         elif scelta == "riprendi":
             print(_("Cerco partite in corso..."))
@@ -1858,6 +1823,12 @@ def run():
         # memoria non e' piu' quello buono.
         token = secrets.get("lichess_token")
         is_logged = "lichess_token" in secrets
+        # Con il token si ascoltano gli avvisi di Lichess, in sottofondo: le
+        # sfide arrivano subito, ovunque si sia in Orolichess.
+        if is_logged:
+            lichess_eventi.avvia(token, secrets.get("lichess_username"))
+        else:
+            lichess_eventi.ferma()
 
         active_games = []
         num_challenges = 0
@@ -1934,6 +1905,7 @@ def run():
 
         if scelta == ".":
             print(_("Uscita da Orolichess in corso. Ritorno a orologic..."))
+            lichess_eventi.ferma()
             break
         elif scelta == "riprendi":
             scelte_games = {}
@@ -2003,49 +1975,50 @@ def run():
             except Exception as e:  # noqa: BLE001
                 print(_("Impossibile aprire il browser: {e}").format(e=e))
         elif scelta == "sfide":
-            print(_("Controllo sfide in entrata..."))
-            try:
-                challenges = get_incoming_challenges(token, usa_cache=False)
-            # Le risposte di Lichess possono cambiare forma: si rinuncia a
-            # questo dato e si prosegue.
-            except Exception:  # noqa: BLE001
-                challenges = []
+            rispondi_alle_sfide(token, secrets.get("lichess_username"))
 
-            if not challenges:
-                print(_("Non hai sfide in attesa."))
-                continue
 
-            for c in challenges:
-                c_id = c["id"]
-                challenger = c.get("challenger", {}).get("name", _("Anonimo"))
-                variant = c["variant"]["name"]
-                speed = c["speed"]
-                rated = _("Classificata") if c["rated"] else _("Amichevole")
-                print(
-                    _("\nSfida da {u} ({v}, {s}, {r})").format(
-                        u=challenger, v=variant, s=speed, r=rated
-                    )
-                )
-
-                if enter_escape(
-                    _("Vuoi accettare questa sfida? (Invio = Si', Esc = No): ")
-                ):
-                    print(_("Accetto la sfida..."))
-                    if accept_challenge(token, c_id):
-                        print(_("Sfida accettata!"))
-                        lichess_board.play_game(
-                            c_id, token, secrets.get("lichess_username")
-                        )
-                        break
-                    else:
-                        print(
-                            _(
-                                "Impossibile accettare la sfida (potrebbe essere stata annullata)."
-                            )
-                        )
-                else:
-                    print(_("Rifiuto la sfida..."))
-                    decline_challenge(token, c_id)
+def rispondi_alle_sfide(token, username):
+    """Le sfide in attesa, una per una: INVIO accetta ed entra in partita, r
+    rifiuta, ESC passa alla seguente lasciandola in attesa. Prima ESC
+    rifiutava, e un tasto premuto per prudenza chiudeva la sfida."""
+    print(_("Controllo sfide in entrata..."))
+    try:
+        challenges = get_incoming_challenges(token, usa_cache=False)
+    # Le risposte di Lichess possono cambiare forma: si rinuncia a
+    # questo dato e si prosegue.
+    except Exception:  # noqa: BLE001
+        challenges = []
+    if not challenges:
+        print(_("Non hai sfide in attesa."))
+        return
+    for c in challenges:
+        c_id = c["id"]
+        challenger = c.get("challenger", {}).get("name", _("Anonimo"))
+        variant = c["variant"]["name"]
+        speed = c["speed"]
+        rated = _("Classificata") if c["rated"] else _("Amichevole")
+        print(
+            _("\nSfida da {u} ({v}, {s}, {r})").format(
+                u=challenger, v=variant, s=speed, r=rated
+            )
+        )
+        risposta = key(_("\rINVIO accetta, ESC la lascia in attesa, r la rifiuta\r"))
+        print()
+        if risposta == "\r":
+            print(_("Accetto la sfida..."))
+            lichess_eventi.dimentica(c_id)
+            if accept_challenge(token, c_id):
+                print(_("Sfida accettata!"))
+                lichess_board.play_game(c_id, token, username)
+                return
+            print(_("Impossibile accettare la sfida (potrebbe essere stata annullata)."))
+        elif risposta.lower() == "r":
+            print(_("Rifiuto la sfida..."))
+            lichess_eventi.dimentica(c_id)
+            decline_challenge(token, c_id)
+        else:
+            print(_("Sfida lasciata in attesa."))
 
 
 if __name__ == "__main__":
