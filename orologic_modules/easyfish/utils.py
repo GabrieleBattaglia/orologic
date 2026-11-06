@@ -61,7 +61,15 @@ def SquaresListToString(board, sq_list, report_piece=False, occupied_only=False)
                     pezzo.color == chess.WHITE,
                     localizzazione.genere_pezzo(pezzo.piece_type),
                 )
-                voci.append(f"{nome.capitalize()} {colore} in {casa}")
+                # La stessa frase dell'ispezione della scacchiera, gia'
+                # tradotta: qui la preposizione era scritta in italiano.
+                voci.append(
+                    _("{piece_desc} in {col_name} {rank_name}").format(
+                        piece_desc=f"{nome.capitalize()} {colore}",
+                        col_name=localizzazione.colonna(j[0]),
+                        rank_name=j[1],
+                    )
+                )
             elif not occupied_only:
                 voci.append(casa)
         elif not occupied_only:
