@@ -267,6 +267,13 @@ def menu_tornei(db, token=None):
         elenco = {t["id"]: riga_elenco(t) for t in tornei}
         # Dalla scheda si torna all'elenco, e da qui con ESC alle cadenze.
         while True:
+            if len(tornei) == 1:
+                # Con una voce sola menu la restituisce subito, senza
+                # chiedere: nel ciclo la scheda si riapriva all'infinito, e
+                # dalla 8.32.1 non si usciva piu' dai tornei. Qui la scheda si
+                # apre una volta, e all'uscita si torna alle cadenze.
+                _scheda(tornei[0], token, db)
+                break
             scelto = menu(
                 elenco,
                 show=True,
