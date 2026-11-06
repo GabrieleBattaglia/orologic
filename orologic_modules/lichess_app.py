@@ -319,7 +319,9 @@ def menu_statistiche(db):
         percentile = perf_data.get("percentile")
         if percentile is not None:
             print(
-                _("Percentile: {p}% (Sei migliore del {p}% dei giocatori)").format(
+                # Il simbolo prima di una virgola: "{p}% dei", cioe' % e d,
+                # pybabel lo prendeva per un segnaposto % d.
+                _("Percentile: {p}%, la quota di giocatori che hai superato.").format(
                     p=percentile
                 )
             )
