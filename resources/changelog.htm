@@ -18,6 +18,47 @@ li { margin-bottom: 0.3em; }
 <body>
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
+<h3>Versione 8.36</h3>
+<h4>8.36.5 (8 novembre 2026)</h4>
+<ul>
+  <li>* [Manuale] L'intestazione del manuale dice la versione corrente, ferma da settembre alla 8.21.5, e in testa c'è un indice con i collegamenti a tutti i capitoli numerati, per saltare subito a quello che serve; tolto anche l'ultimo separatore grafico fra il primo e il secondo capitolo. Il manuale racconta le novità dalla 8.33.0 alla 8.36.0, e non promette più un programma fatto di un file solo: Orologic è una cartella. Su GitHub la pagina del progetto ha un README, con i collegamenti al manuale e a questo registro da leggere nel browser. Issue 65.</li>
+</ul>
+<h4>8.36.4 (8 novembre 2026)</h4>
+<ul>
+  <li>* [L10N] Inglese, spagnolo, francese e portoghese hanno tutte le frasi nuove dalla 8.33.0 alla 8.36.3: statistiche contro il motore, prompt di gioco, tornei arena e berserk.</li>
+</ul>
+<h4>8.36.3 (8 novembre 2026)</h4>
+<ul>
+  <li>* [Easyfish] Da una posizione già conclusa, matto, stallo, ripetizione o cinquanta mosse, <code>.g</code> non comincia più una partita che finiva prima della prima mossa: dice che la posizione è conclusa e chiede di tornare a una mossa precedente. Con le statistiche avrebbe contato un risultato mai giocato.</li>
+</ul>
+<h4>8.36.2 (8 novembre 2026)</h4>
+<ul>
+  <li>* [Easyfish] Una partita contro il motore interrotta, per esempio con Ctrl+C o per un errore del motore, non prende più il risultato rimasto nell'intestazione della partita caricata o di una <code>.g</code> precedente, e non finisce più nel punteggio e nelle statistiche come se fosse stata giocata fino in fondo. Se si interrompe prima di qualunque mossa, la partita torna com'era.</li>
+</ul>
+<h4>8.36.1 (8 novembre 2026)</h4>
+<ul>
+  <li>* [Easyfish] Quando cade la bandierina del motore mentre pensa, la partita la perde il motore. Prima la sua mossa arrivava fuori tempo, si giocava lo stesso con l'incremento, il tratto passava all'utente, e il risultato dava la sconfitta all'utente subito dopo l'annuncio del tempo scaduto per il motore.</li>
+</ul>
+<h4>8.36.0 (8 novembre 2026)</h4>
+<ul>
+  <li>+ [Lichess] Il berserk nei tornei arena: <code>.berserk</code>, o <code>berserk</code>, prima della tua prima mossa dimezza il tuo tempo, e se vinci prendi un punto in più. Se Lichess rifiuta Orologic dice perché, e quando è l'avversario ad andare in berserk una riga lo annuncia. Issue 57.</li>
+</ul>
+<h3>Versione 8.35</h3>
+<h4>8.35.0 (8 novembre 2026)</h4>
+<ul>
+  <li>+ [Lichess] I tornei arena si giocano. Dalla scheda di un torneo ci si iscrive, si rientra, ci si mette in pausa o si ritira l'iscrizione; ai tornei privati Orologic chiede la password, alle battaglie a squadre la squadra. Dopo l'iscrizione si entra nell'attesa del torneo: una riga che si riscrive con quanto manca all'inizio, o con il posto e quanto manca alla fine; quando Lichess abbina, un richiamo, una riga con l'avversario, e la partita si apre da sola; finita la partita si torna nell'attesa. Nell'attesa c classifica, s scheda, g riprende una partita del torneo ancora in corso, ? aiuto, ESC esce, e a torneo iniziato mette in pausa, perché Lichess non ti abbini mentre sei altrove. Alla fine del torneo, un arpeggio e il posto in cui sei arrivato. Si giocano solo i rapid e i classici: Lichess esclude dal bullet e dal blitz le API delle scacchiere elettroniche, che sono quelle di Orologic, e la scheda degli altri tornei lo dice. Issue 57; i tornei svizzeri restano da fare.</li>
+  <li>* [Lichess] Se il token non ha il permesso <code>tournament:write</code>, l'iscrizione lo dice a parole e spiega come creare il token nuovo; anche il login, fra i permessi da concedere, nomina quello dei tornei.</li>
+</ul>
+<h3>Versione 8.34</h3>
+<h4>8.34.0 (8 novembre 2026)</h4>
+<ul>
+  <li>+ [Core] Il prompt di gioco si compone: nelle impostazioni la voce Prompt di gioco ti legge il catalogo, il modello in uso e un'anteprima, e tu scrivi il modello nuovo, testo libero con gli indicatori fatti dal percento e da una lettera. Ci sono i tempi del Bianco e del Nero, il tuo e quello dell'avversario, la loro differenza, la mossa come prima, il numero di mossa e l'ultima mossa separati, il materiale, il tratto, la regola delle 50 mosse, le mosse al controllo del tempo, la durata della partita, il nome dell'avversario e gli stati, cioè pausa, senza orologio, premossa e RECLAMA. Un solo modello vale nella partita arbitrata, in Tempo, contro il motore e su Lichess; un indicatore che lì non ha senso resta vuoto senza lasciare buchi, e gli stati, se non li metti, compaiono da soli dove comparivano. Il modello predefinito, <code>%b %n %m</code>, dà esattamente il prompt di prima. Issue 61.</li>
+</ul>
+<h3>Versione 8.33</h3>
+<h4>8.33.0 (8 novembre 2026)</h4>
+<ul>
+  <li>+ [Easyfish] Le statistiche delle partite contro il motore, con il comando <code>.gs</code>: partite in totale e per colore, con vinte, patte, perse e percentuale; partite al mese con due decimali, dalla prima a oggi, e partite degli ultimi 30 giorni; serie in corso, serie più lunga di vittorie e ultima partita; il punteggio Elo con i suoi conti, anche per colore. Contano tutte le partite <code>.g</code> concluse, a qualunque forza. All'inizio di ogni partita Easyfish ti propone il colore, quello con meno partite e, a parità, quello con più sconfitte, e dice perché: INVIO lo accetta, ESC dà l'altro. Le partite di prima non hanno il registro, e restano solo nel punteggio Elo. Issue 66.</li>
+</ul>
 <h3>Versione 8.32</h3>
 <h4>8.32.2 (6 novembre 2026)</h4>
 <ul>

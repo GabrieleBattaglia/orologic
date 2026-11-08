@@ -9,7 +9,7 @@ import chess
 import chess.pgn
 from GBUtils import Acusticator
 
-from . import config, localizzazione, orologio, tempo
+from . import config, localizzazione, modello_prompt, orologio, tempo
 from .config import _
 
 LARGHEZZA_BRAILLE = 40
@@ -257,33 +257,54 @@ def DescribeMove(move, board, annotation=None):
     return finale
 
 
+def mosse_al_controllo(game_state):
+    """Le mosse che mancano al prossimo controllo del tempo per chi ha il
+    tratto, o None se la sua fase non ne ha uno, come l'ultima."""
+    fasi = game_state.clock_config.get("phases", [])
+    bianco = game_state.active_color == "white"
+    giocate = game_state.white_moves if bianco else game_state.black_moves
+    indice = game_state.fase_per_mosse(giocate)
+    if not 0 <= indice < len(fasi) or not fasi[indice].get("moves", 0):
+        return None
+    soglia = sum(fase.get("moves", 0) for fase in fasi[: indice + 1])
+    # Anche l'ultima fase puo' avere le sue mosse: passata la sua soglia,
+    # un altro controllo non c'e'.
+    if giocate >= soglia:
+        return None
+    return soglia - giocate
+
+
 def prompt_partita(game_state):
-    """Testo del prompt durante la partita: numero di mossa, stato e orologi.
+    """Testo del prompt durante la partita, dal modello dell'utente.
 
     Uguale per l'arbitraggio e per la modalita' Tempo, che prima ne tenevano
-    due copie identiche.
+    due copie identiche. Dalla 8.34.0 lo compone modello_prompt.
     """
-    mosse = game_state.move_history
-    if not mosse:
-        testo = _("Inizio, mossa 0. ")
-    elif len(mosse) % 2 == 1:
-        testo = f"{(len(mosse) + 1) // 2}. {mosse[-1]} "
-    else:
-        testo = f"{len(mosse) // 2}... {mosse[-1]} "
-
-    if game_state.paused:
-        testo = "[" + testo.strip() + "] "
-    elif game_state.ignore_clock:
-        testo = _("senza orologio") + " " + testo.strip() + " "
-
-    orologi = ""
-    intervallo = getattr(game_state, "refresh_interval", 0)
-    if intervallo > 0 and not game_state.ignore_clock:
-        bianco = tempo.compatto(max(0.0, game_state.white_remaining))
-        nero = tempo.compatto(max(0.0, game_state.black_remaining))
-        orologi = f"{bianco} {nero} "
-
-    return orologi + testo
+    bianco, nero = modello_prompt.tempi_visibili(
+        getattr(game_state, "refresh_interval", 0),
+        game_state.white_remaining,
+        game_state.black_remaining,
+        game_state.ignore_clock,
+    )
+    # In Tempo la scacchiera non segue le note: materiale, tratto e numero
+    # di mossa dalla scacchiera sarebbero falsi, e il tratto arriva a parte.
+    senza_scacchiera = getattr(game_state, "senza_scacchiera", False)
+    dati = {
+        "bianco": bianco,
+        "nero": nero,
+        "mio": None,
+        "board": None if senza_scacchiera else game_state.board,
+        "tratto": chess.WHITE if game_state.active_color == "white" else chess.BLACK,
+        "mosse": game_state.move_history,
+        "mossa": modello_prompt.mossa_classica(game_state.move_history),
+        "pausa": game_state.paused,
+        "senza_orologio": game_state.ignore_clock and not game_state.paused,
+        "altri_stati": [],
+        "mosse_al_controllo": mosse_al_controllo(game_state),
+        "inizio": getattr(game_state, "inizio_partita", None),
+        "avversario": "",
+    }
+    return modello_prompt.componi(dati) + " "
 
 
 def GenerateMoveSummary(game_state):

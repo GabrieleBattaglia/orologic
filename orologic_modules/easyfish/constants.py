@@ -79,6 +79,7 @@ MNMAIN = {
     ".gf": _("Partita in FEN. Copia negli appunti"),
     ".gp": _("Partita in PGN. Copia negli appunti"),
     ".gb": _("Scacchiera in caratteri, con tratto e FEN. Copia negli appunti"),
+    ".gs": _("Statistiche delle partite contro il motore"),
     ".i": _("Salva immagine della scacchiera corrente in PDF"),
     ".ii": _("Impostazioni grafica immagine (colori, dimensioni, ecc.)"),
     ".cs": _(

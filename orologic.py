@@ -26,6 +26,7 @@ from orologic_modules import (
     game_flow,
     lichess_app,
     memoboard_app,
+    modello_prompt,
     pgn_search,
     storage,
     tempo,
@@ -436,6 +437,9 @@ def _voci_impostazioni(db):
         "analisi": _("Analisi: tempo, linee e soglie di giudizio"),
         "motore": _("Motore scacchistico: {nome}").format(nome=engine.ENGINE_NAME),
         "nomi": _("Nomi dei pezzi, delle colonne e delle mosse"),
+        "prompt": _("Prompt di gioco: {modello}").format(
+            modello=modello_prompt.modello()
+        ),
         "salvataggio": _("Salvataggio automatico: {stato}").format(stato=salvataggio),
         "stile": _("Stile dei menu: {stato}").format(stato=stile),
         "volume": _("Volume dei suoni: {vol}%").format(
@@ -446,7 +450,8 @@ def _voci_impostazioni(db):
 
 
 def menu_impostazioni():
-    """Sottomenu delle impostazioni: analisi, motore, nomi, interruttori, volume.
+    """Sottomenu delle impostazioni: analisi, motore, nomi, prompt di gioco,
+    interruttori, volume.
 
     Prima motore, nomi e volume stavano nel menu principale, e il resto era
     un'unica sequenza di domande da attraversare tutta per cambiare una
@@ -472,6 +477,8 @@ def menu_impostazioni():
         elif scelta == "nomi":
             _suona("nomi")
             ui.EditLocalization()
+        elif scelta == "prompt":
+            modello_prompt.imposta()
         elif scelta == "salvataggio":
             if ui.alterna_impostazione("autosave_enabled"):
                 print(_("Salvataggio automatico attivo."))

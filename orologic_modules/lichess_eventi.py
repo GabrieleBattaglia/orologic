@@ -11,10 +11,15 @@ arrivo si annuncia con un suono e una riga, ovunque si sia in Orolichess;
 durante una partita propria solo con il suono, per non coprire le mosse.
 Lichess tiene un solo flusso degli eventi per token: aprirne un secondo
 chiude il primo, quindi ne esiste sempre uno solo.
+
+Dallo stesso flusso arrivano le partite che cominciano. Quelle di un torneo
+arena vanno all'attesa del torneo, se l'utente vi si trova, che le apre da
+sola; altrimenti si annunciano, perche' l'utente le riprenda dal menu.
 """
 
 import contextlib
 import json
+import queue
 import sys
 import threading
 
@@ -31,6 +36,13 @@ _stato = {"thread": None, "ferma": None, "risposta": None, "token": None}
 _solo_suono = threading.Event()
 _annunciate = {}
 _lucchetto = threading.Lock()
+# L'attesa del torneo in cui si trova l'utente, e le partite che Lichess vi
+# ha abbinato, pronte da aprire.
+_attesa = {"torneo": None}
+_partite_di_torneo = queue.Queue()
+# Le partite di torneo gia' viste: Lichess rimanda gameStart per tutte le
+# partite in corso a ogni riapertura del flusso.
+_partite_viste = set()
 
 
 def _scrivi(testo):
@@ -76,6 +88,52 @@ def _ritirata(sfida):
         _scrivi(_("La sfida di {u} non c'e' piu'.").format(u=nome))
 
 
+def _partita_iniziata(partita):
+    """Una partita cominciata: conta solo se e' di un torneo. All'attesa di
+    quel torneo arriva in coda; fuori dall'attesa si annuncia una volta."""
+    torneo = partita.get("tournamentId")
+    if not torneo:
+        return
+    with _lucchetto:
+        if partita.get("gameId") in _partite_viste:
+            return
+        _partite_viste.add(partita.get("gameId"))
+    # Il richiamo suona subito, anche nell'attesa: l'utente puo' essere
+    # dentro la classifica, e la partita aspetta che ne esca.
+    Acusticator.play("orologic_torneo_abbinamento", volume=config.VOLUME)
+    if _attesa["torneo"] == torneo:
+        _partite_di_torneo.put(dict(partita, suonata=True))
+        return
+    if _solo_suono.is_set():
+        return
+    avversario = (partita.get("opponent") or {}).get("username", _("Anonimo"))
+    _scrivi(
+        _(
+            "Una tua partita di torneo e' cominciata, contro {u}: la trovi in "
+            "Riprendi partita in corso, nel menu Gioca una partita."
+        ).format(u=avversario)
+    )
+
+
+def entra_in_attesa(id_torneo):
+    """L'utente e' nell'attesa di quel torneo: le sue partite vanno li'."""
+    while not _partite_di_torneo.empty():
+        _partite_di_torneo.get_nowait()
+    _attesa["torneo"] = id_torneo
+
+
+def esci_dall_attesa():
+    _attesa["torneo"] = None
+
+
+def partita_di_torneo():
+    """La prossima partita abbinata nell'attesa, o None."""
+    try:
+        return _partite_di_torneo.get_nowait()
+    except queue.Empty:
+        return None
+
+
 def _ascolta(token, mio_nome, ferma):
     while not ferma.is_set():
         risposta, errore = rete.apri(
@@ -101,6 +159,8 @@ def _ascolta(token, mio_nome, ferma):
                         _arrivata(evento.get("challenge") or {}, mio_nome)
                     elif tipo in ("challengeCanceled", "challengeDeclined"):
                         _ritirata(evento.get("challenge") or {})
+                    elif tipo == "gameStart":
+                        _partita_iniziata(evento.get("game") or {})
         # Una connessione caduta, o chiusa da ferma, non deve far cadere
         # Orologic: l'ascolto riparte dopo una pausa, se non e' finito.
         except Exception:  # noqa: BLE001, S110
@@ -134,6 +194,7 @@ def ferma():
     _stato.update(thread=None, ferma=None, risposta=None, token=None)
     with _lucchetto:
         _annunciate.clear()
+        _partite_viste.clear()
 
 
 def dimentica(id_sfida):

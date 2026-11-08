@@ -6,7 +6,7 @@ import chess.engine
 import chess.pgn
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
-from .. import config, orologio, tempo, ui
+from .. import config, modello_prompt, orologio, tempo, ui
 from .. import engine as orologic_engine
 from ..board_utils import (
     CustomBoard,
@@ -15,7 +15,7 @@ from ..board_utils import (
     mosse_fino_al_nodo,
 )
 from ..config import _
-from . import analysis_utils, punteggio_motore
+from . import analysis_utils, punteggio_motore, statistiche_motore
 from .constants import MNGAME
 from .utils import suona_annulla
 
@@ -163,10 +163,11 @@ def _aggiorna_punteggio(risultato, game_state):
     leale: dalla posizione iniziale, con un risultato, senza ritiri, senza
     profondita' limitata e senza cambi di forza dopo la prima mossa. Quando
     non conta lo dice, e dice perche', ma solo se l'Elo era in gioco.
+    Restituisce vero se la partita e' entrata nel punteggio.
     """
     forza = orologic_engine.forza
     if forza["tipo"] != "elo" or risultato not in ("1-0", "0-1", "1/2-1/2"):
-        return
+        return False
     motivo = None
     if not game_state.dalla_posizione_iniziale:
         motivo = _("la partita non partiva dalla posizione iniziale.")
@@ -178,7 +179,7 @@ def _aggiorna_punteggio(risultato, game_state):
         motivo = _("la forza del motore e' cambiata durante la partita.")
     if motivo:
         print(_("Partita non conteggiata nel tuo punteggio: {motivo}").format(motivo=motivo))
-        return
+        return False
     if risultato == "1/2-1/2":
         punti = 0.5
     else:
@@ -203,6 +204,26 @@ def _aggiorna_punteggio(risultato, game_state):
         Acusticator.play("orologic_punteggio_scende", volume=config.VOLUME)
     for riga in punteggio_motore.righe_dopo_la_partita(dati, variazione):
         print(riga)
+    return True
+
+
+def _scegli_colore():
+    """La scelta del colore, con la proposta delle statistiche, issue 66.
+
+    Il colore proposto e' quello di INVIO, ESC da' l'altro: senza partite
+    registrate la proposta e' il Bianco, come era INVIO prima.
+    """
+    proposto, motivo = statistiche_motore.colore_proposto(statistiche_motore.leggi())
+    if proposto == chess.WHITE:
+        print(_("Ti propongo il Bianco: {motivo}").format(motivo=motivo))
+        domanda = _("Giochi col bianco (INVIO) o col nero (ESCAPE)?: ")
+    else:
+        print(_("Ti propongo il Nero: {motivo}").format(motivo=motivo))
+        domanda = _("Giochi col nero (INVIO) o col bianco (ESCAPE)?: ")
+    accetta = enter_escape(domanda)
+    if accetta:
+        return proposto
+    return chess.BLACK if proposto == chess.WHITE else chess.WHITE
 
 
 def ParseTimeInput(prompt_text):
@@ -234,24 +255,42 @@ def ParseTimeInput(prompt_text):
         return secondi, incremento
 
 
-def _attendi_mossa(game_state, prompt):
+def _attendi_mossa(game_state, prompt, board, ultima_mossa):
     """Aspetta la mossa dell'umano tenendo d'occhio la bandierina.
 
     E' lo stesso ciclo dell'arbitraggio e di Tempo: restituisce nulla se
     il tempo e' scaduto mentre si scriveva, cosi' la partita si chiude da
-    sola invece di aspettare che l'utente prema un tasto. Quando punto sei
-    ha acceso l'aggiornamento automatico, il prompt riporta anche i due
-    orologi, come nella partita arbitrata.
+    sola invece di aspettare che l'utente prema un tasto. Il prompt viene
+    dal modello dell'utente, come in tutte le modalita': prompt e' il testo
+    di %m, e i tempi compaiono quando punto sei ha acceso l'aggiornamento.
     """
     from ..game_flow import async_arbitration_input
 
+    umano_bianco = game_state.human_color == chess.WHITE
+    avversario = game_state.black_player if umano_bianco else game_state.white_player
+
     def get_prompt():
-        intervallo = getattr(game_state, "refresh_interval", 0)
-        if intervallo <= 0 or game_state.ignore_clock:
-            return prompt
-        bianco = tempo.compatto(max(0.0, game_state.white_remaining))
-        nero = tempo.compatto(max(0.0, game_state.black_remaining))
-        return f"{bianco} {nero} {prompt}"
+        bianco, nero = modello_prompt.tempi_visibili(
+            getattr(game_state, "refresh_interval", 0),
+            game_state.white_remaining,
+            game_state.black_remaining,
+            game_state.ignore_clock,
+        )
+        dati = {
+            "bianco": bianco,
+            "nero": nero,
+            "mio": game_state.human_color,
+            "board": board,
+            "mosse": [ultima_mossa] if ultima_mossa else [],
+            "mossa": prompt.strip(),
+            "pausa": False,
+            "senza_orologio": False,
+            "altri_stati": [],
+            "mosse_al_controllo": None,
+            "inizio": getattr(game_state, "inizio_partita", None),
+            "avversario": avversario,
+        }
+        return modello_prompt.componi(dati) + " "
 
     return async_arbitration_input(game_state, get_prompt)
 
@@ -696,6 +735,16 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     if not engine_instance:
         print(_("Motore non disponibile. Configuralo nelle impostazioni."))
         return game_node
+    # Da una posizione gia' conclusa non si gioca: la partita finirebbe senza
+    # una mossa, e le statistiche conterebbero un risultato mai giocato.
+    if game_node.board().is_game_over(claim_draw=True):
+        print(
+            _(
+                "La posizione e' gia' conclusa: torna a una mossa precedente "
+                "per giocare contro il motore."
+            )
+        )
+        return game_node
 
     print(_("Nuova Partita contro il Motore"))
 
@@ -753,10 +802,14 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     game_state.engine_has_clock = engine_has_clock
     game_state.mosse_iniziali = len(board.move_stack)
     game_state.dalla_posizione_iniziale = board.fen() == chess.STARTING_FEN
+    # Il risultato si legge alla fine dall'intestazione: quello di una
+    # partita caricata o di una .g precedente non deve passare per questo.
+    radice = game_node.root()
+    risultato_precedente = radice.headers.get("Result", "*")
+    radice.headers["Result"] = "*"
 
     # Scelta del colore
-    is_white = enter_escape(_("Vuoi giocare col bianco (INVIO) o col nero (ESCAPE)?: "))
-    game_state.human_color = chess.WHITE if is_white else chess.BLACK
+    game_state.human_color = _scegli_colore()
 
     if game_state.human_color == chess.WHITE:
         game_state.white_remaining = float(user_time)
@@ -803,7 +856,14 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
             if game_state.flag_fallen:
                 print(_("Tempo scaduto! Partita terminata."))
                 game_state.game_over = True
-                res = "0-1" if game_state.active_color == chess.WHITE else "1-0"
+                # Perde chi ha esaurito il tempo, come lo ha visto l'orologio:
+                # il tratto puo' essere passato nel frattempo.
+                bianco_scaduto = getattr(
+                    game_state,
+                    "bianco_scaduto",
+                    game_state.active_color == chess.WHITE,
+                )
+                res = "0-1" if bianco_scaduto else "1-0"
                 if current_node.root():
                     current_node.root().headers["Result"] = res
                 break
@@ -825,7 +885,9 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                 # quindi la bandierina cadeva senza che nessuno se ne
                 # accorgesse e l'aggiornamento automatico di punto sei non
                 # aveva modo di farsi sentire.
-                move_input = _attendi_mossa(game_state, prompt)
+                move_input = _attendi_mossa(
+                    game_state, prompt, board, last_move_san
+                )
 
                 if move_input is None:
                     continue
@@ -1014,6 +1076,10 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
 
                 try:
                     result = engine_instance.play(board, limit)
+                    # La bandierina del motore e' caduta mentre pensava: la
+                    # mossa arriva fuori tempo, e non si gioca.
+                    if game_state.flag_fallen:
+                        continue
 
                     if result.move:
                         if engine_has_clock:
@@ -1077,9 +1143,14 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
 
         if current_node.root():
             current_node.root().headers["Result"] = res
+    if res in ("*", "?") and len(board.move_stack) == game_state.mosse_iniziali:
+        # Interrotta prima di qualunque mossa: l'albero torna com'era.
+        current_node.root().headers["Result"] = risultato_precedente
 
     print(_("Risultato: {r}").format(r=res))
-    _aggiorna_punteggio(res, game_state)
+    forza_finale = dict(orologic_engine.forza)
+    conta_per_elo = _aggiorna_punteggio(res, game_state)
+    statistiche_motore.registra(res, game_state.human_color, forza_finale, conta_per_elo)
     # La scacchiera finale non si stampa piu' da sola: chi la vuole la
     # chiede con punto s, come in tutte le altre modalita'.
     return current_node

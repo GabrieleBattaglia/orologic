@@ -176,6 +176,9 @@ def _ciclo(stato):
             primo_avviso = scaduto and not stato.flag_fallen
             if primo_avviso:
                 bianco_scaduto = stato.white_remaining <= 0
+                # Chi ha esaurito il tempo, per chi assegna il risultato:
+                # il tratto puo' passare prima che lo si legga.
+                stato.bianco_scaduto = bianco_scaduto
                 if bianco_scaduto:
                     stato.white_remaining = 0
                 else:
@@ -197,7 +200,13 @@ def _ciclo(stato):
 
 
 def avvia(stato):
-    """Fa partire l'orologio per la partita indicata e restituisce il thread."""
+    """Fa partire l'orologio per la partita indicata e restituisce il thread.
+
+    Segna anche l'istante d'inizio, che serve all'indicatore %g del prompt,
+    se la partita non ne ha gia' uno, come una partita ripresa.
+    """
+    if not getattr(stato, "inizio_partita", None):
+        stato.inizio_partita = time.time()
     filo = threading.Thread(target=_ciclo, args=(stato,), daemon=True)
     filo.start()
     return filo

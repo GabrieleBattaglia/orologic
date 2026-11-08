@@ -25,7 +25,7 @@ from ..board_utils import (
     testo_valutazione,
 )
 from ..config import _
-from . import game_mode
+from . import game_mode, punteggio_motore, statistiche_motore
 from .constants import MNMAIN
 from .drawing import drawing_menu, verbalize_drawings
 from .engine_handler import ShowStats
@@ -263,6 +263,13 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
             f"{CustomBoard(board.fen())}\n{tratto}\n{board.fen()}\n",
             _("Scacchiera copiata negli appunti, con il tratto e il FEN."),
         )
+    elif cmd == ".gs":
+        # Le statistiche delle partite contro il motore, issue 66.
+        Acusticator.play("orologic_statistiche_motore", volume=config.VOLUME)
+        for riga in statistiche_motore.righe_pagina(
+            statistiche_motore.leggi(), punteggio_motore.leggi()
+        ):
+            print(riga)
     elif cmd in [".csb", ".csn", ".cst"]:
         if sharing_window is None or not sharing_window.is_active():
             print(_("Errore: devi prima avviare la condivisione con il comando .cs"))

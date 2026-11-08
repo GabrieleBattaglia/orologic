@@ -86,7 +86,8 @@ def menu_login(db):
     print(_("Per collegare Orologic a Lichess e' necessario un 'Personal API Token'."))
     print(
         _(
-            "Assicurati di concedere i permessi necessari (leggere il profilo, giocare, puzzle, ecc.)."
+            "Assicurati di concedere i permessi necessari: leggere il profilo, "
+            "giocare, puzzle e, per i tornei, tournament:write."
         )
     )
 
@@ -1965,7 +1966,7 @@ def run():
         elif scelta == "gioca":
             menu_gioca(db)
         elif scelta == "tornei":
-            lichess_tornei.menu_tornei(db, token)
+            lichess_tornei.menu_tornei(db, token, secrets.get("lichess_username"))
         elif scelta == "messaggi":
             print(_("Apertura della casella postale nel browser..."))
             try:

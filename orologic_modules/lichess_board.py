@@ -11,7 +11,7 @@ import time
 import chess
 from GBUtils import Acusticator
 
-from . import board_utils, config, rete, tempo, ui
+from . import board_utils, config, modello_prompt, rete, tempo, ui
 from .config import _
 
 
@@ -284,40 +284,9 @@ def async_spectator_loop(q, game_state):
     buf = []
 
     def get_prompt():
-        wt = getattr(game_state, "white_time", 0)
-        bt = getattr(game_state, "black_time", 0)
-        if getattr(game_state, "started", False) and getattr(
-            game_state, "last_clock_sync", None
-        ):
-            elapsed = time.time() - game_state.last_clock_sync
-            if game_state.board.turn == chess.WHITE:
-                wt = max(0, wt - elapsed)
-            else:
-                bt = max(0, bt - elapsed)
-
-        fmt = tempo.compatto
-
-        refresh_interval = getattr(game_state, "refresh_interval", 1)
-        clock_str = (
-            f"{fmt(wt)} {fmt(bt)} "
-            if (getattr(game_state, "started", False) and refresh_interval > 0)
-            else ""
-        )
-
-        if not game_state.move_history:
-            return "\n" + clock_str + _("Inizio, mossa 0.>")
-        elif len(game_state.move_history) % 2 == 1:
-            return (
-                "\n"
-                + clock_str
-                + f"{(len(game_state.move_history) + 1) // 2}. {game_state.move_history[-1]}>"
-            )
-        else:
-            return (
-                "\n"
-                + clock_str
-                + f"{len(game_state.move_history) // 2}... {game_state.move_history[-1]}>"
-            )
+        # Il corpo viene dal modello dell'utente; la cornice, a capo davanti
+        # e segno di maggiore in fondo, resta quella della partita osservata.
+        return "\n" + _corpo_del_prompt(game_state, None, "") + ">"
 
     def refresh_line():
         ui.pulisci_riga()
@@ -635,6 +604,9 @@ class GamePlayState:
         self.move_times = []
         self.clocks_history = []
         self.clock_increment = 0
+        # Il torneo arena della partita, se c'e': serve al berserk.
+        self.tournament_id = None
+        self.berserk = False
 
     def get_clocks(self):
         w_time = self.white_time
@@ -646,6 +618,83 @@ class GamePlayState:
             else:
                 b_time = max(0, b_time - elapsed)
         return w_time, b_time
+
+
+def mie_mosse(game_state):
+    """Le mosse gia' giocate dall'utente nella partita. Si conta da chi
+    aveva il tratto nella posizione di partenza, che in un torneo tematico o
+    da FEN puo' essere il Nero."""
+    totali = len(game_state.move_history)
+    try:
+        primo = chess.Board(game_state.initial_fen).turn
+    except ValueError:
+        primo = chess.WHITE
+    if game_state.my_color == primo:
+        return (totali + 1) // 2
+    return totali // 2
+
+
+def berserk(game_id, token, game_state):
+    """Il berserk dei tornei arena: dimezza il tempo dell'utente, e una
+    vittoria vale un punto in piu'. Solo in una partita di torneo e prima
+    della prima mossa dell'utente."""
+    if not game_state.started:
+        print(_("La partita non e' ancora collegata: riprova fra un attimo."))
+        return
+    if not game_state.tournament_id:
+        print(_("Il berserk vale solo nelle partite dei tornei arena."))
+        return
+    if game_state.berserk:
+        print(_("Sei gia' in berserk."))
+        return
+    if mie_mosse(game_state) > 0:
+        print(_("Il berserk si dichiara prima della tua prima mossa."))
+        return
+    motivo = []
+    if send_action(game_id, token, "berserk", motivo=motivo):
+        game_state.berserk = True
+        Acusticator.play("orologic_berserk", volume=config.VOLUME)
+        print(
+            _(
+                "Berserk: il tuo tempo e' dimezzato, e se vinci prendi un punto "
+                "in piu'."
+            )
+        )
+    else:
+        Acusticator([400.0, 0.2, 0, config.VOLUME], kind=1)
+        print(
+            _("Berserk non riuscito. {motivo}").format(
+                motivo=motivo[0] if motivo else ""
+            ).strip()
+        )
+
+
+def _corpo_del_prompt(game_state, mio, avversario, stati=()):
+    """Il corpo del prompt di una partita su Lichess, osservata o giocata,
+    dal modello dell'utente. I tempi corrono da soli fra un messaggio e
+    l'altro dello stream, e si vedono solo a partita iniziata con .6 acceso."""
+    bianco, nero = game_state.get_clocks()
+    bianco, nero = modello_prompt.tempi_visibili(
+        getattr(game_state, "refresh_interval", 1),
+        bianco,
+        nero,
+        not getattr(game_state, "started", False),
+    )
+    dati = {
+        "bianco": bianco,
+        "nero": nero,
+        "mio": mio,
+        "board": game_state.board,
+        "mosse": game_state.move_history,
+        "mossa": modello_prompt.mossa_classica(game_state.move_history),
+        "pausa": False,
+        "senza_orologio": False,
+        "altri_stati": list(stati),
+        "mosse_al_controllo": None,
+        "inizio": getattr(game_state, "inizio_partita", None),
+        "avversario": avversario,
+    }
+    return modello_prompt.componi(dati)
 
 
 def _play_worker(url, token, q, stop_event, tentativi=3):
@@ -708,36 +757,9 @@ def async_play_loop(q, game_state):
     buf = []
 
     def get_prompt():
-        wt = getattr(game_state, "white_time", 0)
-        bt = getattr(game_state, "black_time", 0)
-        if getattr(game_state, "started", False) and getattr(
-            game_state, "last_clock_sync", None
-        ):
-            elapsed = time.time() - game_state.last_clock_sync
-            if game_state.board.turn == chess.WHITE:
-                wt = max(0, wt - elapsed)
-            else:
-                bt = max(0, bt - elapsed)
-
-        fmt = tempo.compatto
-
-        refresh_interval = getattr(game_state, "refresh_interval", 1)
-        clock_str = (
-            f"{fmt(wt)} {fmt(bt)} "
-            if (getattr(game_state, "started", False) and refresh_interval > 0)
-            else ""
-        )
-
-        p = ""
-        if not game_state.move_history:
-            p = clock_str + _("Inizio, mossa 0. ")
-        elif len(game_state.move_history) % 2 == 1:
-            p = f"{clock_str}{(len(game_state.move_history) + 1) // 2}. {game_state.move_history[-1]} "
-        else:
-            p = f"{clock_str}{len(game_state.move_history) // 2}... {game_state.move_history[-1]} "
-
-        if hasattr(game_state, "premove") and game_state.premove:
-            p = p.rstrip() + f" [{game_state.premove}] "
+        stati = []
+        if getattr(game_state, "premove", None):
+            stati.append(f"[{game_state.premove}]")
 
         if hasattr(game_state, "opponent_gone") and game_state.opponent_gone:
             claim_in = getattr(game_state, "claim_win_in_seconds", 0)
@@ -747,13 +769,17 @@ def async_play_loop(q, game_state):
                 )
                 rem = max(0, claim_in - elapsed_gone)
                 if rem > 0:
-                    p = p.rstrip() + _(" [RECLAMA TRA {rem}s] ").format(rem=rem)
+                    stati.append(_(" [RECLAMA TRA {rem}s] ").format(rem=rem).strip())
                 else:
-                    p = p.rstrip() + _(" [RECLAMA] ")
+                    stati.append(_(" [RECLAMA] ").strip())
             else:
-                p = p.rstrip() + _(" [RECLAMA] ")
+                stati.append(_(" [RECLAMA] ").strip())
 
-        return p
+        mio = game_state.my_color
+        avversario = (
+            game_state.black_player if mio == chess.WHITE else game_state.white_player
+        )
+        return _corpo_del_prompt(game_state, mio, avversario, stati) + " "
 
     def refresh_line():
         ui.pulisci_riga()
@@ -795,6 +821,9 @@ def async_play_loop(q, game_state):
                 return None
             elif msg.get("type") == "gameFull":
                 game_state.game_id = msg.get("id")
+                if msg.get("createdAt"):
+                    game_state.inizio_partita = msg["createdAt"] / 1000
+                game_state.tournament_id = msg.get("tournamentId")
                 clock_data = msg.get("clock", {})
                 game_state.clock_increment = (
                     int(clock_data.get("increment", 0)) / 1000.0
@@ -819,6 +848,14 @@ def async_play_loop(q, game_state):
                     game_state.my_color = chess.WHITE
                 elif b.get("id") == game_state.my_username.lower():
                     game_state.my_color = chess.BLACK
+                # Riaprendo una partita, il berserk gia' dichiarato da una
+                # parte o dall'altra sta nello stato iniziale.
+                stato_iniziale = msg.get("state") or {}
+                mio_bianco = game_state.my_color == chess.WHITE
+                if stato_iniziale.get("wbrsk" if mio_bianco else "bbrsk"):
+                    game_state.berserk = True
+                if stato_iniziale.get("bbrsk" if mio_bianco else "wbrsk"):
+                    game_state.berserk_avversario = True
 
                 variant = msg.get("variant", {}).get("key", "standard")
                 game_state.variant = variant
@@ -978,6 +1015,19 @@ def async_play_loop(q, game_state):
                 if "btime" in msg and msg.get("btime") is not None:
                     game_state.black_time = int(msg.get("btime")) / 1000.0
                 game_state.last_clock_sync = time.time()
+                # Il berserk dell'avversario, nei tornei arena: lo si dice
+                # una volta, perche' il suo tempo dimezzato cambia la partita.
+                # I campi wbrsk e bbrsk lila li manda, ma la specifica non li
+                # documenta: se mancano, semplicemente non si dice nulla.
+                chiave = "bbrsk" if game_state.my_color == chess.WHITE else "wbrsk"
+                if msg.get(chiave) and not getattr(game_state, "berserk_avversario", False):
+                    game_state.berserk_avversario = True
+                    ui.pulisci_riga()
+                    sys.stdout.write(
+                        _("L'avversario e' andato in berserk: il suo tempo e' dimezzato.")
+                        + "\n"
+                    )
+                    refresh_line()
 
                 status = msg.get("status", "started")
                 if status != "started":
@@ -1344,6 +1394,9 @@ def _gioca_partita(game_id, token, username):
             print(_("Offerta di patta inviata."))
             send_action(game_id, token, "draw/yes")
             continue
+        elif cmd in (".berserk", "berserk"):
+            berserk(game_id, token, game_state)
+            continue
         elif cmd == "takeback":
             print(_("Richiesta di annullamento mossa inviata."))
             send_action(game_id, token, "takeback/yes")
@@ -1386,6 +1439,8 @@ def _gioca_partita(game_id, token, username):
             print(_("resign : Abbandona la partita"))
             print(_("takeback : Chiedi di ritirare la mossa"))
             print(_("claim : Reclama vittoria per abbandono avversario"))
+            if game_state.tournament_id:
+                print(_(".berserk : Dimezza il tuo tempo per un punto in piu', torneo arena"))
             print(_("_[testo] : Invia un messaggio in chat (es. _Ciao)"))
             print(_(".  : Esci dalla visuale (non abbandona la partita)"))
         else:

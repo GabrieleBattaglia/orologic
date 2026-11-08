@@ -38,6 +38,9 @@ def StartTempo(clock_config):
 
     # Inizializzazione dello stato di gioco (senza logiche scacchistiche)
     game_state = board_utils.GameState(clock_config)
+    # In Tempo si scrivono note, non mosse: la scacchiera resta ferma, e il
+    # prompt non deve leggerla.
+    game_state.senza_scacchiera = True
     game_state.white_player = _("Bianco")
     game_state.black_player = _("Nero")
     # Orologio nudo: chi lo usa fa da arbitro, quindi pausa e correzioni.

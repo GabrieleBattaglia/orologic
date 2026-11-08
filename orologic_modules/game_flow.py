@@ -53,6 +53,9 @@ def RiprendiPartita(dati_partita):
     # Il tempo gia' corso prima dell'interruzione viaggia nel salvataggio:
     # la sessione caduta non ha potuto scriverlo nel tachimetro, lo fara'
     # questa a fine partita, insieme al proprio.
+    # L'istante d'inizio torna con la partita, per la durata di %g.
+    if dati_partita.get("inizio_partita"):
+        game_state.inizio_partita = dati_partita["inizio_partita"]
     corsa = dati_partita.get("tempo_corso", 0.0)
     if isinstance(corsa, (int, float)) and corsa > 0:
         game_state.tempo_corso = float(corsa)
@@ -138,6 +141,7 @@ def EseguiAutosave(game_state):
         "chess960": bool(getattr(game_state.board, "chess960", False)),
         "starting_fen": game_state.pgn_game.headers.get("FEN", ""),
         "tempo_corso": getattr(game_state, "tempo_corso", 0.0),
+        "inizio_partita": getattr(game_state, "inizio_partita", None),
     }
     try:
         # Scrittura atomica: un'interruzione a meta' lasciava un file

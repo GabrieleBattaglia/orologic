@@ -1,4 +1,4 @@
-Collaudo di Orologic 8.32.2, le novita' del 6 novembre 2026
+Collaudo di Orologic 8.36.5, le novita' del 6 e dell'8 novembre 2026
 Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, UltraCode)
 Prima: Orologic dai sorgenti, con GBUtils V245 o successiva.
 Prova 1, il PGN di fine partita su Lichess
@@ -83,5 +83,66 @@ Domanda 3: Orologic ti dice che la sfida non c'e' piu'?
 Passo 4: in Sfide in attesa prova ESC su una sfida, poi r su un'altra, poi INVIO.
 Domanda 4: ESC la lascia in attesa, r la rifiuta, INVIO ti porta in partita?
 Domanda 5: il din-don ti piace?
+Esito:
+Prova 13, le statistiche contro il motore, issue 66
+Passo 1: in Easyfish scrivi .gs prima di aver giocato.
+Domanda 1: senti che non ci sono partite registrate, e la riga sul punteggio Elo?
+Passo 2: scrivi .g e scegli una modalita' di tempo.
+Domanda 2: prima della domanda sul colore senti quale colore ti propongo e perche'?
+Domanda 3: INVIO ti da' il colore proposto ed ESC l'altro?
+Passo 3: gioca qualche partita breve, con colori diversi, una con .e1500 e una con .f2, fino al risultato.
+Domanda 4: dopo ogni partita la proposta del colore cambia secondo la regola, meno partite e poi piu' sconfitte?
+Passo 4: scrivi .gs.
+Domanda 5: totali, colori, partite al mese con due decimali, ultimi 30 giorni, serie e punteggio Elo tornano con quello che hai giocato?
+Domanda 6: il suono di .gs ti piace?
+Esito:
+Prova 14, il prompt componibile, issue 61
+Passo 1: nel menu principale apri impostazioni e senti la voce Prompt di gioco.
+Domanda 1: l'etichetta dice il modello in uso, %b %n %m?
+Passo 2: scegli la voce, ascolta catalogo e anteprima, scrivi %x e INVIO.
+Domanda 2: ti dice che %x e' sconosciuto e ti fa riscrivere?
+Passo 3: scrivi %i %a %m %v e conferma con INVIO.
+Domanda 3: anteprima e suono di salvataggio sono chiari?
+Passo 4: gioca contro il motore con .6 acceso, poi arbitra una partita con .6 acceso e mettila in pausa con .p.
+Domanda 4: contro il motore senti i due tempi, il tuo prima, e il materiale; in arbitraggio i tempi tuoi e dell'avversario spariscono senza lasciare buchi, e la pausa chiude la mossa fra quadre?
+Passo 5: spegni .6.
+Domanda 5: i tempi spariscono dal prompt?
+Passo 6: torna nelle impostazioni, scegli Prompt di gioco e scrivi un asterisco.
+Domanda 6: torna il predefinito, con il suo suono, e il prompt e' identico a quello di prima?
+Esito:
+Prova 15, i tornei arena giocati, issue 57
+Prima: un token con il permesso tournament:write; un torneo arena rapid in arrivo o in corso su Lichess.
+Passo 1: con il token vecchio, se non ha il permesso, prova a iscriverti.
+Domanda 1: ti dice a parole che manca il permesso e come creare il token nuovo?
+Passo 2: apri la scheda di un torneo blitz.
+Domanda 2: non c'e' Iscriviti, e una riga spiega perche'?
+Passo 3: con il token nuovo iscriviti a un torneo rapid.
+Domanda 3: senti il suono dell'iscrizione ed entri nell'attesa, con la riga che si riscrive ogni secondo?
+Domanda 4: con c, s e ? ottieni classifica, scheda e aiuto, e la riga leggibile in braille?
+Passo 4: aspetta l'abbinamento.
+Domanda 5: senti il richiamo, la riga con l'avversario, e la partita si apre da sola?
+Passo 5: nella partita scrivi .berserk prima della tua prima mossa, poi riprova dopo averla giocata.
+Domanda 6: la prima volta il tempo si dimezza con il suo suono, la seconda ti dice che e' tardi?
+Passo 6: finisci la partita.
+Domanda 7: dopo le domande sui tempi torni nell'attesa, e Lichess ti abbina di nuovo?
+Passo 7: premi ESC nell'attesa a torneo iniziato.
+Domanda 8: ti dice che sei in pausa, con il suono del ritiro, e su Lichess risulti in pausa?
+Passo 8: rientra con Entra nell'attesa e resta fino alla fine del torneo.
+Domanda 9: alla fine senti l'arpeggio e il tuo posto?
+Domanda 10: i suoni di iscrizione, abbinamento, berserk, ritiro e fine torneo ti piacciono?
+Esito:
+Prova 16, tre correzioni della partita contro il motore
+Passo 1: in Easyfish gioca .g a orologio, con 0:05 al motore e tempo abbondante a te, e lascia che il motore vada in zeitnot.
+Domanda 1: quando cade la bandierina del motore, il risultato da' la vittoria a te?
+Passo 2: finisci una partita .g col matto, rispondi no all'analisi e scrivi di nuovo .g.
+Domanda 2: ti dice che la posizione e' conclusa, senza cominciare una partita?
+Passo 3: gioca qualche mossa con .g e interrompi con Ctrl+C mentre il motore pensa, poi scrivi .gs.
+Domanda 3: la partita interrotta non compare fra quelle registrate?
+Esito:
+Prova 17, il manuale, issue 65
+Passo 1: apri il manuale dal menu principale.
+Domanda 1: l'intestazione dice la versione 8.36.5, e l'indice in testa ti porta ai capitoli?
+Passo 2: apri la pagina github . com/GabrieleBattaglia/orologic nel browser.
+Domanda 2: c'e' il README, e i suoi collegamenti aprono manuale e registro come pagine web?
 Esito:
 Difficolta' incontrate e note libere:

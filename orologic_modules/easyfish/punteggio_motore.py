@@ -87,11 +87,18 @@ def riga_attuale(dati):
 
 def righe_dopo_la_partita(dati, variazione):
     """Le righe da dire dopo una partita conteggiata."""
-    fatti = (dati["vinte"] + dati["patte"] / 2) / dati["partite"] * 100
     return [
         _("Punteggio contro il motore: {p}, {v:+d}.").format(
             p=dati["punteggio"], v=variazione
         ),
+        *righe_riepilogo(dati),
+    ]
+
+
+def righe_riepilogo(dati):
+    """Partite, esiti, massimo e minimo: dopo la partita e nella pagina di .gs."""
+    fatti = (dati["vinte"] + dati["patte"] / 2) / dati["partite"] * 100
+    return [
         _("Partite {n}: vinte {w}, patte {d}, perse {l}, punti {pct:.0f}%.").format(
             n=dati["partite"],
             w=dati["vinte"],
