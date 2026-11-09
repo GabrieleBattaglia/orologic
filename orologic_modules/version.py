@@ -1,5 +1,5 @@
 # Orologic: numero di versione e date.
-# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Fable 5.1, modalita' auto).
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
 
 import datetime
 
@@ -9,4 +9,4 @@ VERSION = "8.39.2"
 # La data va aggiornata insieme al numero di versione: la schermata di
 # benvenuto ne calcola l'eta' e, se resta indietro, mente.
 RELEASE_DATE = datetime.datetime(2026, 11, 9, 19, 45)
-PROGRAMMER = "Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, UltraCode)"
+PROGRAMMER = "Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto)"
