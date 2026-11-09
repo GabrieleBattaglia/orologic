@@ -273,8 +273,8 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
             print(
                 _(
                     "Partita a punteggio accesa: alla prima partita scegli l'Elo "
-                    "del motore, poi il tuo Elo e il suo si spostano insieme, "
-                    "partita dopo partita, e la forza resta ferma."
+                    "del motore, poi il motore si adatta al tuo Elo, partita "
+                    "dopo partita, con un margine di caso, e la forza resta ferma."
                 )
             )
         else:

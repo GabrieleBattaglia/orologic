@@ -1,6 +1,8 @@
 # Orologic, Easyfish: la partita contro il motore.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
+import random
+
 import chess
 import chess.engine
 import chess.pgn
@@ -217,7 +219,7 @@ def _prepara_la_forza(engine_instance, game_state):
         game_state.elo_minimo = getattr(opzione, "min", None) or 1320
         game_state.elo_massimo = getattr(opzione, "max", None) or 3190
         # L'Elo del motore si chiede solo alla prima partita a punteggio:
-        # dopo il motore segue l'utente, partita dopo partita.
+        # dopo il motore si adatta all'utente, partita dopo partita.
         if punteggio_motore.leggi() is None:
             elo = _chiedi_elo_del_motore(engine_instance, ea["elo_motore"])
         else:
@@ -252,9 +254,9 @@ def _prepara_la_forza(engine_instance, game_state):
         print(
             _(
                 "Partita a punteggio: il tuo Elo, ora {p}, contro il motore a "
-                "{e}. A fine partita vi spostate degli stessi punti; la forza "
-                "resta ferma, e ritirare una mossa toglie la partita dal "
-                "conteggio."
+                "{e}. A fine partita il motore si adatta al tuo Elo, con un "
+                "margine di caso; la forza resta ferma, e ritirare una mossa "
+                "toglie la partita dal conteggio."
             ).format(p=dati["punteggio"], e=orologic_engine.forza["valore"])
         )
     else:
@@ -262,7 +264,7 @@ def _prepara_la_forza(engine_instance, game_state):
             _(
                 "Partita a punteggio, la prima: a fine partita ti chiedo il "
                 "punteggio da cui partire, poi si aggiorna contro il motore a "
-                "{e}, che da li' in avanti si sposta con te. La forza resta "
+                "{e}, che da li' in avanti si adatta al tuo Elo. La forza resta "
                 "ferma, e ritirare una mossa toglie la partita dal conteggio."
             ).format(e=orologic_engine.forza["valore"])
         )
@@ -366,23 +368,37 @@ def _aggiorna_punteggio(risultato, game_state):
     return dati, variazione
 
 
-def _sposta_il_motore(game_state, elo, variazione):
-    """Il motore della partita a punteggio segue l'utente: si sposta degli
-    stessi punti, entro i limiti del suo Elo, e lo si dice. Restituisce
-    l'Elo nuovo, che vale dalla partita seguente."""
-    nuovo = max(game_state.elo_minimo, min(game_state.elo_massimo, elo + variazione))
+# Il margine di caso del motore che si adatta, deciso con Gabriele il 9
+# novembre 2026: fino a 50 punti in piu' o in meno del tuo Elo.
+MARGINE_DI_CASO = 50
+
+
+def _adatta_il_motore(game_state, elo_utente):
+    """Il motore della partita a punteggio si adatta all'utente: per la
+    partita seguente prende il suo Elo, piu' o meno un valore a caso fino a
+    MARGINE_DI_CASO, entro i limiti del motore. Si dice solo l'Elo nuovo,
+    non quanto c'e' di caso. Restituisce l'Elo nuovo."""
+    voluto = elo_utente + random.randint(-MARGINE_DI_CASO, MARGINE_DI_CASO)
+    nuovo = max(game_state.elo_minimo, min(game_state.elo_massimo, voluto))
     punteggio_motore.salva_ea(elo_motore=nuovo)
-    if nuovo == elo:
-        if variazione:
-            print(
-                _("Il motore resta a Elo {n}: e' il suo limite.").format(n=nuovo)
-            )
-        else:
-            print(_("Il motore resta a Elo {n}.").format(n=nuovo))
+    if nuovo == game_state.elo_minimo and voluto < nuovo:
+        print(
+            _(
+                "Il motore si adatta: alla prossima partita gioca a Elo {n}, il "
+                "suo minimo."
+            ).format(n=nuovo)
+        )
+    elif nuovo == game_state.elo_massimo and voluto > nuovo:
+        print(
+            _(
+                "Il motore si adatta: alla prossima partita gioca a Elo {n}, il "
+                "suo massimo."
+            ).format(n=nuovo)
+        )
     else:
         print(
-            _("Il motore ti segue: passa a Elo {n}, {v:+d}.").format(
-                n=nuovo, v=nuovo - elo
+            _("Il motore si adatta: alla prossima partita gioca a Elo {n}.").format(
+                n=nuovo
             )
         )
     return nuovo
@@ -1335,7 +1351,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     if esito_elo:
         dati_elo, variazione = esito_elo
         elo_utente = dati_elo["punteggio"]
-        elo_motore = _sposta_il_motore(game_state, forza_finale["valore"], variazione)
+        elo_motore = _adatta_il_motore(game_state, elo_utente)
     statistiche_motore.registra(
         res,
         game_state.human_color,
