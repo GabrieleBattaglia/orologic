@@ -66,11 +66,38 @@ LIVELLI_LICHESS = {
 LIVELLI_APPROSSIMATI = (1, 2, 3)
 
 
+def livello_da_elo(elo):
+    """Il livello di abilita' che Stockfish ricava da UCI_Elo, con la sua
+    stessa formula, in search.h: fra 0 e 19, da 1320 a 3190 punti."""
+    e = (elo - 1320) / (3190 - 1320)
+    return min(19.0, max(0.0, ((37.2473 * e - 40.8525) * e + 22.2943) * e - 0.311438))
+
+
+def profondita_della_forza(forza):
+    """La profondita' a cui Stockfish sceglie la mossa per quella forza, o
+    None per la forza piena.
+
+    Con un livello sotto il 20, o con un Elo, Stockfish sceglie la mossa,
+    peggiorata di proposito, quando la ricerca arriva a 1 piu' il livello, e
+    il tempo in piu' non la cambia: serve solo a consumare processore.
+    Fermarlo li' da' la forza dichiarata nel tempo minimo, misurato il 9
+    novembre 2026 sul Gigante con un solo thread: un centesimo di secondo
+    fino a 2500 punti, meno di un secondo a 3190.
+    """
+    if forza["tipo"] == "elo":
+        return 1 + int(livello_da_elo(forza["valore"]))
+    if forza["tipo"] == "livello" and forza["valore"] < 20:
+        return 1 + int(forza["valore"])
+    return None
+
+
 def _limiti_della_forza():
     """Profondita' e secondi per mossa che la forza scelta impone al motore.
 
     La profondita' di .p vale sempre; un livello di Lichess porta anche la
-    sua, se .p non ne ha messa una, e il suo tempo per mossa.
+    sua, se .p non ne ha messa una, e il suo tempo per mossa. Con un livello
+    o un Elo il motore si ferma alla profondita' in cui sceglie la mossa,
+    se .p non lo ferma prima: il tempo scelto dall'utente resta un tetto.
     """
     forza = orologic_engine.forza
     profondita = forza["profondita"]
@@ -79,6 +106,9 @@ def _limiti_della_forza():
         _abilita, profondita_livello, tempo = LIVELLI_LICHESS[forza["valore"]]
         if profondita is None:
             profondita = profondita_livello
+    scelta = profondita_della_forza(forza)
+    if scelta is not None:
+        profondita = scelta if profondita is None else min(profondita, scelta)
     return profondita, tempo
 
 
