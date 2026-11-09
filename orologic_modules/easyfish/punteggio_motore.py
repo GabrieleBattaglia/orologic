@@ -19,11 +19,58 @@ from ..config import _
 
 CHIAVE = "punteggio_contro_il_motore"
 PUNTEGGIO_DI_PARTENZA = 1500
+# La partita a punteggio, comando .ea: accesa o spenta, e l'ultimo Elo dato
+# al motore, che si propone alla partita seguente.
+CHIAVE_EA = "partita_a_punteggio"
+ELO_MOTORE_PREDEFINITO = 1500
+# La forza dell'ultima partita a punteggio spento, che torna alla seguente
+# anche dopo aver chiuso Easyfish: prima il motore ripartiva al massimo.
+CHIAVE_FORZA = "forza_del_motore"
 
 
 def leggi():
     """I dati del punteggio, o None se non si e' ancora giocata una partita."""
     return storage.LoadDB().get(CHIAVE)
+
+
+def stato_ea():
+    """La partita a punteggio: attiva e Elo del motore."""
+    dati = storage.LoadDB().get(CHIAVE_EA) or {}
+    try:
+        elo = int(dati.get("elo_motore") or ELO_MOTORE_PREDEFINITO)
+    except (TypeError, ValueError):
+        elo = ELO_MOTORE_PREDEFINITO
+    return {"attiva": bool(dati.get("attiva")), "elo_motore": elo}
+
+
+def salva_ea(**campi):
+    """Aggiorna lo stato della partita a punteggio, attiva o elo_motore."""
+
+    def modifica(db):
+        dati = dict(db.get(CHIAVE_EA) or {})
+        dati.update(campi)
+        db[CHIAVE_EA] = dati
+
+    storage.UpdateDB(modifica)
+
+
+def forza_ricordata():
+    """La forza dell'ultima partita a punteggio spento, o None."""
+    forza = storage.LoadDB().get(CHIAVE_FORZA)
+    if isinstance(forza, dict) and forza.get("tipo") in ("livello", "elo", "lichess"):
+        return forza
+    return None
+
+
+def ricorda_forza(forza):
+    def modifica(db):
+        db[CHIAVE_FORZA] = {
+            "tipo": forza.get("tipo"),
+            "valore": forza.get("valore"),
+            "profondita": forza.get("profondita"),
+        }
+
+    storage.UpdateDB(modifica)
 
 
 def atteso(mio, avversario):

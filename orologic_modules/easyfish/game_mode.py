@@ -38,13 +38,13 @@ class EasyfishGameState:
         self.white_player = _("Bianco")
         self.black_player = _("Nero")
         self.refresh_interval = 0
-        # Per il punteggio contro il motore: una partita conta solo se
-        # comincia dalla posizione iniziale, senza ritiri di mosse e senza
-        # cambi di forza dopo la prima mossa.
+        # Per il punteggio contro il motore: una partita conta solo con la
+        # partita a punteggio accesa, se comincia dalla posizione iniziale e
+        # senza ritiri di mosse.
         self.mosse_iniziali = 0
         self.dalla_posizione_iniziale = False
         self.ritiri = 0
-        self.forza_cambiata = False
+        self.a_punteggio = False
 
 
 # Gli otto livelli di Lichess, dalla tabella di fishnet, il programma che fa
@@ -98,11 +98,129 @@ def descrivi_forza():
     return riga
 
 
-def _segna_cambio_di_forza(board, game_state):
-    """Un cambio di forza dopo la prima mossa toglie la partita dal punteggio:
-    il motore avrebbe giocato una parte della partita a un'altra forza."""
-    if len(board.move_stack) > game_state.mosse_iniziali:
-        game_state.forza_cambiata = True
+def comando_di_forza(cmd):
+    """Vero per .s, .e, .f e .p seguiti da un numero: i comandi che cambiano
+    la forza del motore in partita."""
+    return cmd[:2] in (".s", ".e", ".f", ".p") and cmd[2:].strip().isdigit()
+
+
+def _forza_bloccata(cmd, game_state):
+    """Con la partita a punteggio la forza non si cambia: lo si dice e si
+    restituisce vero."""
+    if not (game_state.a_punteggio and comando_di_forza(cmd)):
+        return False
+    Acusticator([400.0, 0.2, 0, config.VOLUME], kind=1)
+    print(
+        _(
+            "La partita e' a punteggio: la forza del motore resta quella scelta. "
+            "Per cambiarla, spegni .ea dal prompt di Easyfish."
+        )
+    )
+    return True
+
+
+def applica_forza(engine_instance, forza):
+    """Porta il motore alla forza indicata, livello, Elo o livello di
+    Lichess, con la sua profondita'. Restituisce vero se ci e' riuscito."""
+    tipo, valore = forza.get("tipo"), forza.get("valore")
+    try:
+        if tipo == "elo":
+            if "UCI_Elo" not in engine_instance.options:
+                return False
+            engine_instance.configure({"UCI_LimitStrength": True})
+            engine_instance.configure({"UCI_Elo": int(valore)})
+        else:
+            if tipo == "lichess":
+                abilita = LIVELLI_LICHESS[int(valore)][0]
+            else:
+                abilita = int(valore)
+            if "UCI_LimitStrength" in engine_instance.options:
+                engine_instance.configure({"UCI_LimitStrength": False})
+            engine_instance.configure({"Skill Level": abilita})
+    # Un motore che rifiuta un valore lascia la forza com'era.
+    except Exception:  # noqa: BLE001
+        return False
+    orologic_engine.forza.update(
+        tipo=tipo, valore=int(valore), profondita=forza.get("profondita")
+    )
+    return True
+
+
+def _chiedi_elo_del_motore(engine_instance, proposto):
+    """L'Elo del motore per la partita a punteggio, entro i limiti che il
+    motore dichiara: INVIO tiene quello dell'ultima volta."""
+    opzione = engine_instance.options["UCI_Elo"]
+    minimo = getattr(opzione, "min", None) or 1320
+    massimo = getattr(opzione, "max", None) or 3190
+    proposto = max(minimo, min(massimo, proposto))
+    return dgt(
+        _("Elo del motore per questa partita, da {a} a {b} (INVIO per {p}): ").format(
+            a=minimo, b=massimo, p=proposto
+        ),
+        kind="i",
+        imin=minimo,
+        imax=massimo,
+        default=proposto,
+    )
+
+
+def _prepara_la_forza(engine_instance, game_state):
+    """Prima della partita: con .ea acceso si sceglie l'Elo del motore, con
+    .ea spento torna la forza dell'ultima volta. Poi la riga che dice che
+    cosa succedera' a fine partita."""
+    ea = punteggio_motore.stato_ea()
+    game_state.a_punteggio = ea["attiva"]
+    if ea["attiva"] and "UCI_Elo" not in engine_instance.options:
+        print(
+            _(
+                "Il motore non accetta un Elo: la partita a punteggio non e' "
+                "possibile, e questa partita non conta."
+            )
+        )
+        game_state.a_punteggio = False
+    if game_state.a_punteggio:
+        elo = _chiedi_elo_del_motore(engine_instance, ea["elo_motore"])
+        applica_forza(engine_instance, {"tipo": "elo", "valore": elo, "profondita": None})
+        punteggio_motore.salva_ea(elo_motore=elo)
+    else:
+        ricordata = punteggio_motore.forza_ricordata()
+        if ricordata:
+            applica_forza(engine_instance, ricordata)
+    print(descrivi_forza())
+    if not game_state.a_punteggio:
+        print(
+            _(
+                "Partita a punteggio spenta: questa partita non entra nel tuo "
+                "Elo contro il motore. La accendi con .ea dal prompt di Easyfish."
+            )
+        )
+        return
+    if not game_state.dalla_posizione_iniziale:
+        print(
+            _(
+                "Partita a punteggio accesa, ma la partita non parte dalla "
+                "posizione iniziale: non entrera' nel tuo Elo."
+            )
+        )
+        return
+    dati = punteggio_motore.leggi()
+    if dati:
+        print(
+            _(
+                "Partita a punteggio: a fine partita il tuo Elo, ora {p}, si "
+                "aggiorna contro il motore a {e}. La forza resta ferma, e "
+                "ritirare una mossa toglie la partita dal conteggio."
+            ).format(p=dati["punteggio"], e=orologic_engine.forza["valore"])
+        )
+    else:
+        print(
+            _(
+                "Partita a punteggio, la prima: a fine partita ti chiedo il "
+                "punteggio da cui partire, poi si aggiorna contro il motore a "
+                "{e}. La forza resta ferma, e ritirare una mossa toglie la "
+                "partita dal conteggio."
+            ).format(e=orologic_engine.forza["valore"])
+        )
 
 
 def _imposta_livello_lichess(cmd, board, game_state, engine_instance):
@@ -123,7 +241,6 @@ def _imposta_livello_lichess(cmd, board, game_state, engine_instance):
         print(_("Errore durante l'impostazione del livello: {e}").format(e=e))
         return
     orologic_engine.forza.update(tipo="lichess", valore=livello)
-    _segna_cambio_di_forza(board, game_state)
     Acusticator.play("orologic_forza_lichess", volume=config.VOLUME)
     print(
         _(
@@ -148,7 +265,6 @@ def _imposta_profondita(cmd, board, game_state):
         return
     profondita = int(cmd[2:]) or None
     orologic_engine.forza["profondita"] = profondita
-    _segna_cambio_di_forza(board, game_state)
     Acusticator.play("orologic_profondita", volume=config.VOLUME)
     if profondita:
         print(_("Profondita' massima del motore: {d} semimosse.").format(d=profondita))
@@ -159,24 +275,21 @@ def _imposta_profondita(cmd, board, game_state):
 def _aggiorna_punteggio(risultato, game_state):
     """Alla fine della partita, il punteggio dell'utente contro il motore.
 
-    Conta solo contro un motore impostato con .e, e solo se la partita e'
-    leale: dalla posizione iniziale, con un risultato, senza ritiri, senza
-    profondita' limitata e senza cambi di forza dopo la prima mossa. Quando
-    non conta lo dice, e dice perche', ma solo se l'Elo era in gioco.
+    Conta solo con la partita a punteggio accesa, il comando .ea, dove il
+    motore ha l'Elo scelto prima della partita e la forza non si cambia; e
+    solo se la partita e' leale: dalla posizione iniziale, con un risultato
+    e senza ritiri. Quando non conta lo dice, e dice perche'. Con .ea spento
+    non conta mai, e la riga prima della partita lo ha gia' detto.
     Restituisce vero se la partita e' entrata nel punteggio.
     """
     forza = orologic_engine.forza
-    if forza["tipo"] != "elo" or risultato not in ("1-0", "0-1", "1/2-1/2"):
+    if not game_state.a_punteggio or risultato not in ("1-0", "0-1", "1/2-1/2"):
         return False
     motivo = None
     if not game_state.dalla_posizione_iniziale:
         motivo = _("la partita non partiva dalla posizione iniziale.")
     elif game_state.ritiri:
         motivo = _("hai ritirato delle mosse.")
-    elif forza["profondita"]:
-        motivo = _("la profondita' del motore era limitata.")
-    elif game_state.forza_cambiata:
-        motivo = _("la forza del motore e' cambiata durante la partita.")
     if motivo:
         print(_("Partita non conteggiata nel tuo punteggio: {motivo}").format(motivo=motivo))
         return False
@@ -328,6 +441,8 @@ def _comandi_informativi(cmd, board, game_state, engine_instance):
     """
     if ui.comandi_orologio(cmd, game_state):
         return True
+    if _forza_bloccata(cmd, game_state):
+        return True
     if ui.comandi_lettura(cmd, game_state, board=board):
         return True
     elif cmd == ".a":
@@ -351,7 +466,6 @@ def _comandi_informativi(cmd, board, game_state, engine_instance):
                     pass
                 engine_instance.configure({"Skill Level": new_skill})
                 orologic_engine.forza.update(tipo="livello", valore=new_skill)
-                _segna_cambio_di_forza(board, game_state)
                 Acusticator(["g5", 0.05, 0, config.VOLUME], kind=1)
                 print(
                     _(
@@ -826,14 +940,9 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
 
     _nomi_dei_contendenti(game_state, game_node, engine_instance)
 
-    # La forza che il motore ha davvero adesso: prima si leggeva il livello
-    # scritto nelle impostazioni, anche quando .e lo aveva cambiato nella
-    # partita precedente.
-    print(descrivi_forza())
-    if orologic_engine.forza["tipo"] == "elo":
-        dati = punteggio_motore.leggi()
-        if dati:
-            print(punteggio_motore.riga_attuale(dati))
+    # La forza che il motore ha davvero adesso, e che cosa succedera' a fine
+    # partita: la partita a punteggio, o la forza dell'ultima volta.
+    _prepara_la_forza(engine_instance, game_state)
     # Forza attivazione WDL dal motore per l'analisi e gioco
     try:
         engine_instance.configure({"UCI_ShowWDL": True})
@@ -931,6 +1040,8 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                             board=board,
                             mosse=mosse_fino_al_nodo(current_node),
                         )
+                    elif _forza_bloccata(cmd, game_state):
+                        pass
                     elif cmd.startswith(".e"):
                         try:
                             elo_part = cmd[2:].strip()
@@ -953,7 +1064,6 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                                 engine_instance.configure({"UCI_LimitStrength": True})
                                 engine_instance.configure({"UCI_Elo": new_elo})
                                 orologic_engine.forza.update(tipo="elo", valore=new_elo)
-                                _segna_cambio_di_forza(board, game_state)
                                 Acusticator(["b5", 0.05, 0, config.VOLUME], kind=1)
                                 print(
                                     _(
@@ -1149,6 +1259,9 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
 
     print(_("Risultato: {r}").format(r=res))
     forza_finale = dict(orologic_engine.forza)
+    if not game_state.a_punteggio:
+        # La prossima partita, anche dopo aver chiuso Easyfish, riparte da qui.
+        punteggio_motore.ricorda_forza(forza_finale)
     conta_per_elo = _aggiorna_punteggio(res, game_state)
     statistiche_motore.registra(res, game_state.human_color, forza_finale, conta_per_elo)
     # La scacchiera finale non si stampa piu' da sola: chi la vuole la

@@ -16,6 +16,10 @@ una modalita' non ha senso, come il tuo tempo nell'arbitraggio, resta vuoto,
 e con lui sparisce uno spazio accanto, cosi' il prompt non si riempie di
 buchi. I tempi compaiono solo con l'aggiornamento automatico acceso da .6.
 
+Gli indicatori che hanno una forma estesa, a parole, la danno con una v dopo
+la lettera: %b scrive 01:14:43, %bv scrive 1 ora, 14 minuti e 43 secondi.
+La vogliono gli utenti che ascoltano senza display braille.
+
 Gli stati, pausa, senza orologio, premossa e RECLAMA, hanno il codice %s per
 decidere dove compaiono; se il modello non lo contiene compaiono da soli,
 dove comparivano prima che il prompt fosse componibile.
@@ -63,6 +67,10 @@ def catalogo():
 
 def lettere():
     return {lettera for lettera, _descrizione in catalogo()}
+
+
+# Gli indicatori con la forma estesa, che si chiede con una v dopo la lettera.
+ESTESE = ("b", "n", "i", "a", "d", "g", "t", "u", "v")
 
 
 def modello():
@@ -113,7 +121,12 @@ def analizza(testo):
             if letterale:
                 pezzi.append(("testo", "".join(letterale)))
                 letterale = []
-            pezzi.append(("codice", seguente.lower()))
+            codice = seguente.lower()
+            dopo = testo[indice + 2] if indice + 2 < len(testo) else ""
+            if codice in ESTESE and dopo.lower() == "v":
+                codice += "v"
+                indice += 1
+            pezzi.append(("codice", codice))
         else:
             sconosciuti.append("%" + seguente)
             letterale.append("%" + seguente)
@@ -137,6 +150,44 @@ def _unisci(valori):
         elif prima and prima[0] == "testo" and prima[1].endswith(" "):
             prima[1] = prima[1][:-1]
     return "".join(valore for _tipo, valore in parti)
+
+
+def _differenza_estesa(bianco, nero):
+    scarto = bianco - nero
+    secondi = int(abs(scarto))
+    if not secondi:
+        return _("orologi pari")
+    if scarto > 0:
+        return _("vantaggio del Bianco: {t}").format(t=tempo.parlato(secondi))
+    return _("vantaggio del Nero: {t}").format(t=tempo.parlato(secondi))
+
+
+def _materiale_esteso(board):
+    from .board_utils import CalculateMaterial
+
+    bianco, nero = CalculateMaterial(board)
+    scarto = bianco - nero
+    if not scarto:
+        return _("materiale pari")
+    if scarto > 0:
+        return _("vantaggio del Bianco: {n}").format(n=scarto)
+    return _("vantaggio del Nero: {n}").format(n=-scarto)
+
+
+def _mossa_descritta(board, mosse):
+    """L'ultima mossa a parole, come la dice Orologic; dove la scacchiera non
+    la conosce, come in Tempo, resta quella scritta."""
+    if board is not None and board.move_stack:
+        from .board_utils import DescribeMove
+
+        prima = board.copy()
+        mossa = prima.pop()
+        try:
+            return DescribeMove(mossa, prima)
+        # Una descrizione mancata non deve togliere il prompt.
+        except Exception:  # noqa: BLE001, S110
+            pass
+    return mosse[-1] if mosse else ""
 
 
 def _differenza(bianco, nero):
@@ -166,40 +217,51 @@ def _stati(dati):
     return " ".join(stati)
 
 
-def _valore(lettera, dati):
-    """Il testo di un indicatore; stringa vuota dove non ha senso."""
+def _valore(codice, dati):
+    """Il testo di un indicatore; stringa vuota dove non ha senso. Un codice
+    di due lettere, con la v in fondo, chiede la forma estesa."""
+    lettera, esteso = codice[0], len(codice) == 2
+    durata = tempo.parlato if esteso else tempo.compatto
     board = dati.get("board")
     bianco, nero = dati.get("bianco"), dati.get("nero")
     mio = dati.get("mio")
     tempi = bianco is not None and nero is not None
     if lettera == "b":
-        return tempo.compatto(max(0.0, bianco)) if tempi else ""
+        return durata(max(0.0, bianco)) if tempi else ""
     if lettera == "n":
-        return tempo.compatto(max(0.0, nero)) if tempi else ""
+        return durata(max(0.0, nero)) if tempi else ""
     if lettera in ("i", "a"):
         if not tempi or mio is None:
             return ""
         io_bianco = mio == chess.WHITE
         if lettera == "a":
             io_bianco = not io_bianco
-        return tempo.compatto(max(0.0, bianco if io_bianco else nero))
+        return durata(max(0.0, bianco if io_bianco else nero))
     if lettera == "d":
-        return _differenza(bianco, nero) if tempi else ""
+        if not tempi:
+            return ""
+        return _differenza_estesa(bianco, nero) if esteso else _differenza(bianco, nero)
     if lettera == "m":
         return dati.get("mossa", "")
     if lettera == "c":
         return str(board.fullmove_number) if board is not None else ""
     if lettera == "u":
         mosse = dati.get("mosse") or []
+        if esteso:
+            return _mossa_descritta(board, mosse)
         return mosse[-1] if mosse else ""
     if lettera == "v":
-        return _materiale(board) if board is not None else ""
+        if board is None:
+            return ""
+        return _materiale_esteso(board) if esteso else _materiale(board)
     if lettera == "t":
         # In Tempo la scacchiera non segue la partita: il tratto lo dice la
         # modalita', con la chiave tratto.
         tratto = board.turn if board is not None else dati.get("tratto")
         if tratto is None:
             return ""
+        if esteso:
+            return _("Bianco") if tratto == chess.WHITE else _("Nero")
         return _("B") if tratto == chess.WHITE else _("N")
     if lettera == "r":
         return str(board.halfmove_clock // 2) if board is not None else ""
@@ -210,7 +272,7 @@ def _valore(lettera, dati):
         inizio = dati.get("inizio")
         if not inizio:
             return ""
-        return tempo.compatto(max(0.0, dati.get("adesso", time.time()) - inizio))
+        return durata(max(0.0, dati.get("adesso", time.time()) - inizio))
     if lettera == "o":
         return dati.get("avversario") or ""
     if lettera == "s":
@@ -312,6 +374,12 @@ def imposta():
     print(_("Prompt di gioco. Ogni codice e' il percento seguito da una lettera:"))
     for lettera, descrizione in catalogo():
         print(f"%{lettera} {descrizione}")
+    print(
+        _(
+            "Con una v dopo la lettera, la forma estesa, a parole: %bv %nv %iv "
+            "%av %dv %gv %tv %uv %vv."
+        )
+    )
     print(_("%% scrive un percento; il resto del modello e' testo libero."))
     attuale = modello()
     print(_("Modello attuale: {m}").format(m=attuale))

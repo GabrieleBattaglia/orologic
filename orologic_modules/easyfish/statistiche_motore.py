@@ -261,7 +261,14 @@ def righe_pagina(partite, dati_elo, adesso=None):
         righe.append(
             _(
                 "Punteggio Elo contro il motore: nessuna partita, contano quelle "
-                "leali contro un motore impostato con .e."
+                "giocate con la partita a punteggio accesa, il comando .ea."
             )
         )
+    stato = punteggio_motore.stato_ea()
+    if stato["attiva"]:
+        righe.append(
+            _("Partita a punteggio accesa, motore a Elo {e}.").format(e=stato["elo_motore"])
+        )
+    else:
+        righe.append(_("Partita a punteggio spenta: la accendi con .ea."))
     return righe

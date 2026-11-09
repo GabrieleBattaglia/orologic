@@ -36,6 +36,9 @@ _stato = {"thread": None, "ferma": None, "risposta": None, "token": None}
 _solo_suono = threading.Event()
 _annunciate = {}
 _lucchetto = threading.Lock()
+# Accesa a ogni sfida nuova annunciata: il menu di Orolichess, se e' in
+# attesa del primo tasto, la vede e chiede se andare subito alle sfide.
+sfida_arrivata = threading.Event()
 # L'attesa del torneo in cui si trova l'utente, e le partite che Lichess vi
 # ha abbinato, pronte da aprire.
 _attesa = {"torneo": None}
@@ -77,6 +80,7 @@ def _arrivata(sfida, mio_nome):
         + ". "
         + _("La trovi in Sfide in attesa, nel menu di Orolichess.")
     )
+    sfida_arrivata.set()
 
 
 def _ritirata(sfida):

@@ -2,7 +2,9 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
 import json
+import msvcrt
 import os
+import sys
 import time
 import webbrowser
 
@@ -1896,13 +1898,11 @@ def run():
         else:
             print(_("Orolichess, non connesso: scegli Login per iniziare"))
 
-        scelta = menu(
-            MENU_CHOICES,
-            show=True,
-            keyslist=True,
-            p=_("\nScegli un'azione: "),
-            numbered=db.get("menu_numerati", False),
+        scelta = scegli_ascoltando_le_sfide(
+            MENU_CHOICES, db, _("\nScegli un'azione: ")
         )
+        if scelta is None:
+            continue
 
         if scelta == ".":
             print(_("Uscita da Orolichess in corso. Ritorno a orologic..."))
@@ -1977,6 +1977,55 @@ def run():
                 print(_("Impossibile aprire il browser: {e}").format(e=e))
         elif scelta == "sfide":
             rispondi_alle_sfide(token, secrets.get("lichess_username"))
+
+
+def _prompt_del_menu(voci, numerati, p):
+    """Il prompt che menu di GBUtils scrivera' per queste voci: le iniziali
+    possibili fra parentesi, o p con i menu a numeri."""
+    if numerati:
+        testo = p if p != "> " else f"(1-{len(voci)})"
+        return testo if testo.strip().endswith(">") else testo + "> "
+    iniziali = []
+    for chiave in sorted(voci):
+        lettera = chiave[:1].upper()
+        if lettera and lettera not in iniziali:
+            iniziali.append(lettera)
+    if len(voci) <= 1 or not iniziali:
+        return ">"
+    return f"({', '.join(iniziali)})>"
+
+
+def scegli_ascoltando_le_sfide(voci, db, p):
+    """Il menu principale di Orolichess, che si accorge delle sfide in arrivo.
+
+    menu di GBUtils resta fermo sul tasto finche' non lo si preme, e la voce
+    Sfide in attesa compariva solo al giro dopo. Qui l'elenco si stampa
+    subito, poi si aspetta il primo tasto senza consumarlo: se intanto
+    arriva una sfida, dopo l'annuncio si chiede se andare alle sfide in
+    attesa. Restituisce la scelta, sfide in quel caso, oppure None perche'
+    il menu si ridisegni con la voce aggiornata.
+    """
+    numerati = db.get("menu_numerati", False)
+    menu(voci, show_only=True, numbered=numerati)
+    lichess_eventi.sfida_arrivata.clear()
+    prompt = p.lstrip("\n")
+    sys.stdout.write(_prompt_del_menu(voci, numerati, prompt))
+    sys.stdout.flush()
+    while not msvcrt.kbhit():
+        if lichess_eventi.sfida_arrivata.is_set():
+            lichess_eventi.sfida_arrivata.clear()
+            # Il conto delle sfide va riletto, non preso dalla cache.
+            scorda_cache_rete()
+            if enter_escape(
+                _("\rVuoi rispondere ora? INVIO per le sfide in attesa, ESC per restare nel menu\r")
+            ):
+                return "sfide"
+            return None
+        time.sleep(0.1)
+    # Il tasto resta nella coda della console: menu lo legge come sempre,
+    # e riscrive il suo prompt sulla riga pulita.
+    ui.pulisci_riga()
+    return menu(voci, show=False, keyslist=True, p=prompt, numbered=numerati)
 
 
 def rispondi_alle_sfide(token, username):

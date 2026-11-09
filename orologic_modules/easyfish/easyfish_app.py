@@ -263,6 +263,28 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
             f"{CustomBoard(board.fen())}\n{tratto}\n{board.fen()}\n",
             _("Scacchiera copiata negli appunti, con il tratto e il FEN."),
         )
+    elif cmd == ".ea":
+        # La partita a punteggio: accesa, l'Elo del motore si sceglie prima
+        # di ogni .g e la forza resta ferma; spenta, la partita non conta.
+        attiva = not punteggio_motore.stato_ea()["attiva"]
+        punteggio_motore.salva_ea(attiva=attiva)
+        if attiva:
+            Acusticator.play("orologic_ea_acceso", volume=config.VOLUME)
+            print(
+                _(
+                    "Partita a punteggio accesa: prima di ogni .g scegli l'Elo del "
+                    "motore, la forza resta ferma e a fine partita il tuo Elo si "
+                    "aggiorna."
+                )
+            )
+        else:
+            Acusticator.play("orologic_ea_spento", volume=config.VOLUME)
+            print(
+                _(
+                    "Partita a punteggio spenta: la forza si sceglie con .s, .e, .f "
+                    "e .p, e le partite non entrano nel tuo Elo."
+                )
+            )
     elif cmd == ".gs":
         # Le statistiche delle partite contro il motore, issue 66.
         Acusticator.play("orologic_statistiche_motore", volume=config.VOLUME)
