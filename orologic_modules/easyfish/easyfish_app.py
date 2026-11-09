@@ -272,9 +272,9 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
             Acusticator.play("orologic_ea_acceso", volume=config.VOLUME)
             print(
                 _(
-                    "Partita a punteggio accesa: prima di ogni .g scegli l'Elo del "
-                    "motore, la forza resta ferma e a fine partita il tuo Elo si "
-                    "aggiorna."
+                    "Partita a punteggio accesa: alla prima partita scegli l'Elo "
+                    "del motore, poi il tuo Elo e il suo si spostano insieme, "
+                    "partita dopo partita, e la forza resta ferma."
                 )
             )
         else:

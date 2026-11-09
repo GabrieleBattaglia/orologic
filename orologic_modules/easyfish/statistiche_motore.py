@@ -43,9 +43,20 @@ def punti_del_risultato(risultato, colore_umano):
     return 1 if vince_il_bianco == (colore_umano == chess.WHITE) else 0
 
 
-def registra(risultato, colore_umano, forza, conta_per_elo, quando=None):
+def registra(
+    risultato,
+    colore_umano,
+    forza,
+    conta_per_elo,
+    quando=None,
+    elo_utente=None,
+    variazione=None,
+    elo_motore=None,
+):
     """Aggiunge una partita conclusa al registro. Restituisce la voce scritta,
-    o None se la partita non ha un risultato e quindi non si registra."""
+    o None se la partita non ha un risultato e quindi non si registra. Le
+    partite a punteggio ricordano anche il tuo Elo dopo la partita, la sua
+    variazione e l'Elo del motore per la seguente: sono la serie del mese."""
     punti = punti_del_risultato(risultato, colore_umano)
     if punti is None:
         return None
@@ -58,6 +69,10 @@ def registra(risultato, colore_umano, forza, conta_per_elo, quando=None):
         "profondita": forza.get("profondita"),
         "elo": bool(conta_per_elo),
     }
+    if conta_per_elo and elo_utente is not None:
+        voce.update(
+            elo_utente=elo_utente, variazione=variazione, elo_motore=elo_motore
+        )
 
     def modifica(db):
         db.setdefault(CHIAVE, []).append(voce)
@@ -170,6 +185,49 @@ def serie_piu_lunga_di_vittorie(partite):
     return migliore
 
 
+def serie_del_mese(partite, adesso=None):
+    """La serie dell'Elo nel mese corrente, dalle partite a punteggio: Elo
+    di inizio mese, attuale, massimo, minimo e medio, e quante partite. None
+    se nel mese non ce n'e'."""
+    adesso = adesso or datetime.datetime.now()
+    valori = []
+    for voce in partite:
+        data = _data(voce)
+        if voce.get("elo_utente") is None or data is None:
+            continue
+        if (data.year, data.month) == (adesso.year, adesso.month):
+            valori.append(voce)
+    if not valori:
+        return None
+    elo = [voce["elo_utente"] for voce in valori]
+    inizio = valori[0]["elo_utente"] - (valori[0].get("variazione") or 0)
+    return {
+        "partite": len(valori),
+        "inizio": inizio,
+        "attuale": elo[-1],
+        "variazione": elo[-1] - inizio,
+        "massimo": max([inizio, *elo]),
+        "minimo": min([inizio, *elo]),
+        "media": sum(elo) / len(elo),
+        "motore": valori[-1].get("elo_motore"),
+    }
+
+
+def _righe_del_mese(serie):
+    if serie["partite"] == 1:
+        partite = _("1 partita a punteggio")
+    else:
+        partite = _("{n} partite a punteggio").format(n=serie["partite"])
+    return [
+        _("Questo mese, {partite}: Elo da {a} a {b}, {v:+d}.").format(
+            partite=partite, a=serie["inizio"], b=serie["attuale"], v=serie["variazione"]
+        ),
+        _("Nel mese massimo {max}, minimo {min}, media {m:.0f}.").format(
+            max=serie["massimo"], min=serie["minimo"], m=serie["media"]
+        ),
+    ]
+
+
 def _riga_colore(nome, conto):
     if not conto["partite"]:
         return _("{colore}: nessuna partita.").format(colore=nome)
@@ -257,6 +315,9 @@ def righe_pagina(partite, dati_elo, adesso=None):
             conti = conteggi_per_colore(elo)
             righe.append(_riga_colore(_("Con l'Elo, col Bianco"), conti[BIANCO]))
             righe.append(_riga_colore(_("Con l'Elo, col Nero"), conti[NERO]))
+        serie = serie_del_mese(partite, adesso)
+        if serie:
+            righe.extend(_righe_del_mese(serie))
     else:
         righe.append(
             _(

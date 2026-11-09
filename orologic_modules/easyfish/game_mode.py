@@ -45,6 +45,10 @@ class EasyfishGameState:
         self.dalla_posizione_iniziale = False
         self.ritiri = 0
         self.a_punteggio = False
+        # I limiti dell'Elo del motore, letti dalle sue opzioni: il motore che
+        # segue l'utente non deve uscirne.
+        self.elo_minimo = 1320
+        self.elo_massimo = 3190
 
 
 # Gli otto livelli di Lichess, dalla tabella di fishnet, il programma che fa
@@ -209,7 +213,17 @@ def _prepara_la_forza(engine_instance, game_state):
         )
         game_state.a_punteggio = False
     if game_state.a_punteggio:
-        elo = _chiedi_elo_del_motore(engine_instance, ea["elo_motore"])
+        opzione = engine_instance.options["UCI_Elo"]
+        game_state.elo_minimo = getattr(opzione, "min", None) or 1320
+        game_state.elo_massimo = getattr(opzione, "max", None) or 3190
+        # L'Elo del motore si chiede solo alla prima partita a punteggio:
+        # dopo il motore segue l'utente, partita dopo partita.
+        if punteggio_motore.leggi() is None:
+            elo = _chiedi_elo_del_motore(engine_instance, ea["elo_motore"])
+        else:
+            elo = max(
+                game_state.elo_minimo, min(game_state.elo_massimo, ea["elo_motore"])
+            )
         applica_forza(engine_instance, {"tipo": "elo", "valore": elo, "profondita": None})
         punteggio_motore.salva_ea(elo_motore=elo)
     else:
@@ -237,9 +251,10 @@ def _prepara_la_forza(engine_instance, game_state):
     if dati:
         print(
             _(
-                "Partita a punteggio: a fine partita il tuo Elo, ora {p}, si "
-                "aggiorna contro il motore a {e}. La forza resta ferma, e "
-                "ritirare una mossa toglie la partita dal conteggio."
+                "Partita a punteggio: il tuo Elo, ora {p}, contro il motore a "
+                "{e}. A fine partita vi spostate degli stessi punti; la forza "
+                "resta ferma, e ritirare una mossa toglie la partita dal "
+                "conteggio."
             ).format(p=dati["punteggio"], e=orologic_engine.forza["valore"])
         )
     else:
@@ -247,8 +262,8 @@ def _prepara_la_forza(engine_instance, game_state):
             _(
                 "Partita a punteggio, la prima: a fine partita ti chiedo il "
                 "punteggio da cui partire, poi si aggiorna contro il motore a "
-                "{e}. La forza resta ferma, e ritirare una mossa toglie la "
-                "partita dal conteggio."
+                "{e}, che da li' in avanti si sposta con te. La forza resta "
+                "ferma, e ritirare una mossa toglie la partita dal conteggio."
             ).format(e=orologic_engine.forza["valore"])
         )
 
@@ -310,11 +325,12 @@ def _aggiorna_punteggio(risultato, game_state):
     solo se la partita e' leale: dalla posizione iniziale, con un risultato
     e senza ritiri. Quando non conta lo dice, e dice perche'. Con .ea spento
     non conta mai, e la riga prima della partita lo ha gia' detto.
-    Restituisce vero se la partita e' entrata nel punteggio.
+    Restituisce i dati del punteggio e la variazione se la partita e'
+    entrata nel punteggio, altrimenti None.
     """
     forza = orologic_engine.forza
     if not game_state.a_punteggio or risultato not in ("1-0", "0-1", "1/2-1/2"):
-        return False
+        return None
     motivo = None
     if not game_state.dalla_posizione_iniziale:
         motivo = _("la partita non partiva dalla posizione iniziale.")
@@ -322,7 +338,7 @@ def _aggiorna_punteggio(risultato, game_state):
         motivo = _("hai ritirato delle mosse.")
     if motivo:
         print(_("Partita non conteggiata nel tuo punteggio: {motivo}").format(motivo=motivo))
-        return False
+        return None
     if risultato == "1/2-1/2":
         punti = 0.5
     else:
@@ -347,7 +363,29 @@ def _aggiorna_punteggio(risultato, game_state):
         Acusticator.play("orologic_punteggio_scende", volume=config.VOLUME)
     for riga in punteggio_motore.righe_dopo_la_partita(dati, variazione):
         print(riga)
-    return True
+    return dati, variazione
+
+
+def _sposta_il_motore(game_state, elo, variazione):
+    """Il motore della partita a punteggio segue l'utente: si sposta degli
+    stessi punti, entro i limiti del suo Elo, e lo si dice. Restituisce
+    l'Elo nuovo, che vale dalla partita seguente."""
+    nuovo = max(game_state.elo_minimo, min(game_state.elo_massimo, elo + variazione))
+    punteggio_motore.salva_ea(elo_motore=nuovo)
+    if nuovo == elo:
+        if variazione:
+            print(
+                _("Il motore resta a Elo {n}: e' il suo limite.").format(n=nuovo)
+            )
+        else:
+            print(_("Il motore resta a Elo {n}.").format(n=nuovo))
+    else:
+        print(
+            _("Il motore ti segue: passa a Elo {n}, {v:+d}.").format(
+                n=nuovo, v=nuovo - elo
+            )
+        )
+    return nuovo
 
 
 def _scegli_colore():
@@ -1292,8 +1330,21 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     if not game_state.a_punteggio:
         # La prossima partita, anche dopo aver chiuso Easyfish, riparte da qui.
         punteggio_motore.ricorda_forza(forza_finale)
-    conta_per_elo = _aggiorna_punteggio(res, game_state)
-    statistiche_motore.registra(res, game_state.human_color, forza_finale, conta_per_elo)
+    esito_elo = _aggiorna_punteggio(res, game_state)
+    elo_utente = variazione = elo_motore = None
+    if esito_elo:
+        dati_elo, variazione = esito_elo
+        elo_utente = dati_elo["punteggio"]
+        elo_motore = _sposta_il_motore(game_state, forza_finale["valore"], variazione)
+    statistiche_motore.registra(
+        res,
+        game_state.human_color,
+        forza_finale,
+        bool(esito_elo),
+        elo_utente=elo_utente,
+        variazione=variazione,
+        elo_motore=elo_motore,
+    )
     # La scacchiera finale non si stampa piu' da sola: chi la vuole la
     # chiede con punto s, come in tutte le altre modalita'.
     return current_node
