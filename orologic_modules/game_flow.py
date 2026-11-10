@@ -160,15 +160,16 @@ def async_arbitration_input(game_state, get_prompt):
     import time
 
     buf = []
+    memoria = {}
 
     def refresh_line():
         ui.pulisci_riga()
         # Con la scacchiera ferma resta la riga che chiede un tasto.
         if ui.vista_ferma(game_state):
             sys.stdout.write(ui.riga_vista_ferma())
+            sys.stdout.flush()
         else:
-            sys.stdout.write(get_prompt() + "".join(buf))
-        sys.stdout.flush()
+            ui.scrivi_prompt(memoria, get_prompt(), buf)
 
     last_refresh = time.time()
     if not ui.vista_ferma(game_state):
@@ -207,15 +208,22 @@ def async_arbitration_input(game_state, get_prompt):
             elif c == "\b":
                 if buf:
                     buf.pop()
-                    sys.stdout.write("\b \b")
-                    sys.stdout.flush()
+                    if memoria.get("coda"):
+                        # Dopo il cursore c'e' il resto del prompt: si riscrive.
+                        refresh_line()
+                    else:
+                        sys.stdout.write("\b \b")
+                        sys.stdout.flush()
             elif c == "\x03" or c == "\x1b":
                 sys.stdout.write("\n")
                 return "."
             elif c.isprintable():
                 buf.append(c)
-                sys.stdout.write(c)
-                sys.stdout.flush()
+                if memoria.get("coda"):
+                    refresh_line()
+                else:
+                    sys.stdout.write(c)
+                    sys.stdout.flush()
 
         time.sleep(0.02)
 

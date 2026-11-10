@@ -807,6 +807,30 @@ def pulisci_riga():
 COMANDI_SCACCHIERA = (".s", ".b")
 
 
+def scrivi_prompt(memoria, prompt, buf):
+    """Scrive il prompt di un ciclo d'attesa, sulla riga gia' pulita.
+
+    prompt e' una stringa, o la coppia (prima, dopo) quando il cursore va
+    dopo %m: allora il resto del prompt sta a destra di cio' che scrivi, e
+    il cursore torna indietro sopra di lui. Le righe sopra l'ultima, come la
+    scacchiera di %c, si stampano solo quando cambiano: ogni secondo si
+    riscrive l'ultima riga soltanto. memoria vale per un'attesa sola, e dice
+    al ciclo con coda se dopo il cursore c'e' altro.
+    """
+    prima, dopo = prompt if isinstance(prompt, tuple) else (prompt, "")
+    testo = prima + "".join(buf) + dopo
+    sopra, a_capo, riga = testo.rpartition("\n")
+    if a_capo and memoria.get("sopra") != sopra:
+        sys.stdout.write(sopra + "\n")
+        memoria["sopra"] = sopra
+    sys.stdout.write(riga)
+    coda = len(dopo) if dopo and "\n" not in dopo else 0
+    if coda:
+        sys.stdout.write("\b" * coda)
+    memoria["coda"] = coda
+    sys.stdout.flush()
+
+
 def vista_ferma(game_state):
     """Vero mentre la scacchiera chiesta con .s aspetta un tasto: il prompt
     non si riscrive, perche' chi legge abbia il tempo di esplorarla."""

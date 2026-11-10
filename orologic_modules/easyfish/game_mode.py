@@ -535,7 +535,7 @@ def _attendi_mossa(game_state, prompt, board, ultima_mossa):
             "inizio": getattr(game_state, "inizio_partita", None),
             "avversario": avversario,
         }
-        return modello_prompt.componi(dati) + " "
+        return modello_prompt.prompt_per_input(dati)
 
     return async_arbitration_input(game_state, get_prompt)
 

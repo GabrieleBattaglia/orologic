@@ -303,8 +303,10 @@ def prompt_partita(game_state):
         "mosse_al_controllo": mosse_al_controllo(game_state),
         "inizio": getattr(game_state, "inizio_partita", None),
         "avversario": "",
+        "iniziale_bianco": game_state._tempo_fase(game_state.white_phase, "white"),
+        "iniziale_nero": game_state._tempo_fase(game_state.black_phase, "black"),
     }
-    return modello_prompt.componi(dati) + " "
+    return modello_prompt.prompt_per_input(dati)
 
 
 def GenerateMoveSummary(game_state):

@@ -288,7 +288,9 @@ def async_spectator_loop(q, game_state):
     def get_prompt():
         # Il corpo viene dal modello dell'utente; la cornice, a capo davanti
         # e segno di maggiore in fondo, resta quella della partita osservata.
-        return "\n" + _corpo_del_prompt(game_state, None, "") + ">"
+        return _corpo_del_prompt(game_state, None, "", inizio="\n", fine=">")
+
+    memoria = {}
 
     def refresh_line():
         ui.pulisci_riga()
@@ -296,9 +298,9 @@ def async_spectator_loop(q, game_state):
         # la riga che chiede un tasto, non il prompt.
         if ui.vista_ferma(game_state):
             sys.stdout.write(ui.riga_vista_ferma())
+            sys.stdout.flush()
         else:
-            sys.stdout.write(get_prompt() + "".join(buf))
-        sys.stdout.flush()
+            ui.scrivi_prompt(memoria, get_prompt(), buf)
 
     last_refresh = time.time()
     refresh_line()
@@ -520,15 +522,22 @@ def async_spectator_loop(q, game_state):
             elif c == "\b":
                 if buf:
                     buf.pop()
-                    sys.stdout.write("\b \b")
-                    sys.stdout.flush()
+                    if memoria.get("coda"):
+                        # Dopo il cursore c'e' il resto del prompt: si riscrive.
+                        refresh_line()
+                    else:
+                        sys.stdout.write("\b \b")
+                        sys.stdout.flush()
             elif c == "\x03" or c == "\x1b":  # Ctrl+C
                 sys.stdout.write("\n")
                 return "."
             elif c.isprintable():
                 buf.append(c)
-                sys.stdout.write(c)
-                sys.stdout.flush()
+                if memoria.get("coda"):
+                    refresh_line()
+                else:
+                    sys.stdout.write(c)
+                    sys.stdout.flush()
 
         time.sleep(0.02)
 
@@ -689,7 +698,7 @@ def berserk(game_id, token, game_state):
         )
 
 
-def _corpo_del_prompt(game_state, mio, avversario, stati=()):
+def _corpo_del_prompt(game_state, mio, avversario, stati=(), inizio="", fine=" "):
     """Il corpo del prompt di una partita su Lichess, osservata o giocata,
     dal modello dell'utente. I tempi corrono da soli fra un messaggio e
     l'altro dello stream, e si vedono solo a partita iniziata con .6 acceso."""
@@ -714,7 +723,7 @@ def _corpo_del_prompt(game_state, mio, avversario, stati=()):
         "inizio": getattr(game_state, "inizio_partita", None),
         "avversario": avversario,
     }
-    return modello_prompt.componi(dati)
+    return modello_prompt.prompt_per_input(dati, inizio=inizio, fine=fine)
 
 
 def _play_worker(url, token, q, stop_event, tentativi=3):
@@ -799,7 +808,9 @@ def async_play_loop(q, game_state):
         avversario = (
             game_state.black_player if mio == chess.WHITE else game_state.white_player
         )
-        return _corpo_del_prompt(game_state, mio, avversario, stati) + " "
+        return _corpo_del_prompt(game_state, mio, avversario, stati)
+
+    memoria = {}
 
     def refresh_line():
         ui.pulisci_riga()
@@ -807,9 +818,9 @@ def async_play_loop(q, game_state):
         # la riga che chiede un tasto, non il prompt.
         if ui.vista_ferma(game_state):
             sys.stdout.write(ui.riga_vista_ferma())
+            sys.stdout.flush()
         else:
-            sys.stdout.write(get_prompt() + "".join(buf))
-        sys.stdout.flush()
+            ui.scrivi_prompt(memoria, get_prompt(), buf)
 
     last_refresh = time.time()
     refresh_line()
@@ -1203,15 +1214,22 @@ def async_play_loop(q, game_state):
             elif c == "\b":
                 if buf:
                     buf.pop()
-                    sys.stdout.write("\b \b")
-                    sys.stdout.flush()
+                    if memoria.get("coda"):
+                        # Dopo il cursore c'e' il resto del prompt: si riscrive.
+                        refresh_line()
+                    else:
+                        sys.stdout.write("\b \b")
+                        sys.stdout.flush()
             elif c == "\x03" or c == "\x1b":  # Ctrl+C
                 sys.stdout.write("\n")
                 return "."
             elif c.isprintable():
                 buf.append(c)
-                sys.stdout.write(c)
-                sys.stdout.flush()
+                if memoria.get("coda"):
+                    refresh_line()
+                else:
+                    sys.stdout.write(c)
+                    sys.stdout.flush()
 
         time.sleep(0.02)
 

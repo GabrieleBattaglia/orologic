@@ -18,6 +18,19 @@ li { margin-bottom: 0.3em; }
 <body>
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
+<h3>Versione 8.45</h3>
+<h4>8.45.2 (10 novembre 2026)</h4>
+<ul>
+  <li>* [Manuale] Il capitolo del prompt racconta il file prompt.txt, i codici nuovi, il cursore dopo la mossa e la scacchiera nel prompt.</li>
+</ul>
+<h4>8.45.1 (10 novembre 2026)</h4>
+<ul>
+  <li>* [L10N] Inglese, spagnolo, francese e portoghese hanno le 20 frasi nuove della 8.45.0.</li>
+</ul>
+<h4>8.45.0 (10 novembre 2026)</h4>
+<ul>
+  <li>+ [Core] Il prompt si compone in un file, <code>settings\prompt.txt</code>, al posto della riga da scrivere. La voce Prompt di gioco lo apre nel Blocco note, con in testa le spiegazioni e il catalogo dei codici sulle righe che cominciano con il dollaro, e in fondo il modello in uso; alla chiusura Orologic lo rilegge e lo applica, e se c'è un codice sbagliato propone di riaprirlo. Senza il Blocco note, o se non si lascia aspettare, si apre l'editor predefinito e si aspetta un tasto. Il file sta in settings, e non fra le risorse, perché sopravviva agli aggiornamenti. Codici nuovi: <code>%f</code> il FEN, <code>%c</code> la scacchiera in caratteri, che si ristampa solo quando la posizione cambia, <code>%bp</code> e <code>%np</code> le percentuali di tempo consumato, <code>%h</code> chi ha più tempo con &lt;, &gt; o =; il numero della mossa da giocare passa da <code>%c</code> a <code>%k</code>, anche nei modelli già salvati. Se dopo <code>%m</code> c'è altro, il cursore resta dopo la mossa e il resto del prompt gli scorre a destra. Chiesto da Gabriele.</li>
+</ul>
 <h3>Versione 8.44</h3>
 <h4>8.44.4 (10 novembre 2026)</h4>
 <ul>
