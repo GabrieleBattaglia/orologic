@@ -148,7 +148,7 @@ def testo_del_file(attuale):
     righe += [f"{d}%{lettera} {descrizione}" for lettera, descrizione in catalogo()]
     righe += [
         d + _("Con una v dopo la lettera, la forma estesa, a parole: %bv %nv %iv %av %dv %gv %tv %uv %vv."),
-        d + _("%bp e %np: la percentuale di tempo consumato dal Bianco e dal Nero, come .1 e .2, dove ci sono le fasi."),
+        d + _("%bp e %np: la percentuale di tempo consumato dal Bianco e dal Nero, come .1 e .2: in arbitraggio, in Tempo e contro il motore col tempo a partita."),
         d + _("Un numero dopo il percento, da 1 a 120, rende il prompt dinamico: %4 lo riscrive ogni 4 secondi. Senza numero il prompt e' statico, e i tempi non compaiono."),
         d + _("Se dopo %m c'e' altro, il cursore resta dopo la mossa, e il resto del prompt ti scorre a destra mentre scrivi."),
         d + _("%c va messo prima di %m: la scacchiera si stampa sopra la riga dove scrivi."),

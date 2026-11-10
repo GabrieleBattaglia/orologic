@@ -534,6 +534,8 @@ def _attendi_mossa(game_state, prompt, board, ultima_mossa):
             "mosse_al_controllo": None,
             "inizio": getattr(game_state, "inizio_partita", None),
             "avversario": avversario,
+            "iniziale_bianco": getattr(game_state, "iniziale_bianco", None),
+            "iniziale_nero": getattr(game_state, "iniziale_nero", None),
         }
         return modello_prompt.prompt_per_input(dati)
 
@@ -1074,6 +1076,10 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None, carriera=Fa
         game_state.white_remaining = float(engine_time) if engine_has_clock else 0
         game_state.white_inc = float(engine_inc) if engine_has_clock else 0
         print(_("Giochi col NERO."))
+    # Il tempo di partenza di ciascuno, per le percentuali del prompt, %bp e
+    # %np: la partita contro il motore ha una fase sola, il tempo intero.
+    game_state.iniziale_bianco = game_state.white_remaining or None
+    game_state.iniziale_nero = game_state.black_remaining or None
 
     _nomi_dei_contendenti(game_state, game_node, engine_instance)
 
