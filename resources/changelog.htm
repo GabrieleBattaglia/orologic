@@ -17,76 +17,51 @@ li { margin-bottom: 0.3em; }
 </head>
 <body>
 <h1>ChangeLog di Orologic</h1>
-<h2>Versione 9</h2>
-<h3>Versione 9.7</h3>
-<h4>9.7.4 (10 novembre 2026)</h4>
+<h2>Versione 8</h2>
+<h3>Versione 8.44</h3>
+<h4>8.44.4 (10 novembre 2026)</h4>
 <ul>
   <li>* [Gioca] Nel PGN delle partite contro il motore il Round dice «-», come si fa per una partita singola: in carriera segnava il numero della partita, a cominciare da 1, come se fosse un turno di torneo. Segnalato da Gabriele.</li>
 </ul>
-<h4>9.7.3 (10 novembre 2026)</h4>
+<h4>8.44.3 (10 novembre 2026)</h4>
 <ul>
   <li>* [Gioca] Il PGN delle partite contro il motore ha la classificazione dell'apertura, come quello dell'arbitraggio: ECO, Opening e Variation dell'ultima posizione della partita che il database delle aperture riconosce. Nel Fischer Random non c'è apertura da classificare. Segnalato da Gabriele.</li>
 </ul>
-<h4>9.7.2 (10 novembre 2026)</h4>
+<h4>8.44.2 (10 novembre 2026)</h4>
 <ul>
   <li>* [Manuale] Il manuale racconta le due domande di fine partita e la scacchiera che aspetta un tasto.</li>
 </ul>
-<h4>9.7.1 (10 novembre 2026)</h4>
+<h4>8.44.1 (10 novembre 2026)</h4>
 <ul>
-  <li>* [L10N] Inglese, spagnolo, francese e portoghese hanno le 3 frasi nuove della 9.6.3 e della 9.7.0.</li>
+  <li>* [L10N] Inglese, spagnolo, francese e portoghese hanno le 3 frasi nuove della 8.43.3 e della 8.44.0.</li>
 </ul>
-<h4>9.7.0 (10 novembre 2026)</h4>
+<h4>8.44.0 (10 novembre 2026)</h4>
 <ul>
-  <li>+ [Core] In partita, con l'aggiornamento automatico acceso, la scacchiera chiesta con <code>.s</code> o <code>.b</code> resta ferma: sotto compare «Premi un tasto per tornare al prompt», e il prompt non si riscrive finché non premi un tasto, che serve solo a tornare. L'orologio corre, e gli eventi di Lichess passano lo stesso. Vale in arbitraggio, contro il motore e su Lichess. Chiesto da Gabriele al collaudo della 9.6.2.</li>
+  <li>+ [Core] In partita, con l'aggiornamento automatico acceso, la scacchiera chiesta con <code>.s</code> o <code>.b</code> resta ferma: sotto compare «Premi un tasto per tornare al prompt», e il prompt non si riscrive finché non premi un tasto, che serve solo a tornare. L'orologio corre, e gli eventi di Lichess passano lo stesso. Vale in arbitraggio, contro il motore e su Lichess. Chiesto da Gabriele al collaudo della 8.43.2.</li>
 </ul>
-<h3>Versione 9.6</h3>
-<h4>9.6.3 (10 novembre 2026)</h4>
+<h3>Versione 8.43</h3>
+<h4>8.43.3 (10 novembre 2026)</h4>
 <ul>
-  <li>* [Gioca] A fine partita l'analisi automatica OAA ha la sua domanda, e l'apertura in Easyfish la sua: prima le chiedeva una sola domanda, Vuoi analizzare la partita, e chi rispondeva no non vedeva mai l'OAA. Dal collaudo di Gabriele della 9.6.2.</li>
+  <li>* [Gioca] A fine partita l'analisi automatica OAA ha la sua domanda, e l'apertura in Easyfish la sua: prima le chiedeva una sola domanda, Vuoi analizzare la partita, e chi rispondeva no non vedeva mai l'OAA. Dal collaudo di Gabriele della 8.43.2.</li>
 </ul>
-<h4>9.6.2 (10 novembre 2026)</h4>
+<h4>8.43.2 (10 novembre 2026)</h4>
 <ul>
   <li>* [Manuale] Il capitolo 2.4, Gioca contro il motore, racconta libero, carriera, modelli, record, inizializzazione, sonificazione, resa e fine partita; Easyfish non parla più di gioco contro il motore, e i capitoli dal 2.4 in poi sono rinumerati. Il capitolo sul prompt spiega il numero che lo rende dinamico. Il README presenta il menu gioca.</li>
 </ul>
-<h4>9.6.1 (10 novembre 2026)</h4>
+<h4>8.43.1 (10 novembre 2026)</h4>
 <ul>
-  <li>* [L10N] Inglese, spagnolo, francese e portoghese hanno le 63 frasi nuove dalla 8.42.0 alla 9.6.0.</li>
+  <li>* [L10N] Inglese, spagnolo, francese e portoghese hanno le 63 frasi nuove della 8.42.0 e della 8.43.0.</li>
 </ul>
-<h4>9.6.0 (10 novembre 2026)</h4>
-<ul>
-  <li>+ [Gioca] Il motore può arrendersi. Stockfish non ha un'opzione per farlo, quindi decide Orologic, con la regola di Lichess: quando per 5 sue mosse di fila il motore vede la partita persa, peggio di 10 pedoni o un matto contro, si tira una moneta, una volta sola per partita. Nel 50% dei casi il motore abbandona, con un suono e una riga; altrimenti si gioca fino al matto, per allenarsi a darlo. La regola è fissa, perché nessuno faccia arrendere il motore troppo presto. Issue 69.</li>
-</ul>
-<h3>Versione 9.5</h3>
-<h4>9.5.0 (10 novembre 2026)</h4>
-<ul>
-  <li>+ [Gioca] Il tuo nome: nelle impostazioni la voce Il mio nome lo scrive o lo cambia, e se manca lo chiede la prima partita contro il motore. Va nel PGN, contro il nome del motore con la sua versione, per esempio Stockfish 19. Issue 69.</li>
-</ul>
-<h3>Versione 9.4</h3>
-<h4>9.4.0 (10 novembre 2026)</h4>
-<ul>
-  <li>+ [Gioca] Nella carriera, sonifica: la serie del tuo Elo, partita dopo partita, diventa suono come la storia Elo di Orolichess, con portamento e durata a scelta. Servono almeno 5 partite. Issue 69.</li>
-</ul>
-<h3>Versione 9.3</h3>
-<h4>9.3.0 (10 novembre 2026)</h4>
-<ul>
-  <li>+ [Gioca] Nella carriera, inizializza: dopo una conferma cancella il tuo Elo, le statistiche e i record, e alla partita seguente Orologic richiede il tuo Elo e quello del motore. Il modello resta. Issue 69.</li>
-</ul>
-<h3>Versione 9.2</h3>
-<h4>9.2.0 (10 novembre 2026)</h4>
-<ul>
-  <li>+ [Gioca] Nella carriera, i record: la vittoria contro il motore più forte, la serie più lunga di vittorie e il tuo Elo massimo di sempre, con le date. Issue 69.</li>
-</ul>
-<h3>Versione 9.1</h3>
-<h4>9.1.0 (10 novembre 2026)</h4>
-<ul>
-  <li>+ [Gioca] I modelli con cui il motore della carriera sceglie il suo Elo, nella voce modello: uguale al tuo; delta assoluto, il tuo Elo più o meno un valore fisso; delta casuale, un valore a caso fra due limiti, il modello di serie da -50 a +50; inseguimento, in cui il motore ti insegue a passi che crescono con la distanza e dipendono dal risultato: con te a 1500 e il motore a 1400, se vinci sale di 50, se patti di 25, se perdi scende di 5. Il modello nuovo vale già per la prossima partita. Issue 69.</li>
-</ul>
-<h3>Versione 9.0</h3>
-<h4>9.0.0 (10 novembre 2026)</h4>
+<h4>8.43.0 (10 novembre 2026)</h4>
 <ul>
   <li>+ [Gioca] Il gioco contro il motore passa nel menu principale, alla voce gioca, e da Easyfish spariscono .g, .ea e .gs. Libero è la partita con la forza che scegli tu, anche da Fischer Random, che resta per le partite seguenti e non entra nelle statistiche. Carriera è il tuo Elo contro il motore, sempre dalla posizione iniziale: alla prima partita chiede il tuo Elo e quello del motore, propone il colore, tiene ferma la forza, e ha le voci statistiche, modello, record, sonifica e inizializza. A fine partita succede quello che succede in arbitraggio: le statistiche del tempo per le partite con l'orologio, il PGN salvato e negli appunti, con i nomi, gli Elo e il tag Annotator, e l'analisi automatica oppure la partita aperta in Easyfish. Il registro della carriera tiene le partite a punteggio di prima; le altre partite di Easyfish restano fuori. Chiesto da Gabriele nella issue 69.</li>
+  <li>+ [Gioca] I modelli con cui il motore della carriera sceglie il suo Elo, nella voce modello: uguale al tuo; delta assoluto, il tuo Elo più o meno un valore fisso; delta casuale, un valore a caso fra due limiti, il modello di serie da -50 a +50; inseguimento, in cui il motore ti insegue a passi che crescono con la distanza e dipendono dal risultato: con te a 1500 e il motore a 1400, se vinci sale di 50, se patti di 25, se perdi scende di 5. Il modello nuovo vale già per la prossima partita. Issue 69.</li>
+  <li>+ [Gioca] Nella carriera, i record: la vittoria contro il motore più forte, la serie più lunga di vittorie e il tuo Elo massimo di sempre, con le date. Issue 69.</li>
+  <li>+ [Gioca] Nella carriera, inizializza: dopo una conferma cancella il tuo Elo, le statistiche e i record, e alla partita seguente Orologic richiede il tuo Elo e quello del motore. Il modello resta. Issue 69.</li>
+  <li>+ [Gioca] Nella carriera, sonifica: la serie del tuo Elo, partita dopo partita, diventa suono come la storia Elo di Orolichess, con portamento e durata a scelta. Servono almeno 5 partite. Issue 69.</li>
+  <li>+ [Gioca] Il tuo nome: nelle impostazioni la voce Il mio nome lo scrive o lo cambia, e se manca lo chiede la prima partita contro il motore. Va nel PGN, contro il nome del motore con la sua versione, per esempio Stockfish 19. Issue 69.</li>
+  <li>+ [Gioca] Il motore può arrendersi. Stockfish non ha un'opzione per farlo, quindi decide Orologic, con la regola di Lichess: quando per 5 sue mosse di fila il motore vede la partita persa, peggio di 10 pedoni o un matto contro, si tira una moneta, una volta sola per partita. Nel 50% dei casi il motore abbandona, con un suono e una riga; altrimenti si gioca fino al matto, per allenarsi a darlo. La regola è fissa, perché nessuno faccia arrendere il motore troppo presto. Issue 69.</li>
 </ul>
-<h2>Versione 8</h2>
 <h3>Versione 8.42</h3>
 <h4>8.42.0 (10 novembre 2026)</h4>
 <ul>

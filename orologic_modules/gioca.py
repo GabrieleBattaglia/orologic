@@ -184,7 +184,7 @@ def _dopo_la_partita(partita, stato):
     if mosse < MOSSE_PER_L_ANALISI:
         return
     # Due domande distinte, come chiede la issue 69: prima l'analisi
-    # automatica, poi Easyfish. Al collaudo della 9.6.2 l'OAA stava dietro
+    # automatica, poi Easyfish. Al collaudo della 8.43.2 l'OAA stava dietro
     # alla domanda sull'analisi, e chi rispondeva no non la vedeva.
     chess960_utils.verifica_motore_chess960(
         engine.ENGINE, partita.headers.get("Variant", "") == "Chess960"

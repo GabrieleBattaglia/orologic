@@ -823,7 +823,7 @@ def riga_vista_ferma():
 def _ferma_la_vista(game_state):
     """Dopo la scacchiera, in partita e con l'aggiornamento automatico
     acceso: il prompt si ferma finche' non si preme un tasto. Chiesto da
-    Gabriele al collaudo della 9.6.2; l'orologio intanto corre, e gli
+    Gabriele al collaudo della 8.43.2; l'orologio intanto corre, e gli
     eventi di Lichess passano lo stesso."""
     if not getattr(game_state, "vista_fermabile", False):
         return
