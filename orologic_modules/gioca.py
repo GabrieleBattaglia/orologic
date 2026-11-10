@@ -157,20 +157,23 @@ def _dopo_la_partita(partita, stato):
         print(_("Errore durante la copia del PGN negli appunti: {error}").format(error=e))
     if mosse < MOSSE_PER_L_ANALISI:
         return
-    if not enter_escape(_("Vuoi analizzare la partita? (INVIO per si', ESC per no): ")):
-        return
-    engine.cache_analysis.clear()
+    # Due domande distinte, come chiede la issue 69: prima l'analisi
+    # automatica, poi Easyfish. Al collaudo della 9.6.2 l'OAA stava dietro
+    # alla domanda sull'analisi, e chi rispondeva no non la vedeva.
     chess960_utils.verifica_motore_chess960(
         engine.ENGINE, partita.headers.get("Variant", "") == "Chess960"
     )
     if enter_escape(
+        _("Vuoi l'analisi automatica OAA della partita? (INVIO per si', ESC per no): ")
+    ):
+        engine.cache_analysis.clear()
+        engine.AnalisiAutomatica(board_utils.CopyPgnGame(partita))
+    if enter_escape(
         _(
-            "Desideri l'analisi automatica? (INVIO per si', ESC per analizzarla "
-            "in Easyfish): "
+            "Vuoi aprire la partita in Easyfish, per analizzarla tu? (INVIO per "
+            "si', ESC per no): "
         )
     ):
-        engine.AnalisiAutomatica(board_utils.CopyPgnGame(partita))
-    else:
         from .easyfish import easyfish_app
 
         easyfish_app.run(partita)

@@ -27,6 +27,8 @@ class SpectatorGameState:
         self.is_live = False
         self.move_history = []
         self.refresh_interval = modello_prompt.intervallo()
+        self.vista_fermabile = True
+        self.vista_ferma = False
         self.initial_fen = chess.STARTING_FEN
         self.variant = "standard"
 
@@ -290,7 +292,12 @@ def async_spectator_loop(q, game_state):
 
     def refresh_line():
         ui.pulisci_riga()
-        sys.stdout.write(get_prompt() + "".join(buf))
+        # Con la scacchiera ferma gli eventi passano, e sotto di loro torna
+        # la riga che chiede un tasto, non il prompt.
+        if ui.vista_ferma(game_state):
+            sys.stdout.write(ui.riga_vista_ferma())
+        else:
+            sys.stdout.write(get_prompt() + "".join(buf))
         sys.stdout.flush()
 
     last_refresh = time.time()
@@ -298,7 +305,11 @@ def async_spectator_loop(q, game_state):
 
     while True:
         refresh_interval = getattr(game_state, "refresh_interval", 1)
-        if refresh_interval > 0 and time.time() - last_refresh >= refresh_interval:
+        if (
+            refresh_interval > 0
+            and not ui.vista_ferma(game_state)
+            and time.time() - last_refresh >= refresh_interval
+        ):
             refresh_line()
             last_refresh = time.time()
         try:
@@ -494,6 +505,13 @@ def async_spectator_loop(q, game_state):
             c = msvcrt.getwch()
             if c in ("\x00", "\xe0"):
                 msvcrt.getwch()
+                if not ui.vista_ferma(game_state):
+                    continue
+            if ui.vista_ferma(game_state):
+                # Il tasto serve solo a tornare al prompt.
+                game_state.vista_ferma = False
+                refresh_line()
+                last_refresh = time.time()
                 continue
 
             if c == "\r" or c == "\n":
@@ -599,6 +617,8 @@ class GamePlayState:
         self.opponent_gone_announced = False
         self.claim_win_in_seconds = None
         self.refresh_interval = modello_prompt.intervallo()
+        self.vista_fermabile = True
+        self.vista_ferma = False
         self.initial_fen = chess.STARTING_FEN
         self.variant = "standard"
         self.move_times = []
@@ -783,7 +803,12 @@ def async_play_loop(q, game_state):
 
     def refresh_line():
         ui.pulisci_riga()
-        sys.stdout.write(get_prompt() + "".join(buf))
+        # Con la scacchiera ferma gli eventi passano, e sotto di loro torna
+        # la riga che chiede un tasto, non il prompt.
+        if ui.vista_ferma(game_state):
+            sys.stdout.write(ui.riga_vista_ferma())
+        else:
+            sys.stdout.write(get_prompt() + "".join(buf))
         sys.stdout.flush()
 
     last_refresh = time.time()
@@ -791,7 +816,11 @@ def async_play_loop(q, game_state):
 
     while True:
         refresh_interval = getattr(game_state, "refresh_interval", 1)
-        if refresh_interval > 0 and time.time() - last_refresh >= refresh_interval:
+        if (
+            refresh_interval > 0
+            and not ui.vista_ferma(game_state)
+            and time.time() - last_refresh >= refresh_interval
+        ):
             refresh_line()
             last_refresh = time.time()
         try:
@@ -1159,6 +1188,13 @@ def async_play_loop(q, game_state):
             c = msvcrt.getwch()
             if c in ("\x00", "\xe0"):
                 msvcrt.getwch()
+                if not ui.vista_ferma(game_state):
+                    continue
+            if ui.vista_ferma(game_state):
+                # Il tasto serve solo a tornare al prompt.
+                game_state.vista_ferma = False
+                refresh_line()
+                last_refresh = time.time()
                 continue
 
             if c == "\r" or c == "\n":

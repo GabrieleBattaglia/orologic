@@ -41,6 +41,8 @@ class EasyfishGameState:
         self.white_player = _("Bianco")
         self.black_player = _("Nero")
         self.refresh_interval = modello_prompt.intervallo()
+        self.vista_fermabile = True
+        self.vista_ferma = False
         # Per il punteggio contro il motore: una partita conta solo con la
         # partita di carriera, se comincia dalla posizione iniziale e
         # senza ritiri di mosse.

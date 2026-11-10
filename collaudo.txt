@@ -1,6 +1,19 @@
-Collaudo di Orologic 9.6.2, le issue 68 e 69
+Collaudo di Orologic 9.7.2, le due note del collaudo della 9.6.2
 Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto)
-Prima: Orologic dai sorgenti, con GBUtils V249 o successiva, che ha i suoni del menu gioca.
+Prima: Orologic dai sorgenti, con GBUtils V249 o successiva.
+Prova 1, le domande di fine partita
+Passo 1: gioca una partita libera o di carriera di almeno due mosse a testa, fino alla fine.
+Domanda 1: dopo il PGN arrivano due domande distinte, prima l'analisi automatica OAA e poi Easyfish?
+Domanda 2: con INVIO alla prima parte l'OAA, e dopo puoi ancora aprire la partita in Easyfish?
+Esito:
+Prova 2, la scacchiera ferma
+Passo 1: con il prompt dinamico, per esempio %2 %b %n %m, arbitra una partita e scrivi .s.
+Domanda 1: sotto la scacchiera c'e' Premi un tasto per tornare al prompt, e il prompt non si riscrive?
+Passo 2: premi un tasto qualsiasi, poi scrivi una mossa.
+Domanda 2: torna il prompt, e il tasto premuto non finisce nella mossa?
+Passo 3: fai lo stesso contro il motore e in una partita su Lichess, aspettando una mossa dell'avversario con la scacchiera ferma.
+Domanda 3: la mossa dell'avversario si sente e si legge, e sotto torna la riga che chiede un tasto?
+Passo 4: con il prompt statico scrivi .s.
+Domanda 4: la scacchiera si mostra e torni subito al prompt, senza pausa?
+Esito:
 Difficolta' incontrate e note libere:
-Alla fine della partita non c'è la domanda sull'analisi OAA.
-Quando chiedo di visualizzare la scacchiera con .s, si deve disattivare l'aggiornamento automatico del prompt perchè devo avere il tempo di esplorarla. Perciò, mentre il tempo scorre, aggiungi una riga sotto: premi un tasto per tornare al prompt. E tutto fermo finché non premo un tasto, poi tutto riprende. Ovviamente eventi esterni, come messaggi da lichess o avversario che risponde, passano lo stesso.

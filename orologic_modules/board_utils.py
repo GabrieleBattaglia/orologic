@@ -458,6 +458,10 @@ class GameState:
         # L'aggiornamento automatico con cui comincia la partita lo decide il
         # modello del prompt: un numero lo rende dinamico.
         self.refresh_interval = modello_prompt.intervallo()
+        # La scacchiera di .s ferma il prompt solo dove il prompt si
+        # riscrive da solo: arbitraggio e partite, non il menu di Easyfish.
+        self.vista_fermabile = False
+        self.vista_ferma = False
         self.move_times = []
         self.clocks_history = []
         # Mosse annullate con il comando punto q, pronte da rigiocare.

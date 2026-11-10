@@ -807,6 +807,33 @@ def pulisci_riga():
 COMANDI_SCACCHIERA = (".s", ".b")
 
 
+def vista_ferma(game_state):
+    """Vero mentre la scacchiera chiesta con .s aspetta un tasto: il prompt
+    non si riscrive, perche' chi legge abbia il tempo di esplorarla."""
+    return bool(getattr(game_state, "vista_ferma", False))
+
+
+def riga_vista_ferma():
+    """La riga che resta sotto la scacchiera finche' non si preme un tasto,
+    fra due ritorni a capo, perche' il cursore e il display braille ci
+    restino sopra."""
+    return "\r" + _("Premi un tasto per tornare al prompt.") + "\r"
+
+
+def _ferma_la_vista(game_state):
+    """Dopo la scacchiera, in partita e con l'aggiornamento automatico
+    acceso: il prompt si ferma finche' non si preme un tasto. Chiesto da
+    Gabriele al collaudo della 9.6.2; l'orologio intanto corre, e gli
+    eventi di Lichess passano lo stesso."""
+    if not getattr(game_state, "vista_fermabile", False):
+        return
+    if getattr(game_state, "refresh_interval", 0) <= 0:
+        return
+    game_state.vista_ferma = True
+    sys.stdout.write(riga_vista_ferma())
+    sys.stdout.flush()
+
+
 def _nome_giocatore(game_state, bianco):
     """Nome del giocatore, dallo stato della partita o dal PGN.
 
@@ -856,6 +883,7 @@ def comandi_lettura(comando, game_state, board=None, mosse=None):
             adsr=[1, 5, 90, 4],
         )
         print("\n" + str(board_utils.CustomBoard(scacchiera.fen())))
+        _ferma_la_vista(game_state)
         return True
 
     if comando == ".m":

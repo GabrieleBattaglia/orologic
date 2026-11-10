@@ -30,6 +30,7 @@ from .config import _
 def RiprendiPartita(dati_partita):
     print(_("Ricostruzione dello stato della partita..."))
     game_state = board_utils.GameState(dati_partita["clock_config"])
+    game_state.vista_fermabile = True
     e_chess960 = bool(dati_partita.get("chess960", False))
     game_state.board = board_utils.CustomBoard(
         dati_partita["board_fen"], chess960=e_chess960
@@ -162,18 +163,28 @@ def async_arbitration_input(game_state, get_prompt):
 
     def refresh_line():
         ui.pulisci_riga()
-        sys.stdout.write(get_prompt() + "".join(buf))
+        # Con la scacchiera ferma resta la riga che chiede un tasto.
+        if ui.vista_ferma(game_state):
+            sys.stdout.write(ui.riga_vista_ferma())
+        else:
+            sys.stdout.write(get_prompt() + "".join(buf))
         sys.stdout.flush()
 
     last_refresh = time.time()
-    refresh_line()
+    if not ui.vista_ferma(game_state):
+        refresh_line()
 
     while True:
         if game_state.flag_fallen and not game_state.ignore_clock:
+            game_state.vista_ferma = False
             return None
 
         refresh_interval = getattr(game_state, "refresh_interval", 0)
-        if refresh_interval > 0 and time.time() - last_refresh >= refresh_interval:
+        if (
+            refresh_interval > 0
+            and not ui.vista_ferma(game_state)
+            and time.time() - last_refresh >= refresh_interval
+        ):
             refresh_line()
             last_refresh = time.time()
 
@@ -181,6 +192,13 @@ def async_arbitration_input(game_state, get_prompt):
             c = msvcrt.getwch()
             if c in ("\x00", "\xe0"):
                 msvcrt.getwch()
+                if not ui.vista_ferma(game_state):
+                    continue
+            if ui.vista_ferma(game_state):
+                # Il tasto serve solo a tornare: non entra nella mossa.
+                game_state.vista_ferma = False
+                refresh_line()
+                last_refresh = time.time()
                 continue
 
             if c == "\r" or c == "\n":
@@ -1126,6 +1144,7 @@ def StartGame(clock_config):
         sync=True,
     )
     game_state = board_utils.GameState(clock_config)
+    game_state.vista_fermabile = True
     if is_fischer_random:
         game_state.board = starting_board
         chess960_utils.setup_pgn_headers_chess960(
