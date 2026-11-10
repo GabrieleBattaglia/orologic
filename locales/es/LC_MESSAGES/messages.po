@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-10 12:05+0100\n"
+"POT-Creation-Date: 2026-11-10 12:19+0100\n"
 "PO-Revision-Date: 2025-06-28 14:26+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: es <LL@li.org>\n"
@@ -6636,7 +6636,21 @@ msgstr ""
 "\r"
 "Cuando hayas guardado y cerrado el archivo, pulsa una tecla para volver.\r"
 
-#: orologic_modules/modello_prompt.py:640
+#: orologic_modules/modello_prompt.py:625
+#, python-brace-format
+msgid "Anteprima: {p}"
+msgstr "Vista previa: {p}"
+
+#: orologic_modules/modello_prompt.py:628
+#, python-brace-format
+msgid "Prompt dinamico, riscritto ogni {n} secondi."
+msgstr "Prompt dinámico, reescrito cada {n} segundos."
+
+#: orologic_modules/modello_prompt.py:630
+msgid "Prompt statico."
+msgstr "Prompt estático."
+
+#: orologic_modules/modello_prompt.py:651
 msgid ""
 "Nel file non c'e' un modello. Riaprirlo per scriverlo? (INVIO per riaprire, "
 "ESC per tenere quello di prima): "
@@ -6644,13 +6658,13 @@ msgstr ""
 "En el archivo no hay un modelo. ¿Reabrirlo para escribirlo? (ENTER para "
 "reabrir, ESC para mantener el anterior): "
 
-#: orologic_modules/modello_prompt.py:645
-#: orologic_modules/modello_prompt.py:661
-#: orologic_modules/modello_prompt.py:667
+#: orologic_modules/modello_prompt.py:656
+#: orologic_modules/modello_prompt.py:672
+#: orologic_modules/modello_prompt.py:685
 msgid "Modello invariato."
 msgstr "Modelo sin cambios."
 
-#: orologic_modules/modello_prompt.py:655
+#: orologic_modules/modello_prompt.py:666
 msgid ""
 "Riaprire il file per correggerlo? (INVIO per riaprire, ESC per tenere il "
 "modello di prima): "
@@ -6658,25 +6672,19 @@ msgstr ""
 "¿Reabrir el archivo para corregirlo? (ENTER para reabrir, ESC para mantener "
 "el modelo anterior): "
 
-#: orologic_modules/modello_prompt.py:670
-#, python-brace-format
-msgid "Anteprima: {p}"
-msgstr "Vista previa: {p}"
+#: orologic_modules/modello_prompt.py:677
+msgid ""
+"\r"
+"Questo prompt va bene? (INVIO per accettarlo, ESC per riaprire il file)\r"
+msgstr ""
+"\r"
+"¿Este prompt está bien? (ENTER para aceptarlo, ESC para reabrir el archivo)\r"
 
-#: orologic_modules/modello_prompt.py:673
-#, python-brace-format
-msgid "Prompt dinamico, riscritto ogni {n} secondi."
-msgstr "Prompt dinámico, reescrito cada {n} segundos."
-
-#: orologic_modules/modello_prompt.py:675
-msgid "Prompt statico."
-msgstr "Prompt estático."
-
-#: orologic_modules/modello_prompt.py:678
+#: orologic_modules/modello_prompt.py:688
 msgid "Torna il prompt predefinito."
 msgstr "Se restablece el prompt predeterminado."
 
-#: orologic_modules/modello_prompt.py:681
+#: orologic_modules/modello_prompt.py:691
 msgid "Modello del prompt salvato."
 msgstr "Modelo del prompt guardado."
 

@@ -1,0 +1,29 @@
+$ Prompt di gioco di Orologic. Le righe che cominciano con il dollaro sono spiegazioni, e Orologic le ignora.
+$ Scrivi il modello nell'ultima riga, quella senza dollaro, poi salva e chiudi il Blocco note.
+$ Ogni codice e' il percento seguito da una lettera, maiuscola o minuscola; il resto e' testo libero.
+$ %b tempo del Bianco
+$ %n tempo del Nero
+$ %i il tuo tempo, dove hai un colore: Easyfish e Lichess
+$ %a il tempo dell'avversario, dove hai un colore
+$ %d differenza fra gli orologi, positiva se il Bianco ha piu' tempo
+$ %h chi ha piu' tempo: < il Bianco, > il Nero, = pari
+$ %m numero di mossa con l'ultima mossa, come il prompt classico
+$ %k numero della mossa da giocare
+$ %u ultima mossa giocata
+$ %v bilancio del materiale, positivo se il Bianco ne ha di piu'
+$ %t a chi tocca, B o N
+$ %r mosse senza catture ne' mosse di pedone, verso le 50
+$ %p mosse che mancano al prossimo controllo del tempo
+$ %f la posizione in FEN
+$ %c la scacchiera in caratteri, su piu' righe, come quella di .s
+$ %g durata della partita
+$ %o nome dell'avversario
+$ %s stati: pausa, senza orologio, premossa, RECLAMA
+$ Con una v dopo la lettera, la forma estesa, a parole: %bv %nv %iv %av %dv %gv %tv %uv %vv.
+$ %bp e %np: la percentuale di tempo consumato dal Bianco e dal Nero, come .1 e .2, dove ci sono le fasi.
+$ Un numero dopo il percento, da 1 a 120, rende il prompt dinamico: %4 lo riscrive ogni 4 secondi. Senza numero il prompt e' statico, e i tempi non compaiono.
+$ Se dopo %m c'e' altro, il cursore resta dopo la mossa, e il resto del prompt ti scorre a destra mentre scrivi.
+$ %c va messo prima di %m: la scacchiera si stampa sopra la riga dove scrivi.
+$ %% scrive un percento vero.
+$ Il modello predefinito e': %b %n %m
+%10 %u %m %b %bp %h %d %n %np %v %r %s

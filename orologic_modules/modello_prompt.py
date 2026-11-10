@@ -621,11 +621,22 @@ def apri_nell_editor(percorso):
     print()
 
 
+def _anteprima(nuovo):
+    print(_("Anteprima: {p}").format(p=componi(esempio(), nuovo)))
+    secondi = intervallo(nuovo)
+    if secondi:
+        print(_("Prompt dinamico, riscritto ogni {n} secondi.").format(n=secondi))
+    else:
+        print(_("Prompt statico."))
+
+
 def imposta():
     """La voce Prompt di gioco delle impostazioni: il modello va nel file
     prompt.txt, con le spiegazioni, si apre nel Blocco note, e alla chiusura
-    Orologic lo rilegge e lo applica."""
-    attuale = modello()
+    Orologic lo rilegge, ne fa sentire l'anteprima e chiede conferma: INVIO
+    lo applica, ESC riapre il file."""
+    prima = modello()
+    attuale = prima
     percorso = percorso_file()
     while True:
         os.makedirs(os.path.dirname(percorso), exist_ok=True)
@@ -643,7 +654,7 @@ def imposta():
             ):
                 continue
             print(_("Modello invariato."))
-            salva(attuale)
+            salva(prima)
             return
         errori = errori_del_modello(nuovo)
         if errori:
@@ -659,21 +670,20 @@ def imposta():
                 attuale = nuovo
                 continue
             print(_("Modello invariato."))
-            salva(modello())
+            salva(prima)
             return
-        break
-    if nuovo == modello():
-        salva(nuovo)
-        print(_("Modello invariato."))
-        return
+        _anteprima(nuovo)
+        if enter_escape(
+            _("\rQuesto prompt va bene? (INVIO per accettarlo, ESC per riaprire il file)\r")
+        ):
+            print()
+            break
+        print()
+        attuale = nuovo
     salva(nuovo)
-    print(_("Anteprima: {p}").format(p=componi(esempio(), nuovo)))
-    secondi = intervallo(nuovo)
-    if secondi:
-        print(_("Prompt dinamico, riscritto ogni {n} secondi.").format(n=secondi))
-    else:
-        print(_("Prompt statico."))
-    if nuovo == PREDEFINITO:
+    if nuovo == prima:
+        print(_("Modello invariato."))
+    elif nuovo == PREDEFINITO:
         Acusticator.play("orologic_prompt_predefinito", volume=config.VOLUME)
         print(_("Torna il prompt predefinito."))
     else:
