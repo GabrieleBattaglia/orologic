@@ -90,7 +90,31 @@ def _motore_pronto():
     return engine.ENGINE
 
 
-def _intestazioni(partita, nome, carriera, turno=None):
+def _classifica_apertura(partita):
+    """L'apertura nel PGN, come a fine arbitraggio: ECO, Opening e
+    Variation dell'ultima posizione della linea principale che il database
+    riconosce. Nel Fischer Random non c'e' apertura da classificare."""
+    if partita.headers.get("Variant", "") == "Chess960":
+        return
+    database = board_utils.LoadEcoDatabaseWithFEN("eco.db")
+    if not database:
+        return
+    scacchiera = partita.board()
+    trovata = None
+    for mossa in partita.mainline_moves():
+        scacchiera.push(mossa)
+        voce = board_utils.DetectOpeningByFEN(scacchiera, database)
+        if voce:
+            trovata = voce
+    if not trovata:
+        return
+    partita.headers["ECO"] = trovata["eco"]
+    partita.headers["Opening"] = trovata["opening"]
+    if trovata.get("variation"):
+        partita.headers["Variation"] = trovata["variation"]
+
+
+def _intestazioni(partita, nome, carriera):
     """Le intestazioni che non dipendono dal colore: il colore si sceglie
     dentro la partita, e White e Black si scrivono dopo. Intanto portano
     tutti e due il tuo nome, che la partita usa per gli annunci."""
@@ -99,7 +123,8 @@ def _intestazioni(partita, nome, carriera, turno=None):
     )
     partita.headers["Site"] = "Orologic"
     partita.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
-    partita.headers["Round"] = str(turno) if turno else "-"
+    # Una partita singola, libera o di carriera, non e' un turno di torneo.
+    partita.headers["Round"] = "-"
     partita.headers["White"] = nome
     partita.headers["Black"] = nome
     partita.headers["Annotator"] = f"Orologic V{version.VERSION} by {version.PROGRAMMER}"
@@ -140,6 +165,7 @@ def _dopo_la_partita(partita, stato):
                 board_utils.AggiungiTempiPgn(
                     partita, stato.clocks_history, stato.move_times
                 )
+    _classifica_apertura(partita)
     pgn = board_utils.format_pgn_comments(str(partita))
     nome_file = config.sanitize_filename(
         "{w}-{b}-{r}-{t}.pgn".format(
@@ -217,12 +243,11 @@ def _gioca_in_carriera():
         return
     nome = nome_utente()
     chess960_utils.verifica_motore_chess960(motore, False)
-    partite = statistiche_motore.di_carriera(statistiche_motore.leggi())
     dati = punteggio_motore.leggi()
     # L'Elo con cui cominci, letto prima: a fine partita il punteggio cambia.
     elo_prima = dati["punteggio"] if dati else None
     partita = chess.pgn.Game()
-    _intestazioni(partita, nome, carriera=True, turno=len(partite) + 1)
+    _intestazioni(partita, nome, carriera=True)
     _nodo, stato = game_mode.StartEngineGame(partita, motore, carriera=True)
     if stato is None:
         return
