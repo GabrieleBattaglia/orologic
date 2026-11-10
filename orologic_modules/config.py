@@ -207,6 +207,7 @@ DOT_COMMANDS = {
 MENU_CHOICES = {
     "analizza": _("Modalita' analisi partita"),
     "easyfish": _("Easyfish (Interfaccia Accessibile)"),
+    "gioca": _("Gioca contro il motore (carriera e libero)"),
     "lichess": _("Orolichess (Integrazione Lichess)"),
     "memoboard": _("Memoboard (Allenamento alla cieca)"),
     "arbitra": _("Inizia partita (Arbitraggio)"),

@@ -24,6 +24,7 @@ from orologic_modules import (
     config,
     engine,
     game_flow,
+    gioca,
     lichess_app,
     memoboard_app,
     modello_prompt,
@@ -131,6 +132,13 @@ def SchermataIniziale():
 # Il suono che accompagna ogni voce del menu. Le sequenze erano scritte
 # per esteso dentro i rami, nota per nota, per centinaia di righe.
 TEMI_MENU = {
+    # Gioca contro il motore: due colpi che salgono e una nota tenuta, come
+    # chi si siede alla scacchiera.
+    "gioca": lambda: Acusticator(
+        ["d4", 0.08, -0.4, config.VOLUME, "a4", 0.08, 0.4, config.VOLUME, "d5", 0.25, 0, config.VOLUME],
+        kind=3,
+        adsr=[3, 10, 80, 20],
+    ),
     ".": lambda: Acusticator(
         [
             "g4",
@@ -437,6 +445,9 @@ def _voci_impostazioni(db):
         "analisi": _("Analisi: tempo, linee e soglie di giudizio"),
         "motore": _("Motore scacchistico: {nome}").format(nome=engine.ENGINE_NAME),
         "nomi": _("Nomi dei pezzi, delle colonne e delle mosse"),
+        "giocatore": _("Il mio nome: {nome}").format(
+            nome=db.get("nome_utente") or _("non ancora scritto")
+        ),
         "prompt": _("Prompt di gioco: {modello}").format(
             modello=modello_prompt.modello()
         ),
@@ -479,6 +490,8 @@ def menu_impostazioni():
             ui.EditLocalization()
         elif scelta == "prompt":
             modello_prompt.imposta()
+        elif scelta == "giocatore":
+            gioca.imposta_nome()
         elif scelta == "salvataggio":
             if ui.alterna_impostazione("autosave_enabled"):
                 print(_("Salvataggio automatico attivo."))
@@ -638,6 +651,10 @@ def Main():
         elif scelta == "easyfish":
             _suona("easyfish")
             easyfish_app.run()
+
+        elif scelta == "gioca":
+            _suona("gioca")
+            gioca.menu_gioca()
 
         elif scelta == "lichess":
             _suona("lichess")

@@ -1,7 +1,8 @@
-# Orologic, Easyfish: la partita contro il motore.
-# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
+# Orologic: la partita contro il motore, per il menu gioca.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
 
 import random
+import time
 
 import chess
 import chess.engine
@@ -39,9 +40,9 @@ class EasyfishGameState:
         # tutte le altre modalita' e li danno per esistenti.
         self.white_player = _("Bianco")
         self.black_player = _("Nero")
-        self.refresh_interval = 0
+        self.refresh_interval = modello_prompt.intervallo()
         # Per il punteggio contro il motore: una partita conta solo con la
-        # partita a punteggio accesa, se comincia dalla posizione iniziale e
+        # partita di carriera, se comincia dalla posizione iniziale e
         # senza ritiri di mosse.
         self.mosse_iniziali = 0
         self.dalla_posizione_iniziale = False
@@ -51,6 +52,19 @@ class EasyfishGameState:
         # segue l'utente non deve uscirne.
         self.elo_minimo = 1320
         self.elo_massimo = 3190
+        self.elo_di_partenza = punteggio_motore.PUNTEGGIO_DI_PARTENZA
+        # Mosse, tempi impiegati e orologi dopo ogni mossa, per le
+        # statistiche del tempo e per i tempi nel PGN, come in arbitraggio.
+        self.move_history = []
+        self.move_times = []
+        self.clocks_history = []
+        self.inizio_tratto = None
+        self.modalita = "1"
+        # La resa del motore: le sue mosse di fila in una posizione persa, e
+        # la moneta, che si tira una volta sola per partita.
+        self.mosse_perse = 0
+        self.moneta_tirata = False
+        self.resa = False
 
 
 # Gli otto livelli di Lichess, dalla tabella di fishnet, il programma che fa
@@ -134,6 +148,48 @@ def descrivi_forza():
     return riga
 
 
+# La resa del motore, decisa con Gabriele il 10 novembre 2026. Stockfish non
+# ha un'opzione per arrendersi: la regola e' quella di Lichess, 5 mosse di
+# fila con una valutazione peggio di 10 pedoni o un matto contro, e quando
+# succede si tira una moneta, una volta sola per partita. Fissa, perche'
+# nessuno faccia arrendere il motore troppo presto.
+SOGLIA_DI_RESA = -1000
+MOSSE_PER_LA_RESA = 5
+
+
+def _il_motore_abbandona(result, colore_motore, game_state):
+    """Dopo la ricerca del motore: vero se il motore si arrende."""
+    punteggio = (result.info or {}).get("score")
+    if punteggio is None or game_state.moneta_tirata:
+        return False
+    visto = punteggio.pov(colore_motore)
+    perso = (visto.is_mate() and (visto.mate() or 0) < 0) or (
+        not visto.is_mate() and (visto.score() or 0) < SOGLIA_DI_RESA
+    )
+    game_state.mosse_perse = game_state.mosse_perse + 1 if perso else 0
+    if game_state.mosse_perse < MOSSE_PER_LA_RESA:
+        return False
+    game_state.moneta_tirata = True
+    if random.random() >= 0.5:
+        return False
+    game_state.resa = True
+    Acusticator.play("orologic_motore_abbandona", volume=config.VOLUME)
+    print(_("Il motore abbandona: la partita e' tua."))
+    return True
+
+
+def _segna_la_mossa(game_state, san, bianco):
+    """Ricorda la mossa, il tempo impiegato e l'orologio dopo la mossa, per
+    le statistiche del tempo e per i tempi nel PGN."""
+    adesso = time.time()
+    impiegato = adesso - (game_state.inizio_tratto or adesso)
+    game_state.inizio_tratto = adesso
+    residuo = game_state.white_remaining if bianco else game_state.black_remaining
+    game_state.move_history.append(san)
+    game_state.move_times.append(impiegato)
+    game_state.clocks_history.append(max(0.0, residuo))
+
+
 def comando_di_forza(cmd):
     """Vero per .s, .e, .f e .p seguiti da un numero: i comandi che cambiano
     la forza del motore in partita."""
@@ -141,15 +197,15 @@ def comando_di_forza(cmd):
 
 
 def _forza_bloccata(cmd, game_state):
-    """Con la partita a punteggio la forza non si cambia: lo si dice e si
+    """In carriera la forza non si cambia: lo si dice e si
     restituisce vero."""
     if not (game_state.a_punteggio and comando_di_forza(cmd)):
         return False
     Acusticator([400.0, 0.2, 0, config.VOLUME], kind=1)
     print(
         _(
-            "La partita e' a punteggio: la forza del motore resta quella scelta. "
-            "Per cambiarla, spegni .ea dal prompt di Easyfish."
+            "Partita di carriera: la forza del motore resta quella del modello. "
+            "Per sceglierla tu, gioca una partita libera."
         )
     )
     return True
@@ -183,7 +239,7 @@ def applica_forza(engine_instance, forza):
 
 
 def _chiedi_elo_del_motore(engine_instance, proposto):
-    """L'Elo del motore per la partita a punteggio, entro i limiti che il
+    """L'Elo del motore per la prima partita di carriera, entro i limiti che il
     motore dichiara: INVIO tiene quello dell'ultima volta."""
     opzione = engine_instance.options["UCI_Elo"]
     minimo = getattr(opzione, "min", None) or 1320
@@ -201,73 +257,61 @@ def _chiedi_elo_del_motore(engine_instance, proposto):
 
 
 def _prepara_la_forza(engine_instance, game_state):
-    """Prima della partita: con .ea acceso si sceglie l'Elo del motore, con
-    .ea spento torna la forza dell'ultima volta. Poi la riga che dice che
-    cosa succedera' a fine partita."""
-    ea = punteggio_motore.stato_ea()
-    game_state.a_punteggio = ea["attiva"]
-    if ea["attiva"] and "UCI_Elo" not in engine_instance.options:
+    """Prima della partita, la forza del motore e la riga che dice che cosa
+    succedera' alla fine.
+
+    In carriera l'Elo del motore lo decide il modello: alla prima partita, o
+    dopo un'inizializzazione, si chiedono il tuo Elo di partenza e quello del
+    motore. In libero torna la forza dell'ultima partita libera.
+    """
+    if game_state.a_punteggio and "UCI_Elo" not in engine_instance.options:
         print(
             _(
-                "Il motore non accetta un Elo: la partita a punteggio non e' "
-                "possibile, e questa partita non conta."
+                "Il motore non accetta un Elo: la carriera non e' possibile, e "
+                "questa partita non conta."
             )
         )
         game_state.a_punteggio = False
-    if game_state.a_punteggio:
-        opzione = engine_instance.options["UCI_Elo"]
-        game_state.elo_minimo = getattr(opzione, "min", None) or 1320
-        game_state.elo_massimo = getattr(opzione, "max", None) or 3190
-        # L'Elo del motore si chiede solo alla prima partita a punteggio:
-        # dopo il motore si adatta all'utente, partita dopo partita.
-        if punteggio_motore.leggi() is None:
-            elo = _chiedi_elo_del_motore(engine_instance, ea["elo_motore"])
-        else:
-            elo = max(
-                game_state.elo_minimo, min(game_state.elo_massimo, ea["elo_motore"])
-            )
-        applica_forza(engine_instance, {"tipo": "elo", "valore": elo, "profondita": None})
-        punteggio_motore.salva_ea(elo_motore=elo)
-    else:
+    if not game_state.a_punteggio:
         ricordata = punteggio_motore.forza_ricordata()
         if ricordata:
             applica_forza(engine_instance, ricordata)
-    print(descrivi_forza())
-    if not game_state.a_punteggio:
-        print(
-            _(
-                "Partita a punteggio spenta: questa partita non entra nel tuo "
-                "Elo contro il motore. La accendi con .ea dal prompt di Easyfish."
-            )
-        )
+        print(descrivi_forza())
         return
-    if not game_state.dalla_posizione_iniziale:
-        print(
-            _(
-                "Partita a punteggio accesa, ma la partita non parte dalla "
-                "posizione iniziale: non entrera' nel tuo Elo."
-            )
-        )
-        return
+    opzione = engine_instance.options["UCI_Elo"]
+    game_state.elo_minimo = getattr(opzione, "min", None) or 1320
+    game_state.elo_massimo = getattr(opzione, "max", None) or 3190
+    ea = punteggio_motore.stato_ea()
     dati = punteggio_motore.leggi()
-    if dati:
-        print(
+    if dati is None:
+        game_state.elo_di_partenza = dgt(
             _(
-                "Partita a punteggio: il tuo Elo, ora {p}, contro il motore a "
-                "{e}. A fine partita il motore si adatta al tuo Elo, con un "
-                "margine di caso; la forza resta ferma, e ritirare una mossa "
-                "toglie la partita dal conteggio."
-            ).format(p=dati["punteggio"], e=orologic_engine.forza["valore"])
+                "Prima partita di carriera: da quale Elo parti? (INVIO per "
+                "1500): "
+            ),
+            kind="i",
+            imin=100,
+            imax=3500,
+            default=punteggio_motore.PUNTEGGIO_DI_PARTENZA,
         )
+        elo = _chiedi_elo_del_motore(engine_instance, ea["elo_motore"])
     else:
-        print(
-            _(
-                "Partita a punteggio, la prima: a fine partita ti chiedo il "
-                "punteggio da cui partire, poi si aggiorna contro il motore a "
-                "{e}, che da li' in avanti si adatta al tuo Elo. La forza resta "
-                "ferma, e ritirare una mossa toglie la partita dal conteggio."
-            ).format(e=orologic_engine.forza["valore"])
+        elo = max(game_state.elo_minimo, min(game_state.elo_massimo, ea["elo_motore"]))
+    applica_forza(engine_instance, {"tipo": "elo", "valore": elo, "profondita": None})
+    punteggio_motore.salva_ea(elo_motore=elo)
+    print(descrivi_forza())
+    mio = dati["punteggio"] if dati else game_state.elo_di_partenza
+    print(
+        _(
+            "Partita di carriera: il tuo Elo, {p}, contro il motore a {e}. La "
+            "forza resta ferma, e ritirare una mossa toglie la partita dal "
+            "conteggio. Modello del motore: {m}."
+        ).format(
+            p=mio,
+            e=elo,
+            m=punteggio_motore.descrivi_modello(punteggio_motore.modello()),
         )
+    )
 
 
 def _imposta_livello_lichess(cmd, board, game_state, engine_instance):
@@ -322,13 +366,14 @@ def _imposta_profondita(cmd, board, game_state):
 def _aggiorna_punteggio(risultato, game_state):
     """Alla fine della partita, il punteggio dell'utente contro il motore.
 
-    Conta solo con la partita a punteggio accesa, il comando .ea, dove il
+    Conta solo nella carriera, dal menu gioca, dove il
     motore ha l'Elo scelto prima della partita e la forza non si cambia; e
     solo se la partita e' leale: dalla posizione iniziale, con un risultato
-    e senza ritiri. Quando non conta lo dice, e dice perche'. Con .ea spento
-    non conta mai, e la riga prima della partita lo ha gia' detto.
+    e senza ritiri. Quando non conta lo dice, e dice perche'. In libero
+    non conta mai.
     Restituisce i dati del punteggio e la variazione se la partita e'
-    entrata nel punteggio, altrimenti None.
+    entrata nel punteggio, altrimenti None. Il punteggio di partenza della
+    prima partita si chiede prima di giocare, in _prepara_la_forza.
     """
     forza = orologic_engine.forza
     if not game_state.a_punteggio or risultato not in ("1-0", "0-1", "1/2-1/2"):
@@ -346,19 +391,9 @@ def _aggiorna_punteggio(risultato, game_state):
     else:
         vince_il_bianco = risultato == "1-0"
         punti = 1 if vince_il_bianco == (game_state.human_color == chess.WHITE) else 0
-    partenza = punteggio_motore.PUNTEGGIO_DI_PARTENZA
-    if punteggio_motore.leggi() is None:
-        partenza = dgt(
-            _(
-                "Prima partita per il tuo punteggio contro il motore: da quale "
-                "punteggio parti? (INVIO per 1500): "
-            ),
-            kind="i",
-            imin=100,
-            imax=3500,
-            default=punteggio_motore.PUNTEGGIO_DI_PARTENZA,
-        )
-    dati, variazione = punteggio_motore.registra(punti, forza["valore"], partenza)
+    dati, variazione = punteggio_motore.registra(
+        punti, forza["valore"], game_state.elo_di_partenza
+    )
     if variazione > 0:
         Acusticator.play("orologic_punteggio_sale", volume=config.VOLUME)
     elif variazione < 0:
@@ -373,22 +408,28 @@ def _aggiorna_punteggio(risultato, game_state):
 MARGINE_DI_CASO = 50
 
 
-def _adatta_il_motore(game_state, elo_utente):
-    """Il motore della partita a punteggio si adatta all'utente: per la
-    partita seguente prende il suo Elo, piu' o meno un valore a caso fino a
-    MARGINE_DI_CASO, entro i limiti del motore. Si dice solo l'Elo nuovo,
-    non quanto c'e' di caso. Restituisce l'Elo nuovo."""
-    voluto = elo_utente + random.randint(-MARGINE_DI_CASO, MARGINE_DI_CASO)
-    nuovo = max(game_state.elo_minimo, min(game_state.elo_massimo, voluto))
+def _adatta_il_motore(game_state, elo_utente, elo_motore, punti):
+    """Il motore della carriera sceglie l'Elo della partita seguente con il
+    modello in uso, entro i limiti del motore. Si dice solo l'Elo nuovo, non
+    quanto c'e' di caso. Restituisce l'Elo nuovo."""
+    nuovo, voluto = punteggio_motore.prossimo_elo(
+        punteggio_motore.modello(),
+        elo_utente,
+        elo_motore,
+        punti,
+        game_state.elo_minimo,
+        game_state.elo_massimo,
+        random.randint,
+    )
     punteggio_motore.salva_ea(elo_motore=nuovo)
-    if nuovo == game_state.elo_minimo and voluto < nuovo:
+    if voluto < nuovo:
         print(
             _(
                 "Il motore si adatta: alla prossima partita gioca a Elo {n}, il "
                 "suo minimo."
             ).format(n=nuovo)
         )
-    elif nuovo == game_state.elo_massimo and voluto > nuovo:
+    elif voluto > nuovo:
         print(
             _(
                 "Il motore si adatta: alla prossima partita gioca a Elo {n}, il "
@@ -404,13 +445,18 @@ def _adatta_il_motore(game_state, elo_utente):
     return nuovo
 
 
-def _scegli_colore():
-    """La scelta del colore, con la proposta delle statistiche, issue 66.
-
-    Il colore proposto e' quello di INVIO, ESC da' l'altro: senza partite
-    registrate la proposta e' il Bianco, come era INVIO prima.
-    """
-    proposto, motivo = statistiche_motore.colore_proposto(statistiche_motore.leggi())
+def _scegli_colore(proponi=True):
+    """La scelta del colore. In carriera con la proposta delle statistiche,
+    issue 66: il colore proposto e' quello di INVIO, ESC da' l'altro, e senza
+    partite registrate la proposta e' il Bianco. In libero INVIO e' il
+    Bianco ed ESC il Nero."""
+    if not proponi:
+        if enter_escape(_("Vuoi giocare col bianco (INVIO) o col nero (ESCAPE)?: ")):
+            return chess.WHITE
+        return chess.BLACK
+    proposto, motivo = statistiche_motore.colore_proposto(
+        statistiche_motore.di_carriera(statistiche_motore.leggi())
+    )
     if proposto == chess.WHITE:
         print(_("Ti propongo il Bianco: {motivo}").format(motivo=motivo))
         domanda = _("Giochi col bianco (INVIO) o col nero (ESCAPE)?: ")
@@ -923,16 +969,19 @@ def _partita_finita_dopo_la_mossa(board, current_node, game_state):
     return False
 
 
-def StartEngineGame(game_node, engine_instance, sharing_window=None):
-    """
-    Avvia una partita contro il motore a partire dalla posizione corrente di game_node.
-    Utilizza un thread separato per la gestione dell'orologio.
+def StartEngineGame(game_node, engine_instance, sharing_window=None, carriera=False):
+    """Una partita contro il motore dalla posizione di game_node, con
+    l'orologio in un thread a parte.
+
+    carriera vero: la partita conta per il tuo Elo, e il motore ha l'Elo del
+    modello; falso: partita libera, con la forza che scegli tu. Restituisce
+    l'ultimo nodo e lo stato della partita, None se non e' cominciata.
     """
     if sharing_window and sharing_window.is_active():
         sharing_window.update_board(game_node.board(), game_node)
     if not engine_instance:
         print(_("Motore non disponibile. Configuralo nelle impostazioni."))
-        return game_node
+        return game_node, None
     # Da una posizione gia' conclusa non si gioca: la partita finirebbe senza
     # una mossa, e le statistiche conterebbero un risultato mai giocato.
     if game_node.board().is_game_over(claim_draw=True):
@@ -942,7 +991,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                 "per giocare contro il motore."
             )
         )
-        return game_node
+        return game_node, None
 
     print(_("Nuova Partita contro il Motore"))
 
@@ -967,7 +1016,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     if engine_mode == "1":
         user_time, user_inc = ParseTimeInput(_("Tuo tempo partita"))
         if user_time is None:
-            return game_node
+            return game_node, None
 
         same_time = not enter_escape(
             _("Usare stesso tempo per il motore? (INVIO per no, ESC per si'): ")
@@ -978,7 +1027,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
         else:
             engine_time, engine_inc = ParseTimeInput(_("Tempo partita motore"))
             if engine_time is None:
-                return game_node
+                return game_node, None
 
     elif engine_mode == "2":
         ignore_clock = True
@@ -994,6 +1043,8 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
 
     # Setup GameState
     game_state = EasyfishGameState()
+    game_state.a_punteggio = carriera
+    game_state.modalita = engine_mode
     game_state.ignore_clock = ignore_clock
     board = game_node.board()
     game_state.active_color = board.turn
@@ -1001,13 +1052,13 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     game_state.mosse_iniziali = len(board.move_stack)
     game_state.dalla_posizione_iniziale = board.fen() == chess.STARTING_FEN
     # Il risultato si legge alla fine dall'intestazione: quello di una
-    # partita caricata o di una .g precedente non deve passare per questo.
+    # partita caricata o precedente non deve passare per questo.
     radice = game_node.root()
     risultato_precedente = radice.headers.get("Result", "*")
     radice.headers["Result"] = "*"
 
     # Scelta del colore
-    game_state.human_color = _scegli_colore()
+    game_state.human_color = _scegli_colore(proponi=carriera)
 
     if game_state.human_color == chess.WHITE:
         game_state.white_remaining = float(user_time)
@@ -1025,7 +1076,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     _nomi_dei_contendenti(game_state, game_node, engine_instance)
 
     # La forza che il motore ha davvero adesso, e che cosa succedera' a fine
-    # partita: la partita a punteggio, o la forza dell'ultima volta.
+    # partita: la carriera, o la forza dell'ultima partita libera.
     _prepara_la_forza(engine_instance, game_state)
     # Forza attivazione WDL dal motore per l'analisi e gioco
     try:
@@ -1037,6 +1088,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
 
     # Avvio dell'orologio, lo stesso usato dall'arbitraggio.
     orologio.avvia(game_state)
+    game_state.inizio_tratto = time.time()
 
     current_node = game_node
 
@@ -1198,6 +1250,11 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
 
                         if steps > 0:
                             game_state.ritiri += 1
+                            for _passo in range(min(steps, len(game_state.move_history))):
+                                game_state.move_history.pop()
+                                game_state.move_times.pop()
+                                game_state.clocks_history.pop()
+                            game_state.inizio_tratto = time.time()
                             current_node = temp_node
                             board = current_node.board()
                             game_state.active_color = board.turn
@@ -1219,6 +1276,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                     move_san_norm = NormalizeMove(move_input)
                     move = board.parse_san(move_san_norm)
                     if move in board.legal_moves:
+                        san_umano = board.san(move)
                         new_node = current_node.add_main_variation(move)
                         current_node = new_node
                         board.push(move)
@@ -1229,6 +1287,9 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                             orologio.aggiungi(game_state, True, game_state.white_inc)
                         else:
                             orologio.aggiungi(game_state, False, game_state.black_inc)
+                        _segna_la_mossa(
+                            game_state, san_umano, game_state.human_color == chess.WHITE
+                        )
 
                         game_state.active_color = board.turn
                         Acusticator([1000.0, 0.05, 0, config.VOLUME], kind=1)
@@ -1269,11 +1330,19 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                     )
 
                 try:
-                    result = engine_instance.play(board, limit)
+                    result = engine_instance.play(
+                        board, limit, info=chess.engine.INFO_SCORE
+                    )
                     # La bandierina del motore e' caduta mentre pensava: la
                     # mossa arriva fuori tempo, e non si gioca.
                     if game_state.flag_fallen:
                         continue
+                    if _il_motore_abbandona(result, board.turn, game_state):
+                        current_node.root().headers["Result"] = (
+                            "1-0" if game_state.human_color == chess.WHITE else "0-1"
+                        )
+                        game_state.game_over = True
+                        break
 
                     if result.move:
                         if engine_has_clock:
@@ -1286,9 +1355,15 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
                                     game_state, False, game_state.black_inc
                                 )
 
+                        san_motore = board.san(result.move)
                         new_node = current_node.add_main_variation(result.move)
                         current_node = new_node
                         board.push(result.move)
+                        _segna_la_mossa(
+                            game_state,
+                            san_motore,
+                            game_state.human_color != chess.WHITE,
+                        )
                         if sharing_window and sharing_window.is_active():
                             sharing_window.update_board(board, current_node)
 
@@ -1344,14 +1419,19 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     print(_("Risultato: {r}").format(r=res))
     forza_finale = dict(orologic_engine.forza)
     if not game_state.a_punteggio:
-        # La prossima partita, anche dopo aver chiuso Easyfish, riparte da qui.
+        # La prossima partita libera, anche dopo aver chiuso Orologic,
+        # riparte da qui. Le partite libere non entrano nelle statistiche.
         punteggio_motore.ricorda_forza(forza_finale)
+        return current_node, game_state
     esito_elo = _aggiorna_punteggio(res, game_state)
     elo_utente = variazione = elo_motore = None
     if esito_elo:
         dati_elo, variazione = esito_elo
         elo_utente = dati_elo["punteggio"]
-        elo_motore = _adatta_il_motore(game_state, elo_utente)
+        punti = statistiche_motore.punti_del_risultato(res, game_state.human_color)
+        elo_motore = _adatta_il_motore(
+            game_state, elo_utente, forza_finale["valore"], punti
+        )
     statistiche_motore.registra(
         res,
         game_state.human_color,
@@ -1363,4 +1443,4 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None):
     )
     # La scacchiera finale non si stampa piu' da sola: chi la vuole la
     # chiede con punto s, come in tutte le altre modalita'.
-    return current_node
+    return current_node, game_state

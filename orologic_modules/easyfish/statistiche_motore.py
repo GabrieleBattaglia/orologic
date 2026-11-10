@@ -68,6 +68,7 @@ def registra(
         "forza": {"tipo": forza.get("tipo"), "valore": forza.get("valore")},
         "profondita": forza.get("profondita"),
         "elo": bool(conta_per_elo),
+        "carriera": True,
     }
     if conta_per_elo and elo_utente is not None:
         voce.update(
@@ -79,6 +80,56 @@ def registra(
 
     storage.UpdateDB(modifica)
     return voce
+
+
+def di_carriera(partite):
+    """Le partite della carriera. Quelle registrate da Easyfish fino alla
+    8.41.5 restano se erano entrate nel punteggio; le altre erano partite
+    libere, e le statistiche della carriera non le contano."""
+    return [voce for voce in partite if voce.get("carriera") or voce.get("elo")]
+
+
+def righe_record(partite, dati_elo):
+    """I record della carriera: la vittoria contro il motore piu' forte, la
+    serie piu' lunga di vittorie e il tuo Elo massimo, con le date."""
+    righe = [_("Record della carriera.")]
+    vittorie = [
+        voce
+        for voce in partite
+        if voce.get("punti") == 1 and (voce.get("forza") or {}).get("tipo") == "elo"
+    ]
+    if vittorie:
+        migliore = max(vittorie, key=lambda voce: voce["forza"].get("valore") or 0)
+        data = _data(migliore)
+        righe.append(
+            _("Vittoria contro il motore piu' forte: Elo {e}, il {data}.").format(
+                e=migliore["forza"].get("valore"),
+                data=data.strftime("%d/%m/%Y") if data else "?",
+            )
+        )
+    else:
+        righe.append(_("Nessuna vittoria contro il motore, per ora."))
+    serie = serie_piu_lunga_di_vittorie(partite)
+    if serie:
+        righe.append(_("Serie piu' lunga di vittorie: {n}.").format(n=serie))
+    con_elo = [voce for voce in partite if voce.get("elo_utente") is not None]
+    if con_elo:
+        cima = max(con_elo, key=lambda voce: voce["elo_utente"])
+        data = _data(cima)
+        righe.append(
+            _("Il tuo Elo massimo: {e}, il {data}.").format(
+                e=cima["elo_utente"], data=data.strftime("%d/%m/%Y") if data else "?"
+            )
+        )
+    elif dati_elo:
+        righe.append(_("Il tuo Elo massimo: {e}.").format(e=dati_elo["massimo"]))
+    return righe
+
+
+def serie_dell_elo(partite):
+    """I valori del tuo Elo dopo ogni partita di carriera, per la
+    sonificazione: dal primo all'ultimo."""
+    return [voce["elo_utente"] for voce in partite if voce.get("elo_utente") is not None]
 
 
 def _data(voce):
@@ -255,15 +306,11 @@ def _riga_serie(punti, quante):
 
 
 def righe_pagina(partite, dati_elo, adesso=None):
-    """Le righe della pagina di .gs, nell'ordine in cui si leggono."""
-    righe = [_("Statistiche delle partite contro il motore.")]
+    """Le righe della pagina delle statistiche della carriera, nell'ordine
+    in cui si leggono. partite sono gia' quelle di carriera."""
+    righe = [_("Statistiche della carriera contro il motore.")]
     if not partite:
-        righe.append(
-            _(
-                "Nessuna partita registrata: si contano le partite .g concluse "
-                "dalla versione 8.33.0 in poi."
-            )
-        )
+        righe.append(_("Nessuna partita di carriera registrata."))
     else:
         conti = conteggi_per_colore(partite)
         tot = {
@@ -318,18 +365,21 @@ def righe_pagina(partite, dati_elo, adesso=None):
         serie = serie_del_mese(partite, adesso)
         if serie:
             righe.extend(_righe_del_mese(serie))
+        righe.append(
+            _("Alla prossima partita il motore gioca a Elo {e}.").format(
+                e=punteggio_motore.stato_ea()["elo_motore"]
+            )
+        )
     else:
         righe.append(
             _(
-                "Punteggio Elo contro il motore: nessuna partita, contano quelle "
-                "giocate con la partita a punteggio accesa, il comando .ea."
+                "Punteggio Elo contro il motore: alla prima partita di carriera "
+                "ti chiedo da dove parti."
             )
         )
-    stato = punteggio_motore.stato_ea()
-    if stato["attiva"]:
-        righe.append(
-            _("Partita a punteggio accesa, motore a Elo {e}.").format(e=stato["elo_motore"])
+    righe.append(
+        _("Modello del motore: {m}.").format(
+            m=punteggio_motore.descrivi_modello(punteggio_motore.modello())
         )
-    else:
-        righe.append(_("Partita a punteggio spenta: la accendi con .ea."))
+    )
     return righe

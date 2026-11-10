@@ -1,10 +1,10 @@
-# Orologic, Easyfish: il punteggio dell'utente contro il motore.
-# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, UltraCode).
+# Orologic: il punteggio dell'utente nella carriera contro il motore.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
 
-"""Il punteggio Elo dell'utente nelle partite contro il motore.
+"""Il punteggio Elo dell'utente nella carriera contro il motore.
 
-Contano soltanto le partite contro un motore impostato con .e, perche' solo
-li' l'avversario ha un numero: l'Elo che Stockfish dichiara. Il calcolo e'
+Contano soltanto le partite di carriera, dal menu gioca, dove il motore ha
+un Elo che decide il modello scelto dall'utente. Il calcolo e'
 quello del regolamento FIDE B.02: punteggio atteso dalla differenza di Elo,
 con una differenza oltre i 400 punti contata come 400, e coefficiente K di
 40 per le prime 30 partite, poi 20, e 10 da 2400 in su.
@@ -19,13 +19,22 @@ from ..config import _
 
 CHIAVE = "punteggio_contro_il_motore"
 PUNTEGGIO_DI_PARTENZA = 1500
-# La partita a punteggio, comando .ea: accesa o spenta, e l'ultimo Elo dato
-# al motore, che si propone alla partita seguente.
+# L'Elo del motore per la prossima partita di carriera. La chiave porta
+# ancora il nome della partita a punteggio, il .ea della 8.38.0, perche' i
+# dati gia' salvati restino validi.
 CHIAVE_EA = "partita_a_punteggio"
 ELO_MOTORE_PREDEFINITO = 1500
-# La forza dell'ultima partita a punteggio spento, che torna alla seguente
-# anche dopo aver chiuso Easyfish: prima il motore ripartiva al massimo.
+# La forza dell'ultima partita libera, che torna alla seguente anche dopo
+# aver chiuso il programma: prima il motore ripartiva al massimo.
 CHIAVE_FORZA = "forza_del_motore"
+# Il modello con cui il motore della carriera sceglie il proprio Elo.
+CHIAVE_MODELLO = "modello_del_motore"
+MODELLO_PREDEFINITO = {"tipo": "casuale", "da": -50, "a": 50}
+# La curva dell'inseguimento: il salto e' d * |d| / (|d| + CURVA).
+CURVA = 100
+PASSO_CONTRARIO = 5
+PASSO_VICINO = 10
+DISTANZA_VICINA = 10
 
 
 def leggi():
@@ -34,7 +43,8 @@ def leggi():
 
 
 def stato_ea():
-    """La partita a punteggio: attiva e Elo del motore."""
+    """L'Elo del motore per la prossima partita di carriera. La chiave
+    attiva, della partita a punteggio .ea fino alla 8.41.5, non serve piu'."""
     dati = storage.LoadDB().get(CHIAVE_EA) or {}
     try:
         elo = int(dati.get("elo_motore") or ELO_MOTORE_PREDEFINITO)
@@ -44,7 +54,7 @@ def stato_ea():
 
 
 def salva_ea(**campi):
-    """Aggiorna lo stato della partita a punteggio, attiva o elo_motore."""
+    """Aggiorna l'Elo del motore per la prossima partita, elo_motore."""
 
     def modifica(db):
         dati = dict(db.get(CHIAVE_EA) or {})
@@ -69,6 +79,97 @@ def ricorda_forza(forza):
             "valore": forza.get("valore"),
             "profondita": forza.get("profondita"),
         }
+
+    storage.UpdateDB(modifica)
+
+
+def modello():
+    """Il modello del motore della carriera, con i suoi valori."""
+    salvato = storage.LoadDB().get(CHIAVE_MODELLO)
+    if isinstance(salvato, dict) and salvato.get("tipo") in (
+        "uguale",
+        "delta",
+        "casuale",
+        "inseguimento",
+    ):
+        return salvato
+    return dict(MODELLO_PREDEFINITO)
+
+
+def salva_modello(nuovo):
+    def modifica(db):
+        db[CHIAVE_MODELLO] = dict(nuovo)
+
+    storage.UpdateDB(modifica)
+
+
+def descrivi_modello(scelto):
+    """Il modello in una frase breve, per il menu della carriera."""
+    tipo = scelto.get("tipo")
+    if tipo == "uguale":
+        return _("uguale, il motore ha il tuo Elo")
+    if tipo == "delta":
+        return _("delta assoluto, il tuo Elo {d:+d}").format(d=scelto.get("delta", 0))
+    if tipo == "casuale":
+        return _("delta casuale, il tuo Elo da {a:+d} a {b:+d}").format(
+            a=scelto.get("da", 0), b=scelto.get("a", 0)
+        )
+    return _("inseguimento, il motore ti insegue")
+
+
+def passo_di_inseguimento(elo_utente, elo_motore, punti):
+    """Di quanto si sposta il motore che insegue, dopo una partita.
+
+    La distanza d e' il tuo Elo meno quello del motore. Se il risultato
+    spinge il motore verso di te, cioe' vinci quando lui e' sotto o perdi
+    quando e' sopra, il salto segue una curva: d * |d| / (|d| + 100), 17
+    punti a 50 di distanza, 50 a 100, 225 a 300. La patta da' meta' del
+    salto, verso di te. Il risultato contrario da' un passo piccolo, di 5
+    punti, nella sua direzione: su se vinci, giu' se perdi. Sotto i 10 punti
+    di distanza: vittoria +10, patta 0, sconfitta -10. Regola decisa con
+    Gabriele il 10 novembre 2026, dal suo esempio: tu 1500 e il motore 1400,
+    vinci +50, patti +25, perdi -5.
+    """
+    d = elo_utente - elo_motore
+    if abs(d) < DISTANZA_VICINA:
+        return {1: PASSO_VICINO, 0.5: 0, 0: -PASSO_VICINO}[punti]
+    salto = d * abs(d) / (abs(d) + CURVA)
+    if punti == 0.5:
+        return round(salto / 2)
+    favorevole = (punti == 1 and d > 0) or (punti == 0 and d < 0)
+    if favorevole:
+        return round(salto)
+    return PASSO_CONTRARIO if punti == 1 else -PASSO_CONTRARIO
+
+
+def prossimo_elo(scelto, elo_utente, elo_motore, punti, minimo, massimo, caso):
+    """L'Elo del motore per la partita seguente, secondo il modello, entro i
+    limiti del motore. caso e' una funzione come random.randint, passata
+    da fuori perche' le prove la possano fissare. punti e' None quando il
+    modello cambia fra una partita e l'altra."""
+    tipo = scelto.get("tipo")
+    if tipo == "uguale":
+        voluto = elo_utente
+    elif tipo == "delta":
+        voluto = elo_utente + int(scelto.get("delta", 0))
+    elif tipo == "casuale":
+        da, a = int(scelto.get("da", 0)), int(scelto.get("a", 0))
+        voluto = elo_utente + caso(min(da, a), max(da, a))
+    elif punti is None:
+        voluto = elo_motore
+    else:
+        voluto = elo_motore + passo_di_inseguimento(elo_utente, elo_motore, punti)
+    return max(minimo, min(massimo, voluto)), voluto
+
+
+def azzera_carriera():
+    """Cancella la carriera: punteggio, registro delle partite ed Elo del
+    motore. Il modello resta quello scelto."""
+    from . import statistiche_motore
+
+    def modifica(db):
+        for chiave in (CHIAVE, CHIAVE_EA, statistiche_motore.CHIAVE):
+            db.pop(chiave, None)
 
     storage.UpdateDB(modifica)
 

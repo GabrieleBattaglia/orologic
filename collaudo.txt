@@ -1,0 +1,65 @@
+Collaudo di Orologic 9.6.2, le issue 68 e 69
+Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto)
+Prima: Orologic dai sorgenti, con GBUtils V249 o successiva, che ha i suoni del menu gioca.
+Prova 1, il prompt dinamico, issue 68
+Passo 1: nelle impostazioni, Prompt di gioco, scrivi %4 %b %n %m e conferma.
+Domanda 1: l'anteprima non mostra il 4, e Orologic dice prompt dinamico, ogni 4 secondi?
+Passo 2: arbitra una partita.
+Domanda 2: il prompt si riscrive da solo ogni 4 secondi, senza toccare .6?
+Passo 3: in partita scrivi .6 e metti 0.
+Domanda 3: l'aggiornamento si ferma, e alla partita seguente torna ogni 4 secondi?
+Passo 4: scrivi %0 %b come modello.
+Domanda 4: ti dice che il numero va da 1 a 120 e ti fa riscrivere?
+Passo 5: torna al predefinito con l'asterisco e guarda una partita su Lichess.
+Domanda 5: il prompt e' statico, e con %2 nel modello torna a correre?
+Esito:
+Prova 2, il menu gioca e la partita libera
+Passo 1: nel menu principale scegli gioca.
+Domanda 1: senti il suo tema e le voci carriera e libero?
+Passo 2: scegli libero; se Orologic non sa il tuo nome, te lo chiede.
+Domanda 2: chiede variante, modalita' di tempo e colore, INVIO per il Bianco?
+Passo 3: in partita imposta .f3, gioca qualche mossa e abbandona con il punto.
+Domanda 3: a fine partita chiede dei tempi, salva il PGN con il tuo nome e Stockfish 19, lo copia negli appunti e ti propone l'analisi?
+Passo 4: rispondi ESC all'analisi automatica.
+Domanda 4: la partita si apre in Easyfish, gia' caricata?
+Passo 5: gioca un'altra partita libera.
+Domanda 5: la forza riparte dal livello 3 di Lichess?
+Esito:
+Prova 3, la carriera
+Passo 1: in gioca scegli carriera, poi gioca.
+Domanda 1: alla prima partita chiede il tuo Elo e quello del motore, prima di giocare?
+Domanda 2: propone il colore, e la riga prima della partita dice il tuo Elo, quello del motore e il modello?
+Passo 2: in partita prova .e2000.
+Domanda 3: ti dice che in carriera la forza la decide il modello?
+Passo 3: finisci la partita.
+Domanda 4: senti punteggio, variazione e l'Elo del motore per la prossima, e nel PGN ci sono WhiteElo, BlackElo, Round e Annotator?
+Passo 4: gioca una seconda partita.
+Domanda 5: non chiede piu' gli Elo?
+Esito:
+Prova 4, i modelli del motore
+Passo 1: in carriera scegli modello, e prova uguale, delta assoluto con 100, delta casuale da -30 a 80 e inseguimento.
+Domanda 1: ogni volta senti il suono del modello e l'Elo del motore per la prossima partita, coerente con il modello?
+Domanda 2: l'etichetta della voce modello dice quello in uso?
+Passo 2: con inseguimento, gioca qualche partita.
+Domanda 3: il motore si avvicina al tuo Elo come ti aspetti, di piu' quando e' lontano?
+Esito:
+Prova 5, statistiche, record, sonifica e inizializza
+Passo 1: in carriera scegli statistiche, poi record.
+Domanda 1: le due pagine si capiscono, e i record hanno le date?
+Passo 2: scegli sonifica.
+Domanda 2: con meno di 5 partite te lo dice; con 5 o piu' senti la serie del tuo Elo?
+Passo 3: scegli inizializza e rispondi ESC, poi di nuovo e rispondi INVIO.
+Domanda 3: con ESC resta tutto, con INVIO senti il suono e alla partita seguente ti richiede gli Elo?
+Esito:
+Prova 6, la resa del motore
+Passo 1: gioca libero o in carriera contro un motore debole, per esempio a Elo 1320, e cerca di vincere nettamente.
+Domanda 1: quando la partita e' persa per lui, a volte il motore abbandona, con il suo suono e la riga, e a volte gioca fino al matto?
+Esito:
+Prova 7, il mio nome e Easyfish
+Passo 1: nelle impostazioni scegli Il mio nome e cambialo.
+Domanda 1: l'etichetta dice il nome, e il PGN della partita seguente porta quello nuovo?
+Passo 2: in Easyfish scrivi .g, .ea e .gs, e .? per l'elenco dei comandi.
+Domanda 2: i tre comandi non esistono piu', e l'elenco non li nomina?
+Domanda 3: i suoni nuovi, carriera, libero, modello, record, carriera azzerata e resa, ti piacciono?
+Esito:
+Difficolta' incontrate e note libere:

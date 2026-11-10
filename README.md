@@ -5,7 +5,8 @@ Orologic è un orologio per scacchi e uno strumento di analisi pensato per chi u
 ## Che cosa fa
 
 - **Arbitra le partite a tavolino**: orologi a più fasi, con incrementi e allarmi; mosse in notazione algebrica, descritte a parole; partita salvata in PGN.
-- **Easyfish**: studia le partite con Stockfish, con varianti, commenti, analisi, editor della scacchiera, e gioca contro il motore con un punteggio Elo e le statistiche delle tue partite.
+- **Gioca contro il motore**: una carriera con il tuo Elo, un motore che si adatta a te con quattro modelli, statistiche, record e la serie del tuo Elo in suono; oppure una partita libera, con la forza che scegli tu.
+- **Easyfish**: studia le partite con Stockfish, con varianti, commenti, analisi ed editor della scacchiera.
 - **Orolichess**: gioca su Lichess, guarda le partite, risolvi i puzzle, consulta e gioca i tornei arena.
 - **Memoboard**: allenamento alla visualizzazione della scacchiera alla cieca.
 - **Ricerca PGN**: filtra un archivio di partite e naviga l'albero delle aperture.

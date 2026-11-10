@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 8.41.5 - lunedì 9 novembre 2026)</h1>
+<h1>Guida Utente di Orologic (Versione 9.6.2 - martedì 10 novembre 2026)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -146,87 +146,99 @@ margin: 1em 0;
 </li>
 </ul>
 </li>
-<li><a href="#cap-2-4">2.4. Easyfish (Interfaccia a riga di comando per Stockfish)</a>
+<li><a href="#cap-2-4">2.4. Gioca contro il motore (gioca)</a>
 <ul>
-<li><a href="#cap-2-4-1">2.4.1. Iniziare e Gestire la Partita</a>
+<li><a href="#cap-2-4-1">2.4.1. Libero</a>
 </li>
-<li><a href="#cap-2-4-2">2.4.2. Editor della Scacchiera (.be)</a>
-<ul>
-<li><a href="#cap-2-4-2-1">2.4.2.1. Inserimento Multiplo dei Pezzi</a>
+<li><a href="#cap-2-4-2">2.4.2. Carriera</a>
 </li>
-<li><a href="#cap-2-4-2-2">2.4.2.2. Interpretazione del Prompt dell'Editor</a>
+<li><a href="#cap-2-4-3">2.4.3. Durante la partita</a>
+</li>
+<li><a href="#cap-2-4-4">2.4.4. La resa del motore</a>
+</li>
+<li><a href="#cap-2-4-5">2.4.5. A fine partita</a>
 </li>
 </ul>
 </li>
-<li><a href="#cap-2-4-3">2.4.3. Giocare contro il Motore (.g)</a>
-</li>
-<li><a href="#cap-2-4-4">2.4.4. Modalità Esploratore (.e)</a>
-</li>
-<li><a href="#cap-2-4-5">2.4.5. Menu Disegno (.d)</a>
-</li>
-<li><a href="#cap-2-4-6">2.4.6. Condivisione Scacchiera Didattica (.cs, .csb, .csn, .cst, .cso)</a>
-</li>
-</ul>
-</li>
-<li><a href="#cap-2-5">2.5. Memoboard (Allenamento alla cieca) (memoboard)</a>
+<li><a href="#cap-2-5">2.5. Easyfish (Interfaccia a riga di comando per Stockfish)</a>
 <ul>
-<li><a href="#cap-2-5-1">2.5.1. Funzionamento dei Punteggi (Punti al Minuto)</a>
+<li><a href="#cap-2-5-1">2.5.1. Iniziare e Gestire la Partita</a>
 </li>
-<li><a href="#cap-2-5-2">2.5.2. Esercizi Disponibili e Feedback Acustico</a>
-</li>
-<li><a href="#cap-2-5-3">2.5.3. Classifiche e Qualificazione</a>
-</li>
-<li><a href="#cap-2-5-4">2.5.4. Report di Sessione e Analisi dei Tempi</a>
-</li>
-</ul>
-</li>
-<li><a href="#cap-2-6">2.6. Tempo (Orologio nudo e crudo) (tempo)</a>
-</li>
-<li><a href="#cap-2-7">2.7. Ricerca PGN (ricerca)</a>
+<li><a href="#cap-2-5-2">2.5.2. Editor della Scacchiera (.be)</a>
 <ul>
-<li><a href="#cap-2-7-1">2.7.1. Come caricare le partite</a>
+<li><a href="#cap-2-5-2-1">2.5.2.1. Inserimento Multiplo dei Pezzi</a>
 </li>
-<li><a href="#cap-2-7-2">2.7.2. Il Menu dei Filtri</a>
-</li>
-<li><a href="#cap-2-7-3">2.7.3. Navigazione dell'Albero delle Aperture</a>
-</li>
-<li><a href="#cap-2-7-4">2.7.4. Sfogliare e Analizzare le Partite (tasto 0)</a>
-</li>
-<li><a href="#cap-2-7-5">2.7.5. Un esempio completo: preparare una partita contro un avversario</a>
+<li><a href="#cap-2-5-2-2">2.5.2.2. Interpretazione del Prompt dell'Editor</a>
 </li>
 </ul>
 </li>
-<li><a href="#cap-2-8">2.8. Configurazione</a>
+<li><a href="#cap-2-5-3">2.5.3. Modalità Esploratore (.e)</a>
+</li>
+<li><a href="#cap-2-5-4">2.5.4. Menu Disegno (.d)</a>
+</li>
+<li><a href="#cap-2-5-5">2.5.5. Condivisione Scacchiera Didattica (.cs, .csb, .csn, .cst, .cso)</a>
+</li>
+</ul>
+</li>
+<li><a href="#cap-2-6">2.6. Memoboard (Allenamento alla cieca) (memoboard)</a>
 <ul>
-<li><a href="#cap-2-8-1">2.8.1. Gestione Orologi (orologi)</a>
+<li><a href="#cap-2-6-1">2.6.1. Funzionamento dei Punteggi (Punti al Minuto)</a>
 </li>
-<li><a href="#cap-2-8-2">2.8.2. Il sottomenu Impostazioni (impostazioni)</a>
+<li><a href="#cap-2-6-2">2.6.2. Esercizi Disponibili e Feedback Acustico</a>
 </li>
-<li><a href="#cap-2-8-3">2.8.3. Motore scacchistico (impostazioni, motore)</a>
+<li><a href="#cap-2-6-3">2.6.3. Classifiche e Qualificazione</a>
+</li>
+<li><a href="#cap-2-6-4">2.6.4. Report di Sessione e Analisi dei Tempi</a>
+</li>
+</ul>
+</li>
+<li><a href="#cap-2-7">2.7. Tempo (Orologio nudo e crudo) (tempo)</a>
+</li>
+<li><a href="#cap-2-8">2.8. Ricerca PGN (ricerca)</a>
 <ul>
-<li><a href="#cap-2-8-3-1">2.8.3.1. Portabilità e Gestione Percorsi (Relativi vs Assoluti)</a>
+<li><a href="#cap-2-8-1">2.8.1. Come caricare le partite</a>
 </li>
-<li><a href="#cap-2-8-3-2">2.8.3.2. Spiegazione dei Parametri UCI</a>
+<li><a href="#cap-2-8-2">2.8.2. Il Menu dei Filtri</a>
 </li>
-</ul>
+<li><a href="#cap-2-8-3">2.8.3. Navigazione dell'Albero delle Aperture</a>
 </li>
-<li><a href="#cap-2-8-4">2.8.4. Nomi dei pezzi, delle colonne e delle mosse (impostazioni, nomi)</a>
+<li><a href="#cap-2-8-4">2.8.4. Sfogliare e Analizzare le Partite (tasto 0)</a>
 </li>
-<li><a href="#cap-2-8-5">2.8.5. Impostazioni dell'analisi (impostazioni, analisi)</a>
-</li>
-<li><a href="#cap-2-8-6">2.8.6. Salvataggio automatico e stile dei menu (impostazioni, salvataggio e stile)</a>
-</li>
-<li><a href="#cap-2-8-7">2.8.7. Volume dei suoni (impostazioni, volume)</a>
-</li>
-<li><a href="#cap-2-8-8">2.8.8. Prompt di gioco (impostazioni, prompt)</a>
+<li><a href="#cap-2-8-5">2.8.5. Un esempio completo: preparare una partita contro un avversario</a>
 </li>
 </ul>
 </li>
-<li><a href="#cap-2-9">2.9. Apri Manuale (manuale)</a>
+<li><a href="#cap-2-9">2.9. Configurazione</a>
+<ul>
+<li><a href="#cap-2-9-1">2.9.1. Gestione Orologi (orologi)</a>
 </li>
-<li><a href="#cap-2-10">2.10. Novità (novita)</a>
+<li><a href="#cap-2-9-2">2.9.2. Il sottomenu Impostazioni (impostazioni)</a>
 </li>
-<li><a href="#cap-2-11">2.11. Esci dall'Applicazione (.)</a>
+<li><a href="#cap-2-9-3">2.9.3. Motore scacchistico (impostazioni, motore)</a>
+<ul>
+<li><a href="#cap-2-9-3-1">2.9.3.1. Portabilità e Gestione Percorsi (Relativi vs Assoluti)</a>
+</li>
+<li><a href="#cap-2-9-3-2">2.9.3.2. Spiegazione dei Parametri UCI</a>
+</li>
+</ul>
+</li>
+<li><a href="#cap-2-9-4">2.9.4. Nomi dei pezzi, delle colonne e delle mosse (impostazioni, nomi)</a>
+</li>
+<li><a href="#cap-2-9-5">2.9.5. Impostazioni dell'analisi (impostazioni, analisi)</a>
+</li>
+<li><a href="#cap-2-9-6">2.9.6. Salvataggio automatico e stile dei menu (impostazioni, salvataggio e stile)</a>
+</li>
+<li><a href="#cap-2-9-7">2.9.7. Volume dei suoni (impostazioni, volume)</a>
+</li>
+<li><a href="#cap-2-9-8">2.9.8. Prompt di gioco (impostazioni, prompt)</a>
+</li>
+</ul>
+</li>
+<li><a href="#cap-2-10">2.10. Apri Manuale (manuale)</a>
+</li>
+<li><a href="#cap-2-11">2.11. Novità (novita)</a>
+</li>
+<li><a href="#cap-2-12">2.12. Esci dall'Applicazione (.)</a>
 </li>
 </ul>
 </li>
@@ -427,7 +439,7 @@ margin: 1em 0;
         <tr><td><code>.1</code> / <code>.2</code> / <code>.3</code></td><td>Mostra il tempo del Bianco / del Nero / di entrambi.</td></tr>
         <tr><td><code>.4</code></td><td>Confronta i tempi e indica il vantaggio.</td></tr>
         <tr><td><code>.5</code></td><td>Dice di chi è il tratto, nominando il giocatore, oppure da quanto tempo gli orologi sono fermi se sei in pausa.</td></tr>
-        <tr><td><code>.6</code></td><td>Imposta ogni quanti secondi Orologic ripete da solo la situazione, da 0 a 120 (0 disattiva). Con l'aggiornamento acceso, i tempi compaiono anche nella riga dove scrivi, nel modo che decide il modello del prompt, sezione 2.8.8: con quello predefinito, i due orologi in testa.</td></tr>
+        <tr><td><code>.6</code></td><td>Imposta ogni quanti secondi Orologic ripete da solo la situazione, da 0 a 120 (0 disattiva). Con l'aggiornamento acceso, i tempi compaiono anche nella riga dove scrivi, nel modo che decide il modello del prompt, sezione 2.9.8: con quello predefinito, i due orologi in testa. Ogni partita comincia con l'aggiornamento che dice il modello, acceso se ha un numero e spento se non ce l'ha; <code>.6</code> lo cambia per la partita in corso.</td></tr>
         <tr><td><code>.l</code></td><td>Mostra la lista delle mosse giocate.</td></tr>
         <tr><td><code>.m</code></td><td>Mostra il valore del materiale per ciascun giocatore.</td></tr>
         <tr><td><code>.p</code></td><td>Mette in pausa o riavvia gli orologi.</td></tr>
@@ -591,10 +603,89 @@ margin: 1em 0;
     <li><strong>Rilevamento ed Esposizione Errori Gravi (Corruption Check):</strong> Se il PGN copiato contiene errori gravi che renderebbero impossibile l'analisi o corromperebbero l'albero di gioco (es. mosse illegali per la posizione sulla scacchiera, turni invertiti, o testi non scacchistici incollati per errore come normali messaggi di chat), Orologic riproduce un avviso sonoro di errore, stampa una descrizione dettagliata del problema (indicando la partita e l'errore esatto riscontrato) ed <strong>interrompe immediatamente il caricamento</strong> per evitare analisi automatiche o ripristini su dati corrotti.</li>
 </ol>
 
-<h3 id="cap-2-4">2.4. Easyfish (Interfaccia a riga di comando per Stockfish)</h3>
-<p>Easyfish è un modulo speciale accessibile dal menu principale. Offre un'interfaccia a riga di comando fluida e diretta per studiare, creare varianti e persino giocare in modo flessibile. I comandi speciali sono tutti preceduti dal punto (<code>.</code>). Inoltre, in tutte le modalità di Easyfish (nel menu principale, durante la partita contro il motore e nell'esploratore) sono pienamente supportati i <strong>comandi di ispezione della scacchiera</strong> descritti nella sezione 2.1.4 (<code>/[col]</code>, <code>\[col]</code>, <code>-[col|trv|casa]</code> e <code>,[Pezzo]</code>).</p>
+<h3 id="cap-2-4">2.4. Gioca contro il motore (gioca)</h3>
+<p>Dalla versione 9.0.0 la partita contro Stockfish ha una voce sua nel menu principale, <code>gioca</code>. Fino alla 8.41.5 stava in Easyfish, con i comandi <code>.g</code>, <code>.ea</code> e <code>.gs</code>, che non ci sono più. Entrando scegli fra due strade, <code>carriera</code> e <code>libero</code>, e il punto ti riporta al menu principale. Serve un motore configurato: se manca, Orologic ti propone di configurarlo subito.</p>
+<p>Alla prima partita Orologic ti chiede come ti chiami, una volta sola: il nome va nelle partite salvate, contro quello del motore. Lo cambi dalle impostazioni, alla voce Il mio nome, sezione 2.9.2.</p>
 
-<h4 id="cap-2-4-1">2.4.1. Iniziare e Gestire la Partita</h4>
+<h4 id="cap-2-4-1">2.4.1. Libero</h4>
+<p>La partita libera è quella che si faceva in Easyfish con <code>.g</code>: la forza del motore la scegli tu, con i comandi della sezione 2.4.3, e resta per le partite seguenti anche dopo aver chiuso Orologic. Prima di cominciare Orologic ti chiede se vuoi la variante standard o il Fischer Random, descritto nella sezione 2.1.1.1, poi la modalità di tempo e il colore: INVIO per il Bianco, ESC per il Nero. Le partite libere non entrano nelle statistiche della carriera: si salvano in PGN, e basta.</p>
+
+<h4 id="cap-2-4-2">2.4.2. Carriera</h4>
+<p>La carriera è il tuo Elo contro il motore. Si gioca sempre dalla posizione iniziale standard, contro un motore che ha l'Elo deciso dal modello che scegli, e il tuo punteggio si aggiorna come fa la FIDE: il risultato atteso dipende dalla differenza fra te e il motore, contata al massimo come 400 punti, e il coefficiente K vale 40 per le prime 30 partite, poi 20, e 10 da 2400 in su. Ricorda che è un punteggio contro Stockfish, sulla sua scala: ti dice se migliori, non quanto varresti in un torneo.</p>
+<p>Alla prima partita, o dopo un'inizializzazione, Orologic ti chiede da quale Elo parti, 1500 se premi INVIO, e l'Elo del motore, fra 1320 e 3190. Dopo non chiede più niente. Il colore te lo propone lui: quello con cui hai meno partite; a parità, quello con cui hai perso di più; a parità ancora, il Bianco. Ti dice perché, e INVIO accetta la proposta mentre ESC ti dà l'altro colore. Prima di cominciare una riga ti dice il tuo Elo, quello del motore e il modello in uso.</p>
+<p>In partita la forza resta ferma: i comandi <code>.s</code>, <code>.e</code>, <code>.f</code> e <code>.p</code> ti dicono che la decide il modello. La partita conta se finisce con un risultato, senza mosse ritirate con <code>.u</code>; quando non conta, Orologic ti dice perché. A fine partita senti il punteggio nuovo con la variazione, le partite vinte, patte e perse, la percentuale dei punti, il massimo e il minimo, con un suono che sale o scende; poi il motore sceglie, con il modello, l'Elo della partita seguente, e Orologic ti dice solo quello.</p>
+<p>Il menu della carriera ha sette voci:</p>
+<ul>
+    <li><strong>gioca:</strong> una partita di carriera.</li>
+    <li><strong>statistiche:</strong> le partite in totale e per colore, con vinte, patte, perse e percentuale dei punti; le partite al mese con due decimali, dalla prima a oggi, e quelle degli ultimi 30 giorni; la serie in corso, la serie più lunga di vittorie e l'ultima partita; il colore che ti verrà proposto; il punteggio Elo con i suoi totali e i conti per colore; la serie del mese, cioè l'Elo di inizio mese e quello attuale con la variazione, il massimo, il minimo e la media; l'Elo a cui il motore ti aspetta e il modello in uso.</li>
+    <li><strong>modello:</strong> il modello con cui il motore sceglie il suo Elo, spiegato qui sotto. L'etichetta dice quello in uso, e il modello nuovo vale già per la prossima partita.</li>
+    <li><strong>record:</strong> la vittoria contro il motore più forte, con l'Elo e la data, la serie più lunga di vittorie e il tuo Elo massimo di sempre, con la data.</li>
+    <li><strong>sonifica:</strong> la serie del tuo Elo, una partita dopo l'altra, trasformata in suono come la storia Elo di Orolichess: chiede il portamento e la durata, e servono almeno 5 partite.</li>
+    <li><strong>inizializza:</strong> cancella la carriera, cioè il tuo Elo, le statistiche e i record, dopo una conferma con INVIO; ESC la lascia com'è. Non si torna indietro. Il modello resta quello scelto, e alla partita seguente Orologic ti richiede il tuo Elo e quello del motore.</li>
+    <li><strong>.</strong> torna al menu gioca.</li>
+</ul>
+
+<h5 id="sez-i-modelli-del-motore">I modelli del motore</h5>
+<ul>
+    <li><strong>Uguale:</strong> il motore ha il tuo stesso Elo.</li>
+    <li><strong>Delta assoluto:</strong> il tuo Elo più o meno un valore fisso, che scegli fra -1000 e 1000: con +100 il motore ti sta sempre cento punti sopra.</li>
+    <li><strong>Delta casuale:</strong> il tuo Elo più un valore a caso fra due limiti che scegli, quello in basso fra -1000 e 0 e quello in alto fra 0 e 1000. È il modello di serie, da -50 a +50: il motore è alla tua altezza senza essere prevedibile.</li>
+    <li><strong>Inseguimento:</strong> il motore ti insegue, partendo dal suo Elo, a passi che dipendono dalla distanza fra voi e dall'ultimo risultato. Se il risultato lo spinge verso di te, cioè vinci quando lui è sotto o perdi quando è sopra, il salto cresce con la distanza: 17 punti a 50 di distanza, 50 a 100, 225 a 300. La patta dà metà del salto, sempre verso di te. Il risultato contrario dà un passo piccolo, di 5 punti, su se vinci e giù se perdi. Quando siete a meno di 10 punti: vittoria +10, patta 0, sconfitta -10. Per esempio, tu 1500 e il motore 1400: se vinci il motore sale di 50, se patti di 25, se perdi scende di 5.</li>
+</ul>
+<p>Il motore non esce mai dai limiti di Stockfish, 1320 e 3190, e quando ci arriva Orologic lo dice.</p>
+
+<h4 id="cap-2-4-3">2.4.3. Durante la partita</h4>
+<p>Quando viene richiesto il tempo di riflessione (sia per il giocatore che per il motore), il sistema accetta diversi formati intelligenti:</p>
+<ul>
+    <li>Formato standard orario (es. <code>02:00:00</code>).</li>
+    <li>Minuti e secondi separati da due punti (es. <code>15:30</code> per 15 minuti e 30 secondi).</li>
+    <li>Secondi totali espressi come intero (es. <code>75</code> che equivale a 1 minuto e 15 secondi).</li>
+</ul>
+<p>Inoltre, l'incremento di tempo può essere specificato direttamente assieme al tempo principale separandolo con il segno <code>+</code> (es. <code>01:15:00+10</code>, <code>20:00+15</code>, o <code>400+5</code>), eliminando così la necessità di una richiesta separata per l'incremento.</p>
+<p>Durante la partita valgono tutti i controlli, matto, stallo e ripetizioni, i comandi di ispezione della sezione 2.1.4, <code>.l</code> per la lista delle mosse e <code>.u</code>, che ritira l'ultima mossa tua e quella del motore.</p>
+<p>Valgono anche tutti i comandi degli orologi, da <code>.1</code> a <code>.6</code>, descritti nella sezione 2.1.3. Non valgono invece le correzioni manuali del tempo, <code>.b+</code> e le sue compagne: qui non c'è un arbitro, e i due orologi devono scorrere per conto loro.</p>
+<h5 id="sez-scegliere-la-forza-del-motore">Scegliere la forza del motore</h5>
+<p>Hai quattro comandi per decidere quanto forte gioca il motore. Si danno a partita in corso, anche prima della prima mossa, e la forza scelta resta per le partite seguenti, anche dopo aver chiuso Orologic: prima della 8.38.1 il motore ripartiva ogni volta al massimo. All'inizio di ogni partita Orologic ti dice con che forza gioca. I quattro comandi valgono nella partita libera; in carriera la forza la decide il modello del motore, e in partita resta ferma.</p>
+<ul>
+    <li><code>.s#</code>, il livello di abilità da 0 a 20, per esempio <code>.s10</code>. È lo Skill Level di Stockfish: a ogni mossa il motore mette a confronto alcune mosse buone e, tanto più spesso quanto più il livello è basso, ne sceglie una peggiore della migliore. Non è una scala in punti: dice soltanto più forte o più debole.</li>
+    <li><code>.e#</code>, la forza in punti Elo, per esempio <code>.e1500</code>. Stockfish accetta da 1320 a 3190, e sceglie da sé il livello di abilità corrispondente. Attenzione a cosa sono quei punti: secondo il codice di Stockfish appartengono alla scala CCRL Blitz, cioè a partite fra motori, tarate contro il motore Stash, e non sono punti FIDE o di Lichess di giocatori in carne e ossa. Un 1500 di Stockfish non è quindi un giocatore da 1500 del tuo circolo. Serve però per misurarti contro un numero preciso, ed è la scala su cui si gioca la carriera, descritta nella sezione 2.4.2.</li>
+    <li><code>.f#</code>, gli otto livelli del computer di Lichess, per esempio <code>.f3</code>. Vengono da fishnet, il programma con cui Lichess fa giocare Stockfish, e ogni livello unisce tre cose: abilità, profondità massima e tempo per mossa, come nella tabella qui sotto.</li>
+    <li><code>.p#</code>, la profondità massima della ricerca in semimosse, per esempio <code>.p5</code>; <code>.p0</code> toglie il limite. Si somma agli altri comandi, e con un livello di Lichess prende il posto della profondità del livello. Più è bassa, meno lontano vede il motore: a profondità 1 o 2 non si accorge di una minaccia che arriva fra tre mosse. Contro il motore non c'è pausa degli orologi, quindi qui <code>.p</code> seguito da un numero è sempre la profondità.</li>
+</ul>
+<table>
+    <caption>I livelli di Lichess in Orologic</caption>
+    <thead><tr><th>Livello</th><th>Abilità su Lichess</th><th>Abilità in Orologic</th><th>Profondità</th><th>Tempo per mossa</th></tr></thead>
+    <tbody>
+        <tr><td>1</td><td>-9</td><td>0</td><td>1, su Lichess 5</td><td>50 millisecondi</td></tr>
+        <tr><td>2</td><td>-5</td><td>0</td><td>2, su Lichess 5</td><td>100 millisecondi</td></tr>
+        <tr><td>3</td><td>-1</td><td>0</td><td>3, su Lichess 5</td><td>150 millisecondi</td></tr>
+        <tr><td>4</td><td>3</td><td>3</td><td>5</td><td>200 millisecondi</td></tr>
+        <tr><td>5</td><td>7</td><td>7</td><td>5</td><td>300 millisecondi</td></tr>
+        <tr><td>6</td><td>11</td><td>11</td><td>8</td><td>400 millisecondi</td></tr>
+        <tr><td>7</td><td>16</td><td>16</td><td>13</td><td>500 millisecondi</td></tr>
+        <tr><td>8</td><td>20</td><td>20</td><td>22</td><td>1 secondo</td></tr>
+    </tbody>
+</table>
+<p>I livelli da 1 a 3 sono un'approssimazione. Su Lichess usano un'abilità sotto lo zero, che esiste soltanto in Fairy-Stockfish, la versione modificata che il sito adopera; Stockfish ufficiale non scende sotto lo zero, e qui quei tre livelli tengono l'abilità a 0 e abbassano invece la profondità. Nessuno ha misurato quanto somiglino agli originali, e quando li scegli Orologic te lo ricorda. Anche i punteggi che si leggono in giro per i livelli di Lichess, per esempio 800 per il primo e trecento in più per ogni livello, sono stime di appassionati, non dati del sito.</p>
+<p>E il tempo? Con un livello sotto il 20, o con un Elo, Stockfish sceglie la sua mossa, quella peggiorata di proposito, quando la ricerca arriva a una profondità precisa, il livello più uno: dopo, il tempo in più non lo rende più forte, consuma solo processore. Dalla versione 8.39.3 Orologic lo ferma proprio lì: il motore gioca alla forza dichiarata nel tempo minimo, e il tempo che gli dai all'inizio resta un tetto. Misurato su un computer di Gabriele, con un solo processore: un centesimo di secondo per mossa fino a 2500 punti, qualche decimo a 3000, meno di un secondo al massimo di 3190. Puoi quindi darti 45 minuti e lasciarne pochi secondi a lui: la sua forza resta quella scelta. Con un livello di Lichess il motore pensa al massimo il tempo del livello, anche in una partita a orologio; con <code>.s20</code>, la forza piena, pensa quanto gli concede l'orologio, e più tempo ha, meglio gioca.</p>
+
+<h5 id="sez-cosa-succede-quando-scade-il-tempo">Cosa succede quando scade il tempo</h5>
+<p>Se la bandierina cade mentre stai pensando, la partita si chiude da sola: non devi premere niente per accorgertene. Orologic annuncia il tempo scaduto, assegna il risultato e passa alle domande di fine partita, descritte nella sezione 2.4.5.</p>
+
+<div class="note">
+    <p><strong>Attenzione al tasto ESC.</strong> Durante la partita contro il motore, ESC vale come il punto, cioè come la richiesta di abbandonare. Per non farti perdere una partita con un tasto premuto per sbaglio, Orologic ti chiede sempre conferma prima di registrare l'abbandono: rispondi con ESC a quella domanda e la partita continua.</p>
+</div>
+
+<h4 id="cap-2-4-4">2.4.4. La resa del motore</h4>
+<p>Stockfish non ha un'opzione per arrendersi, quindi la resa la decide Orologic, con la regola di Lichess: quando, per 5 sue mosse di fila, il motore vede la partita persa, cioè una valutazione peggiore di 10 pedoni o un matto contro di sé. In quel momento Orologic tira una moneta, una sola volta per partita: nel 50% dei casi il motore abbandona, e senti un suono che scende e la riga «Il motore abbandona: la partita è tua»; altrimenti si gioca fino al matto, per allenarti a darlo. La regola è fissa e non si cambia, perché nessuno possa far arrendere il motore troppo presto e gonfiare le statistiche.</p>
+
+<h4 id="cap-2-4-5">2.4.5. A fine partita</h4>
+<p>A fine partita succede quello che succede in arbitraggio. Se la partita era a orologio o con il tempo per mossa del motore, e ha almeno 8 semimosse, Orologic ti chiede se vuoi vedere come hai usato il tempo, e nella partita a orologio se salvare i tempi delle mosse nel PGN. Poi salva la partita nella cartella <code>pgn</code> e la copia negli appunti. Nel PGN ci sono il tuo nome e quello del motore, con la sua versione, per esempio Stockfish 19; in carriera anche gli Elo con cui avete cominciato e il numero della partita; e, come in arbitraggio, il tag Annotator con il nome e la versione di Orologic. Infine, se la partita ha almeno 4 semimosse, ti chiede se vuoi analizzarla: INVIO per l'analisi automatica OAA, della sezione 2.1.5.1, oppure ESC per aprirla in Easyfish, già caricata.</p>
+
+<h3 id="cap-2-5">2.5. Easyfish (Interfaccia a riga di comando per Stockfish)</h3>
+<p>Easyfish è un modulo speciale accessibile dal menu principale. Offre un'interfaccia a riga di comando fluida e diretta per studiare, creare varianti e analizzare. Il gioco contro il motore, che fino alla 8.41.5 stava qui, ha ora la sua voce nel menu principale, sezione 2.4. I comandi speciali sono tutti preceduti dal punto (<code>.</code>). Inoltre, in tutte le modalità di Easyfish (nel menu principale, durante la partita contro il motore e nell'esploratore) sono pienamente supportati i <strong>comandi di ispezione della scacchiera</strong> descritti nella sezione 2.1.4 (<code>/[col]</code>, <code>\[col]</code>, <code>-[col|trv|casa]</code> e <code>,[Pezzo]</code>).</p>
+
+<h4 id="cap-2-5-1">2.5.1. Iniziare e Gestire la Partita</h4>
 <ul>
     <li><code>.n</code>: Azzera la scacchiera e inizia una nuova partita vuota.</li>
     <li><code>.pg</code> o <code>.fg</code>: Incolla una partita PGN (o un codice FEN) precedentemente copiata nei tuoi appunti, per iniziare a lavorarci.</li>
@@ -611,14 +702,12 @@ margin: 1em 0;
     <li><code>.k#</code>: Salta direttamente alla mossa numero indicato, per esempio <code>.k12</code> ti porta alla dodicesima. Comodo quando stai studiando una partita lunga e vuoi tornare a un punto preciso senza scorrerla tutta.</li>
     <li><code>.bm</code>: Dice il bilancio del materiale, cioè quanto vale quello che resta sulla scacchiera per ciascun colore e chi è in vantaggio. È lo stesso di <code>.m</code> nelle altre modalità.</li>
     <li><code>.gp</code> e <code>.gf</code>: Copiano negli appunti la partita in formato PGN oppure la sola posizione corrente in formato FEN. Servono per portare quello che stai facendo dentro un altro programma, o per incollarlo in un messaggio.</li>
-    <li><code>.ea</code>: Accende o spegne la partita a punteggio contro il motore, con un suono che sale o che scende. La spiega la sezione 2.4.3, in «Il tuo punteggio contro il motore».</li>
-    <li><code>.gs</code>: Apre le statistiche delle tue partite contro il motore: totali e per colore, partite al mese, serie e punteggio Elo. Le spiega la sezione 2.4.3, in «Le statistiche contro il motore».</li>
     <li><code>.gb</code>: Copia negli appunti la scacchiera in caratteri, la stessa griglia di <code>.s</code>, girata dal lato di chi ha il tratto, seguita da una riga che dice a chi tocca muovere e dal FEN. Serve per incollarla in un messaggio o in un documento per chi non ha un programma di scacchi, o per rileggerla con calma nel blocco note; il FEN in fondo permette a chi la riceve di aprire la posizione in qualsiasi programma. Se gli appunti non rispondono, per esempio perché un altro programma li tiene occupati, <code>.gb</code>, <code>.gp</code> e <code>.gf</code> lo dicono a parole.</li>
     <li><code>.i</code> e <code>.ii</code>: <code>.i</code> salva l'immagine della posizione corrente in un file PDF, dentro la cartella <code>images</code>; <code>.ii</code> apre le impostazioni di quell'immagine, dove scegli i colori dei pezzi e delle case, la dimensione, se evidenziare l'ultima mossa e se disegnare l'ombra sotto i pezzi. Servono a chi vuole stampare una posizione o mandarla a un allievo vedente.</li>
     <li><code>_</code> seguito dal testo: Aggiunge un commento alla mossa in cui ti trovi, per esempio <code>_qui il Nero perde il filo</code>. Il commento entra nel PGN e viene riletto quando ripassi da quella mossa. È lo stesso trattino basso che compare nel riquadro sotto la scacchiera condivisa, se hai acceso <code>.cso</code>.</li>
 </ul>
 
-<h4 id="cap-2-4-2">2.4.2. Editor della Scacchiera (.be)</h4>
+<h4 id="cap-2-5-2">2.5.2. Editor della Scacchiera (.be)</h4>
 <p>Usa <code>.be</code> per entrare in modalità editor, utile per ricreare posizioni specifiche. Da qui puoi piazzare pezzi (es. <code>Pe4</code> piazza un pedone bianco in e4, mentre <code>pe4</code> piazza un pedone nero), svuotare case (es. <code>e4</code>) o usare comandi speciali come:</p>
 <ul>
     <li><code>.v</code>: Svuota l'intera scacchiera, lasciando solo i due Re.</li>
@@ -630,14 +719,14 @@ margin: 1em 0;
     <li><code>.</code>: Esce dall'editor e salva la nuova posizione.</li>
 </ul>
 
-<h5 id="cap-2-4-2-1">2.4.2.1. Inserimento Multiplo dei Pezzi</h5>
+<h5 id="cap-2-5-2-1">2.5.2.1. Inserimento Multiplo dei Pezzi</h5>
 <p>Per velocizzare l'inserimento, è possibile specificare una lista di case separate da virgole:</p>
 <ul>
     <li><strong>Piazzare più pezzi dello stesso tipo:</strong> Inserisci la lettera del pezzo (maiuscolo per il Bianco, minuscolo per il Nero) seguita dalle case separate da virgola (es. <code>ra8,h8</code> posiziona due torri nere in a8 e h8; <code>Pa2,b2,c2,d2,e2,f2,g2,h2</code> posiziona tutti e otto i pedoni bianchi sulla seconda traversa). Questa sintassi non è valida per i Re, in quanto pezzi unici obbligatori.</li>
     <li><strong>Svuotare più case contemporaneamente:</strong> Inserisci la lista delle case separate da virgola senza alcuna lettera del pezzo davanti (es. <code>a8,h8</code> svuota le case a8 e h8).</li>
 </ul>
 
-<h5 id="cap-2-4-2-2">2.4.2.2. Interpretazione del Prompt dell'Editor</h5>
+<h5 id="cap-2-5-2-2">2.5.2.2. Interpretazione del Prompt dell'Editor</h5>
 <p>Durante l'editing, il prompt visualizza in tempo reale un riepilogo compatto dei pezzi presenti sulla scacchiera:</p>
 <ul>
     <li><strong>Materiale:</strong> All'inizio del prompt viene riportato il bilancio totale del materiale nel formato <code>[materiale_bianco/materiale_nero]</code> basato sui classici valori dei pezzi.</li>
@@ -661,69 +750,10 @@ margin: 1em 0;
     </li>
     <li>Digita <code>.t</code> per assegnare il turno al Nero.</li>
     <li>Digita <code>.</code> per uscire dall'editor e confermare la posizione.</li>
-    <li>Ora digita <code>.g</code> per avviare la partita contro il motore. Scegli di giocare con il Bianco: Stockfish guiderà il Re Nero e tu potrai allenarti a dare scacco matto!</li>
+    <li>Ora digita <code>.a5</code> per sentire dal motore come proseguire, oppure <code>.e</code> per esplorare la posizione mossa per mossa.</li>
 </ol>
 
-<h4 id="cap-2-4-3">2.4.3. Giocare contro il Motore (.g)</h4>
-<p>Digita <code>.g</code> da qualsiasi posizione per iniziare una partita interattiva contro Stockfish. Orologic ti chiede prima la modalità di tempo, partita a orologio, tempo fisso per mossa o amichevole senza limiti, poi il colore: ti propone quello che le tue statistiche suggeriscono, e INVIO lo accetta mentre ESC ti dà l'altro, come spiegato più sotto in «Le statistiche contro il motore».</p>
-<p>Quando viene richiesto il tempo di riflessione (sia per il giocatore che per il motore), il sistema accetta diversi formati intelligenti:</p>
-<ul>
-    <li>Formato standard orario (es. <code>02:00:00</code>).</li>
-    <li>Minuti e secondi separati da due punti (es. <code>15:30</code> per 15 minuti e 30 secondi).</li>
-    <li>Secondi totali espressi come intero (es. <code>75</code> che equivale a 1 minuto e 15 secondi).</li>
-</ul>
-<p>Inoltre, l'incremento di tempo può essere specificato direttamente assieme al tempo principale separandolo con il segno <code>+</code> (es. <code>01:15:00+10</code>, <code>20:00+15</code>, o <code>400+5</code>), eliminando così la necessità di una richiesta separata per l'incremento.</p>
-<p>Durante la partita valgono tutti i controlli (matto, stallo, ripetizioni) e puoi impartire istruzioni extra:</p>
-<ul>
-    <li><code>.s#</code>, <code>.e#</code>, <code>.f#</code> e <code>.p#</code>: scelgono la forza del motore, in quattro modi diversi spiegati qui sotto.</li>
-    <li><code>.l</code>: mostra la lista delle mosse giocate fin lì, come in tutte le altre modalità.</li>
-</ul>
-
-<h5 id="sez-scegliere-la-forza-del-motore">Scegliere la forza del motore</h5>
-<p>Hai quattro comandi per decidere quanto forte gioca il motore. Si danno a partita in corso, anche prima della prima mossa, e la forza scelta resta per le partite seguenti, anche dopo aver chiuso Easyfish o Orologic: prima della 8.38.1 il motore ripartiva ogni volta al massimo. All'inizio di ogni partita Orologic ti dice con che forza gioca. I quattro comandi valgono con la partita a punteggio spenta; con la partita a punteggio accesa, spiegata più sotto, la forza la scegli prima di cominciare e in partita resta ferma.</p>
-<ul>
-    <li><code>.s#</code>, il livello di abilità da 0 a 20, per esempio <code>.s10</code>. È lo Skill Level di Stockfish: a ogni mossa il motore mette a confronto alcune mosse buone e, tanto più spesso quanto più il livello è basso, ne sceglie una peggiore della migliore. Non è una scala in punti: dice soltanto più forte o più debole.</li>
-    <li><code>.e#</code>, la forza in punti Elo, per esempio <code>.e1500</code>. Stockfish accetta da 1320 a 3190, e sceglie da sé il livello di abilità corrispondente. Attenzione a cosa sono quei punti: secondo il codice di Stockfish appartengono alla scala CCRL Blitz, cioè a partite fra motori, tarate contro il motore Stash, e non sono punti FIDE o di Lichess di giocatori in carne e ossa. Un 1500 di Stockfish non è quindi un giocatore da 1500 del tuo circolo. Serve però per misurarti contro un numero preciso, ed è la scala su cui si gioca la partita a punteggio, descritta più sotto.</li>
-    <li><code>.f#</code>, gli otto livelli del computer di Lichess, per esempio <code>.f3</code>. Vengono da fishnet, il programma con cui Lichess fa giocare Stockfish, e ogni livello unisce tre cose: abilità, profondità massima e tempo per mossa, come nella tabella qui sotto.</li>
-    <li><code>.p#</code>, la profondità massima della ricerca in semimosse, per esempio <code>.p5</code>; <code>.p0</code> toglie il limite. Si somma agli altri comandi, e con un livello di Lichess prende il posto della profondità del livello. Più è bassa, meno lontano vede il motore: a profondità 1 o 2 non si accorge di una minaccia che arriva fra tre mosse. Contro il motore non c'è pausa degli orologi, quindi qui <code>.p</code> seguito da un numero è sempre la profondità.</li>
-</ul>
-<table>
-    <caption>I livelli di Lichess in Orologic</caption>
-    <thead><tr><th>Livello</th><th>Abilità su Lichess</th><th>Abilità in Orologic</th><th>Profondità</th><th>Tempo per mossa</th></tr></thead>
-    <tbody>
-        <tr><td>1</td><td>-9</td><td>0</td><td>1, su Lichess 5</td><td>50 millisecondi</td></tr>
-        <tr><td>2</td><td>-5</td><td>0</td><td>2, su Lichess 5</td><td>100 millisecondi</td></tr>
-        <tr><td>3</td><td>-1</td><td>0</td><td>3, su Lichess 5</td><td>150 millisecondi</td></tr>
-        <tr><td>4</td><td>3</td><td>3</td><td>5</td><td>200 millisecondi</td></tr>
-        <tr><td>5</td><td>7</td><td>7</td><td>5</td><td>300 millisecondi</td></tr>
-        <tr><td>6</td><td>11</td><td>11</td><td>8</td><td>400 millisecondi</td></tr>
-        <tr><td>7</td><td>16</td><td>16</td><td>13</td><td>500 millisecondi</td></tr>
-        <tr><td>8</td><td>20</td><td>20</td><td>22</td><td>1 secondo</td></tr>
-    </tbody>
-</table>
-<p>I livelli da 1 a 3 sono un'approssimazione. Su Lichess usano un'abilità sotto lo zero, che esiste soltanto in Fairy-Stockfish, la versione modificata che il sito adopera; Stockfish ufficiale non scende sotto lo zero, e qui quei tre livelli tengono l'abilità a 0 e abbassano invece la profondità. Nessuno ha misurato quanto somiglino agli originali, e quando li scegli Orologic te lo ricorda. Anche i punteggi che si leggono in giro per i livelli di Lichess, per esempio 800 per il primo e trecento in più per ogni livello, sono stime di appassionati, non dati del sito.</p>
-<p>E il tempo? Con un livello sotto il 20, o con un Elo, Stockfish sceglie la sua mossa, quella peggiorata di proposito, quando la ricerca arriva a una profondità precisa, il livello più uno: dopo, il tempo in più non lo rende più forte, consuma solo processore. Dalla versione 8.39.3 Orologic lo ferma proprio lì: il motore gioca alla forza dichiarata nel tempo minimo, e il tempo che gli dai all'inizio resta un tetto. Misurato su un computer di Gabriele, con un solo processore: un centesimo di secondo per mossa fino a 2500 punti, qualche decimo a 3000, meno di un secondo al massimo di 3190. Puoi quindi darti 45 minuti e lasciarne pochi secondi a lui: la sua forza resta quella scelta. Con un livello di Lichess il motore pensa al massimo il tempo del livello, anche in una partita a orologio; con <code>.s20</code>, la forza piena, pensa quanto gli concede l'orologio, e più tempo ha, meglio gioca.</p>
-
-<h5 id="sez-il-tuo-punteggio-contro-il-motore">Il tuo punteggio contro il motore</h5>
-<p>Dalla versione 8.38.0 il tuo punteggio Elo contro il motore si gioca con la <strong>partita a punteggio</strong>, che accendi e spegni con il comando <code>.ea</code> dal prompt principale di Easyfish; lo stato resta salvato fra una sessione e l'altra. Con la partita a punteggio accesa, alla prima partita a punteggio, dopo modalità e colore, Orologic ti chiede l'Elo del motore, fra 1320 e 3190. Dopo non te lo chiede più: dalla versione 8.41.3 il motore si adatta a te. A fine partita, aggiornato il tuo Elo, il motore prende per la partita seguente il tuo Elo più o meno un valore a caso, fino a 50 punti, così è alla tua altezza senza essere prevedibile. Orologic ti dice solo l'Elo nuovo, per esempio «Il motore si adatta: alla prossima partita gioca a Elo 1587», e non quanto c'è di caso; il motore non esce mai dai limiti di Stockfish, 1320 e 3190. In partita i comandi di forza <code>.s</code>, <code>.e</code>, <code>.f</code> e <code>.p</code> restano spenti: il motore gioca tutta la partita alla forza scelta. Con la partita a punteggio spenta torna tutto come prima, ma la partita non entra mai nel tuo Elo. Prima di cominciare, una riga ti dice com'è messa la partita a punteggio e che cosa succederà a fine partita: se si aggiornerà il tuo Elo, e da quale valore, oppure perché non conterà. Il tuo punteggio resta salvato fra una sessione e l'altra, e serve a seguire i progressi: scegli un avversario, giochi, e partita dopo partita il punteggio si avvicina alla tua forza contro quel motore. Alla prima partita Orologic ti chiede da quale punteggio partire, 1500 se premi INVIO; poi parte sempre da quello ricordato. Il calcolo è quello della FIDE: il risultato atteso dipende dalla differenza fra te e il motore, contata al massimo come 400 punti, e il coefficiente K vale 40 per le prime 30 partite, poi 20, e 10 da 2400 in su.</p>
-<p>A fine partita senti il punteggio nuovo con la variazione, le partite vinte, patte e perse, la percentuale dei punti fatti, il massimo e il minimo, e un suono sale o scende con il punteggio.</p>
-<p>Perché il numero dica qualcosa, anche con la partita a punteggio accesa la partita conta solo se è leale: deve partire dalla posizione iniziale e finire con un risultato, senza mosse ritirate con <code>.u</code>. Quando non conta, Orologic ti dice perché. Ricorda infine che è un punteggio contro Stockfish, sulla sua scala: ti dice se migliori, non quanto varresti in un torneo.</p>
-<p>Valgono anche tutti i comandi degli orologi, da <code>.1</code> a <code>.6</code>, descritti nella sezione 2.1.3. Non valgono invece le correzioni manuali del tempo, <code>.b+</code> e le sue compagne: qui non c'è un arbitro, e i due orologi devono scorrere per conto loro.</p>
-<h5 id="sez-le-statistiche-contro-il-motore-gs">Le statistiche contro il motore (.gs)</h5>
-<p>Dalla versione 8.33.0 Easyfish tiene il registro di tutte le partite <code>.g</code> concluse con un risultato, a qualunque forza del motore e da qualunque posizione: data, colore, risultato e forza. Il comando <code>.gs</code>, dal prompt principale di Easyfish, apre la pagina delle statistiche: le partite in totale e per colore, ciascuna con vinte, patte, perse e percentuale dei punti; le partite al mese con due decimali, dalla prima partita registrata a oggi, e quelle degli ultimi 30 giorni, per tenere d'occhio l'attività; la serie in corso, se è di almeno due partite, e la serie più lunga di vittorie; la data dell'ultima partita e il colore che ti verrà proposto. In fondo c'è il punteggio Elo contro il motore, con i suoi totali e, per le partite leali giocate dalla 8.33.0 in poi, i conti per colore. Dalla versione 8.41.0 c'è anche la serie del mese corrente, fatta dal tuo Elo dopo ogni partita a punteggio: l'Elo di inizio mese, quello attuale e la variazione, il massimo, il minimo e la media; e infine lo stato della partita a punteggio, con l'Elo a cui il motore ti aspetta.</p>
-<p>Le partite al mese si contano su almeno un mese: una partita giocata oggi vale una partita al mese, non trenta. Le partite giocate prima della 8.33.0 non sono nel registro: restano nei totali del punteggio Elo, ma non nei conti per colore.</p>
-<p>Il registro serve anche alla proposta del colore. All'inizio di ogni partita <code>.g</code> Easyfish ti propone il colore con cui hai meno partite; a parità, quello con cui hai perso di più; a parità ancora, il Bianco. Ti dice perché, per esempio «Ti propongo il Nero: partite col Bianco 5, col Nero 3.», e alla domanda che segue INVIO accetta la proposta ed ESC ti dà l'altro colore.</p>
-
-<h5 id="sez-cosa-succede-quando-scade-il-tempo">Cosa succede quando scade il tempo</h5>
-<p>Se la bandierina cade mentre stai pensando, la partita si chiude da sola: non devi premere niente per accorgertene. Orologic annuncia il tempo scaduto, assegna il risultato e ti porta subito alla domanda sull'analisi. Rispondendo di no torni al menu di Easyfish, e te lo dice.</p>
-
-<div class="note">
-    <p><strong>Attenzione al tasto ESC.</strong> Durante la partita contro il motore, ESC vale come il punto, cioè come la richiesta di abbandonare. Per non farti perdere una partita con un tasto premuto per sbaglio, Orologic ti chiede sempre conferma prima di registrare l'abbandono: rispondi con ESC a quella domanda e la partita continua.</p>
-</div>
-
-<p>Al termine della partita contro il motore, Orologic annuncerà il risultato e ti chiederà direttamente se desideri analizzare la partita, permettendoti di avviarne subito l'esplorazione (<code>.e</code>) in modo del tutto coerente con quanto avviene a fine arbitraggio. La scacchiera non viene stampata da sola: se vuoi rivedere la posizione finale la chiedi con <code>.s</code>.</p>
-
-<h4 id="cap-2-4-4">2.4.4. Modalità Esploratore (.e)</h4>
+<h4 id="cap-2-5-3">2.5.3. Modalità Esploratore (.e)</h4>
 <p>Il comando <code>.e</code> apre l'Esploratore di Varianti. Un ambiente ottimizzato per navigare PGN complessi. Il prompt cambierà per indicarti il livello della variante (es. <code>Lvl0</code> per la linea principale, <code>Lvl1</code>, <code>Lvl2</code>).</p>
 <ul>
     <li><code>a</code> / <code>d</code>: Vai indietro / avanti nella linea.</li>
@@ -733,7 +763,7 @@ margin: 1em 0;
     <li><code>s</code>: Richiedi al motore un'analisi istantanea della posizione.</li>
 </ul>
 
-<h4 id="cap-2-4-5">2.4.5. Menu Disegno (.d)</h4>
+<h4 id="cap-2-5-4">2.5.4. Menu Disegno (.d)</h4>
 <p>Il comando <code>.d</code> apre un sottomenu dedicato all'inserimento di annotazioni grafiche (frecce e cerchi colorati) sulla scacchiera. Queste annotazioni vengono associate in modo permanente alla mossa corrente all'interno del file PGN, e verranno stampate fedelmente se esporti la scacchiera in PDF.</p>
 <ul>
     <li><strong>A - Aggiungi una forma:</strong> Ti permette di tracciare una freccia o un cerchio. Il programma ti chiederà prima le coordinate e poi il colore.
@@ -748,7 +778,7 @@ margin: 1em 0;
     <li><strong>. - Esci:</strong> Torna al menu principale di Easyfish.</li>
 </ul>
 
-<h4 id="cap-2-4-6">2.4.6. Condivisione Scacchiera Didattica (.cs, .csb, .csn, .cst, .cso)</h4>
+<h4 id="cap-2-5-5">2.5.5. Condivisione Scacchiera Didattica (.cs, .csb, .csn, .cst, .cso)</h4>
 <p>Questa funzionalità permette di aprire una finestra grafica separata con il rendering in tempo reale della scacchiera corrente. È ideale per la didattica a distanza, consentendo di condividere la finestra tramite piattaforme come Zoom, Microsoft Teams o Google Meet.</p>
 <ul>
     <li><code>.cs</code>: Attiva o disattiva la finestra di condivisione grafica. All'avvio, la finestra viene aperta e massimizzata automaticamente a schermo intero. La scacchiera si posiziona al centro e si adatta a qualsiasi ridimensionamento.</li>
@@ -760,14 +790,14 @@ margin: 1em 0;
 <h5 id="sez-esempio-di-caso-d-uso">Esempio di caso d'uso</h5>
 <p>Sei un istruttore non vedente e stai spiegando una partita a un allievo vedente. Attivi la condivisione dello schermo di Zoom selezionando la finestra grafica creata da Orologic con <code>.cs</code>. Quando digiti una mossa o inserisci un commento (es. <code>_Questa mossa controlla il centro</code>), l'allievo vedrà la scacchiera aggiornarsi in tempo reale, vedrà le frecce colorate che disegni con <code>.d</code>, e potrà leggere il tuo commento direttamente sotto la scacchiera grazie a <code>.cso on</code>.</p>
 
-<h3 id="cap-2-5">2.5. Memoboard (Allenamento alla cieca) (memoboard)</h3>
+<h3 id="cap-2-6">2.6. Memoboard (Allenamento alla cieca) (memoboard)</h3>
 <p>Memoboard ti aiuta a familiarizzare con la scacchiera allenandoti a visualizzarla senza guardarla. Lo scopo è sviluppare una rapida visualizzazione mentale delle 64 case, fondamentale per il gioco alla cieca e per l'analisi profonda delle partite.</p>
 
-<h4 id="cap-2-5-1">2.5.1. Funzionamento dei Punteggi (Punti al Minuto)</h4>
+<h4 id="cap-2-6-1">2.6.1. Funzionamento dei Punteggi (Punti al Minuto)</h4>
 <p>Per stimolare il miglioramento, Memoboard calcola un punteggio basato su velocità e precisione. Ogni domanda parte con un valore massimo di 15.000 punti, decrescendo di 1 punto per ogni millisecondo impiegato per rispondere. Una risposta esatta aggiunge i punti restanti al totale, mentre una risposta errata non assegna punti.</p>
 <p>La classifica viene ordinata per <strong>Punti al Minuto</strong> (efficienza), calcolati dividendo il punteggio totale per il tempo impiegato in secondi (moltiplicato per 60). Questo premia la precisione e la rapidità di esecuzione rispetto a sessioni lunghe e lente.</p>
 
-<h4 id="cap-2-5-2">2.5.2. Esercizi Disponibili e Feedback Acustico</h4>
+<h4 id="cap-2-6-2">2.6.2. Esercizi Disponibili e Feedback Acustico</h4>
 <ul>
     <li><strong>Esercizio con i cavalli (knights):</strong> Determina se due case sono a distanza di un salto di cavallo (es. a1 e b3). Rispondi con INVIO per Sì o ESC per No.</li>
     <li><strong>Esercizio con le diagonali (bishops):</strong> Determina se due case appartengono alla stessa diagonale (es. a1 e h7). Rispondi con INVIO per Sì o ESC per No.</li>
@@ -776,12 +806,12 @@ margin: 1em 0;
 </ul>
 <p>Durante lo svolgimento delle domande viene riprodotto un segnale acustico singolo con effetto portamento: la frequenza di partenza sale da C3 (130,81 Hz) a C8 (4186,01 Hz) in base alla percentuale di completamento dell'esercizio. Se la risposta è corretta, il tono scivola velocemente verso l'alto di 6 semitoni; se la risposta è sbagliata, scivola verso il basso di 6 semitoni.</p>
 
-<h4 id="cap-2-5-3">2.5.3. Classifiche e Qualificazione</h4>
+<h4 id="cap-2-6-3">2.6.3. Classifiche e Qualificazione</h4>
 <p>Negli esercizi singoli (cavalli, alfieri, colori) l'utente può impostare un numero di domande compreso tra 5 e 300 (valori superiori a 300 vengono automaticamente ridotti a 300). Per evitare punteggi casuali o falsati, le sessioni si qualificano per la classifica Top 10 solo se vengono svolte <strong>almeno 20 domande</strong> (la Sfida Mista prevede invece 100 domande fisse).</p>
 <p>Il nome utente viene richiesto al termine della sessione solo se il punteggio ottenuto è sufficiente ad entrare nei primi 10 posti della classifica. Se l'utente è già presente in classifica per quell'esercizio, il nuovo record sostituisce automaticamente il precedente se migliore; se invece il punteggio è inferiore, il programma richiede conferma prima dell'eventuale sovrascrittura.</p>
 <p>Il comando <code>classifiche</code> visualizza una classifica dettagliata per ciascun esercizio, con indicazione di punti totali, accuratezza (Win%), punti al minuto e data del record. I punteggi vengono salvati nel file <code>memoboard_scores.json</code> nella cartella <code>settings</code> di Orologic.</p>
 
-<h4 id="cap-2-5-4">2.5.4. Report di Sessione e Analisi dei Tempi</h4>
+<h4 id="cap-2-6-4">2.6.4. Report di Sessione e Analisi dei Tempi</h4>
 <p>Al termine di ogni esercizio svolto in MemoBoard (inclusi quelli non qualificati o con punteggio inferiore al proprio record), Orologic genera o aggiorna immediatamente un file di report testuale individuale salvato nella cartella <code>txt/</code>.</p>
 <p>Il nome del file viene generato secondo lo schema <code>Memoboard_{tipologie}_{timestamp}.txt</code> (ad esempio <code>Memoboard_colori_20260725180345.txt</code> oppure <code>Memoboard_colori_cavalli_20260725180345.txt</code> se nella medesima sessione sono stati svolti più esercizi).</p>
 <p>Ciascun report include le seguenti informazioni per ogni esercizio svolto:</p>
@@ -791,7 +821,7 @@ margin: 1em 0;
     <li><strong>Analisi stanchezza per quartili cronologici:</strong> suddivisione dell'intera serie di domande in 4 quartili (Q1, Q2, Q3, Q4) per valutare l'andamento dei tempi medi e la variazione percentuale di affaticamento rispetto al primo quartile iniziale (Q1).</li>
 </ul>
 
-<h3 id="cap-2-6">2.6. Tempo (Orologio nudo e crudo) (tempo)</h3>
+<h3 id="cap-2-7">2.7. Tempo (Orologio nudo e crudo) (tempo)</h3>
 <p>Questa modalità è progettata per chi desidera utilizzare Orologic come un semplice orologio da scacchi fisico (timer di gioco) senza che il software registri le mosse, effettui controlli di legalità o richieda l'inserimento in notazione algebrica (SAN). È ideale per:</p>
 <ul>
     <li>Partite veloci o amichevoli giocate su una scacchiera reale in cui non si vuole perdere tempo a digitare ogni mossa al terminale.</li>
@@ -803,10 +833,10 @@ margin: 1em 0;
 <p>Un esempio di come si usa. Stai arbitrando una partita fra due amici su una scacchiera vera e non vuoi trascrivere le mosse. Scegli un orologio, per esempio quindici minuti con dieci secondi di incremento, scrivi come nota "amichevole del giovedì" e parti. A ogni mossa premi Invio su una riga vuota: Orologic registra una <code>x</code>, passa il turno all'altro e aggiunge l'incremento a chi ha appena mosso. Se ti interessa annotare qualcosa, invece della riga vuota scrivi quello che vuoi, per esempio "il Bianco offre patta". Se sbagli e passi il turno per errore, <code>.q</code> annulla l'ultimo inserimento e restituisce il tempo, incremento compreso.</p>
 <p>Al termine della sessione (premendo <code>.</code>), Orologic genererà e salverà un file di report testuale nella cartella <code>txt</code> con la data e l'ora correnti.</p>
 
-<h3 id="cap-2-7">2.7. Ricerca PGN (ricerca)</h3>
+<h3 id="cap-2-8">2.8. Ricerca PGN (ricerca)</h3>
 <p>La modalità <code>ricerca</code> è uno strumento avanzato di Orologic progettato per esplorare, filtrare e studiare archivi e database PGN contenenti centinaia o migliaia di partite. Consente di estrarre le statistiche sulle aperture, navigare l'albero delle mosse e passare direttamente all'analisi di una specifica partita.</p>
 
-<h4 id="cap-2-7-1">2.7.1. Come caricare le partite</h4>
+<h4 id="cap-2-8-1">2.8.1. Come caricare le partite</h4>
 <p>Orologic rileva automaticamente il tipo di archivio presente negli appunti del tuo sistema operativo. Prima di avviare il comando, copia negli appunti uno dei seguenti elementi:</p>
 <ol>
     <li><strong>Un percorso di file locale:</strong> Copia il percorso completo di un file <code>.pgn</code> (es. <code>C:\scacchi\database.pgn</code>).</li>
@@ -816,7 +846,7 @@ margin: 1em 0;
 <p>Dopo aver copiato, seleziona <code>ricerca</code> dal menu principale. L'applicazione inizierà a caricare le partite in memoria mostrando il progresso. In caso di caricamento da URL molto grandi (come i profili Lichess con decine di migliaia di partite), il programma mostrerà i megabyte scaricati ed il tempo trascorso. Puoi premere <strong>ESC</strong> in qualsiasi momento per interrompere il download e procedere con l'elaborazione dei soli dati parziali scaricati fino a quel momento (limite massimo di scaricamento fissato a 60 minuti).</p>
 <p><em>Nota:</em> Orologic escluderà automaticamente dal conteggio le partite irregolari (Chess960 o con impostazioni personalizzate/tag SetUp) per garantire che l'albero delle aperture parta dalla posizione iniziale standard.</p>
 
-<h4 id="cap-2-7-2">2.7.2. Il Menu dei Filtri</h4>
+<h4 id="cap-2-8-2">2.8.2. Il Menu dei Filtri</h4>
 <p>Una volta completato il caricamento, ti troverai nel Menu dei Filtri interattivo. Qui puoi decidere di restringere il set di partite da esaminare impostando uno o più dei seguenti criteri:</p>
 <ul>
     <li><strong>Giocatore Bianco / Giocatore Nero:</strong> Filtra per il nome di uno specifico giocatore che aveva i pezzi bianchi o neri.</li>
@@ -832,7 +862,7 @@ margin: 1em 0;
     <li>Per <strong>uscire</strong> e tornare al menu principale, digita il punto (<code>.</code>).</li>
 </ul>
 
-<h4 id="cap-2-7-3">2.7.3. Navigazione dell'Albero delle Aperture</h4>
+<h4 id="cap-2-8-3">2.8.3. Navigazione dell'Albero delle Aperture</h4>
 <p>Quando procedi all'albero delle aperture, il programma mostra a schermo la lista delle mosse disponibili per il livello corrente. La navigazione è ottimizzata per l'accessibilità con lo screen reader (NVDA/JAWS) e le righe braille tramite la mappa di tasti della modalità editor di Easyfish:</p>
 <ul>
     <li><strong>w (su) e x (giù):</strong> Scorrono verticalmente le mosse disponibili per la selezione (muovono il cursore all'interno dell'elenco).</li>
@@ -857,7 +887,7 @@ margin: 1em 0;
     </li>
 </ul>
 
-<h4 id="cap-2-7-4">2.7.4. Sfogliare e Analizzare le Partite (tasto 0)</h4>
+<h4 id="cap-2-8-4">2.8.4. Sfogliare e Analizzare le Partite (tasto 0)</h4>
 <p>Premendo il tasto <strong>0</strong> all'interno del navigatore dell'albero, verrai indirizzato al Pager delle partite. Questo menu mostra l'elenco ordinato alfabeticamente di tutte le partite che raggiungono la posizione del ramo corrente. Ciascuna riga riporta i nomi dei giocatori, il risultato e le successive 5 mosse di continuazione giocate in quella specifica partita (es. <code>Bianco vs Nero (1) -- 1-0, 3. d4 Nf6 4. Bd3</code>).</p>
 <p>Per avviare l'analisi assistita di una partita:</p>
 <ol>
@@ -866,7 +896,7 @@ margin: 1em 0;
     <li>Orologic caricherà immediatamente la partita in modalità <strong>Analisi</strong> permettendoti di esplorarla mossa dopo mossa o di avviare l'analisi automatica con Stockfish.</li>
 </ol>
 
-<h4 id="cap-2-7-5">2.7.5. Un esempio completo: preparare una partita contro un avversario</h4>
+<h4 id="cap-2-8-5">2.8.5. Un esempio completo: preparare una partita contro un avversario</h4>
 <p>Sabato giochi contro un avversario che sai essere iscritto a Lichess e vuoi sapere cosa gioca con il Nero contro <code>1. e4</code>. Ecco il giro completo.</p>
 <ol>
     <li>Entra in <code>lichess</code>, scegli <strong>Cerca e Profila Giocatore</strong> e trova il suo nome. Dal sottomenu scegli di copiare l'URL delle sue partite e andare a Ricerca PGN: Orologic mette il link negli appunti e ti porta dove serve.</li>
@@ -879,10 +909,10 @@ margin: 1em 0;
 </ol>
 <p>Lo stesso giro serve anche per studiare te stesso: filtra con il tuo nome e guarda dove il tuo rendimento crolla. Spesso la variante da ripassare salta fuori da sola.</p>
 
-<h3 id="cap-2-8">2.8. Configurazione</h3>
+<h3 id="cap-2-9">2.9. Configurazione</h3>
 <p>Orologic è altamente personalizzabile.</p>
 
-<h4 id="cap-2-8-1">2.8.1. Gestione Orologi (orologi)</h4>
+<h4 id="cap-2-9-1">2.9.1. Gestione Orologi (orologi)</h4>
 <p>La voce <code>orologi</code> del menu principale apre un sottomenu con le tre operazioni sugli orologi, che fino alla versione 8.18.0 stavano nel menu principale sparse fra le modalità di gioco. Si resta nel sottomenu finché non si digita il punto, così se ne possono fare più di una di seguito.</p>
 <ul>
     <li><strong>crea:</strong> Ti guida nella creazione di un nuovo orologio, con fasi multiple, tempo base, incremento e allarmi sonori. Ogni durata viene verificata mentre la inserisci: il minimo è di due secondi per fase e di un secondo per gli allarmi, e con il punto rinunci alla creazione.</li>
@@ -891,22 +921,23 @@ margin: 1em 0;
 </ul>
 <p>Gli allarmi hanno cinque voci diverse, una per ciascuno, così quando ne senti uno sai subito qual è: il messaggio a schermo dice il numero e il suono lo conferma. Il lato da cui arriva il suono, sinistra o destra, dice di chi è l'orologio che sta scendendo.</p>
 
-<h4 id="cap-2-8-2">2.8.2. Il sottomenu Impostazioni (impostazioni)</h4>
-<p>La voce <code>impostazioni</code> del menu principale apre un sottomenu che raccoglie tutto quello che si configura una volta e si cambia di rado. Fino alla versione 8.20 il motore, i nomi e il volume stavano nel menu principale, e le altre impostazioni erano un'unica sequenza di domande da attraversare tutta per cambiarne una sola. Come per gli orologi, si resta nel sottomenu finché non si digita il punto, così si possono sistemare più cose di seguito. Le voci sono sette. Le due che sono interruttori dicono nell'etichetta com'è messa la cosa in quel momento, per esempio "Salvataggio automatico: non attivo": sceglierle basta a cambiare stato, senza domande in più, e al giro dopo il menu dice il valore nuovo. Anche il motore, il prompt e il volume si presentano con il loro stato, cioè il nome del motore in uso, il modello del prompt e il volume su cento.</p>
+<h4 id="cap-2-9-2">2.9.2. Il sottomenu Impostazioni (impostazioni)</h4>
+<p>La voce <code>impostazioni</code> del menu principale apre un sottomenu che raccoglie tutto quello che si configura una volta e si cambia di rado. Fino alla versione 8.20 il motore, i nomi e il volume stavano nel menu principale, e le altre impostazioni erano un'unica sequenza di domande da attraversare tutta per cambiarne una sola. Come per gli orologi, si resta nel sottomenu finché non si digita il punto, così si possono sistemare più cose di seguito. Le voci sono otto. Le due che sono interruttori dicono nell'etichetta com'è messa la cosa in quel momento, per esempio "Salvataggio automatico: non attivo": sceglierle basta a cambiare stato, senza domande in più, e al giro dopo il menu dice il valore nuovo. Anche il motore, il prompt e il volume si presentano con il loro stato, cioè il nome del motore in uso, il modello del prompt e il volume su cento.</p>
 <ul>
-    <li><strong>analisi:</strong> tempo, linee e soglie di giudizio dell'analisi, sezione 2.8.5.</li>
-    <li><strong>motore:</strong> ricerca, scaricamento e configurazione del motore scacchistico, sezione 2.8.3.</li>
-    <li><strong>nomi:</strong> i nomi dei pezzi, delle colonne e delle mosse, sezione 2.8.4.</li>
-    <li><strong>prompt:</strong> il modello del prompt di gioco, sezione 2.8.8.</li>
-    <li><strong>salvataggio:</strong> accende o spegne il salvataggio automatico, sezione 2.8.6.</li>
-    <li><strong>stile:</strong> menu a parole o a numeri, sezione 2.8.6.</li>
-    <li><strong>volume:</strong> il volume dei suoni, sezione 2.8.7.</li>
+    <li><strong>analisi:</strong> tempo, linee e soglie di giudizio dell'analisi, sezione 2.9.5.</li>
+    <li><strong>motore:</strong> ricerca, scaricamento e configurazione del motore scacchistico, sezione 2.9.3.</li>
+    <li><strong>nomi:</strong> i nomi dei pezzi, delle colonne e delle mosse, sezione 2.9.4.</li>
+    <li><strong>giocatore:</strong> il tuo nome, quello che va nelle partite contro il motore salvate; l'etichetta dice quello scritto, e scegliendola lo cambi, mentre INVIO a vuoto lo lascia com'è. Se non l'hai mai scritto, te lo chiede la prima partita, sezione 2.4.</li>
+    <li><strong>prompt:</strong> il modello del prompt di gioco, sezione 2.9.8.</li>
+    <li><strong>salvataggio:</strong> accende o spegne il salvataggio automatico, sezione 2.9.6.</li>
+    <li><strong>stile:</strong> menu a parole o a numeri, sezione 2.9.6.</li>
+    <li><strong>volume:</strong> il volume dei suoni, sezione 2.9.7.</li>
 </ul>
 
-<h4 id="cap-2-8-3">2.8.3. Motore scacchistico (impostazioni, motore)</h4>
+<h4 id="cap-2-9-3">2.9.3. Motore scacchistico (impostazioni, motore)</h4>
 <p>Questo passaggio è fondamentale per abilitare le funzioni di analisi. Orologic ti guiderà nella configurazione iniziale, ma è importante capire come renderlo portatile e cosa significano i parametri tecnici.</p>
 
-<h5 id="cap-2-8-3-1">2.8.3.1. Portabilità e Gestione Percorsi (Relativi vs Assoluti)</h5>
+<h5 id="cap-2-9-3-1">2.9.3.1. Portabilità e Gestione Percorsi (Relativi vs Assoluti)</h5>
 <p>Orologic gestisce in modo intelligente il percorso del motore scacchistico per garantire la massima portabilità:</p>
 <ul>
     <li><strong>Percorso Relativo (Consigliato per chiavette USB e portabilità):</strong> Se il motore si trova nello stesso disco/drive di Orologic (ad esempio nella cartella <code>engine</code> all'interno del programma), Orologic salverà un percorso relativo. Questo ti permette di spostare l'intera cartella di Orologic o utilizzarla da una chiavetta USB su diversi computer senza dover riconfigurare il motore.</li>
@@ -921,7 +952,7 @@ margin: 1em 0;
 </ol>
 <p>Orologic rileverà automaticamente che il motore si trova nello stesso drive e confermerà il salvataggio in modalità relativa portabile.</p>
 
-<h5 id="cap-2-8-3-2">2.8.3.2. Spiegazione dei Parametri UCI</h5>
+<h5 id="cap-2-9-3-2">2.9.3.2. Spiegazione dei Parametri UCI</h5>
 <p>Durante la configurazione, ti verranno chiesti alcuni valori. Ecco una guida per impostarli correttamente:</p>
 <ul>
     <li><strong>Hash (Memoria):</strong> Indica quanta RAM dedicare al motore per memorizzare le posizioni analizzate. Valori comuni sono 128 o 256 MB. Più memoria permette analisi più veloci su tempi lunghi.</li>
@@ -931,26 +962,27 @@ margin: 1em 0;
 </ul>
 <p>Lo Skill Level scritto qui è quello con cui il motore parte. In partita lo si cambia con i comandi descritti nella sezione 2.4.3, "Scegliere la forza del motore", dove sono spiegati anche il limite in Elo, i livelli di Lichess, la profondità e le loro differenze. Due cose da tenere presenti: l'Elo di Stockfish non scende sotto i 1320 punti, e per un avversario più modesto restano lo Skill Level basso, i primi livelli di Lichess o una profondità ridotta; e quei punti sono di motori contro motori, non di giocatori. Un buon punto di partenza resta un avversario un po' più debole di te: perdere sempre non insegna niente, e vincere sempre nemmeno.</p>
 
-<h4 id="cap-2-8-4">2.8.4. Nomi dei pezzi, delle colonne e delle mosse (impostazioni, nomi)</h4>
+<h4 id="cap-2-9-4">2.9.4. Nomi dei pezzi, delle colonne e delle mosse (impostazioni, nomi)</h4>
 <p>Questa opzione ti permette di personalizzare il linguaggio descrittivo usato dal programma: puoi cambiare i nomi dei pezzi (es. da "cavallo" a "destriero"), i nomi delle colonne (es. da "Ancona" ad "Apple") e i verbi usati per descrivere le mosse.</p>
 <p>Serve più di quanto sembri, perché queste parole le senti a ogni singola mossa e il modo di dirle è personale. Un esempio concreto: la descrizione predefinita di <code>Nxe5</code> suona "il Cavallo mangia il Pedone in Empoli 5". Se sei abituato all'alfabeto telefonico internazionale invece che a quello italiano, cambi i nomi delle colonne e diventa "Echo 5". Se preferisci "cattura" a "mangia", cambi il verbo. Se giochi con qualcuno che chiama la Donna Regina, cambi il nome del pezzo.</p>
 <p>Le modifiche valgono immediatamente, senza riavviare il programma: la prima mossa che descrivi dopo essere uscito da questo menu usa già le parole nuove. Vale anche per l'esplorazione della scacchiera e per i riepiloghi salvati nei file di testo. Se cambi idea, puoi scorrere le voci e rimettere quelle originali, oppure chiudere con il punto per uscire a metà lasciando immutato quello che non hai ancora toccato.</p>
 
-<h4 id="cap-2-8-5">2.8.5. Impostazioni dell'analisi (impostazioni, analisi)</h4>
+<h4 id="cap-2-9-5">2.9.5. Impostazioni dell'analisi (impostazioni, analisi)</h4>
 <p>Tre cose che valgono per ogni analisi con il motore. Il <strong>tempo di analisi</strong>, in secondi per posizione, da un decimo a trecento: più è alto, più l'analisi è profonda e lenta. Le <strong>linee</strong>, cioè quante varianti il motore propone per ogni posizione, da una a venti. Le <strong>soglie di giudizio</strong>, in centesimi di pedone: quanto deve costare una mossa perché venga chiamata inesattezza, errore o svarione. I valori attuali sono proposti fra parentesi quadre, e Invio li conferma.</p>
 
-<h4 id="cap-2-8-6">2.8.6. Salvataggio automatico e stile dei menu (impostazioni, salvataggio e stile)</h4>
+<h4 id="cap-2-9-6">2.9.6. Salvataggio automatico e stile dei menu (impostazioni, salvataggio e stile)</h4>
 <ul>
     <li><strong>Salvataggio automatico:</strong> se è attivo, durante una partita arbitrata Orologic salva la situazione dopo ogni mossa, e al prossimo avvio ti chiede se riprenderla da dove era rimasta. Previene la perdita della partita se il programma o il computer si chiudono all'improvviso.</li>
     <li><strong>Stile dei menu:</strong> a parole, che è il modo predefinito e si sceglie scrivendo le prime lettere della voce, oppure a numeri.</li>
 </ul>
 
-<h4 id="cap-2-8-7">2.8.7. Volume dei suoni (impostazioni, volume)</h4>
+<h4 id="cap-2-9-7">2.9.7. Volume dei suoni (impostazioni, volume)</h4>
 <p>Imposta il volume degli effetti sonori da 0, muto, a 100. Orologic fa sentire una nota al volume vecchio e una al volume nuovo, così il confronto è immediato.</p>
 
-<h4 id="cap-2-8-8">2.8.8. Prompt di gioco (impostazioni, prompt)</h4>
+<h4 id="cap-2-9-8">2.9.8. Prompt di gioco (impostazioni, prompt)</h4>
 <p>Il prompt è la riga su cui scrivi le mosse durante una partita. Dalla versione 8.34.0 lo componi tu, con un modello che vale in tutte le modalità di gioco: la partita arbitrata, la modalità Tempo, la partita contro il motore in Easyfish, le partite su Lichess e quelle che osservi. La voce <code>prompt</code> del sottomenu Impostazioni ti legge il catalogo degli indicatori, il modello in uso e un'anteprima con dati di esempio; poi ti chiede il modello nuovo. Se c'è un codice che Orologic non conosce te lo dice e ti fa riscrivere; altrimenti ti fa sentire l'anteprima del modello nuovo e chiede conferma, INVIO per salvarlo, ESC per lasciare tutto com'era. INVIO a vuoto lascia il modello com'è, un asterisco torna al predefinito.</p>
 <p>Il modello è testo libero: ogni indicatore si scrive con il segno di percento seguito da una lettera, maiuscola o minuscola, e tutto il resto compare così com'è. Per scrivere un percento vero si mette <code>%%</code>. Il modello predefinito è <code>%b %n %m</code>, che dà il prompt di sempre: i due orologi e il numero di mossa con l'ultima mossa, per esempio <code>04:55 04:47 2. Nf3</code>.</p>
+<p>Dalla versione 8.42.0 il modello dice anche se il prompt è dinamico o statico. Un numero dopo il percento, da 1 a 120, lo rende dinamico: <code>%4 %b %n %m</code> lo riscrive ogni 4 secondi, come farebbe <code>.6</code> seguito da 4, e il numero non compare nel prompt. Un modello senza numero è statico, come il predefinito. Vale per tutte le modalità, partite su Lichess comprese, che prima partivano sempre dinamiche: se vuoi i tempi che corrono anche lì, metti un numero nel modello. In partita <code>.6</code> cambia l'aggiornamento per quella partita, e alla seguente torna quello del modello. Un numero fuori da quei limiti, come <code>%0</code> o <code>%200</code>, Orologic te lo segnala e ti fa riscrivere il modello.</p>
 <p>Dalla versione 8.39.0 gli indicatori che hanno una forma estesa, a parole, la danno con una <code>v</code> dopo la lettera, per chi ascolta senza display braille: <code>%b</code> scrive <code>1:14:43</code>, <code>%bv</code> scrive «1 ora, 14 minuti e 43 secondi». La forma estesa c'è per i tempi, <code>%bv</code>, <code>%nv</code>, <code>%iv</code>, <code>%av</code> e la durata <code>%gv</code>; per la differenza, <code>%dv</code>, che dice per esempio «vantaggio del Bianco: 1 minuto e 20 secondi» oppure «orologi pari»; per il tratto, <code>%tv</code>, Bianco o Nero per intero; per l'ultima mossa, <code>%uv</code>, descritta come la dice Orologic, per esempio «Cavallo in Firenze 3»; e per il materiale, <code>%vv</code>, «vantaggio del Nero: 2» oppure «materiale pari». Le maiuscole valgono come le minuscole, anche per la v.</p>
 <table>
     <caption>Gli indicatori del prompt</caption>
@@ -973,17 +1005,17 @@ margin: 1em 0;
         <tr><td><code>%s</code></td><td>Gli stati: <code>[pausa]</code>, <code>senza orologio</code>, la premossa e RECLAMA su Lichess.</td></tr>
     </tbody>
 </table>
-<p>Un indicatore che in una modalità non ha senso resta vuoto, e si porta via lo spazio accanto, così il prompt non si riempie di buchi: <code>%i</code> nella partita arbitrata, dove nessuno dei due è "tu", <code>%p</code> su Lichess, o <code>%c</code>, <code>%v</code> e <code>%r</code> in Tempo, dove si scrivono note e non mosse; lì <code>%t</code> dice comunque a chi tocca. I tempi compaiono solo quando l'aggiornamento automatico di <code>.6</code> è acceso, come prima: senza aggiornamento sarebbero fermi e ti ingannerebbero.</p>
+<p>Un indicatore che in una modalità non ha senso resta vuoto, e si porta via lo spazio accanto, così il prompt non si riempie di buchi: <code>%i</code> nella partita arbitrata, dove nessuno dei due è "tu", <code>%p</code> su Lichess, o <code>%c</code>, <code>%v</code> e <code>%r</code> in Tempo, dove si scrivono note e non mosse; lì <code>%t</code> dice comunque a chi tocca. I tempi compaiono solo quando l'aggiornamento automatico è acceso: senza aggiornamento sarebbero fermi e ti ingannerebbero.</p>
 <p>Gli stati non si perdono mai. Con <code>%s</code> scegli tu dove compaiono; se il modello non lo contiene compaiono da soli dove comparivano prima: la pausa chiude fra parentesi quadre la mossa di <code>%m</code>, senza orologio le sta davanti, premossa e RECLAMA vanno in fondo; e se il modello non ha nemmeno <code>%m</code>, vanno tutti in fondo.</p>
 <p>Qualche esempio, con il Bianco a te dopo 1. e4 e5 2. Cf3: <code>%i/%a %m</code> dà <code>04:55/04:47 2. Nf3</code>, il tuo tempo prima di quello dell'avversario; <code>%m %d %v</code> dà <code>2. Nf3 +00:08 0</code>; <code>%t%c %u</code> dà <code>N2 Nf3</code>, corto quanto basta per una riga braille. La partita osservata su Lichess aggiunge sempre in fondo il suo segno di maggiore, che dice che lì non si gioca.</p>
 
-<h3 id="cap-2-9">2.9. Apri Manuale (manuale)</h3>
+<h3 id="cap-2-10">2.10. Apri Manuale (manuale)</h3>
 <p>Questo comando apre questa guida nel tuo browser web predefinito.</p>
 
-<h3 id="cap-2-10">2.10. Novità (novita)</h3>
+<h3 id="cap-2-11">2.11. Novità (novita)</h3>
 <p>Apre nel browser il registro delle modifiche, cioè l'elenco di tutto quello che è cambiato in ogni versione di Orologic, dalla più recente alla più vecchia. Ogni voce dice se è una funzione nuova o una correzione, in quale parte del programma interviene e, quando serve, perché è stata fatta. È il posto dove guardare dopo un aggiornamento, per sapere che cosa troverai di diverso.</p>
 
-<h3 id="cap-2-11">2.11. Esci dall'Applicazione (.)</h3>
+<h3 id="cap-2-12">2.12. Esci dall'Applicazione (.)</h3>
 <p>Digitando <code>.</code> e premendo Invio dal menu principale chiuderà Orologic.</p>
 
 <h2 id="cap-3">3. Piccolo Glossario</h2>

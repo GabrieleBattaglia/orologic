@@ -16,6 +16,11 @@ una modalita' non ha senso, come il tuo tempo nell'arbitraggio, resta vuoto,
 e con lui sparisce uno spazio accanto, cosi' il prompt non si riempie di
 buchi. I tempi compaiono solo con l'aggiornamento automatico acceso da .6.
 
+Un numero dopo il percento, da 1 a 120, rende il prompt dinamico: %4 lo
+riscrive ogni 4 secondi, come .6 4. Un modello senza numero e' statico.
+Il modello decide come comincia ogni partita, in tutte le modalita'; in
+partita .6 lo cambia per quella partita soltanto.
+
 Gli indicatori che hanno una forma estesa, a parole, la danno con una v dopo
 la lettera: %b scrive 01:14:43, %bv scrive 1 ora, 14 minuti e 43 secondi.
 La vogliono gli utenti che ascoltano senza display braille.
@@ -37,6 +42,8 @@ CHIAVE = "modello_prompt"
 # Riproduce il prompt di prima della 8.34.0, in tutte le modalita'.
 PREDEFINITO = "%b %n %m"
 LUNGHEZZA_MASSIMA = 200
+# I secondi dell'aggiornamento automatico, gli stessi di .6.
+INTERVALLO_MASSIMO = 120
 # dgt tronca in silenzio a smax: si legge di piu' e si controlla a parte.
 LETTURA_MASSIMA = 1000
 
@@ -115,6 +122,21 @@ def analizza(testo):
             indice += 1
             continue
         seguente = testo[indice + 1] if indice + 1 < len(testo) else ""
+        if seguente.isdigit():
+            fine = indice + 1
+            while fine < len(testo) and testo[fine].isdigit():
+                fine += 1
+            secondi = int(testo[indice + 1 : fine])
+            if 1 <= secondi <= INTERVALLO_MASSIMO:
+                if letterale:
+                    pezzi.append(("testo", "".join(letterale)))
+                    letterale = []
+                pezzi.append(("intervallo", secondi))
+            else:
+                sconosciuti.append(testo[indice:fine])
+                letterale.append(testo[indice:fine])
+            indice = fine
+            continue
         if seguente == "%":
             letterale.append("%")
         elif seguente.lower() in validi and seguente:
@@ -299,6 +321,10 @@ def componi(dati, testo=None):
         if tipo == "testo":
             calcolati.append((tipo, valore))
             continue
+        if tipo == "intervallo":
+            # Non scrive niente: dice solo ogni quanto riscrivere il prompt.
+            calcolati.append(("codice", ""))
+            continue
         uscita = _valore(valore, dati)
         if valore == "m" and not usa_stati and uscita:
             # Gli stati al loro posto di sempre: la pausa chiude la mossa fra
@@ -318,6 +344,16 @@ def componi(dati, testo=None):
     else:
         in_fondo = [_stati(dati)]
     return " ".join(parte for parte in [corpo, *in_fondo] if parte)
+
+
+def intervallo(testo=None):
+    """I secondi dell'aggiornamento automatico che il modello chiede, o 0 se
+    il modello e' statico. Se ci sono piu' numeri vale il primo."""
+    pezzi, _sconosciuti = analizza(modello() if testo is None else testo)
+    for tipo, valore in pezzi:
+        if tipo == "intervallo":
+            return valore
+    return 0
 
 
 def mossa_classica(mosse):
@@ -380,6 +416,12 @@ def imposta():
             "%av %dv %gv %tv %uv %vv."
         )
     )
+    print(
+        _(
+            "Un numero dopo il percento, da 1 a 120, rende il prompt dinamico: "
+            "%4 lo riscrive ogni 4 secondi. Senza numero il prompt e' statico."
+        )
+    )
     print(_("%% scrive un percento; il resto del modello e' testo libero."))
     attuale = modello()
     print(_("Modello attuale: {m}").format(m=attuale))
@@ -409,6 +451,16 @@ def imposta():
             continue
         _pezzi, sconosciuti = analizza(nuovo)
         lettere_ignote = [c for c in sconosciuti if c.strip() != "%"]
+        numeri_fuori = [c for c in lettere_ignote if c[1:].isdigit()]
+        if numeri_fuori:
+            _errore()
+            print(
+                _(
+                    "Il numero dopo il percento va da 1 a 120 secondi: {c} non va. "
+                    "Riscrivi il modello."
+                ).format(c=", ".join(numeri_fuori))
+            )
+            continue
         if lettere_ignote:
             _errore()
             print(
@@ -428,6 +480,13 @@ def imposta():
             )
             continue
         print(_("Anteprima: {p}").format(p=componi(esempio(), nuovo)))
+        secondi = intervallo(nuovo)
+        if secondi:
+            print(
+                _("Prompt dinamico, riscritto ogni {n} secondi.").format(n=secondi)
+            )
+        else:
+            print(_("Prompt statico."))
         if enter_escape(_("Salvare questo modello? (INVIO per si', ESC per no): ")):
             salva(nuovo)
             if nuovo == PREDEFINITO:

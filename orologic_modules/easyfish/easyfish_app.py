@@ -10,7 +10,7 @@ import chess.engine
 import pyperclip
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
-from .. import chess960_utils, config, ui
+from .. import config, ui
 from .. import engine as orologic_engine
 
 # DRY: Uso le utility di Orologic
@@ -25,7 +25,6 @@ from ..board_utils import (
     testo_valutazione,
 )
 from ..config import _
-from . import game_mode, punteggio_motore, statistiche_motore
 from .constants import MNMAIN
 from .drawing import drawing_menu, verbalize_drawings
 from .engine_handler import ShowStats
@@ -263,35 +262,6 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
             f"{CustomBoard(board.fen())}\n{tratto}\n{board.fen()}\n",
             _("Scacchiera copiata negli appunti, con il tratto e il FEN."),
         )
-    elif cmd == ".ea":
-        # La partita a punteggio: accesa, l'Elo del motore si sceglie prima
-        # di ogni .g e la forza resta ferma; spenta, la partita non conta.
-        attiva = not punteggio_motore.stato_ea()["attiva"]
-        punteggio_motore.salva_ea(attiva=attiva)
-        if attiva:
-            Acusticator.play("orologic_ea_acceso", volume=config.VOLUME)
-            print(
-                _(
-                    "Partita a punteggio accesa: alla prima partita scegli l'Elo "
-                    "del motore, poi il motore si adatta al tuo Elo, partita "
-                    "dopo partita, con un margine di caso, e la forza resta ferma."
-                )
-            )
-        else:
-            Acusticator.play("orologic_ea_spento", volume=config.VOLUME)
-            print(
-                _(
-                    "Partita a punteggio spenta: la forza si sceglie con .s, .e, .f "
-                    "e .p, e le partite non entrano nel tuo Elo."
-                )
-            )
-    elif cmd == ".gs":
-        # Le statistiche delle partite contro il motore, issue 66.
-        Acusticator.play("orologic_statistiche_motore", volume=config.VOLUME)
-        for riga in statistiche_motore.righe_pagina(
-            statistiche_motore.leggi(), punteggio_motore.leggi()
-        ):
-            print(riga)
     elif cmd in [".csb", ".csn", ".cst"]:
         if sharing_window is None or not sharing_window.is_active():
             print(_("Errore: devi prima avviare la condivisione con il comando .cs"))
@@ -814,62 +784,6 @@ def _esegui(partita=None):
                 game_state.board = board
                 if mod_in_exp:
                     is_modified = True
-
-            elif cmd == ".g":
-                is_standard = enter_escape(
-                    _(
-                        "Vuoi giocare alla variante standard (scacchi standard)? (INVIO per si', ESC per no): "
-                    )
-                )
-                if not is_standard:
-                    fr_board, fr_fen, _fr_num = (
-                        chess960_utils.setup_fischer_random_board_interactive()
-                    )
-                    if fr_board is not None:
-                        if is_modified:
-                            SaveGameToFile(game)
-                        board = fr_board
-                        game, node = InitNewPGN(board)
-                        chess960_utils.setup_pgn_headers_chess960(game, board, fr_fen)
-                        game_state.board = board
-                        is_modified = False
-                        chess960_utils.verifica_motore_chess960(engine, True)
-                    else:
-                        print(_("Configurazione Fischer Random annullata."))
-                        continue
-                else:
-                    chess960_utils.verifica_motore_chess960(engine, False)
-
-                # Avvio partita contro il motore
-                final_node = game_mode.StartEngineGame(
-                    node, engine, sharing_window=sharing_window
-                )
-                # Sincronizza stato al ritorno
-                node = final_node
-                board = node.board()  # Ricrea board dallo stato finale
-                game_state.board = board
-                is_modified = True
-                print(
-                    _(
-                        "\nSuggerimento: puoi esplorare e analizzare la partita appena conclusa."
-                    )
-                )
-                if enter_escape(
-                    _("Vuoi analizzare la partita? (INVIO per si', ESC per no): ")
-                ):
-                    print(_("Accesso alla modalità esplorazione..."))
-                    mod_in_exp, final_node = ExplorerMode(
-                        game, engine, sharing_window=sharing_window
-                    )
-                    node = final_node
-                    board = node.board()
-                    game_state.board = board
-                    if mod_in_exp:
-                        is_modified = True
-                else:
-                    # Senza questa riga si restava zitti sulla posizione
-                    # finale, e sembrava di essere ancora nella partita.
-                    print(_("Ritorno al menu di Easyfish."))
 
             elif cmd == ".d":
                 if drawing_menu(game, node):

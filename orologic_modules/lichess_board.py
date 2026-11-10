@@ -26,7 +26,7 @@ class SpectatorGameState:
         self.started = False
         self.is_live = False
         self.move_history = []
-        self.refresh_interval = 1
+        self.refresh_interval = modello_prompt.intervallo()
         self.initial_fen = chess.STARTING_FEN
         self.variant = "standard"
 
@@ -598,7 +598,7 @@ class GamePlayState:
         self.opponent_gone = False
         self.opponent_gone_announced = False
         self.claim_win_in_seconds = None
-        self.refresh_interval = 1
+        self.refresh_interval = modello_prompt.intervallo()
         self.initial_fen = chess.STARTING_FEN
         self.variant = "standard"
         self.move_times = []

@@ -455,7 +455,9 @@ class GameState:
         # piu' nero: li accumula il thread di orologio e a fine partita
         # finiscono nel tachimetro dell'orologio salvato.
         self.tempo_corso = 0.0
-        self.refresh_interval = 0
+        # L'aggiornamento automatico con cui comincia la partita lo decide il
+        # modello del prompt: un numero lo rende dinamico.
+        self.refresh_interval = modello_prompt.intervallo()
         self.move_times = []
         self.clocks_history = []
         # Mosse annullate con il comando punto q, pronte da rigiocare.
