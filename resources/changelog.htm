@@ -19,6 +19,10 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
 <h3>Versione 8.45</h3>
+<h4>8.45.6 (12 novembre 2026)</h4>
+<ul>
+  <li>- [Gioca] Nel modello inseguimento il sorpasso è possibile. Quando il risultato allontanerebbe il motore da te, cioè vinci contro un motore più forte o perdi contro uno più debole, il motore resta fermo, invece di muoversi di 5 punti; e sparisce la regola dei 10 punti sotto i 10 di distanza, che lo faceva salire quanto te. Prima, tu 1600 e lui 1800 vincendo sempre, restavi 17 punti sotto per sempre; ora lo superi alla sedicesima vittoria, e poi lui ti insegue. Lo stesso in discesa. Le patte restano come prima, metà del salto verso di te. Issue 70, decisa con Gabriele.</li>
+</ul>
 <h4>8.45.5 (12 novembre 2026)</h4>
 <ul>
   <li>- [Gioca] Nel modello inseguimento, quando il tuo Elo è sotto il minimo del motore, 1320 per Stockfish, il motore non sale più quando vinci: resta al minimo finché non lo raggiungi, e Orologic dice che gioca al suo minimo. Lo stesso, al contrario, sopra il suo massimo. Prima il passo contrario di 5 punti lo allontanava: tu a 1135 vincevi e passavi a 1150, e il motore da 1320 saliva a 1325. Issue 70, segnalata da Gabriele.</li>

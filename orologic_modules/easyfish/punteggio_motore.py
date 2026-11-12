@@ -32,9 +32,6 @@ CHIAVE_MODELLO = "modello_del_motore"
 MODELLO_PREDEFINITO = {"tipo": "casuale", "da": -50, "a": 50}
 # La curva dell'inseguimento: il salto e' d * |d| / (|d| + CURVA).
 CURVA = 100
-PASSO_CONTRARIO = 5
-PASSO_VICINO = 10
-DISTANZA_VICINA = 10
 
 
 def leggi():
@@ -120,26 +117,24 @@ def descrivi_modello(scelto):
 def passo_di_inseguimento(elo_utente, elo_motore, punti):
     """Di quanto si sposta il motore che insegue, dopo una partita.
 
-    La distanza d e' il tuo Elo meno quello del motore. Se il risultato
-    spinge il motore verso di te, cioe' vinci quando lui e' sotto o perdi
-    quando e' sopra, il salto segue una curva: d * |d| / (|d| + 100), 17
-    punti a 50 di distanza, 50 a 100, 225 a 300. La patta da' meta' del
-    salto, verso di te. Il risultato contrario da' un passo piccolo, di 5
-    punti, nella sua direzione: su se vinci, giu' se perdi. Sotto i 10 punti
-    di distanza: vittoria +10, patta 0, sconfitta -10. Regola decisa con
-    Gabriele il 10 novembre 2026, dal suo esempio: tu 1500 e il motore 1400,
-    vinci +50, patti +25, perdi -5.
+    La distanza d e' il tuo Elo, gia' aggiornato, meno quello del motore. Se
+    il risultato spinge il motore verso di te, cioe' vinci quando lui e'
+    sotto o perdi quando e' sopra, il salto segue una curva: d * |d| /
+    (|d| + 100), 17 punti a 50 di distanza, 50 a 100, 225 a 300. La patta
+    da' meta' del salto, verso di te. Il risultato contrario lascia il motore
+    fermo, e la distanza la chiude il tuo Elo, cosi' il sorpasso e'
+    possibile: tu 1600 e il motore 1800, vincendo sempre lo superi alla
+    sedicesima, e poi lui ti insegue a circa 25 punti; in discesa lo stesso.
+    Regola decisa con Gabriele il 12 novembre 2026, issue 70: prima il passo
+    contrario di 5 punti, e il passo di 10 sotto i 10 punti di distanza,
+    tenevano il motore sempre davanti.
     """
     d = elo_utente - elo_motore
-    if abs(d) < DISTANZA_VICINA:
-        return {1: PASSO_VICINO, 0.5: 0, 0: -PASSO_VICINO}[punti]
     salto = d * abs(d) / (abs(d) + CURVA)
     if punti == 0.5:
         return round(salto / 2)
     favorevole = (punti == 1 and d > 0) or (punti == 0 and d < 0)
-    if favorevole:
-        return round(salto)
-    return PASSO_CONTRARIO if punti == 1 else -PASSO_CONTRARIO
+    return round(salto) if favorevole else 0
 
 
 def prossimo_elo(scelto, elo_utente, elo_motore, punti, minimo, massimo, caso):
