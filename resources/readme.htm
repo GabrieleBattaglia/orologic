@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 8.45.4 - martedì 10 novembre 2026)</h1>
+<h1>Guida Utente di Orologic (Versione 8.45.5 - giovedì 12 novembre 2026)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -630,7 +630,7 @@ margin: 1em 0;
     <li><strong>Uguale:</strong> il motore ha il tuo stesso Elo.</li>
     <li><strong>Delta assoluto:</strong> il tuo Elo più o meno un valore fisso, che scegli fra -1000 e 1000: con +100 il motore ti sta sempre cento punti sopra.</li>
     <li><strong>Delta casuale:</strong> il tuo Elo più un valore a caso fra due limiti che scegli, quello in basso fra -1000 e 0 e quello in alto fra 0 e 1000. È il modello di serie, da -50 a +50: il motore è alla tua altezza senza essere prevedibile.</li>
-    <li><strong>Inseguimento:</strong> il motore ti insegue, partendo dal suo Elo, a passi che dipendono dalla distanza fra voi e dall'ultimo risultato. Se il risultato lo spinge verso di te, cioè vinci quando lui è sotto o perdi quando è sopra, il salto cresce con la distanza: 17 punti a 50 di distanza, 50 a 100, 225 a 300. La patta dà metà del salto, sempre verso di te. Il risultato contrario dà un passo piccolo, di 5 punti, su se vinci e giù se perdi. Quando siete a meno di 10 punti: vittoria +10, patta 0, sconfitta -10. Per esempio, tu 1500 e il motore 1400: se vinci il motore sale di 50, se patti di 25, se perdi scende di 5.</li>
+    <li><strong>Inseguimento:</strong> il motore ti insegue, partendo dal suo Elo, a passi che dipendono dalla distanza fra voi e dall'ultimo risultato. Se il risultato lo spinge verso di te, cioè vinci quando lui è sotto o perdi quando è sopra, il salto cresce con la distanza: 17 punti a 50 di distanza, 50 a 100, 225 a 300. La patta dà metà del salto, sempre verso di te. Il risultato contrario dà un passo piccolo, di 5 punti, su se vinci e giù se perdi. Quando siete a meno di 10 punti: vittoria +10, patta 0, sconfitta -10. Per esempio, tu 1500 e il motore 1400: se vinci il motore sale di 50, se patti di 25, se perdi scende di 5. Stockfish però non scende sotto 1320 e non sale sopra 3190: se il tuo Elo è sotto il suo minimo, il motore non sale mai, nemmeno quando vinci, e resta al minimo finché non lo raggiungi; allo stesso modo, sopra il suo massimo non scende. Orologic te lo dice: «alla prossima partita gioca a Elo 1320, il suo minimo».</li>
 </ul>
 <p>Il motore non esce mai dai limiti di Stockfish, 1320 e 3190, e quando ci arriva Orologic lo dice.</p>
 

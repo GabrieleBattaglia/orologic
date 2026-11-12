@@ -158,7 +158,21 @@ def prossimo_elo(scelto, elo_utente, elo_motore, punti, minimo, massimo, caso):
     elif punti is None:
         voluto = elo_motore
     else:
-        voluto = elo_motore + passo_di_inseguimento(elo_utente, elo_motore, punti)
+        passo = passo_di_inseguimento(elo_utente, elo_motore, punti)
+        # Fuori dalla portata del motore il passo contrario non vale: sotto il
+        # suo minimo non sale, sopra il suo massimo non scende, perche' ti
+        # allontanerebbe senza che tu possa mai raggiungerlo. Issue 70: tu a
+        # 1135 vinci, il motore a 1320, il suo minimo, saliva a 1325.
+        if elo_utente < minimo:
+            passo = min(passo, 0)
+        elif elo_utente > massimo:
+            passo = max(passo, 0)
+        voluto = elo_motore + passo
+        # Fermo al limite perche' sei fuori portata: il messaggio lo dice.
+        if elo_utente < minimo and voluto <= minimo:
+            voluto = min(voluto, elo_utente)
+        elif elo_utente > massimo and voluto >= massimo:
+            voluto = max(voluto, elo_utente)
     return max(minimo, min(massimo, voluto)), voluto
 
 
