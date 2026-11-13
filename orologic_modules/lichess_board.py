@@ -1382,6 +1382,7 @@ def _gioca_partita(game_id, token, username):
         user_input = async_play_loop(q, game_state)
 
         if user_input is None:
+            ui.svuota_tastiera()
             if len(game_state.move_history) > 10:
                 from GBUtils import enter_escape
 

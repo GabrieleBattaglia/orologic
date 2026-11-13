@@ -831,6 +831,25 @@ def scrivi_prompt(memoria, prompt, buf):
     sys.stdout.flush()
 
 
+def svuota_tastiera():
+    """Butta i tasti rimasti nella console, prima di una domanda che arriva
+    alla fine di una partita: quello che si e' premuto durante il gioco, o un
+    evento rimasto dalla mossa, non deve rispondere al posto dell'utente ne'
+    far ripetere la domanda. Senza console non fa niente."""
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+        import msvcrt
+
+        while msvcrt.kbhit():
+            msvcrt.getwch()
+        kernel32 = ctypes.windll.kernel32
+        kernel32.FlushConsoleInputBuffer(kernel32.GetStdHandle(-10))
+    except (OSError, AttributeError):
+        pass
+
+
 def vista_ferma(game_state):
     """Vero mentre la scacchiera chiesta con .s aspetta un tasto: il prompt
     non si riscrive, perche' chi legge abbia il tempo di esplorarla."""

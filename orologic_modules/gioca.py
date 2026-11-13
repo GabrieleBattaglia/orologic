@@ -23,7 +23,7 @@ import chess.pgn
 import pyperclip
 from GBUtils import Acusticator, dgt, enter_escape, menu, sonify
 
-from . import board_utils, chess960_utils, config, engine, storage, version
+from . import board_utils, chess960_utils, config, engine, storage, ui, version
 from .config import _
 from .easyfish import game_mode, punteggio_motore, statistiche_motore
 
@@ -148,6 +148,8 @@ def _dopo_la_partita(partita, stato):
     from . import game_flow
 
     mosse = len(stato.move_history)
+    # Un tasto rimasto dalla partita faceva ripetere la domanda dei tempi.
+    ui.svuota_tastiera()
     if stato.modalita in ("1", "2") and mosse >= MOSSE_PER_I_TEMPI:
         if enter_escape(
             _(

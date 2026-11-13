@@ -900,6 +900,7 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
     # aggiornate, e metterci i residui finali li faceva leggere al contrario.
     # I tempi finali stanno nell'ultimo clk di ciascun colore e nel riepilogo.
     print(_("Partita terminata."))
+    ui.svuota_tastiera()
 
     if len(game_state.move_history) >= 8:
         from GBUtils import enter_escape
