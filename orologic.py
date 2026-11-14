@@ -534,6 +534,9 @@ FRASI_AGGIORNAMENTO_GBUTILS = (
     _("Vuoi aggiornare adesso?"),
     _("Aggiornamento rimandato."),
     _("Scarico l'aggiornamento."),
+    # Dalla V294 di GBUtils, gestisci_aggiornamento 1.3.2: prima restava in
+    # italiano.
+    _("{percento}%, {fatti} MB su {tutti}."),
     _("Aggiornamento pronto, il programma si chiude per applicarlo."),
     _("Aggiornamento non riuscito, si prosegue con questa versione."),
     _("Nessuna risposta."),

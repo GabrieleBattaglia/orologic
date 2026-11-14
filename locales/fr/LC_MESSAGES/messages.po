@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 11:20+0100\n"
+"POT-Creation-Date: 2026-11-14 11:34+0100\n"
 "PO-Revision-Date: 2026-04-12 16:04+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fr <LL@li.org>\n"
@@ -205,19 +205,24 @@ msgstr "Mise à jour reportée."
 msgid "Scarico l'aggiornamento."
 msgstr "Téléchargement de la mise à jour."
 
-#: orologic.py:537
+#: orologic.py:539
+#, python-brace-format
+msgid "{percento}%, {fatti} MB su {tutti}."
+msgstr "{percento}%, {fatti} Mo sur {tutti}."
+
+#: orologic.py:540
 msgid "Aggiornamento pronto, il programma si chiude per applicarlo."
 msgstr "Mise à jour prête, le programme se ferme pour l'appliquer."
 
-#: orologic.py:538
+#: orologic.py:541
 msgid "Aggiornamento non riuscito, si prosegue con questa versione."
 msgstr "Mise à jour échouée, on continue avec cette version."
 
-#: orologic.py:539
+#: orologic.py:542
 msgid "Nessuna risposta."
 msgstr "Pas de réponse."
 
-#: orologic.py:577
+#: orologic.py:580
 msgid ""
 "\n"
 "Ripristino della partita."
@@ -225,7 +230,7 @@ msgstr ""
 "\n"
 "Restauration de la partie."
 
-#: orologic.py:580
+#: orologic.py:583
 msgid ""
 "E' stata rilevata una partita di arbitraggio in sospeso. Desideri "
 "riprenderla? (INVIO per si', ESC per no): "
@@ -233,12 +238,12 @@ msgstr ""
 "Une partie d'arbitrage en attente a été détectée. Voulez-vous la reprendre ?"
 " (ENTRÉE pour oui, ESC pour non) : "
 
-#: orologic.py:591
+#: orologic.py:594
 #, python-brace-format
 msgid "Impossibile ripristinare la partita: {e}"
 msgstr "Impossible de restaurer la partie : {e}"
 
-#: orologic.py:611 orologic_modules/lichess_app.py:481
+#: orologic.py:614 orologic_modules/lichess_app.py:481
 #: orologic_modules/lichess_app.py:2152
 msgid ""
 "\n"
@@ -247,7 +252,7 @@ msgstr ""
 "\n"
 "Choisissez une action : "
 
-#: orologic.py:622
+#: orologic.py:625
 msgid ""
 "\n"
 "Caricamento partita dagli appunti..."
@@ -255,7 +260,7 @@ msgstr ""
 "\n"
 "Chargement de la partie depuis le presse-papiers..."
 
-#: orologic.py:629 orologic_modules/game_flow.py:977
+#: orologic.py:632 orologic_modules/game_flow.py:977
 #: orologic_modules/gioca.py:82 orologic_modules/pgn_search.py:1339
 msgid ""
 "Il motore scacchistico non e' configurato. Vuoi configurarlo ora? (INVIO per"
@@ -264,23 +269,23 @@ msgstr ""
 "Le moteur d'échecs n'est pas configuré. Voulez-vous le configurer "
 "maintenant ? (ENTRÉE pour oui, ESC pour non) : "
 
-#: orologic.py:635 orologic_modules/game_flow.py:988
+#: orologic.py:638 orologic_modules/game_flow.py:988
 #: orologic_modules/pgn_search.py:1345
 msgid "Impossibile inizializzare il motore. Analisi annullata."
 msgstr "Impossible d'initialiser le moteur. Analyse annulée."
 
-#: orologic.py:641 orologic_modules/game_flow.py:996
+#: orologic.py:644 orologic_modules/game_flow.py:996
 #: orologic_modules/pgn_search.py:1351
 msgid "Desideri l'analisi automatica? (INVIO per si', ESC per manuale): "
 msgstr ""
 "Voulez-vous une analyse automatique? (ENTRÉE pour oui, ESC pour manuel) : "
 
-#: orologic.py:708 orologic_modules/easyfish/drawing.py:68
+#: orologic.py:711 orologic_modules/easyfish/drawing.py:68
 #: orologic_modules/lichess_app.py:1979
 msgid "sconosciuto"
 msgstr "inconnu"
 
-#: orologic.py:711
+#: orologic.py:714
 #, python-brace-format
 msgid ""
 "\n"
@@ -291,7 +296,7 @@ msgstr ""
 "Au revoir d'Orologic {v}.\n"
 "C'était notre {lc}e fois et nous nous sommes amusés ensemble pendant : {d}"
 
-#: orologic.py:721
+#: orologic.py:724
 msgid ""
 "\n"
 "Interruzione richiesta, chiudo Orologic."
@@ -299,7 +304,7 @@ msgstr ""
 "\n"
 "Interruption demandée, je ferme Orologic."
 
-#: orologic.py:724
+#: orologic.py:727
 msgid ""
 "\n"
 "Premi un tasto per uscire..."

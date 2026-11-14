@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-14 11:20+0100\n"
+"POT-Creation-Date: 2026-11-14 11:34+0100\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -204,19 +204,24 @@ msgstr "Update postponed."
 msgid "Scarico l'aggiornamento."
 msgstr "Downloading the update."
 
-#: orologic.py:537
+#: orologic.py:539
+#, python-brace-format
+msgid "{percento}%, {fatti} MB su {tutti}."
+msgstr "{percento}%, {fatti} MB of {tutti}."
+
+#: orologic.py:540
 msgid "Aggiornamento pronto, il programma si chiude per applicarlo."
 msgstr "Update ready, the program will close to apply it."
 
-#: orologic.py:538
+#: orologic.py:541
 msgid "Aggiornamento non riuscito, si prosegue con questa versione."
 msgstr "Update failed, continuing with this version."
 
-#: orologic.py:539
+#: orologic.py:542
 msgid "Nessuna risposta."
 msgstr "No answer."
 
-#: orologic.py:577
+#: orologic.py:580
 msgid ""
 "\n"
 "Ripristino della partita."
@@ -224,7 +229,7 @@ msgstr ""
 "\n"
 "Restoring the game."
 
-#: orologic.py:580
+#: orologic.py:583
 msgid ""
 "E' stata rilevata una partita di arbitraggio in sospeso. Desideri "
 "riprenderla? (INVIO per si', ESC per no): "
@@ -232,12 +237,12 @@ msgstr ""
 "A pending refereed game has been detected. Do you want to resume it? (ENTER "
 "for yes, ESC for no): "
 
-#: orologic.py:591
+#: orologic.py:594
 #, python-brace-format
 msgid "Impossibile ripristinare la partita: {e}"
 msgstr "Unable to restore game: {e}"
 
-#: orologic.py:611 orologic_modules/lichess_app.py:481
+#: orologic.py:614 orologic_modules/lichess_app.py:481
 #: orologic_modules/lichess_app.py:2152
 msgid ""
 "\n"
@@ -246,7 +251,7 @@ msgstr ""
 "\n"
 "Choose an action: "
 
-#: orologic.py:622
+#: orologic.py:625
 msgid ""
 "\n"
 "Caricamento partita dagli appunti..."
@@ -254,7 +259,7 @@ msgstr ""
 "\n"
 "Loading game from clipboard..."
 
-#: orologic.py:629 orologic_modules/game_flow.py:977
+#: orologic.py:632 orologic_modules/game_flow.py:977
 #: orologic_modules/gioca.py:82 orologic_modules/pgn_search.py:1339
 msgid ""
 "Il motore scacchistico non e' configurato. Vuoi configurarlo ora? (INVIO per"
@@ -263,22 +268,22 @@ msgstr ""
 "The chess engine is not configured. Do you want to set it up now? (ENTER for"
 " yes, ESC for no): "
 
-#: orologic.py:635 orologic_modules/game_flow.py:988
+#: orologic.py:638 orologic_modules/game_flow.py:988
 #: orologic_modules/pgn_search.py:1345
 msgid "Impossibile inizializzare il motore. Analisi annullata."
 msgstr "Could not initialize engine. Analysis cancelled."
 
-#: orologic.py:641 orologic_modules/game_flow.py:996
+#: orologic.py:644 orologic_modules/game_flow.py:996
 #: orologic_modules/pgn_search.py:1351
 msgid "Desideri l'analisi automatica? (INVIO per si', ESC per manuale): "
 msgstr "Do you want automatic analysis? (ENTER for yes, ESC for manual): "
 
-#: orologic.py:708 orologic_modules/easyfish/drawing.py:68
+#: orologic.py:711 orologic_modules/easyfish/drawing.py:68
 #: orologic_modules/lichess_app.py:1979
 msgid "sconosciuto"
 msgstr "unknown"
 
-#: orologic.py:711
+#: orologic.py:714
 #, python-brace-format
 msgid ""
 "\n"
@@ -289,7 +294,7 @@ msgstr ""
 "Goodbye from Orologic {v}.\n"
 "This was our {lc}th time and we had fun together for: {d}"
 
-#: orologic.py:721
+#: orologic.py:724
 msgid ""
 "\n"
 "Interruzione richiesta, chiudo Orologic."
@@ -297,7 +302,7 @@ msgstr ""
 "\n"
 "Interruption requested, I am closing Orologic."
 
-#: orologic.py:724
+#: orologic.py:727
 msgid ""
 "\n"
 "Premi un tasto per uscire..."
