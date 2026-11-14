@@ -4,7 +4,9 @@
 import json
 import msvcrt
 import os
+import queue
 import sys
+import threading
 import time
 import webbrowser
 
@@ -1307,10 +1309,13 @@ def get_active_games(token, silenzioso=True, usa_cache=True):
     return _in_cache(("partite", token), dati.get("nowPlaying", []))
 
 
-def get_incoming_challenges(token, silenzioso=True, usa_cache=True):
-    """Sfide in arrivo, con la stessa regola di silenzio delle partite attive."""
+def get_challenges(token, silenzioso=True, usa_cache=True):
+    """Le sfide in attesa, come coppia (ricevute, inviate), con la stessa
+    regola di silenzio delle partite attive. Lichess le manda insieme: in
+    sono quelle rivolte a te, out quelle che hai lanciato tu. Con silenzioso
+    falso, una lettura fallita si dice e restituisce None."""
     if not token:
-        return []
+        return [], []
     if usa_cache:
         pronte = _da_cache(("sfide", token))
         if pronte is not None:
@@ -1318,9 +1323,19 @@ def get_incoming_challenges(token, silenzioso=True, usa_cache=True):
     dati, errore = rete.leggi_json("https://lichess.org/api/challenge", token=token)
     if errore:
         if not silenzioso:
-            print(_("Sfide in arrivo non recuperate. {motivo}").format(motivo=errore))
-        return []
-    return _in_cache(("sfide", token), dati.get("in", []))
+            print(_("Sfide in attesa non recuperate. {motivo}").format(motivo=errore))
+            # Gia' detto: chi chiede a voce alta non deve aggiungere che non ci
+            # sono sfide.
+            return None
+        return [], []
+    return _in_cache(
+        ("sfide", token), (dati.get("in") or [], dati.get("out") or [])
+    )
+
+
+def get_incoming_challenges(token, silenzioso=True, usa_cache=True):
+    """Le sole sfide in arrivo."""
+    return (get_challenges(token, silenzioso=silenzioso, usa_cache=usa_cache) or ([], []))[0]
 
 
 def accept_challenge(token, challenge_id):
@@ -1339,6 +1354,109 @@ def decline_challenge(token, challenge_id):
     if not riuscito:
         print(_("Sfida non rifiutata. {motivo}").format(motivo=errore))
     return riuscito
+
+
+def cancel_challenge(token, challenge_id):
+    """Ritira una sfida lanciata da te."""
+    riuscito, errore = rete.invia(
+        f"https://lichess.org/api/challenge/{challenge_id}/cancel", token=token
+    )
+    if not riuscito:
+        print(_("Sfida non annullata. {motivo}").format(motivo=errore))
+    return riuscito
+
+
+def _velocita(chiave):
+    nomi = {
+        "ultraBullet": _("ultrabullet"),
+        "bullet": _("bullet"),
+        "blitz": _("blitz"),
+        "rapid": _("rapida"),
+        "classical": _("classica"),
+        "correspondence": _("corrispondenza"),
+    }
+    return nomi.get(chiave, chiave or "")
+
+
+def dettagli_della_sfida(sfida):
+    """La sfida in poche parole: la variante se non e' la standard, la
+    cadenza e se e' classificata, per esempio blitz 5+3, classificata."""
+    parti = []
+    variante = sfida.get("variant") or {}
+    if variante.get("key") not in (None, "standard"):
+        parti.append(variante.get("name", ""))
+    controllo = sfida.get("timeControl") or {}
+    if controllo.get("type") == "clock":
+        parti.append(
+            "{v} {c}".format(
+                v=_velocita(sfida.get("speed")), c=controllo.get("show", "")
+            ).strip()
+        )
+    elif controllo.get("type") == "correspondence":
+        parti.append(
+            _("corrispondenza, {n} giorni per mossa").format(
+                n=controllo.get("daysPerTurn", "?")
+            )
+        )
+    else:
+        parti.append(_("senza limite di tempo"))
+    parti.append(_("classificata") if sfida.get("rated") else _("amichevole"))
+    return ", ".join(p for p in parti if p)
+
+
+def _avversario_della_sfida(sfida, ricevuta):
+    """Chi ti sfida, se la sfida e' ricevuta; chi hai sfidato, se e' tua.
+    Una sfida aperta non ha destinatario."""
+    if ricevuta:
+        return (sfida.get("challenger") or {}).get("name") or _("Anonimo")
+    return (sfida.get("destUser") or {}).get("name") or _("chiunque")
+
+
+def descrivi_sfida(sfida, ricevuta):
+    """Una riga per l'elenco delle sfide: verso, avversario e dettagli."""
+    nome = _avversario_della_sfida(sfida, ricevuta)
+    dettagli = dettagli_della_sfida(sfida)
+    if ricevuta:
+        return _("ricevuta da {u}, {d}").format(u=nome, d=dettagli)
+    return _("inviata a {u}, {d}").format(u=nome, d=dettagli)
+
+
+def _elenca_nomi(nomi):
+    """Fino a tre nomi, uniti come si dice: Cris, Luca e Mario. Oltre i tre
+    nessun nome, e resta il solo numero."""
+    if not nomi or len(nomi) > 3:
+        return ""
+    if len(nomi) == 1:
+        return nomi[0]
+    return _("{a} e {b}").format(a=", ".join(nomi[:-1]), b=nomi[-1])
+
+
+def voce_delle_sfide(ricevute, inviate):
+    """La voce del menu principale: Sfide: 1 ricevuta da Mario, 2 inviate a
+    Cris e Luca. Issue 72."""
+    parti = []
+    for elenco, ricevuta in ((ricevute, True), (inviate, False)):
+        if not elenco:
+            continue
+        n = len(elenco)
+        # Due sfide di Mario sono due sfide, ma un nome solo.
+        nomi = _elenca_nomi(
+            list(dict.fromkeys(_avversario_della_sfida(s, ricevuta) for s in elenco))
+        )
+        if ricevuta:
+            if n == 1:
+                parti.append(_("1 ricevuta da {u}").format(u=nomi))
+            elif nomi:
+                parti.append(_("{n} ricevute da {u}").format(n=n, u=nomi))
+            else:
+                parti.append(_("{n} ricevute").format(n=n))
+        elif n == 1:
+            parti.append(_("1 inviata a {u}").format(u=nomi))
+        elif nomi:
+            parti.append(_("{n} inviate a {u}").format(n=n, u=nomi))
+        else:
+            parti.append(_("{n} inviate").format(n=n))
+    return _("Sfide: {elenco}").format(elenco=", ".join(parti))
 
 
 def get_game_params(for_seek=False, for_bot=False):
@@ -1444,7 +1562,7 @@ def challenge_ai(token, level, params_dict):
     return dati
 
 
-def challenge_user(token, username, params_dict):
+def _parametri_della_sfida(params_dict):
     payload = {
         "color": params_dict["color"],
         "variant": params_dict["variant"],
@@ -1455,17 +1573,205 @@ def challenge_user(token, username, params_dict):
         payload["clock.increment"] = params_dict["clock_increment"]
     else:
         payload["days"] = params_dict.get("days", 1)
+    return payload
 
+
+def challenge_user(token, username, params_dict):
+    """Lancia una sfida e restituisce la sfida creata, come la manda
+    Lichess: l'oggetto della sfida, con il suo id, senza involucri."""
     dati, errore = rete.leggi_json(
         f"https://lichess.org/api/challenge/{username}",
         token=token,
         metodo="POST",
-        dati=payload,
+        dati=_parametri_della_sfida(params_dict),
     )
     if errore:
         print(_("Sfida non inviata. {motivo}").format(motivo=errore))
         return None
     return dati
+
+
+# Quanto si aspetta, al massimo, la risposta a una sfida a tempo reale: e'
+# anche il tempo massimo di silenzio sul collegamento che la tiene viva.
+ATTESA_DELLA_SFIDA = 3600
+
+
+def _motivo_del_rifiuto(token, id_sfida):
+    """Il motivo che l'avversario ha scelto rifiutando, se Lichess lo dice."""
+    dati, errore = rete.leggi_json(
+        f"https://lichess.org/api/challenge/{id_sfida}/show", token=token
+    )
+    if errore or not isinstance(dati, dict):
+        return ""
+    motivo = dati.get("declineReason")
+    return _("Motivo: {m}").format(m=motivo) if motivo else ""
+
+
+def _stato_della_sfida(token, id_sfida):
+    """Lo stato di una sfida secondo Lichess, per esempio accepted, oppure
+    None se non si riesce a saperlo."""
+    dati, errore = rete.leggi_json(
+        f"https://lichess.org/api/challenge/{id_sfida}/show", token=token
+    )
+    if errore or not isinstance(dati, dict):
+        return None
+    return dati.get("status")
+
+
+def _chiudi_senza_aspettare(risposta):
+    """Chiude il collegamento della sfida in un thread a parte: chiuderlo da
+    qui aspetterebbe il lettore, fermo finche' Lichess non manda qualcosa."""
+
+    def chiudi():
+        try:
+            risposta.close()
+        # Il lettore puo' averlo gia' chiuso, o lasciato a meta'.
+        except Exception:  # noqa: BLE001, S110
+            pass
+
+    threading.Thread(target=chiudi, daemon=True).start()
+
+
+def sfida_e_aspetta(token, username, params_dict, mio_nome):
+    """Lancia la sfida e ne dice l'esito. Issue 72: prima, dopo l'invio, non
+    si sentiva niente, perche' Orologic cercava la sfida dentro un involucro
+    che Lichess non manda; e la sfida a tempo reale scadeva comunque dopo 20
+    secondi, mentre Orologic ne aspettava 60.
+
+    A tempo reale la sfida resta viva finche' il collegamento e' aperto, con
+    keepAliveStream: Orologic aspetta, dice se l'avversario accetta, ed entra
+    in partita, o se rifiuta, col motivo; ESC la ritira. Il collegamento lo
+    apre e lo legge un thread, cosi' ESC vale anche mentre si apre; se cade
+    senza esito, la sfida si ritira, o si entra in partita se intanto era
+    stata accettata. Per corrispondenza la sfida resta su Lichess e si
+    ritrova in Sfide, fra le inviate."""
+    print(_("\nInvio sfida in corso..."))
+    if params_dict["clock_limit"] is None:
+        sfida = challenge_user(token, username, params_dict)
+        if sfida is None:
+            return
+        scorda_cache_rete()
+        if isinstance(sfida, dict) and sfida.get("id"):
+            print(
+                _(
+                    "Sfida per corrispondenza inviata a {u}: resta su Lichess finche' "
+                    "non risponde, e la trovi in Sfide, fra le inviate."
+                ).format(u=username)
+            )
+        else:
+            print(_("Lichess non ha confermato la sfida."))
+        return
+    dati = _parametri_della_sfida(params_dict)
+    dati["keepAliveStream"] = "true"
+    coda = queue.Queue()
+    collegamento = {}
+    fermo = threading.Event()
+
+    def leggi():
+        risposta, errore = rete.apri(
+            f"https://lichess.org/api/challenge/{username}",
+            token=token,
+            metodo="POST",
+            dati=dati,
+            timeout=ATTESA_DELLA_SFIDA,
+            accetta="application/x-ndjson",
+        )
+        if errore:
+            coda.put({"errore": errore})
+            return
+        collegamento["risposta"] = risposta
+        if fermo.is_set():
+            _chiudi_senza_aspettare(risposta)
+            return
+        try:
+            for riga in risposta:
+                riga = riga.strip()
+                if not riga:
+                    continue
+                try:
+                    coda.put(json.loads(riga))
+                except ValueError:
+                    continue
+        # La chiusura del collegamento interrompe la lettura in modi diversi,
+        # anche con un AttributeError di http.client: nessuno e' un guasto da
+        # mostrare, la fine si dice dal thread principale.
+        except Exception:  # noqa: BLE001
+            coda.put({"interrotto": True})
+        coda.put({"finito": True})
+
+    threading.Thread(target=leggi, daemon=True).start()
+    id_sfida = None
+    try:
+        while True:
+            try:
+                evento = coda.get(timeout=0.1)
+            except queue.Empty:
+                if msvcrt.kbhit() and msvcrt.getwch() == "\x1b":
+                    if id_sfida is None:
+                        print(
+                            _(
+                                "Sfida ritirata prima che Lichess la confermasse: se "
+                                "era gia' partita, scade da sola entro 20 secondi."
+                            )
+                        )
+                    elif cancel_challenge(token, id_sfida):
+                        print(_("Sfida annullata."))
+                    return
+                continue
+            if "errore" in evento:
+                print(_("Sfida non inviata. {motivo}").format(motivo=evento["errore"]))
+                return
+            if id_sfida is None and evento.get("id"):
+                id_sfida = evento["id"]
+                print(
+                    _("Sfida inviata a {u}: aspetto la risposta, ESC la annulla.").format(
+                        u=username
+                    )
+                )
+                continue
+            esito = evento.get("done")
+            if esito == "accepted":
+                print(_("{u} ha accettato la sfida!").format(u=username))
+                scorda_cache_rete()
+                lichess_board.play_game(id_sfida, token, mio_nome)
+                return
+            if esito == "declined":
+                motivo = _motivo_del_rifiuto(token, id_sfida)
+                riga = _("{u} ha rifiutato la sfida.").format(u=username)
+                print(riga + (" " + motivo if motivo else ""))
+                return
+            if esito:
+                print(_("La sfida e' stata annullata."))
+                return
+            if "interrotto" in evento or "finito" in evento:
+                # Senza il collegamento la sfida resta accettabile ancora per
+                # qualche secondo: o e' gia' stata accettata, e si gioca, o si
+                # ritira, perche' non parta una partita che nessuno apre.
+                if id_sfida and _stato_della_sfida(token, id_sfida) == "accepted":
+                    print(_("{u} ha accettato la sfida!").format(u=username))
+                    scorda_cache_rete()
+                    lichess_board.play_game(id_sfida, token, mio_nome)
+                    return
+                if id_sfida and cancel_challenge(token, id_sfida):
+                    print(
+                        _(
+                            "Il collegamento con Lichess si e' chiuso: la sfida e' "
+                            "stata ritirata."
+                        )
+                    )
+                else:
+                    print(
+                        _(
+                            "Il collegamento con Lichess si e' chiuso: la sfida non e' "
+                            "piu' attiva."
+                        )
+                    )
+                return
+    finally:
+        fermo.set()
+        scorda_cache_rete()
+        if "risposta" in collegamento:
+            _chiudi_senza_aspettare(collegamento["risposta"])
 
 
 def seek_game(token, params_dict):
@@ -1630,7 +1936,7 @@ def menu_gioca(db):
             "cerca": _("Cerca avversario casuale (Seek)"),
             "bot": _("Gioca contro il computer"),
             "amico": _("Sfida un amico"),
-            "accetta": _("Accetta sfide in attesa"),
+            "accetta": _("Sfide in attesa, ricevute e inviate"),
             "riprendi": _("Riprendi partita in corso"),
             ".": _("Torna al menu Lichess"),
         }
@@ -1707,60 +2013,7 @@ def menu_gioca(db):
             print(_("\nImpostazioni della sfida:"))
             params = get_game_params(for_seek=False, for_bot=False)
 
-            print(_("\nInvio sfida in corso..."))
-            resp = challenge_user(token, amico_scelto, params)
-            if resp and "challenge" in resp:
-                challenge_id = resp["challenge"]["id"]
-                print(_("Sfida inviata! In attesa che l'avversario accetti..."))
-
-                timeout = 60
-                start_time = time.time()
-                game_started = False
-                while time.time() - start_time < timeout:
-                    print(
-                        _(
-                            "In attesa... ({t}s rimanenti) - Premi CTRL+C o ESC per annullare"
-                        ).format(t=int(timeout - (time.time() - start_time))),
-                        end="\r",
-                    )
-
-                    import msvcrt
-
-                    if msvcrt.kbhit():
-                        c = msvcrt.getwch()
-                        if c == "\x1b" or c == "\x03":  # ESC or CTRL+C
-                            print()
-                            break
-
-                    active = get_active_games(token, usa_cache=False)
-                    for game in active:
-                        if game.get("gameId") == challenge_id:
-                            print(_("\nSfida accettata!"))
-
-                            lichess_board.play_game(
-                                challenge_id, token, secrets.get("lichess_username")
-                            )
-                            game_started = True
-                            break
-                    if game_started:
-                        break
-                    time.sleep(2)
-
-                if not game_started:
-                    print(
-                        _(
-                            "\nL'avversario non ha accettato la sfida in tempo (oppure e' offline)."
-                        )
-                    )
-                    print(
-                        _(
-                            "Nota: La sfida potrebbe rimanere valida su Lichess se era per corrispondenza."
-                        )
-                    )
-                    rete.invia(
-                        f"https://lichess.org/api/challenge/{challenge_id}/cancel",
-                        token=token,
-                    )
+            sfida_e_aspetta(token, amico_scelto, params, secrets.get("lichess_username"))
 
         elif scelta == "accetta":
             rispondi_alle_sfide(token, secrets.get("lichess_username"))
@@ -1834,7 +2087,7 @@ def run():
             lichess_eventi.ferma()
 
         active_games = []
-        num_challenges = 0
+        ricevute, inviate = [], []
         if is_logged:
             MENU_CHOICES["logout"] = _("Logout (Rimuovi token)")
             active_games = get_active_games(token)
@@ -1848,14 +2101,13 @@ def run():
                         "Riprendi partita in sospeso ({n} attive)"
                     ).format(n=len(active_games))
 
-            # Controllo sfide in sospeso
+            # Le sfide in attesa, ricevute e inviate.
             try:
-                challenges = get_incoming_challenges(token)
-                num_challenges = len(challenges) if challenges else 0
+                ricevute, inviate = get_challenges(token)
             # Le risposte di Lichess possono cambiare forma: si rinuncia a
             # questo dato e si prosegue.
             except Exception:  # noqa: BLE001
-                num_challenges = 0
+                ricevute, inviate = [], []
         else:
             MENU_CHOICES["login"] = _("Login (Imposta API Token)")
 
@@ -1879,10 +2131,8 @@ def run():
 
         if is_logged:
             MENU_CHOICES["messaggi"] = _("Casella Postale (Apri Lichess Inbox)")
-            if num_challenges > 0:
-                MENU_CHOICES["sfide"] = _("Sfide in attesa ({n})").format(
-                    n=num_challenges
-                )
+            if ricevute or inviate:
+                MENU_CHOICES["sfide"] = voce_delle_sfide(ricevute, inviate)
 
         MENU_CHOICES["."] = _("Ritorna a Orologic (Esci)")
 
@@ -2029,46 +2279,65 @@ def scegli_ascoltando_le_sfide(voci, db, p):
 
 
 def rispondi_alle_sfide(token, username):
-    """Le sfide in attesa, una per una: INVIO accetta ed entra in partita, r
-    rifiuta, ESC passa alla seguente lasciandola in attesa. Prima ESC
-    rifiutava, e un tasto premuto per prudenza chiudeva la sfida."""
-    print(_("Controllo sfide in entrata..."))
-    try:
-        challenges = get_incoming_challenges(token, usa_cache=False)
-    # Le risposte di Lichess possono cambiare forma: si rinuncia a
-    # questo dato e si prosegue.
-    except Exception:  # noqa: BLE001
-        challenges = []
-    if not challenges:
-        print(_("Non hai sfide in attesa."))
-        return
-    for c in challenges:
-        c_id = c["id"]
-        challenger = c.get("challenger", {}).get("name", _("Anonimo"))
-        variant = c["variant"]["name"]
-        speed = c["speed"]
-        rated = _("Classificata") if c["rated"] else _("Amichevole")
-        print(
-            _("\nSfida da {u} ({v}, {s}, {r})").format(
-                u=challenger, v=variant, s=speed, r=rated
-            )
+    """Le sfide in attesa, ricevute e inviate, in un elenco unico, ognuna con
+    verso, avversario e dettagli. Una ricevuta: INVIO accetta ed entra in
+    partita, r rifiuta, ESC torna all'elenco. Una tua: INVIO la ritira, ESC
+    la lascia. Issue 72: prima c'erano solo le ricevute, una dopo l'altra."""
+    while True:
+        print(_("Controllo le sfide in attesa..."))
+        try:
+            esito = get_challenges(token, silenzioso=False, usa_cache=False)
+        # Le risposte di Lichess possono cambiare forma: si rinuncia a
+        # questo dato e si prosegue.
+        except Exception:  # noqa: BLE001
+            esito = [], []
+        if esito is None:
+            return
+        ricevute, inviate = esito
+        if not ricevute and not inviate:
+            print(_("Non hai sfide in attesa."))
+            return
+        voci = {}
+        sfide = {}
+        # Chiavi della stessa larghezza, 01 e 10: con 1 e 10 menu aspetterebbe
+        # INVIO sulla prima, e le metterebbe in ordine di testo, 1, 10, 2.
+        larghezza = len(str(len(ricevute) + len(inviate)))
+        for elenco, ricevuta in ((ricevute, True), (inviate, False)):
+            for sfida in elenco:
+                chiave = str(len(sfide) + 1).zfill(larghezza)
+                voci[chiave] = descrivi_sfida(sfida, ricevuta)
+                sfide[chiave] = (ricevuta, sfida)
+        voci["."] = _("Torna indietro")
+        scelta = menu(
+            voci, show=True, keyslist=True, ordered=False, p=_("\nScegli una sfida: ")
         )
-        risposta = key(_("\rINVIO accetta, ESC la lascia in attesa, r la rifiuta\r"))
-        print()
-        if risposta == "\r":
-            print(_("Accetto la sfida..."))
-            lichess_eventi.dimentica(c_id)
-            if accept_challenge(token, c_id):
-                print(_("Sfida accettata!"))
-                lichess_board.play_game(c_id, token, username)
-                return
-            print(_("Impossibile accettare la sfida (potrebbe essere stata annullata)."))
-        elif risposta.lower() == "r":
-            print(_("Rifiuto la sfida..."))
-            lichess_eventi.dimentica(c_id)
-            decline_challenge(token, c_id)
-        else:
-            print(_("Sfida lasciata in attesa."))
+        if scelta not in sfide:
+            return
+        ricevuta, sfida = sfide[scelta]
+        c_id = sfida.get("id")
+        scorda_cache_rete()
+        if ricevuta:
+            risposta = key(_("\rINVIO accetta, r la rifiuta, ESC torna all'elenco\r"))
+            print()
+            if risposta == "\r":
+                print(_("Accetto la sfida..."))
+                lichess_eventi.dimentica(c_id)
+                if accept_challenge(token, c_id):
+                    print(_("Sfida accettata!"))
+                    lichess_board.play_game(c_id, token, username)
+                    return
+                print(
+                    _("Impossibile accettare la sfida (potrebbe essere stata annullata).")
+                )
+            elif risposta.lower() == "r":
+                print(_("Rifiuto la sfida..."))
+                lichess_eventi.dimentica(c_id)
+                decline_challenge(token, c_id)
+        elif enter_escape(
+            _("\rVuoi annullare questa sfida? INVIO la annulla, ESC la lascia\r")
+        ):
+            if cancel_challenge(token, c_id):
+                print(_("Sfida annullata."))
 
 
 if __name__ == "__main__":

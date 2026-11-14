@@ -78,7 +78,7 @@ def _arrivata(sfida, mio_nome):
         )
         .strip()
         + ". "
-        + _("La trovi in Sfide in attesa, nel menu di Orolichess.")
+        + _("La trovi in Sfide, nel menu di Orolichess.")
     )
     sfida_arrivata.set()
 

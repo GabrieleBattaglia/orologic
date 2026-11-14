@@ -9,10 +9,17 @@ from . import rete, storage, tempo
 from .config import _
 
 
-def fetch_rating_history(username):
-    dati, errore = rete.leggi_json(
-        f"https://lichess.org/api/user/{username}/rating-history"
-    )
+def fetch_rating_history(username, token=None):
+    """La storia Elo di un giocatore. Con il token, se c'e': per alcuni
+    giocatori Lichess la manda solo a chi ha fatto l'accesso, e senza
+    risponde con un elenco vuoto, come per chi non ha mai giocato. Issue 72:
+    Crisolon, con migliaia di partite classificate, risultava senza storia."""
+    url = f"https://lichess.org/api/user/{username}/rating-history"
+    dati, errore = rete.leggi_json(url, token=token)
+    if errore and token:
+        # Un token revocato o scaduto fa rispondere 401 anche a questa
+        # richiesta pubblica: si riprova senza, come prima della issue 72.
+        dati, errore = rete.leggi_json(url)
     if errore:
         print(_("Storia Elo non recuperata. {motivo}").format(motivo=errore))
         return None
@@ -155,12 +162,38 @@ def print_wrapped_dea(label, dea_str):
                 print(f"{indent}{part}")
 
 
+_classificate = {}
+
+
+def _partite_classificate(username, secrets):
+    """Quante partite classificate ha il giocatore, dal suo profilo; zero se
+    il profilo non arriva. Letto una volta sola per giocatore."""
+    if username not in _classificate:
+        dati, errore = rete.leggi_json(
+            f"https://lichess.org/api/user/{username}",
+            token=(secrets or {}).get("lichess_token"),
+        )
+        conto = (dati or {}).get("count") or {} if not errore else {}
+        _classificate[username] = int(conto.get("rated") or 0)
+    return _classificate[username]
+
+
 def run_stats(username, secrets):
     print(_("\nRecupero storia Elo per {u} in corso...").format(u=username))
-    history_data = fetch_rating_history(username)
+    history_data = fetch_rating_history(username, (secrets or {}).get("lichess_token"))
     if history_data is None:
         # Il motivo lo ha gia' detto fetch_rating_history, che conosce
         # l'errore vero: qui si lascia solo il tempo di leggerlo.
+        enter_escape(_("\nPremi Invio per continuare..."))
+        return
+    if not history_data and _partite_classificate(username, secrets) > 0:
+        # Il giocatore ha partite classificate, ma Lichess non ha mandato la
+        # storia: dirgli che non ne ha sarebbe falso.
+        print(
+            _(
+                "Lichess non ha mandato la storia Elo di {u}, che ha {n} partite classificate: riprova piu' tardi."
+            ).format(u=username, n=_partite_classificate(username, secrets))
+        )
         enter_escape(_("\nPremi Invio per continuare..."))
         return
     if not history_data:

@@ -21,6 +21,12 @@ def get_token(secrets):
     return secrets.get("lichess_token")
 
 
+# Da quante lettere si chiedono i suggerimenti. La specifica di Lichess dice
+# tre, ma il server con tre risponde 400, "No search term provided", e con
+# quattro risponde: misurato il 14 novembre 2026, issue 72.
+LETTERE_PER_I_SUGGERIMENTI = 4
+
+
 def search_player():
     print(_("RICERCA GIOCATORE"))
     print(
@@ -41,7 +47,7 @@ def search_player():
     errore_segnalato = False
 
     while True:
-        if len(term) >= 3 and not term.startswith("="):
+        if len(term) >= LETTERE_PER_I_SUGGERIMENTI and not term.startswith("="):
             chiave = term.lower()
             if chiave in suggerimenti_visti:
                 results = suggerimenti_visti[chiave]
@@ -55,7 +61,8 @@ def search_player():
                 if errore and not errore_segnalato:
                     # Un solo avviso: ripeterlo a ogni tasto sarebbe insopportabile.
                     print(
-                        _("Suggerimenti non disponibili. {motivo}").format(
+                        "\n"
+                        + _("Suggerimenti non disponibili. {motivo}").format(
                             motivo=errore
                         )
                     )
@@ -67,7 +74,7 @@ def search_player():
 
         if term.startswith("="):
             print(_("\n[Ricerca ESATTA forzata per: {t}]").format(t=term[1:]))
-        elif len(term) >= 3:
+        elif len(term) >= LETTERE_PER_I_SUGGERIMENTI:
             if results:
                 nomi = [res.get("name") for res in results]
                 print("\n({n}) {lista}".format(n=len(nomi), lista=", ".join(nomi)))
@@ -679,52 +686,9 @@ def show_player_menu(username, secrets):
 
             print(_("\nImpostazioni della sfida:"))
             params = lichess_app.get_game_params(for_seek=False, for_bot=False)
-            print(_("\nInvio sfida in corso..."))
-            resp = lichess_app.challenge_user(token, username, params)
-            if resp and "challenge" in resp:
-                challenge_id = resp["challenge"]["id"]
-                print(_("Sfida inviata! In attesa che l'avversario accetti..."))
-                import time
-
-                timeout = 60
-                start_time = time.time()
-                game_started = False
-                while time.time() - start_time < timeout:
-                    print(
-                        _("In attesa... ({t}s rimanenti)").format(
-                            t=int(timeout - (time.time() - start_time))
-                        ),
-                        end="\r",
-                    )
-                    active = lichess_app.get_active_games(token)
-                    for game in active:
-                        if game.get("gameId") == challenge_id:
-                            print(_("\nSfida accettata!"))
-                            from . import lichess_board
-
-                            lichess_board.play_game(
-                                challenge_id, token, secrets.get("lichess_username")
-                            )
-                            game_started = True
-                            break
-                    if game_started:
-                        break
-                    time.sleep(5)
-
-                if not game_started:
-                    print(
-                        _(
-                            "\nL'avversario non ha accettato la sfida in tempo (oppure e' offline)."
-                        )
-                    )
-                    try:
-                        rete.invia(
-                            f"https://lichess.org/api/challenge/{challenge_id}/cancel",
-                            token=token,
-                        )
-                    # Come sopra.
-                    except Exception:  # noqa: BLE001, S110
-                        pass
+            lichess_app.sfida_e_aspetta(
+                token, username, params, secrets.get("lichess_username")
+            )
         elif scelta == "segui":
             follow_player(username, token, follow=True)
             if profile:

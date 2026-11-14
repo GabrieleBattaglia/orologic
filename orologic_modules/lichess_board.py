@@ -1275,7 +1275,7 @@ def show_post_game_report(game_id, token, username):
                 nelo = rating + diff
                 from .lichess_stats import fetch_rating_history
 
-                history_data = fetch_rating_history(username)
+                history_data = fetch_rating_history(username, token)
                 if history_data:
                     perf_name = data.get("perf")
                     if not perf_name:

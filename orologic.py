@@ -536,6 +536,7 @@ FRASI_AGGIORNAMENTO_GBUTILS = (
     _("Scarico l'aggiornamento."),
     _("Aggiornamento pronto, il programma si chiude per applicarlo."),
     _("Aggiornamento non riuscito, si prosegue con questa versione."),
+    _("Nessuna risposta."),
 )
 
 

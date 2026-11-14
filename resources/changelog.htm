@@ -18,6 +18,35 @@ li { margin-bottom: 0.3em; }
 <body>
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 8</h2>
+<h3>Versione 8.46</h3>
+<h4>8.46.6 (14 novembre 2026)</h4>
+<ul>
+  <li>* [Manuale] Il capitolo di Orolichess racconta l'invio delle sfide con la risposta, la voce Sfide, i suggerimenti dalla quarta lettera e la storia Elo con il token.</li>
+</ul>
+<h4>8.46.5 (14 novembre 2026)</h4>
+<ul>
+  <li>* [L10N] Inglese, spagnolo, francese e portoghese hanno le 41 frasi nuove dalla 8.46.0 alla 8.46.4, compresa «Nessuna risposta.».</li>
+</ul>
+<h4>8.46.4 (14 novembre 2026)</h4>
+<ul>
+  <li>- [L10N] La frase «Nessuna risposta.», che GBUtils dice quando la domanda dell'aggiornamento resta senza risposta per due minuti, entra nella tupla delle frasi dell'aggiornamento, e così nei cataloghi: prima restava in italiano. Issue 71.</li>
+</ul>
+<h4>8.46.3 (14 novembre 2026)</h4>
+<ul>
+  <li>- [Orolichess] La storia Elo si chiede con il token, se c'è: per alcuni giocatori Lichess la manda solo a chi ha fatto l'accesso, e senza risponde con un elenco vuoto. Crisolon, con quattordicimila partite classificate, risultava senza storia; col token ne ha quindici varianti. Se il token è revocato, si riprova senza; e se la storia arriva vuota per un giocatore con partite classificate, Orologic non dice più che non ne ha, ma che Lichess non l'ha mandata. Il resoconto di fine partita su Lichess chiede anche lui la storia col token. Issue 72.</li>
+</ul>
+<h4>8.46.2 (14 novembre 2026)</h4>
+<ul>
+  <li>- [Orolichess] La ricerca del giocatore chiede i suggerimenti dalla quarta lettera: con tre Lichess risponde 400, «No search term provided», anche se la sua specifica dice tre. E l'avviso di suggerimenti non disponibili va a capo, invece di attaccarsi alle lettere scritte. Issue 72.</li>
+</ul>
+<h4>8.46.1 (14 novembre 2026)</h4>
+<ul>
+  <li>- [Orolichess] Dopo l'invio di una sfida, a un amico o dal Profilatore, Orologic dice che è partita e ne aspetta la risposta. Prima non si sentiva niente: Lichess manda la sfida creata senza l'involucro che Orologic cercava, e la sfida a tempo reale scadeva dopo venti secondi, mentre Orologic ne aspettava sessanta. Ora la sfida a tempo reale resta viva finché si aspetta, con keepAliveStream: si sente se l'avversario accetta, e si entra in partita, o se rifiuta, col motivo; ESC la ritira, subito anche mentre il collegamento si apre, e si sente «Sfida annullata.» solo se Lichess l'ha davvero annullata. Se il collegamento cade senza esito, la sfida si ritira, oppure si entra in partita se intanto era stata accettata. Quella per corrispondenza resta su Lichess e si ritrova in Sfide. Issue 72.</li>
+</ul>
+<h4>8.46.0 (14 novembre 2026)</h4>
+<ul>
+  <li>+ [Orolichess] Le sfide in attesa, ricevute e inviate. Il menu principale mostra la voce Sfide ogni volta che ce ne sono, con il conto e i nomi, per esempio «Sfide: 1 ricevuta da Mario, 2 inviate a Cris e Luca». Dentro, un elenco unico con verso, avversario, variante, cadenza e punteggio: una sfida ricevuta si accetta o si rifiuta, una tua si ritira. Un nome ripetuto si dice una volta, e con dieci sfide o più l'elenco resta in ordine. Prima la voce compariva solo con sfide ricevute, e le tue non si vedevano. Chiesto da Gabriele nella issue 72.</li>
+</ul>
 <h3>Versione 8.45</h3>
 <h4>8.45.7 (13 novembre 2026)</h4>
 <ul>
