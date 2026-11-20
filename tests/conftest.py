@@ -121,9 +121,12 @@ class Registro:
 
     def __init__(self):
         self.detti = []
+        # Con l'uscita e la destinazione, per le prove degli annunci.
+        self.chiamate = []
 
     def dici(self, testo, chiave=None, dove="entrambi", interrompi=False):
         self.detti.append((testo, interrompi))
+        self.chiamate.append((testo, chiave, dove, interrompi))
         return True
 
     def testi(self):

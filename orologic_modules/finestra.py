@@ -1,7 +1,7 @@
 # Orologic: la finestra, con l'area unica che fa da console.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
 
-"""La finestra di Orologic, tappa T2 della GUI (Piano della GUI.txt).
+"""La finestra di Orologic, tappe T2 e T3 della GUI (Piano della GUI.txt).
 
 Il nucleo di Orologic gira in un filo suo, esattamente come nel terminale:
 scrive con print e sys.stdout, legge con key, menu, enter_escape e dgt di
@@ -19,6 +19,10 @@ di testo, uscita e ingresso insieme.
                    cursore, con i ritorni carrello, i backspace e gli a capo.
   Finestra         l'area, i tasti e gli annunci con GBsintesi.
 
+Gli annunci seguono le impostazioni di annunci.py: se si fanno, con quale
+uscita e dove, e se interrompono quello in corso. F3 apre la finestra delle
+impostazioni, finche' non c'e' la plancia della T4.
+
 Le due forme dell'area. Fuori dal gioco scorre come un terminale. Durante una
 partita, quando lo strato le consegna chi da' i dati, diventa il cruscotto di
 cruscotto.py, che si riscrive da solo ogni secondo, col prompt in fondo: le
@@ -30,9 +34,10 @@ Le cause del testo. eco e' cio' che il nucleo scrive subito dopo un
 carattere letto con getwch, cioe' l'eco del carattere nei cicli d'attesa, e
 l'eco che leggi_riga fa da se': NVDA dice gia' i caratteri premuti, quindi
 la riga in corso cambiata dall'eco non si annuncia. tasto e' cio' che segue
-Invio, Esc o un tasto letto da key: e' la risposta a un tasto, e interrompe
-la voce. None e' il testo che il nucleo scrive da se', per l'orologio, per
-una mossa arrivata o da un altro filo, e si accoda. Le righe chiuse si
+Invio, Esc o un tasto letto da key: e' la risposta a un tasto, e di partenza
+interrompe la voce. None e' il testo che il nucleo scrive da se', per
+l'orologio, per una mossa arrivata o da un altro filo, e di partenza si
+accoda. Le righe chiuse si
 annunciano sempre, tranne quella del prompt in cui si e' appena scritto.
 
 Le lezioni della T0: riga e colonna si chiedono all'area, che non va a capo
@@ -50,10 +55,10 @@ import time
 import traceback
 
 import wx
-from GBsintesi import AUTOMATICA, Sintesi
+from GBsintesi import Sintesi
 from GBUtils import sorgente_dei_tasti
 
-from . import cruscotto, strato, version
+from . import annunci, cruscotto, dialoghi, strato, version
 from .config import _
 
 # L'eco e' solo cio' che il nucleo scrive entro questi secondi dal tasto: i
@@ -68,14 +73,6 @@ ATTESA_DELLA_CHIUSURA = 5.0
 # La larghezza che lo strato dichiara: pulisci_riga scrive tanti spazi, che
 # l'area non mostra.
 COLONNE = 300
-# Dove vanno gli annunci, provvisorio fino alle impostazioni della T3: F3 li
-# fa girare.
-DESTINAZIONI = (
-    ("sintesi", _("Annunci alla sintesi.")),
-    ("entrambi", _("Annunci a sintesi e braille.")),
-    ("braille", _("Annunci al solo braille.")),
-    (None, _("Annunci spenti.")),
-)
 
 
 class CambioDiForma:
@@ -326,7 +323,7 @@ class Finestra(wx.Frame):
         self.detta = ""
         self.programmato = False
         self.sintesi = Sintesi()
-        self.destinazione = 0
+        self.annunci = annunci.carica()
         self.nucleo = None
         self.chiudendo = False
         # Finito il nucleo la finestra si chiude; le prove la tengono aperta
@@ -382,9 +379,8 @@ class Finestra(wx.Frame):
     def _tasto_giu(self, evento):
         codice = evento.GetKeyCode()
         ctrl, shift = evento.ControlDown(), evento.ShiftDown()
-        if codice == wx.WXK_F3 and not ctrl and not shift:
-            self.destinazione = (self.destinazione + 1) % len(DESTINAZIONI)
-            self.sintesi.dici(DESTINAZIONI[self.destinazione][1], AUTOMATICA, "entrambi", interrompi=True)
+        if codice == wx.WXK_F3 and not ctrl and not shift and not evento.AltDown():
+            self.impostazioni()
             return
         if (ctrl and codice == ord("V")) or (shift and codice == wx.WXK_INSERT):
             self._incolla()
@@ -429,7 +425,7 @@ class Finestra(wx.Frame):
         # e' appena scritto, che nel cruscotto sta gia' fra le ultime mosse.
         messaggi = []
         da_dire = []
-        interrompi = False
+        dal_tasto = False
         ultima_causa = None
         for testo, causa in pezzi:
             if isinstance(testo, CambioDiForma):
@@ -440,7 +436,7 @@ class Finestra(wx.Frame):
                 continue
             ultima_causa = causa
             if causa == "tasto":
-                interrompi = True
+                dal_tasto = True
             for riga in self.terminale.applica(testo):
                 chiuse.append(riga)
                 if riga.strip() and riga.rstrip() != self.detta.rstrip():
@@ -461,7 +457,7 @@ class Finestra(wx.Frame):
                     da_dire.append(nuovo)
             self.detta = visibile
         self._mostra_nella_forma(chiuse, messaggi)
-        self._di(da_dire, interrompi)
+        self._di(da_dire, dal_tasto)
 
     def _mostra_nella_forma(self, chiuse, messaggi):
         """Le righe chiuse e la riga in corso, nella forma dell'area di adesso."""
@@ -563,12 +559,40 @@ class Finestra(wx.Frame):
             else:
                 self._al_cursore()
 
-    def _di(self, righe, interrompi):
-        dove = DESTINAZIONI[self.destinazione][0]
-        if dove is None:
+    def _di(self, righe, dal_tasto):
+        """Gli annunci, secondo le impostazioni: dal_tasto e' vero per la
+        risposta a un tasto. Solo il primo puo' interrompere, gli altri lo
+        seguono."""
+        if not self.annunci["attivi"]:
             return
+        interrompi = annunci.interrompe(self.annunci, dal_tasto)
         for numero, riga in enumerate(righe):
-            self.sintesi.dici(riga, AUTOMATICA, dove, interrompi=interrompi and numero == 0)
+            self.sintesi.dici(riga, self.annunci["uscita"], self.annunci["destinazione"], interrompi=interrompi and numero == 0)
+
+    # Le impostazioni.
+
+    def impostazioni(self):
+        """La finestra delle impostazioni, per ora quelle degli annunci. Il
+        nucleo intanto continua: i tasti vanno alla finestra, e il testo che
+        arriva si mostra e si annuncia come sempre."""
+        voci = [(voce, annunci.riga(voce, self.annunci)) for voce in annunci.VOCI]
+        with dialoghi.FinestraImpostazioni(self, voci, self._cambia_impostazione) as dialogo:
+            dialogo.ShowModal()
+        self.area.SetFocus()
+
+    def _cambia_impostazione(self, voce, dialogo):
+        scelte = annunci.SCELTE[voce]
+        nomi = [annunci.nome_della_scelta(voce, scelta) for scelta in scelte]
+        indice = self.scegli(dialogo, annunci.etichetta(voce), nomi, scelte.index(self.annunci[voce]))
+        if indice is None:
+            return
+        self.annunci = annunci.normalizza({**self.annunci, voce: scelte[indice]})
+        annunci.salva(self.annunci)
+        dialogo.aggiorna(voce, annunci.riga(voce, self.annunci))
+
+    def scegli(self, genitore, titolo, voci, scelta):
+        """La scelta da una lista; le prove la sostituiscono."""
+        return dialoghi.scegli(genitore, titolo, voci, scelta)
 
     # Il nucleo.
 
