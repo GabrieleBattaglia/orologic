@@ -9,7 +9,7 @@ import chess.engine
 import chess.pgn
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
-from .. import config, modello_prompt, orologio, tempo, ui
+from .. import config, modello_prompt, orologio, strato, tempo, ui
 from .. import engine as orologic_engine
 from ..board_utils import (
     CustomBoard,
@@ -511,6 +511,9 @@ def _attendi_mossa(game_state, prompt, board, ultima_mossa):
     """
     from ..game_flow import async_arbitration_input
 
+    # La scacchiera di Easyfish non sta nello stato: il cruscotto della
+    # finestra la trova qui.
+    game_state.scacchiera_del_cruscotto = board
     umano_bianco = game_state.human_color == chess.WHITE
     avversario = game_state.black_player if umano_bianco else game_state.white_player
 
@@ -973,6 +976,7 @@ def _partita_finita_dopo_la_mossa(board, current_node, game_state):
     return False
 
 
+@strato.in_partita
 def StartEngineGame(game_node, engine_instance, sharing_window=None, carriera=False):
     """Una partita contro il motore dalla posizione di game_node, con
     l'orologio in un thread a parte.
@@ -1399,6 +1403,8 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None, carriera=Fa
         print(_("\nPartita interrotta."))
     finally:
         game_state.game_over = True
+        # Il riepilogo che segue si legge nella console, non nel cruscotto.
+        strato.fine_del_gioco()
 
     print(_("Partita terminata."))
 

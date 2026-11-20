@@ -27,6 +27,7 @@ import shutil
 import sys
 import tempfile
 import threading
+import time
 
 import pytest
 
@@ -110,3 +111,86 @@ def pytest_sessionfinish(session, exitstatus):
 
 def pytest_unconfigure(config):
     shutil.rmtree(CARTELLA_DELLE_PROVE, ignore_errors=True)
+
+
+# Le prove della finestra: la voce finta, la wx.App, la pompa degli eventi.
+
+
+class Registro:
+    """La sintesi finta: si segna cosa avrebbe detto."""
+
+    def __init__(self):
+        self.detti = []
+
+    def dici(self, testo, chiave=None, dove="entrambi", interrompi=False):
+        self.detti.append((testo, interrompi))
+        return True
+
+    def testi(self):
+        return [testo for testo, _interrompi in self.detti]
+
+
+@pytest.fixture(scope="session")
+def app():
+    import wx
+
+    applicazione = wx.App()
+    yield applicazione
+
+
+def pompa(finche, secondi=10.0):
+    """Fa girare un ciclo di eventi vero di wx, come le prove di Tornello,
+    finche' la condizione e' vera, al piu' per tanti secondi; restituisce la
+    condizione. Senza un ciclo attivo CallAfter e i timer non scattano."""
+    import wx
+
+    ciclo = wx.GUIEventLoop()
+    limite = time.monotonic() + secondi
+    errori = []
+
+    def guarda():
+        try:
+            fatto = finche()
+        except Exception as errore:  # noqa: BLE001 - si rilancia fuori dal ciclo
+            errori.append(errore)
+            fatto = True
+        if fatto or time.monotonic() >= limite:
+            ciclo.Exit()
+        else:
+            wx.CallLater(20, guarda)
+
+    wx.CallLater(20, guarda)
+    ciclo.Run()
+    if errori:
+        raise errori[0]
+    return finche()
+
+
+@pytest.fixture
+def finestra(app, request):
+    from orologic_modules import finestra as modulo_finestra
+
+    """La finestra vera, collegata al nucleo. pytest.ini spegne la cattura
+    dell'uscita, che rimetterebbe il suo stdout al posto di quello della
+    finestra."""
+    vera = modulo_finestra.prepara()
+    vera.sintesi = Registro()
+    # Col nucleo finto la finestra resta aperta, per leggerla; con Orologic
+    # intero si chiude da sola, come nella vita vera.
+    vera.chiudi_alla_fine = "orologic_parte" in request.node.name
+    vera.Show()
+    try:
+        yield vera
+    finally:
+        vera.faccia.chiudi()
+        if vera.nucleo is not None:
+            vera.nucleo.join(timeout=5)
+        pompa(lambda: False, 0.1)
+        if vera:
+            vera.Destroy()
+        modulo_finestra.ripristina()
+        pompa(lambda: False, 0.1)
+
+
+def righe_dell_area(vera):
+    return vera.area.GetValue().split("\n")

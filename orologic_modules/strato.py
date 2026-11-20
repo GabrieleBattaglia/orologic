@@ -17,10 +17,18 @@ imposta_faccia. Per il resto la finestra non ha bisogno dello strato: key,
 menu ed enter_escape di GBUtils la seguono con sorgente_dei_tasti, print e
 dgt con sys.stdout e sys.stdin.
 
+Dalla T2 lo strato sa anche quando c'e' una partita in corso, per il
+cruscotto della finestra (decisione C1 del punto 74): le funzioni di gioco
+dichiarano la zona della partita con in_partita o partita, e i cicli d'attesa
+consegnano con fornisci chi da' i dati del cruscotto. Nel terminale tutto
+questo non fa niente.
+
 Fuori da questo modulo nessuno importa msvcrt: lo controlla
 tests/test_strato.py.
 """
 
+import contextlib
+import functools
 import os
 import shutil
 
@@ -59,8 +67,14 @@ class FacciaTerminale:
         """Le colonne della riga, chieste al terminale."""
         return shutil.get_terminal_size(fallback=(80, 24)).columns
 
+    def cruscotto(self, fornitore):
+        """Il terminale non ha cruscotto."""
+
 
 _faccia = FacciaTerminale()
+# Quante zone di partita sono aperte una dentro l'altra: una ripresa da
+# salvataggio automatico apre la partita dentro il menu che l'ha chiesta.
+_partite = 0
 
 
 def imposta_faccia(faccia):
@@ -96,3 +110,44 @@ def svuota_tastiera():
 def larghezza():
     """Quante colonne ha la riga che si ripulisce."""
     return _faccia.larghezza()
+
+
+@contextlib.contextmanager
+def partita():
+    """La zona di una partita: finche' e' aperta, i cicli d'attesa possono
+    dare alla faccia i dati del cruscotto con fornisci. Alla chiusura
+    dell'ultima zona il cruscotto se ne va."""
+    global _partite
+    _partite += 1
+    try:
+        yield
+    finally:
+        _partite -= 1
+        if not _partite:
+            _faccia.cruscotto(None)
+
+
+def in_partita(funzione):
+    """Il decoratore delle funzioni di gioco: tutta la funzione e' la zona
+    di una partita."""
+
+    @functools.wraps(funzione)
+    def avvolta(*argomenti, **opzioni):
+        with partita():
+            return funzione(*argomenti, **opzioni)
+
+    return avvolta
+
+
+def fornisci(fornitore):
+    """Dentro una partita, chi da' i dati del cruscotto: una funzione senza
+    argomenti che restituisce i dati di cruscotto.dati_di. Fuori da una
+    partita non fa niente."""
+    if _partite:
+        _faccia.cruscotto(fornitore)
+
+
+def fine_del_gioco():
+    """Il gioco e' finito, anche se la funzione di gioco continua, per
+    esempio col riepilogo: il cruscotto lascia il posto alla console."""
+    _faccia.cruscotto(None)

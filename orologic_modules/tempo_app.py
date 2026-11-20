@@ -7,7 +7,7 @@ import time
 
 from GBUtils import Acusticator, dgt, key, menu
 
-from . import board_utils, clock, config, orologio, ui, version
+from . import board_utils, clock, config, orologio, strato, ui, version
 from .config import _
 from .game_flow import async_arbitration_input
 
@@ -101,6 +101,7 @@ def StartTempo(clock_config):
     _loop_tempo(game_state, clock_config)
 
 
+@strato.in_partita
 def _loop_tempo(game_state, clock_config):
     """Loop principale della modalita' Tempo."""
     game_state.paused_time_start = None

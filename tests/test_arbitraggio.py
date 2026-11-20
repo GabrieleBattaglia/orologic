@@ -1,0 +1,54 @@
+# Orologic, un'arbitraggio vero nella finestra (tappa T2 della GUI).
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
+
+"""StartGame di game_flow, come lo lancia la voce Arbitra del menu, con un
+orologio pronto: Invio a ogni domanda, poi cinque mosse. Il cruscotto deve
+arrivare da solo, con le mosse a parole, gli orologi e i messaggi. Il motore
+vero non parte."""
+
+from conftest import pompa
+
+from orologic_modules import engine, game_flow
+
+
+def _fermo(finestra, secondi=0.3):
+    """Aspetta che l'area smetta di cambiare."""
+    prima = None
+    for _ in range(40):
+        pompa(lambda: False, secondi)
+        adesso = finestra.area.GetValue()
+        if adesso == prima:
+            return
+        prima = adesso
+
+
+def test_un_arbitraggio_vero_nel_cruscotto(finestra, monkeypatch):
+    monkeypatch.setattr(engine, "InitEngine", lambda: False)
+    orologio = {"name": "Prova", "same_time": True, "phases": [{"white_time": 300, "black_time": 300, "white_inc": 0, "black_inc": 0, "moves": 0}], "alarms": []}
+    finestra.avvia_il_nucleo(lambda: game_flow.StartGame(orologio))
+    for _domanda in range(15):
+        _fermo(finestra)
+        if finestra.fornitore is not None:
+            break
+        finestra.faccia.premi("\r")
+    assert finestra.fornitore is not None
+    _fermo(finestra, 0.6)
+    for mossa in ("e4", "e5", "Nf3", "Nc6", "Bb5"):
+        for tasto in mossa + "\r":
+            finestra.faccia.premi(tasto)
+        _fermo(finestra)
+    righe = finestra.mostrate
+    sezioni = [nome for nome, _testo in righe]
+    assert sezioni.count("scacchiera") == 10
+    mosse = [testo for nome, testo in righe if nome == "mosse"]
+    assert mosse[0] == "Ultime mosse:"
+    assert mosse[-1].startswith("3. alfiere in ")
+    assert sum(1 for riga in mosse if "; " in riga) >= 2
+    messaggi = [testo for nome, testo in righe if nome == "messaggi"]
+    assert messaggi[0] == "Messaggi:"
+    assert any("Ruy Lopez" in testo for testo in messaggi)
+    # La riga del prompt con la mossa scritta non e' un messaggio.
+    assert not any(testo.startswith(("2... Nc6 ", "2. Nf3 ")) for testo in messaggi)
+    assert righe[-1] == ("prompt", "3. Bb5 ")
+    detti = [testo for testo, _interrompi in finestra.sintesi.detti]
+    assert any(testo.startswith("Bianco: alfiere in ") for testo in detti)

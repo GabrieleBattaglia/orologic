@@ -19,6 +19,13 @@ di testo, uscita e ingresso insieme.
                    cursore, con i ritorni carrello, i backspace e gli a capo.
   Finestra         l'area, i tasti e gli annunci con GBsintesi.
 
+Le due forme dell'area. Fuori dal gioco scorre come un terminale. Durante una
+partita, quando lo strato le consegna chi da' i dati, diventa il cruscotto di
+cruscotto.py, che si riscrive da solo ogni secondo, col prompt in fondo: le
+righe stampate diventano i messaggi, e restano anche nel registro della
+console, che torna intero a fine partita. Nel cruscotto i rinfreschi lasciano
+il cursore sulla stessa riga della stessa sezione e alla stessa colonna.
+
 Le cause del testo. eco e' cio' che il nucleo scrive subito dopo un
 carattere letto con getwch, cioe' l'eco del carattere nei cicli d'attesa, e
 l'eco che leggi_riga fa da se': NVDA dice gia' i caratteri premuti, quindi
@@ -46,7 +53,7 @@ import wx
 from GBsintesi import AUTOMATICA, Sintesi
 from GBUtils import sorgente_dei_tasti
 
-from . import strato, version
+from . import cruscotto, strato, version
 from .config import _
 
 # L'eco e' solo cio' che il nucleo scrive entro questi secondi dal tasto: i
@@ -69,6 +76,16 @@ DESTINAZIONI = (
     ("braille", _("Annunci al solo braille.")),
     (None, _("Annunci spenti.")),
 )
+
+
+class CambioDiForma:
+    """Nella fila del testo, il punto in cui l'area cambia forma: il
+    fornitore dei dati del cruscotto, o None per tornare alla console. Sta
+    nella stessa fila del testo perche' l'ordine non si perda: cio' che il
+    nucleo scrive dopo l'inizio della partita va nel cruscotto."""
+
+    def __init__(self, fornitore):
+        self.fornitore = fornitore
 
 
 class FacciaFinestra:
@@ -157,6 +174,13 @@ class FacciaFinestra:
 
     def larghezza(self):
         return COLONNE
+
+    def cruscotto(self, fornitore):
+        with self._lucchetto:
+            primo = not self._pezzi
+            self._pezzi.append((CambioDiForma(fornitore), None))
+        if primo and self.avvisa is not None:
+            self.avvisa()
 
     def scrivi(self, testo, causa=None):
         if causa is None:
@@ -288,8 +312,16 @@ class Finestra(wx.Frame):
         dimensionatore.Add(self.area, 1, wx.EXPAND)
         pannello.SetSizer(dimensionatore)
         self.terminale = Terminale()
-        # Le righe chiuse mostrate nell'area; la riga in corso viene dopo.
+        # Le righe chiuse della console; la riga in corso viene dopo. Durante
+        # il cruscotto continuano a raccogliersi, e tornano a fine partita.
         self.righe = []
+        # Il cruscotto: chi da' i dati, i messaggi della partita, le righe
+        # mostrate come coppie (sezione, testo), l'orologio che lo rinfresca.
+        self.fornitore = None
+        self.messaggi = []
+        self.mostrate = []
+        self.orologio = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, lambda _evento: self._ridisegna(), self.orologio)
         # La riga in corso come l'utente l'ha gia' sentita o scritta.
         self.detta = ""
         self.programmato = False
@@ -309,21 +341,27 @@ class Finestra(wx.Frame):
 
     # I tasti.
 
+    def _riga_del_prompt(self):
+        """La riga in corso, l'ultima dell'area, nelle due forme."""
+        if self.fornitore is not None and self.mostrate:
+            return len(self.mostrate) - 1
+        return len(self.righe)
+
     def _riga_e_colonna(self):
         trovata, colonna, riga = self.area.PositionToXY(self.area.GetInsertionPoint())
         if not trovata:
-            return len(self.righe), 0
-        return min(riga, len(self.righe)), colonna
+            return self._riga_del_prompt(), 0
+        return min(riga, self._riga_del_prompt()), colonna
 
     def _vai(self, riga, colonna):
         lunghezza = self.area.GetLineLength(riga)
         self.area.SetInsertionPoint(self.area.XYToPosition(max(0, min(colonna, lunghezza)), riga))
 
     def _al_cursore(self):
-        self._vai(len(self.righe), self.terminale.colonna)
+        self._vai(self._riga_del_prompt(), self.terminale.colonna)
 
     def _manda(self, tasto):
-        if self._riga_e_colonna()[0] != len(self.righe):
+        if self._riga_e_colonna()[0] != self._riga_del_prompt():
             self._al_cursore()
         self.faccia.premi(tasto)
 
@@ -387,15 +425,26 @@ class Finestra(wx.Frame):
         if not pezzi or not self:
             return
         chiuse = []
+        # Le righe chiuse che sono messaggi: non la riga del prompt in cui si
+        # e' appena scritto, che nel cruscotto sta gia' fra le ultime mosse.
+        messaggi = []
         da_dire = []
         interrompi = False
         ultima_causa = None
         for testo, causa in pezzi:
+            if isinstance(testo, CambioDiForma):
+                # Il testo arrivato prima va nella forma di prima.
+                self._mostra_nella_forma(chiuse, messaggi)
+                chiuse, messaggi = [], []
+                self._cambia_forma(testo.fornitore)
+                continue
             ultima_causa = causa
             if causa == "tasto":
                 interrompi = True
             for riga in self.terminale.applica(testo):
                 chiuse.append(riga)
+                if riga.strip() and riga.rstrip() != self.detta.rstrip():
+                    messaggi.append(riga)
                 nuovo = _parte_nuova(riga, self.detta)
                 if nuovo:
                     da_dire.append(nuovo)
@@ -411,8 +460,26 @@ class Finestra(wx.Frame):
                 if nuovo:
                     da_dire.append(nuovo)
             self.detta = visibile
-        self._mostra(chiuse, visibile)
+        self._mostra_nella_forma(chiuse, messaggi)
         self._di(da_dire, interrompi)
+
+    def _mostra_nella_forma(self, chiuse, messaggi):
+        """Le righe chiuse e la riga in corso, nella forma dell'area di adesso."""
+        if self.fornitore is not None:
+            self.righe.extend(chiuse)
+            self._taglia_il_registro()
+            self.messaggi.extend(messaggi)
+            del self.messaggi[: -cruscotto.MESSAGGI_MOSTRATI]
+            self._ridisegna()
+        elif chiuse or self.area.GetLineText(len(self.righe)) != self.terminale.visibile():
+            self._mostra(chiuse, self.terminale.visibile())
+
+    def _taglia_il_registro(self):
+        """Le righe piu' vecchie se ne vanno a gruppi; restituisce quante."""
+        if len(self.righe) <= RIGHE_TENUTE + RIGHE_TOLTE_ALLA_VOLTA:
+            return 0
+        del self.righe[:RIGHE_TOLTE_ALLA_VOLTA]
+        return RIGHE_TOLTE_ALLA_VOLTA
 
     def _mostra(self, chiuse, visibile):
         """Le righe chiuse prendono il posto della riga in corso, che va in
@@ -424,14 +491,77 @@ class Finestra(wx.Frame):
         inizio = self.area.XYToPosition(0, ultima)
         self.area.Replace(inizio, inizio + self.area.GetLineLength(ultima), "\n".join([*chiuse, visibile]))
         self.righe.extend(chiuse)
-        if len(self.righe) > RIGHE_TENUTE + RIGHE_TOLTE_ALLA_VOLTA:
-            self.area.Remove(0, self.area.XYToPosition(0, RIGHE_TOLTE_ALLA_VOLTA))
-            del self.righe[:RIGHE_TOLTE_ALLA_VOLTA]
-            riga -= RIGHE_TOLTE_ALLA_VOLTA
+        tolte = self._taglia_il_registro()
+        if tolte:
+            self.area.Remove(0, self.area.XYToPosition(0, tolte))
+            riga -= tolte
         if sul_fondo:
             self._al_cursore()
         else:
             self._vai(max(0, riga), colonna)
+
+    # Il cruscotto.
+
+    def _cambia_forma(self, fornitore):
+        """Lo strato consegna chi da' i dati del cruscotto, o None a fine
+        partita."""
+        if fornitore is None:
+            if self.fornitore is None:
+                return
+            self.fornitore = None
+            self.orologio.Stop()
+            self.mostrate = []
+            self.area.ChangeValue("\n".join([*self.righe, self.terminale.visibile()]))
+            self._al_cursore()
+            return
+        nuova = self.fornitore is None
+        self.fornitore = fornitore
+        if nuova:
+            self.messaggi = []
+            self.mostrate = []
+            self.orologio.Start(1000)
+        self._ridisegna()
+
+    def _ridisegna(self):
+        """Riscrive solo le righe cambiate e rimette il cursore: sulla stessa
+        riga della stessa sezione, alla stessa colonna; se era nel prompt e il
+        prompt e' cambiato, al cursore del nucleo."""
+        if not self or self.fornitore is None:
+            return
+        try:
+            dati = self.fornitore()
+            nuove = cruscotto.righe(dati, self.messaggi)
+        # Lo stato appartiene al nucleo, che intanto puo' cambiarlo: si
+        # riprova al prossimo secondo.
+        except Exception:  # noqa: BLE001
+            return
+        nuove.append(("prompt", self.terminale.visibile()))
+        if nuove == self.mostrate:
+            return
+        if self.mostrate:
+            numero, colonna = self._riga_e_colonna()
+            sezione = self.mostrate[numero][0]
+            nella_sezione = sum(1 for s, _t in self.mostrate[:numero] if s == sezione)
+            prompt_cambiato = self.mostrate[-1] != nuove[-1]
+        else:
+            numero, colonna, sezione, nella_sezione, prompt_cambiato = 0, 0, "prompt", 0, True
+        if len(nuove) == len(self.mostrate) and all(a[0] == b[0] for a, b in zip(nuove, self.mostrate, strict=True)):
+            # Stesse righe: si sostituiscono solo quelle cambiate, dal fondo.
+            for indice in range(len(nuove) - 1, -1, -1):
+                if nuove[indice][1] != self.mostrate[indice][1]:
+                    inizio = self.area.XYToPosition(0, indice)
+                    self.area.Replace(inizio, inizio + self.area.GetLineLength(indice), nuove[indice][1])
+        else:
+            self.area.ChangeValue("\n".join(testo for _sezione, testo in nuove))
+        self.mostrate = nuove
+        if sezione == "prompt":
+            self._vai(len(nuove) - 1, self.terminale.colonna if prompt_cambiato else colonna)
+        else:
+            righe_della_sezione = [i for i, (s, _t) in enumerate(nuove) if s == sezione]
+            if righe_della_sezione:
+                self._vai(righe_della_sezione[min(nella_sezione, len(righe_della_sezione) - 1)], colonna)
+            else:
+                self._al_cursore()
 
     def _di(self, righe, interrompi):
         dove = DESTINAZIONI[self.destinazione][0]

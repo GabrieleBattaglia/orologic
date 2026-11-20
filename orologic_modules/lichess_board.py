@@ -10,7 +10,7 @@ import time
 import chess
 from GBUtils import Acusticator
 
-from . import board_utils, config, modello_prompt, rete, strato, tempo, ui
+from . import board_utils, config, cruscotto, modello_prompt, rete, strato, tempo, ui
 from .config import _
 
 
@@ -282,6 +282,7 @@ def _spectate_worker(url, token, q, stop_event):
 
 
 def async_spectator_loop(q, game_state):
+    strato.fornisci(lambda: cruscotto.dati_di(game_state))
     buf = []
 
     def get_prompt():
@@ -541,6 +542,7 @@ def async_spectator_loop(q, game_state):
         time.sleep(0.02)
 
 
+@strato.in_partita
 def spectate_game(game_id, token=None):
     url_stream = f"https://lichess.org/api/stream/game/{game_id}"
 
@@ -782,6 +784,7 @@ def send_action(game_id, token, action, uci=None, chat_text=None, motivo=None):
 
 
 def async_play_loop(q, game_state):
+    strato.fornisci(lambda: cruscotto.dati_di(game_state))
     buf = []
 
     def get_prompt():
@@ -1346,6 +1349,7 @@ def show_post_game_report(game_id, token, username):
     enter_escape(_("\nPremi Invio per continuare..."))
 
 
+@strato.in_partita
 def play_game(game_id, token, username):
     """Gioca una partita su Lichess. Durante la partita gli avvisi delle sfide
     in arrivo sono solo un suono, per non coprire le mosse."""

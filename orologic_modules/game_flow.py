@@ -15,6 +15,7 @@ from . import (
     chess960_utils,
     clock,
     config,
+    cruscotto,
     engine,
     orologio,
     storage,
@@ -159,6 +160,8 @@ def async_arbitration_input(game_state, get_prompt):
     import sys
     import time
 
+    # Il cruscotto della finestra: arbitraggio, Tempo ed Easyfish passano da qui.
+    strato.fornisci(lambda: cruscotto.dati_di(game_state))
     buf = []
     memoria = {}
 
@@ -659,6 +662,7 @@ def salva_pgn_partita(pgn_str, nome_file):
     return None
 
 
+@strato.in_partita
 def _loop_principale_partita(game_state, eco_database, autosave_is_on):
     # Qui c'e' un arbitro: puo' fermare gli orologi e correggere i tempi.
     game_state.arbitro_presente = True
