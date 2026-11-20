@@ -1,7 +1,7 @@
 # Orologic: la finestra, con l'area unica che fa da console.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
 
-"""La finestra di Orologic, tappe T2 e T3 della GUI (Piano della GUI.txt).
+"""La finestra di Orologic, tappe T2, T3 e T4 della GUI (Piano della GUI.txt).
 
 Il nucleo di Orologic gira in un filo suo, esattamente come nel terminale:
 scrive con print e sys.stdout, legge con key, menu, enter_escape e dgt di
@@ -17,7 +17,19 @@ di testo, uscita e ingresso insieme.
   IngressoFinestra lo stdin del nucleo, per input e quindi per dgt.
   Terminale        il terminale imitato: la riga in corso e la colonna del
                    cursore, con i ritorni carrello, i backspace e gli a capo.
-  Finestra         l'area, i tasti e gli annunci con GBsintesi.
+  Attesa           nella fila del testo, cio' che il nucleo aspetta adesso.
+  Finestra         la plancia, l'area, i tasti e gli annunci con GBsintesi.
+
+La plancia, l'albero accanto all'area (P1-P4 del piano). menu di GBUtils,
+con sorgente_delle_scelte, le consegna le sue voci invece di scriverle, e
+aspetta la scelta; enter_escape le fa mostrare Si' e No, e il tasto lo legge
+come sempre. In cima il percorso dei menu, come rami aperti, e dentro
+l'ultimo le voci di adesso; il percorso lo tiene plancia.py. Il fuoco segue
+la domanda: alla plancia per un menu, all'area per un testo, una mossa o un
+tasto, Si' e No compresi; F5 va alla plancia, F6 all'area, e Tab e Shift+Tab
+passano dall'una all'altra. Ogni passaggio ha il suo suono, quelli di
+MeTeOra. Mentre la plancia aspetta, cio' che si scrive nell'area non va al
+nucleo: il fuoco torna alla plancia.
 
 Gli annunci seguono le impostazioni di annunci.py: se si fanno, con quale
 uscita e dove, e se interrompono quello in corso. F3 apre la finestra delle
@@ -56,9 +68,9 @@ import traceback
 
 import wx
 from GBsintesi import Sintesi
-from GBUtils import sorgente_dei_tasti
+from GBUtils import Acusticator, sorgente_dei_tasti, sorgente_delle_scelte
 
-from . import annunci, cruscotto, dialoghi, strato, version
+from . import annunci, config, cruscotto, dialoghi, plancia, strato, version
 from .config import _
 
 # L'eco e' solo cio' che il nucleo scrive entro questi secondi dal tasto: i
@@ -70,6 +82,8 @@ RIGHE_TENUTE = 5000
 RIGHE_TOLTE_ALLA_VOLTA = 200
 # Quanti secondi il nucleo ha per chiudersi da solo, quando si chiude la finestra.
 ATTESA_DELLA_CHIUSURA = 5.0
+# I suoni del fuoco, gli stessi di MeTeOra per le stesse funzioni (P3).
+SUONI_DEL_FUOCO = {"plancia": "spostamento_f5", "console": "spostamento_f6"}
 # La larghezza che lo strato dichiara: pulisci_riga scrive tanti spazi, che
 # l'area non mostra.
 COLONNE = 300
@@ -85,11 +99,44 @@ class CambioDiForma:
         self.fornitore = fornitore
 
 
+class Attesa:
+    """Nella fila del testo, cio' che il nucleo aspetta da qui in poi:
+    "menu", una scelta della plancia, con le voci; "sino", il tasto di una
+    domanda di enter_escape, con la domanda; "area", un testo, una mossa o
+    un tasto; None, niente, perche' lavora. Sta nella fila del testo perche'
+    plancia e fuoco cambino dopo il testo scritto prima."""
+
+    def __init__(self, tipo, voci=(), prompt="", vuoto=None, sito=None, alla_radice=False):
+        self.tipo = tipo
+        self.voci = list(voci)
+        self.prompt = prompt
+        self.vuoto = vuoto
+        self.sito = sito
+        self.alla_radice = alla_radice
+
+
+def _sito_della_chiamata():
+    """Il punto del programma che ha chiamato menu, fuori da GBUtils e da
+    questo modulo, e se e' il menu principale di orologic.py."""
+    quadro = sys._getframe(1)
+    while quadro is not None:
+        nome = os.path.basename(quadro.f_code.co_filename)
+        if nome not in ("GBUtils.py", "finestra.py"):
+            sito = (quadro.f_code.co_filename, quadro.f_code.co_name, quadro.f_lineno)
+            return sito, nome == "orologic.py" and quadro.f_code.co_name == "Main"
+        quadro = quadro.f_back
+    return None, False
+
+
 class FacciaFinestra:
-    """La faccia dello strato per la finestra, e la sorgente dei tasti di key."""
+    """La faccia dello strato per la finestra, la sorgente dei tasti di key
+    e la sorgente delle scelte di menu ed enter_escape."""
 
     def __init__(self):
         self._tasti = queue.Queue()
+        self._scelte = queue.Queue()
+        # Cio' che il nucleo aspetta, come l'ultima Attesa messa in fila.
+        self._attesa = None
         self._lucchetto = threading.Lock()
         self._pezzi = []
         self._causa = None
@@ -116,12 +163,20 @@ class FacciaFinestra:
                 if scadenza is not None and time.monotonic() >= scadenza:
                     return None
 
+    def _aspetta(self, attesa):
+        """Mette in fila l'Attesa, se cambia cio' che il nucleo aspetta."""
+        if attesa.tipo in ("menu", "sino") or attesa.tipo != self._attesa:
+            self._attesa = attesa.tipo
+            self._metti(attesa)
+
     def kbhit(self):
         self._controlla_chiusura()
         self._causa = None
+        self._aspetta(Attesa("area"))
         return not self._tasti.empty()
 
     def getwch(self):
+        self._aspetta(Attesa("area"))
         tasto = self._prendi()
         self._causa = "tasto" if tasto in ("\r", "\x1b") else "eco"
         self._quando = time.monotonic()
@@ -129,17 +184,48 @@ class FacciaFinestra:
 
     def tasto_per_key(self, attesa):
         """La sorgente di key: key non fa l'eco, quindi quello che segue e'
-        sempre una risposta."""
+        sempre una risposta. Per una domanda di enter_escape la plancia
+        tiene il suo Si' e No finche' arriva il tasto."""
+        if self._attesa != "sino":
+            self._aspetta(Attesa("area"))
         tasto = self._prendi(attesa)
         if tasto is not None:
             self._causa = "tasto"
             self._quando = time.monotonic()
+        if self._attesa == "sino":
+            self._aspetta(Attesa(None))
         return tasto
+
+    def scelte_per_menu(self, tipo, voci, prompt, vuoto):
+        """La sorgente delle scelte di GBUtils. Per enter_escape mette in
+        fila la domanda, e il tasto lo legge key; per menu mette in fila le
+        voci e aspetta la scelta della plancia, che restituisce."""
+        if tipo == "enter_escape":
+            self._aspetta(Attesa("sino", prompt=prompt))
+            return None
+        sito, alla_radice = _sito_della_chiamata()
+        # I tasti scritti prima non devono finire nella domanda dopo.
+        self.svuota_tastiera()
+        while True:
+            try:
+                self._scelte.get_nowait()
+            except queue.Empty:
+                break
+        self._aspetta(Attesa("menu", voci, prompt, vuoto, sito, alla_radice))
+        while True:
+            self._controlla_chiusura()
+            try:
+                scelta = self._scelte.get(timeout=0.05)
+            except queue.Empty:
+                continue
+            self._aspetta(Attesa(None))
+            return scelta
 
     def leggi_riga(self, eco=True):
         """Una riga, come la console la da' a input: i caratteri con l'eco
         se eco e' vero, Backspace cancella, Esc svuota la riga, Invio la
         consegna."""
+        self._aspetta(Attesa("area"))
         scritti = []
         while True:
             tasto = self._prendi()
@@ -173,20 +259,19 @@ class FacciaFinestra:
         return COLONNE
 
     def cruscotto(self, fornitore):
-        with self._lucchetto:
-            primo = not self._pezzi
-            self._pezzi.append((CambioDiForma(fornitore), None))
-        if primo and self.avvisa is not None:
-            self.avvisa()
+        self._metti(CambioDiForma(fornitore))
 
     def scrivi(self, testo, causa=None):
         if causa is None:
             causa = self._causa
             if causa == "eco" and time.monotonic() - self._quando > ECO_MASSIMO:
                 causa = None
+        self._metti(testo, causa)
+
+    def _metti(self, pezzo, causa=None):
         with self._lucchetto:
             primo = not self._pezzi
-            self._pezzi.append((testo, causa))
+            self._pezzi.append((pezzo, causa))
         if primo and self.avvisa is not None:
             self.avvisa()
 
@@ -194,6 +279,11 @@ class FacciaFinestra:
 
     def premi(self, tasto):
         self._tasti.put(tasto)
+
+    def scegli(self, valore):
+        """La scelta della plancia per il menu che aspetta: la chiave, o
+        None come Esc."""
+        self._scelte.put(valore)
 
     def prendi_il_testo(self):
         with self._lucchetto:
@@ -303,11 +393,25 @@ class Finestra(wx.Frame):
         super().__init__(None, title=_("Orologic {versione}").format(versione=version.VERSION))
         self.faccia = faccia
         pannello = wx.Panel(self)
+        # L'ordine di creazione e' quello di Tab: la plancia, poi l'area.
+        self.plancia = wx.TreeCtrl(pannello, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_SINGLE)
+        self.plancia.SetName(_("Plancia"))
         self.area = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_RICH2 | wx.TE_NOHIDESEL | wx.TE_DONTWRAP)
         self.area.SetName(_("Console"))
-        dimensionatore = wx.BoxSizer(wx.VERTICAL)
-        dimensionatore.Add(self.area, 1, wx.EXPAND)
+        # Lo spazio orizzontale: la plancia a sinistra, l'area piu' larga.
+        dimensionatore = wx.BoxSizer(wx.HORIZONTAL)
+        dimensionatore.Add(self.plancia, 1, wx.EXPAND)
+        dimensionatore.Add(self.area, 3, wx.EXPAND)
         pannello.SetSizer(dimensionatore)
+        # La plancia: il percorso dei menu, cio' che il nucleo aspetta, e le
+        # voci di adesso come (tipo, valore) per ogni elemento.
+        self.percorso = plancia.Percorso()
+        self.attesa = Attesa(None)
+        self.voci_della_plancia = {}
+        # L'ultima voce scelta in ogni menu, per sito: tornando al menu e'
+        # di nuovo selezionata.
+        self.ultime_scelte = {}
+        self.fuoco = "console"
         self.terminale = Terminale()
         # Le righe chiuse della console; la riga in corso viene dopo. Durante
         # il cruscotto continuano a raccogliersi, e tornano a fine partita.
@@ -331,6 +435,11 @@ class Finestra(wx.Frame):
         self.chiudi_alla_fine = True
         self.area.Bind(wx.EVT_CHAR, self._carattere)
         self.area.Bind(wx.EVT_KEY_DOWN, self._tasto_giu)
+        self.Bind(wx.EVT_CHAR_HOOK, self._tasto_della_finestra)
+        self.plancia.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self._voce_attivata)
+        self.plancia.Bind(wx.EVT_KEY_DOWN, self._tasto_della_plancia)
+        self.plancia.Bind(wx.EVT_SET_FOCUS, lambda evento: self._fuoco_a("plancia", evento))
+        self.area.Bind(wx.EVT_SET_FOCUS, lambda evento: self._fuoco_a("console", evento))
         self.Bind(wx.EVT_CLOSE, self._chiudi)
         faccia.avvisa = self._avvisa
         self.Maximize()
@@ -358,6 +467,10 @@ class Finestra(wx.Frame):
         self._vai(self._riga_del_prompt(), self.terminale.colonna)
 
     def _manda(self, tasto):
+        if self.attesa.tipo == "menu":
+            # Il nucleo aspetta la plancia, non l'area.
+            self.vai_alla_plancia()
+            return
         if self._riga_e_colonna()[0] != self._riga_del_prompt():
             self._al_cursore()
         self.faccia.premi(tasto)
@@ -379,9 +492,6 @@ class Finestra(wx.Frame):
     def _tasto_giu(self, evento):
         codice = evento.GetKeyCode()
         ctrl, shift = evento.ControlDown(), evento.ShiftDown()
-        if codice == wx.WXK_F3 and not ctrl and not shift and not evento.AltDown():
-            self.impostazioni()
-            return
         if (ctrl and codice == ord("V")) or (shift and codice == wx.WXK_INSERT):
             self._incolla()
             return
@@ -389,6 +499,22 @@ class Finestra(wx.Frame):
         # alle spalle del nucleo.
         if codice in (wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE) or (ctrl and codice in (ord("X"), ord("Z"), ord("Y"))):
             return
+        evento.Skip()
+
+    def _tasto_della_finestra(self, evento):
+        """I tasti di tutta la finestra, plancia e area: F3 le impostazioni,
+        F5 la plancia, F6 l'area."""
+        codice = evento.GetKeyCode()
+        if not evento.HasAnyModifiers():
+            if codice == wx.WXK_F3:
+                self.impostazioni()
+                return
+            if codice == wx.WXK_F5:
+                self.vai_alla_plancia()
+                return
+            if codice == wx.WXK_F6:
+                self.vai_all_area()
+                return
         evento.Skip()
 
     def _incolla(self):
@@ -433,6 +559,11 @@ class Finestra(wx.Frame):
                 self._mostra_nella_forma(chiuse, messaggi)
                 chiuse, messaggi = [], []
                 self._cambia_forma(testo.fornitore)
+                continue
+            if isinstance(testo, Attesa):
+                self._mostra_nella_forma(chiuse, messaggi)
+                chiuse, messaggi = [], []
+                self._cambia_attesa(testo)
                 continue
             ultima_causa = causa
             if causa == "tasto":
@@ -569,6 +700,107 @@ class Finestra(wx.Frame):
         for numero, riga in enumerate(righe):
             self.sintesi.dici(riga, self.annunci["uscita"], self.annunci["destinazione"], interrompi=interrompi and numero == 0)
 
+    # La plancia e il fuoco.
+
+    def _cambia_attesa(self, attesa):
+        """Il nucleo aspetta altro: la plancia si riscrive, e il fuoco segue
+        la domanda."""
+        self.attesa = attesa
+        if attesa.tipo == "menu":
+            self.percorso.menu(attesa.sito, attesa.prompt, attesa.alla_radice)
+        self._riscrivi_la_plancia()
+        if attesa.tipo == "menu":
+            self._sposta_il_fuoco("plancia")
+        elif attesa.tipo in ("area", "sino"):
+            self._sposta_il_fuoco("console")
+
+    def _riscrivi_la_plancia(self):
+        """Il percorso come rami aperti, e dentro l'ultimo le voci di
+        adesso: quelle del menu, o Si' e No di una domanda. Selezionata la
+        voce scelta l'ultima volta in quel menu, o la prima, o, senza voci,
+        l'ultimo ramo."""
+        albero = self.plancia
+        albero.Freeze()
+        try:
+            albero.DeleteAllItems()
+            self.voci_della_plancia = {}
+            radice = albero.AddRoot("")
+            ramo = radice
+            for etichetta in self.percorso.etichette():
+                ramo = albero.AppendItem(ramo, etichetta)
+            if self.attesa.tipo == "menu":
+                voci = [("menu", valore, etichetta) for etichetta, valore in plancia.voci_del_menu(self.attesa.voci, self.attesa.prompt, self.attesa.vuoto)]
+            elif self.attesa.tipo == "sino":
+                domanda = " ".join(self.attesa.prompt.split())
+                if domanda:
+                    ramo = albero.AppendItem(ramo, domanda)
+                voci = [("sino", valore, etichetta) for etichetta, valore in plancia.voci_del_si_e_no()]
+            else:
+                voci = []
+            prima = None
+            ultima = self.ultime_scelte.get(self.attesa.sito) if self.attesa.tipo == "menu" else None
+            for tipo, valore, etichetta in voci:
+                voce = albero.AppendItem(ramo, etichetta)
+                self.voci_della_plancia[voce] = (tipo, valore, etichetta)
+                if prima is None or (ultima is not None and valore == ultima):
+                    prima = voce
+            albero.ExpandAll()
+            da_selezionare = prima or (ramo if ramo != radice else None)
+            if da_selezionare is not None:
+                albero.SelectItem(da_selezionare)
+        finally:
+            albero.Thaw()
+
+    def _voce_attivata(self, evento):
+        voce = self.voci_della_plancia.get(evento.GetItem())
+        if voce is None:
+            return
+        tipo, valore, etichetta = voce
+        if tipo == "menu" and self.attesa.tipo == "menu":
+            self.ultime_scelte[self.attesa.sito] = valore
+            self.percorso.scelto(etichetta)
+            self.attesa = Attesa(None)
+            self._riscrivi_la_plancia()
+            self.faccia.scegli(valore)
+        elif tipo == "sino" and self.attesa.tipo == "sino":
+            self.faccia.premi(valore)
+
+    def _tasto_della_plancia(self, evento):
+        """Esc nella plancia vale come Esc nel menu che aspetta."""
+        if evento.GetKeyCode() == wx.WXK_ESCAPE and not evento.HasAnyModifiers() and self.attesa.tipo == "menu":
+            self.attesa = Attesa(None)
+            self._riscrivi_la_plancia()
+            self.faccia.scegli(None)
+            return
+        evento.Skip()
+
+    def vai_alla_plancia(self):
+        self.plancia.SetFocus()
+
+    def vai_all_area(self):
+        self.area.SetFocus()
+
+    def _sposta_il_fuoco(self, dove):
+        """Il fuoco segue la domanda, ma non esce da una finestra di dialogo
+        aperta sopra."""
+        attuale = wx.Window.FindFocus()
+        if attuale is not None and attuale.GetTopLevelParent() is not self:
+            return
+        if dove == "plancia":
+            self.vai_alla_plancia()
+        else:
+            self.vai_all_area()
+
+    def _fuoco_a(self, dove, evento):
+        evento.Skip()
+        if dove != self.fuoco:
+            self.fuoco = dove
+            self.suona(SUONI_DEL_FUOCO[dove])
+
+    def suona(self, preset):
+        """Gli effetti sonori della finestra; le prove li sostituiscono."""
+        Acusticator.play(preset, volume=config.VOLUME)
+
     # Le impostazioni.
 
     def impostazioni(self):
@@ -657,6 +889,7 @@ def prepara():
     _SALVATI.update(
         faccia=strato.imposta_faccia(faccia),
         sorgente=sorgente_dei_tasti(faccia.tasto_per_key),
+        scelte=sorgente_delle_scelte(faccia.scelte_per_menu),
         stdout=sys.stdout,
         stdin=sys.stdin,
         getpass=getpass.getpass,
@@ -678,6 +911,7 @@ def ripristina():
         return
     strato.imposta_faccia(_SALVATI["faccia"])
     sorgente_dei_tasti(_SALVATI["sorgente"])
+    sorgente_delle_scelte(_SALVATI["scelte"])
     sys.stdout = _SALVATI["stdout"]
     sys.stdin = _SALVATI["stdin"]
     getpass.getpass = _SALVATI["getpass"]

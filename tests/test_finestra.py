@@ -10,7 +10,7 @@ import threading
 import time
 
 import pytest
-from conftest import pompa, righe_dell_area
+from conftest import attiva, pompa, righe_dell_area
 from GBUtils import dgt, key
 
 from orologic_modules import game_flow, strato
@@ -49,12 +49,17 @@ def test_il_backspace_del_ciclo_d_attesa():
 # La faccia, senza finestra.
 
 
+def _testo(faccia):
+    """Il testo messo in fila, senza le attese della plancia."""
+    return [(testo, causa) for testo, causa in faccia.prendi_il_testo() if isinstance(testo, str)]
+
+
 def test_leggi_riga_fa_l_eco_cancella_e_svuota():
     faccia = FacciaFinestra()
     for tasto in ["a", "b", "\x08", "c", "\x1b", "d", "e", "\r"]:
         faccia.premi(tasto)
     assert faccia.leggi_riga() == "de"
-    pezzi = faccia.prendi_il_testo()
+    pezzi = _testo(faccia)
     assert "".join(testo for testo, _causa in pezzi) == "ab\b \bc\b \b\b \bde\n"
     assert all(causa == "eco" for testo, causa in pezzi if testo != "\n")
     assert pezzi[-1] == ("\n", "tasto")
@@ -65,7 +70,7 @@ def test_leggi_riga_senza_eco_per_le_password():
     for tasto in "segreto\r":
         faccia.premi(tasto)
     assert faccia.leggi_riga(eco=False) == "segreto"
-    assert [testo for testo, _causa in faccia.prendi_il_testo()] == ["\n"]
+    assert [testo for testo, _causa in _testo(faccia)] == ["\n"]
 
 
 def test_la_sorgente_di_key_scade_e_risponde():
@@ -76,7 +81,7 @@ def test_la_sorgente_di_key_scade_e_risponde():
     faccia.premi("x")
     assert faccia.tasto_per_key(None) == "x"
     faccia.scrivi("risposta")
-    assert faccia.prendi_il_testo() == [("risposta", "tasto")]
+    assert _testo(faccia) == [("risposta", "tasto")]
 
 
 def test_l_eco_dei_cicli_dura_poco():
@@ -86,7 +91,7 @@ def test_l_eco_dei_cicli_dura_poco():
     faccia.scrivi("N")
     time.sleep(0.05)
     faccia.scrivi("rinfresco")
-    assert faccia.prendi_il_testo() == [("N", "eco"), ("rinfresco", None)]
+    assert _testo(faccia) == [("N", "eco"), ("rinfresco", None)]
 
 
 def test_la_chiusura_interrompe_ogni_lettura():
@@ -194,8 +199,10 @@ def test_orologic_parte_e_si_chiude_nella_finestra(finestra, monkeypatch):
 
     monkeypatch.setattr(engine, "InitEngine", lambda: False)
     finestra.avvia_il_nucleo(lambda: orologic.esegui(con_la_finestra=True))
-    assert pompa(lambda: righe_dell_area(finestra)[-1].endswith(">"), 30)
-    finestra.faccia.premi(".")
+    # Il menu principale e' nella plancia, non nell'area.
+    assert pompa(lambda: finestra.attesa.tipo == "menu", 30)
+    assert "Esci" not in finestra.area.GetValue()
+    attiva(finestra, "Esci")
     assert pompa(lambda: "Premi un tasto per uscire" in finestra.area.GetValue(), 15)
     testo = finestra.area.GetValue()
     assert "Benvenuto, sono Orologic" in testo

@@ -121,7 +121,7 @@ def test_f3_apre_le_impostazioni_e_il_fuoco_torna_all_area(finestra):
     wx.CallLater(50, chiudi)
     evento = wx.KeyEvent(wx.wxEVT_KEY_DOWN)
     evento.SetKeyCode(wx.WXK_F3)
-    finestra._tasto_giu(evento)
+    finestra._tasto_della_finestra(evento)
     assert viste == [("Impostazioni", True, "Annunci: sì")]
     pompa(lambda: False, 0.1)
     assert wx.Window.FindFocus() is finestra.area

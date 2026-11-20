@@ -178,6 +178,9 @@ def finestra(app, request):
     finestra."""
     vera = modulo_finestra.prepara()
     vera.sintesi = Registro()
+    # I suoni del fuoco si segnano, non si suonano.
+    vera.suonati = []
+    vera.suona = vera.suonati.append
     # Col nucleo finto la finestra resta aperta, per leggerla; con Orologic
     # intero si chiude da sola, come nella vita vera.
     vera.chiudi_alla_fine = "orologic_parte" in request.node.name
@@ -197,3 +200,33 @@ def finestra(app, request):
 
 def righe_dell_area(vera):
     return vera.area.GetValue().split("\n")
+
+
+def rami_della_plancia(vera):
+    """La plancia come coppie (profondita', etichetta), dall'alto."""
+    albero = vera.plancia
+    rami = []
+
+    def visita(voce, profondita):
+        figlio, biscotto = albero.GetFirstChild(voce)
+        while figlio.IsOk():
+            rami.append((profondita, albero.GetItemText(figlio)))
+            visita(figlio, profondita + 1)
+            figlio, biscotto = albero.GetNextChild(voce, biscotto)
+
+    if albero.GetRootItem().IsOk():
+        visita(albero.GetRootItem(), 0)
+    return rami
+
+
+def attiva(vera, etichetta):
+    """Invio sulla voce della plancia con questa etichetta."""
+    import wx
+
+    for voce, (_tipo, _valore, testo) in vera.voci_della_plancia.items():
+        if testo == etichetta:
+            vera.plancia.SelectItem(voce)
+            evento = wx.TreeEvent(wx.wxEVT_TREE_ITEM_ACTIVATED, vera.plancia, voce)
+            vera._voce_attivata(evento)
+            return
+    raise AssertionError(f"nella plancia non c'e' {etichetta}")
