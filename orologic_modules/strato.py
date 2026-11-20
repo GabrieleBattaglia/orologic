@@ -20,8 +20,13 @@ dgt con sys.stdout e sys.stdin.
 Dalla T2 lo strato sa anche quando c'e' una partita in corso, per il
 cruscotto della finestra (decisione C1 del Piano della GUI.txt): le funzioni di gioco
 dichiarano la zona della partita con in_partita o partita, e i cicli d'attesa
-consegnano con fornisci chi da' i dati del cruscotto. Nel terminale tutto
-questo non fa niente.
+consegnano con fornisci chi da' i dati del cruscotto, e dalla T4 anche i
+comandi della modalita', per la plancia. Nel terminale tutto questo non fa
+niente.
+
+Dalla T4 una scelta della plancia si puo' interrompere con un evento, come
+fa il menu di Orolichess quando arriva una sfida: scelta_interrompibile, e
+menu restituisce SCELTA_INTERROTTA. con_la_plancia dice se c'e' la plancia.
 
 Fuori da questo modulo nessuno importa msvcrt: lo controlla
 tests/test_strato.py.
@@ -67,11 +72,20 @@ class FacciaTerminale:
         """Le colonne della riga, chieste al terminale."""
         return shutil.get_terminal_size(fallback=(80, 24)).columns
 
-    def cruscotto(self, fornitore):
+    def cruscotto(self, fornitore, comandi=None):
         """Il terminale non ha cruscotto."""
+
+    def con_la_plancia(self):
+        return False
+
+    def interrompi_la_scelta_con(self, evento):
+        """Il terminale non ha la plancia: menu legge i tasti da se'."""
+        return None
 
 
 _faccia = FacciaTerminale()
+# Cio' che menu restituisce quando la scelta della plancia e' interrotta.
+SCELTA_INTERROTTA = object()
 # Quante zone di partita sono aperte una dentro l'altra: una ripresa da
 # salvataggio automatico apre la partita dentro il menu che l'ha chiesta.
 _partite = 0
@@ -139,12 +153,29 @@ def in_partita(funzione):
     return avvolta
 
 
-def fornisci(fornitore):
+def fornisci(fornitore, comandi=None):
     """Dentro una partita, chi da' i dati del cruscotto: una funzione senza
-    argomenti che restituisce i dati di cruscotto.dati_di. Fuori da una
-    partita non fa niente."""
+    argomenti che restituisce i dati di cruscotto.dati_di; e i comandi della
+    modalita', come il dizionario dell'aiuto, chiave e descrizione, per la
+    plancia. Fuori da una partita non fa niente."""
     if _partite:
-        _faccia.cruscotto(fornitore)
+        _faccia.cruscotto(fornitore, comandi)
+
+
+def con_la_plancia():
+    """Vero se le scelte di menu vanno alla plancia della finestra."""
+    return _faccia.con_la_plancia()
+
+
+@contextlib.contextmanager
+def scelta_interrompibile(evento):
+    """Finche' e' aperta, una scelta della plancia finisce quando l'evento
+    si accende, e menu restituisce SCELTA_INTERROTTA."""
+    precedente = _faccia.interrompi_la_scelta_con(evento)
+    try:
+        yield
+    finally:
+        _faccia.interrompi_la_scelta_con(precedente)
 
 
 def fine_del_gioco():

@@ -95,8 +95,9 @@ class CambioDiForma:
     nella stessa fila del testo perche' l'ordine non si perda: cio' che il
     nucleo scrive dopo l'inizio della partita va nel cruscotto."""
 
-    def __init__(self, fornitore):
+    def __init__(self, fornitore, comandi=None):
         self.fornitore = fornitore
+        self.comandi = comandi
 
 
 class Attesa:
@@ -137,6 +138,8 @@ class FacciaFinestra:
         self._scelte = queue.Queue()
         # Cio' che il nucleo aspetta, come l'ultima Attesa messa in fila.
         self._attesa = None
+        # L'evento che interrompe la scelta della plancia, se c'e'.
+        self._interruttore = None
         self._lucchetto = threading.Lock()
         self._pezzi = []
         self._causa = None
@@ -214,12 +217,23 @@ class FacciaFinestra:
         self._aspetta(Attesa("menu", voci, prompt, vuoto, sito, alla_radice))
         while True:
             self._controlla_chiusura()
+            if self._interruttore is not None and self._interruttore.is_set():
+                self._aspetta(Attesa(None))
+                return strato.SCELTA_INTERROTTA
             try:
                 scelta = self._scelte.get(timeout=0.05)
             except queue.Empty:
                 continue
             self._aspetta(Attesa(None))
             return scelta
+
+    def con_la_plancia(self):
+        return True
+
+    def interrompi_la_scelta_con(self, evento):
+        precedente = self._interruttore
+        self._interruttore = evento
+        return precedente
 
     def leggi_riga(self, eco=True):
         """Una riga, come la console la da' a input: i caratteri con l'eco
@@ -258,8 +272,8 @@ class FacciaFinestra:
     def larghezza(self):
         return COLONNE
 
-    def cruscotto(self, fornitore):
-        self._metti(CambioDiForma(fornitore))
+    def cruscotto(self, fornitore, comandi=None):
+        self._metti(CambioDiForma(fornitore, comandi))
 
     def scrivi(self, testo, causa=None):
         if causa is None:
@@ -411,6 +425,10 @@ class Finestra(wx.Frame):
         # L'ultima voce scelta in ogni menu, per sito: tornando al menu e'
         # di nuovo selezionata.
         self.ultime_scelte = {}
+        # I comandi della modalita' in gioco, per la plancia, e l'ultimo
+        # scelto, che resta selezionato.
+        self.comandi = None
+        self.ultimo_comando = None
         self.fuoco = "console"
         self.terminale = Terminale()
         # Le righe chiuse della console; la riga in corso viene dopo. Durante
@@ -558,7 +576,7 @@ class Finestra(wx.Frame):
                 # Il testo arrivato prima va nella forma di prima.
                 self._mostra_nella_forma(chiuse, messaggi)
                 chiuse, messaggi = [], []
-                self._cambia_forma(testo.fornitore)
+                self._cambia_forma(testo.fornitore, testo.comandi)
                 continue
             if isinstance(testo, Attesa):
                 self._mostra_nella_forma(chiuse, messaggi)
@@ -629,9 +647,13 @@ class Finestra(wx.Frame):
 
     # Il cruscotto.
 
-    def _cambia_forma(self, fornitore):
-        """Lo strato consegna chi da' i dati del cruscotto, o None a fine
-        partita."""
+    def _cambia_forma(self, fornitore, comandi=None):
+        """Lo strato consegna chi da' i dati del cruscotto, con i comandi
+        della modalita' per la plancia, o None a fine partita."""
+        nuovi = comandi if fornitore is not None else None
+        if nuovi != self.comandi:
+            self.comandi = nuovi
+            self._riscrivi_la_plancia()
         if fornitore is None:
             if self.fornitore is None:
                 return
@@ -735,10 +757,16 @@ class Finestra(wx.Frame):
                 if domanda:
                     ramo = albero.AppendItem(ramo, domanda)
                 voci = [("sino", valore, etichetta) for etichetta, valore in plancia.voci_del_si_e_no()]
+            elif self.comandi:
+                ramo = albero.AppendItem(ramo, _("Comandi della partita"))
+                voci = [("comando", valore, etichetta) for etichetta, valore in plancia.comandi_della_partita(self.comandi)]
             else:
                 voci = []
             prima = None
-            ultima = self.ultime_scelte.get(self.attesa.sito) if self.attesa.tipo == "menu" else None
+            if self.attesa.tipo == "menu":
+                ultima = self.ultime_scelte.get(self.attesa.sito)
+            else:
+                ultima = self.ultimo_comando
             for tipo, valore, etichetta in voci:
                 voce = albero.AppendItem(ramo, etichetta)
                 self.voci_della_plancia[voce] = (tipo, valore, etichetta)
@@ -764,6 +792,17 @@ class Finestra(wx.Frame):
             self.faccia.scegli(valore)
         elif tipo == "sino" and self.attesa.tipo == "sino":
             self.faccia.premi(valore)
+        elif tipo == "comando":
+            # Il comando si scrive nel prompt come se lo si digitasse; quelli
+            # che vogliono un seguito, come una colonna, aspettano nell'area.
+            self.ultimo_comando = valore
+            testo, invio = valore
+            for carattere in testo:
+                self.faccia.premi(carattere)
+            if invio:
+                self.faccia.premi("\r")
+            else:
+                self.vai_all_area()
 
     def _tasto_della_plancia(self, evento):
         """Esc nella plancia vale come Esc nel menu che aspetta."""

@@ -84,3 +84,37 @@ def voci_del_menu(voci, prompt="", vuoto=None):
 def voci_del_si_e_no():
     """Le voci di una domanda di enter_escape: il tasto che ciascuna manda."""
     return [(_("Sì, come Invio"), "\r"), (_("No, come Esc"), "\x1b")]
+
+
+def comandi_della_partita(comandi):
+    """I comandi di una modalita' di gioco come voci della plancia: coppie
+    (etichetta, (testo, invio)), dove testo e' cio' che si scrive nel prompt
+    e invio dice se lo si manda subito. Le chiavi dell'aiuto di Orologic
+    hanno forme diverse: .1, con le alternative, come .s oppure .b e oo /
+    ooo, o con piu' comandi insieme, come .1-0 .0-1 .1/2 .*, che diventano
+    una voce ciascuno; e con un seguito da scrivere, come /[col], .s# e
+    _[testo], che si scrivono fino al seguito e lasciano il resto a chi
+    gioca. L'etichetta e' la descrizione, poi cio' che si scrive. Il punto
+    da solo, che esce dalla partita o la abbandona, va in fondo, come nei
+    menu."""
+    voci = []
+    ordinati = [voce for voce in comandi.items() if str(voce[0]).strip() != "."]
+    ordinati += [voce for voce in comandi.items() if str(voce[0]).strip() == "."]
+    for chiave, descrizione in ordinati:
+        chiave = str(chiave).strip()
+        descrizione = " ".join(str(descrizione).split())
+        if " oppure " in chiave:
+            forme = [chiave.split(" oppure ")[0].strip()]
+        elif " / " in chiave:
+            forme = [forma.strip() for forma in chiave.split(" / ")]
+        else:
+            forme = chiave.split()
+        for forma in forme:
+            seguito = "[" in forma or forma.endswith("#")
+            testo = forma.split("[")[0].rstrip("#") if seguito else forma
+            if not testo:
+                continue
+            # Traduttori: una voce dei comandi della partita nella plancia, come Mostra entrambi gli orologi, .3.
+            etichetta = _("{descrizione}, {comando}").format(descrizione=descrizione, comando=forma) if descrizione else forma
+            voci.append((etichetta, (testo, not seguito)))
+    return voci

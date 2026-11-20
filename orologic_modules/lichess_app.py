@@ -2243,6 +2243,19 @@ def _prompt_del_menu(voci, numerati, p):
     return f"({', '.join(iniziali)})>"
 
 
+def _sfida_arrivata():
+    """E' arrivata una sfida mentre si sceglieva: si chiede se andare alle
+    sfide in attesa. Restituisce sfide, o None perche' il menu si ridisegni."""
+    lichess_eventi.sfida_arrivata.clear()
+    # Il conto delle sfide va riletto, non preso dalla cache.
+    scorda_cache_rete()
+    if enter_escape(
+        _("\rVuoi rispondere ora? INVIO per le sfide in attesa, ESC per restare nel menu\r")
+    ):
+        return "sfide"
+    return None
+
+
 def scegli_ascoltando_le_sfide(voci, db, p):
     """Il menu principale di Orolichess, che si accorge delle sfide in arrivo.
 
@@ -2254,21 +2267,23 @@ def scegli_ascoltando_le_sfide(voci, db, p):
     il menu si ridisegni con la voce aggiornata.
     """
     numerati = db.get("menu_numerati", False)
+    prompt = p.lstrip("\n")
+    if strato.con_la_plancia():
+        # Nella finestra le voci vanno alla plancia, e una sfida che arriva
+        # interrompe l'attesa della scelta.
+        lichess_eventi.sfida_arrivata.clear()
+        with strato.scelta_interrompibile(lichess_eventi.sfida_arrivata):
+            scelta = menu(voci, show=False, keyslist=True, p=prompt, numbered=numerati)
+        if scelta is not strato.SCELTA_INTERROTTA:
+            return scelta
+        return _sfida_arrivata()
     menu(voci, show_only=True, numbered=numerati)
     lichess_eventi.sfida_arrivata.clear()
-    prompt = p.lstrip("\n")
     sys.stdout.write(_prompt_del_menu(voci, numerati, prompt))
     sys.stdout.flush()
     while not strato.kbhit():
         if lichess_eventi.sfida_arrivata.is_set():
-            lichess_eventi.sfida_arrivata.clear()
-            # Il conto delle sfide va riletto, non preso dalla cache.
-            scorda_cache_rete()
-            if enter_escape(
-                _("\rVuoi rispondere ora? INVIO per le sfide in attesa, ESC per restare nel menu\r")
-            ):
-                return "sfide"
-            return None
+            return _sfida_arrivata()
         time.sleep(0.1)
     # Il tasto resta nella coda della console: menu lo legge come sempre,
     # e riscrive il suo prompt sulla riga pulita.

@@ -9,7 +9,14 @@ import wx
 from conftest import attiva, pompa, rami_della_plancia, righe_dell_area
 from GBUtils import dgt, enter_escape, menu
 
-from orologic_modules import plancia
+from orologic_modules import (
+    config,
+    game_flow,
+    lichess_app,
+    lichess_eventi,
+    plancia,
+    strato,
+)
 
 # Il percorso, senza finestra.
 
@@ -120,3 +127,75 @@ def _tasto(codice):
     evento = wx.KeyEvent(wx.wxEVT_KEY_DOWN)
     evento.SetKeyCode(codice)
     return evento
+
+
+# I comandi delle partite.
+
+
+def test_i_comandi_della_partita_dalle_chiavi_dell_aiuto():
+    voci = dict(plancia.comandi_della_partita(config.DOT_COMMANDS))
+    valori = list(voci.values())
+    assert ("Mostra entrambi gli orologi, .3") in voci
+    assert voci["Mostra entrambi gli orologi, .3"] == (".3", True)
+    assert voci["Scacchiera testuale, .s"] == (".s", True)
+    assert voci["Esplora diagonale alto-destra, /[col]"] == ("/", False)
+    assert voci["Posizioni di un pezzo specifico, ,[P,N,B,R,Q,K]"] == (",", False)
+    assert [testo for testo, _invio in valori if testo in (".1-0", ".0-1", ".1/2", ".*")] == [".1-0", ".0-1", ".1/2", ".*"]
+    assert ("oo", True) in valori and ("ooo", True) in valori
+    motore = plancia.comandi_della_partita({".": "Abbandona la partita", ".s#": "Livello del motore", ".1": "Tempo"})
+    assert motore == [("Livello del motore, .s#", (".s", False)), ("Tempo, .1", (".1", True)), ("Abbandona la partita, .", (".", True))]
+
+
+def test_i_comandi_della_partita_nella_plancia(finestra):
+    esiti = []
+    comandi = {".": "Esci", ".3": "Entrambi gli orologi", "/[col]": "Diagonale"}
+
+    def nucleo():
+        stato = type("Stato", (), {"flag_fallen": False, "ignore_clock": False, "refresh_interval": 0, "vista_ferma": False})()
+        with strato.partita():
+            esiti.append(game_flow.async_arbitration_input(stato, lambda: "1. e4 ", comandi))
+            esiti.append(game_flow.async_arbitration_input(stato, lambda: "1. e4 ", comandi))
+        esiti.append("fine")
+
+    finestra.avvia_il_nucleo(nucleo)
+    assert pompa(lambda: finestra.comandi == comandi and finestra.attesa.tipo == "area")
+    rami = rami_della_plancia(finestra)
+    assert rami[-4:] == [(0, "Comandi della partita"), (1, "Entrambi gli orologi, .3"), (1, "Diagonale, /[col]"), (1, "Esci, .")]
+    attiva(finestra, "Entrambi gli orologi, .3")
+    assert pompa(lambda: len(esiti) == 1)
+    assert esiti == [".3"]
+    # Il comando scelto resta selezionato.
+    assert pompa(lambda: finestra.plancia.GetItemText(finestra.plancia.GetSelection()) == "Entrambi gli orologi, .3")
+    # Un comando col seguito si scrive fino al seguito, e il fuoco va
+    # all'area per completarlo.
+    attiva(finestra, "Diagonale, /[col]")
+    assert pompa(lambda: wx.Window.FindFocus() is finestra.area)
+    for tasto in "e\r":
+        finestra.faccia.premi(tasto)
+    assert pompa(lambda: esiti[-1] == "fine")
+    assert esiti == [".3", "/e", "fine"]
+    # Fuori dalla partita i comandi se ne vanno.
+    assert pompa(lambda: finestra.comandi is None and ("Comandi della partita" not in [r for _p, r in rami_della_plancia(finestra)]))
+
+
+def test_la_sfida_che_arriva_interrompe_il_menu_di_orolichess(finestra, monkeypatch):
+    monkeypatch.setattr(lichess_app, "scorda_cache_rete", lambda: None)
+    esiti = []
+    voci = {"gioca": "Gioca", ".": "Esci"}
+
+    def nucleo():
+        esiti.append(lichess_app.scegli_ascoltando_le_sfide(voci, {}, "\nScegli: "))
+        esiti.append(lichess_app.scegli_ascoltando_le_sfide(voci, {}, "\nScegli: "))
+
+    finestra.avvia_il_nucleo(nucleo)
+    assert pompa(lambda: finestra.attesa.tipo == "menu")
+    assert "Gioca" not in finestra.area.GetValue()
+    lichess_eventi.sfida_arrivata.set()
+    # La domanda delle sfide: Esc resta nel menu, che si ridisegna.
+    assert pompa(lambda: finestra.attesa.tipo == "sino")
+    finestra.faccia.premi("\x1b")
+    assert pompa(lambda: len(esiti) == 1 and finestra.attesa.tipo == "menu")
+    attiva(finestra, "Gioca")
+    assert pompa(lambda: not finestra.nucleo.is_alive())
+    assert esiti == [None, "gioca"]
+    assert not lichess_eventi.sfida_arrivata.is_set()

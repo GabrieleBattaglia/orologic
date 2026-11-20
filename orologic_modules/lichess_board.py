@@ -281,8 +281,52 @@ def _spectate_worker(url, token, q, stop_event):
     q.put({"tipo": "fine"})
 
 
+def _righe_comuni():
+    return [
+        _(".1 : Tempo Bianco"),
+        _(".2 : Tempo Nero"),
+        _(".3 : Tempo di entrambi"),
+        _(".4 : Confronto tempi"),
+        _(".5 : A chi tocca muovere"),
+        _(".6 : Modifica timing aggiornamento orologio"),
+        _(".m : Materiale in gioco"),
+        _(".l : Lista mosse"),
+        _(".s oppure .b : Mostra scacchiera"),
+    ]
+
+
+def _righe_dell_osservazione():
+    """Le righe dell'aiuto della partita osservata, chiave : descrizione."""
+    return [*_righe_comuni(), _(".  : Esci")]
+
+
+def _righe_del_gioco(game_state):
+    """Le righe dell'aiuto della partita giocata, chiave : descrizione."""
+    righe = [
+        *_righe_comuni(),
+        _("draw : Proponi patta"),
+        _("resign : Abbandona la partita"),
+        _("takeback : Chiedi di ritirare la mossa"),
+        _("claim : Reclama vittoria per abbandono avversario"),
+    ]
+    if getattr(game_state, "tournament_id", None):
+        righe.append(_(".berserk : Dimezza il tuo tempo per un punto in piu', torneo arena"))
+    righe.append(_("_[testo] : Invia un messaggio in chat (es. _Ciao)"))
+    righe.append(_(".  : Esci dalla visuale (non abbandona la partita)"))
+    return righe
+
+
+def _comandi_delle_righe(righe):
+    """Le righe dell'aiuto come dizionario, per la plancia della finestra."""
+    comandi = {}
+    for riga in righe:
+        chiave, _separatore, descrizione = riga.partition(" : ")
+        comandi[chiave.strip()] = descrizione.strip()
+    return comandi
+
+
 def async_spectator_loop(q, game_state):
-    strato.fornisci(lambda: cruscotto.dati_di(game_state))
+    strato.fornisci(lambda: cruscotto.dati_di(game_state), _comandi_delle_righe(_righe_dell_osservazione()))
     buf = []
 
     def get_prompt():
@@ -592,16 +636,8 @@ def spectate_game(game_id, token=None):
             pass
         elif cmd == ".?":
             print(_("\nComandi disponibili:"))
-            print(_(".1 : Tempo Bianco"))
-            print(_(".2 : Tempo Nero"))
-            print(_(".3 : Tempo di entrambi"))
-            print(_(".4 : Confronto tempi"))
-            print(_(".5 : A chi tocca muovere"))
-            print(_(".6 : Modifica timing aggiornamento orologio"))
-            print(_(".m : Materiale in gioco"))
-            print(_(".l : Lista mosse"))
-            print(_(".s oppure .b : Mostra scacchiera"))
-            print(_(".  : Esci"))
+            for riga in _righe_dell_osservazione():
+                print(riga)
         else:
             print(_("\nComando non riconosciuto. Usa .? per l'aiuto."))
 
@@ -784,7 +820,7 @@ def send_action(game_id, token, action, uci=None, chat_text=None, motivo=None):
 
 
 def async_play_loop(q, game_state):
-    strato.fornisci(lambda: cruscotto.dati_di(game_state))
+    strato.fornisci(lambda: cruscotto.dati_di(game_state), _comandi_delle_righe(_righe_del_gioco(game_state)))
     buf = []
 
     def get_prompt():
@@ -1484,23 +1520,8 @@ def _gioca_partita(game_id, token, username):
             pass
         elif cmd == ".?":
             print(_("\nComandi disponibili per giocare:"))
-            print(_(".1 : Tempo Bianco"))
-            print(_(".2 : Tempo Nero"))
-            print(_(".3 : Tempo di entrambi"))
-            print(_(".4 : Confronto tempi"))
-            print(_(".5 : A chi tocca muovere"))
-            print(_(".6 : Modifica timing aggiornamento orologio"))
-            print(_(".m : Materiale in gioco"))
-            print(_(".l : Lista mosse"))
-            print(_(".s oppure .b : Mostra scacchiera"))
-            print(_("draw : Proponi patta"))
-            print(_("resign : Abbandona la partita"))
-            print(_("takeback : Chiedi di ritirare la mossa"))
-            print(_("claim : Reclama vittoria per abbandono avversario"))
-            if game_state.tournament_id:
-                print(_(".berserk : Dimezza il tuo tempo per un punto in piu', torneo arena"))
-            print(_("_[testo] : Invia un messaggio in chat (es. _Ciao)"))
-            print(_(".  : Esci dalla visuale (non abbandona la partita)"))
+            for riga in _righe_del_gioco(game_state):
+                print(riga)
         else:
             if not game_state.started:
                 print(_("La partita non e' ancora iniziata!"))

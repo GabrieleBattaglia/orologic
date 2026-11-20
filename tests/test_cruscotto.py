@@ -130,7 +130,7 @@ def test_la_scacchiera_lasciata_da_easyfish():
 
 def test_fuori_dalla_partita_fornisci_non_fa_niente(monkeypatch):
     chiamate = []
-    monkeypatch.setattr(strato.faccia(), "cruscotto", chiamate.append)
+    monkeypatch.setattr(strato.faccia(), "cruscotto", lambda fornitore, comandi=None: chiamate.append(fornitore))
     strato.fornisci(dict)
     assert chiamate == []
     with strato.partita():

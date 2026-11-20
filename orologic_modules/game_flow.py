@@ -156,12 +156,13 @@ def EseguiAutosave(game_state):
         )
 
 
-def async_arbitration_input(game_state, get_prompt):
+def async_arbitration_input(game_state, get_prompt, comandi=None):
     import sys
     import time
 
-    # Il cruscotto della finestra: arbitraggio, Tempo ed Easyfish passano da qui.
-    strato.fornisci(lambda: cruscotto.dati_di(game_state))
+    # Il cruscotto della finestra: arbitraggio, Tempo ed Easyfish passano da
+    # qui, ognuno con i suoi comandi per la plancia.
+    strato.fornisci(lambda: cruscotto.dati_di(game_state), config.DOT_COMMANDS if comandi is None else comandi)
     buf = []
     memoria = {}
 

@@ -136,7 +136,7 @@ def _loop_tempo(game_state, clock_config):
             return board_utils.prompt_partita(game_state)
 
         # Lettura asincrona dell'input
-        user_input = async_arbitration_input(game_state, get_prompt)
+        user_input = async_arbitration_input(game_state, get_prompt, TEMPO_COMMANDS)
         if user_input is None:
             continue
 

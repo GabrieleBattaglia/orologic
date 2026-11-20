@@ -542,7 +542,7 @@ def _attendi_mossa(game_state, prompt, board, ultima_mossa):
         }
         return modello_prompt.prompt_per_input(dati)
 
-    return async_arbitration_input(game_state, get_prompt)
+    return async_arbitration_input(game_state, get_prompt, MNGAME)
 
 
 def _nomi_dei_contendenti(game_state, game_node, engine_instance):
