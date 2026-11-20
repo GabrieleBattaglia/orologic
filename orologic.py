@@ -716,13 +716,29 @@ def saluta(inizio, fine=None):
     )
 
 
-if __name__ == "__main__":
+def esegui(con_la_finestra=False):
+    """Orologic dall'inizio alla fine, uguale nel terminale e nella finestra.
+    Nella finestra l'invito al caffe' non compare alla chiusura: nei
+    programmi con finestra sta in un menu."""
     t_start = datetime.datetime.now()
     try:
         Main()
     except KeyboardInterrupt:
         print(_("\nInterruzione richiesta, chiudo Orologic."))
     saluta(t_start)
-    Donazione(lang=lingua_rilevata)
+    if not con_la_finestra:
+        Donazione(lang=lingua_rilevata)
     key(prompt=_("\nPremi un tasto per uscire..."), attesa=300)
+
+
+if __name__ == "__main__":
+    # Dalla 9.0.0 Orologic parte nella finestra; con --cli nel terminale,
+    # come prima. Il programma e' lo stesso: cambia solo chi gli fa da
+    # tastiera e da schermo, attraverso lo strato.
+    if "--cli" in sys.argv:
+        esegui()
+    else:
+        from orologic_modules import finestra
+
+        finestra.avvia(lambda: esegui(con_la_finestra=True))
     sys.exit(0)

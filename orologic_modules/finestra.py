@@ -1,0 +1,541 @@
+# Orologic: la finestra, con l'area unica che fa da console.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
+
+"""La finestra di Orologic, tappa T2 della GUI (punto 74 di docs/idee.txt).
+
+Il nucleo di Orologic gira in un filo suo, esattamente come nel terminale:
+scrive con print e sys.stdout, legge con key, menu, enter_escape e dgt di
+GBUtils e con lo strato. La finestra gli fa da terminale con una grande area
+di testo, uscita e ingresso insieme.
+
+  FacciaFinestra   la tastiera e lo schermo del nucleo: una sola coda di
+                   tasti, letta dallo strato (kbhit, getwch), da key con
+                   sorgente_dei_tasti di GBUtils e da input e getpass con
+                   leggi_riga; e il testo scritto, consegnato alla finestra a
+                   pezzi, ognuno con la sua causa.
+  UscitaFinestra   lo stdout del nucleo.
+  IngressoFinestra lo stdin del nucleo, per input e quindi per dgt.
+  Terminale        il terminale imitato: la riga in corso e la colonna del
+                   cursore, con i ritorni carrello, i backspace e gli a capo.
+  Finestra         l'area, i tasti e gli annunci con GBsintesi.
+
+Le cause del testo. eco e' cio' che il nucleo scrive subito dopo un
+carattere letto con getwch, cioe' l'eco del carattere nei cicli d'attesa, e
+l'eco che leggi_riga fa da se': NVDA dice gia' i caratteri premuti, quindi
+la riga in corso cambiata dall'eco non si annuncia. tasto e' cio' che segue
+Invio, Esc o un tasto letto da key: e' la risposta a un tasto, e interrompe
+la voce. None e' il testo che il nucleo scrive da se', per l'orologio, per
+una mossa arrivata o da un altro filo, e si accoda. Le righe chiuse si
+annunciano sempre, tranne quella del prompt in cui si e' appena scritto.
+
+Le lezioni della T0: riga e colonna si chiedono all'area, che non va a capo
+da sola; frecce, pagine, Home e Fine passano all'area, per leggere liberi;
+ogni altro tasto riporta il cursore al suo posto nella riga in corso.
+"""
+
+import getpass
+import io
+import os
+import queue
+import sys
+import threading
+import time
+import traceback
+
+import wx
+from GBsintesi import AUTOMATICA, Sintesi
+from GBUtils import sorgente_dei_tasti
+
+from . import strato, version
+from .config import _
+
+# L'eco e' solo cio' che il nucleo scrive entro questi secondi dal tasto: i
+# cicli d'attesa guardano l'orologio prima di kbhit, e un rinfresco a tempo
+# che cade al giro dopo un tasto non e' un eco.
+ECO_MASSIMO = 0.015
+# Le righe che l'area tiene; oltre, le piu' vecchie se ne vanno a gruppi.
+RIGHE_TENUTE = 5000
+RIGHE_TOLTE_ALLA_VOLTA = 200
+# Quanti secondi il nucleo ha per chiudersi da solo, quando si chiude la finestra.
+ATTESA_DELLA_CHIUSURA = 5.0
+# La larghezza che lo strato dichiara: pulisci_riga scrive tanti spazi, che
+# l'area non mostra.
+COLONNE = 300
+# Dove vanno gli annunci, provvisorio fino alle impostazioni della T3: F3 li
+# fa girare.
+DESTINAZIONI = (
+    ("sintesi", _("Annunci alla sintesi.")),
+    ("entrambi", _("Annunci a sintesi e braille.")),
+    ("braille", _("Annunci al solo braille.")),
+    (None, _("Annunci spenti.")),
+)
+
+
+class FacciaFinestra:
+    """La faccia dello strato per la finestra, e la sorgente dei tasti di key."""
+
+    def __init__(self):
+        self._tasti = queue.Queue()
+        self._lucchetto = threading.Lock()
+        self._pezzi = []
+        self._causa = None
+        self._quando = 0.0
+        self._chiusura = threading.Event()
+        self.avvisa = None
+
+    # Il lato del nucleo.
+
+    def _controlla_chiusura(self):
+        if self._chiusura.is_set():
+            raise KeyboardInterrupt
+
+    def _prendi(self, attesa=None):
+        """Il prossimo tasto, o None se l'attesa scade. Con la finestra che
+        si chiude solleva KeyboardInterrupt, come Ctrl+C nel terminale."""
+        scadenza = None if attesa is None else time.monotonic() + max(0.0, attesa)
+        while True:
+            self._controlla_chiusura()
+            passo = 0.05 if scadenza is None else min(0.05, max(0.0, scadenza - time.monotonic()))
+            try:
+                return self._tasti.get(timeout=passo)
+            except queue.Empty:
+                if scadenza is not None and time.monotonic() >= scadenza:
+                    return None
+
+    def kbhit(self):
+        self._controlla_chiusura()
+        self._causa = None
+        return not self._tasti.empty()
+
+    def getwch(self):
+        tasto = self._prendi()
+        self._causa = "tasto" if tasto in ("\r", "\x1b") else "eco"
+        self._quando = time.monotonic()
+        return tasto
+
+    def tasto_per_key(self, attesa):
+        """La sorgente di key: key non fa l'eco, quindi quello che segue e'
+        sempre una risposta."""
+        tasto = self._prendi(attesa)
+        if tasto is not None:
+            self._causa = "tasto"
+            self._quando = time.monotonic()
+        return tasto
+
+    def leggi_riga(self, eco=True):
+        """Una riga, come la console la da' a input: i caratteri con l'eco
+        se eco e' vero, Backspace cancella, Esc svuota la riga, Invio la
+        consegna."""
+        scritti = []
+        while True:
+            tasto = self._prendi()
+            if tasto == "\r":
+                self.scrivi("\n", "tasto")
+                self._causa = "tasto"
+                self._quando = time.monotonic()
+                return "".join(scritti)
+            if tasto == "\x08":
+                if scritti:
+                    scritti.pop()
+                    if eco:
+                        self.scrivi("\b \b", "eco")
+            elif tasto == "\x1b":
+                if scritti and eco:
+                    self.scrivi("\b \b" * len(scritti), "eco")
+                scritti.clear()
+            elif tasto.isprintable():
+                scritti.append(tasto)
+                if eco:
+                    self.scrivi(tasto, "eco")
+
+    def svuota_tastiera(self):
+        while True:
+            try:
+                self._tasti.get_nowait()
+            except queue.Empty:
+                return
+
+    def larghezza(self):
+        return COLONNE
+
+    def scrivi(self, testo, causa=None):
+        if causa is None:
+            causa = self._causa
+            if causa == "eco" and time.monotonic() - self._quando > ECO_MASSIMO:
+                causa = None
+        with self._lucchetto:
+            primo = not self._pezzi
+            self._pezzi.append((testo, causa))
+        if primo and self.avvisa is not None:
+            self.avvisa()
+
+    # Il lato della finestra.
+
+    def premi(self, tasto):
+        self._tasti.put(tasto)
+
+    def prendi_il_testo(self):
+        with self._lucchetto:
+            pezzi, self._pezzi = self._pezzi, []
+        return pezzi
+
+    def chiudi(self):
+        self._chiusura.set()
+
+
+class UscitaFinestra(io.TextIOBase):
+    """Lo stdout del nucleo: tutto quello che scrive va alla faccia."""
+
+    def __init__(self, faccia):
+        super().__init__()
+        self._faccia = faccia
+
+    def writable(self):
+        return True
+
+    def write(self, testo):
+        if testo:
+            self._faccia.scrivi(testo)
+        return len(testo)
+
+    def flush(self):
+        pass
+
+    def isatty(self):
+        return False
+
+    @property
+    def encoding(self):
+        return "utf-8"
+
+
+class IngressoFinestra(io.TextIOBase):
+    """Lo stdin del nucleo: input lo legge una riga alla volta."""
+
+    def __init__(self, faccia):
+        super().__init__()
+        self._faccia = faccia
+
+    def readable(self):
+        return True
+
+    def readline(self, size=-1):
+        return self._faccia.leggi_riga() + "\n"
+
+    def isatty(self):
+        return False
+
+    @property
+    def encoding(self):
+        return "utf-8"
+
+
+class Terminale:
+    """Il terminale imitato: le righe si chiudono con l'a capo, il ritorno
+    carrello riporta il cursore a inizio riga, il backspace lo sposta indietro
+    di uno, ogni altro carattere scrive sopra o in fondo."""
+
+    def __init__(self):
+        self.riga = []
+        self.colonna = 0
+
+    def applica(self, testo):
+        """Applica il testo e restituisce le righe chiuse, senza spazi in fondo."""
+        chiuse = []
+        for carattere in testo:
+            if carattere == "\n":
+                chiuse.append(self.visibile().rstrip())
+                self.riga, self.colonna = [], 0
+            elif carattere == "\r":
+                self.colonna = 0
+            elif carattere == "\b":
+                self.colonna = max(0, self.colonna - 1)
+            elif carattere == "\t" or carattere >= " ":
+                if self.colonna < len(self.riga):
+                    self.riga[self.colonna] = carattere
+                else:
+                    self.riga.extend(" " * (self.colonna - len(self.riga)))
+                    self.riga.append(carattere)
+                self.colonna += 1
+        return chiuse
+
+    def visibile(self):
+        """La riga in corso, senza gli spazi in fondo che stanno oltre il cursore."""
+        testo = "".join(self.riga)
+        return testo[: max(self.colonna, len(testo.rstrip()))]
+
+
+def _parte_nuova(riga, detta):
+    """Cio' che di una riga va annunciato, sapendo che detta e' gia' stata
+    sentita: niente se e' la stessa, la sola coda se la riga la continua,
+    come dice NVDA nel terminale, altrimenti la riga intera."""
+    riga, detta = riga.rstrip(), detta.rstrip()
+    if not riga.strip() or riga == detta:
+        return ""
+    if detta.strip() and riga.startswith(detta):
+        return riga[len(detta):].strip()
+    return riga.strip()
+
+
+class Finestra(wx.Frame):
+    def __init__(self, faccia):
+        super().__init__(None, title=_("Orologic {versione}").format(versione=version.VERSION))
+        self.faccia = faccia
+        pannello = wx.Panel(self)
+        self.area = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_RICH2 | wx.TE_NOHIDESEL | wx.TE_DONTWRAP)
+        self.area.SetName(_("Console"))
+        dimensionatore = wx.BoxSizer(wx.VERTICAL)
+        dimensionatore.Add(self.area, 1, wx.EXPAND)
+        pannello.SetSizer(dimensionatore)
+        self.terminale = Terminale()
+        # Le righe chiuse mostrate nell'area; la riga in corso viene dopo.
+        self.righe = []
+        # La riga in corso come l'utente l'ha gia' sentita o scritta.
+        self.detta = ""
+        self.programmato = False
+        self.sintesi = Sintesi()
+        self.destinazione = 0
+        self.nucleo = None
+        self.chiudendo = False
+        # Finito il nucleo la finestra si chiude; le prove la tengono aperta
+        # per leggerla.
+        self.chiudi_alla_fine = True
+        self.area.Bind(wx.EVT_CHAR, self._carattere)
+        self.area.Bind(wx.EVT_KEY_DOWN, self._tasto_giu)
+        self.Bind(wx.EVT_CLOSE, self._chiudi)
+        faccia.avvisa = self._avvisa
+        self.Maximize()
+        self.area.SetFocus()
+
+    # I tasti.
+
+    def _riga_e_colonna(self):
+        trovata, colonna, riga = self.area.PositionToXY(self.area.GetInsertionPoint())
+        if not trovata:
+            return len(self.righe), 0
+        return min(riga, len(self.righe)), colonna
+
+    def _vai(self, riga, colonna):
+        lunghezza = self.area.GetLineLength(riga)
+        self.area.SetInsertionPoint(self.area.XYToPosition(max(0, min(colonna, lunghezza)), riga))
+
+    def _al_cursore(self):
+        self._vai(len(self.righe), self.terminale.colonna)
+
+    def _manda(self, tasto):
+        if self._riga_e_colonna()[0] != len(self.righe):
+            self._al_cursore()
+        self.faccia.premi(tasto)
+
+    def _carattere(self, evento):
+        codice = evento.GetUnicodeKey()
+        if codice == wx.WXK_RETURN:
+            self._manda("\r")
+        elif codice == wx.WXK_BACK:
+            self._manda("\x08")
+        elif codice == wx.WXK_ESCAPE:
+            self._manda("\x1b")
+        elif codice != wx.WXK_NONE and codice >= 32 and not (evento.ControlDown() and not evento.AltDown()):
+            self._manda(chr(codice))
+        else:
+            # Frecce, pagine, Home, Fine e il resto: all'area, per leggere.
+            evento.Skip()
+
+    def _tasto_giu(self, evento):
+        codice = evento.GetKeyCode()
+        ctrl, shift = evento.ControlDown(), evento.ShiftDown()
+        if codice == wx.WXK_F3 and not ctrl and not shift:
+            self.destinazione = (self.destinazione + 1) % len(DESTINAZIONI)
+            self.sintesi.dici(DESTINAZIONI[self.destinazione][1], AUTOMATICA, "entrambi", interrompi=True)
+            return
+        if (ctrl and codice == ord("V")) or (shift and codice == wx.WXK_INSERT):
+            self._incolla()
+            return
+        # Tagliare, cancellare, annullare e ripetere cambierebbero l'area
+        # alle spalle del nucleo.
+        if codice in (wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE) or (ctrl and codice in (ord("X"), ord("Z"), ord("Y"))):
+            return
+        evento.Skip()
+
+    def _incolla(self):
+        """Gli appunti vanno al nucleo come tasti, fino al primo a capo."""
+        if not wx.TheClipboard.Open():
+            return
+        try:
+            dati = wx.TextDataObject()
+            if wx.TheClipboard.GetData(dati) and dati.GetText():
+                for carattere in dati.GetText().splitlines()[0]:
+                    if carattere.isprintable():
+                        self._manda(carattere)
+        finally:
+            wx.TheClipboard.Close()
+
+    # Il testo.
+
+    def _avvisa(self):
+        wx.CallAfter(self._programma)
+
+    def _programma(self):
+        if not self.programmato:
+            self.programmato = True
+            wx.CallLater(15, self._applica)
+
+    def _applica(self):
+        """Il testo del nucleo nell'area, e l'annuncio di quello nuovo."""
+        self.programmato = False
+        pezzi = self.faccia.prendi_il_testo()
+        if not pezzi or not self:
+            return
+        chiuse = []
+        da_dire = []
+        interrompi = False
+        ultima_causa = None
+        for testo, causa in pezzi:
+            ultima_causa = causa
+            if causa == "tasto":
+                interrompi = True
+            for riga in self.terminale.applica(testo):
+                chiuse.append(riga)
+                nuovo = _parte_nuova(riga, self.detta)
+                if nuovo:
+                    da_dire.append(nuovo)
+                self.detta = ""
+            # L'eco si aggiunge a cio' che e' gia' stato sentito pezzo per
+            # pezzo: con i tasti rapidi l'eco e l'Invio arrivano insieme.
+            if causa == "eco":
+                self.detta = self.terminale.visibile()
+        visibile = self.terminale.visibile()
+        if visibile.strip():
+            if ultima_causa != "eco":
+                nuovo = _parte_nuova(visibile, self.detta)
+                if nuovo:
+                    da_dire.append(nuovo)
+            self.detta = visibile
+        self._mostra(chiuse, visibile)
+        self._di(da_dire, interrompi)
+
+    def _mostra(self, chiuse, visibile):
+        """Le righe chiuse prendono il posto della riga in corso, che va in
+        fondo. Il cursore, se era nella riga in corso, va al cursore del
+        nucleo; se l'utente rileggeva piu' su, resta dov'era."""
+        riga, colonna = self._riga_e_colonna()
+        sul_fondo = riga >= len(self.righe)
+        ultima = len(self.righe)
+        inizio = self.area.XYToPosition(0, ultima)
+        self.area.Replace(inizio, inizio + self.area.GetLineLength(ultima), "\n".join([*chiuse, visibile]))
+        self.righe.extend(chiuse)
+        if len(self.righe) > RIGHE_TENUTE + RIGHE_TOLTE_ALLA_VOLTA:
+            self.area.Remove(0, self.area.XYToPosition(0, RIGHE_TOLTE_ALLA_VOLTA))
+            del self.righe[:RIGHE_TOLTE_ALLA_VOLTA]
+            riga -= RIGHE_TOLTE_ALLA_VOLTA
+        if sul_fondo:
+            self._al_cursore()
+        else:
+            self._vai(max(0, riga), colonna)
+
+    def _di(self, righe, interrompi):
+        dove = DESTINAZIONI[self.destinazione][0]
+        if dove is None:
+            return
+        for numero, riga in enumerate(righe):
+            self.sintesi.dici(riga, AUTOMATICA, dove, interrompi=interrompi and numero == 0)
+
+    # Il nucleo.
+
+    def avvia_il_nucleo(self, corpo):
+        def filo():
+            try:
+                corpo()
+            except (KeyboardInterrupt, SystemExit):
+                pass
+            except Exception:  # noqa: BLE001 - l'errore va letto nell'area, poi si chiude
+                print(traceback.format_exc())
+            wx.CallAfter(self._nucleo_finito)
+
+        self.nucleo = threading.Thread(target=filo, name="nucleo di Orologic", daemon=True)
+        self.nucleo.start()
+
+    def _nucleo_finito(self):
+        if self:
+            self._applica()
+            if self.chiudi_alla_fine:
+                self.Destroy()
+
+    def _chiudi(self, evento):
+        """Alt+F4: il nucleo riceve l'interruzione, come Ctrl+C nel
+        terminale, e ha qualche secondo per chiudersi da solo."""
+        if self.nucleo is None or not self.nucleo.is_alive():
+            evento.Skip()
+            return
+        if self.chiudendo:
+            return
+        self.chiudendo = True
+        self.faccia.chiudi()
+        inizio = time.monotonic()
+
+        def aspetta():
+            if not self:
+                return
+            if self.nucleo.is_alive() and time.monotonic() - inizio < ATTESA_DELLA_CHIUSURA:
+                wx.CallLater(100, aspetta)
+                return
+            if self.nucleo.is_alive():
+                # Il nucleo e' fermo dove non legge tasti, per esempio in
+                # rete: si chiude il motore e si esce comunque.
+                from . import engine
+
+                engine.CloseEngine()
+                os._exit(0)
+            self.Destroy()
+
+        wx.CallLater(100, aspetta)
+
+
+_SALVATI = {}
+
+
+def prepara():
+    """Crea la faccia e la finestra e collega il nucleo alla finestra: lo
+    strato, la sorgente dei tasti di key, stdout, stdin e getpass. Serve una
+    wx.App gia' nata. ripristina rimette tutto com'era."""
+    faccia = FacciaFinestra()
+    finestra = Finestra(faccia)
+    _SALVATI.update(
+        faccia=strato.imposta_faccia(faccia),
+        sorgente=sorgente_dei_tasti(faccia.tasto_per_key),
+        stdout=sys.stdout,
+        stdin=sys.stdin,
+        getpass=getpass.getpass,
+    )
+    sys.stdout = UscitaFinestra(faccia)
+    sys.stdin = IngressoFinestra(faccia)
+
+    def password(prompt="Password: ", stream=None):
+        sys.stdout.write(prompt)
+        return faccia.leggi_riga(eco=False)
+
+    getpass.getpass = password
+    return finestra
+
+
+def ripristina():
+    """Scollega il nucleo dalla finestra, come prima di prepara."""
+    if not _SALVATI:
+        return
+    strato.imposta_faccia(_SALVATI["faccia"])
+    sorgente_dei_tasti(_SALVATI["sorgente"])
+    sys.stdout = _SALVATI["stdout"]
+    sys.stdin = _SALVATI["stdin"]
+    getpass.getpass = _SALVATI["getpass"]
+    _SALVATI.clear()
+
+
+def avvia(corpo):
+    """Apre la finestra e ci fa girare corpo, il programma di sempre, in un
+    filo suo. Torna quando la finestra si chiude."""
+    app = wx.App()
+    finestra = prepara()
+    finestra.Show()
+    finestra.avvia_il_nucleo(corpo)
+    app.MainLoop()
+    ripristina()
