@@ -1,7 +1,7 @@
 # Orologic: la finestra, con l'area unica che fa da console.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
 
-"""La finestra di Orologic, tappa T2 della GUI (punto 74 di docs/idee.txt).
+"""La finestra di Orologic, tappa T2 della GUI (Piano della GUI.txt).
 
 Il nucleo di Orologic gira in un filo suo, esattamente come nel terminale:
 scrive con print e sys.stdout, legge con key, menu, enter_escape e dgt di

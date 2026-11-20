@@ -1,7 +1,7 @@
 # Orologic: lo strato unico fra il nucleo e chi gli fa da tastiera e schermo.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
 
-"""Lo strato unico, tappa T1 della GUI di Orologic (punto 74 di idee.txt).
+"""Lo strato unico, tappa T1 della GUI di Orologic (Piano della GUI.txt).
 
 Orologic legge i tasti e scrive il testo come un programma da terminale, e
 cosi' resta: dalla 9.0.0 pero' gira anche dentro una finestra, dove la
@@ -18,7 +18,7 @@ menu ed enter_escape di GBUtils la seguono con sorgente_dei_tasti, print e
 dgt con sys.stdout e sys.stdin.
 
 Dalla T2 lo strato sa anche quando c'e' una partita in corso, per il
-cruscotto della finestra (decisione C1 del punto 74): le funzioni di gioco
+cruscotto della finestra (decisione C1 del Piano della GUI.txt): le funzioni di gioco
 dichiarano la zona della partita con in_partita o partita, e i cicli d'attesa
 consegnano con fornisci chi da' i dati del cruscotto. Nel terminale tutto
 questo non fa niente.

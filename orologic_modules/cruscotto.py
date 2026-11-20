@@ -1,7 +1,7 @@
 # Orologic: il cruscotto delle partite nella finestra.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
 
-"""Il cruscotto, tappa T2 della GUI (punto 74 di docs/idee.txt, decisione C1).
+"""Il cruscotto, tappa T2 della GUI (Piano della GUI.txt, decisione C1).
 
 Durante una partita, nell'arbitraggio, in Tempo, contro il motore e su
 Lichess, l'area della finestra non scorre come un terminale: e' un cruscotto
