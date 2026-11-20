@@ -82,6 +82,8 @@ ignore = [
 [lint.per-file-ignores]
 # Gli strumenti di sviluppo non fanno parte del programma consegnato.
 "strumenti/*.py" = ["T201"]
+# Nelle prove automatiche assert e' lo strumento, non una scorciatoia.
+"tests/*.py" = ["S101"]
 
 [format]
 # I sorgenti usano i fine riga di Windows, come tutto il resto del progetto.

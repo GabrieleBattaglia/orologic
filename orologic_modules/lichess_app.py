@@ -2,7 +2,6 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
 import json
-import msvcrt
 import os
 import queue
 import sys
@@ -23,6 +22,7 @@ from . import (
     lichess_tornei,
     rete,
     storage,
+    strato,
     ui,
 )
 from .config import _, percorso_salvataggio
@@ -1062,7 +1062,6 @@ def fetch_user_profile(username, token=None):
 
 
 def watch_player(username, token):
-    import msvcrt
     import sys
 
     print(_("Controllo se l'utente e' in gioco..."))
@@ -1105,8 +1104,8 @@ def watch_player(username, token):
 
                     interrupted = False
                     for _idx in range(polling_interval * 10):
-                        if msvcrt.kbhit():
-                            c = msvcrt.getwch()
+                        if strato.kbhit():
+                            c = strato.getwch()
                             if c in ("\x1b", "."):
                                 interrupted = True
                                 break
@@ -1706,7 +1705,7 @@ def sfida_e_aspetta(token, username, params_dict, mio_nome):
             try:
                 evento = coda.get(timeout=0.1)
             except queue.Empty:
-                if msvcrt.kbhit() and msvcrt.getwch() == "\x1b":
+                if strato.kbhit() and strato.getwch() == "\x1b":
                     if id_sfida is None:
                         print(
                             _(
@@ -1775,7 +1774,6 @@ def sfida_e_aspetta(token, username, params_dict, mio_nome):
 
 
 def seek_game(token, params_dict):
-    import msvcrt
     import sys
     import threading
 
@@ -1849,7 +1847,7 @@ def seek_game(token, params_dict):
             ui.pulisci_riga()
             print(_("Ricerca interrotta. {motivo}").format(motivo=problemi[0]))
             return None
-        if msvcrt.kbhit() and msvcrt.getwch() == "\x1b":
+        if strato.kbhit() and strato.getwch() == "\x1b":
             stop_seek.set()
             ui.pulisci_riga()
             print(_("Ricerca annullata."))
@@ -2261,7 +2259,7 @@ def scegli_ascoltando_le_sfide(voci, db, p):
     prompt = p.lstrip("\n")
     sys.stdout.write(_prompt_del_menu(voci, numerati, prompt))
     sys.stdout.flush()
-    while not msvcrt.kbhit():
+    while not strato.kbhit():
         if lichess_eventi.sfida_arrivata.is_set():
             lichess_eventi.sfida_arrivata.clear()
             # Il conto delle sfide va riletto, non preso dalla cache.

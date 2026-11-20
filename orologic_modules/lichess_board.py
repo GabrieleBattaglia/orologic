@@ -2,7 +2,6 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
 import json
-import msvcrt
 import queue
 import sys
 import threading
@@ -11,7 +10,7 @@ import time
 import chess
 from GBUtils import Acusticator
 
-from . import board_utils, config, modello_prompt, rete, tempo, ui
+from . import board_utils, config, modello_prompt, rete, strato, tempo, ui
 from .config import _
 
 
@@ -503,10 +502,10 @@ def async_spectator_loop(q, game_state):
                 sys.stdout.write(_("La scacchiera e' pronta!\n"))
                 refresh_line()
 
-        if msvcrt.kbhit():
-            c = msvcrt.getwch()
+        if strato.kbhit():
+            c = strato.getwch()
             if c in ("\x00", "\xe0"):
-                msvcrt.getwch()
+                strato.getwch()
                 if not ui.vista_ferma(game_state):
                     continue
             if ui.vista_ferma(game_state):
@@ -1195,10 +1194,10 @@ def async_play_loop(q, game_state):
         except queue.Empty:
             pass
 
-        if msvcrt.kbhit():
-            c = msvcrt.getwch()
+        if strato.kbhit():
+            c = strato.getwch()
             if c in ("\x00", "\xe0"):
-                msvcrt.getwch()
+                strato.getwch()
                 if not ui.vista_ferma(game_state):
                     continue
             if ui.vista_ferma(game_state):

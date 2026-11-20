@@ -18,13 +18,12 @@ altrove.
 """
 
 import datetime
-import msvcrt
 import sys
 import time
 
 from GBUtils import Acusticator, dgt, menu
 
-from . import config, lichess_eventi, rete, tempo, ui
+from . import config, lichess_eventi, rete, strato, tempo, ui
 from .config import _
 
 URL_ELENCO = "https://lichess.org/api/tournament"
@@ -438,14 +437,14 @@ def attesa(torneo, token, username, db):
             _scrivi_riga(riga_attesa(vista))
             fine = time.monotonic() + 1
             while time.monotonic() < fine:
-                if msvcrt.kbhit():
+                if strato.kbhit():
                     break
                 time.sleep(0.05)
-            if not msvcrt.kbhit():
+            if not strato.kbhit():
                 continue
-            tasto = msvcrt.getwch()
+            tasto = strato.getwch()
             if tasto in ("\x00", "\xe0"):
-                msvcrt.getwch()
+                strato.getwch()
                 continue
             tasto = tasto.lower()
             print()

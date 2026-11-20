@@ -3,7 +3,6 @@
 
 import datetime
 import os
-import shutil
 import sys
 import time
 
@@ -12,7 +11,16 @@ import pyperclip
 from GBUtils import Acusticator, dgt
 from GBUtils import enter_escape as _enter_escape_gbutils
 
-from . import board_utils, config, localizzazione, orologio, storage, tempo, version
+from . import (
+    board_utils,
+    config,
+    localizzazione,
+    orologio,
+    storage,
+    strato,
+    tempo,
+    version,
+)
 from .board_utils import stampa_elenco
 from .config import _
 
@@ -800,7 +808,7 @@ def pulisci_riga():
     fissarla a settantanove colonne lasciava residui sulle righe piu'
     lunghe.
     """
-    larghezza = shutil.get_terminal_size(fallback=(80, 24)).columns
+    larghezza = strato.larghezza()
     sys.stdout.write("\r" + " " * max(1, larghezza - 1) + "\r")
 
 
@@ -836,18 +844,7 @@ def svuota_tastiera():
     alla fine di una partita: quello che si e' premuto durante il gioco, o un
     evento rimasto dalla mossa, non deve rispondere al posto dell'utente ne'
     far ripetere la domanda. Senza console non fa niente."""
-    if os.name != "nt":
-        return
-    try:
-        import ctypes
-        import msvcrt
-
-        while msvcrt.kbhit():
-            msvcrt.getwch()
-        kernel32 = ctypes.windll.kernel32
-        kernel32.FlushConsoleInputBuffer(kernel32.GetStdHandle(-10))
-    except (OSError, AttributeError):
-        pass
+    strato.svuota_tastiera()
 
 
 def vista_ferma(game_state):

@@ -4,7 +4,6 @@
 import datetime
 import io
 import json
-import msvcrt
 import os
 import sys
 import urllib.parse
@@ -13,7 +12,7 @@ import urllib.request
 import chess.pgn
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
-from . import config, rete, storage
+from . import config, rete, storage, strato
 from .config import _
 
 
@@ -413,7 +412,7 @@ def download_games(username, token):
     try:
         with risposta as resp:
             for line in resp:
-                if msvcrt.kbhit() and msvcrt.getwch() == "\x1b":
+                if strato.kbhit() and strato.getwch() == "\x1b":
                     interrotto = True
                     print(
                         _(

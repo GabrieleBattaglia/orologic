@@ -18,6 +18,7 @@ from . import (
     engine,
     orologio,
     storage,
+    strato,
     tempo,
     ui,
     version,
@@ -155,7 +156,6 @@ def EseguiAutosave(game_state):
 
 
 def async_arbitration_input(game_state, get_prompt):
-    import msvcrt
     import sys
     import time
 
@@ -189,10 +189,10 @@ def async_arbitration_input(game_state, get_prompt):
             refresh_line()
             last_refresh = time.time()
 
-        if msvcrt.kbhit():
-            c = msvcrt.getwch()
+        if strato.kbhit():
+            c = strato.getwch()
             if c in ("\x00", "\xe0"):
-                msvcrt.getwch()
+                strato.getwch()
                 if not ui.vista_ferma(game_state):
                     continue
             if ui.vista_ferma(game_state):

@@ -23,7 +23,7 @@ import chess.pgn
 import pyperclip
 from GBUtils import contesto_ssl, dgt, enter_escape, key, menu
 
-from orologic_modules import board_utils, engine
+from orologic_modules import board_utils, engine, strato
 from orologic_modules.config import _
 
 # Entry point
@@ -142,10 +142,8 @@ def _carica_archivio():
                 while True:
                     # Controllo tasto ESC per interruzione manuale
                     if os.name == "nt":
-                        import msvcrt
-
-                        if msvcrt.kbhit():
-                            ch = msvcrt.getwch()
+                        if strato.kbhit():
+                            ch = strato.getwch()
                             if ch == "\x1b":
                                 sys.stdout.write("\n")
                                 print(
