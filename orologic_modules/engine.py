@@ -2002,6 +2002,23 @@ def AnalisiAutomatica(pgn_game):
     )
 
 
+# I lati dei bip delle domande del motore, nell'ordine del terminale: il
+# percorso, la hash, i core, il livello di skill e il move overhead. Il primo
+# ha la seconda nota a -75, com'e' sempre stato.
+LATI_DELLE_DOMANDE = {"percorso": (-0.75, -75), "hash": (-0.25,), "core": (0,), "skill": (0.25,), "overhead": (0.5,)}
+
+
+def bip_della_domanda(lato, lato_della_seconda=None):
+    """Il bip breve dopo una domanda della configurazione del motore."""
+    seconda = lato if lato_della_seconda is None else lato_della_seconda
+    Acusticator(["g6", 0.025, lato, config.VOLUME, "c5", 0.025, seconda, config.VOLUME], kind=3)
+
+
+def suono_del_motore_salvato():
+    """La nota della configurazione del motore salvata, col motore riavviato."""
+    Acusticator(["a6", 0.5, 1, config.VOLUME], kind=3, adsr=[0.001, 0, 100, 99.9])
+
+
 def percorso_da_salvare(percorso_assoluto):
     """Il percorso del motore come va salvato: relativo alla cartella di
     Orologic se sta sullo stesso disco, per la portabilita', altrimenti
@@ -2079,9 +2096,7 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
         smax=256,
         default=default_path,
     )
-    Acusticator(
-        ["g6", 0.025, -0.75, config.VOLUME, "c5", 0.025, -75, config.VOLUME], kind=3
-    )
+    bip_della_domanda(-0.75, -75)
 
     default_exe = initial_executable if initial_executable else ""
     executable = dgt(
@@ -2143,9 +2158,7 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
         imax=4096,
         default=128,
     )
-    Acusticator(
-        ["g6", 0.025, -0.25, config.VOLUME, "c5", 0.025, -0.25, config.VOLUME], kind=3
-    )
+    bip_della_domanda(-0.25)
 
     max_cores = os.cpu_count() or 1
     num_cores = dgt(
@@ -2157,7 +2170,7 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
         imax=max_cores,
         default=min(4, max_cores),
     )
-    Acusticator(["g6", 0.025, 0, config.VOLUME, "c5", 0.025, 0, config.VOLUME], kind=3)
+    bip_della_domanda(0)
 
     skill_level = dgt(
         _("Inserisci il livello di skill (min: 0, max: 20): "),
@@ -2166,9 +2179,7 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
         imax=20,
         default=20,
     )
-    Acusticator(
-        ["g6", 0.025, 0.25, config.VOLUME, "c5", 0.025, 0.25, config.VOLUME], kind=3
-    )
+    bip_della_domanda(0.25)
 
     move_overhead = dgt(
         _("Inserisci il move overhead in millisecondi (min: 0, max: 500): "),
@@ -2177,9 +2188,7 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
         imax=500,
         default=0,
     )
-    Acusticator(
-        ["g6", 0.025, 0.5, config.VOLUME, "c5", 0.025, 0.5, config.VOLUME], kind=3
-    )
+    bip_della_domanda(0.5)
 
     engine_config = {
         "engine_path": path_to_save,
@@ -2192,5 +2201,5 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
     storage.SetValue("engine_config", engine_config)
     print(_("Configurazione del motore salvata."))
     InitEngine()
-    Acusticator(["a6", 0.5, 1, config.VOLUME], kind=3, adsr=[0.001, 0, 100, 99.9])
+    suono_del_motore_salvato()
     return

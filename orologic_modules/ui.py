@@ -52,6 +52,21 @@ def copia_negli_appunti(testo, conferma):
     return True
 
 
+def nota_del_nome(indice, totale, genere=False):
+    """La nota che conferma una voce dei nomi: sale dalla prima all'ultima,
+    da 130 a 2093 hertz, e va da sinistra a destra; un po' piu' alta per il
+    genere di un pezzo. La stessa nel terminale e nella finestra."""
+    inizio, fine = 130.81, 2093.00
+    altezza = inizio * ((fine / inizio) ** (indice / (totale - 1))) if totale > 1 else inizio
+    pan = -1 + (2 * indice / (totale - 1)) if totale > 1 else 0
+    Acusticator([altezza * (1.2 if genere else 1), 0.08, pan, config.VOLUME], kind=1, adsr=[2, 5, 80, 10])
+
+
+def arpeggio_dei_nomi():
+    """L'arpeggio dei nomi salvati."""
+    Acusticator(["c7", 0.05, 0, config.VOLUME, "e7", 0.05, 0, config.VOLUME, "g7", 0.15, 0, config.VOLUME], kind=1, adsr=[2, 5, 90, 5])
+
+
 def voci_dei_nomi():
     """Le voci dei nomi e della grammatica di gioco, con la loro domanda, uguali
     per il terminale e per le impostazioni della finestra: (gruppo, chiave,
@@ -131,23 +146,10 @@ def EditLocalization():
 
     items_to_edit = voci_dei_nomi()
     num_items = len(items_to_edit)
-    # Calcolo dinamico frequenze
-    start_freq = 130.81
-    end_freq = 2093.00
-    pitches = []
-    for k in range(num_items):
-        p = (
-            start_freq * ((end_freq / start_freq) ** (k / (num_items - 1)))
-            if num_items > 1
-            else start_freq
-        )
-        pitches.append(p)
 
     interrompi = False
     for i, item in enumerate(items_to_edit):
         cat, key_item, details = item
-        current_pitch = pitches[i]
-        pan = -1 + (2 * i / (num_items - 1)) if num_items > 1 else 0
 
         if isinstance(details, tuple):
             sub_key, prompt_text = details
@@ -167,11 +169,7 @@ def EditLocalization():
 
             if cat == "pieces":
                 # Suono di conferma per il nome del pezzo
-                Acusticator(
-                    [current_pitch, 0.08, pan, config.VOLUME],
-                    kind=1,
-                    adsr=[2, 5, 80, 10],
-                )
+                nota_del_nome(i, num_items)
 
                 current_gender = l10n_config[cat][key_item].get("gender", "m")
                 gender_prompt = _(
@@ -189,11 +187,7 @@ def EditLocalization():
                     if new_gender in ["m", "f", "n"]:
                         l10n_config[cat][key_item]["gender"] = new_gender
                         # Suono di conferma per il genere
-                        Acusticator(
-                            [current_pitch * 1.2, 0.08, pan, config.VOLUME],
-                            kind=1,
-                            adsr=[2, 5, 80, 10],
-                        )
+                        nota_del_nome(i, num_items, genere=True)
                         break
                     print(
                         _(
@@ -204,11 +198,7 @@ def EditLocalization():
                     break
             else:
                 # Suono di conferma standard (aggettivi)
-                Acusticator(
-                    [current_pitch, 0.08, pan, config.VOLUME],
-                    kind=1,
-                    adsr=[2, 5, 80, 10],
-                )
+                nota_del_nome(i, num_items)
         else:
             prompt_text = details
             current_val = l10n_config.get(cat, {}).get(key_item, "")
@@ -223,27 +213,8 @@ def EditLocalization():
                 l10n_config[cat] = {}
             l10n_config[cat][key_item] = new_val.strip()
             # Suono di conferma standard
-            Acusticator(
-                [current_pitch, 0.08, pan, config.VOLUME], kind=1, adsr=[2, 5, 80, 10]
-            )
-    Acusticator(
-        [
-            "c7",
-            0.05,
-            0,
-            config.VOLUME,
-            "e7",
-            0.05,
-            0,
-            config.VOLUME,
-            "g7",
-            0.15,
-            0,
-            config.VOLUME,
-        ],
-        kind=1,
-        adsr=[2, 5, 90, 5],
-    )
+            nota_del_nome(i, num_items)
+    arpeggio_dei_nomi()
     storage.SetValue("localization", l10n_config)
     localizzazione.ricarica()
     print(_("\nImpostazioni di lingua salvate con successo!"))

@@ -18,6 +18,13 @@ terminale, e si mettono in uso i valori come fanno le funzioni del
 terminale: il tempo e le linee dell'analisi, il volume, i nomi, il prompt.
 Il motore si riavvia, o si scarica, in un filo a parte, perche' la finestra
 non si fermi; le frasi del motore vanno nella console come sempre.
+
+I suoni sono quelli del terminale, con le stesse funzioni: il tema della
+voce del sottomenu quando si apre il suo elenco, il bip dopo un valore
+dell'analisi o un interruttore, la nota che sale di ogni nome e l'arpeggio
+quando l'elenco dei nomi si chiude, i bip delle domande del motore coi loro
+lati e la nota del motore salvato, la nota bassa di un prompt sbagliato.
+Il nome del giocatore, come nel terminale, non suona.
 """
 
 import os
@@ -39,6 +46,7 @@ from . import (
     modello_prompt,
     pub,
     storage,
+    temi,
     ui,
     version,
 )
@@ -226,7 +234,6 @@ class Impostazioni:
                 db.pop(gioca.CHIAVE_NOME, None)
 
         storage.UpdateDB(modifica)
-        _bip()
 
     def _interruttore(self, chiave, titolo, nomi, dialogo):
         acceso = bool(storage.LoadDB().get(chiave))
@@ -308,7 +315,7 @@ class Impostazioni:
     def _prompt(self, dialogo):
         prima = modello_prompt.modello()
         with dialoghi.FinestraPrompt(dialogo, prima, modello_prompt.righe_d_aiuto(), modello_prompt.righe_d_anteprima,
-                                     modello_prompt.errori_del_modello) as finestra_del_prompt:
+                                     modello_prompt.errori_del_modello, modello_prompt._errore) as finestra_del_prompt:
             if finestra_del_prompt.ShowModal() != wx.ID_OK:
                 return
             nuovo = finestra_del_prompt.modello or modello_prompt.PREDEFINITO
@@ -372,8 +379,24 @@ class Impostazioni:
                 genere = (*chiave[:2], "gender")
                 elenco.aggiorna(genere, self.riga_del_nome(genere, None))
 
+        temi.suona("nomi")
         with dialoghi.FinestraImpostazioni(dialogo, righe, al_cambio, _("Nomi dei pezzi, delle colonne e delle mosse")) as elenco:
             elenco.ShowModal()
+        # Come il terminale quando salva i nomi in fondo alle domande.
+        ui.arpeggio_dei_nomi()
+
+    @staticmethod
+    def _indice_del_nome(chiave):
+        """La posizione della voce fra le domande del terminale, che da' la
+        nota; il genere ha quella del nome al plurale, la domanda dopo la
+        quale il terminale lo chiede."""
+        cercata = (*chiave[:2], "pname") if chiave[-1] == "gender" else chiave
+        voci = ui.voci_dei_nomi()
+        for indice, (gruppo, chiave_della_voce, resto) in enumerate(voci):
+            percorso = (gruppo, chiave_della_voce, resto[0]) if gruppo == "pieces" else (gruppo, chiave_della_voce)
+            if percorso == cercata:
+                return indice, len(voci)
+        return 0, len(voci)
 
     def cambia_un_nome(self, chiave, domanda, dialogo):
         nomi = self._nomi_in_uso()
@@ -385,6 +408,11 @@ class Impostazioni:
             nuovo = None if indice is None else generi[indice]
         else:
             nuovo = self.finestra.chiedi_valore(dialogo, domanda, f"{domanda} [{attuale}]: ", attuale, "testo", 0, 256)
+        if nuovo is None:
+            return
+        # La nota di ogni risposta, anche se il nome resta com'era, come nel terminale.
+        indice, totale = self._indice_del_nome(chiave)
+        ui.nota_del_nome(indice, totale, genere=chiave[-1] == "gender")
         # Come nel terminale, un campo vuoto lascia il nome com'era.
         if not nuovo or nuovo == attuale:
             return
@@ -394,7 +422,6 @@ class Impostazioni:
         sopra[chiave[-1]] = nuovo
         storage.SetValue("localization", nomi)
         localizzazione.ricarica()
-        _bip()
 
     # Il motore.
 
@@ -423,6 +450,7 @@ class Impostazioni:
 
     def _motore(self, dialogo):
         righe = [(voce, self.riga_del_motore(voce)) for voce in VOCI_DEL_MOTORE]
+        temi.suona("motore")
         with dialoghi.FinestraImpostazioni(dialogo, righe, self.cambia_il_motore, self.riga("motore")) as elenco:
             self.elenco_del_motore = elenco
             try:
@@ -466,6 +494,8 @@ class Impostazioni:
             if nuovo is None or nuovo == eseguibile:
                 return
             eseguibile = nuovo
+        if voce == "percorso":
+            engine.bip_della_domanda(*engine.LATI_DELLE_DOMANDE["percorso"])
         completo = engine.percorso_assoluto(os.path.join(cartella, eseguibile))
         if not os.path.isfile(completo):
             self.finestra.avvisa(dialogo, _("Il file specificato non esiste. Verifica il percorso e il nome dell'eseguibile."))
@@ -485,7 +515,10 @@ class Impostazioni:
         chiave, predefinito, minimo, massimo, titolo, domanda = opzioni[voce]
         attuale = cfg.get(chiave, predefinito)
         nuovo = self.finestra.chiedi_valore(dialogo, titolo, domanda, min(max(attuale, minimo), massimo), "intero", minimo, massimo)
-        if nuovo is None or nuovo == attuale:
+        if nuovo is None:
+            return
+        engine.bip_della_domanda(*engine.LATI_DELLE_DOMANDE[voce])
+        if nuovo == attuale:
             return
         self.salva_il_motore(None, **{chiave: nuovo})
 
@@ -500,7 +533,14 @@ class Impostazioni:
             db["engine_config"] = cfg
 
         storage.UpdateDB(modifica)
-        self.in_disparte(engine.InitEngine)
+        self.in_disparte(self._riavvia_il_motore)
+
+    @staticmethod
+    def _riavvia_il_motore():
+        """Come in fondo alla configurazione del terminale: il motore riparte,
+        poi la nota del motore salvato."""
+        engine.InitEngine()
+        engine.suono_del_motore_salvato()
 
     def _cerca_il_motore(self):
         cartella, eseguibile, _usato = engine.SearchForEngine()
@@ -523,7 +563,7 @@ class Impostazioni:
                     db["engine_config"] = cfg
 
                 storage.UpdateDB(modifica)
-            engine.InitEngine()
+            self._riavvia_il_motore()
 
         self.in_disparte(lavoro)
 

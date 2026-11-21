@@ -573,7 +573,7 @@ class Finestra(wx.Frame):
         plancia, F6 l'area."""
         codice = evento.GetKeyCode()
         if evento.GetModifiers() == wx.MOD_CONTROL and codice == ord(","):
-            self.impostazioni()
+            self.impostazioni(suono=True)
             return
         if not evento.HasAnyModifiers():
             if codice == wx.WXK_F5:
@@ -1093,13 +1093,18 @@ class Finestra(wx.Frame):
 
     # Le impostazioni.
 
-    def impostazioni(self):
+    def impostazioni(self, suono=False):
         """La finestra delle impostazioni, il luogo unico di tutte (S1): con
-        Ctrl e virgola, o dalla voce impostazioni del menu principale. Il
-        nucleo intanto continua: i tasti vanno alla finestra, e il testo che
-        arriva si mostra e si annuncia come sempre."""
+        Ctrl e virgola, o dalla voce impostazioni del menu principale, che il
+        suo tema lo suona gia'; con Ctrl e virgola lo suona qui. Il nucleo
+        intanto continua: i tasti vanno alla finestra, e il testo che arriva
+        si mostra e si annuncia come sempre."""
         if self.dialogo_impostazioni is not None:
             return
+        if suono:
+            from . import temi
+
+            temi.suona("impostazioni")
         with dialoghi.FinestraImpostazioni(self, self.gestore.righe(), self.gestore.cambia) as dialogo:
             self.dialogo_impostazioni = dialogo
             try:

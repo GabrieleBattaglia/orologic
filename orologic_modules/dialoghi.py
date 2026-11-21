@@ -268,10 +268,11 @@ class FinestraPrompt(wx.Dialog):
     degli errori, vuote se il modello va bene. Conferma accetta solo un
     modello senza errori; Esc o Annulla annullano."""
 
-    def __init__(self, genitore, modello, aiuto, anteprima, errori):
+    def __init__(self, genitore, modello, aiuto, anteprima, errori, suono_d_errore=None):
         super().__init__(genitore, title=_("Prompt di gioco"), style=STILE_ADATTABILE)
         self._anteprima = anteprima
         self._errori = errori
+        self._suono_d_errore = suono_d_errore or wx.Bell
         pannello = pannello_scorrevole(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
         # L'ordine di creazione e' quello del Tab: il campo, l'esito, i
@@ -321,7 +322,7 @@ class FinestraPrompt(wx.Dialog):
     def conferma(self):
         """Un modello con errori non si conferma: l'esito dice perche'."""
         if self.aggiorna():
-            wx.Bell()
+            self._suono_d_errore()
             self.esito.SetFocus()
             return
         self.EndModal(wx.ID_OK)
