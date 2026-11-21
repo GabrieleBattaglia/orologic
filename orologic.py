@@ -389,7 +389,11 @@ def Main():
 
         elif scelta == "orologi":
             _suona("orologi")
-            menu_orologi()
+            # Nella finestra gli orologi stanno tutti in una finestra sola.
+            if strato.con_la_plancia():
+                strato.orologi()
+            else:
+                menu_orologi()
 
         elif scelta == "easyfish":
             _suona("easyfish")

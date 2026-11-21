@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-21 15:03+0100\n"
+"POT-Creation-Date: 2026-11-21 16:13+0100\n"
 "PO-Revision-Date: 2026-04-12 16:04+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fr <LL@li.org>\n"
@@ -268,7 +268,7 @@ msgstr ""
 "\n"
 "Chargement de la partie depuis le presse-papiers..."
 
-#: orologic.py:371 orologic_modules/game_flow.py:982
+#: orologic.py:371 orologic_modules/game_flow.py:988
 #: orologic_modules/gioca.py:82 orologic_modules/pgn_search.py:1337
 msgid ""
 "Il motore scacchistico non e' configurato. Vuoi configurarlo ora? (INVIO per"
@@ -277,23 +277,23 @@ msgstr ""
 "Le moteur d'échecs n'est pas configuré. Voulez-vous le configurer "
 "maintenant ? (ENTRÉE pour oui, ESC pour non) : "
 
-#: orologic.py:377 orologic_modules/game_flow.py:993
+#: orologic.py:377 orologic_modules/game_flow.py:999
 #: orologic_modules/pgn_search.py:1343
 msgid "Impossibile inizializzare il motore. Analisi annullata."
 msgstr "Impossible d'initialiser le moteur. Analyse annulée."
 
-#: orologic.py:383 orologic_modules/game_flow.py:1001
+#: orologic.py:383 orologic_modules/game_flow.py:1007
 #: orologic_modules/pgn_search.py:1349
 msgid "Desideri l'analisi automatica? (INVIO per si', ESC per manuale): "
 msgstr ""
 "Voulez-vous une analyse automatique? (ENTRÉE pour oui, ESC pour manuel) : "
 
-#: orologic.py:454 orologic_modules/easyfish/drawing.py:68
+#: orologic.py:458 orologic_modules/easyfish/drawing.py:68
 #: orologic_modules/lichess_app.py:1982
 msgid "sconosciuto"
 msgstr "inconnu"
 
-#: orologic.py:457
+#: orologic.py:461
 #, python-brace-format
 msgid ""
 "\n"
@@ -304,7 +304,7 @@ msgstr ""
 "Au revoir d'Orologic {v}.\n"
 "C'était notre {lc}e fois et nous nous sommes amusés ensemble pendant : {d}"
 
-#: orologic.py:470
+#: orologic.py:474
 msgid ""
 "\n"
 "Interruzione richiesta, chiudo Orologic."
@@ -312,7 +312,7 @@ msgstr ""
 "\n"
 "Interruption demandée, je ferme Orologic."
 
-#: orologic.py:474
+#: orologic.py:478
 msgid ""
 "\n"
 "Premi un tasto per uscire..."
@@ -471,48 +471,48 @@ msgstr "Erreur dans le coup des Noirs : {e}"
 msgid "M{m}"
 msgstr "M{m}"
 
-#: orologic_modules/board_utils.py:518
+#: orologic_modules/board_utils.py:522
 #, python-brace-format
 msgid "{giocatore} entra in fase {numero}, ha ora {tempo}"
 msgstr "{giocatore} entre dans la phase {numero}, a maintenant {tempo}"
 
-#: orologic_modules/board_utils.py:580
+#: orologic_modules/board_utils.py:584
 #, python-brace-format
 msgid "File {filename} non trovato."
 msgstr "Fichier {filename} introuvable."
 
-#: orologic_modules/board_utils.py:587
+#: orologic_modules/board_utils.py:591
 #, python-brace-format
 msgid "Errore durante la lettura di {filename}: {error}"
 msgstr "Erreur de lecture de {filename} : {error}"
 
-#: orologic_modules/board_utils.py:651
+#: orologic_modules/board_utils.py:655
 #, python-brace-format
 msgid "Caricate {num_entries} linee di apertura ECO."
 msgstr "{num_entries} lignes d'ouverture ECO chargées."
 
-#: orologic_modules/board_utils.py:777
+#: orologic_modules/board_utils.py:781
 msgid "Il testo e' vuoto o non contiene dati."
 msgstr "Le texte est vide ou ne contient aucune donnée."
 
-#: orologic_modules/board_utils.py:793
+#: orologic_modules/board_utils.py:797
 msgid "Impossibile trovare un PGN o una partita nel testo."
 msgstr "Impossible de trouver un PGN ou une partie dans le texte."
 
-#: orologic_modules/board_utils.py:802
+#: orologic_modules/board_utils.py:806
 msgid "Il testo non contiene un PGN valido."
 msgstr "Le texte ne contient pas de PGN valide."
 
-#: orologic_modules/board_utils.py:809
+#: orologic_modules/board_utils.py:813
 #, python-brace-format
 msgid "Partita {idx}: "
 msgstr "Partie {idx} : "
 
-#: orologic_modules/board_utils.py:814
+#: orologic_modules/board_utils.py:818
 msgid "Il PGN e' corrotto o contiene mosse non valide:\n"
 msgstr "Le PGN est corrompu ou contient des coups invalides :\n"
 
-#: orologic_modules/board_utils.py:837
+#: orologic_modules/board_utils.py:841
 msgid ""
 "Il PGN presentava lievi imperfezioni di layout ed e' stato corretto e "
 "aggiornato automaticamente."
@@ -520,23 +520,24 @@ msgstr ""
 "Le PGN présentait des imperfections mineures de mise en page et a été "
 "automatiquement corrigé et mis à jour."
 
-#: orologic_modules/board_utils.py:840
+#: orologic_modules/board_utils.py:844
 msgid "Il PGN e' perfettamente valido."
 msgstr "Le PGN est parfaitement valable."
 
-#: orologic_modules/board_utils.py:853
+#: orologic_modules/board_utils.py:857
 #, python-brace-format
 msgid "Errore imprevisto durante l'analisi del PGN: {error}"
 msgstr "Erreur inattendue lors de l'analyse du PGN : {error}"
 
-#: orologic_modules/board_utils.py:933 orologic_modules/cruscotto.py:69
-#: orologic_modules/cruscotto.py:217 orologic_modules/easyfish/constants.py:26
+#: orologic_modules/board_utils.py:937 orologic_modules/controlli.py:273
+#: orologic_modules/cruscotto.py:69 orologic_modules/cruscotto.py:217
+#: orologic_modules/easyfish/constants.py:26
 #: orologic_modules/easyfish/easyfish_app.py:725
 #: orologic_modules/easyfish/easyfish_app.py:1041
 #: orologic_modules/easyfish/game_mode.py:41
 #: orologic_modules/easyfish/game_mode.py:563
 #: orologic_modules/easyfish/interaction.py:113
-#: orologic_modules/engine.py:1399 orologic_modules/game_flow.py:1050
+#: orologic_modules/engine.py:1399 orologic_modules/game_flow.py:1056
 #: orologic_modules/lichess_app.py:1520 orologic_modules/lichess_app.py:2035
 #: orologic_modules/lichess_app.py:2170 orologic_modules/lichess_board.py:20
 #: orologic_modules/lichess_board.py:649 orologic_modules/lichess_board.py:972
@@ -548,14 +549,15 @@ msgstr "Erreur inattendue lors de l'analyse du PGN : {error}"
 msgid "Bianco"
 msgstr "Blancs"
 
-#: orologic_modules/board_utils.py:933 orologic_modules/cruscotto.py:70
-#: orologic_modules/cruscotto.py:218 orologic_modules/easyfish/constants.py:28
+#: orologic_modules/board_utils.py:937 orologic_modules/controlli.py:273
+#: orologic_modules/cruscotto.py:70 orologic_modules/cruscotto.py:218
+#: orologic_modules/easyfish/constants.py:28
 #: orologic_modules/easyfish/easyfish_app.py:725
 #: orologic_modules/easyfish/easyfish_app.py:1041
 #: orologic_modules/easyfish/game_mode.py:42
 #: orologic_modules/easyfish/game_mode.py:563
 #: orologic_modules/easyfish/interaction.py:113
-#: orologic_modules/engine.py:1400 orologic_modules/game_flow.py:1051
+#: orologic_modules/engine.py:1400 orologic_modules/game_flow.py:1057
 #: orologic_modules/lichess_app.py:1520 orologic_modules/lichess_app.py:2035
 #: orologic_modules/lichess_app.py:2170 orologic_modules/lichess_board.py:21
 #: orologic_modules/lichess_board.py:650 orologic_modules/lichess_board.py:972
@@ -567,11 +569,11 @@ msgstr "Blancs"
 msgid "Nero"
 msgstr "Noirs"
 
-#: orologic_modules/board_utils.py:945
+#: orologic_modules/board_utils.py:949
 msgid "Mosse dalla piu' lenta alla piu' rapida:"
 msgstr "Coups du plus lent au plus rapide :"
 
-#: orologic_modules/board_utils.py:952
+#: orologic_modules/board_utils.py:956
 msgid ""
 "\n"
 "Suddivisione della partita in 4 fasi:"
@@ -579,11 +581,11 @@ msgstr ""
 "\n"
 "Division de la partie en 4 phases :"
 
-#: orologic_modules/board_utils.py:956
+#: orologic_modules/board_utils.py:960
 msgid "nessuna mossa."
 msgstr "aucun coup."
 
-#: orologic_modules/board_utils.py:966
+#: orologic_modules/board_utils.py:970
 #, no-python-format, python-brace-format
 msgid ""
 "Q{num} da mossa {start_num} a mossa {end_num}: {time_str}, pari al "
@@ -591,16 +593,16 @@ msgid ""
 msgstr ""
 "Q{num} du coup {start_num} au coup {end_num} : {time_str}, soit {perc:.1f}"
 
-#: orologic_modules/board_utils.py:974
+#: orologic_modules/board_utils.py:978
 msgid "del tempo;"
 msgstr "du temps ;"
 
-#: orologic_modules/board_utils.py:981
+#: orologic_modules/board_utils.py:985
 #, python-brace-format
 msgid "La mossa piu' lenta e' la {move}, {time};"
 msgstr "Le coup le plus lent est {move}, {time} ;"
 
-#: orologic_modules/board_utils.py:987
+#: orologic_modules/board_utils.py:991
 #, python-brace-format
 msgid "la piu' veloce e' la {move}, {time}."
 msgstr "le plus rapide est {move}, {time}."
@@ -719,7 +721,7 @@ msgstr ""
 msgid "Scelta non valida. Premi v, c, oppure i."
 msgstr "Choix invalide. Appuyez sur v, c ou i."
 
-#: orologic_modules/clock.py:106
+#: orologic_modules/clock.py:113 orologic_modules/finestra_orologi.py:535
 msgid ""
 "Tempo non riconosciuto: scrivilo come ore:minuti:secondi, minuti:secondi o "
 "secondi."
@@ -727,161 +729,162 @@ msgstr ""
 "Temps non reconnu : écrivez-le sous la forme heures:minutes:secondes, "
 "minutes:secondes ou secondes."
 
-#: orologic_modules/clock.py:112
+#: orologic_modules/clock.py:119
 #, python-brace-format
 msgid "Tempo troppo breve: il minimo e' {quanto}."
 msgstr "Temps trop court : le minimum est {quanto}."
 
-#: orologic_modules/clock.py:121
+#: orologic_modules/clock.py:128
 msgid "Creazione orologi"
 msgstr "Création d'horloges"
 
-#: orologic_modules/clock.py:122
+#: orologic_modules/clock.py:129 orologic_modules/finestra_orologi.py:223
 msgid "Nome dell'orologio: "
 msgstr "Nom de l'horloge : "
 
-#: orologic_modules/clock.py:126
+#: orologic_modules/clock.py:133 orologic_modules/finestra_orologi.py:563
 msgid "Un orologio con questo nome esiste gia'."
 msgstr "Une horloge portant ce nom existe déjà."
 
-#: orologic_modules/clock.py:130
+#: orologic_modules/clock.py:137
 msgid ""
 "Bianco e Nero partono con lo stesso tempo? (Invio per si', 'n' per no): "
 msgstr ""
 "Les Blancs et les Noirs partent-ils avec le même temps ? (Entrée pour oui, "
 "'n' pour non) : "
 
-#: orologic_modules/clock.py:143
+#: orologic_modules/clock.py:150
 #, python-brace-format
 msgid "Tempo (hh:mm:ss) per fase {num}, punto per annullare: "
 msgstr "Temps (hh:mm:ss) pour la phase {num}, point pour annuler : "
 
-#: orologic_modules/clock.py:148 orologic_modules/clock.py:164
-#: orologic_modules/clock.py:177 orologic_modules/clock.py:217
+#: orologic_modules/clock.py:155 orologic_modules/clock.py:171
+#: orologic_modules/clock.py:184 orologic_modules/clock.py:224
 msgid "Creazione dell'orologio annullata."
 msgstr "Création de l'horloge annulée."
 
-#: orologic_modules/clock.py:151
+#: orologic_modules/clock.py:158
 #, python-brace-format
 msgid "Incremento in secondi per fase {num}: "
 msgstr "Incrément en secondes pour la phase {num} : "
 
-#: orologic_modules/clock.py:160
+#: orologic_modules/clock.py:167
 #, python-brace-format
 msgid "Tempo per il bianco (hh:mm:ss) fase {num}, punto per annullare: "
 msgstr "Temps pour les Blancs (hh:mm:ss) phase {num}, point pour annuler : "
 
-#: orologic_modules/clock.py:167
+#: orologic_modules/clock.py:174
 #, python-brace-format
 msgid "Incremento per il bianco fase {num}: "
 msgstr "Incrément pour les Blancs, phase {num} : "
 
-#: orologic_modules/clock.py:173
+#: orologic_modules/clock.py:180
 #, python-brace-format
 msgid "Tempo per il nero (hh:mm:ss) fase {num}, punto per annullare: "
 msgstr "Temps pour les Noirs (hh:mm:ss) phase {num}, point pour annuler : "
 
-#: orologic_modules/clock.py:180
+#: orologic_modules/clock.py:187
 #, python-brace-format
 msgid "Incremento per il nero fase {num}: "
 msgstr "Incrément pour les Noirs, phase {num} : "
 
-#: orologic_modules/clock.py:190
+#: orologic_modules/clock.py:197
 #, python-brace-format
 msgid "Numero di mosse per fase {num} (0 per terminare): "
 msgstr "Nombre de coups pour la phase {num} (0 pour terminer) : "
 
-#: orologic_modules/clock.py:203
+#: orologic_modules/clock.py:210
 msgid "Numero di allarmi da inserire (max 5, 0 per nessuno): "
 msgstr "Nombre d'alarmes à insérer (max 5, 0 pour aucune) : "
 
-#: orologic_modules/clock.py:212
+#: orologic_modules/clock.py:219
 #, python-brace-format
 msgid "Inserisci il tempo (mm:ss) per l'allarme {num}, punto per annullare: "
 msgstr "Entrez le temps (mm:ss) pour l'alarme {num}, point pour annuler : "
 
-#: orologic_modules/clock.py:222
+#: orologic_modules/clock.py:229 orologic_modules/finestra_orologi.py:229
 msgid "Inserisci una nota per l'orologio (opzionale): "
 msgstr "Saisissez une note pour l'horloge (facultatif) : "
 
-#: orologic_modules/clock.py:257
+#: orologic_modules/clock.py:264
 msgid "Orologio creato e salvato."
 msgstr "Horloge créée et enregistrée."
 
-#: orologic_modules/clock.py:263
+#: orologic_modules/clock.py:270 orologic_modules/controlli.py:173
 #, python-brace-format
 msgid "{t} piu' {i} di incremento"
 msgstr "{t} plus {i} d'incrément"
 
-#: orologic_modules/clock.py:282
+#: orologic_modules/clock.py:290 orologic_modules/finestra_orologi.py:235
 msgid "  Tempo uguale per i due colori"
 msgstr "  Temps égal pour les deux couleurs"
 
-#: orologic_modules/clock.py:284
+#: orologic_modules/clock.py:292
 msgid "  Tempi distinti per bianco e nero"
 msgstr "  Temps distincts pour les Blancs et les Noirs"
 
-#: orologic_modules/clock.py:289
+#: orologic_modules/clock.py:297 orologic_modules/finestra_orologi.py:125
 #, python-brace-format
 msgid "  fase {n}: {t}"
 msgstr "  phase {n} : {t}"
 
-#: orologic_modules/clock.py:296
+#: orologic_modules/clock.py:304
 #, python-brace-format
 msgid "  fase {n}, bianco: {t}"
 msgstr "  phase {n}, blancs : {t}"
 
-#: orologic_modules/clock.py:302
+#: orologic_modules/clock.py:310
 #, python-brace-format
 msgid "  fase {n}, nero: {t}"
 msgstr "  phase {n}, noirs : {t}"
 
-#: orologic_modules/clock.py:309
+#: orologic_modules/clock.py:318 orologic_modules/finestra_orologi.py:127
 #, python-brace-format
 msgid "  per: {n} mosse"
 msgstr "  pour : {n} coups"
 
-#: orologic_modules/clock.py:311
+#: orologic_modules/clock.py:320
 msgid "  per: tutte le mosse restanti"
 msgstr "  pour : tous les coups restants"
 
-#: orologic_modules/clock.py:316
+#: orologic_modules/clock.py:325 orologic_modules/finestra_orologi.py:131
 #, python-brace-format
 msgid "  allarmi a: {elenco}"
 msgstr "  alarmes à : {elenco}"
 
-#: orologic_modules/clock.py:321
+#: orologic_modules/clock.py:330 orologic_modules/finestra_orologi.py:133
 msgid "  nessun allarme"
 msgstr "  pas d'alarme"
 
-#: orologic_modules/clock.py:331
+#: orologic_modules/clock.py:340
 #, python-brace-format
 msgid "  creato {data}, ha {eta}"
 msgstr "  créé le {data}, il y a {eta}"
 
-#: orologic_modules/clock.py:338
+#: orologic_modules/clock.py:347
 msgid "  Tachimetro: questo orologio ha corso per 1 secondo."
 msgstr "  Compteur : cette pendule a tourné pendant 1 seconde."
 
-#: orologic_modules/clock.py:340
+#: orologic_modules/clock.py:349
 #, python-brace-format
 msgid "  Tachimetro: questo orologio ha corso per {n} secondi."
 msgstr "  Compteur : cette pendule a tourné pendant {n} secondes."
 
-#: orologic_modules/clock.py:371
+#: orologic_modules/clock.py:380
 #, python-brace-format
 msgid "Orologi {a} a {b} di {n}, ESC per uscire, un altro tasto continua"
 msgstr "Horloges {a} à {b} de {n}, ESC pour sortir, une autre touche continue"
 
-#: orologic_modules/clock.py:379
+#: orologic_modules/clock.py:388 orologic_modules/finestra_orologi.py:187
+#: orologic_modules/finestra_orologi.py:189
 msgid "Orologi salvati"
 msgstr "Horloges enregistrées"
 
-#: orologic_modules/clock.py:382 orologic_modules/clock.py:400
+#: orologic_modules/clock.py:391 orologic_modules/clock.py:409
 msgid "Nessun orologio salvato."
 msgstr "Aucune horloge enregistrée."
 
-#: orologic_modules/clock.py:391 orologic_modules/memoboard_app.py:584
+#: orologic_modules/clock.py:400 orologic_modules/memoboard_app.py:584
 #: orologic_modules/memoboard_app.py:617 orologic_modules/memoboard_app.py:695
 msgid ""
 "\n"
@@ -890,18 +893,18 @@ msgstr ""
 "\n"
 "Appuyez sur une touche pour revenir au menu..."
 
-#: orologic_modules/clock.py:426
+#: orologic_modules/clock.py:435
 msgid "Eliminazione di un orologio salvato"
 msgstr "Supprimer une horloge enregistrée"
 
-#: orologic_modules/clock.py:430
+#: orologic_modules/clock.py:439
 #, python-brace-format
 msgid "Sei sicuro di voler eliminare {name}? (INVIO per si', ESC per no): "
 msgstr ""
 "Êtes-vous sûr de vouloir supprimer {name} ? (ENTRÉE pour oui, ESC pour "
 "non) : "
 
-#: orologic_modules/clock.py:443
+#: orologic_modules/clock.py:452
 msgid "Orologio eliminato."
 msgstr "Horloge supprimée."
 
@@ -1304,6 +1307,218 @@ msgstr "Voir les horloges"
 msgid "Elimina orologio"
 msgstr "Supprimer l'horloge"
 
+#: orologic_modules/controlli.py:71
+msgid "Incremento"
+msgstr "Incrément"
+
+#: orologic_modules/controlli.py:72
+msgid "Ritardo"
+msgstr "Délai"
+
+#: orologic_modules/controlli.py:73
+msgid "Secondi del periodo"
+msgstr "Secondes de la période"
+
+#: orologic_modules/controlli.py:74
+msgid "Periodi"
+msgstr "Périodes"
+
+#: orologic_modules/controlli.py:75
+msgid "Minuti del periodo"
+msgstr "Minutes de la période"
+
+#: orologic_modules/controlli.py:76
+msgid "Mosse del periodo"
+msgstr "Coups de la période"
+
+#: orologic_modules/controlli.py:85
+msgid "Incremento dopo la mossa"
+msgstr "Incrément après le coup"
+
+#: orologic_modules/controlli.py:86
+msgid ""
+"a ogni mossa fatta si aggiungono i secondi dell'incremento; la prima mossa "
+"non ne ha. E' il modo di sempre di Orologic"
+msgstr ""
+"à chaque coup joué s'ajoutent les secondes de l'incrément ; le premier coup "
+"n'en a pas. C'est le mode habituel d'Orologic"
+
+#: orologic_modules/controlli.py:88
+msgid "Incremento prima della mossa, Fischer"
+msgstr "Incrément avant le coup, Fischer"
+
+#: orologic_modules/controlli.py:89
+msgid ""
+"l'incremento c'e' gia' alla partenza, e a ogni mossa fatta arriva quello per"
+" la mossa dopo, come nei DGT e nelle regole FIDE"
+msgstr ""
+"l'incrément est déjà là au départ, et chaque coup joué apporte celui du coup"
+" suivant, comme sur les DGT et dans les règles de la FIDE"
+
+#: orologic_modules/controlli.py:91
+msgid "Ritardo Bronstein"
+msgstr "Délai Bronstein"
+
+#: orologic_modules/controlli.py:92
+msgid ""
+"a ogni mossa fatta torna il tempo usato, fino ai secondi del ritardo, senza "
+"superare quello d'inizio turno; il ritardo c'e' gia' alla partenza"
+msgstr ""
+"à chaque coup joué, le temps utilisé est rendu, jusqu'aux secondes du délai,"
+" sans dépasser celui du début du tour ; le délai est déjà là au départ"
+
+#: orologic_modules/controlli.py:94
+msgid "Ritardo semplice, US delay"
+msgstr "Délai simple, US delay"
+
+#: orologic_modules/controlli.py:95
+msgid ""
+"a ogni turno il tempo resta fermo per i secondi del ritardo, poi scende; il "
+"ritardo non usato si perde"
+msgstr ""
+"à chaque tour, le temps reste figé pendant les secondes du délai, puis "
+"diminue ; le délai non utilisé est perdu"
+
+#: orologic_modules/controlli.py:97
+msgid "Clessidra"
+msgstr "Sablier"
+
+#: orologic_modules/controlli.py:98
+msgid ""
+"il tempo che usi passa all'avversario: la somma dei due orologi resta la "
+"stessa"
+msgstr ""
+"le temps que vous utilisez passe à l'adversaire : la somme des deux horloges"
+" reste la même"
+
+#: orologic_modules/controlli.py:100
+msgid "Byo-yomi giapponese"
+msgstr "Byo-yomi japonais"
+
+#: orologic_modules/controlli.py:101
+msgid ""
+"finito il tempo, ci sono i periodi: una mossa dentro un periodo lo fa "
+"ripartire intero, superarlo lo consuma; finiti i periodi cade la bandierina."
+" Solo nell'ultima fase"
+msgstr ""
+"le temps écoulé, viennent les périodes : un coup joué dans une période la "
+"fait repartir en entier, la dépasser la consomme ; les périodes épuisées, le"
+" drapeau tombe. Uniquement dans la dernière phase"
+
+#: orologic_modules/controlli.py:103
+msgid "Byo-yomi canadese"
+msgstr "Byo-yomi canadien"
+
+#: orologic_modules/controlli.py:104
+msgid ""
+"finito il tempo, le mosse del periodo vanno fatte nei minuti del periodo, "
+"contando quella in corso; fatte tutte, il periodo riparte. Solo nell'ultima "
+"fase"
+msgstr ""
+"le temps écoulé, les coups de la période doivent être joués dans les minutes"
+" de la période, en comptant le coup en cours ; quand ils sont tous joués, la"
+" période recommence. Uniquement dans la dernière phase"
+
+#: orologic_modules/controlli.py:106
+msgid "Conta in su"
+msgstr "Compte progressif"
+
+#: orologic_modules/controlli.py:107
+msgid ""
+"finito il tempo, la bandierina non cade: l'orologio conta in su il tempo in "
+"piu', come nello Scrabble. Solo nell'ultima fase"
+msgstr ""
+"le temps écoulé, le drapeau ne tombe pas : l'horloge compte en progressant "
+"le temps de dépassement, comme au Scrabble. Uniquement dans la dernière "
+"phase"
+
+#: orologic_modules/controlli.py:127
+#, python-brace-format
+msgid "{nome}: {descrizione}"
+msgstr "{nome} : {descrizione}"
+
+#: orologic_modules/controlli.py:174
+#, python-brace-format
+msgid "{t} piu' {i} di incremento prima della mossa"
+msgstr "{t} plus {i} d'incrément avant le coup"
+
+#: orologic_modules/controlli.py:176
+#, python-brace-format
+msgid "{t} con ritardo Bronstein di {d}"
+msgstr "{t} avec délai Bronstein de {d}"
+
+#: orologic_modules/controlli.py:178
+#, python-brace-format
+msgid "{t} con ritardo semplice di {d}"
+msgstr "{t} avec délai simple de {d}"
+
+#: orologic_modules/controlli.py:180
+#, python-brace-format
+msgid "{t} a clessidra"
+msgstr "{t} en sablier"
+
+#: orologic_modules/controlli.py:182
+#, python-brace-format
+msgid "{t} piu' byo-yomi di {n} periodi da {p}"
+msgstr "{t} plus byo-yomi de {n} périodes de {p}"
+
+#: orologic_modules/controlli.py:184
+#, python-brace-format
+msgid "{t} piu' byo-yomi canadese di {m} mosse in {p}"
+msgstr "{t} plus byo-yomi canadien de {m} coups en {p}"
+
+#: orologic_modules/controlli.py:186
+#, python-brace-format
+msgid "{t}, poi conta in su"
+msgstr "{t}, puis compte progressif"
+
+#: orologic_modules/controlli.py:214 orologic_modules/localizzazione.py:43
+#: orologic_modules/localizzazione.py:159 orologic_modules/ui.py:322
+#: orologic_modules/ui.py:869
+msgid "bianco"
+msgstr "blanc"
+
+#: orologic_modules/controlli.py:214 orologic_modules/localizzazione.py:49
+#: orologic_modules/localizzazione.py:159 orologic_modules/ui.py:334
+#: orologic_modules/ui.py:869
+msgid "nero"
+msgstr "noir"
+
+#: orologic_modules/controlli.py:215
+#, python-brace-format
+msgid "Fase {n}, {chi}: tempo troppo breve, il minimo e' {quanto}."
+msgstr "Phase {n}, {chi} : temps trop court, le minimum est {quanto}."
+
+#: orologic_modules/controlli.py:224
+#, python-brace-format
+msgid "Fase {n}: {nome} sta solo nell'ultima fase."
+msgstr "Phase {n} : {nome} n'est possible que dans la dernière phase."
+
+#: orologic_modules/controlli.py:336
+#, python-brace-format
+msgid "{chi} entra nel byo-yomi: {n} periodi da {p}."
+msgstr "{chi} entre en byo-yomi : {n} périodes de {p}."
+
+#: orologic_modules/controlli.py:343
+#, python-brace-format
+msgid "{chi} entra nel byo-yomi canadese: {m} mosse in {p}."
+msgstr "{chi} entre en byo-yomi canadien : {m} coups en {p}."
+
+#: orologic_modules/controlli.py:347
+#, python-brace-format
+msgid "{chi}: tempo finito, l'orologio ora conta in su."
+msgstr "{chi} : temps écoulé, l'horloge passe en compte progressif."
+
+#: orologic_modules/controlli.py:353
+#, python-brace-format
+msgid "{chi}: periodo consumato, ne restano {n}."
+msgstr "{chi} : période consommée, il en reste {n}."
+
+#: orologic_modules/controlli.py:392
+#, python-brace-format
+msgid "{chi}: periodo canadese nuovo, {m} mosse in {p}."
+msgstr "{chi} : nouvelle période canadienne, {m} coups en {p}."
+
 #: orologic_modules/cruscotto.py:130
 #, python-brace-format
 msgid "in {tempo}"
@@ -1404,7 +1619,7 @@ msgstr ""
 "{titolo}. Entrée pour modifier, Esc pour fermer, Maj+Tab pour aller au "
 "filtre."
 
-#: orologic_modules/dialoghi.py:91
+#: orologic_modules/dialoghi.py:91 orologic_modules/finestra_orologi.py:204
 msgid "Chiudi"
 msgstr "Fermer"
 
@@ -1509,7 +1724,7 @@ msgstr "Fond du panneau de commande"
 msgid "Sfondo area"
 msgstr "Fond de la zone"
 
-#: orologic_modules/dialoghi.py:744 orologic_modules/finestra.py:440
+#: orologic_modules/dialoghi.py:744 orologic_modules/finestra.py:452
 msgid "Plancia"
 msgstr "Panneau de commande"
 
@@ -2454,26 +2669,142 @@ msgstr "Entrez le move overhead en millisecondes (min : 0, max : 500) : "
 msgid "Configurazione del motore salvata."
 msgstr "Configuration du moteur enregistrée."
 
-#: orologic_modules/finestra.py:435
+#: orologic_modules/finestra.py:447
 #, python-brace-format
 msgid "Orologic {versione}"
 msgstr "Orologic {versione}"
 
-#: orologic_modules/finestra.py:442
+#: orologic_modules/finestra.py:454
 msgid "Console"
 msgstr "Console"
 
-#: orologic_modules/game_flow.py:33
+#: orologic_modules/finestra_orologi.py:124
+#, python-brace-format
+msgid "bianco {b}, nero {n}"
+msgstr "blancs {b}, noirs {n}"
+
+#: orologic_modules/finestra_orologi.py:134
+#, python-brace-format
+msgid "{nome}: {sommario}"
+msgstr "{nome} : {sommario}"
+
+#: orologic_modules/finestra_orologi.py:174
+msgid "Orologi"
+msgstr "Horloges"
+
+#: orologic_modules/finestra_orologi.py:192
+msgid "&Modifica"
+msgstr "&Modifier"
+
+#: orologic_modules/finestra_orologi.py:193
+msgid "&Vedi"
+msgstr "&Voir"
+
+#: orologic_modules/finestra_orologi.py:200
+#: orologic_modules/finestra_orologi.py:202
+msgid "Scheda dell'orologio"
+msgstr "Fiche de l'horloge"
+
+#: orologic_modules/finestra_orologi.py:237
+#: orologic_modules/finestra_orologi.py:239
+msgid "Fasi"
+msgstr "Phases"
+
+#: orologic_modules/finestra_orologi.py:254
+msgid "Mosse della fase, 0 per tutte le restanti:"
+msgstr "Coups de la phase, 0 pour tous les coups restants :"
+
+#: orologic_modules/finestra_orologi.py:255
+#: orologic_modules/finestra_orologi.py:257
+msgid "Tipologia"
+msgstr "Type"
+
+#: orologic_modules/finestra_orologi.py:259
+#: orologic_modules/finestra_orologi.py:261
+msgid "Allarmi"
+msgstr "Alarmes"
+
+#: orologic_modules/finestra_orologi.py:263
+msgid "Tempo dell'allarme (mm:ss):"
+msgstr "Temps de l'alarme (mm:ss) :"
+
+#: orologic_modules/finestra_orologi.py:269
+msgid "&Salva"
+msgstr "&Enregistrer"
+
+#: orologic_modules/finestra_orologi.py:270 orologic_modules/pub.py:22
+msgid "&Annulla"
+msgstr "&Annuler"
+
+#: orologic_modules/finestra_orologi.py:290
+msgid "Crea nuovo"
+msgstr "Créer une horloge"
+
+#: orologic_modules/finestra_orologi.py:320
+#, python-brace-format
+msgid "Sei sicuro di voler eliminare {name}?"
+msgstr "Êtes-vous sûr de vouloir supprimer {name} ?"
+
+#: orologic_modules/finestra_orologi.py:381
+#, python-brace-format
+msgid "Fase {n}"
+msgstr "Phase {n}"
+
+#: orologic_modules/finestra_orologi.py:383
+msgid "Nuova fase"
+msgstr "Nouvelle phase"
+
+#: orologic_modules/finestra_orologi.py:431
+#, python-brace-format
+msgid "{campo} del Bianco"
+msgstr "{campo} des Blancs"
+
+#: orologic_modules/finestra_orologi.py:432
+#, python-brace-format
+msgid "{campo} del Nero"
+msgstr "{campo} des Noirs"
+
+#: orologic_modules/finestra_orologi.py:434
+msgid "Ore"
+msgstr "Heures"
+
+#: orologic_modules/finestra_orologi.py:435
+msgid "Minuti"
+msgstr "Minutes"
+
+#: orologic_modules/finestra_orologi.py:436
+msgid "Secondi"
+msgstr "Secondes"
+
+#: orologic_modules/finestra_orologi.py:500
+#, python-brace-format
+msgid "Allarme {n}: {t}"
+msgstr "Alarme {n} : {t}"
+
+#: orologic_modules/finestra_orologi.py:502
+msgid "Nuovo allarme"
+msgstr "Nouvelle alarme"
+
+#: orologic_modules/finestra_orologi.py:560
+msgid "Scrivi il nome dell'orologio."
+msgstr "Écrivez le nom de l'horloge."
+
+#: orologic_modules/finestra_orologi.py:570
+#, python-brace-format
+msgid "La fase {n} ha 0 mosse: la fase dopo non comincerebbe mai."
+msgstr "La phase {n} a 0 coup : la phase suivante ne commencerait jamais."
+
+#: orologic_modules/game_flow.py:34
 msgid "Ricostruzione dello stato della partita..."
 msgstr "Reconstruction de l'état de la partie..."
 
-#: orologic_modules/game_flow.py:71
+#: orologic_modules/game_flow.py:76
 msgid "Attenzione: PGN non valido nel file di salvataggio. Ne creo uno nuovo."
 msgstr ""
 "Avertissement : PGN non valide dans le fichier de sauvegarde. Je vais en "
 "créer un nouveau."
 
-#: orologic_modules/game_flow.py:79
+#: orologic_modules/game_flow.py:84
 #, python-brace-format
 msgid ""
 "Errore nella lettura del PGN salvato: {error}. La partita riprendera' senza "
@@ -2482,27 +2813,27 @@ msgstr ""
 "Erreur de lecture du PGN enregistré : {error}. La partie reprendra sans "
 "historique PGN."
 
-#: orologic_modules/game_flow.py:92
+#: orologic_modules/game_flow.py:100
 #, python-brace-format
 msgid "Bianco: {player} - Tempo: {time}"
 msgstr "Blanc : {player} - Temps : {time}"
 
-#: orologic_modules/game_flow.py:98
+#: orologic_modules/game_flow.py:106
 #, python-brace-format
 msgid "Nero: {player} - Tempo: {time}"
 msgstr "Noir : {player} - Temps : {time}"
 
-#: orologic_modules/game_flow.py:111
+#: orologic_modules/game_flow.py:119
 #, python-brace-format
 msgid "Ultima mossa: {move}"
 msgstr "Dernier coup : {move}"
 
-#: orologic_modules/game_flow.py:117
+#: orologic_modules/game_flow.py:125
 #, python-brace-format
 msgid "Tocca a: {player}"
 msgstr "C'est au tour de : {player}"
 
-#: orologic_modules/game_flow.py:155
+#: orologic_modules/game_flow.py:165
 #, python-brace-format
 msgid ""
 "\n"
@@ -2511,11 +2842,11 @@ msgstr ""
 "\n"
 "[Erreur lors de la sauvegarde automatique : {error}]"
 
-#: orologic_modules/game_flow.py:251
+#: orologic_modules/game_flow.py:261
 msgid "Comandi disponibili:"
 msgstr "Commandes disponibles :"
 
-#: orologic_modules/game_flow.py:278
+#: orologic_modules/game_flow.py:288
 msgid ""
 "Per annullare una mossa bisogna prima fermare gli orologi con il comando "
 "punto p."
@@ -2523,34 +2854,34 @@ msgstr ""
 "Pour annuler un coup, il faut d'abord arrêter les horloges avec la commande "
 "point p."
 
-#: orologic_modules/game_flow.py:284
+#: orologic_modules/game_flow.py:294
 msgid "Non c'e' nessuna mossa da annullare."
 msgstr "Il n'y a aucun coup à annuler."
 
-#: orologic_modules/game_flow.py:335
+#: orologic_modules/game_flow.py:340
 msgid "Rientro nella fase precedente, tolto il tempo aggiunto."
 msgstr "Retour à la phase précédente, temps ajouté retiré."
 
-#: orologic_modules/game_flow.py:344
+#: orologic_modules/game_flow.py:350
 #, python-brace-format
 msgid "Ultima mossa annullata: {mossa}"
 msgstr "Dernier coup annulé : {mossa}"
 
-#: orologic_modules/game_flow.py:380
+#: orologic_modules/game_flow.py:386
 #, python-brace-format
 msgid "Risultato assegnato: {risultato}"
 msgstr "Résultat attribué : {risultato}"
 
-#: orologic_modules/game_flow.py:413
+#: orologic_modules/game_flow.py:419
 #, python-brace-format
 msgid "Commento registrato per la mossa {mossa}"
 msgstr "Commentaire enregistré pour le coup {mossa}"
 
-#: orologic_modules/game_flow.py:418
+#: orologic_modules/game_flow.py:424
 msgid "Nessuna mossa da commentare."
 msgstr "Aucun coup à commenter."
 
-#: orologic_modules/game_flow.py:434
+#: orologic_modules/game_flow.py:440
 #, python-brace-format
 msgid "Scacco matto! Vince {winner}."
 msgstr "Échec et mat! {winner} gagne."
@@ -2558,59 +2889,59 @@ msgstr "Échec et mat! {winner} gagne."
 #: orologic_modules/easyfish/easyfish_app.py:122
 #: orologic_modules/easyfish/game_mode.py:666
 #: orologic_modules/easyfish/game_mode.py:812
-#: orologic_modules/game_flow.py:461
+#: orologic_modules/game_flow.py:467
 msgid "Patta per stallo!"
 msgstr "Nulle par pat !"
 
 #: orologic_modules/easyfish/easyfish_app.py:148
 #: orologic_modules/easyfish/game_mode.py:692
 #: orologic_modules/easyfish/game_mode.py:840
-#: orologic_modules/game_flow.py:488
+#: orologic_modules/game_flow.py:494
 msgid "Patta per materiale insufficiente!"
 msgstr "Nulle par manque de matériel !"
 
 #: orologic_modules/easyfish/game_mode.py:868
-#: orologic_modules/game_flow.py:515
+#: orologic_modules/game_flow.py:521
 msgid "Patta per la regola delle 75 mosse!"
 msgstr "Nulle par la règle des 75 coups !"
 
 #: orologic_modules/easyfish/game_mode.py:896
-#: orologic_modules/game_flow.py:542
+#: orologic_modules/game_flow.py:548
 msgid "Patta per ripetizione della posizione (5 volte)!"
 msgstr "Nulle par la répétition de la position (5 fois) !"
 
 #: orologic_modules/easyfish/game_mode.py:924
-#: orologic_modules/game_flow.py:569
+#: orologic_modules/game_flow.py:575
 msgid "Patta per la regola delle 50 mosse!"
 msgstr "Nulle par la règle des 50 coups !"
 
 #: orologic_modules/easyfish/game_mode.py:952
-#: orologic_modules/game_flow.py:596
+#: orologic_modules/game_flow.py:602
 msgid "Patta per triplice ripetizione della posizione!"
 msgstr "Nulle par la triple répétition de la position !"
 
-#: orologic_modules/game_flow.py:646
+#: orologic_modules/game_flow.py:652
 #, python-brace-format
 msgid "La cartella di sempre non era scrivibile: {errore}"
 msgstr "Le dossier habituel n'était pas accessible en écriture : {errore}"
 
-#: orologic_modules/game_flow.py:650
+#: orologic_modules/game_flow.py:656
 #, python-brace-format
 msgid "PGN salvato come {percorso}."
 msgstr "PGN enregistré sous {percorso}."
 
-#: orologic_modules/game_flow.py:653
+#: orologic_modules/game_flow.py:659
 #, python-brace-format
 msgid "Non sono riuscita a salvare il PGN su disco: {errore}"
 msgstr "Je n'ai pas pu enregistrer le PGN sur le disque : {errore}"
 
-#: orologic_modules/game_flow.py:657
+#: orologic_modules/game_flow.py:663
 msgid "La partita resta negli appunti, incollala subito da qualche parte."
 msgstr ""
 "La partie reste dans le presse-papiers, collez-la immédiatement quelque "
 "part."
 
-#: orologic_modules/game_flow.py:682 orologic_modules/tempo_app.py:113
+#: orologic_modules/game_flow.py:688 orologic_modules/tempo_app.py:115
 msgid ""
 "\n"
 "Tempo scaduto!"
@@ -2618,7 +2949,7 @@ msgstr ""
 "\n"
 "Le temps est écoulé !"
 
-#: orologic_modules/game_flow.py:685
+#: orologic_modules/game_flow.py:691
 msgid ""
 "Premere INVIO per continuare la partita senza orologio, oppure ESC per "
 "terminare e assegnare la vittoria."
@@ -2626,19 +2957,19 @@ msgstr ""
 "Appuyez sur ENTRÉE pour continuer la partie sans horloge, ou sur ESC pour "
 "terminer et attribuer la victoire."
 
-#: orologic_modules/game_flow.py:689
+#: orologic_modules/game_flow.py:695
 msgid "Scegli, INVIO o ESC: "
 msgstr "Choisissez, ENTRÉE ou ESC : "
 
-#: orologic_modules/game_flow.py:695
+#: orologic_modules/game_flow.py:701
 msgid "Vince il Nero per tempo."
 msgstr "Les Noirs gagnent au temps."
 
-#: orologic_modules/game_flow.py:698
+#: orologic_modules/game_flow.py:704
 msgid "Vince il Bianco per tempo."
 msgstr "Les Blancs gagnent au temps."
 
-#: orologic_modules/game_flow.py:706
+#: orologic_modules/game_flow.py:712
 msgid ""
 "Partita continuata senza limiti di tempo. Usa i comandi .1-0, .0-1, .1/2, .*"
 " per terminare."
@@ -2646,11 +2977,11 @@ msgstr ""
 "La partie continue sans limite de temps. Utilisez les commandes .1-0, .0-1, "
 ".1/2, .* pour terminer."
 
-#: orologic_modules/game_flow.py:755 orologic_modules/tempo_app.py:242
+#: orologic_modules/game_flow.py:761 orologic_modules/tempo_app.py:233
 msgid "Comando non riconosciuto."
 msgstr "Commande non reconnue."
 
-#: orologic_modules/game_flow.py:760
+#: orologic_modules/game_flow.py:766
 msgid ""
 "Non e' possibile inserire nuove mosse mentre il tempo e' in pausa. Riavvia "
 "il tempo con .p"
@@ -2658,25 +2989,25 @@ msgstr ""
 "Il n'est pas possible d'insérer de nouveaux coups pendant que le temps est "
 "en pause. Redémarrez le temps avec .p"
 
-#: orologic_modules/game_flow.py:829
+#: orologic_modules/game_flow.py:835
 msgid " proposta di patta"
 msgstr " proposition de nulle"
 
-#: orologic_modules/game_flow.py:832 orologic_modules/localizzazione.py:76
+#: orologic_modules/game_flow.py:838 orologic_modules/localizzazione.py:76
 msgid "proposta di patta"
 msgstr "proposition de nulle"
 
-#: orologic_modules/game_flow.py:840
+#: orologic_modules/game_flow.py:846
 #, python-brace-format
 msgid "Mosse annullate: {mosse}"
 msgstr "Coups annulés : {mosse}"
 
-#: orologic_modules/game_flow.py:867
+#: orologic_modules/game_flow.py:873
 #, python-brace-format
 msgid "Apertura rilevata: {apertura}"
 msgstr "Ouverture détectée : {apertura}"
 
-#: orologic_modules/game_flow.py:895
+#: orologic_modules/game_flow.py:901
 #, python-brace-format
 msgid ""
 "Mossa '{move}' non valida. Alternative:\n"
@@ -2686,11 +3017,11 @@ msgstr ""
 "{alternatives}"
 
 #: orologic_modules/easyfish/game_mode.py:1413
-#: orologic_modules/game_flow.py:907
+#: orologic_modules/game_flow.py:913
 msgid "Partita terminata."
 msgstr "Partie terminée."
 
-#: orologic_modules/game_flow.py:915 orologic_modules/gioca.py:156
+#: orologic_modules/game_flow.py:921 orologic_modules/gioca.py:156
 #: orologic_modules/lichess_board.py:1427
 msgid ""
 "Vuoi vedere come hai usato il tempo a tua disposizione? (INVIO per si', ESC "
@@ -2699,7 +3030,7 @@ msgstr ""
 "Voulez-vous voir comment vous avez utilisé le temps dont vous disposiez ? "
 "(ENTRÉE pour oui, ESC pour non) : "
 
-#: orologic_modules/game_flow.py:921 orologic_modules/gioca.py:163
+#: orologic_modules/game_flow.py:927 orologic_modules/gioca.py:163
 #: orologic_modules/lichess_board.py:1435
 msgid "Desideri salvare i tempi mossa nel PGN? (INVIO per si', ESC per no): "
 msgstr ""
@@ -2707,21 +3038,21 @@ msgstr ""
 "ESC pour non) : "
 
 #: orologic_modules/easyfish/pgn_handler.py:30
-#: orologic_modules/game_flow.py:949 orologic_modules/gioca.py:183
+#: orologic_modules/game_flow.py:955 orologic_modules/gioca.py:183
 msgid "PGN copiato negli appunti."
 msgstr "PGN copié dans le presse-papiers."
 
-#: orologic_modules/game_flow.py:952 orologic_modules/gioca.py:185
+#: orologic_modules/game_flow.py:958 orologic_modules/gioca.py:185
 #: orologic_modules/lichess_profiler.py:629
 #, python-brace-format
 msgid "Errore durante la copia del PGN negli appunti: {error}"
 msgstr "Erreur lors de la copie du PGN dans le presse-papier : {error}"
 
-#: orologic_modules/game_flow.py:966
+#: orologic_modules/game_flow.py:972
 msgid "File di salvataggio automatico eliminato."
 msgstr "Fichier de sauvegarde automatique supprimé."
 
-#: orologic_modules/game_flow.py:970
+#: orologic_modules/game_flow.py:976
 #, python-brace-format
 msgid ""
 "\n"
@@ -2730,15 +3061,15 @@ msgstr ""
 "\n"
 "[Avertissement : Impossible de supprimer le fichier de sauvegarde automatique : {error}]"
 
-#: orologic_modules/game_flow.py:975
+#: orologic_modules/game_flow.py:981
 msgid "Vuoi analizzare la partita? (INVIO per si', ESC per no): "
 msgstr "Voulez-vous analyser la partie ? (ENTRÉE pour oui, ESC pour non) : "
 
-#: orologic_modules/game_flow.py:990
+#: orologic_modules/game_flow.py:996
 msgid "Motore non configurato. Ritorno al menu'."
 msgstr "Moteur non configuré. Retour au menu."
 
-#: orologic_modules/game_flow.py:1016
+#: orologic_modules/game_flow.py:1022
 msgid ""
 "\n"
 "Avvio partita\n"
@@ -2746,7 +3077,7 @@ msgstr ""
 "\n"
 "Démarrer la partie\n"
 
-#: orologic_modules/game_flow.py:1019
+#: orologic_modules/game_flow.py:1025
 msgid ""
 "Vuoi giocare alla variante standard (scacchi standard)? (INVIO per si', ESC "
 "per Fischer Random): "
@@ -2754,44 +3085,44 @@ msgstr ""
 "Voulez-vous jouer à la variante standard (échecs standard) ? (ENTRÉE pour "
 "oui, ESC pour Fischer Random) : "
 
-#: orologic_modules/game_flow.py:1055
+#: orologic_modules/game_flow.py:1061
 msgid "Sede sconosciuta"
 msgstr "Lieu inconnu"
 
-#: orologic_modules/game_flow.py:1061
+#: orologic_modules/game_flow.py:1067
 msgid "Nome del bianco"
 msgstr "Nom du blanc"
 
-#: orologic_modules/game_flow.py:1062
+#: orologic_modules/game_flow.py:1068
 msgid "Nome del nero"
 msgstr "Nom du noir"
 
-#: orologic_modules/game_flow.py:1063
+#: orologic_modules/game_flow.py:1069
 msgid "Elo del bianco"
 msgstr "Elo du blanc"
 
-#: orologic_modules/game_flow.py:1064
+#: orologic_modules/game_flow.py:1070
 msgid "Elo del nero"
 msgstr "Elo du noir"
 
-#: orologic_modules/game_flow.py:1065
+#: orologic_modules/game_flow.py:1071
 msgid "Evento"
 msgstr "Événement"
 
-#: orologic_modules/game_flow.py:1066
+#: orologic_modules/game_flow.py:1072
 msgid "Sede"
 msgstr "Site"
 
-#: orologic_modules/game_flow.py:1067
+#: orologic_modules/game_flow.py:1073
 msgid "Round"
 msgstr "Ronde"
 
-#: orologic_modules/game_flow.py:1072
+#: orologic_modules/game_flow.py:1078
 #, python-brace-format
 msgid "{domanda} [{predefinito}]: "
 msgstr "{domanda} [{predefinito}] : "
 
-#: orologic_modules/game_flow.py:1123
+#: orologic_modules/game_flow.py:1129
 msgid "Premi un tasto qualsiasi per iniziare la partita quando sei pronto..."
 msgstr ""
 "Appuyez sur n'importe quelle touche pour démarrer la partie lorsque vous "
@@ -6411,12 +6742,6 @@ msgstr "Gustav"
 msgid "Hotel"
 msgstr "Hector"
 
-#: orologic_modules/localizzazione.py:43
-#: orologic_modules/localizzazione.py:159 orologic_modules/ui.py:322
-#: orologic_modules/ui.py:869
-msgid "bianco"
-msgstr "blanc"
-
 #: orologic_modules/localizzazione.py:44
 #: orologic_modules/localizzazione.py:160 orologic_modules/ui.py:320
 msgid "bianca"
@@ -6431,12 +6756,6 @@ msgstr "blancs"
 #: orologic_modules/localizzazione.py:162 orologic_modules/ui.py:315
 msgid "bianche"
 msgstr "blanches"
-
-#: orologic_modules/localizzazione.py:49
-#: orologic_modules/localizzazione.py:159 orologic_modules/ui.py:334
-#: orologic_modules/ui.py:869
-msgid "nero"
-msgstr "noir"
 
 #: orologic_modules/localizzazione.py:50
 #: orologic_modules/localizzazione.py:160 orologic_modules/ui.py:332
@@ -7385,12 +7704,12 @@ msgstr "L'invite par défaut est rétablie."
 msgid "Modello del prompt salvato."
 msgstr "Modèle de l'invite enregistré."
 
-#: orologic_modules/orologio.py:165
+#: orologic_modules/orologio.py:168
 #, python-brace-format
 msgid "Allarme {n}, {chi} e' sceso a {quanto}"
 msgstr "Alarme {n}, {chi} est descendu à {quanto}"
 
-#: orologic_modules/orologio.py:194
+#: orologic_modules/orologio.py:204
 #, python-brace-format
 msgid "Bandierina caduta: tempo scaduto per {chi}."
 msgstr "Chute du drapeau : temps écoulé pour {chi}."
@@ -7917,10 +8236,6 @@ msgstr "&Pas à pas"
 msgid "&OK"
 msgstr "&OK"
 
-#: orologic_modules/pub.py:22
-msgid "&Annulla"
-msgstr "&Annuler"
-
 #: orologic_modules/pub.py:24
 msgid ""
 "Non trovo un programma di posta, oppure non si è aperto: prepariamo la mail "
@@ -8337,17 +8652,17 @@ msgstr "La mise à jour a échoué, je redémarre le moteur précédent."
 msgid "Aggiornamento completato."
 msgstr "Mise à jour terminée."
 
-#: orologic_modules/storage.py:212
+#: orologic_modules/storage.py:225
 #, python-brace-format
 msgid "Il database delle impostazioni non e' leggibile: {errore}"
 msgstr "La base de données des paramètres n'est pas lisible : {errore}"
 
-#: orologic_modules/storage.py:218
+#: orologic_modules/storage.py:231
 #, python-brace-format
 msgid "Ne ho messo da parte una copia in {percorso}"
 msgstr "J'ai enregistré une copie dans {percorso}"
 
-#: orologic_modules/storage.py:222
+#: orologic_modules/storage.py:235
 msgid ""
 "Riparto dalle impostazioni predefinite, gli orologi salvati non sono andati "
 "perduti nella copia."
@@ -8355,17 +8670,17 @@ msgstr ""
 "Je redémarre avec les paramètres par défaut, les horloges enregistrées n'ont"
 " pas été perdues dans la copie."
 
-#: orologic_modules/storage.py:226
+#: orologic_modules/storage.py:239
 msgid "Attenzione: non sono riuscita a metterne da parte una copia."
 msgstr "Attention : je n'ai pas pu mettre de côté une copie."
 
-#: orologic_modules/storage.py:231
+#: orologic_modules/storage.py:244
 #, python-brace-format
 msgid "Ho ignorato {numero} orologi salvati perche' incompleti."
 msgstr ""
 "J'ai ignoré {numero} horloges enregistrées car elles étaient incomplètes."
 
-#: orologic_modules/storage.py:277
+#: orologic_modules/storage.py:290
 #, python-brace-format
 msgid "Errore nel salvataggio del database: {errore}"
 msgstr "Erreur lors de l'enregistrement de la base de données : {errore}"
@@ -8455,33 +8770,33 @@ msgid "Premi un tasto qualsiasi per iniziare quando sei pronto..."
 msgstr ""
 "Appuyez sur n'importe quelle touche pour commencer quand vous êtes prêt..."
 
-#: orologic_modules/tempo_app.py:116
+#: orologic_modules/tempo_app.py:118
 msgid "Premere INVIO per continuare senza orologio, oppure ESC per terminare."
 msgstr ""
 "Appuyez sur ENTRÉE pour continuer sans horloge, ou sur ESC pour terminer."
 
-#: orologic_modules/tempo_app.py:128
+#: orologic_modules/tempo_app.py:130
 msgid "Partita continuata senza limiti di tempo. Usa '.' per terminare."
 msgstr "La partie continue sans limite de temps. Utilisez '.' pour terminer."
 
-#: orologic_modules/tempo_app.py:168
+#: orologic_modules/tempo_app.py:170
 msgid "Comando non disponibile: orologio disabilitato."
 msgstr "Commande non disponible : horloge désactivée."
 
-#: orologic_modules/tempo_app.py:185
+#: orologic_modules/tempo_app.py:187
 msgid "Comandi disponibili nella modalita' Tempo:"
 msgstr "Commandes disponibles en mode Temps :"
 
-#: orologic_modules/tempo_app.py:195
+#: orologic_modules/tempo_app.py:197
 msgid "Nulla da eliminare."
 msgstr "Rien à supprimer."
 
-#: orologic_modules/tempo_app.py:235
+#: orologic_modules/tempo_app.py:226
 #, python-brace-format
 msgid "Ultimo input '{move}' eliminato."
 msgstr "Dernière entrée '{move}' supprimée."
 
-#: orologic_modules/tempo_app.py:249
+#: orologic_modules/tempo_app.py:240
 msgid ""
 "Non e' possibile inserire note mentre il tempo e' in pausa. Riavvia il tempo"
 " con .p"
@@ -8489,117 +8804,117 @@ msgstr ""
 "Il n'est pas possible d'insérer des notes pendant que le temps est en pause."
 " Redémarrez le temps avec .p"
 
-#: orologic_modules/tempo_app.py:303
+#: orologic_modules/tempo_app.py:280
 msgid "Riepilogo Sessione Tempo"
 msgstr "Résumé de la session Temps"
 
-#: orologic_modules/tempo_app.py:305
+#: orologic_modules/tempo_app.py:282
 #, python-brace-format
 msgid "Tempo rimasto al Bianco: {time}"
 msgstr "Temps restant des Blancs : {time}"
 
-#: orologic_modules/tempo_app.py:310
+#: orologic_modules/tempo_app.py:287
 #, python-brace-format
 msgid "Tempo rimasto al Nero: {time}"
 msgstr "Temps restant des Noirs : {time}"
 
-#: orologic_modules/tempo_app.py:314
+#: orologic_modules/tempo_app.py:291
 #, python-brace-format
 msgid "Numero di mosse giocate: {n}"
 msgstr "Nombre de coups joués : {n}"
 
-#: orologic_modules/tempo_app.py:316
+#: orologic_modules/tempo_app.py:293
 #, python-brace-format
 msgid "Tempo totale di gioco: {time}"
 msgstr "Temps de jeu total : {time}"
 
-#: orologic_modules/tempo_app.py:321
+#: orologic_modules/tempo_app.py:298
 #, python-brace-format
 msgid "Tempo totale in pausa: {time}"
 msgstr "Temps total en pause : {time}"
 
-#: orologic_modules/tempo_app.py:326
+#: orologic_modules/tempo_app.py:303
 #, python-brace-format
 msgid "Tempo totale + tempo in pausa: {time}"
 msgstr "Temps total + temps en pause : {time}"
 
-#: orologic_modules/tempo_app.py:341
+#: orologic_modules/tempo_app.py:318
 msgid "Premi un tasto qualsiasi per tornare al menu'..."
 msgstr "Appuyez sur une touche pour revenir au menu..."
 
-#: orologic_modules/tempo_app.py:356
+#: orologic_modules/tempo_app.py:333
 msgid "Sessione Orologio - Tempo\n"
 msgstr "Session Horloge - Temps\n"
 
-#: orologic_modules/tempo_app.py:357
+#: orologic_modules/tempo_app.py:334
 #, python-brace-format
 msgid "Data e ora: {datetime}\n"
 msgstr "Date et heure : {datetime}\n"
 
-#: orologic_modules/tempo_app.py:358
+#: orologic_modules/tempo_app.py:335
 #, python-brace-format
 msgid "Orologio utilizzato: {clock_name}\n"
 msgstr "Horloge utilisée : {clock_name}\n"
 
-#: orologic_modules/tempo_app.py:361
+#: orologic_modules/tempo_app.py:338
 #, python-brace-format
 msgid "Controllo del tempo: {tc}\n"
 msgstr "Contrôle du temps : {tc}\n"
 
-#: orologic_modules/tempo_app.py:367
+#: orologic_modules/tempo_app.py:344
 #, python-brace-format
 msgid "Nota: {note}\n"
 msgstr "Note : {note}\n"
 
-#: orologic_modules/tempo_app.py:369 orologic_modules/ui.py:1169
+#: orologic_modules/tempo_app.py:346 orologic_modules/ui.py:1169
 msgid "Lista Mosse:\n"
 msgstr "Liste des coups :\n"
 
-#: orologic_modules/tempo_app.py:380
+#: orologic_modules/tempo_app.py:357
 msgid "STATISTICHE FINALI:\n"
 msgstr "STATISTIQUES FINALES :\n"
 
-#: orologic_modules/tempo_app.py:381
+#: orologic_modules/tempo_app.py:358
 #, python-brace-format
 msgid "Tempo rimasto al Bianco: {time}\n"
 msgstr "Temps restant des Blancs : {time}\n"
 
-#: orologic_modules/tempo_app.py:384
+#: orologic_modules/tempo_app.py:361
 #, python-brace-format
 msgid "Tempo rimasto al Nero: {time}\n"
 msgstr "Temps restant des Noirs : {time}\n"
 
-#: orologic_modules/tempo_app.py:387
+#: orologic_modules/tempo_app.py:364
 #, python-brace-format
 msgid "Numero di mosse giocate: {n}\n"
 msgstr "Nombre de coups joués : {n}\n"
 
-#: orologic_modules/tempo_app.py:388
+#: orologic_modules/tempo_app.py:365
 #, python-brace-format
 msgid "Tempo totale di gioco: {time}\n"
 msgstr "Temps de jeu total : {time}\n"
 
-#: orologic_modules/tempo_app.py:391
+#: orologic_modules/tempo_app.py:368
 #, python-brace-format
 msgid "Tempo totale in pausa: {time}\n"
 msgstr "Temps total en pause : {time}\n"
 
-#: orologic_modules/tempo_app.py:394
+#: orologic_modules/tempo_app.py:371
 #, python-brace-format
 msgid "Tempo totale + tempo in pausa: {time}\n"
 msgstr "Temps total + temps en pause : {time}\n"
 
-#: orologic_modules/tempo_app.py:397
+#: orologic_modules/tempo_app.py:374
 #, python-brace-format
 msgid "Generato da Orologic V{version}\n"
 msgstr "Généré par Orologic V{version}\n"
 
-#: orologic_modules/tempo_app.py:410
+#: orologic_modules/tempo_app.py:387
 #, python-brace-format
 msgid "Report salvato in: {path}"
 msgstr "Rapport enregistré dans : {path}"
 
-#: orologic_modules/tempo_app.py:413
+#: orologic_modules/tempo_app.py:390
 #, python-brace-format
 msgid "Errore nel salvataggio del report: {error}"
 msgstr "Erreur lors de l'enregistrement du rapport : {error}"

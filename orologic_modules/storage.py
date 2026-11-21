@@ -60,12 +60,25 @@ def _numero(valore, ripiego):
 
 
 def _normalizza_fase(fase):
-    """Completa una fase di orologio con i valori mancanti."""
+    """Completa una fase di orologio con i valori mancanti.
+
+    Dalla finestra degli orologi una fase ha anche la tipologia del
+    controllo, un testo, e i valori della tipologia per ogni colore,
+    numeri con white_ o black_ davanti: si conservano. Quale tipologia e
+    quali valori siano validi lo dice controlli.py, quando la fase si usa.
+    """
     if not isinstance(fase, dict):
         return dict(DEFAULT_PHASE)
     pulita = {}
     for chiave, ripiego in DEFAULT_PHASE.items():
         pulita[chiave] = _numero(fase.get(chiave), ripiego)
+    if isinstance(fase.get("tipo"), str):
+        pulita["tipo"] = fase["tipo"]
+    for chiave, valore in fase.items():
+        if chiave not in pulita and chiave.startswith(("white_", "black_")):
+            numero = _numero(valore, None)
+            if numero is not None:
+                pulita[chiave] = numero
     return pulita
 
 

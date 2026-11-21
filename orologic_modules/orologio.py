@@ -12,7 +12,7 @@ import time
 
 from GBUtils import Acusticator
 
-from . import config, tempo
+from . import config, controlli, tempo
 from .config import _
 
 # Un solo lucchetto per tutti i tempi di gioco. E' rientrante perche' le
@@ -141,6 +141,7 @@ def _ciclo(stato):
         adesso = time.monotonic()
         trascorso = adesso - ultimo
         ultimo = adesso
+        avvisi = []
 
         with LUCCHETTO:
             in_corso = not stato.paused and not stato.ignore_clock
@@ -148,13 +149,15 @@ def _ciclo(stato):
                 bianco = _e_bianco(stato)
                 if _deve_scorrere(stato, bianco):
                     prima = _residuo(stato, bianco)
-                    _imposta_residuo(stato, bianco, prima - trascorso)
+                    # Il tempo scorre secondo la tipologia della fase:
+                    # ritardi, clessidra e tempi supplementari stanno in
+                    # controlli.py.
+                    avvisi = controlli.scorri(stato, bianco, trascorso)
                     # Il tachimetro dell'orologio salvato conta il tempo
                     # corso davvero: nel passo in cui cade la bandierina il
                     # residuo scende sotto zero, e quell'avanzo non e' corso.
-                    stato.tempo_corso = getattr(stato, "tempo_corso", 0.0) + max(
-                        0.0, min(trascorso, prima)
-                    )
+                    corso = max(0.0, min(trascorso, prima)) if controlli.scaduto(stato, bianco) else trascorso
+                    stato.tempo_corso = getattr(stato, "tempo_corso", 0.0) + corso
                     chiave_colore = "white" if bianco else "black"
                     for numero, soglia in enumerate(allarmi, 1):
                         if (chiave_colore, soglia) in suonati:
@@ -170,12 +173,13 @@ def _ciclo(stato):
                             )
                             _suona_allarme(numero, bianco)
 
+            # Col conta in su il tempo finito non fa cadere la bandierina.
             scaduto = not stato.ignore_clock and (
-                stato.white_remaining <= 0 or stato.black_remaining <= 0
+                controlli.scaduto(stato, True) or controlli.scaduto(stato, False)
             )
             primo_avviso = scaduto and not stato.flag_fallen
             if primo_avviso:
-                bianco_scaduto = stato.white_remaining <= 0
+                bianco_scaduto = controlli.scaduto(stato, True)
                 # Chi ha esaurito il tempo, per chi assegna il risultato:
                 # il tratto puo' passare prima che lo si legga.
                 stato.bianco_scaduto = bianco_scaduto
@@ -185,6 +189,12 @@ def _ciclo(stato):
                     stato.black_remaining = 0
                 stato.flag_fallen = True
                 stato.paused = True
+
+        for testo, suono in avvisi:
+            # Fuori dal lucchetto, come la bandierina: byo-yomi, periodi,
+            # canadese e conta in su.
+            print(testo)
+            controlli.suona(suono)
 
         if primo_avviso:
             # Fuori dal lucchetto: suoni e messaggi non devono trattenere il

@@ -15,6 +15,7 @@ from . import (
     chess960_utils,
     clock,
     config,
+    controlli,
     cruscotto,
     engine,
     orologio,
@@ -44,6 +45,10 @@ def RiprendiPartita(dati_partita):
     game_state.white_moves = dati_partita["white_moves"]
     game_state.black_moves = dati_partita["black_moves"]
     game_state.active_color = dati_partita["active_color"]
+    # Lo stato delle tipologie e il registro delle mosse; i salvataggi
+    # di prima non li hanno, e valgono vuoti.
+    game_state.controllo = dati_partita.get("controllo") or {}
+    game_state.rettifiche = dati_partita.get("rettifiche") or []
     game_state.move_history = dati_partita["move_history"]
     game_state.white_player = dati_partita["white_player"]
     game_state.black_player = dati_partita["black_player"]
@@ -83,6 +88,9 @@ def RiprendiPartita(dati_partita):
         game_state.pgn_node = game_state.pgn_game.end()
     game_state.paused = True
     chess960_utils.verifica_motore_chess960(engine.ENGINE, e_chess960)
+    # La partita ripresa non riceve di nuovo cio' che riceve all'avvio: il
+    # suo tempo salvato lo contiene gia'. Il turno di chi ha il tratto si.
+    controlli.inizio_turno(game_state, game_state.active_color == "white")
     orologio.avvia(game_state)
     db = storage.LoadDB()
     autosave_is_on = db.get("autosave_enabled", False)
@@ -145,6 +153,8 @@ def EseguiAutosave(game_state):
         "starting_fen": game_state.pgn_game.headers.get("FEN", ""),
         "tempo_corso": getattr(game_state, "tempo_corso", 0.0),
         "inizio_partita": getattr(game_state, "inizio_partita", None),
+        "controllo": getattr(game_state, "controllo", {}),
+        "rettifiche": getattr(game_state, "rettifiche", []),
     }
     try:
         # Scrittura atomica: un'interruzione a meta' lasciava un file
@@ -317,15 +327,10 @@ def annulla_ultima_mossa(game_state):
     # la mossa aveva prodotto: incremento, contatore delle
     # mosse ed eventuale passaggio di fase.
     game_state.active_color = "white" if game_state.active_color == "black" else "black"
-    fasi = game_state.clock_config["phases"]
-    if game_state.active_color == "white":
-        orologio.aggiungi(game_state, True, -fasi[game_state.white_phase]["white_inc"])
-    else:
-        orologio.aggiungi(
-            game_state,
-            False,
-            -fasi[game_state.black_phase]["black_inc"],
-        )
+    # Via quello che la tipologia aveva dato a mossa fatta: l'incremento,
+    # il ritardo, il periodo ripartito; il tempo speso resta speso.
+    torna_il_bianco = game_state.active_color == "white"
+    controlli.annulla(game_state, torna_il_bianco, riparti=False)
     tempo_di_fase = game_state.annulla_mossa()
     if tempo_di_fase:
         if game_state.active_color == "white":
@@ -333,6 +338,7 @@ def annulla_ultima_mossa(game_state):
         else:
             orologio.aggiungi(game_state, False, -tempo_di_fase)
         print(_("Rientro nella fase precedente, tolto il tempo aggiunto."))
+    controlli.inizio_turno(game_state, torna_il_bianco)
     if game_state.move_times:
         game_state.move_times.pop()
     if game_state.clocks_history:
@@ -787,11 +793,10 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                 # Le due letture si arrotondano con la stessa regola dei
                 # tag, cosi' residuo precedente meno tempo speso piu'
                 # incremento da' esattamente il residuo scritto.
-                fasi = game_state.clock_config["phases"]
-                if mosso_bianco:
-                    incremento = fasi[game_state.white_phase]["white_inc"]
-                else:
-                    incremento = fasi[game_state.black_phase]["black_inc"]
+                # Quello che la tipologia della fase da' a mossa fatta, poi
+                # il cambio di tratto e di fase, poi quello che da' per la
+                # mossa dopo (controlli.py); il residuo per il tag clk e'
+                # quello alla fine, come lo mostra l'orologio.
                 with orologio.blocco():
                     dopo = (
                         game_state.white_remaining
@@ -804,9 +809,10 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         else (current_turn_clock_before)
                     )
                     time_spent = max(0, tempo.intero(prima) - tempo.intero(dopo))
-                    residuo = orologio.aggiungi(game_state, mosso_bianco, incremento)
+                    registro = controlli.a_mossa_fatta(game_state, mosso_bianco)
                 game_state.board.push(move)
                 game_state.switch_turn()
+                residuo = controlli.a_turno_passato(game_state, registro)
                 current_turn_clock_before = None
                 game_state.descriptive_move_history.append(description)
                 # Fa cinque: due ottave sopra la conferma del salvataggio, fa
@@ -1183,6 +1189,8 @@ def StartGame(clock_config):
     game_state.pgn_game.headers["Annotator"] = (
         f"Orologic V{version.VERSION} by {version.PROGRAMMER}"
     )
+    # Quello che la tipologia della prima fase da' prima della prima mossa.
+    controlli.inizio_partita(game_state)
     orologio.avvia(game_state)
     last_valid_eco_entry = _loop_principale_partita(
         game_state, eco_database, autosave_is_on

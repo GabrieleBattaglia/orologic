@@ -7,7 +7,7 @@ import time
 
 from GBUtils import Acusticator, dgt, key, menu
 
-from . import board_utils, clock, config, orologio, strato, ui, version
+from . import board_utils, clock, config, controlli, orologio, strato, ui, version
 from .config import _
 from .game_flow import async_arbitration_input
 
@@ -94,7 +94,9 @@ def StartTempo(clock_config):
         sync=True,
     )
 
-    # Avvio del thread dell'orologio
+    # Quello che la tipologia della prima fase da' prima della prima nota,
+    # poi l'avvio del thread dell'orologio.
+    controlli.inizio_partita(game_state)
     orologio.avvia(game_state)
 
     # Esecuzione del loop principale per Tempo
@@ -198,26 +200,15 @@ def _loop_tempo(game_state, clock_config):
                     # Rimuoviamo l'ultima mossa
                     last_move = game_state.move_history.pop()
                     # Revertiamo il turno e il tempo
+                    # Via quello che la tipologia aveva dato alla nota.
                     if game_state.active_color == "white":
                         game_state.active_color = "black"
                         game_state.black_moves = max(0, game_state.black_moves - 1)
-                        orologio.aggiungi(
-                            game_state,
-                            False,
-                            -game_state.clock_config["phases"][game_state.black_phase][
-                                "black_inc"
-                            ],
-                        )
+                        controlli.annulla(game_state, False)
                     else:
                         game_state.active_color = "white"
                         game_state.white_moves = max(0, game_state.white_moves - 1)
-                        orologio.aggiungi(
-                            game_state,
-                            True,
-                            -game_state.clock_config["phases"][game_state.white_phase][
-                                "white_inc"
-                            ],
-                        )
+                        controlli.annulla(game_state, True)
 
                     Acusticator(
                         [
@@ -260,25 +251,11 @@ def _loop_tempo(game_state, clock_config):
             # Aggiungiamo alla cronologia temporanea
             game_state.move_history.append(mossa_str)
 
-            # Applica incrementi o cambi fase
-            if game_state.active_color == "white":
-                orologio.aggiungi(
-                    game_state,
-                    True,
-                    game_state.clock_config["phases"][game_state.white_phase][
-                        "white_inc"
-                    ],
-                )
-            else:
-                orologio.aggiungi(
-                    game_state,
-                    False,
-                    game_state.clock_config["phases"][game_state.black_phase][
-                        "black_inc"
-                    ],
-                )
-
+            # La tipologia della fase a nota fatta, il cambio di tratto e di
+            # fase, poi quello che da' per la nota dopo (controlli.py).
+            registro = controlli.a_mossa_fatta(game_state, game_state.active_color == "white")
             game_state.switch_turn()
+            controlli.a_turno_passato(game_state, registro)
 
     # --- RIEPILOGO FINALE ---
     end_time = time.time()

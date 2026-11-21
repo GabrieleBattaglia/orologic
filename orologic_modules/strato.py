@@ -81,6 +81,9 @@ class FacciaTerminale:
     def impostazioni(self):
         """Il terminale ha il suo sottomenu delle impostazioni."""
 
+    def orologi(self):
+        """Il terminale ha il suo sottomenu degli orologi."""
+
     def interrompi_la_scelta_con(self, evento):
         """Il terminale non ha la plancia: menu legge i tasti da se'."""
         return None
@@ -169,6 +172,12 @@ def impostazioni():
     """Nella finestra, la finestra delle impostazioni; il nucleo aspetta che
     si chiuda."""
     _faccia.impostazioni()
+
+
+def orologi():
+    """Nella finestra, la finestra degli orologi; il nucleo aspetta che si
+    chiuda."""
+    _faccia.orologi()
 
 
 def con_la_plancia():

@@ -435,6 +435,10 @@ class GameState:
         self.white_moves = 0
         self.black_moves = 0
         self.active_color = "white"
+        # Le tipologie del controllo del tempo: lo stato di ogni colore e
+        # il registro di ogni mossa, per annullarla (controlli.py).
+        self.controllo = {}
+        self.rettifiche = []
         self.paused = False
         # Istante in cui gli orologi sono stati fermati: serve al
         # comando punto cinque per dire da quanto sono in pausa.

@@ -108,6 +108,11 @@ class ApriImpostazioni:
         self.chiuse = threading.Event()
 
 
+class ApriOrologi(ApriImpostazioni):
+    """Nella fila del testo, la voce orologi del menu principale: la
+    finestra apre quella degli orologi, e il nucleo aspetta che si chiuda."""
+
+
 class CambioDiForma:
     """Nella fila del testo, il punto in cui l'area cambia forma: il
     fornitore dei dati del cruscotto, o None per tornare alla console. Sta
@@ -252,7 +257,14 @@ class FacciaFinestra:
     def impostazioni(self):
         """La voce impostazioni del menu principale: la finestra apre le
         impostazioni, e il nucleo aspetta che si chiudano."""
-        richiesta = ApriImpostazioni()
+        self._apri_e_aspetta(ApriImpostazioni())
+
+    def orologi(self):
+        """La voce orologi del menu principale: la finestra apre quella
+        degli orologi, e il nucleo aspetta che si chiuda."""
+        self._apri_e_aspetta(ApriOrologi())
+
+    def _apri_e_aspetta(self, richiesta):
         self._aspetta(Attesa(None))
         self._metti(richiesta)
         while not richiesta.chiuse.wait(0.05):
@@ -498,6 +510,7 @@ class Finestra(wx.Frame):
         # Le impostazioni: chi scrive le righe e le cambia, e l'elenco aperto.
         self.gestore = modulo_impostazioni.Impostazioni(self)
         self.dialogo_impostazioni = None
+        self.dialogo_orologi = None
         self.nucleo = None
         self.chiudendo = False
         # Finito il nucleo la finestra si chiude; le prove la tengono aperta
@@ -633,6 +646,9 @@ class Finestra(wx.Frame):
                 self._mostra_nella_forma(chiuse, messaggi)
                 chiuse, messaggi = [], []
                 self._cambia_forma(testo.fornitore, testo.comandi)
+                continue
+            if isinstance(testo, ApriOrologi):
+                wx.CallAfter(self._orologi_dal_nucleo, testo)
                 continue
             if isinstance(testo, ApriImpostazioni):
                 wx.CallAfter(self._impostazioni_dal_nucleo, testo)
@@ -1171,6 +1187,33 @@ class Finestra(wx.Frame):
                 self.impostazioni()
         finally:
             richiesta.chiuse.set()
+
+    def orologi(self):
+        """La finestra degli orologi, dalla voce orologi del menu principale,
+        che il suo tema lo suona gia'."""
+        if self.dialogo_orologi is not None:
+            return
+        from . import finestra_orologi
+
+        with finestra_orologi.FinestraOrologi(self, self.chiedi_conferma, self.avvisa) as dialogo:
+            self.dialogo_orologi = dialogo
+            try:
+                dialogo.ShowModal()
+            finally:
+                self.dialogo_orologi = None
+        self._rimetti_il_fuoco()
+
+    def _orologi_dal_nucleo(self, richiesta):
+        try:
+            if self:
+                self.orologi()
+        finally:
+            richiesta.chiuse.set()
+
+    def chiedi_conferma(self, genitore, testo):
+        """Una domanda con Si' e No, come quella del terminale; le prove la
+        sostituiscono."""
+        return wx.MessageBox(testo, "Orologic", wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION, genitore) == wx.YES
 
     def scegli(self, genitore, titolo, voci, scelta):
         """La scelta da una lista; le prove la sostituiscono."""

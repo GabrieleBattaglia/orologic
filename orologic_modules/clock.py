@@ -5,7 +5,7 @@ import datetime
 
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
-from . import board_utils, config, storage, tempo
+from . import board_utils, config, controlli, storage, tempo
 from .config import _
 from .orologio import blocco as blocco_dei_tempi
 
@@ -21,16 +21,23 @@ OROLOGI_PER_SCHERMATA = 3
 
 
 def generate_time_control_string(clock_config):
+    """Il tag TimeControl del PGN: per ogni fase le mosse, il tempo e
+    l'incremento, che il PGN scrive uguale prima e dopo la mossa; la
+    clessidra con l'asterisco, come vuole lo standard. Ritardi e tempi
+    supplementari il PGN non li sa dire: resta il tempo."""
     phases = clock_config["phases"]
     tc_list = []
     for phase in phases:
         moves = phase["moves"]
         base_time = int(phase["white_time"])
-        inc = int(phase["white_inc"])
-        if moves == 0:
-            tc = f"{base_time}+{inc}" if inc > 0 else f"{base_time}"
+        codice = controlli.codice_di(phase)
+        inc = int(controlli.valore(phase, "inc", "white")) if codice in ("dopo", "prima") else 0
+        if codice == "clessidra":
+            tc = f"*{base_time}"
         else:
-            tc = f"{moves}/{base_time}+{inc}" if inc > 0 else f"{moves}/{base_time}"
+            tc = f"{base_time}+{inc}" if inc > 0 else f"{base_time}"
+        if moves:
+            tc = f"{moves}/{tc}"
         tc_list.append(tc)
     return ", ".join(tc_list)
 
@@ -266,8 +273,9 @@ def _durata_con_incremento(secondi, incremento):
     return tempo.parlato(secondi)
 
 
-def _descrivi_orologio(numero, orologio):
-    """Righe che descrivono un orologio, pensate per essere ascoltate.
+def descrivi_orologio(numero, orologio):
+    """Righe che descrivono un orologio, pensate per essere ascoltate: nel
+    terminale, e nella scheda della finestra degli orologi.
 
     Prima era una tabella con sigle e abbreviazioni, B=N F1:01:30:00+30,
     che alla sintesi vocale non diceva quasi nulla e taceva del tutto il
@@ -288,22 +296,23 @@ def _descrivi_orologio(numero, orologio):
             righe.append(
                 _("  fase {n}: {t}").format(
                     n=indice,
-                    t=_durata_con_incremento(fase["white_time"], fase["white_inc"]),
+                    t=controlli.sommario_fase(fase, "white"),
                 )
             )
         else:
             righe.append(
                 _("  fase {n}, bianco: {t}").format(
                     n=indice,
-                    t=_durata_con_incremento(fase["white_time"], fase["white_inc"]),
+                    t=controlli.sommario_fase(fase, "white"),
                 )
             )
             righe.append(
                 _("  fase {n}, nero: {t}").format(
                     n=indice,
-                    t=_durata_con_incremento(fase["black_time"], fase["black_inc"]),
+                    t=controlli.sommario_fase(fase, "black"),
                 )
             )
+        righe += ["  " + riga for riga in controlli.spiegazione(fase)]
         mosse = fase.get("moves", 0)
         righe.append(
             _("  per: {n} mosse").format(n=mosse)
@@ -382,7 +391,7 @@ def ViewClocks():
         print(_("Nessun orologio salvato."))
         return
     blocchi = [
-        _descrivi_orologio(numero, orologio)
+        descrivi_orologio(numero, orologio)
         for numero, orologio in enumerate(db["clocks"], 1)
     ]
     # Chi esce con ESC ha gia' detto di voler tornare al menu: chiedergli
