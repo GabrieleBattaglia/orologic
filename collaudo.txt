@@ -1,5 +1,4 @@
 Collaudo della finestra del prompt di Orologic 9, ramo gui, 21 novembre 2026, secondo giro: solo gli annunci, con NVDA. Accanto a ogni voce scrivi ok, oppure cosa non va.
-Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py, gli annunci attivi, poi Ctrl e virgola e la voce Prompt di gioco.
-Domanda 1: muovendoti nei Disponibili e nel Prompt, NVDA legge prima la voce e poi, in coda, le regole del simbolo e verboso o breve? Se l'annuncio arriva ancora prima della voce, o troppo tardi, dimmelo: parte 300 millisecondi dopo la voce, e si regola.
-Domanda 2: con lo Spazio senti la voce riletta, e dopo verboso o breve?
-Esito:
+* Togli "verboso" dall'annuncio perchè nvda lo legge da solo dall'elenco. Ora arriva doppio.
+Dal testo di anteprima, togli la parola anteprima e mettila nel titolo dell'oggetto, o label, in modo che nvda lo legga quando questo riceve il focus. Ma la casella deve riportare fedelmente il prompt e quella parola non c'entra nulla.
+Inoltre, io potrei volere lo stesso tag sia verboso che breve, nel prompt. Quindi se ne inserisco una forma, l'altra deve poter rimanere fra le disponibili, con lo switcher diverso da quello già inserito. Se li metto entrambi, verboso e breve, allora quel tag scompare dai disponibili.
