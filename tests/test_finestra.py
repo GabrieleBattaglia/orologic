@@ -202,7 +202,7 @@ def test_orologic_parte_e_si_chiude_nella_finestra(finestra, monkeypatch):
     # Il menu principale e' nella plancia, non nell'area.
     assert pompa(lambda: finestra.attesa.tipo == "menu", 30)
     assert "Esci" not in finestra.area.GetValue()
-    attiva(finestra, "Esci")
+    attiva(finestra, ".: Esci")
     assert pompa(lambda: "Premi un tasto per uscire" in finestra.area.GetValue(), 15)
     testo = finestra.area.GetValue()
     assert "Benvenuto, sono Orologic" in testo

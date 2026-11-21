@@ -219,14 +219,19 @@ def rami_della_plancia(vera):
     return rami
 
 
+def voce_della_plancia(vera, etichetta):
+    """L'elemento della plancia con questa etichetta."""
+    for voce in vera.voci_della_plancia:
+        if voce.IsOk() and vera.plancia.GetItemText(voce) == etichetta:
+            return voce
+    raise AssertionError(f"nella plancia non c'e' {etichetta}")
+
+
 def attiva(vera, etichetta):
     """Invio sulla voce della plancia con questa etichetta."""
     import wx
 
-    for voce, (_tipo, _valore, testo) in vera.voci_della_plancia.items():
-        if testo == etichetta:
-            vera.plancia.SelectItem(voce)
-            evento = wx.TreeEvent(wx.wxEVT_TREE_ITEM_ACTIVATED, vera.plancia, voce)
-            vera._voce_attivata(evento)
-            return
-    raise AssertionError(f"nella plancia non c'e' {etichetta}")
+    voce = voce_della_plancia(vera, etichetta)
+    vera.plancia.SelectItem(voce)
+    evento = wx.TreeEvent(wx.wxEVT_TREE_ITEM_ACTIVATED, vera.plancia, voce)
+    vera._voce_attivata(evento)

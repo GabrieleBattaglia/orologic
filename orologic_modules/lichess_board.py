@@ -317,12 +317,9 @@ def _righe_del_gioco(game_state):
 
 
 def _comandi_delle_righe(righe):
-    """Le righe dell'aiuto come dizionario, per la plancia della finestra."""
-    comandi = {}
-    for riga in righe:
-        chiave, _separatore, descrizione = riga.partition(" : ")
-        comandi[chiave.strip()] = descrizione.strip()
-    return comandi
+    """Le righe dell'aiuto come coppie (chiave, riga), per la plancia della
+    finestra, che le mostra cosi' come sono."""
+    return [(riga.partition(" : ")[0].strip(), riga) for riga in righe]
 
 
 def async_spectator_loop(q, game_state):

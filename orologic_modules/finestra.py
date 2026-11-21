@@ -20,16 +20,21 @@ di testo, uscita e ingresso insieme.
   Attesa           nella fila del testo, cio' che il nucleo aspetta adesso.
   Finestra         la plancia, l'area, i tasti e gli annunci con GBsintesi.
 
-La plancia, l'albero accanto all'area (P1-P4 del piano). menu di GBUtils,
-con sorgente_delle_scelte, le consegna le sue voci invece di scriverle, e
-aspetta la scelta; enter_escape le fa mostrare Si' e No, e il tasto lo legge
-come sempre. In cima il percorso dei menu, come rami aperti, e dentro
-l'ultimo le voci di adesso; il percorso lo tiene plancia.py. Il fuoco segue
-la domanda: alla plancia per un menu, all'area per un testo, una mossa o un
-tasto, Si' e No compresi; F5 va alla plancia, F6 all'area, e Tab e Shift+Tab
-passano dall'una all'altra. Ogni passaggio ha il suo suono, quelli di
-MeTeOra. Mentre la plancia aspetta, cio' che si scrive nell'area non va al
-nucleo: il fuoco torna alla plancia.
+La plancia, l'albero accanto all'area (P1-P4 e A1-A4 del piano). menu di
+GBUtils, con sorgente_delle_scelte, le consegna le sue voci invece di
+scriverle, e aspetta la scelta; enter_escape le fa mostrare INVIO ed ESC, e
+il tasto lo legge come sempre. E' un albero vero, che tiene plancia.py: le
+voci del menu principale in cima, e le voci che aprono un altro menu sono
+rami. Freccia destra, Invio o il clic aprono un ramo, e Orologic entra nel
+suo menu; freccia sinistra lo chiude, e Orologic torna al menu sopra con la
+voce punto, o con Esc dove il punto non c'e'. Le voci dei menu sopra restano
+attorno al ramo aperto: Invio su una di loro fa tornare Orologic fin li' e
+poi la sceglie. Il fuoco segue la domanda: alla plancia per un menu,
+all'area per un testo, una mossa o un tasto, INVIO ed ESC compresi; F5 va
+alla plancia, F6 all'area, e Tab e Shift+Tab passano dall'una all'altra.
+Ogni passaggio ha il suo suono, quelli di MeTeOra. Mentre la plancia
+aspetta, cio' che si scrive nell'area non va al nucleo: il fuoco torna alla
+plancia.
 
 Gli annunci seguono le impostazioni di annunci.py: se si fanno, con quale
 uscita e dove, e se interrompono quello in corso. F3 apre la finestra delle
@@ -82,6 +87,9 @@ RIGHE_TENUTE = 5000
 RIGHE_TOLTE_ALLA_VOLTA = 200
 # Quanti secondi il nucleo ha per chiudersi da solo, quando si chiude la finestra.
 ATTESA_DELLA_CHIUSURA = 5.0
+# Quante risposte la plancia da' da sola per arrivare a una voce: oltre,
+# Orologic e' andato dove la plancia non se l'aspettava, e la strada si ferma.
+PASSI_MASSIMI = 20
 # I suoni del fuoco, gli stessi di MeTeOra per le stesse funzioni (P3).
 SUONI_DEL_FUOCO = {"plancia": "spostamento_f5", "console": "spostamento_f6"}
 # La larghezza che lo strato dichiara: pulisci_riga scrive tanti spazi, che
@@ -417,19 +425,31 @@ class Finestra(wx.Frame):
         dimensionatore.Add(self.plancia, 1, wx.EXPAND)
         dimensionatore.Add(self.area, 3, wx.EXPAND)
         pannello.SetSizer(dimensionatore)
-        # La plancia: il percorso dei menu, cio' che il nucleo aspetta, e le
-        # voci di adesso come (tipo, valore) per ogni elemento.
-        self.percorso = plancia.Percorso()
+        # La plancia: i menu aperti, cio' che il nucleo aspetta, e i dati di
+        # ogni elemento dell'albero.
+        self.albero = plancia.Albero()
         self.attesa = Attesa(None)
         self.voci_della_plancia = {}
+        # La strada verso una voce: (percorso, voce finale), i passi fatti, e
+        # la voce da selezionare all'arrivo, come (livello, chiave).
+        self.meta = None
+        self.passi = 0
+        self.da_selezionare = None
+        # Dopo una risposta della strada, come deve cambiare la pila:
+        # ("avanti", livelli attesi) o ("indietro", livelli al massimo).
+        self.atteso = None
+        self.ricostruendo = False
         # L'ultima voce scelta in ogni menu, per sito: tornando al menu e'
         # di nuovo selezionata.
         self.ultime_scelte = {}
         # I comandi della modalita' in gioco, per la plancia, e l'ultimo
-        # scelto, che resta selezionato.
+        # scelto, come etichette dalla cima, che resta selezionato.
         self.comandi = None
         self.ultimo_comando = None
+        # Dove sta il fuoco, e dove lo vuole la domanda: all'attivazione
+        # della finestra torna li'.
         self.fuoco = "console"
+        self.fuoco_voluto = "console"
         self.terminale = Terminale()
         # Le righe chiuse della console; la riga in corso viene dopo. Durante
         # il cruscotto continuano a raccogliersi, e tornano a fine partita.
@@ -455,6 +475,9 @@ class Finestra(wx.Frame):
         self.area.Bind(wx.EVT_KEY_DOWN, self._tasto_giu)
         self.Bind(wx.EVT_CHAR_HOOK, self._tasto_della_finestra)
         self.plancia.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self._voce_attivata)
+        self.plancia.Bind(wx.EVT_TREE_ITEM_EXPANDING, self._si_apre)
+        self.plancia.Bind(wx.EVT_TREE_ITEM_COLLAPSING, self._si_chiude)
+        self.Bind(wx.EVT_ACTIVATE, self._attivata)
         self.plancia.Bind(wx.EVT_KEY_DOWN, self._tasto_della_plancia)
         self.plancia.Bind(wx.EVT_SET_FOCUS, lambda evento: self._fuoco_a("plancia", evento))
         self.area.Bind(wx.EVT_SET_FOCUS, lambda evento: self._fuoco_a("console", evento))
@@ -726,80 +749,252 @@ class Finestra(wx.Frame):
 
     def _cambia_attesa(self, attesa):
         """Il nucleo aspetta altro: la plancia si riscrive, e il fuoco segue
-        la domanda."""
+        la domanda. Lungo una strada i menu di passaggio hanno subito la loro
+        risposta."""
         self.attesa = attesa
         if attesa.tipo == "menu":
-            self.percorso.menu(attesa.sito, attesa.prompt, attesa.alla_radice)
+            self.albero.menu(attesa.sito, attesa.voci, attesa.prompt, attesa.vuoto, attesa.alla_radice)
+            if self._prosegui_la_strada():
+                return
+        elif attesa.tipo in ("area", "sino"):
+            # Orologic chiede altro: la strada si ferma qui.
+            self.meta = None
+        elif self.meta is not None:
+            return
         self._riscrivi_la_plancia()
         if attesa.tipo == "menu":
             self._sposta_il_fuoco("plancia")
         elif attesa.tipo in ("area", "sino"):
             self._sposta_il_fuoco("console")
 
+    # La strada.
+
+    def _prendi_la_strada(self, verso, finale, da_selezionare):
+        """Verso il menu del percorso verso, e li' la voce finale, se c'e'."""
+        if self.attesa.tipo != "menu":
+            return
+        self.meta = (tuple(verso), finale)
+        self.passi = 0
+        self.atteso = None
+        self.da_selezionare = da_selezionare
+        if not self._prosegui_la_strada():
+            self._riscrivi_la_plancia()
+
+    def _prosegui_la_strada(self):
+        """Da' al menu di adesso la risposta della strada. Vero se l'ha data."""
+        if self.meta is None:
+            return False
+        atteso, self.atteso = self.atteso, None
+        livelli = len(self.albero.livelli)
+        if atteso is not None and (
+            (atteso[0] == "avanti" and livelli != atteso[1]) or (atteso[0] == "indietro" and livelli > atteso[1])
+        ):
+            # Il ramo non si e' aperto, o il menu non si e' chiuso, per
+            # esempio arbitra senza orologi salvati: la strada si ferma qui.
+            self.meta = None
+            return False
+        self.passi += 1
+        verso, finale = self.meta
+        cosa, valore = self.albero.strada(verso, finale)
+        if cosa == "arrivato" or self.passi > PASSI_MASSIMI:
+            self.meta = None
+            return False
+        if cosa == "finale":
+            self.meta = None
+        elif cosa == "avanti":
+            self.atteso = ("avanti", livelli + 1)
+        else:
+            self.atteso = ("indietro", livelli - 1)
+        self._rispondi(valore, avanti=cosa != "indietro")
+        if cosa == "finale":
+            self._riscrivi_la_plancia()
+        return True
+
+    def _rispondi(self, valore, avanti=True):
+        """La risposta al menu che aspetta: una voce, o None come Esc."""
+        livello = self.albero.adesso()
+        if avanti and livello is not None:
+            self.albero.scelto(valore)
+            self.ultime_scelte[livello.sito] = valore
+        self.attesa = Attesa(None)
+        self.faccia.scegli(valore)
+
+    def _percorso_fino(self, indice):
+        return tuple(livello.scelta for livello in self.albero.livelli[:indice])
+
+    def _aperto(self, indice, chiave):
+        """Vero se la voce e' il ramo aperto del suo livello."""
+        livelli = self.albero.livelli
+        return indice < len(livelli) - 1 and livelli[indice].scelta == chiave
+
+    def _entra(self, indice, chiave):
+        self._prendi_la_strada(self._percorso_fino(indice) + (chiave,), None, (indice, chiave))
+
+    def _esci(self, indice, chiave):
+        self._prendi_la_strada(self._percorso_fino(indice), None, (indice, chiave))
+
+    def _scegli(self, indice, chiave):
+        self._prendi_la_strada(self._percorso_fino(indice), chiave, (indice, chiave))
+
+    # L'albero.
+
     def _riscrivi_la_plancia(self):
-        """Il percorso come rami aperti, e dentro l'ultimo le voci di
-        adesso: quelle del menu, o Si' e No di una domanda. Selezionata la
-        voce scelta l'ultima volta in quel menu, o la prima, o, senza voci,
-        l'ultimo ramo."""
+        """Fuori dal gioco i menu: le voci del menu principale in cima, e
+        dentro ogni ramo aperto le voci del suo menu; una domanda di
+        enter_escape sotto la voce scelta, con INVIO ed ESC. In gioco i
+        comandi della modalita'."""
         albero = self.plancia
+        self.ricostruendo = True
         albero.Freeze()
         try:
             albero.DeleteAllItems()
             self.voci_della_plancia = {}
             radice = albero.AddRoot("")
-            ramo = radice
-            for etichetta in self.percorso.etichette():
-                ramo = albero.AppendItem(ramo, etichetta)
-            if self.attesa.tipo == "menu":
-                voci = [("menu", valore, etichetta) for etichetta, valore in plancia.voci_del_menu(self.attesa.voci, self.attesa.prompt, self.attesa.vuoto)]
-            elif self.attesa.tipo == "sino":
-                domanda = " ".join(self.attesa.prompt.split())
-                if domanda:
-                    ramo = albero.AppendItem(ramo, domanda)
-                voci = [("sino", valore, etichetta) for etichetta, valore in plancia.voci_del_si_e_no()]
-            elif self.comandi:
-                ramo = albero.AppendItem(ramo, _("Comandi della partita"))
-                voci = [("comando", valore, etichetta) for etichetta, valore in plancia.comandi_della_partita(self.comandi)]
+            if self.comandi and self.attesa.tipo != "menu":
+                selezionata = self._metti_i_comandi(radice, plancia.comandi_della_partita(self.comandi), ())
             else:
-                voci = []
-            prima = None
-            if self.attesa.tipo == "menu":
-                ultima = self.ultime_scelte.get(self.attesa.sito)
-            else:
-                ultima = self.ultimo_comando
-            for tipo, valore, etichetta in voci:
-                voce = albero.AppendItem(ramo, etichetta)
-                self.voci_della_plancia[voce] = (tipo, valore, etichetta)
-                if prima is None or (ultima is not None and valore == ultima):
-                    prima = voce
-            albero.ExpandAll()
-            da_selezionare = prima or (ramo if ramo != radice else None)
-            if da_selezionare is not None:
-                albero.SelectItem(da_selezionare)
+                selezionata = self._metti_i_menu(radice)
+            if selezionata is not None and selezionata.IsOk():
+                albero.SelectItem(selezionata)
+                albero.EnsureVisible(selezionata)
         finally:
             albero.Thaw()
+            self.ricostruendo = False
+
+    def _metti_i_menu(self, radice):
+        albero = self.plancia
+        livelli = self.albero.livelli
+        voluta = self.da_selezionare
+        self.da_selezionare = None
+        if voluta is None and livelli:
+            adesso = len(livelli) - 1
+            livello = livelli[adesso]
+            if self.attesa.tipo == "menu":
+                voluta = (adesso, self.ultime_scelte.get(livello.sito))
+            else:
+                voluta = (adesso, livello.scelta)
+        selezionata = None
+        prima_di_adesso = None
+        genitore = radice
+        ultima_scelta = None
+        for indice, livello in enumerate(livelli):
+            dentro = None
+            for testo, valore, ramo in plancia.voci_del_menu(livello):
+                voce = albero.AppendItem(genitore, testo)
+                self.voci_della_plancia[voce] = ("menu", indice, valore, ramo)
+                if ramo:
+                    albero.SetItemHasChildren(voce, True)
+                if indice == len(livelli) - 1 and prima_di_adesso is None:
+                    prima_di_adesso = voce
+                if valore is not None and valore == livello.scelta:
+                    dentro = voce
+                if voluta is not None and voluta == (indice, valore):
+                    selezionata = voce
+            if dentro is None:
+                break
+            ultima_scelta = dentro
+            if indice < len(livelli) - 1:
+                genitore = dentro
+        if self.attesa.tipo == "sino":
+            # La domanda sotto la voce che l'ha portata, con le sue risposte.
+            sotto = ultima_scelta if ultima_scelta is not None and not self._sotto_un_ramo_aperto(ultima_scelta) else genitore
+            domanda = albero.AppendItem(sotto, " ".join(self.attesa.prompt.split()) or "?")
+            self.voci_della_plancia[domanda] = ("domanda",)
+            prima = None
+            for testo, tasto in plancia.voci_della_domanda():
+                voce = albero.AppendItem(domanda, testo)
+                self.voci_della_plancia[voce] = ("sino", tasto)
+                prima = prima or voce
+            selezionata = prima
+        # I rami aperti, dalla cima.
+        for voce, dati in list(self.voci_della_plancia.items()):
+            if dati[0] == "menu" and self._aperto(dati[1], dati[2]):
+                albero.Expand(voce)
+        if self.attesa.tipo == "sino" and selezionata is not None:
+            # Aperti i rami sopra la domanda, fino alla radice, che e' nascosta.
+            sopra = albero.GetItemParent(selezionata)
+            while sopra.IsOk() and sopra != radice:
+                albero.Expand(sopra)
+                sopra = albero.GetItemParent(sopra)
+        return selezionata or prima_di_adesso
+
+    def _sotto_un_ramo_aperto(self, voce):
+        dati = self.voci_della_plancia.get(voce)
+        return dati is not None and dati[0] == "menu" and self._aperto(dati[1], dati[2])
+
+    def _metti_i_comandi(self, genitore, nodi, sopra):
+        """I comandi, coi rami chiusi, tranne quelli che portano all'ultimo
+        comando dato, che resta selezionato."""
+        albero = self.plancia
+        selezionata = None
+        for nodo in nodi:
+            voce = albero.AppendItem(genitore, nodo.etichetta)
+            cammino = (*sopra, nodo.etichetta)
+            self.voci_della_plancia[voce] = ("comando", nodo, cammino)
+            if self.ultimo_comando == cammino or (selezionata is None and genitore == albero.GetRootItem() and self.ultimo_comando is None):
+                selezionata = voce
+            if nodo.figli:
+                dentro = self._metti_i_comandi(voce, nodo.figli, cammino)
+                if dentro is not None and self.ultimo_comando is not None and self.ultimo_comando[: len(cammino)] == cammino:
+                    albero.Expand(voce)
+                    selezionata = dentro
+        return selezionata
+
+    # I tasti e gli eventi della plancia.
+
+    def _si_apre(self, evento):
+        """Freccia destra o il clic su un ramo di menu: Orologic entra nel
+        suo menu, e il ramo si apre quando arriva."""
+        if self.ricostruendo:
+            return
+        dati = self.voci_della_plancia.get(evento.GetItem())
+        if dati is None or dati[0] != "menu":
+            return
+        _tipo, indice, chiave, ramo = dati
+        if self._aperto(indice, chiave):
+            return
+        evento.Veto()
+        if ramo:
+            wx.CallAfter(self._entra, indice, chiave)
+
+    def _si_chiude(self, evento):
+        """Freccia sinistra su un ramo aperto: Orologic torna al suo menu."""
+        if self.ricostruendo:
+            return
+        dati = self.voci_della_plancia.get(evento.GetItem())
+        if dati is None or dati[0] != "menu":
+            return
+        _tipo, indice, chiave, _ramo = dati
+        if self._aperto(indice, chiave):
+            evento.Veto()
+            wx.CallAfter(self._esci, indice, chiave)
 
     def _voce_attivata(self, evento):
-        voce = self.voci_della_plancia.get(evento.GetItem())
-        if voce is None:
+        voce = evento.GetItem()
+        dati = self.voci_della_plancia.get(voce)
+        if dati is None:
             return
-        tipo, valore, etichetta = voce
-        if tipo == "menu" and self.attesa.tipo == "menu":
-            self.ultime_scelte[self.attesa.sito] = valore
-            self.percorso.scelto(etichetta)
-            self.attesa = Attesa(None)
-            self._riscrivi_la_plancia()
-            self.faccia.scegli(valore)
-        elif tipo == "sino" and self.attesa.tipo == "sino":
-            self.faccia.premi(valore)
-        elif tipo == "comando":
+        if dati[0] == "menu":
+            _tipo, indice, chiave, ramo = dati
+            if self._aperto(indice, chiave):
+                self._esci(indice, chiave)
+            elif ramo:
+                self._entra(indice, chiave)
+            else:
+                self._scegli(indice, chiave)
+        elif dati[0] == "sino" and self.attesa.tipo == "sino":
+            self.faccia.premi(dati[1])
+        elif dati[0] == "comando":
+            _tipo, nodo, cammino = dati
+            if nodo.figli:
+                self.plancia.Toggle(voce)
+                return
             # Il comando si scrive nel prompt come se lo si digitasse; quelli
-            # che vogliono un seguito, come una colonna, aspettano nell'area.
-            self.ultimo_comando = valore
-            testo, invio = valore
-            for carattere in testo:
+            # coi valori liberi, come l'Elo, aspettano il resto nell'area.
+            self.ultimo_comando = cammino
+            for carattere in nodo.testo:
                 self.faccia.premi(carattere)
-            if invio:
+            if nodo.invio:
                 self.faccia.premi("\r")
             else:
                 self.vai_all_area()
@@ -807,16 +1002,20 @@ class Finestra(wx.Frame):
     def _tasto_della_plancia(self, evento):
         """Esc nella plancia vale come Esc nel menu che aspetta."""
         if evento.GetKeyCode() == wx.WXK_ESCAPE and not evento.HasAnyModifiers() and self.attesa.tipo == "menu":
+            self.meta = None
             self.attesa = Attesa(None)
-            self._riscrivi_la_plancia()
             self.faccia.scegli(None)
             return
         evento.Skip()
 
+    # Il fuoco.
+
     def vai_alla_plancia(self):
+        self.fuoco_voluto = "plancia"
         self.plancia.SetFocus()
 
     def vai_all_area(self):
+        self.fuoco_voluto = "console"
         self.area.SetFocus()
 
     def _sposta_il_fuoco(self, dove):
@@ -830,8 +1029,24 @@ class Finestra(wx.Frame):
         else:
             self.vai_all_area()
 
+    def _attivata(self, evento):
+        """La finestra torna in primo piano, anche la prima volta: il fuoco va
+        dove lo vuole la domanda, non dove Windows lo aveva lasciato."""
+        evento.Skip()
+        if evento.GetActive():
+            wx.CallAfter(self._rimetti_il_fuoco)
+
+    def _rimetti_il_fuoco(self):
+        if not self:
+            return
+        attuale = wx.Window.FindFocus()
+        if attuale is not None and attuale.GetTopLevelParent() is not self:
+            return
+        (self.plancia if self.fuoco_voluto == "plancia" else self.area).SetFocus()
+
     def _fuoco_a(self, dove, evento):
         evento.Skip()
+        self.fuoco_voluto = dove
         if dove != self.fuoco:
             self.fuoco = dove
             self.suona(SUONI_DEL_FUOCO[dove])
