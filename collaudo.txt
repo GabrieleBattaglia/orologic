@@ -1,5 +1,11 @@
-Collaudo della T5 di Orologic 9, ramo gui, 21 novembre 2026: solo quello che una prova automatica non vede, NVDA e Lichess veri. Accanto a ogni voce scrivi ok, oppure cosa non va.
-Si lancia dalla cartella E:\git\tmp\Orologic-gui con python orologic.py.
-3. Orolichess col tuo account: amici, guarda, tornei e statistiche si aprono come rami, e una sfida che arriva mentre scegli fa la sua domanda.
-Sì, funziona bene. Quando però una foglia di ramo ha un effetto. Ad esempio, lichess, amici, vedi amici, deejayrino, profilo. Se faccio freccia sinistra o invio, non accade niente se ho gli avvisi spenti. Quindi in quel caso sarebbe utile che il fuoco saltasse nell'area di testo, all'inizio delle informazioni stampate. Se invece gli avvisi sono accesi, allora il focus può restare sul ramo come adesso. Poi, molto importante: verifica che tutti gli eventi che nella versione cli avevano un suono, lo abbiano anche in questa versione e che sia lo stesso suono. Non ne sono certo ma mi pare che questa versione 9 sia più povera di effetti sonori.
-Per il resto va abbastanza bene. Ci sono molte cosucce da limare qua e là ma ci arriveremo con calma. Prosegui pure con i lavori del piano.
+Collaudo della T6 di Orologic 9, ramo gui, 21 novembre 2026: il giro completo prima della 9.0.0, solo con NVDA, le orecchie e Lichess veri. Accanto a ogni voce scrivi ok, oppure cosa non va.
+Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py.
+Passo 1: con gli annunci spenti, in Orolichess vai ad amici, vedi amici, un amico, profilo, e premi Invio.
+Domanda 1: il fuoco va all'area e NVDA legge la prima riga del profilo?
+Passo 2: accendi gli annunci e ripeti.
+Domanda 2: il fuoco resta sul ramo, e il profilo si sente con gli annunci?
+Passo 3: un giro libero nelle modalità: arbitra, tempo, gioca col motore, Easyfish, analisi, memoboard, ricerca e impostazioni.
+Domanda 3: dove la 9 ti sembra più povera di suoni del terminale? Il confronto automatico copre le impostazioni; il resto della finestra esegue lo stesso codice del terminale.
+Domanda 4: le cosucce da limare, una per riga, qui sotto.
+Domanda 5: il collegamento del menu Start al terminale si chiama per ora Orologic nel terminale: va bene, o che nome vuoi?
+Esito:
