@@ -78,6 +78,9 @@ class FacciaTerminale:
     def con_la_plancia(self):
         return False
 
+    def impostazioni(self):
+        """Il terminale ha il suo sottomenu delle impostazioni."""
+
     def interrompi_la_scelta_con(self, evento):
         """Il terminale non ha la plancia: menu legge i tasti da se'."""
         return None
@@ -160,6 +163,12 @@ def fornisci(fornitore, comandi=None):
     plancia. Fuori da una partita non fa niente."""
     if _partite:
         _faccia.cruscotto(fornitore, comandi)
+
+
+def impostazioni():
+    """Nella finestra, la finestra delle impostazioni; il nucleo aspetta che
+    si chiuda."""
+    _faccia.impostazioni()
 
 
 def con_la_plancia():

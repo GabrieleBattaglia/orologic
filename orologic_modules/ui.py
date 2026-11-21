@@ -52,22 +52,11 @@ def copia_negli_appunti(testo, conferma):
     return True
 
 
-def EditLocalization():
-    print(_("Personalizzazione dei nomi e della grammatica di gioco"))
-    print(
-        _(
-            "Per ogni voce, inserisci il nuovo testo o premi INVIO per mantenere il valore attuale."
-        )
-    )
-    print(_("Digita un punto per chiudere subito, conservando le voci gia' riviste."))
-    db = storage.LoadDB()
-    # Carica i default e sovrascrivili con le personalizzazioni utente esistenti
-    # Questo garantisce che le nuove chiavi (es. 'analysis') siano presenti anche se il DB è vecchio
-    l10n_config = localizzazione.unisci(
-        localizzazione.predefinito(), db.get("localization", {})
-    )
-
-    items_to_edit = [
+def voci_dei_nomi():
+    """Le voci dei nomi e della grammatica di gioco, con la loro domanda, uguali
+    per il terminale e per le impostazioni della finestra: (gruppo, chiave,
+    domanda), o per i pezzi (gruppo, chiave, (campo, domanda))."""
+    return [
         ("pieces", "pawn", ("name", _("Nome per 'Pedone'"))),
         ("pieces", "pawn", ("pname", _("Nome PLURALE per 'Pedone'"))),
         ("pieces", "knight", ("name", _("Nome per 'Cavallo'"))),
@@ -123,6 +112,24 @@ def EditLocalization():
         ("analysis", "normal", _("Termine per 'Mossa Normale'")),
         ("analysis", "book", _("Termine per 'Teoria'")),
     ]
+
+
+def EditLocalization():
+    print(_("Personalizzazione dei nomi e della grammatica di gioco"))
+    print(
+        _(
+            "Per ogni voce, inserisci il nuovo testo o premi INVIO per mantenere il valore attuale."
+        )
+    )
+    print(_("Digita un punto per chiudere subito, conservando le voci gia' riviste."))
+    db = storage.LoadDB()
+    # Carica i default e sovrascrivili con le personalizzazioni utente esistenti
+    # Questo garantisce che le nuove chiavi (es. 'analysis') siano presenti anche se il DB è vecchio
+    l10n_config = localizzazione.unisci(
+        localizzazione.predefinito(), db.get("localization", {})
+    )
+
+    items_to_edit = voci_dei_nomi()
     num_items = len(items_to_edit)
     # Calcolo dinamico frequenze
     start_freq = 130.81

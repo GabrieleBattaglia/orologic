@@ -169,6 +169,8 @@ def _configura_opzioni(cfg):
         "Hash": cfg.get("hash_size", 128),
         "Threads": cfg.get("num_cores", 1),
         "Skill Level": cfg.get("skill_level", 20),
+        # Fino alla 8.46.8 si chiedeva e si salvava, ma al motore non arrivava.
+        "Move Overhead": cfg.get("move_overhead", 0),
     }
     conosciute = {n: v for n, v in desiderate.items() if n in ENGINE.options}
     ignorate = sorted(set(desiderate) - set(conosciute))
@@ -1996,6 +1998,31 @@ def AnalisiAutomatica(pgn_game):
     )
 
 
+def percorso_da_salvare(percorso_assoluto):
+    """Il percorso del motore come va salvato: relativo alla cartella di
+    Orologic se sta sullo stesso disco, per la portabilita', altrimenti
+    assoluto. Restituisce (percorso, relativo)."""
+    app_path = os.path.abspath(percorso_salvataggio(""))
+    app_drive = os.path.splitdrive(app_path)[0]
+    engine_drive = os.path.splitdrive(percorso_assoluto)[0]
+    if app_drive and app_drive.lower() == engine_drive.lower():
+        try:
+            return os.path.relpath(percorso_assoluto, app_path), True
+        except ValueError:
+            pass
+    return percorso_assoluto, False
+
+
+def percorso_assoluto(percorso_salvato):
+    """Il percorso assoluto del motore da quello salvato nella
+    configurazione."""
+    if not percorso_salvato:
+        return ""
+    if os.path.isabs(percorso_salvato):
+        return os.path.abspath(percorso_salvato)
+    return os.path.abspath(percorso_salvataggio(percorso_salvato))
+
+
 def MenuMotore():
     from GBUtils import key
 
@@ -2016,6 +2043,9 @@ def MenuMotore():
         if p and e:
             EditEngineConfig(initial_path=p, initial_executable=e)
     elif scelta_azione == "s":
+        # Il motore in uso si chiude prima: Windows non sposta una cartella
+        # con dentro un eseguibile aperto, e la sostituzione falliva.
+        CloseEngine()
         p, e = stockfish_installer.DownloadAndInstallEngine()
         if p and e:
             EditEngineConfig(initial_path=p, initial_executable=e)

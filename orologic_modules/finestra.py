@@ -77,6 +77,7 @@ from GBsintesi import Sintesi
 from GBUtils import Acusticator, sorgente_dei_tasti, sorgente_delle_scelte
 
 from . import annunci, config, cruscotto, dialoghi, plancia, strato, version
+from . import impostazioni as modulo_impostazioni
 from .config import _
 
 # L'eco e' solo cio' che il nucleo scrive entro questi secondi dal tasto: i
@@ -96,6 +97,15 @@ SUONI_DEL_FUOCO = {"plancia": "spostamento_f5", "console": "spostamento_f6"}
 # La larghezza che lo strato dichiara: pulisci_riga scrive tanti spazi, che
 # l'area non mostra.
 COLONNE = 300
+
+
+class ApriImpostazioni:
+    """Nella fila del testo, la voce impostazioni del menu principale: la
+    finestra apre le impostazioni e, quando si chiudono, accende chiuse, che
+    il nucleo aspetta."""
+
+    def __init__(self):
+        self.chiuse = threading.Event()
 
 
 class CambioDiForma:
@@ -238,6 +248,15 @@ class FacciaFinestra:
 
     def con_la_plancia(self):
         return True
+
+    def impostazioni(self):
+        """La voce impostazioni del menu principale: la finestra apre le
+        impostazioni, e il nucleo aspetta che si chiudano."""
+        richiesta = ApriImpostazioni()
+        self._aspetta(Attesa(None))
+        self._metti(richiesta)
+        while not richiesta.chiuse.wait(0.05):
+            self._controlla_chiusura()
 
     def interrompi_la_scelta_con(self, evento):
         precedente = self._interruttore
@@ -469,6 +488,9 @@ class Finestra(wx.Frame):
         self.programmato = False
         self.sintesi = Sintesi()
         self.annunci = annunci.carica()
+        # Le impostazioni: chi scrive le righe e le cambia, e l'elenco aperto.
+        self.gestore = modulo_impostazioni.Impostazioni(self)
+        self.dialogo_impostazioni = None
         self.nucleo = None
         self.chiudendo = False
         # Finito il nucleo la finestra si chiude; le prove la tengono aperta
@@ -604,6 +626,9 @@ class Finestra(wx.Frame):
                 self._mostra_nella_forma(chiuse, messaggi)
                 chiuse, messaggi = [], []
                 self._cambia_forma(testo.fornitore, testo.comandi)
+                continue
+            if isinstance(testo, ApriImpostazioni):
+                wx.CallAfter(self._impostazioni_dal_nucleo, testo)
                 continue
             if isinstance(testo, Attesa):
                 self._mostra_nella_forma(chiuse, messaggi)
@@ -1069,27 +1094,50 @@ class Finestra(wx.Frame):
     # Le impostazioni.
 
     def impostazioni(self):
-        """La finestra delle impostazioni, per ora quelle degli annunci. Il
+        """La finestra delle impostazioni, il luogo unico di tutte (S1): con
+        Ctrl e virgola, o dalla voce impostazioni del menu principale. Il
         nucleo intanto continua: i tasti vanno alla finestra, e il testo che
         arriva si mostra e si annuncia come sempre."""
-        voci = [(voce, annunci.riga(voce, self.annunci)) for voce in annunci.VOCI]
-        with dialoghi.FinestraImpostazioni(self, voci, self._cambia_impostazione) as dialogo:
-            dialogo.ShowModal()
-        self.area.SetFocus()
-
-    def _cambia_impostazione(self, voce, dialogo):
-        scelte = annunci.SCELTE[voce]
-        nomi = [annunci.nome_della_scelta(voce, scelta) for scelta in scelte]
-        indice = self.scegli(dialogo, annunci.etichetta(voce), nomi, scelte.index(self.annunci[voce]))
-        if indice is None:
+        if self.dialogo_impostazioni is not None:
             return
-        self.annunci = annunci.normalizza({**self.annunci, voce: scelte[indice]})
-        annunci.salva(self.annunci)
-        dialogo.aggiorna(voce, annunci.riga(voce, self.annunci))
+        with dialoghi.FinestraImpostazioni(self, self.gestore.righe(), self.gestore.cambia) as dialogo:
+            self.dialogo_impostazioni = dialogo
+            try:
+                dialogo.ShowModal()
+            finally:
+                self.dialogo_impostazioni = None
+        self._rimetti_il_fuoco()
+
+    def _impostazioni_dal_nucleo(self, richiesta):
+        try:
+            if self:
+                self.impostazioni()
+        finally:
+            richiesta.chiuse.set()
 
     def scegli(self, genitore, titolo, voci, scelta):
         """La scelta da una lista; le prove la sostituiscono."""
         return dialoghi.scegli(genitore, titolo, voci, scelta)
+
+    def chiedi_valore(self, genitore, titolo, domanda, valore, tipo="testo", minimo=0, massimo=256):
+        """Un numero o un testo in un campo; le prove lo sostituiscono."""
+        return dialoghi.chiedi_valore(genitore, titolo, domanda, valore, tipo, minimo, massimo)
+
+    def avvisa(self, genitore, testo):
+        """Un avviso da leggere e chiudere; le prove lo sostituiscono."""
+        wx.MessageBox(testo, "Orologic", wx.OK | wx.ICON_WARNING, genitore)
+
+    def dopo_il_motore(self):
+        """Dal filo del motore: le righe del motore si riscrivono negli
+        elenchi ancora aperti."""
+        wx.CallAfter(self._riscrivi_il_motore)
+
+    def _riscrivi_il_motore(self):
+        elenco = getattr(self.gestore, "elenco_del_motore", None)
+        if elenco:
+            self.gestore._aggiorna_il_motore(elenco)
+        if self.dialogo_impostazioni:
+            self.dialogo_impostazioni.aggiorna("motore", self.gestore.riga("motore"))
 
     # Il nucleo.
 

@@ -37,6 +37,7 @@ from orologic_modules import (
     modello_prompt,
     pgn_search,
     storage,
+    strato,
     tempo,
     tempo_app,
     ui,
@@ -681,7 +682,11 @@ def Main():
 
         elif scelta == "impostazioni":
             _suona("impostazioni")
-            menu_impostazioni()
+            # Nella finestra le impostazioni stanno tutte in un luogo solo.
+            if strato.con_la_plancia():
+                strato.impostazioni()
+            else:
+                menu_impostazioni()
 
         elif scelta == "arbitra":
             _suona("arbitra")

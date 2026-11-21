@@ -6,6 +6,10 @@
   FinestraImpostazioni  la lista piatta delle impostazioni, una riga per
                         voce, Etichetta: valore, col filtro, come in MeTeOra.
   FinestraScelta        una scelta da una lista.
+  FinestraValore        un numero o un testo, in un campo che ha per
+                        etichetta la domanda del terminale.
+  FinestraPrompt        il modello del prompt di gioco, con i codici e
+                        l'anteprima.
   Caffe                 l'invito a offrire un caffè, solo a richiesta,
                         con Dona con PayPal e Chiudi.
 
@@ -50,8 +54,9 @@ class FinestraImpostazioni(wx.Dialog):
     il cui nome, la parte prima dei due punti, contiene il testo scritto,
     senza badare a maiuscole e accenti. Invio nel filtro torna alla lista."""
 
-    def __init__(self, genitore, voci, al_cambio):
-        super().__init__(genitore, title=_("Impostazioni"), style=STILE_ADATTABILE)
+    def __init__(self, genitore, voci, al_cambio, titolo=None):
+        titolo = titolo or _("Impostazioni")
+        super().__init__(genitore, title=titolo, style=STILE_ADATTABILE)
         self._chiavi = [chiave for chiave, _testo in voci]
         self._testi = dict(voci)
         # Le voci mostrate dalla lista, nel suo ordine: tutte, finche' il
@@ -70,9 +75,10 @@ class FinestraImpostazioni(wx.Dialog):
         etichetta_del_filtro = wx.StaticText(pannello, label=_("Filtro delle voci:"))
         self.filtro = wx.TextCtrl(pannello)
         self.filtro.SetName(_("Filtro delle voci"))
-        etichetta = wx.StaticText(pannello, label=_("Impostazioni. Invio cambia la voce, Esc chiude, Maiuscolo con Tab va al filtro."))
+        # Traduttori: {titolo} e' il titolo dell'elenco, come Impostazioni.
+        etichetta = wx.StaticText(pannello, label=_("{titolo}. Invio cambia la voce, Esc chiude, Maiuscolo con Tab va al filtro.").format(titolo=titolo))
         self.lista = wx.ListBox(pannello, choices=[testo for _chiave, testo in voci], style=wx.LB_SINGLE)
-        self.lista.SetName(_("Impostazioni"))
+        self.lista.SetName(titolo)
         chiudi = wx.Button(pannello, wx.ID_CANCEL, _("Chiudi"))
         sizer.Add(etichetta, 0, wx.ALL, 5)
         riga_del_filtro = wx.BoxSizer(wx.HORIZONTAL)
@@ -195,6 +201,130 @@ def scegli(genitore, titolo, voci, scelta=0):
             return None
         indice = dialogo.GetSelection()
     return None if indice == wx.NOT_FOUND else indice
+
+
+class FinestraValore(wx.Dialog):
+    """Un valore da scrivere: un numero intero o decimale fra minimo e
+    massimo, in un campo che non ne accetta altri, o un testo lungo al piu'
+    massimo caratteri. L'etichetta del campo e' la domanda del terminale.
+    Conferma, o Invio nel campo, conferma; Esc o Annulla annullano. valore
+    dice il valore confermato."""
+
+    def __init__(self, genitore, titolo, domanda, valore, tipo="testo", minimo=0, massimo=256):
+        super().__init__(genitore, title=titolo, style=STILE_ADATTABILE)
+        self._tipo = tipo
+        pannello = pannello_scorrevole(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        etichetta = wx.StaticText(pannello, label=" ".join(domanda.split()))
+        if tipo == "intero":
+            self.campo = wx.SpinCtrl(pannello, min=int(minimo), max=int(massimo), initial=int(valore), style=wx.SP_ARROW_KEYS | wx.TE_PROCESS_ENTER)
+        elif tipo == "decimale":
+            self.campo = wx.SpinCtrlDouble(pannello, min=minimo, max=massimo, initial=float(valore), inc=0.1, style=wx.SP_ARROW_KEYS | wx.TE_PROCESS_ENTER)
+            self.campo.SetDigits(1)
+        else:
+            self.campo = wx.TextCtrl(pannello, value=str(valore), style=wx.TE_PROCESS_ENTER)
+            self.campo.SetMaxLength(int(massimo))
+        self.campo.SetName(" ".join(domanda.split()))
+        pulsanti = wx.StdDialogButtonSizer()
+        conferma = wx.Button(pannello, wx.ID_OK, _("Conferma"))
+        conferma.SetDefault()
+        pulsanti.AddButton(conferma)
+        pulsanti.AddButton(wx.Button(pannello, wx.ID_CANCEL, _("Annulla")))
+        pulsanti.Realize()
+        sizer.Add(etichetta, 0, wx.ALL, 5)
+        sizer.Add(self.campo, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
+        sizer.Add(pulsanti, 0, wx.ALL | wx.ALIGN_RIGHT, 5)
+        pannello.SetSizer(sizer)
+        adatta_finestra(self, pannello, (480, 200))
+        self.Maximize()
+        self.campo.Bind(wx.EVT_TEXT_ENTER, lambda _evento: self.EndModal(wx.ID_OK))
+        self.campo.SetFocus()
+        if tipo == "testo":
+            self.campo.SelectAll()
+
+    @property
+    def valore(self):
+        if self._tipo == "intero":
+            return int(self.campo.GetValue())
+        if self._tipo == "decimale":
+            return round(float(self.campo.GetValue()), 1)
+        return self.campo.GetValue().strip()
+
+
+def chiedi_valore(genitore, titolo, domanda, valore, tipo="testo", minimo=0, massimo=256):
+    """Apre una FinestraValore e restituisce il valore confermato, o None se
+    si annulla."""
+    with FinestraValore(genitore, titolo, domanda, valore, tipo, minimo, massimo) as dialogo:
+        if dialogo.ShowModal() != wx.ID_OK:
+            return None
+        return dialogo.valore
+
+
+class FinestraPrompt(wx.Dialog):
+    """Il modello del prompt di gioco, al posto del Blocco note: il campo col
+    modello, i codici e le loro regole in sola lettura, e un riquadro che
+    dice l'anteprima, o che cosa non va. aiuto e' la lista delle righe dei
+    codici, anteprima(testo) le righe dell'anteprima, errori(testo) le frasi
+    degli errori, vuote se il modello va bene. Conferma accetta solo un
+    modello senza errori; Esc o Annulla annullano."""
+
+    def __init__(self, genitore, modello, aiuto, anteprima, errori):
+        super().__init__(genitore, title=_("Prompt di gioco"), style=STILE_ADATTABILE)
+        self._anteprima = anteprima
+        self._errori = errori
+        pannello = pannello_scorrevole(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        # L'ordine di creazione e' quello del Tab: il campo, l'esito, i
+        # codici, i pulsanti; ogni controllo prende il nome del testo prima.
+        etichetta = wx.StaticText(pannello, label=_("Modello del prompt"))
+        self.campo = wx.TextCtrl(pannello, value=modello, style=wx.TE_PROCESS_ENTER)
+        self.campo.SetName(_("Modello del prompt"))
+        self.esito = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
+        self.esito.SetName(_("Anteprima: {p}").format(p="").strip(" :"))
+        spiegazione = _("Ogni codice e' il percento seguito da una lettera, maiuscola o minuscola; il resto e' testo libero.")
+        etichetta_dei_codici = wx.StaticText(pannello, label=spiegazione)
+        self.codici = wx.TextCtrl(pannello, value="\n".join(aiuto), style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
+        self.codici.SetName(spiegazione)
+        pulsanti = wx.StdDialogButtonSizer()
+        conferma = wx.Button(pannello, wx.ID_OK, _("Conferma"))
+        conferma.SetDefault()
+        pulsanti.AddButton(conferma)
+        pulsanti.AddButton(wx.Button(pannello, wx.ID_CANCEL, _("Annulla")))
+        pulsanti.Realize()
+        sizer.Add(etichetta, 0, wx.ALL, 5)
+        sizer.Add(self.campo, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
+        sizer.Add(self.esito, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(etichetta_dei_codici, 0, wx.LEFT | wx.RIGHT, 5)
+        sizer.Add(self.codici, 2, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
+        sizer.Add(pulsanti, 0, wx.ALL | wx.ALIGN_RIGHT, 5)
+        pannello.SetSizer(sizer)
+        adatta_finestra(self, pannello, (640, 480))
+        self.Maximize()
+        self.campo.Bind(wx.EVT_TEXT, lambda _evento: self.aggiorna())
+        self.campo.Bind(wx.EVT_TEXT_ENTER, lambda _evento: self.conferma())
+        conferma.Bind(wx.EVT_BUTTON, lambda _evento: self.conferma())
+        self.aggiorna()
+        self.campo.SetFocus()
+        self.campo.SetInsertionPointEnd()
+
+    @property
+    def modello(self):
+        return self.campo.GetValue().strip()
+
+    def aggiorna(self):
+        """L'esito del modello scritto: gli errori, o l'anteprima."""
+        errori = self._errori(self.modello) if self.modello else []
+        righe = errori or (self._anteprima(self.modello) if self.modello else [])
+        self.esito.ChangeValue("\n".join(righe))
+        return errori
+
+    def conferma(self):
+        """Un modello con errori non si conferma: l'esito dice perche'."""
+        if self.aggiorna():
+            wx.Bell()
+            self.esito.SetFocus()
+            return
+        self.EndModal(wx.ID_OK)
 
 
 class Caffe(wx.Dialog):

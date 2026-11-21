@@ -86,7 +86,7 @@ def test_la_finestra_delle_impostazioni_cambia_e_salva(finestra, monkeypatch, da
 
     monkeypatch.setattr(finestra, "scegli", scegli)
     voci = [(voce, annunci.riga(voce, finestra.annunci)) for voce in annunci.VOCI]
-    dialogo = dialoghi.FinestraImpostazioni(finestra, voci, finestra._cambia_impostazione)
+    dialogo = dialoghi.FinestraImpostazioni(finestra, voci, finestra.gestore.cambia)
     try:
         assert dialogo.lista.GetName() == "Impostazioni"
         assert dialogo.lista.GetCount() == len(annunci.VOCI)
@@ -123,7 +123,7 @@ def test_ctrl_virgola_apre_le_impostazioni_e_il_fuoco_torna_all_area(finestra):
     evento.SetKeyCode(ord(","))
     evento.SetControlDown(True)
     finestra._tasto_della_finestra(evento)
-    assert viste == [("Impostazioni", True, "Annunci: sì")]
+    assert viste == [("Impostazioni", True, "Tempo analisi default (sec): 1.0")]
     pompa(lambda: False, 0.1)
     assert wx.Window.FindFocus() is finestra.area
 

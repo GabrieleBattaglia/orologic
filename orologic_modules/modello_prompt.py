@@ -145,18 +145,34 @@ def testo_del_file(attuale):
         d + _("Scrivi il modello nell'ultima riga, quella senza dollaro, poi salva e chiudi il Blocco note."),
         d + _("Ogni codice e' il percento seguito da una lettera, maiuscola o minuscola; il resto e' testo libero."),
     ]
-    righe += [f"{d}%{lettera} {descrizione}" for lettera, descrizione in catalogo()]
-    righe += [
-        d + _("Con una v dopo la lettera, la forma estesa, a parole: %bv %nv %iv %av %dv %gv %tv %uv %vv."),
-        d + _("%bp e %np: la percentuale di tempo consumato dal Bianco e dal Nero, come .1 e .2: in arbitraggio, in Tempo e contro il motore col tempo a partita."),
-        d + _("Un numero dopo il percento, da 1 a 120, rende il prompt dinamico: %4 lo riscrive ogni 4 secondi. Senza numero il prompt e' statico, e i tempi non compaiono."),
-        d + _("Se dopo %m c'e' altro, il cursore resta dopo la mossa, e il resto del prompt ti scorre a destra mentre scrivi."),
-        d + _("%c va messo prima di %m: la scacchiera si stampa sopra la riga dove scrivi."),
-        d + _("%% scrive un percento vero."),
-        d + _("Il modello predefinito e': {m}").format(m=PREDEFINITO),
-        attuale,
-    ]
+    righe += [d + riga for riga in righe_d_aiuto()]
+    righe.append(attuale)
     return "\r\n".join(righe) + "\r\n"
+
+
+def righe_d_aiuto():
+    """I codici del modello, uno per riga, e le regole che li accompagnano:
+    nel file del Blocco note e nella finestra del prompt."""
+    righe = [f"%{lettera} {descrizione}" for lettera, descrizione in catalogo()]
+    righe += [
+        _("Con una v dopo la lettera, la forma estesa, a parole: %bv %nv %iv %av %dv %gv %tv %uv %vv."),
+        _("%bp e %np: la percentuale di tempo consumato dal Bianco e dal Nero, come .1 e .2: in arbitraggio, in Tempo e contro il motore col tempo a partita."),
+        _("Un numero dopo il percento, da 1 a 120, rende il prompt dinamico: %4 lo riscrive ogni 4 secondi. Senza numero il prompt e' statico, e i tempi non compaiono."),
+        _("Se dopo %m c'e' altro, il cursore resta dopo la mossa, e il resto del prompt ti scorre a destra mentre scrivi."),
+        _("%c va messo prima di %m: la scacchiera si stampa sopra la riga dove scrivi."),
+        _("%% scrive un percento vero."),
+        _("Il modello predefinito e': {m}").format(m=PREDEFINITO),
+    ]
+    return righe
+
+
+def righe_d_anteprima(nuovo):
+    """L'anteprima del modello, come la stampa il terminale."""
+    secondi = intervallo(nuovo)
+    return [
+        _("Anteprima: {p}").format(p=componi(esempio(), nuovo)),
+        _("Prompt dinamico, riscritto ogni {n} secondi.").format(n=secondi) if secondi else _("Prompt statico."),
+    ]
 
 
 def salva(nuovo):
@@ -622,12 +638,8 @@ def apri_nell_editor(percorso):
 
 
 def _anteprima(nuovo):
-    print(_("Anteprima: {p}").format(p=componi(esempio(), nuovo)))
-    secondi = intervallo(nuovo)
-    if secondi:
-        print(_("Prompt dinamico, riscritto ogni {n} secondi.").format(n=secondi))
-    else:
-        print(_("Prompt statico."))
+    for riga in righe_d_anteprima(nuovo):
+        print(riga)
 
 
 def imposta():
