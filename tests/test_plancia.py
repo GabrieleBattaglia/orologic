@@ -268,6 +268,62 @@ def test_il_ramo_che_non_si_apre_ferma_la_strada(finestra, monkeypatch):
     assert pompa(lambda: not finestra.nucleo.is_alive())
 
 
+def test_la_foglia_che_stampa_porta_il_fuoco_all_area(finestra, monkeypatch):
+    """Come Lichess, amici, un amico, profilo: con gli annunci spenti, dopo
+    una foglia che stampa, il fuoco va all'area, all'inizio di cio' che ha
+    stampato; con gli annunci accesi, o se la foglia non stampa, resta alla
+    plancia (Gabriele, collaudo della T5)."""
+    monkeypatch.setitem(plancia.RAMI, ("test_plancia.py", "nucleo"), {"amici"})
+    monkeypatch.setitem(finestra.annunci, "attivi", False)
+    scelte = []
+
+    def amici():
+        while True:
+            scelta = menu({"profilo": "Profilo", "zitto": "Niente", ".": "Indietro"})
+            scelte.append(scelta)
+            if scelta in (".", None):
+                return
+            if scelta == "profilo":
+                print("\nProfilo di deejayrino:")
+                print("Partite: 10")
+
+    def nucleo():
+        print("Benvenuto.")
+        while True:
+            if menu({"amici": "Amici", ".": "Esci"}) == ".":
+                return
+            amici()
+
+    def posizione():
+        _trovata, colonna, riga = finestra.area.PositionToXY(finestra.area.GetInsertionPoint())
+        return finestra.area.GetLineText(riga), colonna
+
+    finestra.avvia_il_nucleo(nucleo)
+    assert pompa(lambda: finestra.attesa.tipo == "menu")
+    finestra.vai_alla_plancia()
+    _apri(finestra, "amici: Amici")
+    assert pompa(lambda: len(rami_della_plancia(finestra)) == 5)
+    assert pompa(lambda: wx.Window.FindFocus() is finestra.plancia)
+    # Annunci spenti: all'area, sulla prima riga stampata, saltata la vuota.
+    attiva(finestra, "profilo: Profilo")
+    assert pompa(lambda: scelte == ["profilo"] and finestra.attesa.tipo == "menu" and wx.Window.FindFocus() is finestra.area)
+    assert posizione() == ("Profilo di deejayrino:", 0)
+    # Una foglia che non stampa: il fuoco resta alla plancia.
+    finestra.vai_alla_plancia()
+    attiva(finestra, "zitto: Niente")
+    assert pompa(lambda: scelte[-1] == "zitto" and finestra.attesa.tipo == "menu")
+    pompa(lambda: False, 0.3)
+    assert wx.Window.FindFocus() is finestra.plancia
+    # Annunci accesi: il fuoco resta alla plancia, come prima.
+    finestra.annunci["attivi"] = True
+    attiva(finestra, "profilo: Profilo")
+    assert pompa(lambda: scelte[-1] == "profilo" and len(scelte) == 3 and finestra.attesa.tipo == "menu")
+    pompa(lambda: False, 0.3)
+    assert wx.Window.FindFocus() is finestra.plancia
+    attiva(finestra, ".: Esci")
+    assert pompa(lambda: not finestra.nucleo.is_alive())
+
+
 def test_i_rami_del_censimento():
     principale = ("C:\\o\\orologic.py", "Main", 1)
     assert plancia.e_un_ramo(principale, "orologi") and not plancia.e_un_ramo(principale, "analizza")

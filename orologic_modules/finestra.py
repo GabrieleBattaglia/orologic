@@ -472,6 +472,10 @@ class Finestra(wx.Frame):
         self.fuoco_voluto = "console"
         # Il primo menu della sessione non porta via il fuoco dall'area.
         self.primo_menu = True
+        # Dove comincia cio' che stampa la foglia del menu appena scelta,
+        # come (riga, colonna) dell'area; None se l'ultima scelta non e' una
+        # foglia.
+        self.inizio_della_foglia = None
         self.terminale = Terminale()
         # Le righe chiuse della console; la riga in corso viene dopo. Durante
         # il cruscotto continuano a raccogliersi, e tornano a fine partita.
@@ -676,6 +680,10 @@ class Finestra(wx.Frame):
         if len(self.righe) <= RIGHE_TENUTE + RIGHE_TOLTE_ALLA_VOLTA:
             return 0
         del self.righe[:RIGHE_TOLTE_ALLA_VOLTA]
+        if self.inizio_della_foglia is not None:
+            riga, colonna = self.inizio_della_foglia
+            riga -= RIGHE_TOLTE_ALLA_VOLTA
+            self.inizio_della_foglia = (riga, colonna) if riga >= 0 else (0, 0)
         return RIGHE_TOLTE_ALLA_VOLTA
 
     def _mostra(self, chiuse, visibile):
@@ -791,6 +799,10 @@ class Finestra(wx.Frame):
         elif self.meta is not None:
             return
         self._riscrivi_la_plancia()
+        foglia = None
+        if attesa.tipo in ("menu", "area", "sino"):
+            # Una domanda vera: la foglia scelta ha finito di stampare.
+            foglia, self.inizio_della_foglia = self.inizio_della_foglia, None
         if attesa.tipo == "menu" and self.primo_menu:
             # All'avvio il fuoco resta sull'area, all'inizio del benvenuto, e
             # alla plancia si va con F5 (Gabriele, collaudo del 21 novembre
@@ -799,9 +811,34 @@ class Finestra(wx.Frame):
             self.area.SetInsertionPoint(0)
             self.area.ShowPosition(0)
         elif attesa.tipo == "menu":
-            self._sposta_il_fuoco("plancia")
+            if not self._alla_risposta_della_foglia(foglia):
+                self._sposta_il_fuoco("plancia")
         elif attesa.tipo in ("area", "sino"):
             self._sposta_il_fuoco("console")
+
+    def _alla_risposta_della_foglia(self, inizio):
+        """Dopo una foglia del menu, con gli annunci spenti, il fuoco va
+        all'area, all'inizio di cio' che la voce ha stampato: dal ramo, senza
+        annunci, non si sentirebbe niente (Gabriele, collaudo della T5). Con
+        gli annunci accesi, o se la voce non ha stampato nulla, il fuoco
+        resta alla plancia. Vero se e' andato all'area."""
+        if inizio is None or self.annunci["attivi"] or self.fornitore is not None:
+            return False
+        riga, colonna = inizio
+        ultima = self._riga_del_prompt()
+        # La prima riga con del testo: Orologic apre spesso le sue risposte
+        # con una riga vuota.
+        while riga <= ultima:
+            testo = self.area.GetLineText(riga)[colonna:]
+            if testo.strip():
+                break
+            riga, colonna = riga + 1, 0
+        else:
+            return False
+        self._vai(riga, colonna + len(testo) - len(testo.lstrip()))
+        self.area.ShowPosition(self.area.GetInsertionPoint())
+        self._sposta_il_fuoco("console")
+        return True
 
     # La strada.
 
@@ -837,6 +874,8 @@ class Finestra(wx.Frame):
             return False
         if cosa == "finale":
             self.meta = None
+            # La foglia scelta: cio' che stampa comincia in fondo all'area.
+            self.inizio_della_foglia = (len(self.righe), len(self.terminale.visibile()))
         elif cosa == "avanti":
             self.atteso = ("avanti", livelli + 1)
         else:
