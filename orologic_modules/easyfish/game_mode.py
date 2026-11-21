@@ -1008,6 +1008,10 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None, carriera=Fa
         p=_("Modalita' di gioco: "),
         numbered=True,
     )
+    # Esc, o Invio a vuoto, annulla la partita, come l'annullamento della
+    # domanda del tempo: prima la partita partiva con gli orologi a zero.
+    if engine_mode is None:
+        return game_node, None
 
     user_time = 0
     user_inc = 0

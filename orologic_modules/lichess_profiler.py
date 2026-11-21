@@ -605,7 +605,8 @@ def choose_game_for_analysis(games_list):
             p=_("\nScegli una partita (numero) o naviga: "),
         )
 
-        if scelta == ".":
+        # Esc, o Invio a vuoto, vale come la voce punto.
+        if scelta in (".", None):
             break
         elif scelta == "n" and end_idx < total:
             current_page += 1
