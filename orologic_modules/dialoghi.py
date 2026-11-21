@@ -6,18 +6,28 @@
   FinestraImpostazioni  la lista piatta delle impostazioni, una riga per
                         voce, Etichetta: valore, col filtro, come in MeTeOra.
   FinestraScelta        una scelta da una lista.
+  Caffe                 l'invito a offrire un caffè, solo a richiesta,
+                        con Dona con PayPal e Chiudi.
 
 Si aprono massimizzate, e Esc chiude come Chiudi o Annulla: le finestre
 massimizzate si leggono meglio con lo screen reader e il display braille.
 Ogni lista ha il suo nome, che NVDA legge, e le istruzioni nella riga sopra.
 """
 
+import contextlib
+import time
 import unicodedata
+import webbrowser
 
 import wx
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
 from .config import _
+
+INDIRIZZO_PAYPAL = "https://paypal.me/GabrieleBattaglia780"
+# Un Invio entro tanti secondi dall'apertura, o dall'Invio di prima, e' un
+# tasto tenuto giu', o rimandato da NVDA: non chiude. La misura di Ciechino.
+GRAZIA_INVIO = 0.65
 
 
 def _premuto_invio(evento):
@@ -185,3 +195,54 @@ def scegli(genitore, titolo, voci, scelta=0):
             return None
         indice = dialogo.GetSelection()
     return None if indice == wx.NOT_FOUND else indice
+
+
+class Caffe(wx.Dialog):
+    """L'invito a offrire un caffè, solo a richiesta, dalle impostazioni (S2):
+    il testo in sola lettura, che ha il fuoco, e i pulsanti Dona con PayPal e
+    Chiudi, il predefinito. Invio nel testo ed Esc chiudono; donare deve
+    essere una scelta, non un tasto premuto per abitudine. suona riceve il
+    nome dell'evento sonoro."""
+
+    def __init__(self, genitore, testo, suona=None):
+        super().__init__(genitore, title=_("Offrimi un caffè"), style=STILE_ADATTABILE)
+        self._suona = suona or (lambda _evento: None)
+        pannello = pannello_scorrevole(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        self.testo = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2, value=testo)
+        self.testo.SetName(_("Offrimi un caffè"))
+        dona = wx.Button(pannello, wx.ID_ANY, _("Dona con &PayPal"))
+        chiudi = wx.Button(pannello, wx.ID_OK, _("&Chiudi"))
+        chiudi.SetDefault()
+        riga = wx.BoxSizer(wx.HORIZONTAL)
+        riga.Add(dona, 0, wx.RIGHT, 5)
+        riga.Add(chiudi, 0)
+        sizer.Add(self.testo, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(riga, 0, wx.ALL | wx.ALIGN_RIGHT, 5)
+        pannello.SetSizer(sizer)
+        adatta_finestra(self, pannello, (560, 360))
+        self.Maximize()
+        self.SetEscapeId(wx.ID_OK)
+        dona.Bind(wx.EVT_BUTTON, lambda _evento: self.dona())
+        chiudi.Bind(wx.EVT_BUTTON, lambda _evento: self.EndModal(wx.ID_OK))
+        self.Bind(wx.EVT_CHAR_HOOK, self._tasto)
+        # L'apertura conta come un Invio: quello della voce che l'ha aperta
+        # non la chiude appena aperta.
+        self.ultimo_invio = time.monotonic()
+        self.testo.SetInsertionPoint(0)
+        self.testo.SetFocus()
+
+    def _tasto(self, evento):
+        if evento.GetEventObject() is self.testo and evento.GetKeyCode() in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER):
+            adesso = time.monotonic()
+            precedente, self.ultimo_invio = self.ultimo_invio, adesso
+            if not evento.IsAutoRepeat() and adesso - precedente >= GRAZIA_INVIO:
+                self.EndModal(wx.ID_OK)
+            return
+        evento.Skip()
+
+    def dona(self):
+        self._suona("caffe_paypal")
+        with contextlib.suppress(webbrowser.Error):
+            webbrowser.open(INDIRIZZO_PAYPAL)
+        self.EndModal(wx.ID_OK)
