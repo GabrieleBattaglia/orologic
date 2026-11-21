@@ -37,6 +37,7 @@ from GBUtils import Acusticator
 
 from . import (
     annunci,
+    aspetto,
     avvio,
     config,
     dialoghi,
@@ -64,6 +65,7 @@ VOCI = (
     "prompt",
     "salvataggio",
     "stile",
+    "colori",
     "volume",
     *annunci.VOCI,
     "lingua",
@@ -99,6 +101,8 @@ class Impostazioni:
         self.prossima_lingua = None
         # Il lavoro sul motore in corso, nel suo filo.
         self.lavoro = None
+        # La finestra dei colori, mentre e' aperta: le prove la guidano.
+        self.finestra_dei_colori = None
 
     # L'elenco principale.
 
@@ -125,6 +129,8 @@ class Impostazioni:
             return _("Salvataggio automatico: {stato}").format(stato=_("attivo") if db.get("autosave_enabled") else _("non attivo"))
         if voce == "stile":
             return _("Stile dei menu: {stato}").format(stato=_("numeri") if db.get("menu_numerati") else _("parole"))
+        if voce == "colori":
+            return _("Colori e dimensioni")
         if voce == "volume":
             return _("Volume dei suoni: {vol}%").format(vol=round(config.VOLUME * 100))
         if voce in annunci.VOCI:
@@ -144,6 +150,7 @@ class Impostazioni:
             "prompt": self._prompt,
             "salvataggio": lambda d: self._interruttore("autosave_enabled", _("Salvataggio automatico"), (_("attivo"), _("non attivo")), d),
             "stile": lambda d: self._interruttore("menu_numerati", _("Stile dei menu"), (_("numeri"), _("parole")), d),
+            "colori": self._colori,
             "volume": self._volume,
             "lingua": self._scegli_la_lingua,
             "caffe": self._caffe,
@@ -283,6 +290,38 @@ class Impostazioni:
             return
         avvio.salva(codici[indice])
         self.prossima_lingua = None if codici[indice] == config.lingua_rilevata else codici[indice]
+
+    # Colori e dimensioni.
+
+    def _colori(self, dialogo):
+        """La finestra dei colori e delle dimensioni: OK salva, Annulla o
+        Esc rimettono quello che c'era se Invio su Applica a l'aveva gia'
+        messo in uso."""
+        prima = aspetto.carica()
+
+        def chiedi_nome(genitore):
+            return self.finestra.chiedi_valore(genitore, _("Salva colore"), _("Nome del colore:"), "", "testo", 0, aspetto.LUNGHEZZA_DEL_NOME)
+
+        with dialoghi.FinestraColori(dialogo, prima, chiedi_nome, self._suono_dei_colori) as finestra_dei_colori:
+            self.finestra_dei_colori = finestra_dei_colori
+            try:
+                esito = finestra_dei_colori.ShowModal()
+            finally:
+                self.finestra_dei_colori = None
+            nuove, applicate = finestra_dei_colori.impostazioni, finestra_dei_colori.applicate
+        if esito == wx.ID_OK:
+            aspetto.salva(nuove)
+        elif applicate:
+            aspetto.applica_a_tutte(prima)
+
+    @staticmethod
+    def _suono_dei_colori(evento):
+        """Invio su Applica a: il suono di un valore cambiato; Invio su un
+        colore, che va nei cursori: due note brevi che salgono."""
+        if evento == "applicato":
+            _bip()
+        else:
+            Acusticator(["c6", 0.04, 0, config.VOLUME, "g6", 0.06, 0, config.VOLUME], kind=1)
 
     # Il caffè e il PUB.
 

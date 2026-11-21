@@ -76,7 +76,7 @@ import wx
 from GBsintesi import Sintesi
 from GBUtils import Acusticator, sorgente_dei_tasti, sorgente_delle_scelte
 
-from . import annunci, config, cruscotto, dialoghi, plancia, strato, version
+from . import annunci, aspetto, config, cruscotto, dialoghi, plancia, strato, version
 from . import impostazioni as modulo_impostazioni
 from .config import _
 
@@ -445,6 +445,9 @@ class Finestra(wx.Frame):
         dimensionatore.Add(self.plancia, 1, wx.EXPAND)
         dimensionatore.Add(self.area, 3, wx.EXPAND)
         pannello.SetSizer(dimensionatore)
+        # Colori e dimensioni dei caratteri, se sono stati cambiati; nell'area
+        # wx mette lo stile anche nel testo che arriva dopo.
+        aspetto.applica_alla_finestra(self)
         # La plancia: i menu aperti, cio' che il nucleo aspetta, e i dati di
         # ogni elemento dell'albero.
         self.albero = plancia.Albero()
