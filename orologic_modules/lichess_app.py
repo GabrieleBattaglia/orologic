@@ -279,7 +279,8 @@ def menu_statistiche(db):
             numbered=db.get("menu_numerati", False),
         )
 
-        if scelta == ".":
+        # Esc, o Invio a vuoto, vale come la voce punto.
+        if scelta in (".", None):
             break
 
         if scelta == "puzzle":
@@ -517,7 +518,8 @@ def menu_amici(db):
                     p=_("\nScegli un amico per visualizzare le azioni: "),
                     numbered=db.get("menu_numerati", False),
                 )
-                if scelta_amico != ".":
+                # Esc, o Invio a vuoto, vale come la voce punto.
+                if scelta_amico not in (".", None):
                     lichess_profiler.show_player_menu(scelta_amico, secrets)
 
         elif scelta == "cerca":
@@ -764,7 +766,8 @@ def menu_puzzle(db):
             numbered=db.get("menu_numerati", False),
         )
 
-        if scelta == ".":
+        # Esc, o Invio a vuoto, vale come la voce punto.
+        if scelta in (".", None):
             break
 
         difficulty = None
@@ -1219,7 +1222,8 @@ def menu_guarda(db):
                 p=_("\nScegli un amico da guardare: "),
                 numbered=db.get("menu_numerati", False),
             )
-            if amico_scelto != ".":
+            # Esc, o Invio a vuoto, vale come la voce punto.
+            if amico_scelto not in (".", None):
                 f_obj = next(
                     f
                     for f in following
@@ -1255,7 +1259,8 @@ def menu_guarda(db):
                 p=_("\nScegli canale: "),
                 numbered=db.get("menu_numerati", False),
             )
-            if canale_scelto != ".":
+            # Esc, o Invio a vuoto, vale come la voce punto.
+            if canale_scelto not in (".", None):
                 game_id = data[canale_scelto].get("gameId")
                 if not game_id:
                     print(_("Lichess non ha indicato quale partita: riprova."))
@@ -2005,7 +2010,8 @@ def menu_gioca(db):
                 p=_("\nScegli un amico da sfidare: "),
                 numbered=db.get("menu_numerati", False),
             )
-            if amico_scelto == ".":
+            # Esc, o Invio a vuoto, vale come la voce punto.
+            if amico_scelto in (".", None):
                 continue
 
             print(_("\nImpostazioni della sfida:"))
@@ -2039,7 +2045,8 @@ def menu_gioca(db):
                 p=_("\nScegli la partita da riprendere: "),
                 numbered=db.get("menu_numerati", False),
             )
-            if game_scelto != ".":
+            # Esc, o Invio a vuoto, vale come la voce punto.
+            if game_scelto not in (".", None):
                 lichess_board.play_game(
                     game_scelto, token, secrets.get("lichess_username")
                 )
@@ -2178,7 +2185,8 @@ def run():
                 p=_("\nScegli la partita da riprendere: "),
                 numbered=db.get("menu_numerati", False),
             )
-            if game_scelto != ".":
+            # Esc, o Invio a vuoto, vale come la voce punto.
+            if game_scelto not in (".", None):
                 lichess_board.play_game(
                     game_scelto, token, secrets.get("lichess_username")
                 )
