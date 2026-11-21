@@ -105,11 +105,16 @@ def test_crea_un_orologio_con_due_fasi_e_un_allarme(prova):
     _scegli(d.gruppi["white"]["minuti"], 30)
     # Un allarme a due minuti.
     assert p.voci(d.allarmi) == ["Nuovo allarme"]
+    assert not d.allarme["minuti"].scelta.IsShown()
     p.tasto(d.allarmi, wx.WXK_RETURN)
-    assert pompa(lambda: wx.Window.FindFocus() is d.tempo_allarme)
-    d.tempo_allarme.ChangeValue("2:00")
-    p.tasto(d.tempo_allarme, wx.WXK_RETURN)
+    assert pompa(lambda: wx.Window.FindFocus() is d.allarme["minuti"].scelta)
+    assert d.allarme["minuti"].valore == 1
+    _scegli(d.allarme["minuti"], 2)
     assert p.voci(d.allarmi) == ["Allarme 1: 2 minuti", "Nuovo allarme"]
+    # Invio nelle combo: il tempo va bene, il bip, e il fuoco torna all'elenco.
+    p.tasto(d.allarme["minuti"].scelta, wx.WXK_RETURN)
+    assert p.suoni[-1] == "bip"
+    assert pompa(lambda: wx.Window.FindFocus() is d.allarmi)
     # Salva: l'orologio nel database, l'elenco col sommario, i campi chiusi.
     d.salva()
     assert p.suoni[-1] == "salvato"
@@ -262,3 +267,40 @@ def test_la_voce_orologi_del_menu_apre_la_finestra(finestra, collezione):
     wx.CallLater(30, chiudi)
     finestra.avvia_il_nucleo(nucleo)
     assert pompa(lambda: finiti == [True])
+
+
+def test_gli_allarmi_controllati(prova):
+    p = prova()
+    d = p.dialogo
+    p.tasto(d.elenco, wx.WXK_RETURN)
+    d.nome.ChangeValue("Armageddon")
+    # Niente Vedi, e la scheda senza a capo.
+    assert not hasattr(d, "pulsante_vedi")
+    assert d.scheda.GetWindowStyleFlag() & wx.TE_DONTWRAP
+    # Cinque minuti a testa: un allarme a 5:00 non e' sotto il totale.
+    for minuti, secondi in ((5, 0), (4, 59)):
+        d.allarmi.SetSelection(d.allarmi.GetCount() - 1)
+        p.tasto(d.allarmi, wx.WXK_RETURN)
+        _scegli(d.allarme["minuti"], minuti)
+        _scegli(d.allarme["secondi"], secondi)
+        p.tasto(d.allarme["minuti"].scelta, wx.WXK_RETURN)
+    assert p.avvisi == ["Allarme 1: 5 minuti non e' sotto il tempo totale dell'orologio, 5 minuti."]
+    assert p.suoni[-1] == "bip"
+    # Un doppione non passa.
+    d.allarmi.SetSelection(d.allarmi.GetCount() - 1)
+    p.tasto(d.allarmi, wx.WXK_RETURN)
+    _scegli(d.allarme["minuti"], 4)
+    _scegli(d.allarme["secondi"], 59)
+    p.tasto(d.allarme["secondi"].scelta, wx.WXK_RETURN)
+    assert p.avvisi[-1] == "Allarme 3: c'e' gia' un allarme a 4 minuti e 59 secondi."
+    p.tasto(d.allarmi, wx.WXK_DELETE)
+    # Tempi diversi, 5 e 4 minuti: 4:30 vale per il Bianco, e si salva.
+    d.stesso_tempo.SetValue(False)
+    d.stesso_tempo.GetEventHandler().ProcessEvent(wx.CommandEvent(wx.wxEVT_CHECKBOX, d.stesso_tempo.GetId()))
+    _scegli(d.gruppi["black"]["minuti"], 4)
+    d.allarmi.SetSelection(0)
+    d.allarmi.GetEventHandler().ProcessEvent(wx.CommandEvent(wx.wxEVT_LISTBOX, d.allarmi.GetId()))
+    _scegli(d.allarme["minuti"], 4)
+    _scegli(d.allarme["secondi"], 30)
+    d.salva()
+    assert storage.LoadDB()["clocks"][0]["alarms"] == [270, 299]

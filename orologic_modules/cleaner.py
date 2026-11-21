@@ -6,7 +6,106 @@ import time
 
 from GBUtils import enter_escape, key
 
+from . import storage
 from .config import _, percorso_salvataggio
+
+# Le cartelle dove i file si accumulano: le partite, i resoconti e le
+# immagini e i PDF di Easyfish. In settings ci sono le impostazioni, e li'
+# non si pulisce.
+CARTELLE = ("pgn", "txt", "images")
+CHIAVE_GIORNI = "pulizia_giorni"
+GIORNI_PREDEFINITI = 365
+# I valori di t, a passi di due mesi da due mesi a tre anni (scelta di
+# Gabriele): un mese e' un dodicesimo di 365 giorni, cosi' un anno e' 365
+# giorni e tre anni 1095.
+MESI = tuple(range(2, 37, 2))
+
+
+def giorni_di(mesi):
+    return round(mesi * 365 / 12)
+
+
+VALORI_DEI_GIORNI = tuple(giorni_di(mesi) for mesi in MESI)
+
+
+def durata_in_mesi(mesi):
+    """Due mesi, un anno, un anno e due mesi, tre anni."""
+    anni, resto = divmod(mesi, 12)
+    parti = []
+    if anni:
+        parti.append(_("1 anno") if anni == 1 else _("{n} anni").format(n=anni))
+    if resto:
+        parti.append(_("1 mese") if resto == 1 else _("{n} mesi").format(n=resto))
+    return _(" e ").join(parti)
+
+
+def durata_dei_giorni(giorni):
+    """La durata di un valore di t, come durata_in_mesi."""
+    for mesi in MESI:
+        if giorni_di(mesi) == giorni:
+            return durata_in_mesi(mesi)
+    return _("{n} giorni").format(n=giorni)
+
+
+def giorni_salvati():
+    """Il t scelto, salvato nel database; 365 se non c'e'."""
+    valore = storage.LoadDB().get(CHIAVE_GIORNI)
+    return valore if valore in VALORI_DEI_GIORNI else GIORNI_PREDEFINITI
+
+
+def salva_giorni(giorni):
+    storage.SetValue(CHIAVE_GIORNI, giorni)
+
+
+def cartella(nome):
+    return percorso_salvataggio(nome)
+
+
+def file_accumulati():
+    """I file delle cartelle, dal piu' vecchio: dizionari con percorso,
+    nome, cartella, peso in byte e data, quella dell'ultima modifica."""
+    trovati = []
+    for nome_della_cartella in CARTELLE:
+        percorso = cartella(nome_della_cartella)
+        try:
+            nomi = os.listdir(percorso)
+        except OSError:
+            continue
+        for nome in nomi:
+            completo = os.path.join(percorso, nome)
+            try:
+                if not os.path.isfile(completo):
+                    continue
+                informazioni = os.stat(completo)
+            except OSError:
+                continue
+            trovati.append({"percorso": completo, "nome": nome, "cartella": nome_della_cartella,
+                            "peso": informazioni.st_size, "data": informazioni.st_mtime})
+    return sorted(trovati, key=lambda file: (file["data"], file["nome"]))
+
+
+def vecchi(files, giorni, adesso=None):
+    """I file piu' vecchi di giorni."""
+    limite = (time.time() if adesso is None else adesso) - giorni * 86400
+    return [file for file in files if file["data"] < limite]
+
+
+def ci_sono_vecchi(giorni):
+    return bool(vecchi(file_accumulati(), giorni))
+
+
+def ripristina_date(files):
+    """La data dei file torna a oggi, cosi' non sono piu' vecchi: l'avviso
+    ignorato del terminale. Restituisce quanti."""
+    adesso = time.time()
+    fatti = 0
+    for file in files:
+        try:
+            os.utime(file["percorso"], (adesso, adesso))
+            fatti += 1
+        except OSError:
+            pass
+    return fatti
 
 
 def check_and_clean_old_files(days=365):
@@ -15,11 +114,11 @@ def check_and_clean_old_files(days=365):
     Permette all'utente di vederli, cancellarli o ignorare l'avviso aggiornando
     la data di modifica.
     """
-    dirs_to_check = ["pgn", "txt", "images"]
+    dirs_to_check = CARTELLE
     cutoff_time = time.time() - (days * 86400)
 
     for d in dirs_to_check:
-        folder_path = percorso_salvataggio(d)
+        folder_path = cartella(d)
         if not os.path.exists(folder_path):
             continue
 

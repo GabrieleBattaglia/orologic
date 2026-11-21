@@ -293,8 +293,15 @@ def Main():
 
     SchermataIniziale()
 
-    # Pulizia vecchi file
-    cleaner.check_and_clean_old_files(days=365)
+    # Pulizia dei file vecchi, piu' vecchi del t scelto, 365 giorni se non
+    # c'e': nella finestra si apre da sola la finestra della pulizia, nel
+    # terminale l'avviso di sempre.
+    giorni = cleaner.giorni_salvati()
+    if strato.con_la_plancia():
+        if cleaner.ci_sono_vecchi(giorni):
+            strato.pulizia()
+    else:
+        cleaner.check_and_clean_old_files(days=giorni)
 
     # Aggiornamento automatico: la conversazione la conduce GBUtils, che
     # da sorgente tace e dal pacchetto compilato controlla, mostra le

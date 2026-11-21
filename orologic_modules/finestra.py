@@ -113,6 +113,11 @@ class ApriOrologi(ApriImpostazioni):
     finestra apre quella degli orologi, e il nucleo aspetta che si chiuda."""
 
 
+class ApriPulizia(ApriImpostazioni):
+    """Nella fila del testo, la pulizia che si apre da sola all'avvio, coi
+    file vecchi: il nucleo aspetta che si chiuda."""
+
+
 class CambioDiForma:
     """Nella fila del testo, il punto in cui l'area cambia forma: il
     fornitore dei dati del cruscotto, o None per tornare alla console. Sta
@@ -263,6 +268,11 @@ class FacciaFinestra:
         """La voce orologi del menu principale: la finestra apre quella
         degli orologi, e il nucleo aspetta che si chiuda."""
         self._apri_e_aspetta(ApriOrologi())
+
+    def pulizia(self):
+        """All'avvio, coi file vecchi: la finestra apre la pulizia, e il
+        nucleo aspetta che si chiuda."""
+        self._apri_e_aspetta(ApriPulizia())
 
     def _apri_e_aspetta(self, richiesta):
         self._aspetta(Attesa(None))
@@ -511,6 +521,7 @@ class Finestra(wx.Frame):
         self.gestore = modulo_impostazioni.Impostazioni(self)
         self.dialogo_impostazioni = None
         self.dialogo_orologi = None
+        self.dialogo_pulizia = None
         self.nucleo = None
         self.chiudendo = False
         # Finito il nucleo la finestra si chiude; le prove la tengono aperta
@@ -649,6 +660,9 @@ class Finestra(wx.Frame):
                 continue
             if isinstance(testo, ApriOrologi):
                 wx.CallAfter(self._orologi_dal_nucleo, testo)
+                continue
+            if isinstance(testo, ApriPulizia):
+                wx.CallAfter(self._pulizia_dal_nucleo, testo)
                 continue
             if isinstance(testo, ApriImpostazioni):
                 wx.CallAfter(self._impostazioni_dal_nucleo, testo)
@@ -1207,6 +1221,29 @@ class Finestra(wx.Frame):
         try:
             if self:
                 self.orologi()
+        finally:
+            richiesta.chiuse.set()
+
+    def pulizia(self, genitore=None):
+        """La finestra della pulizia: dalla voce Pulizia delle impostazioni,
+        o da sola all'avvio coi file vecchi."""
+        if self.dialogo_pulizia is not None:
+            return
+        from . import finestra_pulizia
+
+        with finestra_pulizia.FinestraPulizia(genitore or self, self.chiedi_conferma, self.avvisa) as dialogo:
+            self.dialogo_pulizia = dialogo
+            try:
+                dialogo.ShowModal()
+            finally:
+                self.dialogo_pulizia = None
+        if genitore is None:
+            self._rimetti_il_fuoco()
+
+    def _pulizia_dal_nucleo(self, richiesta):
+        try:
+            if self:
+                self.pulizia()
         finally:
             richiesta.chiuse.set()
 

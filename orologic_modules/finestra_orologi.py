@@ -14,9 +14,10 @@ Gabriele nel modulo): il nome, la nota, il tempo uguale per i due colori,
 l'elenco delle fasi con Nuova fase, le combo di ore, minuti e secondi e
 quelle della tipologia, per il Bianco e, senza la spunta, per il Nero, le
 mosse della fase, l'elenco delle tipologie, l'elenco degli allarmi con
-Nuovo allarme e il campo del tempo dell'allarme, Salva e Annulla. In fondo
-la scheda dell'orologio scelto, quella che Vedi raggiunge, col tachimetro,
-che non si modifica.
+Nuovo allarme e le combo del tempo dell'allarme, Salva e Annulla. In fondo
+la scheda dell'orologio scelto, senza a capo, col tachimetro, che non si
+modifica; Invio su un orologio ci porta. Il pulsante Vedi c'era, e il
+collaudo l'ha tolto: la scheda c'e' sempre.
 
 I suoni sono quelli del terminale per gli stessi eventi: il tema di crea
 quando si apre un orologio nuovo, quello di vedi, la conferma e la nota
@@ -190,15 +191,15 @@ class FinestraOrologi(wx.Dialog):
         sizer.Add(self.elenco, 1, wx.EXPAND | wx.ALL, 5)
         pulsanti = wx.BoxSizer(wx.HORIZONTAL)
         self.pulsante_modifica = wx.Button(pannello, label=_("&Modifica"))
-        self.pulsante_vedi = wx.Button(pannello, label=_("&Vedi"))
-        pulsanti.Add(self.pulsante_modifica, 0, wx.RIGHT, 5)
-        pulsanti.Add(self.pulsante_vedi, 0)
+        pulsanti.Add(self.pulsante_modifica, 0)
         sizer.Add(pulsanti, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         self.editor = wx.Panel(pannello)
         self._crea_i_campi(self.editor)
         sizer.Add(self.editor, 0, wx.EXPAND)
         sizer.Add(wx.StaticText(pannello, label=_("Scheda dell'orologio")), 0, wx.LEFT | wx.RIGHT, 5)
-        self.scheda = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
+        # Senza a capo: ogni riga della scheda resta una riga, intera, per
+        # NVDA e per il display braille (collaudo della finestra).
+        self.scheda = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_DONTWRAP)
         self.scheda.SetName(_("Scheda dell'orologio"))
         sizer.Add(self.scheda, 1, wx.EXPAND | wx.ALL, 5)
         chiudi = wx.Button(pannello, wx.ID_CANCEL, _("Chiudi"))
@@ -211,7 +212,6 @@ class FinestraOrologi(wx.Dialog):
         self.Bind(wx.EVT_CHAR_HOOK, self._tasto)
         self.elenco.Bind(wx.EVT_LISTBOX, lambda _evento: self._mostra_la_scheda())
         self.pulsante_modifica.Bind(wx.EVT_BUTTON, lambda _evento: self.modifica())
-        self.pulsante_vedi.Bind(wx.EVT_BUTTON, lambda _evento: self.vedi())
         self._riempi_l_elenco(0)
         self.ultimo_invio = time.monotonic()
         self.elenco.SetFocus()
@@ -260,11 +260,16 @@ class FinestraOrologi(wx.Dialog):
         self.allarmi = wx.ListBox(editor, style=wx.LB_SINGLE)
         self.allarmi.SetName(_("Allarmi"))
         sizer.Add(self.allarmi, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
-        domanda = _("Tempo dell'allarme (mm:ss):")
-        sizer.Add(wx.StaticText(editor, label=domanda), 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
-        self.tempo_allarme = wx.TextCtrl(editor)
-        self.tempo_allarme.SetName(_senza_due_punti(domanda))
-        sizer.Add(self.tempo_allarme, 0, wx.LEFT | wx.RIGHT, 5)
+        # Il tempo dell'allarme scelto, con combo di soli numeri come i
+        # tempi delle fasi (collaudo della finestra).
+        self.allarme = {
+            "ore": _Campo(editor, sizer, 0, ORE_MASSIME),
+            "minuti": _Campo(editor, sizer, 0, 59),
+            "secondi": _Campo(editor, sizer, 0, 59),
+        }
+        self.allarme["ore"].nome(_("Ore dell'allarme"))
+        self.allarme["minuti"].nome(_("Minuti dell'allarme"))
+        self.allarme["secondi"].nome(_("Secondi dell'allarme"))
         riga = wx.BoxSizer(wx.HORIZONTAL)
         self.pulsante_salva = wx.Button(editor, label=_("&Salva"))
         self.pulsante_annulla = wx.Button(editor, label=_("&Annulla"))
@@ -280,6 +285,8 @@ class FinestraOrologi(wx.Dialog):
             for campo in campi.values():
                 campo.scelta.Bind(wx.EVT_CHOICE, lambda _evento: self._salva_la_fase())
         self.mosse.scelta.Bind(wx.EVT_CHOICE, lambda _evento: self._salva_la_fase())
+        for campo in self.allarme.values():
+            campo.scelta.Bind(wx.EVT_CHOICE, lambda _evento: self._salva_l_allarme())
         self.pulsante_salva.Bind(wx.EVT_BUTTON, lambda _evento: self.salva())
         self.pulsante_annulla.Bind(wx.EVT_BUTTON, lambda _evento: self.annulla())
 
@@ -505,38 +512,81 @@ class FinestraOrologi(wx.Dialog):
         self._carica_l_allarme()
 
     def _carica_l_allarme(self):
+        """Il tempo dell'allarme scelto nelle sue combo; su Nuovo allarme le
+        combo non ci sono."""
         indice = self.allarmi.GetSelection()
         allarmi = self.bozza["alarms"] if self.bozza else []
-        self.tempo_allarme.ChangeValue(tempo.orologio(allarmi[indice])[3:] if 0 <= indice < len(allarmi) else "")
+        scelto = 0 <= indice < len(allarmi)
+        if scelto:
+            ore, resto = divmod(int(allarmi[indice]), 3600)
+            minuti, secondi = divmod(resto, 60)
+            self._caricando = True
+            self.allarme["ore"].valore = ore
+            self.allarme["minuti"].valore = minuti
+            self.allarme["secondi"].valore = secondi
+            self._caricando = False
+        for campo in self.allarme.values():
+            campo.mostra(scelto)
+        self._rifai()
+
+    def _salva_l_allarme(self):
+        """Le combo nell'allarme scelto, e la sua voce nell'elenco."""
+        indice = self.allarmi.GetSelection()
+        if self.bozza is None or self._caricando or not 0 <= indice < len(self.bozza["alarms"]):
+            return
+        self.bozza["alarms"][indice] = self.allarme["ore"].valore * 3600 + self.allarme["minuti"].valore * 60 + self.allarme["secondi"].valore
+        self.allarmi.SetString(indice, self._voce_dell_allarme(indice))
+
+    def _voce_dell_allarme(self, indice):
+        return _("Allarme {n}: {t}").format(n=indice + 1, t=tempo.parlato(self.bozza["alarms"][indice]))
 
     def aggiungi_un_allarme(self):
         """Invio su Nuovo allarme: l'allarme nasce a un minuto, e il fuoco va
-        al campo del suo tempo."""
+        ai minuti del suo tempo."""
         allarmi = self.bozza["alarms"]
         if len(allarmi) >= ALLARMI_MASSIMI:
             suona("no")
             return
         allarmi.append(60)
         self._riempi_gli_allarmi(len(allarmi) - 1)
-        self.tempo_allarme.SetFocus()
-        self.tempo_allarme.SelectAll()
+        self.allarme["minuti"].scelta.SetFocus()
+
+    def errori_degli_allarmi(self, solo=None):
+        """Che cosa non va negli allarmi, o nel solo allarme con quell'indice:
+        il minimo di un secondo, due allarmi allo stesso tempo, un allarme
+        che non sta sotto il tempo totale di nessuno dei due colori."""
+        self._salva_la_fase()
+        allarmi = self.bozza["alarms"]
+        fasi = self.bozza["phases"]
+        colori = ("white",) if self.stesso_tempo.GetValue() else COLORI
+        totale = max(controlli.tempo_totale(fasi, colore) for colore in colori)
+        errori = []
+        for indice, secondi in enumerate(allarmi):
+            if solo is not None and indice != solo:
+                continue
+            numero = indice + 1
+            if secondi < clock.TEMPO_MINIMO_ALLARME:
+                errori.append(_("Allarme {n}: il minimo e' {quanto}.").format(n=numero, quanto=tempo.parlato(clock.TEMPO_MINIMO_ALLARME)))
+            elif secondi in allarmi[:indice] or (solo is not None and allarmi.count(secondi) > 1):
+                errori.append(_("Allarme {n}: c'e' gia' un allarme a {t}.").format(n=numero, t=tempo.parlato(secondi)))
+            elif secondi >= totale:
+                errori.append(_("Allarme {n}: {t} non e' sotto il tempo totale dell'orologio, {totale}.").format(
+                    n=numero, t=tempo.parlato(secondi), totale=tempo.parlato(totale)))
+        return errori
 
     def conferma_l_allarme(self):
-        """Invio nel campo del tempo: l'allarme scelto prende quel tempo, col
-        bip del terminale, e il fuoco torna all'elenco."""
+        """Invio nelle combo dell'allarme: se il tempo va bene, il bip del
+        terminale e il fuoco torna all'elenco; se no, che cosa non va."""
         indice = self.allarmi.GetSelection()
-        allarmi = self.bozza["alarms"]
-        if not 0 <= indice < len(allarmi):
+        if not 0 <= indice < len(self.bozza["alarms"]):
             suona("no")
             return
-        secondi = tempo.da_testo(self.tempo_allarme.GetValue())
-        if secondi is None or secondi < clock.TEMPO_MINIMO_ALLARME:
+        errori = self.errori_degli_allarmi(indice)
+        if errori:
             suona("nome_usato")
-            self._avvisa(self, _("Tempo non riconosciuto: scrivilo come ore:minuti:secondi, minuti:secondi o secondi."))
+            self._avvisa(self, "\n".join(errori))
             return
-        allarmi[indice] = secondi
         _bip()
-        self._riempi_gli_allarmi(indice)
         self.allarmi.SetFocus()
 
     def togli_l_allarme(self):
@@ -569,6 +619,7 @@ class FinestraOrologi(wx.Dialog):
             if numero < len(fasi) and not fase.get("moves"):
                 errori.append(_("La fase {n} ha 0 mosse: la fase dopo non comincerebbe mai.").format(n=numero))
         errori += controlli.errori_delle_fasi(fasi)
+        errori += self.errori_degli_allarmi()
         return errori
 
     def salva(self):
@@ -643,10 +694,9 @@ class FinestraOrologi(wx.Dialog):
                 if self.allarmi.GetSelection() >= len(self.bozza["alarms"]):
                     self.aggiungi_un_allarme()
                 else:
-                    self.tempo_allarme.SetFocus()
-                    self.tempo_allarme.SelectAll()
+                    self.allarme["minuti"].scelta.SetFocus()
                 return
-            if oggetto is self.tempo_allarme:
+            if any(oggetto is campo.scelta for campo in self.allarme.values()):
                 self.conferma_l_allarme()
                 return
             if not isinstance(oggetto, wx.Button):

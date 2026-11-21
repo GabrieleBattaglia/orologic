@@ -69,6 +69,7 @@ VOCI = (
     "volume",
     *annunci.VOCI,
     "lingua",
+    "pulizia",
     "caffe",
     "pub_entra",
     "pub_aiuto",
@@ -139,6 +140,8 @@ class Impostazioni:
             return annunci.riga(voce, self.finestra.annunci)
         if voce == "lingua":
             return _riga(_("Lingua"), self._lingua())
+        if voce == "pulizia":
+            return _("Pulizia")
         return {"caffe": _("Offrimi un caffè"), "pub_entra": _("Entra al PUB"), "pub_aiuto": _("Chiedi aiuto al PUB")}[voce]
 
     def cambia(self, voce, dialogo):
@@ -155,6 +158,7 @@ class Impostazioni:
             "colori": self._colori,
             "volume": self._volume,
             "lingua": self._scegli_la_lingua,
+            "pulizia": self.finestra.pulizia,
             "caffe": self._caffe,
             "pub_entra": self._entra_al_pub,
             "pub_aiuto": self._chiedi_aiuto_al_pub,

@@ -216,6 +216,21 @@ def errori_della_fase(fase, colore, numero):
     return []
 
 
+def tempo_totale(fasi, colore):
+    """Il tempo totale dell'orologio per il colore: le fasi sommate, con i
+    tempi supplementari, periodi del byo-yomi e periodo canadese. Gli
+    allarmi devono stare sotto, almeno per un colore (scelta di Gabriele)."""
+    totale = 0
+    for fase in fasi:
+        totale += fase.get(f"{colore}_time", 0)
+        codice = codice_di(fase)
+        if codice == "byoyomi":
+            totale += valore(fase, "periodo", colore) * valore(fase, "periodi", colore)
+        elif codice == "canadese":
+            totale += 60 * valore(fase, "minuti_periodo", colore)
+    return totale
+
+
 def errori_delle_fasi(fasi):
     """I tempi supplementari stanno solo nell'ultima fase."""
     errori = []
