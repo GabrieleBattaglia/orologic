@@ -189,13 +189,11 @@ def test_il_prompt(gestore):
 def test_la_finestra_del_prompt(app):
     from orologic_modules import dialoghi
 
-    dialogo = dialoghi.FinestraPrompt(None, "%b %n %m", modello_prompt.righe_d_aiuto(), modello_prompt.righe_d_anteprima, modello_prompt.errori_del_modello)
+    dialogo = dialoghi.FinestraPrompt(None, "%b %n %m", lambda *_argomenti: None)
     try:
-        assert dialogo.esito.GetValue().startswith("Anteprima: ")
-        dialogo.campo.ChangeValue("%z")
-        assert dialogo.aggiorna() == ["Codici sconosciuti: %z."]
-        assert dialogo.esito.GetValue() == "Codici sconosciuti: %z."
-        assert "%b tempo del Bianco" in dialogo.codici.GetValue()
+        assert dialogo.esempio.GetValue().startswith("Anteprima: ")
+        assert dialogo.prompt.GetString(0) == "%b tempo del Bianco"
+        assert dialogo.modello == "%b %n %m"
     finally:
         dialogo.Destroy()
 

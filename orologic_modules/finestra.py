@@ -775,6 +775,11 @@ class Finestra(wx.Frame):
             else:
                 self._al_cursore()
 
+    def annuncia(self, righe):
+        """Righe da annunciare per una finestra di dialogo, come il testo che
+        arriva da se': solo se gli annunci sono attivi."""
+        self._di(list(righe), False)
+
     def _di(self, righe, dal_tasto):
         """Gli annunci, secondo le impostazioni: dal_tasto e' vero per la
         risposta a un tasto. Solo il primo puo' interrompere, gli altri lo

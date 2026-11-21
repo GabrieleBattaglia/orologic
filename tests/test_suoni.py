@@ -232,10 +232,11 @@ def test_il_motore(registro, gestore, monkeypatch, tmp_path):
 def test_il_prompt_sbagliato(registro, app):
     modello_prompt._errore()
     terminale = registro.prendi()
-    finestra_del_prompt = dialoghi.FinestraPrompt(
-        None, "%z", modello_prompt.righe_d_aiuto(), modello_prompt.righe_d_anteprima, modello_prompt.errori_del_modello, modello_prompt._errore
-    )
+    # Un testo libero troppo lungo: il modello supera i 200 caratteri.
+    finestra_del_prompt = dialoghi.FinestraPrompt(None, "%b", lambda *_argomenti: "x" * 250, suono_d_errore=modello_prompt._errore)
     try:
+        finestra_del_prompt.disponibili.SetSelection(finestra_del_prompt.disponibili.GetCount() - 1)
+        finestra_del_prompt.aggiungi()
         finestra_del_prompt.conferma()
     finally:
         finestra_del_prompt.Destroy()

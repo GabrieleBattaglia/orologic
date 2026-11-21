@@ -12,7 +12,7 @@ import pytest
 import wx
 from conftest import pompa
 
-from orologic_modules import aspetto, dialoghi, impostazioni, modello_prompt, storage
+from orologic_modules import aspetto, dialoghi, impostazioni, storage
 
 SCELTE = {
     "plancia": {"testo": [100, 100, 0], "sfondo": [0, 0, 0], "dimensione": 16},
@@ -117,10 +117,10 @@ def test_ogni_finestra_di_dialogo(aspetto_scelto, app):
     controlla(scelta, plancia=[scelta.lista])
     valore = dialoghi.FinestraValore(None, "Valore", "Quanto?", 5, "intero", 0, 10)
     controlla(valore, area=[valore.campo])
-    prompt = dialoghi.FinestraPrompt(None, "%b %4", modello_prompt.righe_d_aiuto(), modello_prompt.righe_d_anteprima, modello_prompt.errori_del_modello)
-    # L'anteprima del prompt si riscrive con ChangeValue: lo stile resta.
-    assert _stile_del_testo(prompt.esito, 1) == (_atteso("area", "testo"), _atteso("area", "sfondo"), 20)
-    controlla(prompt, area=[prompt.campo, prompt.esito, prompt.codici])
+    prompt = dialoghi.FinestraPrompt(None, "%b %4", lambda *_argomenti: None)
+    # L'esempio del prompt si riscrive con ChangeValue: lo stile resta.
+    assert _stile_del_testo(prompt.esempio, 1) == (_atteso("area", "testo"), _atteso("area", "sfondo"), 20)
+    controlla(prompt, plancia=[prompt.disponibili, prompt.prompt], area=[prompt.spiegazione, prompt.secondi, prompt.esempio])
     caffe = dialoghi.Caffe(None, "Grazie.")
     controlla(caffe, area=[caffe.testo])
 

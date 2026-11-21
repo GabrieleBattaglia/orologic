@@ -8,8 +8,9 @@
   FinestraScelta        una scelta da una lista.
   FinestraValore        un numero o un testo, in un campo che ha per
                         etichetta la domanda del terminale.
-  FinestraPrompt        il modello del prompt di gioco, con i codici e
-                        l'anteprima.
+  FinestraPrompt        la composizione del prompt di gioco: i simboli
+                        disponibili, il prompt, la spiegazione,
+                        l'aggiornamento e l'esempio.
   Caffe                 l'invito a offrire un caffè, solo a richiesta,
                         con Dona con PayPal e Chiudi.
   FinestraColori        colori e dimensioni dei caratteri della plancia e
@@ -33,7 +34,7 @@ import webbrowser
 import wx
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
-from . import aspetto
+from . import aspetto, modello_prompt
 from .config import _
 
 INDIRIZZO_PAYPAL = "https://paypal.me/GabrieleBattaglia780"
@@ -271,73 +272,314 @@ def chiedi_valore(genitore, titolo, domanda, valore, tipo="testo", minimo=0, mas
         return dialogo.valore
 
 
-class FinestraPrompt(wx.Dialog):
-    """Il modello del prompt di gioco, al posto del Blocco note: il campo col
-    modello, i codici e le loro regole in sola lettura, e un riquadro che
-    dice l'anteprima, o che cosa non va. aiuto e' la lista delle righe dei
-    codici, anteprima(testo) le righe dell'anteprima, errori(testo) le frasi
-    degli errori, vuote se il modello va bene. Conferma accetta solo un
-    modello senza errori; Esc o Annulla annullano."""
+# Il segnaposto del testo libero fra i simboli disponibili: non si esaurisce.
+TESTO_LIBERO = None
 
-    def __init__(self, genitore, modello, aiuto, anteprima, errori, suono_d_errore=None):
+
+def _seleziona(lista, indice):
+    if lista.GetCount():
+        lista.SetSelection(max(0, min(indice, lista.GetCount() - 1)))
+
+
+class FinestraPrompt(wx.Dialog):
+    """La composizione del prompt di gioco, come l'ha chiesta Gabriele nel
+    collaudo della T6, con due elenchi come i criteri di spareggio di
+    Tornello. Disponibili ha i simboli che il prompt non usa, ognuno con la
+    sua descrizione, e in fondo Testo libero; Prompt ha gli elementi del
+    modello, nell'ordine. Sotto, la spiegazione del simbolo scelto, che si
+    annuncia se gli annunci sono attivi, l'aggiornamento in secondi, e
+    l'esempio del prompt coi dati di prova.
+    Nei disponibili Invio mette il simbolo in fondo al prompt, e il fuoco
+    resta sul vicino; su Testo libero chiede il testo. Nel prompt Canc
+    rimette il simbolo fra i disponibili, e il fuoco va al vicino, o ai
+    disponibili se il prompt e' vuoto; Ctrl con le frecce su e giu' sposta
+    l'elemento prima o dopo; Invio su un testo libero lo fa riscrivere. Lo
+    Spazio, nei due elenchi, accende e spegne la forma estesa, (verboso),
+    dove il simbolo ce l'ha. OK salva e chiude, Annulla o Esc chiudono.
+    chiedi_testo(genitore, valore) chiede un testo libero, o None;
+    annuncia(righe) le annuncia se gli annunci sono attivi."""
+
+    def __init__(self, genitore, modello, chiedi_testo, annuncia=None, suono_d_errore=None):
         super().__init__(genitore, title=_("Prompt di gioco"), style=STILE_ADATTABILE)
-        self._anteprima = anteprima
-        self._errori = errori
+        self.elementi, secondi = modello_prompt.elementi(modello)
+        # Il modello di partenza: se nulla cambia, OK lo lascia com'era.
+        self._originale = (modello, copy.deepcopy(self.elementi), secondi)
+        self._descrizioni = dict(modello_prompt.simboli())
+        # La forma estesa dei simboli disponibili, che torna con loro nel prompt.
+        self._verbosi = {}
+        self._chiedi_testo = chiedi_testo
+        self._annuncia = annuncia or (lambda _righe: None)
         self._suono_d_errore = suono_d_errore or wx.Bell
         pannello = pannello_scorrevole(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
-        # L'ordine di creazione e' quello del Tab: il campo, l'esito, i
-        # codici, i pulsanti; ogni controllo prende il nome del testo prima.
-        etichetta = wx.StaticText(pannello, label=_("Modello del prompt"))
-        self.campo = wx.TextCtrl(pannello, value=modello, style=wx.TE_PROCESS_ENTER)
-        self.campo.SetName(_("Modello del prompt"))
-        self.esito = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
-        self.esito.SetName(_("Anteprima: {p}").format(p="").strip(" :"))
-        spiegazione = _("Ogni codice e' il percento seguito da una lettera, maiuscola o minuscola; il resto e' testo libero.")
-        etichetta_dei_codici = wx.StaticText(pannello, label=spiegazione)
-        self.codici = wx.TextCtrl(pannello, value="\n".join(aiuto), style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
-        self.codici.SetName(spiegazione)
+        # L'ordine di creazione e' quello del Tab, e ogni controllo prende
+        # il nome del testo creato subito prima.
+        etichetta_dei_disponibili = wx.StaticText(pannello, label=_("Disponibili"))
+        self.disponibili = wx.ListBox(pannello, style=wx.LB_SINGLE)
+        self.disponibili.SetName(_("Disponibili"))
+        etichetta_della_spiegazione = wx.StaticText(pannello, label=_("Spiegazione"))
+        self.spiegazione = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
+        self.spiegazione.SetName(_("Spiegazione"))
+        etichetta_del_prompt = wx.StaticText(pannello, label=_("Prompt"))
+        self.prompt = wx.ListBox(pannello, style=wx.LB_SINGLE)
+        self.prompt.SetName(_("Prompt"))
+        domanda_dei_secondi = _("Aggiornamento in secondi, da 0, statico, a 120:")
+        etichetta_dei_secondi = wx.StaticText(pannello, label=domanda_dei_secondi)
+        self.secondi = wx.SpinCtrl(pannello, min=0, max=modello_prompt.INTERVALLO_MASSIMO, initial=secondi)
+        self.secondi.SetName(domanda_dei_secondi.rstrip(":").rstrip())
+        etichetta_dell_esempio = wx.StaticText(pannello, label=_("Esempio"))
+        self.esempio = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_DONTWRAP)
+        self.esempio.SetName(_("Esempio"))
         pulsanti = wx.StdDialogButtonSizer()
-        conferma = wx.Button(pannello, wx.ID_OK, _("Conferma"))
-        conferma.SetDefault()
-        pulsanti.AddButton(conferma)
+        ok = wx.Button(pannello, wx.ID_OK, _("OK"))
+        ok.SetDefault()
+        pulsanti.AddButton(ok)
         pulsanti.AddButton(wx.Button(pannello, wx.ID_CANCEL, _("Annulla")))
         pulsanti.Realize()
-        sizer.Add(etichetta, 0, wx.ALL, 5)
-        sizer.Add(self.campo, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
-        sizer.Add(self.esito, 1, wx.EXPAND | wx.ALL, 5)
-        sizer.Add(etichetta_dei_codici, 0, wx.LEFT | wx.RIGHT, 5)
-        sizer.Add(self.codici, 2, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
+        elenchi = wx.BoxSizer(wx.HORIZONTAL)
+        for etichetta, lista in ((etichetta_dei_disponibili, self.disponibili), (etichetta_del_prompt, self.prompt)):
+            colonna = wx.BoxSizer(wx.VERTICAL)
+            colonna.Add(etichetta, 0, wx.BOTTOM, 5)
+            colonna.Add(lista, 1, wx.EXPAND)
+            elenchi.Add(colonna, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(elenchi, 2, wx.EXPAND)
+        sizer.Add(etichetta_della_spiegazione, 0, wx.LEFT | wx.RIGHT, 5)
+        sizer.Add(self.spiegazione, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        riga_dei_secondi = wx.BoxSizer(wx.HORIZONTAL)
+        riga_dei_secondi.Add(etichetta_dei_secondi, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        riga_dei_secondi.Add(self.secondi, 0)
+        sizer.Add(riga_dei_secondi, 0, wx.ALL, 5)
+        sizer.Add(etichetta_dell_esempio, 0, wx.LEFT | wx.RIGHT, 5)
+        sizer.Add(self.esempio, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
         sizer.Add(pulsanti, 0, wx.ALL | wx.ALIGN_RIGHT, 5)
         pannello.SetSizer(sizer)
         aspetto.applica_alla_finestra(self)
+        # La spiegazione e' piccola, ma tiene qualche riga del suo carattere;
+        # gli elenchi si misurano vuoti, come in Tornello, perche' la voce
+        # piu' lunga non allarghi la finestra.
+        self.spiegazione.SetMinSize(wx.Size(-1, self.spiegazione.GetCharHeight() * 4))
+        for lista in (self.disponibili, self.prompt):
+            lista.SetMinSize(lista.GetEffectiveMinSize())
         adatta_finestra(self, pannello, (640, 480))
         self.Maximize()
-        self.campo.Bind(wx.EVT_TEXT, lambda _evento: self.aggiorna())
-        self.campo.Bind(wx.EVT_TEXT_ENTER, lambda _evento: self.conferma())
-        conferma.Bind(wx.EVT_BUTTON, lambda _evento: self.conferma())
+        self._riempi(0, 0)
+        self.Bind(wx.EVT_CHAR_HOOK, self._tasto)
+        for lista in (self.disponibili, self.prompt):
+            lista.Bind(wx.EVT_LISTBOX, lambda evento: self._spiega(evento.GetEventObject(), annuncia=True))
+            lista.Bind(wx.EVT_SET_FOCUS, self._fuoco_a_un_elenco)
+        self.disponibili.Bind(wx.EVT_LISTBOX_DCLICK, lambda _evento: self.aggiungi())
+        self.secondi.Bind(wx.EVT_SPINCTRL, lambda _evento: self.aggiorna())
+        self.secondi.Bind(wx.EVT_TEXT, lambda _evento: self.aggiorna())
+        ok.Bind(wx.EVT_BUTTON, lambda _evento: self.conferma())
+        self._spiega(self.disponibili)
         self.aggiorna()
-        self.campo.SetFocus()
-        self.campo.SetInsertionPointEnd()
+        # L'apertura conta come un Invio: quello della voce che l'ha aperta
+        # non mette un simbolo nel prompt.
+        self.ultimo_invio = time.monotonic()
+        self.disponibili.SetFocus()
+
+    # Le voci.
+
+    def voci_disponibili(self):
+        """I simboli che il prompt non usa, nell'ordine del catalogo, e Testo libero."""
+        usati = {elemento["codice"] for elemento in self.elementi if "codice" in elemento}
+        return [codice for codice, _descrizione in modello_prompt.simboli() if codice not in usati] + [TESTO_LIBERO]
+
+    def _etichetta(self, codice, verboso):
+        testo = f"%{codice} {self._descrizioni[codice]}"
+        return f"{testo} {_('(verboso)')}" if verboso else testo
+
+    def etichetta_dell_elemento(self, elemento):
+        if "testo" in elemento:
+            return _("Testo libero: {testo}").format(testo=elemento["testo"])
+        return self._etichetta(elemento["codice"], elemento["verboso"])
+
+    def _etichetta_disponibile(self, voce):
+        return _("Testo libero") if voce is TESTO_LIBERO else self._etichetta(voce, self._verbosi.get(voce, False))
+
+    def _riempi(self, nei_disponibili=None, nel_prompt=None):
+        """Riscrive i due elenchi, con selezionate le voci a quegli indici, o
+        a quelli di prima."""
+        if nei_disponibili is None:
+            nei_disponibili = max(self.disponibili.GetSelection(), 0)
+        if nel_prompt is None:
+            nel_prompt = max(self.prompt.GetSelection(), 0)
+        self.disponibili.Set([self._etichetta_disponibile(voce) for voce in self.voci_disponibili()])
+        self.prompt.Set([self.etichetta_dell_elemento(elemento) for elemento in self.elementi])
+        _seleziona(self.disponibili, nei_disponibili)
+        _seleziona(self.prompt, nel_prompt)
+
+    def _spiega(self, lista, annuncia=False):
+        """La spiegazione della voce scelta nell'elenco: la voce, poi le
+        regole dell'aiuto che la riguardano, che sono quelle che si
+        annunciano: la voce la legge gia' lo screen reader."""
+        indice = lista.GetSelection()
+        if indice == wx.NOT_FOUND:
+            return
+        if lista is self.disponibili:
+            voce = self.voci_disponibili()[indice]
+            riga = self._etichetta_disponibile(voce)
+            regole = [] if voce is TESTO_LIBERO else modello_prompt.regole_del_simbolo(voce)
+        else:
+            elemento = self.elementi[indice]
+            riga = self.etichetta_dell_elemento(elemento)
+            regole = [] if "testo" in elemento else modello_prompt.regole_del_simbolo(elemento["codice"])
+        self.spiegazione.ChangeValue("\n".join([riga, *regole]))
+        if annuncia and regole:
+            self._annuncia(regole)
+
+    def _fuoco_a_un_elenco(self, evento):
+        evento.Skip()
+        self._spiega(evento.GetEventObject(), annuncia=True)
+
+    # Il modello e l'esempio.
+
+    def _invariato(self):
+        _originale, elementi, secondi = self._originale
+        return self.elementi == elementi and self.secondi.GetValue() == secondi
 
     @property
     def modello(self):
-        return self.campo.GetValue().strip()
+        """Il modello composto; quello di partenza, scritto com'era, se nulla e' cambiato."""
+        if self._invariato():
+            return self._originale[0]
+        return modello_prompt.modello_degli_elementi(self.elementi, self.secondi.GetValue())
 
     def aggiorna(self):
-        """L'esito del modello scritto: gli errori, o l'anteprima."""
-        errori = self._errori(self.modello) if self.modello else []
-        righe = errori or (self._anteprima(self.modello) if self.modello else [])
-        self.esito.ChangeValue("\n".join(righe))
+        """L'esempio del prompt, coi dati di prova, o che cosa non va."""
+        modello = self.modello
+        errori = modello_prompt.errori_del_modello(modello) if modello else []
+        righe = errori or (modello_prompt.righe_d_anteprima(modello) if modello else [])
+        self.esempio.ChangeValue("\n".join(righe))
         return errori
 
     def conferma(self):
-        """Un modello con errori non si conferma: l'esito dice perche'."""
-        if self.aggiorna():
+        """Un modello cambiato con errori non si conferma: l'esempio dice
+        perche'. Uno che non e' cambiato si lascia com'era."""
+        if not self._invariato() and self.aggiorna():
             self._suono_d_errore()
-            self.esito.SetFocus()
+            self.esempio.SetFocus()
             return
         self.EndModal(wx.ID_OK)
+
+    # I tasti.
+
+    def _tasto(self, evento):
+        codice = evento.GetKeyCode()
+        oggetto = evento.GetEventObject()
+        senza_modificatori = not evento.HasAnyModifiers()
+        if oggetto is self.prompt and evento.GetModifiers() == wx.MOD_CONTROL and codice in (wx.WXK_UP, wx.WXK_DOWN):
+            self.sposta(-1 if codice == wx.WXK_UP else 1)
+            return
+        if oggetto in (self.disponibili, self.prompt) and codice == wx.WXK_SPACE and senza_modificatori:
+            self.cambia_il_verboso(oggetto)
+            return
+        if oggetto is self.prompt and codice in (wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE) and senza_modificatori:
+            self.rimuovi()
+            return
+        if oggetto in (self.disponibili, self.prompt) and _premuto_invio(evento):
+            adesso = time.monotonic()
+            precedente, self.ultimo_invio = self.ultimo_invio, adesso
+            if evento.IsAutoRepeat() or adesso - precedente < GRAZIA_INVIO:
+                return
+            if oggetto is self.disponibili:
+                self.aggiungi()
+            else:
+                self.riscrivi_il_testo()
+            return
+        evento.Skip()
+
+    def aggiungi(self):
+        """Invio nei disponibili: il simbolo in fondo al prompt, col suo
+        verboso; il fuoco resta sulla voce vicina, o va al prompt se i
+        disponibili sono finiti. Testo libero chiede il testo e resta."""
+        indice = self.disponibili.GetSelection()
+        if indice == wx.NOT_FOUND:
+            return
+        voce = self.voci_disponibili()[indice]
+        if voce is TESTO_LIBERO:
+            testo = self._chiedi_testo(self, "")
+            if not testo or not testo.strip():
+                return
+            elemento = {"testo": testo.strip()}
+        else:
+            elemento = {"codice": voce, "verboso": self._verbosi.pop(voce, False)}
+        self.elementi.append(elemento)
+        self._riempi(indice, len(self.elementi) - 1)
+        if not self.voci_disponibili():
+            self.prompt.SetFocus()
+        self._spiega(self.disponibili, annuncia=True)
+        self.aggiorna()
+
+    def rimuovi(self):
+        """Canc nel prompt: il simbolo torna fra i disponibili, al suo posto,
+        e il fuoco va all'elemento vicino; se il prompt e' vuoto, ai
+        disponibili, sul simbolo appena tornato. Un testo libero se ne va."""
+        indice = self.prompt.GetSelection()
+        if indice == wx.NOT_FOUND:
+            return
+        voci = self.voci_disponibili()
+        scelta = voci[max(self.disponibili.GetSelection(), 0)]
+        elemento = self.elementi.pop(indice)
+        if "codice" in elemento:
+            self._verbosi[elemento["codice"]] = elemento["verboso"]
+        voci = self.voci_disponibili()
+        if self.elementi:
+            self._riempi(voci.index(scelta), indice)
+            self._spiega(self.prompt, annuncia=True)
+        else:
+            self._riempi(voci.index(elemento["codice"]) if "codice" in elemento else voci.index(scelta), 0)
+            self.disponibili.SetFocus()
+        self.aggiorna()
+
+    def sposta(self, passo):
+        """Ctrl con le frecce nel prompt: l'elemento prima o dopo; agli
+        estremi, la nota bassa dell'errore."""
+        indice = self.prompt.GetSelection()
+        nuovo = indice + passo
+        if indice == wx.NOT_FOUND or not 0 <= nuovo < len(self.elementi):
+            self._suono_d_errore()
+            return
+        self.elementi[indice], self.elementi[nuovo] = self.elementi[nuovo], self.elementi[indice]
+        self._riempi(None, nuovo)
+        self._spiega(self.prompt)
+        self.aggiorna()
+
+    def cambia_il_verboso(self, lista):
+        """Lo Spazio: la forma estesa accesa o spenta; su un simbolo che non
+        ce l'ha, o su un testo, la nota bassa dell'errore."""
+        indice = lista.GetSelection()
+        if indice == wx.NOT_FOUND:
+            return
+        if lista is self.disponibili:
+            voce = self.voci_disponibili()[indice]
+            if voce not in modello_prompt.ESTESE:
+                self._suono_d_errore()
+                return
+            self._verbosi[voce] = not self._verbosi.get(voce, False)
+        else:
+            elemento = self.elementi[indice]
+            if elemento.get("codice") not in modello_prompt.ESTESE:
+                self._suono_d_errore()
+                return
+            elemento["verboso"] = not elemento["verboso"]
+        self._riempi()
+        self._spiega(lista)
+        self.aggiorna()
+
+    def riscrivi_il_testo(self):
+        """Invio su un testo libero del prompt: si riscrive; vuoto, resta
+        com'era, e per toglierlo c'e' Canc."""
+        indice = self.prompt.GetSelection()
+        if indice == wx.NOT_FOUND or "testo" not in self.elementi[indice]:
+            return
+        testo = self._chiedi_testo(self, self.elementi[indice]["testo"])
+        if not testo or not testo.strip():
+            return
+        self.elementi[indice]["testo"] = testo.strip()
+        self._riempi()
+        self._spiega(self.prompt)
+        self.aggiorna()
 
 
 class Caffe(wx.Dialog):

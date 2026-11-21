@@ -150,20 +150,91 @@ def testo_del_file(attuale):
     return "\r\n".join(righe) + "\r\n"
 
 
+def _regole():
+    """Le regole che accompagnano i codici, per nome: nel file del Blocco
+    note tutte, nella finestra di composizione quelle del simbolo scelto."""
+    return {
+        "estese": _("Con una v dopo la lettera, la forma estesa, a parole: %bv %nv %iv %av %dv %gv %tv %uv %vv."),
+        "percentuali": _("%bp e %np: la percentuale di tempo consumato dal Bianco e dal Nero, come .1 e .2: in arbitraggio, in Tempo e contro il motore col tempo a partita."),
+        "dinamico": _("Un numero dopo il percento, da 1 a 120, rende il prompt dinamico: %4 lo riscrive ogni 4 secondi. Senza numero il prompt e' statico, e i tempi non compaiono."),
+        "dopo_la_mossa": _("Se dopo %m c'e' altro, il cursore resta dopo la mossa, e il resto del prompt ti scorre a destra mentre scrivi."),
+        "scacchiera": _("%c va messo prima di %m: la scacchiera si stampa sopra la riga dove scrivi."),
+        "percento": _("%% scrive un percento vero."),
+    }
+
+
 def righe_d_aiuto():
     """I codici del modello, uno per riga, e le regole che li accompagnano:
-    nel file del Blocco note e nella finestra del prompt."""
+    nel file del Blocco note."""
     righe = [f"%{lettera} {descrizione}" for lettera, descrizione in catalogo()]
-    righe += [
-        _("Con una v dopo la lettera, la forma estesa, a parole: %bv %nv %iv %av %dv %gv %tv %uv %vv."),
-        _("%bp e %np: la percentuale di tempo consumato dal Bianco e dal Nero, come .1 e .2: in arbitraggio, in Tempo e contro il motore col tempo a partita."),
-        _("Un numero dopo il percento, da 1 a 120, rende il prompt dinamico: %4 lo riscrive ogni 4 secondi. Senza numero il prompt e' statico, e i tempi non compaiono."),
-        _("Se dopo %m c'e' altro, il cursore resta dopo la mossa, e il resto del prompt ti scorre a destra mentre scrivi."),
-        _("%c va messo prima di %m: la scacchiera si stampa sopra la riga dove scrivi."),
-        _("%% scrive un percento vero."),
-        _("Il modello predefinito e': {m}").format(m=PREDEFINITO),
-    ]
+    righe += list(_regole().values())
+    righe.append(_("Il modello predefinito e': {m}").format(m=PREDEFINITO))
     return righe
+
+
+# La finestra di composizione del prompt, chiesta da Gabriele nel collaudo
+# della T6: il modello come una fila di elementi, simboli e testi liberi,
+# uniti da uno spazio, e i secondi dell'aggiornamento a parte, in testa.
+
+
+def simboli():
+    """I simboli della finestra di composizione, come (codice, descrizione):
+    quelli del catalogo, con le due percentuali dopo i tempi del Bianco e
+    del Nero. La forma estesa non e' un simbolo a se': e' un interruttore."""
+    risultato = []
+    for lettera, descrizione in catalogo():
+        risultato.append((lettera, descrizione))
+        if lettera == "n":
+            risultato.append(("bp", _("percentuale di tempo consumato dal Bianco")))
+            risultato.append(("np", _("percentuale di tempo consumato dal Nero")))
+    return risultato
+
+
+def regole_del_simbolo(codice):
+    """Le regole dell'aiuto che riguardano il simbolo, per la spiegazione."""
+    regole = _regole()
+    righe = []
+    if codice in ESTESE:
+        righe.append(regole["estese"])
+    if codice in ("bp", "np"):
+        righe.append(regole["percentuali"])
+    if codice == "m":
+        righe.append(regole["dopo_la_mossa"])
+    if codice in ("c", "m"):
+        righe.append(regole["scacchiera"])
+    return righe
+
+
+def elementi(testo):
+    """Il modello come elementi della finestra di composizione, e i secondi
+    dell'aggiornamento. Un elemento e' {"codice": lettera, "verboso": vero o
+    falso}, dove la lettera e' quella del catalogo o bp e np, oppure
+    {"testo": testo}: il testo libero fra due simboli, senza gli spazi ai
+    bordi, che sono i separatori. Un codice sconosciuto resta nel testo."""
+    pezzi, _sconosciuti = analizza(testo)
+    risultato = []
+    secondi = 0
+    for tipo, valore in pezzi:
+        if tipo == "intervallo":
+            secondi = secondi or valore
+        elif tipo == "codice":
+            verboso = len(valore) == 2 and valore.endswith("v")
+            risultato.append({"codice": valore[0] if verboso else valore, "verboso": verboso})
+        elif valore.strip():
+            risultato.append({"testo": valore.strip()})
+    return risultato, secondi
+
+
+def modello_degli_elementi(fila, secondi=0):
+    """Il contrario: gli elementi della fila uniti da uno spazio, con i
+    secondi in testa se ci sono; nel testo libero il percento si raddoppia."""
+    parti = [f"%{secondi}"] if secondi else []
+    for elemento in fila:
+        if "testo" in elemento:
+            parti.append(elemento["testo"].replace("%", "%%"))
+        else:
+            parti.append("%" + elemento["codice"] + ("v" if elemento["verboso"] else ""))
+    return " ".join(parti)
 
 
 def righe_d_anteprima(nuovo):

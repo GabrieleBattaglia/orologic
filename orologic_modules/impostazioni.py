@@ -101,8 +101,10 @@ class Impostazioni:
         self.prossima_lingua = None
         # Il lavoro sul motore in corso, nel suo filo.
         self.lavoro = None
-        # La finestra dei colori, mentre e' aperta: le prove la guidano.
+        # La finestra dei colori e quella del prompt, mentre sono aperte: le
+        # prove le guidano.
         self.finestra_dei_colori = None
+        self.finestra_del_prompt = None
 
     # L'elenco principale.
 
@@ -352,13 +354,23 @@ class Impostazioni:
     # Il prompt.
 
     def _prompt(self, dialogo):
+        """La finestra di composizione del prompt: i testi liberi si
+        scrivono in un campo, e la spiegazione dei simboli si annuncia se
+        gli annunci sono attivi."""
         prima = modello_prompt.modello()
-        with dialoghi.FinestraPrompt(dialogo, prima, modello_prompt.righe_d_aiuto(), modello_prompt.righe_d_anteprima,
-                                     modello_prompt.errori_del_modello, modello_prompt._errore) as finestra_del_prompt:
-            if finestra_del_prompt.ShowModal() != wx.ID_OK:
-                return
+
+        def chiedi_testo(genitore, valore):
+            return self.finestra.chiedi_valore(genitore, _("Testo libero"), _("Testo libero"), valore, "testo", 0, modello_prompt.LUNGHEZZA_MASSIMA)
+
+        with dialoghi.FinestraPrompt(dialogo, prima, chiedi_testo, self.finestra.annuncia, modello_prompt._errore) as finestra_del_prompt:
+            self.finestra_del_prompt = finestra_del_prompt
+            try:
+                esito = finestra_del_prompt.ShowModal()
+            finally:
+                self.finestra_del_prompt = None
             nuovo = finestra_del_prompt.modello or modello_prompt.PREDEFINITO
-        self.salva_il_prompt(prima, nuovo)
+        if esito == wx.ID_OK:
+            self.salva_il_prompt(prima, nuovo)
 
     @staticmethod
     def salva_il_prompt(prima, nuovo):

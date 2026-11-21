@@ -59,12 +59,12 @@ Name: "francais"; MessagesFile: "compiler:Languages\French.isl"
 Name: "portugues"; MessagesFile: "compiler:Languages\Portuguese.isl"
 
 [CustomMessages]
-; Il collegamento al terminale, Orologic con --cli: il nome lo sceglie Gabriele; questo e' provvisorio.
-italiano.Terminale=Orologic nel terminale
-english.Terminale=Orologic in the terminal
-espanol.Terminale=Orologic en la terminal
-francais.Terminale=Orologic dans le terminal
-portugues.Terminale=Orologic no terminal
+; Il collegamento al terminale, Orologic con --cli, col nome scelto da Gabriele nel collaudo della T6.
+italiano.Terminale=Orologic modalità a linea di comando
+english.Terminale=Orologic command line mode
+espanol.Terminale=Orologic modo línea de comandos
+francais.Terminale=Orologic mode ligne de commande
+portugues.Terminale=Orologic modo linha de comando
 italiano.CancelloIDati=Cancello anche i dati di Orologic? Impostazioni, orologi, carriera contro il motore, token di Lichess, partite, resoconti e il motore scaricato. Con No restano nella cartella, e reinstallando Orologic li ritrovi.
 english.CancelloIDati=Shall I also delete the Orologic data? Settings, clocks, career against the engine, Lichess token, games, reports and the downloaded engine. With No they stay in the folder, and you will find them again if you reinstall Orologic.
 espanol.CancelloIDati=¿Borro también los datos de Orologic? Ajustes, relojes, carrera contra el motor, token de Lichess, partidas, informes y el motor descargado. Con No se quedan en la carpeta, y al reinstalar Orologic los vuelves a encontrar.
