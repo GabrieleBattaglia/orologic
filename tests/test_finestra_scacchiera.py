@@ -299,17 +299,38 @@ def test_la_vista_ferma_e_la_partita_da_guardare(finestra, aperta):
 def test_un_suono_per_evento_firmato_da_orologic():
     """Ogni evento della scacchiera ha un preset suo, che c'e' nella
     collezione, diverso da tutti gli altri anche nel contenuto, e firmato da
-    Orologic; gli eventi del no aspettano la seconda parte dell'ascolto."""
+    Orologic; ogni evento che il codice suona ha il suo preset e la sua
+    azione nell'elenco per Acu_Maker."""
+    import pathlib
+    import re
+
     from GBUtils import Acusticator
 
-    nomi = list(finestra_scacchiera.SUONI.values())
+    suoni = finestra_scacchiera.SUONI
+    nomi = list(suoni.values())
     assert len(set(nomi)) == len(nomi)
     impronte = {repr(Acusticator.preset(nome)) for nome in nomi}
     assert len(impronte) == len(nomi)
     for nome in nomi:
         assert "orologic" in Acusticator.usato_da(nome), nome
-    assert set(finestra_scacchiera.GIRI.values()) <= set(finestra_scacchiera.SUONI)
-    assert not set(finestra_scacchiera.EVENTI_DEL_NO) & set(finestra_scacchiera.SUONI)
+    assert set(finestra_scacchiera.GIRI.values()) <= set(suoni)
+    sorgente = pathlib.Path(finestra_scacchiera.__file__).read_text(encoding="utf-8")
+    usati = set(re.findall(r'suona\("([a-z_]+)"\)', sorgente)) | set(finestra_scacchiera.GIRI.values())
+    assert usati == set(suoni)
+    assert set(finestra_scacchiera.AZIONI) == set(suoni)
+
+
+def test_l_elenco_dei_suoni_e_aggiornato():
+    """suoni_della_scacchiera.txt e' quello che scrive strumenti/elenco_suoni.py
+    dalle tabelle di adesso: se una cambia, si rigenera."""
+    import importlib.util
+    import pathlib
+
+    radice = pathlib.Path(__file__).resolve().parent.parent
+    specifica = importlib.util.spec_from_file_location("elenco_suoni", radice / "strumenti" / "elenco_suoni.py")
+    elenco = importlib.util.module_from_spec(specifica)
+    specifica.loader.exec_module(elenco)
+    assert (radice / elenco.NOME_DEL_FILE).read_bytes().decode("utf-8") == elenco.testo()
 
 
 def test_la_posizione_nuova_e_la_fine_della_partita(finestra, aperta):

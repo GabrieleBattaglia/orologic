@@ -58,7 +58,8 @@ PROMOZIONI = (chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT)
 # strumenti/ascolto_scacchiera.py: sollevare e posare la coppia votata 5,
 # rimettere la meta' che posa della coppia votata 4, subito sotto; al bordo
 # uno dei due votati 5, e per passare dall'altra parte, uno per lato, gli
-# altri del gruppo del bordo, in ordine di voto.
+# altri del gruppo del bordo, in ordine di voto. I suoni del no, uno per
+# evento, dalla seconda parte dell'ascolto.
 SUONI = {
     "apri": "due_ante_che_si_aprono",
     "solleva": "casella_ritirati_spuntata",
@@ -69,19 +70,38 @@ SUONI = {
     "giro_destra": "filtro_tratto_indifferente",
     "giro_sinistra": "filtro_posto_attuale",
     "giro_su": "filtro_visus",
+    "mossa_non_vale": "casella_in_vendita_tolta",
+    "casa_vuota": "casella_del_computer_tolta",
+    "niente_in_mano": "casella_senza_prelazione_tolta",
+    "comando_assente": "filtro_stipendio_massimo",
+    "da_guardare": "orecchio_che_cerca",
+    "nessuna_mossa": "filtro_eta_minima",
 }
 GIRI = {SU: "giro_su", GIU: "giro_giu", SINISTRA: "giro_sinistra", DESTRA: "giro_destra"}
-# Gli eventi del no, ognuno col suo suono, da scegliere nella seconda parte
-# dell'ascolto: per ora tutti con l'errore del nucleo, provvisorio.
-EVENTI_DEL_NO = ("mossa_non_vale", "casa_vuota", "niente_in_mano", "comando_assente", "da_guardare", "nessuna_mossa")
+# Le azioni che fanno suonare ogni evento, per suoni_della_scacchiera.txt,
+# l'elenco che Gabriele usa con Acu_Maker: lo scrive strumenti/elenco_suoni.py.
+AZIONI = {
+    "apri": "La scacchiera interattiva si apre, con lo spazio al prompt delle mosse a riga vuota",
+    "solleva": "Lo spazio solleva il pezzo della casa, o, con un pezzo già in mano, rimette quello a posto e solleva questo",
+    "posa": "Invio posa il pezzo sollevato sulla casa scelta, e la mossa va a Orologic",
+    "rimetti": "Lo spazio sulla casa del pezzo sollevato lo rimette giù, senza muovere",
+    "bordo": "Una freccia al bordo della scacchiera: il cursore si ferma",
+    "giro_su": "Alt e freccia su, oltre il bordo di sopra: il cursore passa in fondo",
+    "giro_giu": "Alt e freccia giù, oltre il bordo di sotto: il cursore passa in cima",
+    "giro_sinistra": "Alt e freccia sinistra, oltre il bordo sinistro: il cursore passa a destra",
+    "giro_destra": "Alt e freccia destra, oltre il bordo destro: il cursore passa a sinistra",
+    "mossa_non_vale": "Invio con una mossa che non vale, o una promozione impossibile: si dice perché",
+    "casa_vuota": "Lo spazio su una casa vuota, senza niente da sollevare",
+    "niente_in_mano": "Invio senza un pezzo in mano",
+    "comando_assente": "Un tasto per un comando che la modalità non ha: da F1 a F5 senza orologi, C senza commenti, Backspace senza comandi",
+    "da_guardare": "Spazio o Invio nella partita osservata su Lichess, dove la scacchiera è solo da guardare",
+    "nessuna_mossa": "u quando non c'è ancora nessuna mossa giocata",
+}
 
 
 def suona(evento):
     """I suoni della scacchiera; le prove li sostituiscono."""
-    if evento in SUONI:
-        Acusticator.play(SUONI[evento], volume=config.VOLUME)
-    elif evento in EVENTI_DEL_NO:
-        Acusticator(["b3", 0.2, 0, config.VOLUME], kind=2)
+    Acusticator.play(SUONI[evento], volume=config.VOLUME)
 
 
 def _e_nero(colore):
