@@ -191,7 +191,7 @@ def test_la_finestra_del_prompt(app):
 
     dialogo = dialoghi.FinestraPrompt(None, "%b %n %m", lambda *_argomenti: None)
     try:
-        assert dialogo.esempio.GetValue().startswith("Anteprima: ")
+        assert dialogo.esempio.GetValue() == modello_prompt.componi(modello_prompt.esempio(), "%b %n %m")
         assert dialogo.prompt.GetString(0) == "%b tempo del Bianco"
         assert dialogo.modello == "%b %n %m"
     finally:

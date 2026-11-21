@@ -292,9 +292,11 @@ class FinestraPrompt(wx.Dialog):
     sua descrizione, e in fondo Testo libero; Prompt ha gli elementi del
     modello, nell'ordine. Sotto, la spiegazione del simbolo scelto, che si
     annuncia se gli annunci sono attivi, l'aggiornamento in secondi, e
-    l'esempio del prompt coi dati di prova.
+    l'anteprima del prompt coi dati di prova.
     Nei disponibili Invio mette il simbolo in fondo al prompt, e il fuoco
-    resta sul vicino; su Testo libero chiede il testo. Nel prompt Canc
+    resta sul vicino; su Testo libero chiede il testo. Un simbolo con la
+    forma estesa puo' starci breve e verboso: messa una forma, l'altra resta
+    fra i disponibili. Nel prompt Canc
     rimette il simbolo fra i disponibili, e il fuoco va al vicino, o ai
     disponibili se il prompt e' vuoto; Ctrl con le frecce su e giu' sposta
     l'elemento prima o dopo; Invio su un testo libero lo fa riscrivere. Lo
@@ -333,9 +335,11 @@ class FinestraPrompt(wx.Dialog):
         etichetta_dei_secondi = wx.StaticText(pannello, label=domanda_dei_secondi)
         self.secondi = wx.SpinCtrl(pannello, min=0, max=modello_prompt.INTERVALLO_MASSIMO, initial=secondi)
         self.secondi.SetName(domanda_dei_secondi.rstrip(":").rstrip())
-        etichetta_dell_esempio = wx.StaticText(pannello, label=_("Esempio"))
+        # La parola Anteprima sta nell'etichetta, che NVDA legge col fuoco:
+        # la casella riporta il prompt e basta (secondo giro del collaudo).
+        etichetta_dell_esempio = wx.StaticText(pannello, label=_("Anteprima"))
         self.esempio = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_DONTWRAP)
-        self.esempio.SetName(_("Esempio"))
+        self.esempio.SetName(_("Anteprima"))
         pulsanti = wx.StdDialogButtonSizer()
         ok = wx.Button(pannello, wx.ID_OK, _("OK"))
         ok.SetDefault()
@@ -386,10 +390,30 @@ class FinestraPrompt(wx.Dialog):
 
     # Le voci.
 
+    def _forme_usate(self, codice, escluso=None):
+        """Le forme del simbolo gia' nel prompt, verboso vero o falso,
+        senza contare l'elemento escluso."""
+        return {elemento["verboso"] for elemento in self.elementi if elemento is not escluso and elemento.get("codice") == codice}
+
+    def _forme_libere(self, codice):
+        """Le forme del simbolo che il prompt non usa: un simbolo con la
+        forma estesa puo' starci breve e verboso (Gabriele, secondo giro del
+        collaudo della finestra); gli altri una volta sola."""
+        forme = {False, True} if codice in modello_prompt.ESTESE else {False}
+        return forme - self._forme_usate(codice)
+
+    def _verboso_disponibile(self, codice):
+        """La forma del simbolo fra i disponibili: quella rimasta, se l'altra
+        e' gia' nel prompt, altrimenti quella dell'interruttore."""
+        libere = self._forme_libere(codice)
+        if len(libere) == 1:
+            return next(iter(libere))
+        return self._verbosi.get(codice, False)
+
     def voci_disponibili(self):
-        """I simboli che il prompt non usa, nell'ordine del catalogo, e Testo libero."""
-        usati = {elemento["codice"] for elemento in self.elementi if "codice" in elemento}
-        return [codice for codice, _descrizione in modello_prompt.simboli() if codice not in usati] + [TESTO_LIBERO]
+        """I simboli con almeno una forma che il prompt non usa, nell'ordine
+        del catalogo, e Testo libero."""
+        return [codice for codice, _descrizione in modello_prompt.simboli() if self._forme_libere(codice)] + [TESTO_LIBERO]
 
     def _etichetta(self, codice, verboso):
         testo = f"%{codice} {self._descrizioni[codice]}"
@@ -401,7 +425,7 @@ class FinestraPrompt(wx.Dialog):
         return self._etichetta(elemento["codice"], elemento["verboso"])
 
     def _etichetta_disponibile(self, voce):
-        return _("Testo libero") if voce is TESTO_LIBERO else self._etichetta(voce, self._verbosi.get(voce, False))
+        return _("Testo libero") if voce is TESTO_LIBERO else self._etichetta(voce, self._verboso_disponibile(voce))
 
     def _riempi(self, nei_disponibili=None, nel_prompt=None):
         """Riscrive i due elenchi, con selezionate le voci a quegli indici, o
@@ -423,7 +447,7 @@ class FinestraPrompt(wx.Dialog):
             return None
         if lista is self.disponibili:
             voce = self.voci_disponibili()[indice]
-            return voce, self._verbosi.get(voce, False)
+            return voce, voce is not TESTO_LIBERO and self._verboso_disponibile(voce)
         elemento = self.elementi[indice]
         return elemento.get("codice"), elemento.get("verboso", False)
 
@@ -435,11 +459,17 @@ class FinestraPrompt(wx.Dialog):
             return []
         return [_("verboso") if verboso else _("breve")]
 
+    @classmethod
+    def _stato_da_annunciare(cls, codice, verboso):
+        """Solo breve: verboso NVDA lo legge gia' nella voce, (verboso), e
+        annunciato arrivava doppio (Gabriele, secondo giro del collaudo)."""
+        return [] if verboso else cls._stato(codice, verboso)
+
     def _spiega(self, lista, annuncia=False):
         """La spiegazione della voce scelta nell'elenco: la voce, le regole
         dell'aiuto che la riguardano e, per i simboli con la forma estesa,
-        verboso o breve. Si annuncia tutto tranne la voce, che la legge gia'
-        lo screen reader."""
+        verboso o breve. Si annunciano le regole e breve; la voce, con
+        (verboso), la legge gia' lo screen reader."""
         scelto = self._scelto(lista)
         if scelto is None:
             return
@@ -449,10 +479,10 @@ class FinestraPrompt(wx.Dialog):
             riga = self._etichetta_disponibile(codice)
         else:
             riga = self.etichetta_dell_elemento(self.elementi[indice])
-        coda = [] if codice is None else [*modello_prompt.regole_del_simbolo(codice), *self._stato(codice, verboso)]
-        self.spiegazione.ChangeValue("\n".join([riga, *coda]))
+        regole = [] if codice is None else modello_prompt.regole_del_simbolo(codice)
+        self.spiegazione.ChangeValue("\n".join([riga, *regole, *self._stato(codice, verboso)]))
         if annuncia:
-            self._annuncia_dopo(coda)
+            self._annuncia_dopo([*regole, *self._stato_da_annunciare(codice, verboso)])
 
     def _annuncia_dopo(self, righe):
         """L'annuncio parte dopo RITARDO_DELL_ANNUNCIO, in coda alla voce che
@@ -487,11 +517,15 @@ class FinestraPrompt(wx.Dialog):
         return modello_prompt.modello_degli_elementi(self.elementi, self.secondi.GetValue())
 
     def aggiorna(self):
-        """L'esempio del prompt, coi dati di prova, o che cosa non va."""
+        """L'anteprima: il prompt coi dati di prova, fedele, senza altre
+        parole; oppure che cosa non va."""
         modello = self.modello
         errori = modello_prompt.errori_del_modello(modello) if modello else []
-        righe = errori or (modello_prompt.righe_d_anteprima(modello) if modello else [])
-        self.esempio.ChangeValue("\n".join(righe))
+        if errori:
+            testo = "\n".join(errori)
+        else:
+            testo = modello_prompt.componi(modello_prompt.esempio(), modello) if modello else ""
+        self.esempio.ChangeValue(testo)
         return errori
 
     def conferma(self):
@@ -544,7 +578,8 @@ class FinestraPrompt(wx.Dialog):
                 return
             elemento = {"testo": testo.strip()}
         else:
-            elemento = {"codice": voce, "verboso": self._verbosi.pop(voce, False)}
+            elemento = {"codice": voce, "verboso": self._verboso_disponibile(voce)}
+            self._verbosi.pop(voce, None)
         self.elementi.append(elemento)
         self._riempi(indice, len(self.elementi) - 1)
         if not self.voci_disponibili():
@@ -588,26 +623,29 @@ class FinestraPrompt(wx.Dialog):
 
     def cambia_il_verboso(self, lista):
         """Lo Spazio: la forma estesa accesa o spenta; su un simbolo che non
-        ce l'ha, o su un testo, la nota bassa dell'errore."""
+        ce l'ha, su uno che ha gia' l'altra forma nel prompt, o su un testo,
+        la nota bassa dell'errore."""
         indice = lista.GetSelection()
         if indice == wx.NOT_FOUND:
             return
         if lista is self.disponibili:
             voce = self.voci_disponibili()[indice]
-            if voce not in modello_prompt.ESTESE:
+            # L'altra forma e' gia' nel prompt: questa non cambia.
+            if voce not in modello_prompt.ESTESE or len(self._forme_libere(voce)) < 2:
                 self._suono_d_errore()
                 return
             self._verbosi[voce] = not self._verbosi.get(voce, False)
         else:
             elemento = self.elementi[indice]
-            if elemento.get("codice") not in modello_prompt.ESTESE:
+            codice = elemento.get("codice")
+            if codice not in modello_prompt.ESTESE or (not elemento["verboso"]) in self._forme_usate(codice, escluso=elemento):
                 self._suono_d_errore()
                 return
             elemento["verboso"] = not elemento["verboso"]
         self._riempi()
         self._spiega(lista)
-        # Dopo la voce riletta, solo il nuovo stato: verboso o breve.
-        self._annuncia_dopo(self._stato(*self._scelto(lista)))
+        # Dopo la voce riletta, solo breve: verboso lo dice gia' la voce.
+        self._annuncia_dopo(self._stato_da_annunciare(*self._scelto(lista)))
         self.aggiorna()
 
     def riscrivi_il_testo(self):

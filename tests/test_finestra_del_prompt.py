@@ -103,18 +103,51 @@ def test_disponibili_e_prompt_all_apertura(prova):
     p = prova("%b %n %m")
     d = p.dialogo
     assert p.voci(d.prompt) == ["%b tempo del Bianco", "%n tempo del Nero", "%m numero di mossa con l'ultima mossa, come il prompt classico"]
-    assert p.voci(d.disponibili)[0] == "%bp percentuale di tempo consumato dal Bianco"
+    # %b e %n sono nel prompt brevi: fra i disponibili resta la forma verbosa.
+    assert p.voci(d.disponibili)[:3] == ["%b tempo del Bianco (verboso)", "%n tempo del Nero (verboso)", "%bp percentuale di tempo consumato dal Bianco"]
     assert p.voci(d.disponibili)[-1] == "Testo libero"
-    assert len(p.voci(d.disponibili)) == len(modello_prompt.simboli()) - 3 + 1
-    assert d.esempio.GetValue().startswith("Anteprima: ")
-    assert d.spiegazione.GetValue().startswith("%bp percentuale di tempo consumato dal Bianco\n%bp e %np:")
+    assert len(p.voci(d.disponibili)) == len(modello_prompt.simboli()) - 1 + 1
+    # L'anteprima: il prompt e basta; la parola Anteprima sta nell'etichetta.
+    assert d.esempio.GetName() == "Anteprima"
+    assert d.esempio.GetValue() == modello_prompt.componi(modello_prompt.esempio(), "%b %n %m")
+    assert not d.esempio.GetValue().startswith("Anteprima")
+    assert d.spiegazione.GetValue() == "%b tempo del Bianco (verboso)\nverboso"
     assert d.modello == "%b %n %m"
 
 
-def test_invio_spazio_e_testo_libero(prova):
+def test_le_due_forme_di_un_simbolo(prova):
     p = prova("%b %n %m")
     d = p.dialogo
+    # La forma rimasta non si cambia: l'altra e' gia' nel prompt.
+    p.seleziona(d.disponibili, "%b tempo del Bianco (verboso)")
+    p.tasto(d.disponibili, wx.WXK_SPACE)
+    assert p.errori == ["errore"]
+    # Messa anche la forma verbosa, %b sparisce dai disponibili.
+    assert not p.tasto(d.disponibili, wx.WXK_RETURN)
+    assert d.elementi[-1] == {"codice": "b", "verboso": True}
+    assert not any(voce.startswith("%b ") for voce in p.voci(d.disponibili))
+    assert d.disponibili.GetStringSelection() == "%n tempo del Nero (verboso)"
+    assert d.modello == "%b %n %m %bv"
+    # Nel prompt lo Spazio non fa due %b uguali.
+    d.prompt.SetSelection(0)
+    p.tasto(d.prompt, wx.WXK_SPACE)
+    assert p.errori == ["errore", "errore"]
+    # Tolta la forma breve, %b torna fra i disponibili, breve.
+    p.tasto(d.prompt, wx.WXK_DELETE)
+    assert "%b tempo del Bianco" in p.voci(d.disponibili)
+    assert d.modello == "%n %m %bv"
+    # Un simbolo libero nelle due forme: messa la breve, resta la verbosa.
+    p.seleziona(d.disponibili, "%i il tuo tempo, dove hai un colore: Easyfish e Lichess")
+    p.tasto(d.disponibili, wx.WXK_RETURN)
+    assert d.elementi[-1] == {"codice": "i", "verboso": False}
+    assert d.disponibili.GetStringSelection() == "%i il tuo tempo, dove hai un colore: Easyfish e Lichess (verboso)"
+
+
+def test_invio_spazio_e_testo_libero(prova):
+    p = prova("%m")
+    d = p.dialogo
     # Invio: il simbolo in fondo al prompt, il fuoco resta sul vicino.
+    p.seleziona(d.disponibili, "%bp percentuale di tempo consumato dal Bianco")
     assert not p.tasto(d.disponibili, wx.WXK_RETURN)
     assert d.elementi[-1] == {"codice": "bp", "verboso": False}
     assert d.disponibili.GetStringSelection() == "%np percentuale di tempo consumato dal Nero"
@@ -126,6 +159,8 @@ def test_invio_spazio_e_testo_libero(prova):
     assert not p.tasto(d.disponibili, wx.WXK_RETURN)
     assert d.elementi[-1] == {"codice": "i", "verboso": True}
     assert d.prompt.GetString(d.prompt.GetCount() - 1).endswith("(verboso)")
+    # Fra i disponibili resta la forma breve.
+    assert d.disponibili.GetStringSelection() == "%i il tuo tempo, dove hai un colore: Easyfish e Lichess"
     # Su un simbolo senza forma estesa, la nota bassa dell'errore.
     p.seleziona(d.disponibili, "%h chi ha piu' tempo: < il Bianco, > il Nero, = pari")
     p.tasto(d.disponibili, wx.WXK_SPACE)
@@ -136,14 +171,14 @@ def test_invio_spazio_e_testo_libero(prova):
     p.tasto(d.disponibili, wx.WXK_RETURN)
     assert d.elementi[-1] == {"testo": "/"}
     assert p.voci(d.disponibili)[-1] == "Testo libero"
-    assert d.modello == "%b %n %m %bp %iv /"
+    assert d.modello == "%m %bp %iv /"
     # Un Invio dentro la grazia non fa niente.
     d.ultimo_invio = time.monotonic()
     evento = wx.KeyEvent(wx.wxEVT_CHAR_HOOK)
     evento.SetKeyCode(wx.WXK_RETURN)
     evento.SetEventObject(d.disponibili)
     d._tasto(evento)
-    assert len(d.elementi) == 6
+    assert len(d.elementi) == 4
 
 
 def test_canc_ctrl_frecce_e_testo_da_riscrivere(prova):
@@ -188,7 +223,7 @@ def test_aggiornamento_spiegazione_e_annunci(prova):
     d.secondi.SetValue(5)
     d.aggiorna()
     assert d.modello == "%5 %b %n %m"
-    assert "Prompt dinamico, riscritto ogni 5 secondi." in d.esempio.GetValue()
+    assert d.esempio.GetValue() == modello_prompt.componi(modello_prompt.esempio(), "%5 %b %n %m")
     # Scegliendo una voce, la spiegazione la segue e si annunciano le regole.
     d.prompt.SetSelection(2)
     evento = wx.CommandEvent(wx.wxEVT_LISTBOX, d.prompt.GetId())
@@ -202,7 +237,7 @@ def test_aggiornamento_spiegazione_e_annunci(prova):
     assert pompa(lambda: p.annunci == [regole])
 
 
-def test_verboso_o_breve_in_coda_e_solo_l_ultimo_annuncio(prova):
+def test_breve_in_coda_verboso_no_e_solo_l_ultimo_annuncio(prova):
     p = prova("%b %n %m")
     d = p.dialogo
     pompa(lambda: False, 0.5)
@@ -210,10 +245,19 @@ def test_verboso_o_breve_in_coda_e_solo_l_ultimo_annuncio(prova):
     p.seleziona(d.disponibili, "%i il tuo tempo, dove hai un colore: Easyfish e Lichess")
     d._spiega(d.disponibili, annuncia=True)
     assert d.spiegazione.GetValue().split("\n")[-1] == "breve"
-    # Lo Spazio: la voce si riscrive, e in coda si annuncia il nuovo stato.
+    # Lo Spazio accende il verboso: la voce riletta lo dice, e non si annuncia.
     p.tasto(d.disponibili, wx.WXK_SPACE)
     assert d.spiegazione.GetValue().split("\n")[-1] == "verboso"
-    assert pompa(lambda: p.annunci == [["verboso"]])
+    pompa(lambda: False, 0.5)
+    assert p.annunci == []
+    # Spento, in coda si annuncia breve.
+    p.tasto(d.disponibili, wx.WXK_SPACE)
+    assert pompa(lambda: p.annunci == [["breve"]])
+    # Una voce verbosa senza regole non annuncia niente.
+    p.seleziona(d.disponibili, "%b tempo del Bianco (verboso)")
+    d._spiega(d.disponibili, annuncia=True)
+    pompa(lambda: False, 0.5)
+    assert p.annunci == [["breve"]]
     # Scorrendo in fretta si annuncia solo l'ultima voce; un simbolo senza
     # regole e senza forma estesa non annuncia niente.
     p.seleziona(d.disponibili, "%a il tempo dell'avversario, dove hai un colore")
@@ -221,7 +265,7 @@ def test_verboso_o_breve_in_coda_e_solo_l_ultimo_annuncio(prova):
     p.seleziona(d.disponibili, "%o nome dell'avversario")
     d._spiega(d.disponibili, annuncia=True)
     pompa(lambda: False, 0.5)
-    assert p.annunci == [["verboso"]]
+    assert p.annunci == [["breve"]]
     assert d.spiegazione.GetValue() == "%o nome dell'avversario"
 
 
@@ -271,7 +315,7 @@ def test_dalle_impostazioni_ok_salva_annulla_no(finestra, prompt_di_prima, monke
     modello_prompt.salva("%b %n %m")
 
     def aggiungi_e_conferma(dialogo):
-        dialogo.disponibili.SetSelection(0)
+        dialogo.disponibili.SetSelection(dialogo.voci_disponibili().index("bp"))
         dialogo.aggiungi()
         # Gli annunci attivi: le regole del simbolo vanno alla sintesi, in coda.
         regola = modello_prompt._regole()["percentuali"]
@@ -283,7 +327,7 @@ def test_dalle_impostazioni_ok_salva_annulla_no(finestra, prompt_di_prima, monke
     assert modello_prompt.modello() == "%b %n %m %bp"
 
     def aggiungi_e_annulla(dialogo):
-        dialogo.disponibili.SetSelection(0)
+        dialogo.disponibili.SetSelection(dialogo.voci_disponibili().index("np"))
         dialogo.aggiungi()
         dialogo.EndModal(wx.ID_CANCEL)
 
