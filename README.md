@@ -1,6 +1,6 @@
 # Orologic
 
-Orologic è un orologio per scacchi e uno strumento di analisi pensato per chi usa uno screen reader o un display braille. Si usa tutto da tastiera, in una console di Windows, e ogni messaggio è scritto per essere letto a voce.
+Orologic è un orologio per scacchi e uno strumento di analisi pensato per chi usa uno screen reader o un display braille. Si usa tutto da tastiera, e ogni messaggio è scritto per essere letto a voce. Dalla versione 9 parte in una finestra di Windows, con la plancia dei menu, la console e gli annunci alla sintesi e al braille; con l'opzione `--cli` parte nel terminale di sempre.
 
 ## Che cosa fa
 
@@ -19,7 +19,7 @@ Orologic è un orologio per scacchi e uno strumento di analisi pensato per chi u
 
 ## Scaricare Orologic
 
-Dalla pagina delle [release](https://github.com/GabrieleBattaglia/orologic/releases) si scarica Orologic.zip: va scompattato in una cartella qualsiasi, senza installazione. Gli aggiornamenti successivi li propone e li installa Orologic stesso, all'avvio.
+Dalla pagina delle [release](https://github.com/GabrieleBattaglia/orologic/releases) si scarica, dalla versione 9, l'installatore, Orologic-Setup seguito dal numero di versione, oppure Orologic.zip, da scompattare in una cartella qualsiasi, senza installazione. Chi ha già Orologic scompattato può installare sopra la sua cartella, e i suoi dati restano. Gli aggiornamenti successivi li propone e li installa Orologic stesso, all'avvio, in tutti e due i casi.
 
 Il programma parla italiano, inglese, spagnolo, francese e portoghese.
 
