@@ -76,7 +76,9 @@ margin: 1em 0;
 </li>
 <li><a href="#cap-1-3-3">1.3.3. Le partite: il cruscotto e gli annunci</a>
 </li>
-<li><a href="#cap-1-3-4">1.3.4. Nel terminale, con --cli</a>
+<li><a href="#cap-1-3-4">1.3.4. La scacchiera interattiva</a>
+</li>
+<li><a href="#cap-1-3-5">1.3.5. Nel terminale, con --cli</a>
 </li>
 </ul>
 </li>
@@ -282,7 +284,7 @@ margin: 1em 0;
 <p>Questo è il modo del terminale. Dalla versione 9, nella finestra, le stesse voci, con le stesse parole, stanno nella plancia, l'albero descritto nella sezione 1.3.1, e si scelgono con le frecce e Invio.</p>
 
 <h3 id="cap-1-3">1.3. La Finestra di Orologic, lo Screen Reader e il Terminale</h3>
-<p>Dalla versione 9 Orologic parte in una finestra di Windows. Dentro gira lo stesso Orologic di prima, con tutte le sue funzioni, i suoi comandi e le sue frasi: cambia il modo di muoversi e di scegliere. Chi preferisce il terminale di sempre lo ritrova con l'opzione <code>--cli</code>, sezione 1.3.4.</p>
+<p>Dalla versione 9 Orologic parte in una finestra di Windows. Dentro gira lo stesso Orologic di prima, con tutte le sue funzioni, i suoi comandi e le sue frasi: cambia il modo di muoversi e di scegliere. Chi preferisce il terminale di sempre lo ritrova con l'opzione <code>--cli</code>, sezione 1.3.5.</p>
 
 <h4 id="cap-1-3-1">1.3.1. La plancia e la console</h4>
 <p>La finestra ha due parti. A sinistra la <strong>plancia</strong>, un albero con le voci dei menu, scritte come le scrive il menu del terminale, la chiave e la descrizione, per esempio <code>arbitra: Inizia partita (Arbitraggio)</code>, e nello stesso ordine. A destra la <strong>console</strong>, una grande area di testo dove Orologic scrive tutto quello che nel terminale scriveva sullo schermo, e dove rispondi alle sue domande.</p>
@@ -311,7 +313,21 @@ margin: 1em 0;
 <p>In partita la plancia mostra i comandi della modalità, con le righe del loro aiuto: Invio su un comando lo scrive nel prompt e lo manda, come se lo avessi digitato. I comandi con un seguito sono rami con i valori possibili: la diagonale e la colonna hanno le otto lettere, la casa ha le colonne e le traverse, i pezzi le loro sigle, il livello del motore in Easyfish i suoi numeri. Quelli con un valore libero, come l'Elo o un messaggio in chat, scrivono l'inizio del comando e ti lasciano completarlo nella console.</p>
 <p>Il testo nuovo che compare nella console viene annunciato alla sintesi e al braille, come lo leggeva NVDA nel terminale, ma senza ripeterti quello che scrivi. Le impostazioni degli annunci, sezione 2.9.2, dicono se annunciare, con quale uscita, se alla sintesi, al braille o a tutti e due, e se un annuncio nuovo interrompe quello in corso o si accoda: di partenza la risposta a un tasto interrompe e il resto si accoda.</p>
 
-<h4 id="cap-1-3-4">1.3.4. Nel terminale, con --cli</h4>
+<h4 id="cap-1-3-4">1.3.4. La scacchiera interattiva</h4>
+<p>Solo nella finestra, nell'arbitraggio, nelle partite contro il motore e su Lichess: al prompt delle mosse, a riga vuota, lo <code>Spazio</code> apre la scacchiera interattiva, e <code>Esc</code> la chiude. È un testo di otto righe, una per traversa, come <code>1| R | - | q | - | N | K | + | b |1</code>: il numero ai due lati, le case fra barre verticali, i pezzi con le lettere inglesi, maiuscole i bianchi e minuscole i neri, il trattino le case chiare vuote e il più le scure, il pezzo sollevato fra parentesi quadre, come <code>[N]</code>. Quando giochi la guardi dal tuo colore; quando arbitri o osservi, dal Bianco. Il cursore di NVDA, e il display braille, stanno sul segno della casa scelta.</p>
+<p>Gli annunci della scacchiera ci sono sempre, anche con gli annunci spenti, e vanno solo alla sintesi, perché il braille resta a NVDA: la casa e il suo pezzo, per esempio Empoli 4, Donna nera, o Empoli 4, vuota, detti subito dopo il tasto. Mentre la scacchiera è aperta, anche le risposte di Orologic, come la mossa dell'avversario, si sentono alla sintesi.</p>
+<ul>
+    <li><strong>Muoversi:</strong> le frecce, una casa alla volta; al bordo si fermano con un suono. <code>Alt</code> con le frecce passa dall'altra parte. <code>Maiuscolo</code> con sinistra e destra sale lungo le diagonali, <code>Ctrl</code> con sinistra e destra scende.</li>
+    <li><strong>Saltare:</strong> una lettera da a ad h seguita subito da un numero va a quella casa, per esempio <code>e4</code>; un numero da 1 a 8 da solo va a quella traversa, nella stessa colonna. <code>u</code> va alla casa d'arrivo dell'ultima mossa. <code>9</code> gira la scacchiera.</li>
+    <li><strong>Muovere:</strong> lo <code>Spazio</code> solleva il pezzo della casa, qualunque, anche dell'avversario, per studiare; sulla sua casa lo posa di nuovo, su un'altra casa piena lo rimette a posto e solleva quello. <code>Invio</code> posa il pezzo sollevato sulla casa scelta: la mossa va a Orologic, come se l'avessi scritta, oppure senti perché non vale. Per arroccare sposti il Re in colonna g o c. La promozione chiede il pezzo da un elenco. <code>Ctrl+Spazio</code> dice il pezzo in mano.</li>
+    <li><strong>Sapere:</strong> <code>Tab</code> dice la casa con i pezzi che la difendono e la attaccano, come <code>-e4</code>; <code>l</code> l'ultima mossa, <code>L</code> le ultime due; <code>m</code> le mosse possibili del pezzo sollevato, o di quello sulla casa; <code>R N B Q K P</code>, e le minuscole, dove sono quei pezzi, come <code>,R</code>; <code>W</code> tutti i pezzi bianchi, <code>w</code> tutti i neri; da <code>F1</code> a <code>F5</code> gli orologi, come da <code>.1</code> a <code>.5</code>.</li>
+    <li><strong>Commentare:</strong> <code>C</code> chiede un commento alla mossa, come <code>.c</code>, dove la modalità lo prevede.</li>
+    <li><strong>Il menu:</strong> <code>Backspace</code> ferma il tempo, dove c'è, e apre il menu dei comandi della partita, quelli della plancia; Invio ne sceglie uno, <code>Backspace</code> nel menu fa ripartire il tempo, <code>Esc</code> chiude il menu.</li>
+    <li><strong>L'aiuto:</strong> <code>?</code> apre l'elenco di questi tasti.</li>
+</ul>
+<p>Se Orologic fa una domanda che non è il prompt delle mosse, la scacchiera si chiude da sola e ti lascia rispondere nella console o nella plancia; quando torni al prompt delle mosse si riapre. A fine partita si chiude. Nella partita che osservi su Lichess la scacchiera è solo da guardare.</p>
+
+<h4 id="cap-1-3-5">1.3.5. Nel terminale, con --cli</h4>
 <p>Con l'opzione <code>--cli</code> Orologic parte nel terminale di sempre, uguale alla versione 8: <code>orologic.exe --cli</code>, oppure il collegamento Orologic modalità a linea di comando che l'installatore mette nel menu Start, sezione 1.7. Il pacchetto non ha una console sua: con <code>--cli</code> se ne apre una. Il terminale differisce significativamente dalle classiche finestre di Windows. Per un'esperienza ottimale con NVDA o JAWS, è fondamentale seguire queste linee guida:</p>
 
 <div class="note">

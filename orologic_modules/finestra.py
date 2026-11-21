@@ -134,15 +134,18 @@ class Attesa:
     "menu", una scelta della plancia, con le voci; "sino", il tasto di una
     domanda di enter_escape, con la domanda; "area", un testo, una mossa o
     un tasto; None, niente, perche' lavora. Sta nella fila del testo perche'
-    plancia e fuoco cambino dopo il testo scritto prima."""
+    plancia e fuoco cambino dopo il testo scritto prima. gioco e' vero per il
+    prompt delle mosse, che legge i tasti con kbhit e getwch: li' lo spazio
+    apre la scacchiera interattiva."""
 
-    def __init__(self, tipo, voci=(), prompt="", vuoto=None, sito=None, alla_radice=False):
+    def __init__(self, tipo, voci=(), prompt="", vuoto=None, sito=None, alla_radice=False, gioco=False):
         self.tipo = tipo
         self.voci = list(voci)
         self.prompt = prompt
         self.vuoto = vuoto
         self.sito = sito
         self.alla_radice = alla_radice
+        self.gioco = gioco
 
 
 def _sito_della_chiamata():
@@ -165,8 +168,10 @@ class FacciaFinestra:
     def __init__(self):
         self._tasti = queue.Queue()
         self._scelte = queue.Queue()
-        # Cio' che il nucleo aspetta, come l'ultima Attesa messa in fila.
+        # Cio' che il nucleo aspetta, come l'ultima Attesa messa in fila: il
+        # tipo, e se e' il prompt delle mosse.
         self._attesa = None
+        self._gioco = False
         # L'evento che interrompe la scelta della plancia, se c'e'.
         self._interruttore = None
         self._lucchetto = threading.Lock()
@@ -197,18 +202,19 @@ class FacciaFinestra:
 
     def _aspetta(self, attesa):
         """Mette in fila l'Attesa, se cambia cio' che il nucleo aspetta."""
-        if attesa.tipo in ("menu", "sino") or attesa.tipo != self._attesa:
+        if attesa.tipo in ("menu", "sino") or attesa.tipo != self._attesa or attesa.gioco != self._gioco:
             self._attesa = attesa.tipo
+            self._gioco = attesa.gioco
             self._metti(attesa)
 
     def kbhit(self):
         self._controlla_chiusura()
         self._causa = None
-        self._aspetta(Attesa("area"))
+        self._aspetta(Attesa("area", gioco=True))
         return not self._tasti.empty()
 
     def getwch(self):
-        self._aspetta(Attesa("area"))
+        self._aspetta(Attesa("area", gioco=True))
         tasto = self._prendi()
         self._causa = "tasto" if tasto in ("\r", "\x1b") else "eco"
         self._quando = time.monotonic()
@@ -522,6 +528,12 @@ class Finestra(wx.Frame):
         self.dialogo_impostazioni = None
         self.dialogo_orologi = None
         self.dialogo_pulizia = None
+        # La scacchiera interattiva: aperta, o da riaprire quando il nucleo
+        # torna al prompt delle mosse dopo una domanda; e i caratteri scritti
+        # nella riga del prompt, perche' lo spazio la apra solo a riga vuota.
+        self.dialogo_scacchiera = None
+        self.scacchiera_da_riaprire = False
+        self.digitati = 0
         self.nucleo = None
         self.chiudendo = False
         # Finito il nucleo la finestra si chiude; le prove la tengono aperta
@@ -570,11 +582,24 @@ class Finestra(wx.Frame):
             return
         if self._riga_e_colonna()[0] != self._riga_del_prompt():
             self._al_cursore()
+        self.premi_nel_prompt(tasto)
+
+    def premi_nel_prompt(self, tasto):
+        """Un tasto al nucleo, come digitato, tenendo il conto dei caratteri
+        della riga: Invio ed Esc la chiudono, Backspace ne toglie uno."""
+        if tasto in ("\r", "\x1b"):
+            self.digitati = 0
+        elif tasto == "\x08":
+            self.digitati = max(0, self.digitati - 1)
+        elif tasto.isprintable():
+            self.digitati += 1
         self.faccia.premi(tasto)
 
     def _carattere(self, evento):
         codice = evento.GetUnicodeKey()
-        if codice == wx.WXK_RETURN:
+        if codice == wx.WXK_SPACE and not evento.HasAnyModifiers() and self.si_apre_la_scacchiera():
+            self.apri_la_scacchiera()
+        elif codice == wx.WXK_RETURN:
             self._manda("\r")
         elif codice == wx.WXK_BACK:
             self._manda("\x08")
@@ -689,7 +714,9 @@ class Finestra(wx.Frame):
                 self.detta = self.terminale.visibile()
         visibile = self.terminale.visibile()
         if visibile.strip():
-            if ultima_causa != "eco":
+            # Con la scacchiera aperta la riga del prompt non si dice: la
+            # scacchiera dice gia' cio' che serve, e il prompt si rinfresca.
+            if ultima_causa != "eco" and self.dialogo_scacchiera is None:
                 nuovo = _parte_nuova(visibile, self.detta)
                 if nuovo:
                     da_dire.append(nuovo)
@@ -748,6 +775,9 @@ class Finestra(wx.Frame):
             self.comandi = nuovi
             self._riscrivi_la_plancia()
         if fornitore is None:
+            # A partita finita la scacchiera si chiude, e non si riapre.
+            self.scacchiera_da_riaprire = False
+            self._chiudi_la_scacchiera()
             if self.fornitore is None:
                 return
             self.fornitore = None
@@ -815,10 +845,21 @@ class Finestra(wx.Frame):
         for riga in righe:
             self.sintesi.dici(riga, self.annunci["uscita"], self.annunci["destinazione"], interrompi=False)
 
+    def alla_sintesi(self, testo, interrompi=True):
+        """Un annuncio della scacchiera interattiva: sempre, e solo alla
+        sintesi, perche' il braille resta a NVDA (Gabriele, specifiche della
+        scacchiera)."""
+        self.sintesi.dici(testo, self.annunci["uscita"], "sintesi", interrompi=interrompi)
+
     def _di(self, righe, dal_tasto):
         """Gli annunci, secondo le impostazioni: dal_tasto e' vero per la
         risposta a un tasto. Solo il primo puo' interrompere, gli altri lo
-        seguono."""
+        seguono. Con la scacchiera aperta le risposte del nucleo si dicono
+        sempre, alla sintesi e in coda agli annunci della scacchiera."""
+        if self.dialogo_scacchiera is not None:
+            for riga in righe:
+                self.alla_sintesi(riga, interrompi=False)
+            return
         if not self.annunci["attivi"]:
             return
         interrompi = annunci.interrompe(self.annunci, dal_tasto)
@@ -832,6 +873,9 @@ class Finestra(wx.Frame):
         la domanda. Lungo una strada i menu di passaggio hanno subito la loro
         risposta."""
         self.attesa = attesa
+        # Una domanda nuova comincia con la riga vuota.
+        self.digitati = 0
+        self._scacchiera_e_domande(attesa)
         if attesa.tipo == "menu":
             self.albero.menu(attesa.sito, attesa.voci, attesa.prompt, attesa.vuoto, attesa.alla_radice)
             if self._prosegui_la_strada():
@@ -1111,9 +1155,9 @@ class Finestra(wx.Frame):
             # coi valori liberi, come l'Elo, aspettano il resto nell'area.
             self.ultimo_comando = cammino
             for carattere in nodo.testo:
-                self.faccia.premi(carattere)
+                self.premi_nel_prompt(carattere)
             if nodo.invio:
-                self.faccia.premi("\r")
+                self.premi_nel_prompt("\r")
             else:
                 self.vai_all_area()
 
@@ -1246,6 +1290,60 @@ class Finestra(wx.Frame):
                 self.pulizia()
         finally:
             richiesta.chiuse.set()
+
+    # La scacchiera interattiva.
+
+    def si_apre_la_scacchiera(self):
+        """Vero se lo spazio apre la scacchiera: in partita, al prompt delle
+        mosse ancora vuoto, con una posizione da mostrare."""
+        if self.fornitore is None or self.dialogo_scacchiera is not None:
+            return False
+        if self.attesa.tipo != "area" or not self.attesa.gioco or self.digitati:
+            return False
+        try:
+            dati = self.fornitore()
+        # Lo stato appartiene al nucleo, che intanto puo' cambiarlo.
+        except Exception:  # noqa: BLE001
+            return False
+        return bool(dati) and dati.get("board") is not None
+
+    def apri_la_scacchiera(self):
+        """La scacchiera interattiva, finche' Esc la chiude, la partita
+        finisce o il nucleo fa una domanda che non e' il prompt delle mosse."""
+        if self.dialogo_scacchiera is not None or self.fornitore is None:
+            return
+        from . import finestra_scacchiera
+
+        self.scacchiera_da_riaprire = False
+        with finestra_scacchiera.FinestraScacchiera(self) as dialogo:
+            self.dialogo_scacchiera = dialogo
+            try:
+                dialogo.ShowModal()
+            finally:
+                self.dialogo_scacchiera = None
+        if self:
+            self._rimetti_il_fuoco()
+
+    def _chiudi_la_scacchiera(self):
+        if self.dialogo_scacchiera is not None:
+            self.dialogo_scacchiera.chiudi()
+
+    def _scacchiera_e_domande(self, attesa):
+        """Una domanda del nucleo che non e' il prompt delle mosse chiude la
+        scacchiera, perche' si risponda nell'area o nella plancia; al ritorno
+        al prompt delle mosse la scacchiera si riapre."""
+        di_gioco = attesa.tipo == "area" and attesa.gioco
+        if self.dialogo_scacchiera is not None:
+            if attesa.tipo is None or di_gioco:
+                return
+            if self.fornitore is not None:
+                self.scacchiera_da_riaprire = True
+            self.fuoco_voluto = "plancia" if attesa.tipo == "menu" else "console"
+            self._chiudi_la_scacchiera()
+        elif di_gioco and self.scacchiera_da_riaprire:
+            self.scacchiera_da_riaprire = False
+            if self.fornitore is not None:
+                wx.CallAfter(self.apri_la_scacchiera)
 
     def chiedi_conferma(self, genitore, testo):
         """Una domanda con Si' e No, come quella del terminale; le prove la

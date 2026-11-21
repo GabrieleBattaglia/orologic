@@ -28,6 +28,8 @@ class SpectatorGameState:
         self.refresh_interval = modello_prompt.intervallo()
         self.vista_fermabile = True
         self.vista_ferma = False
+        # Nella finestra la scacchiera interattiva qui e' solo da guardare.
+        self.solo_da_guardare = True
         self.initial_fen = chess.STARTING_FEN
         self.variant = "standard"
 

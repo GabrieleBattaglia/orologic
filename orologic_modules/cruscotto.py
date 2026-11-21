@@ -81,6 +81,10 @@ def dati_di(stato, board=None):
         "spesi": list(getattr(stato, "move_times", []) or []),
         "residui": list(getattr(stato, "clocks_history", []) or []),
         "mosse_al_controllo": mancano,
+        # Per la scacchiera interattiva: la scacchiera di .s che aspetta un
+        # tasto, e la partita che si osserva soltanto.
+        "vista_ferma": bool(getattr(stato, "vista_ferma", False)),
+        "da_guardare": bool(getattr(stato, "solo_da_guardare", False)),
     }
 
 
