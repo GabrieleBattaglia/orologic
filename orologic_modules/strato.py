@@ -87,6 +87,10 @@ class FacciaTerminale:
     def pulizia(self):
         """Il terminale ha il suo avviso dei file vecchi."""
 
+    def ricerca_pgn(self, ricerca):
+        """Il terminale ha la sua ricerca, coi tasti."""
+        return None
+
     def interrompi_la_scelta_con(self, evento):
         """Il terminale non ha la plancia: menu legge i tasti da se'."""
         return None
@@ -187,6 +191,13 @@ def pulizia():
     """Nella finestra, la finestra della pulizia; il nucleo aspetta che si
     chiuda."""
     _faccia.pulizia()
+
+
+def ricerca_pgn(ricerca):
+    """Nella finestra, la finestra della ricerca PGN, con lo stato di
+    ricerca; il nucleo aspetta che si chiuda, e riceve la partita da
+    passare a Easyfish o all'analisi, come (azione, indice), o None."""
+    return _faccia.ricerca_pgn(ricerca)
 
 
 def con_la_plancia():

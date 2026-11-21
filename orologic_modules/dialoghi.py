@@ -43,8 +43,9 @@ INDIRIZZO_PAYPAL = "https://paypal.me/GabrieleBattaglia780"
 GRAZIA_INVIO = 0.65
 
 
-def _premuto_invio(evento):
+def premuto_invio(evento):
     return evento.GetKeyCode() in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER) and not evento.HasAnyModifiers()
+
 
 
 def normale(testo):
@@ -109,10 +110,10 @@ class FinestraImpostazioni(wx.Dialog):
         self.lista.SetFocus()
 
     def _tasto(self, evento):
-        if evento.GetEventObject() is self.lista and _premuto_invio(evento):
+        if evento.GetEventObject() is self.lista and premuto_invio(evento):
             self.cambia()
             return
-        if evento.GetEventObject() is self.filtro and _premuto_invio(evento):
+        if evento.GetEventObject() is self.filtro and premuto_invio(evento):
             self.lista.SetFocus()
             return
         evento.Skip()
@@ -194,7 +195,7 @@ class FinestraScelta(wx.Dialog):
         self.lista.SetFocus()
 
     def _tasto(self, evento):
-        if evento.GetEventObject() is self.lista and _premuto_invio(evento):
+        if evento.GetEventObject() is self.lista and premuto_invio(evento):
             if self.lista.GetSelection() != wx.NOT_FOUND:
                 self.EndModal(wx.ID_OK)
             return
@@ -552,7 +553,7 @@ class FinestraPrompt(wx.Dialog):
         if oggetto is self.prompt and codice in (wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE) and senza_modificatori:
             self.rimuovi()
             return
-        if oggetto in (self.disponibili, self.prompt) and _premuto_invio(evento):
+        if oggetto in (self.disponibili, self.prompt) and premuto_invio(evento):
             adesso = time.monotonic()
             precedente, self.ultimo_invio = self.ultimo_invio, adesso
             if evento.IsAutoRepeat() or adesso - precedente < GRAZIA_INVIO:
@@ -873,7 +874,7 @@ class FinestraColori(wx.Dialog):
         self.anteprima.GetParent().Layout()
 
     def _tasto(self, evento):
-        if not _premuto_invio(evento):
+        if not premuto_invio(evento):
             evento.Skip()
             return
         oggetto = evento.GetEventObject()

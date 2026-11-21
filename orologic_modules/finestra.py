@@ -118,6 +118,17 @@ class ApriPulizia(ApriImpostazioni):
     file vecchi: il nucleo aspetta che si chiuda."""
 
 
+class ApriRicerca(ApriImpostazioni):
+    """Nella fila del testo, la ricerca PGN del menu principale: la finestra
+    apre la sua, con lo stato di ricerca, e scrive in uscita la partita
+    scelta per Easyfish o per l'analisi; il nucleo aspetta che si chiuda."""
+
+    def __init__(self, ricerca):
+        super().__init__()
+        self.ricerca = ricerca
+        self.uscita = None
+
+
 class CambioDiForma:
     """Nella fila del testo, il punto in cui l'area cambia forma: il
     fornitore dei dati del cruscotto, o None per tornare alla console. Sta
@@ -279,6 +290,13 @@ class FacciaFinestra:
         """All'avvio, coi file vecchi: la finestra apre la pulizia, e il
         nucleo aspetta che si chiuda."""
         self._apri_e_aspetta(ApriPulizia())
+
+    def ricerca_pgn(self, ricerca):
+        """La voce ricerca del menu principale: la finestra apre quella
+        della ricerca PGN, e il nucleo aspetta che si chiuda."""
+        richiesta = ApriRicerca(ricerca)
+        self._apri_e_aspetta(richiesta)
+        return richiesta.uscita
 
     def _apri_e_aspetta(self, richiesta):
         self._aspetta(Attesa(None))
@@ -528,6 +546,7 @@ class Finestra(wx.Frame):
         self.dialogo_impostazioni = None
         self.dialogo_orologi = None
         self.dialogo_pulizia = None
+        self.dialogo_ricerca = None
         # La scacchiera interattiva: aperta, o da riaprire quando il nucleo
         # torna al prompt delle mosse dopo una domanda; e i caratteri scritti
         # nella riga del prompt, perche' lo spazio la apra solo a riga vuota.
@@ -688,6 +707,9 @@ class Finestra(wx.Frame):
                 continue
             if isinstance(testo, ApriPulizia):
                 wx.CallAfter(self._pulizia_dal_nucleo, testo)
+                continue
+            if isinstance(testo, ApriRicerca):
+                wx.CallAfter(self._ricerca_dal_nucleo, testo)
                 continue
             if isinstance(testo, ApriImpostazioni):
                 wx.CallAfter(self._impostazioni_dal_nucleo, testo)
@@ -1294,6 +1316,31 @@ class Finestra(wx.Frame):
         try:
             if self:
                 self.pulizia()
+        finally:
+            richiesta.chiuse.set()
+
+    def ricerca_pgn(self, ricerca):
+        """La finestra della ricerca PGN, dalla voce ricerca del menu
+        principale, che il suo tema lo suona gia': restituisce la partita
+        scelta per Easyfish o per l'analisi, o None."""
+        if self.dialogo_ricerca is not None:
+            return None
+        from . import finestra_ricerca
+
+        with finestra_ricerca.FinestraRicerca(self, ricerca, self.chiedi_conferma, self.avvisa, self.annuncia) as dialogo:
+            self.dialogo_ricerca = dialogo
+            try:
+                dialogo.ShowModal()
+            finally:
+                self.dialogo_ricerca = None
+            uscita = dialogo.uscita
+        self._rimetti_il_fuoco()
+        return uscita
+
+    def _ricerca_dal_nucleo(self, richiesta):
+        try:
+            if self:
+                richiesta.uscita = self.ricerca_pgn(richiesta.ricerca)
         finally:
             richiesta.chiuse.set()
 

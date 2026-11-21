@@ -712,7 +712,9 @@ def show_player_menu(username, secrets):
             print(_("Passaggio a Ricerca PGN..."))
             from . import pgn_search
 
-            pgn_search.run()
+            # Nella finestra l'indirizzo arriva direttamente, senza
+            # passare dagli appunti.
+            pgn_search.run(indirizzo=pgn_url)
         elif scelta == "storia":
             from . import lichess_stats
 

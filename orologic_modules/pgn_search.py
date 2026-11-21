@@ -29,8 +29,15 @@ from orologic_modules.config import _
 # Entry point
 
 
-def run():
-    """Entry point principale, chiamato dal menu principale di Orologic."""
+def run(indirizzo=None):
+    """Entry point principale, chiamato dal menu principale di Orologic.
+
+    Nella finestra la ricerca ha una finestra sua, finestra_ricerca.py;
+    indirizzo e' quello che il profilatore di Lichess le passa direttamente.
+    Nel terminale l'indirizzo arriva dagli appunti, come sempre."""
+    if strato.con_la_plancia():
+        _nella_finestra(indirizzo)
+        return
     print(_("Ricerca PGN"))
     print(_("Caricamento archivio dagli appunti..."))
 
@@ -59,14 +66,8 @@ def run():
     _mostra_statistiche(totale, info_list)
     giocatore_comune = _trova_giocatore_comune(info_list)
     if giocatore_comune:
-        print(
-            _(
-                "\nRilevato giocatore principale: {player} (presente in >=90{pct} delle partite)."
-            ).format(player=giocatore_comune, pct="%")
-        )
-        print(
-            _("Le statistiche dell'albero saranno relative al suo punteggio (+ = -).")
-        )
+        for riga in righe_del_giocatore_comune(giocatore_comune):
+            print(riga)
 
     # Loop filtri → albero
     while True:
@@ -102,9 +103,10 @@ def _carica_archivio():
 
     clipboard = clipboard.strip().strip('"')
     pgn_text = None
+    tipo = tipo_di_sorgente(clipboard)
 
     # Percorso file?
-    if os.path.isfile(clipboard):
+    if tipo == "file":
         print(_("Rilevato percorso file: {path}").format(path=clipboard))
         try:
             with open(clipboard, encoding="utf-8", errors="replace") as f:
@@ -116,25 +118,12 @@ def _carica_archivio():
             return None
 
     # URL?
-    elif clipboard.lower().startswith("http"):
+    elif tipo == "url":
         print(_("Rilevato URL: {url}").format(url=clipboard))
         try:
-            req = urllib.request.Request(
-                clipboard,
-                headers={"User-Agent": "Orologic PGN Search"},
-            )
-            # Aggiungi token Lichess se presente
-            from orologic_modules.lichess_app import load_secrets
-
-            token = load_secrets().get("lichess_token")
-            if token and "lichess.org" in clipboard.lower():
-                req.add_header("Authorization", f"Bearer {token}")
-
-            with urllib.request.urlopen(
-                req, timeout=30, context=contesto_ssl()
-            ) as resp:
+            with _apri_indirizzo(clipboard) as resp:
                 # Scarica a blocchi di 64KB per mostrare il progresso ed evitare freeze
-                chunk_size = 65536
+                chunk_size = BLOCCO
                 data = []
                 downloaded = 0
                 last_download_print = 0.0
@@ -161,7 +150,7 @@ def _carica_archivio():
 
                     now = time.time()
                     elapsed = now - start_time
-                    if elapsed > 3600.0:  # Timeout di 60 minuti (3600 secondi)
+                    if elapsed > LIMITE_DELLO_SCARICAMENTO:  # Timeout di 60 minuti (3600 secondi)
                         sys.stdout.write("\n")
                         print(
                             _(
@@ -212,6 +201,103 @@ def _carica_archivio():
 
     # Parsing partite
     print(_("Analisi del PGN in corso..."))
+    stampati = []
+
+    def avanzamento(count):
+        sys.stdout.write(_("\rPartite caricate: {n}...").format(n=count))
+        sys.stdout.flush()
+        stampati.append(count)
+
+    def interrotta(e):
+        print(
+            _(
+                "Lettura interrotta: il PGN non e' leggibile da questo punto in poi. {errore}"
+            ).format(errore=e)
+        )
+
+    games, excluded_count = leggi_le_partite(pgn_text, avanzamento, interrotta)
+
+    if stampati:
+        sys.stdout.write("\n")
+
+    for riga in righe_dell_esito(len(games), excluded_count):
+        print(riga)
+    return games or None
+
+
+# Le parti comuni al terminale e alla finestra
+
+BLOCCO = 65536
+LIMITE_DELLO_SCARICAMENTO = 3600.0
+OGNI_QUANTO = 3.0
+
+
+def tipo_di_sorgente(testo):
+    """file, url o testo: che cosa c'e' negli appunti, gia' ripuliti."""
+    if os.path.isfile(testo):
+        return "file"
+    if testo.lower().startswith("http"):
+        return "url"
+    return "testo"
+
+
+def _apri_indirizzo(indirizzo):
+    """La risposta dell'indirizzo, col token di Lichess se c'e'."""
+    req = urllib.request.Request(
+        indirizzo,
+        headers={"User-Agent": "Orologic PGN Search"},
+    )
+    # Aggiungi token Lichess se presente
+    from orologic_modules.lichess_app import load_secrets
+
+    token = load_secrets().get("lichess_token")
+    if token and "lichess.org" in indirizzo.lower():
+        req.add_header("Authorization", f"Bearer {token}")
+    return urllib.request.urlopen(req, timeout=30, context=contesto_ssl())
+
+
+def _partita_da_tenere(game):
+    """vuota, esclusa o buona: i record senza mosse ne' intestazioni vere si
+    saltano, le partite che non partono dalla posizione standard si
+    escludono."""
+    has_real_headers = False
+    for val in game.headers.values():
+        if val not in ("?", "*", "????.??.??"):
+            has_real_headers = True
+            break
+    has_moves = len(list(game.mainline_moves())) > 0
+    if not has_real_headers and not has_moves:
+        return "vuota"
+
+    # Escludi varianti non standard (Setup/FEN personalizzato e Chess960)
+    is_setup = game.headers.get("SetUp") == "1"
+    is_chess960 = game.headers.get("Variant", "").lower() in (
+        "chess960",
+        "fischerandom",
+        "fischer random",
+    )
+
+    is_non_standard = False
+    if is_setup:
+        fen = game.headers.get("FEN", "").strip()
+        if fen:
+            normalized_fen = " ".join(fen.split()[:4]).lower()
+            standard_normalized = (
+                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -".lower()
+            )
+            if normalized_fen != standard_normalized:
+                is_non_standard = True
+
+    if is_chess960 or is_non_standard:
+        return "esclusa"
+    return "buona"
+
+
+def leggi_le_partite(pgn_text, avanzamento=None, interrotta=None, fermato=None):
+    """Le partite del testo PGN: (partite, escluse). avanzamento(n) riceve
+    le partite lette, alla prima buona e poi ogni tre secondi; interrotta(e)
+    l'errore, se il testo non si legge piu'; fermato(), vero, ferma la
+    lettura e tiene le partite lette fin li'."""
     games = []
     pgn_io = io.StringIO(pgn_text)
     count = 0
@@ -223,6 +309,8 @@ def _carica_archivio():
     MASSIMI_ERRORI = 5
 
     while True:
+        if fermato is not None and fermato():
+            break
         posizione = pgn_io.tell()
         try:
             game = chess.pgn.read_game(pgn_io)
@@ -234,11 +322,8 @@ def _carica_archivio():
                 continue
             letture_fallite += 1
             if letture_fallite >= MASSIMI_ERRORI:
-                print(
-                    _(
-                        "Lettura interrotta: il PGN non e' leggibile da questo punto in poi. {errore}"
-                    ).format(errore=e)
-                )
+                if interrotta is not None:
+                    interrotta(e)
                 break
             continue
         letture_fallite = 0
@@ -247,71 +332,297 @@ def _carica_archivio():
 
         count += 1
 
-        # Filtra record spazzatura che non hanno né mosse né header significativi
-        has_real_headers = False
-        for val in game.headers.values():
-            if val not in ("?", "*", "????.??.??"):
-                has_real_headers = True
-                break
-        has_moves = len(list(game.mainline_moves())) > 0
-        if not has_real_headers and not has_moves:
+        esito = _partita_da_tenere(game)
+        if esito == "vuota":
             continue
-
-        # Escludi varianti non standard (Setup/FEN personalizzato e Chess960)
-        is_setup = game.headers.get("SetUp") == "1"
-        is_chess960 = game.headers.get("Variant", "").lower() in (
-            "chess960",
-            "fischerandom",
-            "fischer random",
-        )
-
-        is_non_standard = False
-        if is_setup:
-            fen = game.headers.get("FEN", "").strip()
-            if fen:
-                normalized_fen = " ".join(fen.split()[:4]).lower()
-                standard_normalized = (
-                    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -".lower()
-                )
-                if normalized_fen != standard_normalized:
-                    is_non_standard = True
-
-        if is_chess960 or is_non_standard:
+        if esito == "esclusa":
             excluded_count += 1
             continue
 
         games.append(game)
 
         now = time.time()
-        if now - last_print >= 3.0:
-            sys.stdout.write(_("\rPartite caricate: {n}...").format(n=count))
-            sys.stdout.flush()
+        if now - last_print >= OGNI_QUANTO:
+            if avanzamento is not None:
+                avanzamento(count)
             last_print = now
 
-    if last_print > 0.0:
-        sys.stdout.write("\n")
+    return games, excluded_count
 
-    if not games:
-        print(_("Nessuna partita valida trovata nel PGN."))
+
+def righe_dell_esito(valide, excluded_count):
+    """Le righe che dicono com'e' andata la lettura."""
+    righe = []
+    if not valide:
+        righe.append(_("Nessuna partita valida trovata nel PGN."))
         if excluded_count > 0:
-            print(
+            righe.append(
                 _(
                     "{ex} partite sono state escluse perche' non iniziano dalla posizione standard."
                 ).format(ex=excluded_count)
             )
-        return None
+        return righe
 
     if excluded_count > 0:
-        total_valid_and_excluded = len(games) + excluded_count
+        total_valid_and_excluded = valide + excluded_count
         pct = (excluded_count / total_valid_and_excluded) * 100
-        print(
+        righe.append(
             _(
                 "Nota: {ex} partite su {tot} ({pct:.2f}%) sono state escluse perche' non iniziano dalla posizione standard (Setup o Chess960)."
             ).format(ex=excluded_count, tot=total_valid_and_excluded, pct=pct)
         )
 
-    print(_("Caricate {n} partite valide.").format(n=len(games)))
-    return games
+    righe.append(_("Caricate {n} partite valide.").format(n=valide))
+    return righe
+
+
+def pulita(testo):
+    """Una riga del terminale per la finestra: senza i ritorni a capo e con
+    uno spazio solo fra le parole, come le vuole il display braille."""
+    return " ".join(testo.split())
+
+
+def carica_archivio(tipo, sorgente, avanzamento=None, fermato=None):
+    """Per la finestra: l'archivio da un file, da un indirizzo o da un
+    testo, come tipo_di_sorgente; restituisce (Archivio o None, righe). Le
+    righe dell'avanzamento vanno ad avanzamento, al piu' ogni tre secondi;
+    fermato(), vero, ferma lo scaricamento o la lettura e tiene quello che
+    e' arrivato. Gira in un filo: non tocca la finestra."""
+    righe = []
+    if tipo == "file":
+        righe.append(pulita(_("Rilevato percorso file: {path}").format(path=sorgente)))
+        try:
+            with open(sorgente, encoding="utf-8", errors="replace") as f:
+                pgn_text = f.read()
+        except OSError as e:
+            righe.append(pulita(_("Errore nella lettura del file: {e}").format(e=e)))
+            return None, righe
+    elif tipo == "url":
+        righe.append(pulita(_("Rilevato URL: {url}").format(url=sorgente)))
+        try:
+            pgn_text = _scarica(sorgente, righe, avanzamento, fermato)
+        # Gli archivi PGN arrivano da fuori e possono essere malformati
+        # in modi imprevedibili.
+        except Exception as e:  # noqa: BLE001
+            if isinstance(e, urllib.error.HTTPError):
+                righe.append(pulita(_("Errore HTTP durante il download: {code} {reason}").format(code=e.code, reason=e.reason)))
+            else:
+                righe.append(pulita(_("Errore nel download: {e}").format(e=e)))
+            return None, righe
+    else:
+        pgn_text = sorgente.strip()
+        if not pgn_text:
+            righe.append(_("Gli appunti sono vuoti."))
+            return None, righe
+        if "[" not in pgn_text and "1." not in pgn_text:
+            righe.append(_("Il testo negli appunti non sembra contenere dati PGN validi."))
+            return None, righe
+
+    if not pgn_text or not pgn_text.strip():
+        righe.append(_("Nessun contenuto PGN trovato."))
+        return None, righe
+
+    def letti(count):
+        if avanzamento is not None:
+            avanzamento(pulita(_("\rPartite caricate: {n}...").format(n=count)))
+
+    def interrotta(e):
+        righe.append(pulita(_("Lettura interrotta: il PGN non e' leggibile da questo punto in poi. {errore}").format(errore=e)))
+
+    games, esclusi = leggi_le_partite(pgn_text, letti, interrotta, fermato)
+    if fermato is not None and fermato() and games:
+        righe.append(_("Lettura fermata: tengo le partite lette finora."))
+    righe.extend(pulita(riga) for riga in righe_dell_esito(len(games), esclusi))
+    if not games:
+        return None, righe
+    return Archivio(games, esclusi), righe
+
+
+def _scarica(indirizzo, righe, avanzamento=None, fermato=None):
+    """Il testo dell'indirizzo, a blocchi: Esc, cioe' fermato, e il limite
+    dei sessanta minuti tengono quello che e' arrivato, come nel terminale."""
+    data = []
+    downloaded = 0
+    start_time = time.time()
+    last_print = start_time
+    with _apri_indirizzo(indirizzo) as resp:
+        while True:
+            if fermato is not None and fermato():
+                righe.append(pulita(_("Scaricamento interrotto dall'utente. Elaborazione delle partite caricate finora...")))
+                break
+            chunk = resp.read(BLOCCO)
+            if not chunk:
+                break
+            data.append(chunk)
+            downloaded += len(chunk)
+            now = time.time()
+            elapsed = now - start_time
+            if elapsed > LIMITE_DELLO_SCARICAMENTO:
+                righe.append(pulita(_("Tempo massimo di scaricamento (60 minuti) raggiunto. Elaborazione delle partite caricate finora...")))
+                break
+            if now - last_print >= OGNI_QUANTO and avanzamento is not None:
+                mb = downloaded / (1024 * 1024)
+                avanzamento(pulita(_("\rScaricamento in corso: {mb:.2f} MB ({elapsed:.0f}s)...\r").format(mb=mb, elapsed=elapsed)))
+                last_print = now
+    return b"".join(data).decode("utf-8", errors="replace")
+
+
+# L'albero della finestra, senza wx
+
+
+class Archivio:
+    """Le partite caricate nella finestra, con le loro intestazioni, le
+    mosse della linea principale, che fanno l'albero, e il giocatore
+    principale. Le varianti dei commenti nell'albero non entrano: una
+    partita sta in un ramo solo, quello che si e' giocato."""
+
+    def __init__(self, games, esclusi=0):
+        self.games = games
+        self.esclusi = esclusi
+        self.info = estrai_info(games)
+        self.mosse = [list(game.mainline_moves()) for game in games]
+        self.giocatore_comune = _trova_giocatore_comune(self.info)
+
+    def figli(self, indici, profondita):
+        """Dopo tante mosse quante profondita, le mosse giocate nelle
+        partite di indici: [(mossa, indici)], dalla piu' giocata, a parita'
+        nell'ordine dell'archivio, e le partite che finiscono li'."""
+        gruppi = {}
+        finite = []
+        for indice in indici:
+            mosse = self.mosse[indice]
+            if len(mosse) > profondita:
+                gruppi.setdefault(mosse[profondita], []).append(indice)
+            else:
+                finite.append(indice)
+        rami = sorted(gruppi.items(), key=lambda coppia: len(coppia[1]), reverse=True)
+        return rami, finite
+
+    def statistiche(self, indici, filtri):
+        return _formato_statistiche(self.info, indici, filtri, self.giocatore_comune)
+
+    def partita(self, indice):
+        """Bianco vs Nero, risultato."""
+        info = self.info[indice]
+        return _("{bianco} vs {nero}, {risultato}").format(bianco=info["White"], nero=info["Black"], risultato=info["Result"])
+
+    def continuazione(self, scacchiera, indice, profondita, quante=5):
+        """Le mosse che seguono il ramo, come nel terminale: 2... Nc6 3. Bb5 a6."""
+        board = scacchiera.copy(stack=False)
+        parti = []
+        for mossa in self.mosse[indice][profondita : profondita + quante]:
+            san = board.san(mossa)
+            if board.turn == chess.WHITE:
+                parti.append(f"{board.fullmove_number}. {san}")
+            elif not parti:
+                parti.append(f"{board.fullmove_number}... {san}")
+            else:
+                parti.append(san)
+            board.push(mossa)
+        return " ".join(parti)
+
+    def voce_della_lista(self, scacchiera, indice, profondita, numero):
+        """Una riga delle partite del ramo, come le stampava il terminale."""
+        info = self.info[indice]
+        valore = info["Result"]
+        continuazione = self.continuazione(scacchiera, indice, profondita)
+        if continuazione:
+            valore += ", " + continuazione
+        return "{w} vs {b} ({num}): {valore}".format(w=info["White"], b=info["Black"], num=numero, valore=valore)
+
+
+def scacchiera_del_percorso(percorso):
+    board = chess.Board()
+    for mossa in percorso:
+        board.push(mossa)
+    return board
+
+
+def voce_della_radice(archivio, indici, filtri):
+    return _("{ramo} ({n} partite) | {statistiche}").format(ramo=_("(radice)"), n=len(indici), statistiche=archivio.statistiche(indici, filtri))
+
+
+def voce_del_ramo(archivio, scacchiera, mossa, indici, totale, filtri):
+    """La voce di una mossa, con le statistiche del terminale; con una
+    partita sola e' la foglia, e dice la partita."""
+    san = scacchiera.san(mossa)
+    try:
+        descrizione = board_utils.DescribeMove(mossa, scacchiera)
+    # Gli archivi PGN arrivano da fuori e possono essere malformati
+    # in modi imprevedibili.
+    except Exception:  # noqa: BLE001
+        descrizione = san
+    if len(indici) == 1:
+        return _("{descrizione} ({mossa}): {partita}").format(descrizione=descrizione, mossa=san, partita=archivio.partita(indici[0]))
+    pct = len(indici) / totale * 100 if totale else 0
+    return _("{descrizione} ({mossa}) ({n} partite) = {pct:.1f}% | {statistiche}").format(
+        descrizione=descrizione, mossa=san, n=len(indici), pct=pct, statistiche=archivio.statistiche(indici, filtri))
+
+
+def sequenza_del_percorso(percorso):
+    """La linea dalla prima mossa: 1. e4 e5 2. Nf3, o (radice)."""
+    board = chess.Board()
+    mosse = []
+    for mossa in percorso:
+        mosse.append(board.san(mossa))
+        board.push(mossa)
+    return _formatta_sequenza_mosse(mosse)
+
+
+def righe_dell_archivio(archivio):
+    """Le statistiche generali del terminale, per l'area in cima alla
+    finestra."""
+    righe = [pulita(riga) for riga in righe_delle_statistiche(len(archivio.games), archivio.info)]
+    if archivio.giocatore_comune:
+        righe.extend(pulita(riga) for riga in righe_del_giocatore_comune(archivio.giocatore_comune))
+    if len(archivio.games) < 20:
+        righe.append(pulita(_("\nAttenzione: l'archivio contiene solo {n} partite (minimo consigliato: 20).").format(n=len(archivio.games))))
+    return [riga for riga in righe if riga]
+
+
+def scrivi_pgn(percorso, games, indici):
+    """Le partite di indici nel file, con varianti e commenti."""
+    with open(percorso, "w", encoding="utf-8") as f:
+        for idx in indici:
+            game = games[idx]
+            exporter = chess.pgn.StringExporter(
+                headers=True, variations=True, comments=True
+            )
+            pgn_str = game.accept(exporter)
+            f.write(str(pgn_str))
+            f.write("\n\n")
+
+
+class Ricerca:
+    """Lo stato della ricerca nella finestra, che resta fra un'apertura e
+    l'altra: dopo Easyfish o l'analisi si torna allo stesso punto.
+    indirizzo e' quello del profilatore, da caricare alla prima apertura;
+    posizione la voce dell'albero, come (percorso, partita)."""
+
+    def __init__(self, indirizzo=None):
+        self.indirizzo = indirizzo
+        self.archivio = None
+        self.righe = []
+        self.filtri = {}
+        self.posizione = None
+
+
+def _nella_finestra(indirizzo):
+    """La ricerca nella finestra: si apre, e a ogni uscita verso Easyfish o
+    l'analisi si riapre al ritorno, allo stesso punto."""
+    ricerca = Ricerca(indirizzo)
+    while True:
+        uscita = strato.ricerca_pgn(ricerca)
+        if uscita is None:
+            return
+        azione, indice = uscita
+        game = ricerca.archivio.games[indice]
+        if azione == "easyfish":
+            from orologic_modules.easyfish import easyfish_app
+
+            easyfish_app.run(partita=board_utils.CopyPgnGame(game))
+        else:
+            _avvia_analisi(game, automatica=azione == "automatica")
 
 
 # Estrazione info headers
@@ -464,6 +775,13 @@ def _formato_statistiche(info_list, indici, filtri_attivi, giocatore_comune=None
 
 def _mostra_statistiche(totale, info_list):
     """Stampa le statistiche generali dell'archivio caricato."""
+    for riga in righe_delle_statistiche(totale, info_list):
+        print(riga)
+
+
+def righe_delle_statistiche(totale, info_list):
+    """Le righe delle statistiche generali, per il terminale e la finestra."""
+    righe = []
     tutti = list(range(totale))
     pw, pd, pb, other = _calcola_wdl(info_list, tutti)
 
@@ -471,15 +789,15 @@ def _mostra_statistiche(totale, info_list):
     d_count = sum(1 for i in tutti if info_list[i]["Result"] == "1/2-1/2")
     b_count = sum(1 for i in tutti if info_list[i]["Result"] == "0-1")
 
-    print(_("Archivio PGN Caricato"))
-    print(_("Partite totali: {n}").format(n=totale))
+    righe.append(_("Archivio PGN Caricato"))
+    righe.append(_("Partite totali: {n}").format(n=totale))
 
-    print(_("Statistiche Risultati"))
-    print(_("  Vittorie Bianco: {n} ({p:.1f}%)").format(n=w_count, p=pw))
-    print(_("  Patte:           {n} ({p:.1f}%)").format(n=d_count, p=pd))
-    print(_("  Vittorie Nero:   {n} ({p:.1f}%)").format(n=b_count, p=pb))
+    righe.append(_("Statistiche Risultati"))
+    righe.append(_("  Vittorie Bianco: {n} ({p:.1f}%)").format(n=w_count, p=pw))
+    righe.append(_("  Patte:           {n} ({p:.1f}%)").format(n=d_count, p=pd))
+    righe.append(_("  Vittorie Nero:   {n} ({p:.1f}%)").format(n=b_count, p=pb))
     if other > 0:
-        print(
+        righe.append(
             _("  Altre/ND:        {n} ({p:.1f}%)").format(
                 n=other, p=other / totale * 100
             )
@@ -500,17 +818,27 @@ def _mostra_statistiche(totale, info_list):
         if info["ECO"]:
             eco.add(info["ECO"])
 
-    print(_("\nGiocatori univoci:     {n}").format(n=len(giocatori)))
-    print(_("Eventi univoci:        {n}").format(n=len(eventi)))
+    righe.append(_("\nGiocatori univoci:     {n}").format(n=len(giocatori)))
+    righe.append(_("Eventi univoci:        {n}").format(n=len(eventi)))
     if anni:
-        print(
+        righe.append(
             _("Anni univoci:          {n} ({min} - {max})").format(
                 n=len(anni), min=min(anni), max=max(anni)
             )
         )
     else:
-        print(_("Anni univoci:          N/D"))
-    print(_("Aperture ECO univoche: {n}").format(n=len(eco)))
+        righe.append(_("Anni univoci:          N/D"))
+    righe.append(_("Aperture ECO univoche: {n}").format(n=len(eco)))
+    return righe
+
+
+def righe_del_giocatore_comune(giocatore_comune):
+    return [
+        _(
+            "\nRilevato giocatore principale: {player} (presente in >=90{pct} delle partite)."
+        ).format(player=giocatore_comune, pct="%"),
+        _("Le statistiche dell'albero saranno relative al suo punteggio (+ = -)."),
+    ]
 
 
 def _trova_giocatore_comune(info_list):
@@ -1303,15 +1631,7 @@ def _salva_pgn_filtrato(games, indici, filtri_attivi):
     percorso = os.path.join(os.getcwd(), nome)
 
     try:
-        with open(percorso, "w", encoding="utf-8") as f:
-            for i, idx in enumerate(indici):
-                game = games[idx]
-                exporter = chess.pgn.StringExporter(
-                    headers=True, variations=True, comments=True
-                )
-                pgn_str = game.accept(exporter)
-                f.write(str(pgn_str))
-                f.write("\n\n")
+        scrivi_pgn(percorso, games, indici)
 
         print(_("Salvate {n} partite in: {path}").format(n=len(indici), path=percorso))
     # Gli archivi PGN arrivano da fuori e possono essere malformati
@@ -1323,8 +1643,11 @@ def _salva_pgn_filtrato(games, indici, filtri_attivi):
 # Analisi
 
 
-def _avvia_analisi(game):
-    """Gestisce il passaggio di una partita all'analisi (automatica o manuale)."""
+def _avvia_analisi(game, automatica=None):
+    """Gestisce il passaggio di una partita all'analisi (automatica o manuale).
+
+    Dalla finestra automatica arriva gia' scelta, coi pulsanti della
+    partita; nel terminale e' None, e la domanda la fa scegliere."""
     print(_("Partita selezionata"))
     for k, v in game.headers.items():
         if v and v != "?" and v != "????.??.??":
@@ -1345,9 +1668,11 @@ def _avvia_analisi(game):
 
     engine.cache_analysis.clear()
 
-    if enter_escape(
-        _("Desideri l'analisi automatica? (INVIO per si', ESC per manuale): ")
-    ):
+    if automatica is None:
+        automatica = enter_escape(
+            _("Desideri l'analisi automatica? (INVIO per si', ESC per manuale): ")
+        )
+    if automatica:
         engine.AnalisiAutomatica(board_utils.CopyPgnGame(game))
     else:
         engine.AnalyzeGame(game, is_corrected=False)
