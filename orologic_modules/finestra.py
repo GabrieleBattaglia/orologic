@@ -38,8 +38,8 @@ aspetta, cio' che si scrive nell'area non va al nucleo: il fuoco torna alla
 plancia.
 
 Gli annunci seguono le impostazioni di annunci.py: se si fanno, con quale
-uscita e dove, e se interrompono quello in corso. F3 apre la finestra delle
-impostazioni, finche' non c'e' la plancia della T4.
+uscita e dove, e se interrompono quello in corso. Ctrl e virgola apre la
+finestra delle impostazioni.
 
 Le due forme dell'area. Fuori dal gioco scorre come un terminale. Durante una
 partita, quando lo strato le consegna chi da' i dati, diventa il cruscotto di
@@ -546,13 +546,14 @@ class Finestra(wx.Frame):
         evento.Skip()
 
     def _tasto_della_finestra(self, evento):
-        """I tasti di tutta la finestra, plancia e area: F3 le impostazioni,
-        F5 la plancia, F6 l'area."""
+        """I tasti di tutta la finestra, plancia e area: Ctrl e virgola le
+        impostazioni, come nelle altre applicazioni (Gabriele, S1), F5 la
+        plancia, F6 l'area."""
         codice = evento.GetKeyCode()
+        if evento.GetModifiers() == wx.MOD_CONTROL and codice == ord(","):
+            self.impostazioni()
+            return
         if not evento.HasAnyModifiers():
-            if codice == wx.WXK_F3:
-                self.impostazioni()
-                return
             if codice == wx.WXK_F5:
                 self.vai_alla_plancia()
                 return
@@ -1184,8 +1185,9 @@ def ripristina():
 
 def avvia(corpo):
     """Apre la finestra e ci fa girare corpo, il programma di sempre, in un
-    filo suo. Torna quando la finestra si chiude."""
-    app = wx.App()
+    filo suo. Torna quando la finestra si chiude. La wx.App puo' essere gia'
+    nata per la finestra della lingua del primo avvio."""
+    app = wx.GetApp() or wx.App()
     finestra = prepara()
     finestra.Show()
     finestra.avvia_il_nucleo(corpo)

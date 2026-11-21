@@ -5,6 +5,7 @@ import datetime
 import json
 import os
 import re
+import sys
 
 from GBUtils import polipo
 
@@ -79,10 +80,14 @@ CARTELLA_LOCALES = resource_path("locales")
 CARTELLA_SETTINGS = percorso_salvataggio("settings")
 
 # Inizializzazione localizzazione base
+# Solo nel terminale polipo chiede la lingua in console: nella finestra il
+# primo avvio la chiede avvio.py, prima di qui, e nelle prove e negli
+# strumenti nessuno deve fermarsi ad aspettare una risposta.
 lingua_rilevata, _ = polipo(
     source_language="it",
     localedir=CARTELLA_LOCALES,
     config_path=CARTELLA_SETTINGS,
+    interattivo="--cli" in sys.argv,
 )
 
 # Ripiego per quando l'API di GitHub non risponde. Dalla 19 il pacchetto

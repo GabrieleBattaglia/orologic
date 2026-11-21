@@ -17,6 +17,13 @@ from GBUtils import (
     menu,
 )
 
+# Prima di config, che sceglie la lingua all'importazione: nella finestra la
+# lingua del primo avvio si sceglie in una finestra, non in console (T5a).
+if __name__ == "__main__":
+    from orologic_modules import avvio
+
+    avvio.prepara(sys.argv)
+
 from orologic_modules import (
     board_utils,
     cleaner,

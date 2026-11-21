@@ -105,7 +105,7 @@ def test_la_finestra_delle_impostazioni_cambia_e_salva(finestra, monkeypatch, da
         dialogo.Destroy()
 
 
-def test_f3_apre_le_impostazioni_e_il_fuoco_torna_all_area(finestra):
+def test_ctrl_virgola_apre_le_impostazioni_e_il_fuoco_torna_all_area(finestra):
     """La finestra vera, modale, con il nucleo fermo: si chiude da sola
     poco dopo, come con Esc, e il fuoco torna alla console."""
     viste = []
@@ -119,9 +119,36 @@ def test_f3_apre_le_impostazioni_e_il_fuoco_torna_all_area(finestra):
         wx.CallLater(50, chiudi)
 
     wx.CallLater(50, chiudi)
-    evento = wx.KeyEvent(wx.wxEVT_KEY_DOWN)
-    evento.SetKeyCode(wx.WXK_F3)
+    evento = wx.KeyEvent(wx.wxEVT_CHAR_HOOK)
+    evento.SetKeyCode(ord(","))
+    evento.SetControlDown(True)
     finestra._tasto_della_finestra(evento)
     assert viste == [("Impostazioni", True, "Annunci: sì")]
     pompa(lambda: False, 0.1)
     assert wx.Window.FindFocus() is finestra.area
+
+
+def test_il_filtro_delle_impostazioni(app):
+    voci = [("a", "Annunci: sì"), ("b", "Volume dei suoni: 40%"), ("c", "Destinazione degli annunci: solo la sintesi")]
+    cambiate = []
+    dialogo = dialoghi.FinestraImpostazioni(None, voci, lambda chiave, _dialogo: cambiate.append(chiave))
+    try:
+        assert dialogo.filtro.GetName() == "Filtro delle voci"
+        dialogo.filtro.ChangeValue("annùnci")
+        dialogo.filtra()
+        assert [dialogo.lista.GetString(i) for i in range(dialogo.lista.GetCount())] == ["Annunci: sì", "Destinazione degli annunci: solo la sintesi"]
+        dialogo.lista.SetSelection(1)
+        dialogo.cambia()
+        assert cambiate == ["c"]
+        # Il filtro guarda solo il nome, la parte prima dei due punti.
+        dialogo.filtro.ChangeValue("sintesi")
+        dialogo.filtra()
+        assert dialogo.lista.GetString(0) == "Nessuna voce contiene sintesi."
+        dialogo.cambia()
+        assert cambiate == ["c"]
+        dialogo.filtro.ChangeValue("")
+        dialogo.filtra()
+        assert dialogo.lista.GetCount() == 3
+        assert dialogo.lista.GetStringSelection() == "Destinazione degli annunci: solo la sintesi"
+    finally:
+        dialogo.Destroy()
