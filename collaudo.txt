@@ -1,11 +1,21 @@
 Collaudo della T6 di Orologic 9, ramo gui, 21 novembre 2026: il giro completo prima della 9.0.0, solo con NVDA, le orecchie e Lichess veri. Accanto a ogni voce scrivi ok, oppure cosa non va.
 Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py.
-Passo 1: con gli annunci spenti, in Orolichess vai ad amici, vedi amici, un amico, profilo, e premi Invio.
-Domanda 1: il fuoco va all'area e NVDA legge la prima riga del profilo?
-Passo 2: accendi gli annunci e ripeti.
-Domanda 2: il fuoco resta sul ramo, e il profilo si sente con gli annunci?
 Passo 3: un giro libero nelle modalità: arbitra, tempo, gioca col motore, Easyfish, analisi, memoboard, ricerca e impostazioni.
 Domanda 3: dove la 9 ti sembra più povera di suoni del terminale? Il confronto automatico copre le impostazioni; il resto della finestra esegue lo stesso codice del terminale.
+* Ok, ora mi pare sia a posto.
 Domanda 4: le cosucce da limare, una per riga, qui sotto.
+* Scusami, non riesco a dirtele ora, salteranno fuori con l'utilizzo. Ad esempio la creazione e gestione degli orologi, devo spiegarti come voglio finestre e procedure.
+* Dobbiamo anche affrontare la modalità scacchiera interattiva che sarà un modo alternativo di fare le mosse in tutte le parti dell'app in cui si fanno. Però il risultato fino a qui è soddisfacente.
 Domanda 5: il collegamento del menu Start al terminale si chiama per ora Orologic nel terminale: va bene, o che nome vuoi?
-Esito:
+* Orologic modalità a linea di comando.
+
+• NVDA legge cursori, combo e schede con le loro etichette?
+• Invio su Applica a e sui colori fa sentire i due suoni?
+Perfetta! La finestra è proprio come la volevo.
+
+Iniziamo con la finestra di composizione del prompt.
+Si apre una finestra.
+Una combo riporta tutti i simboli conosciuti. Le frecce verticali li selezionano e una piccola area di testo visualizza (e annuncia se attivi), la spiegazione di quel simbolo. Spazio, attiva disattiva su quel simbolo lo switch (verboso), che viene riportato solo se attivo, accanto all'elemento. Invio lo togle dalla lista disponibili, il fuoco cade sull'elemento vicino se c'è, altrimenti passa nella combo Prompt.
+Il simbolo su cui si è dato l'invio finisce in prompt. Qui, canc riporta il simbolo fra i disponibili e il focus ricade su quello vicno, se era l'ultimo, il focus torna sui disponibili. Ctrl+ frecce verticali spostano l'elemento su o giù. Su = prima, giù = dopo (sinistra/destra).
+Un'area di testo navigabile ripota l'esempio del prompt composto fino a quel momento, riempito con dati fittizzi.
+Ok salva e chiude, annulla chiude.
