@@ -125,6 +125,20 @@ def test_frecce_lettere_e_annunci(finestra, aperta):
     assert dialogo.scacchiera.cursore == chess.D1
     _tasto(dialogo, wx.WXK_DOWN, "Alt")
     assert dialogo.scacchiera.cursore == chess.D8
+    assert aperta["suonati"][-1] == "giro_giu"
+    # Con Alt lontano dal bordo e' un passo, senza suono.
+    _tasto(dialogo, wx.WXK_LEFT, "Alt")
+    assert dialogo.scacchiera.cursore == chess.C8
+    assert aperta["suonati"][-1] == "giro_giu"
+    for _volta in range(3):
+        _tasto(dialogo, wx.WXK_LEFT, "Alt")
+    assert dialogo.scacchiera.cursore == chess.H8
+    assert aperta["suonati"][-1] == "giro_sinistra"
+    _tasto(dialogo, wx.WXK_RIGHT, "Alt")
+    _tasto(dialogo, wx.WXK_UP, "Alt")
+    assert dialogo.scacchiera.cursore == chess.A1
+    assert aperta["suonati"][-2:] == ["giro_destra", "giro_su"]
+    _scrivi(dialogo, "d8")
     _tasto(dialogo, wx.WXK_RIGHT, "Control")
     assert dialogo.scacchiera.cursore == chess.E7
     _tasto(dialogo, wx.WXK_LEFT, "Shift")
@@ -162,16 +176,22 @@ def test_la_mossa_illegale_si_spiega(finestra, aperta):
     _scrivi(dialogo, "e5")
     _tasto(dialogo, wx.WXK_RETURN)
     assert aperta["premuti"] == []
-    assert aperta["suonati"][-1] == "no"
+    assert aperta["suonati"][-1] == "mossa_non_vale"
     assert _ultimo_detto(finestra, f"Pedone bianco non puo' andare in {nome_casa(chess.E5)}.")
     # Posato di nuovo sulla sua casa.
     _scrivi(dialogo, "e2")
     _tasto(dialogo, wx.WXK_SPACE)
     assert aperta["suonati"][-1] == "rimetti"
     assert dialogo.scacchiera.sollevato is None
-    # Invio senza niente in mano.
+    # Invio senza niente in mano, spazio su una casa vuota, u senza mosse.
     _tasto(dialogo, wx.WXK_RETURN)
+    assert aperta["suonati"][-1] == "niente_in_mano"
     assert _ultimo_detto(finestra, "Nessun pezzo in mano.")
+    _scrivi(dialogo, "e4")
+    _tasto(dialogo, wx.WXK_SPACE)
+    assert aperta["suonati"][-1] == "casa_vuota"
+    _scrivi(dialogo, "u")
+    assert aperta["suonati"][-1] == "nessuna_mossa"
 
 
 def test_la_promozione_chiede_il_pezzo(finestra, aperta, monkeypatch):
@@ -214,7 +234,7 @@ def test_i_comandi(finestra, aperta, monkeypatch):
     _tasto(dialogo, wx.WXK_F1)
     _scrivi(dialogo, "C")
     assert aperta["premuti"] == []
-    assert aperta["suonati"][-2:] == ["no", "no"]
+    assert aperta["suonati"][-2:] == ["comando_assente", "comando_assente"]
 
 
 RISPOSTA_DEL_MENU = {}
@@ -272,8 +292,24 @@ def test_la_vista_ferma_e_la_partita_da_guardare(finestra, aperta):
     _tasto(dialogo, wx.WXK_SPACE)
     _tasto(dialogo, wx.WXK_RETURN)
     assert aperta["premuti"] == []
-    assert aperta["suonati"][-2:] == ["no", "no"]
+    assert aperta["suonati"][-2:] == ["da_guardare", "da_guardare"]
     assert _ultimo_detto(finestra, "Qui la scacchiera e' solo da guardare.")
+
+
+def test_un_suono_per_evento_firmato_da_orologic():
+    """Ogni evento della scacchiera ha un preset suo, che c'e' nella
+    collezione, diverso da tutti gli altri anche nel contenuto, e firmato da
+    Orologic; gli eventi del no aspettano la seconda parte dell'ascolto."""
+    from GBUtils import Acusticator
+
+    nomi = list(finestra_scacchiera.SUONI.values())
+    assert len(set(nomi)) == len(nomi)
+    impronte = {repr(Acusticator.preset(nome)) for nome in nomi}
+    assert len(impronte) == len(nomi)
+    for nome in nomi:
+        assert "orologic" in Acusticator.usato_da(nome), nome
+    assert set(finestra_scacchiera.GIRI.values()) <= set(finestra_scacchiera.SUONI)
+    assert not set(finestra_scacchiera.EVENTI_DEL_NO) & set(finestra_scacchiera.SUONI)
 
 
 def test_la_posizione_nuova_e_la_fine_della_partita(finestra, aperta):

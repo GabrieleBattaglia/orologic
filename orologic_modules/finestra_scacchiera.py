@@ -53,22 +53,35 @@ GIRO_DELLA_POSIZIONE = 150
 CHIUSA_PER_UNA_DOMANDA = wx.ID_HIGHEST + 71
 PROMOZIONI = (chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT)
 
+# I suoni della scacchiera, un preset per evento, dalla collezione di GBUtils,
+# scelti da Gabriele all'ascolto alla cieca del 21 novembre 2026,
+# strumenti/ascolto_scacchiera.py: sollevare e posare la coppia votata 5,
+# rimettere la meta' che posa della coppia votata 4, subito sotto; al bordo
+# uno dei due votati 5, e per passare dall'altra parte, uno per lato, gli
+# altri del gruppo del bordo, in ordine di voto.
 SUONI = {
-    # Dalla collezione di GBUtils, fra i non firmati, brevi e di rumore:
-    # provvisori, fino alla sessione d'ascolto di Gabriele.
-    "solleva": lambda: Acusticator.play("filtro_polisportiva", volume=config.VOLUME),
-    "posa": lambda: Acusticator.play("filtro_comune", volume=config.VOLUME),
-    "rimetti": lambda: Acusticator.play("casella_usciti_tolta", volume=config.VOLUME),
-    "apri": lambda: Acusticator.play("banda_che_si_allarga", volume=config.VOLUME),
-    "bordo": lambda: Acusticator(["c3", 0.04, 0, config.VOLUME], kind=2),
-    # Come l'errore del nucleo, per esempio la mossa annullata senza pausa.
-    "no": lambda: Acusticator(["b3", 0.2, 0, config.VOLUME], kind=2),
+    "apri": "due_ante_che_si_aprono",
+    "solleva": "casella_ritirati_spuntata",
+    "posa": "casella_ritirati_tolta",
+    "rimetti": "filtro_comune",
+    "bordo": "filtro_provincia",
+    "giro_giu": "filtro_classe_peggiore",
+    "giro_destra": "filtro_tratto_indifferente",
+    "giro_sinistra": "filtro_posto_attuale",
+    "giro_su": "filtro_visus",
 }
+GIRI = {SU: "giro_su", GIU: "giro_giu", SINISTRA: "giro_sinistra", DESTRA: "giro_destra"}
+# Gli eventi del no, ognuno col suo suono, da scegliere nella seconda parte
+# dell'ascolto: per ora tutti con l'errore del nucleo, provvisorio.
+EVENTI_DEL_NO = ("mossa_non_vale", "casa_vuota", "niente_in_mano", "comando_assente", "da_guardare", "nessuna_mossa")
 
 
 def suona(evento):
     """I suoni della scacchiera; le prove li sostituiscono."""
-    SUONI[evento]()
+    if evento in SUONI:
+        Acusticator.play(SUONI[evento], volume=config.VOLUME)
+    elif evento in EVENTI_DEL_NO:
+        Acusticator(["b3", 0.2, 0, config.VOLUME], kind=2)
 
 
 def _e_nero(colore):
@@ -318,7 +331,7 @@ class FinestraScacchiera(wx.Dialog):
         osservata su Lichess: lo dice, con il suono del no."""
         if not (self._dati() or {}).get("da_guardare"):
             return False
-        suona("no")
+        suona("da_guardare")
         self.annuncia(_("Qui la scacchiera e' solo da guardare."))
         return True
 
@@ -328,7 +341,7 @@ class FinestraScacchiera(wx.Dialog):
     def comando(self, testo, chiave=None):
         """Un comando della modalita', se la modalita' ce l'ha."""
         if chiave is not None and not self._ha(chiave):
-            suona("no")
+            suona("comando_assente")
             return
         self.scrivi(testo)
 
@@ -378,9 +391,13 @@ class FinestraScacchiera(wx.Dialog):
             passo = GIU_SINISTRA if codice == wx.WXK_LEFT else GIU_DESTRA
         elif modificatori not in (wx.MOD_NONE, wx.MOD_ALT):
             return
-        if not self.scacchiera.sposta(passo, avvolgi=modificatori == wx.MOD_ALT):
+        esito = self.scacchiera.sposta(passo, avvolgi=modificatori == wx.MOD_ALT)
+        if esito == "fermo":
             suona("bordo")
             return
+        if esito == "giro":
+            # Dall'altra parte: il suono del lato oltrepassato.
+            suona(GIRI[passo])
         self._mostra_la_casa()
 
     def _mostra_la_casa(self):
@@ -445,7 +462,7 @@ class FinestraScacchiera(wx.Dialog):
         elif carattere == "u":
             casa = self.scacchiera.casa_dell_ultima_mossa()
             if casa is None:
-                suona("no")
+                suona("nessuna_mossa")
                 self.annuncia(self.scacchiera.ultime_mosse(1))
                 return
             self.scacchiera.cursore = casa
@@ -466,7 +483,7 @@ class FinestraScacchiera(wx.Dialog):
             return
         esito = self.scacchiera.spazio()
         if esito == "vuota":
-            suona("no")
+            suona("casa_vuota")
             self.annuncia(self.scacchiera.descrivi())
             return
         if esito == "posato":
@@ -484,13 +501,13 @@ class FinestraScacchiera(wx.Dialog):
             return
         mossa = self.scacchiera.mossa()
         if mossa is None:
-            suona("no")
+            suona("niente_in_mano")
             self.annuncia(self.scacchiera.in_mano())
             return
         if self.scacchiera.promozione():
             motivo = self.scacchiera.giudica(self.scacchiera.mossa(chess.QUEEN))
             if motivo:
-                suona("no")
+                suona("mossa_non_vale")
                 self.annuncia(motivo)
                 return
             nomi = [localizzazione.nome_pezzo(pezzo).capitalize() for pezzo in PROMOZIONI]
@@ -501,7 +518,7 @@ class FinestraScacchiera(wx.Dialog):
             mossa = self.scacchiera.mossa(PROMOZIONI[indice])
         motivo = self.scacchiera.giudica(mossa)
         if motivo:
-            suona("no")
+            suona("mossa_non_vale")
             self.annuncia(motivo)
             return
         san = self.scacchiera.san(mossa)
@@ -514,7 +531,7 @@ class FinestraScacchiera(wx.Dialog):
 
     def commento(self):
         if not self._ha(".c"):
-            suona("no")
+            suona("comando_assente")
             return
         testo = self.finestra.chiedi_valore(self, _("Commento mossa"), _("Commento mossa"), "", "testo", 0, 500)
         self.area.SetFocus()
@@ -526,7 +543,7 @@ class FinestraScacchiera(wx.Dialog):
         partita; un comando scelto va al nucleo, e la scacchiera torna. Nel
         menu Backspace fa ripartire il tempo."""
         if not self.finestra.comandi:
-            suona("no")
+            suona("comando_assente")
             return
         dati = self._dati() or {}
         pausa = self._ha(".p") and not dati.get("senza_orologio")

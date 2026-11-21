@@ -156,16 +156,19 @@ class Scacchiera:
     # Gli spostamenti.
 
     def sposta(self, passo, avvolgi=False):
-        """Il cursore di un passo; al bordo si ferma e restituisce falso, o,
-        con avvolgi, passa dall'altra parte."""
+        """Il cursore di un passo. Restituisce passo; al bordo fermo, e il
+        cursore resta; con avvolgi, al bordo giro, e il cursore passa
+        dall'altra parte."""
         colonna, riga = self._in_vista(self.cursore)
         colonna, riga = colonna + passo[0], riga + passo[1]
+        esito = "passo"
         if not (0 <= colonna < 8 and 0 <= riga < 8):
             if not avvolgi:
-                return False
+                return "fermo"
             colonna, riga = colonna % 8, riga % 8
+            esito = "giro"
         self.cursore = self._dalla_vista(colonna, riga)
-        return True
+        return esito
 
     def vai(self, colonna=None, traversa=None):
         """Alla colonna, una lettera, e alla traversa, un numero da 1 a 8; quella che manca resta."""

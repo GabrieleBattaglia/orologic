@@ -54,20 +54,23 @@ def test_il_cursore_nel_testo_e_il_pezzo_sollevato():
 def test_bordi_passaggi_e_diagonali():
     s = Scacchiera(chess.Board())
     s.vai("f", 8)
-    assert not s.sposta(SU)
+    assert s.sposta(SU) == "fermo"
     assert s.cursore == chess.F8
     # Con Alt si passa dall'altra parte: f8 e su va a f1, a4 e sinistra a h4.
-    assert s.sposta(SU, avvolgi=True)
+    assert s.sposta(SU, avvolgi=True) == "giro"
     assert s.cursore == chess.F1
     s.vai("a", 4)
-    s.sposta(SINISTRA, avvolgi=True)
+    assert s.sposta(SINISTRA, avvolgi=True) == "giro"
     assert s.cursore == chess.H4
+    # Lontano dal bordo, con Alt, e' un passo come gli altri.
+    assert s.sposta(SINISTRA, avvolgi=True) == "passo"
+    assert s.cursore == chess.G4
     s.vai("c", 1)
-    s.sposta(SU_DESTRA)
+    assert s.sposta(SU_DESTRA) == "passo"
     assert s.cursore == chess.D2
     s.sposta(GIU_DESTRA)
     assert s.cursore == chess.E1
-    assert not s.sposta(GIU_DESTRA)
+    assert s.sposta(GIU_DESTRA) == "fermo"
     # Dal Nero su va verso la traversa 1, destra verso la colonna a.
     n = Scacchiera(chess.Board(), dal_nero=True)
     n.vai("e", 8)
