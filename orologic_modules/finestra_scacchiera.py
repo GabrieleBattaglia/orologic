@@ -26,7 +26,7 @@ import wx
 from GBUtils import Acusticator
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
-from . import aspetto, config, localizzazione, plancia
+from . import aspetto, config, localizzazione, plancia, storage
 from .config import _
 from .scacchiera import (
     DESTRA,
@@ -44,8 +44,16 @@ from .scacchiera import (
 # I millisecondi fra il tasto e l'annuncio: NVDA dice prima quello che vede
 # sotto il cursore, e l'annuncio lo interrompe.
 RITARDO_DELL_ANNUNCIO = 100
-# Quanto una lettera da a a h aspetta il numero della casa.
-ATTESA_DELLA_CASA = 700
+# Quanto un tasto che fa coppia aspetta il secondo: una lettera da a ad h il
+# numero della casa, l'1 e lo 0 l'altra cifra del risultato. Si sceglie nelle
+# impostazioni, in millisecondi (Gabriele, collaudo della scacchiera).
+CHIAVE_ATTESA = "scacchiera_attesa_ms"
+ATTESA_PREDEFINITA = 700
+ATTESA_MINIMA = 200
+ATTESA_MASSIMA = 3000
+# I risultati rapidi, dove la modalita' li ha, come nell'arbitraggio: le due
+# cifre, o l'asterisco, e il comando che li assegna.
+RISULTATI = {"10": ".1-0", "01": ".0-1", "12": ".1/2", "*": ".*"}
 # Ogni quanto si rilegge la posizione dal cruscotto.
 GIRO_DELLA_POSIZIONE = 150
 # Il codice con cui la scacchiera si chiude per una domanda del nucleo: la
@@ -76,6 +84,7 @@ SUONI = {
     "comando_assente": "filtro_stipendio_massimo",
     "da_guardare": "orecchio_che_cerca",
     "nessuna_mossa": "filtro_eta_minima",
+    "risultato": "casella_liberi_spuntata",
 }
 GIRI = {SU: "giro_su", GIU: "giro_giu", SINISTRA: "giro_sinistra", DESTRA: "giro_destra"}
 # Le azioni che fanno suonare ogni evento, per suoni_della_scacchiera.txt,
@@ -96,12 +105,64 @@ AZIONI = {
     "comando_assente": "Un tasto per un comando che la modalità non ha: da F1 a F5 senza orologi, C senza commenti, Backspace senza comandi",
     "da_guardare": "Spazio o Invio nella partita osservata su Lichess, dove la scacchiera è solo da guardare",
     "nessuna_mossa": "u quando non c'è ancora nessuna mossa giocata",
+    "risultato": "1 e 0, 0 e 1, 1 e 2, o l'asterisco, dove si assegna il risultato: si apre la conferma",
 }
 
 
 def suona(evento):
     """I suoni della scacchiera; le prove li sostituiscono."""
     Acusticator.play(SUONI[evento], volume=config.VOLUME)
+
+
+def attesa_dei_comandi():
+    """I millisecondi che un tasto aspetta il secondo, dalle impostazioni."""
+    try:
+        valore = int(storage.LoadDB().get(CHIAVE_ATTESA, ATTESA_PREDEFINITA))
+    except (TypeError, ValueError):
+        valore = ATTESA_PREDEFINITA
+    return min(max(valore, ATTESA_MINIMA), ATTESA_MASSIMA)
+
+
+def domanda_del_risultato(codice):
+    return {
+        "10": _("Vince il Bianco, 1-0: assegno il risultato?"),
+        "01": _("Vince il Nero, 0-1: assegno il risultato?"),
+        "12": _("Patta, 1/2: assegno il risultato?"),
+        "*": _("Risultato non specificato, *: lo assegno?"),
+    }[codice]
+
+
+class ConfermaDelRisultato(wx.Dialog):
+    """La conferma del risultato: Invio lo assegna, Esc continua la partita.
+    La domanda e' anche il titolo, che NVDA legge all'apertura."""
+
+    def __init__(self, genitore, domanda):
+        super().__init__(genitore, title=domanda, style=STILE_ADATTABILE)
+        pannello = pannello_scorrevole(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(wx.StaticText(pannello, label=domanda), 0, wx.ALL, 5)
+        pulsanti = wx.BoxSizer(wx.HORIZONTAL)
+        self.assegna = wx.Button(pannello, wx.ID_YES, _("Assegna"))
+        continua = wx.Button(pannello, wx.ID_NO, _("Continua la partita"))
+        pulsanti.Add(self.assegna, 0, wx.ALL, 5)
+        pulsanti.Add(continua, 0, wx.ALL, 5)
+        sizer.Add(pulsanti, 0, wx.ALIGN_RIGHT)
+        pannello.SetSizer(sizer)
+        aspetto.applica_alla_finestra(self)
+        adatta_finestra(self, pannello, (480, 200))
+        self.Maximize()
+        self.SetAffirmativeId(wx.ID_YES)
+        self.SetEscapeId(wx.ID_NO)
+        self.assegna.SetDefault()
+        self.Bind(wx.EVT_BUTTON, lambda _evento: self.EndModal(wx.ID_YES), self.assegna)
+        self.Bind(wx.EVT_BUTTON, lambda _evento: self.EndModal(wx.ID_NO), continua)
+        self.assegna.SetFocus()
+
+
+def chiedi_il_risultato(genitore, domanda):
+    """Vero se il risultato va assegnato; le prove la sostituiscono."""
+    with ConfermaDelRisultato(genitore, domanda) as dialogo:
+        return dialogo.ShowModal() == wx.ID_YES
 
 
 def _e_nero(colore):
@@ -134,6 +195,7 @@ def righe_d_aiuto():
         _("Ctrl con spazio: il pezzo in mano."),
         _("Da a ad h, poi da 1 a 8: salta a quella casa."),
         _("Da 1 a 8: la traversa, nella colonna di adesso."),
+        _("1 e 0, 0 e 1, 1 e 2, asterisco: dove si assegna il risultato, 1-0, 0-1, patta o non specificato, con la conferma."),
         _("9: gira la scacchiera."),
         _("R N B Q K P, e in minuscolo: dove sono quei pezzi, bianchi e neri."),
         _("W: tutti i pezzi bianchi; w: tutti i neri."),
@@ -234,6 +296,7 @@ class FinestraScacchiera(wx.Dialog):
         self._annuncio = None
         self._lettera = None
         self._attesa_della_lettera = None
+        self.attesa_dei_comandi = attesa_dei_comandi()
         # Vero quando si chiude: da li' non scrive piu' nel prompt, perche' il
         # nucleo puo' gia' fare un'altra domanda.
         self.chiusa = False
@@ -433,16 +496,31 @@ class FinestraScacchiera(wx.Dialog):
         if self._lettera is not None:
             lettera = self._lettera
             self._chiudi_la_lettera()
-            if carattere in "12345678":
-                self.scacchiera.vai(lettera, int(carattere))
-                self._mostra_la_casa()
+            if self._coppia(lettera, carattere):
                 return
             self._dopo_la_lettera(lettera)
-        if carattere in "abcdefgh":
+        # Le lettere aspettano il numero della casa; l'1 e lo 0, dove si
+        # assegna il risultato, l'altra cifra.
+        if carattere in "abcdefgh" or (carattere in "10" and self.risultati()):
             self._lettera = carattere
-            self._attesa_della_lettera = wx.CallLater(ATTESA_DELLA_CASA, self._lettera_scaduta)
+            self._attesa_della_lettera = wx.CallLater(self.attesa_dei_comandi, self._lettera_scaduta)
+            return
+        if carattere == "*":
+            self.risultato("*")
             return
         self._carattere_della_scacchiera(carattere)
+
+    def _coppia(self, primo, secondo):
+        """Il secondo tasto di una coppia: la casa, o un risultato. Vero se
+        la coppia vale."""
+        if primo in "abcdefgh" and secondo in "12345678":
+            self.scacchiera.vai(primo, int(secondo))
+            self._mostra_la_casa()
+            return True
+        if primo + secondo in RISULTATI:
+            self.risultato(primo + secondo)
+            return True
+        return False
 
     def _chiudi_la_lettera(self):
         if self._attesa_della_lettera is not None:
@@ -458,10 +536,13 @@ class FinestraScacchiera(wx.Dialog):
             self._dopo_la_lettera(lettera)
 
     def _dopo_la_lettera(self, lettera):
-        """Una lettera senza il numero passa ai comandi dopo: la b dice gli
-        alfieri neri; le altre non hanno altro."""
+        """Un tasto rimasto senza il secondo fa quello che fa da solo: la b
+        dice gli alfieri neri, l'1 va alla prima traversa; lo 0 e le altre
+        lettere non hanno altro."""
         if lettera == "b":
             self.scrivi(",b")
+        elif lettera == "1":
+            self._carattere_della_scacchiera("1")
 
     def _carattere_della_scacchiera(self, carattere):
         if carattere in "12345678":
@@ -546,6 +627,24 @@ class FinestraScacchiera(wx.Dialog):
         suona("posa")
         self.scrivi(san)
         self.disegna()
+
+    # Il risultato.
+
+    def risultati(self):
+        """Vero dove la modalita' assegna i risultati, come nell'arbitraggio."""
+        return self._ha(RISULTATI["10"])
+
+    def risultato(self, codice):
+        """1 e 0, 0 e 1, 1 e 2, o l'asterisco: la conferma, e con Invio il
+        risultato va al nucleo; con Esc la partita continua."""
+        if not self.risultati():
+            suona("comando_assente")
+            return
+        suona("risultato")
+        if chiedi_il_risultato(self, domanda_del_risultato(codice)):
+            self.scrivi(RISULTATI[codice])
+        if self:
+            self.area.SetFocus()
 
     # Il commento e il menu.
 

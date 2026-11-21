@@ -1,7 +1,8 @@
-Collaudo della scacchiera interattiva, tappa 1, Orologic 9, ramo gui, 21 novembre 2026: NVDA, il braille e le orecchie. Accanto a ogni voce scrivi ok, oppure cosa non va.
-Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py; arbitra una partita, poi una contro il motore, e se puoi una su Lichess.
-* Tutto perfetto fin qui, grandissimo lavoro.
-* Mi è venuto in mente che servono 4 comandi rapidi per assegnare i risultati dove possibile. Potremmo fare così: 1 e 0 attivano anche loro il timer e aspettano un tempo n. Poi 10 vince il bianco, 01 il nero, 12 patta e * non specificato. Facciamo però che si chiede conferma: invio sì, esc si continua. Ovviamente dove gioco.
-* Poi aggiungerei l'opzione nelle impostazioni: tempo attesa comandi scacchiera, nelle impostazioni, in cui chiediamo i millisecondi per queste attese: 700 di default.
-* Fatto ciò, questa fase è promossa a pieni voti.
-* Ups, mentre chiudevo orologic dopo il collaudo, ho scoperto un piccolo bug. Le domande a fine partita, tipo vuoi vedere come hai usato il tempo eccetera. Quelle che prevedono invio|ESCAPE. Invio funziona, esc, no... Devo sceglierlo dal menu altrimenti non fa nulla.
+Collaudo delle note sulla scacchiera, Orologic 9, ramo gui, 21 novembre 2026: NVDA e le orecchie. Accanto a ogni voce scrivi ok, oppure cosa non va.
+Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py; arbitra una partita.
+Domanda 1: nella scacchiera 1 e 0, 0 e 1, 1 e 2 e l'asterisco aprono la conferma del risultato, con il suono della porta che si apre; Invio lo assegna, Esc continua la partita. Va bene?
+Domanda 2: l'1 da solo, passata l'attesa, va alla prima traversa; contro il motore e su Lichess, dove i risultati non ci sono, ci va subito. Ti torna?
+Domanda 3: impostazioni, Tempo di attesa dei comandi della scacchiera (ms): cambiata, vale alla scacchiera aperta dopo, per le lettere e per le cifre?
+Domanda 4: a fine partita, alle domande Invio o Esc, Esc ora risponde anche dalla plancia, qualunque voce sia selezionata?
+Domanda 5: i testi nuovi, le quattro domande del risultato, Vince il Bianco, 1-0: assegno il risultato? e le altre, i pulsanti Assegna e Continua la partita, la voce delle impostazioni e la riga dell'aiuto: li approvi?
+Esito:

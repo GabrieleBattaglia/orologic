@@ -71,6 +71,7 @@ def test_le_righe_coi_testi_di_orologic(gestore):
     assert righe["soglia_errore"] == "Soglia Errore: 100"
     assert righe["giocatore"] == "Il mio nome: non ancora scritto"
     assert righe["nomi"] == "Nomi dei pezzi, delle colonne e delle mosse"
+    assert righe["scacchiera_attesa"] == "Tempo di attesa dei comandi della scacchiera (ms): 700"
     assert righe["salvataggio"] == "Salvataggio automatico: non attivo"
     assert righe["stile"] == "Stile dei menu: parole"
     assert righe["volume"] == "Volume dei suoni: 0%"
@@ -245,3 +246,16 @@ def test_caffe_e_pub(gestore, monkeypatch):
     gestore.cambia("caffe", None)
     assert viste == [("Offrimi un caffè", True)]
     assert suonati[-3:] == ["mess_pub_entra", "mess_pub_aiuto", "donazione"]
+
+
+def test_l_attesa_dei_comandi_della_scacchiera(gestore):
+    from orologic_modules import finestra_scacchiera
+
+    gestore.risposte.append(1200)
+    gestore.cambia("scacchiera_attesa", None)
+    assert storage.LoadDB()[finestra_scacchiera.CHIAVE_ATTESA] == 1200
+    assert finestra_scacchiera.attesa_dei_comandi() == 1200
+    assert gestore.riga("scacchiera_attesa") == "Tempo di attesa dei comandi della scacchiera (ms): 1200"
+    _tipo, titolo, domanda, valore, genere, minimo, massimo = gestore.chieste[0]
+    assert titolo == "Tempo di attesa dei comandi della scacchiera (ms)"
+    assert (domanda, valore, genere, minimo, massimo) == ("Tempo di attesa dei comandi della scacchiera (ms) [700]: ", 700, "intero", 200, 3000)

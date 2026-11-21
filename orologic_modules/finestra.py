@@ -1162,12 +1162,18 @@ class Finestra(wx.Frame):
                 self.vai_all_area()
 
     def _tasto_della_plancia(self, evento):
-        """Esc nella plancia vale come Esc nel menu che aspetta."""
-        if evento.GetKeyCode() == wx.WXK_ESCAPE and not evento.HasAnyModifiers() and self.attesa.tipo == "menu":
-            self.meta = None
-            self.attesa = Attesa(None)
-            self.faccia.scegli(None)
-            return
+        """Esc nella plancia vale come Esc nel menu che aspetta, e come Esc
+        nella domanda Invio o Esc, su qualunque voce sia il cursore: prima
+        andava scelta la voce ESC (Gabriele, collaudo della scacchiera)."""
+        if evento.GetKeyCode() == wx.WXK_ESCAPE and not evento.HasAnyModifiers():
+            if self.attesa.tipo == "menu":
+                self.meta = None
+                self.attesa = Attesa(None)
+                self.faccia.scegli(None)
+                return
+            if self.attesa.tipo == "sino":
+                self.faccia.premi("\x1b")
+                return
         evento.Skip()
 
     # Il fuoco.

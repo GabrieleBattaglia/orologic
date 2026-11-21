@@ -63,6 +63,7 @@ VOCI = (
     "motore",
     "nomi",
     "prompt",
+    "scacchiera_attesa",
     "salvataggio",
     "stile",
     "colori",
@@ -128,6 +129,10 @@ class Impostazioni:
             return _("Nomi dei pezzi, delle colonne e delle mosse")
         if voce == "prompt":
             return _("Prompt di gioco: {modello}").format(modello=modello_prompt.modello())
+        if voce == "scacchiera_attesa":
+            from . import finestra_scacchiera
+
+            return _riga(_("Tempo di attesa dei comandi della scacchiera (ms)"), finestra_scacchiera.attesa_dei_comandi())
         if voce == "salvataggio":
             return _("Salvataggio automatico: {stato}").format(stato=_("attivo") if db.get("autosave_enabled") else _("non attivo"))
         if voce == "stile":
@@ -153,6 +158,7 @@ class Impostazioni:
             "motore": self._motore,
             "nomi": self._nomi,
             "prompt": self._prompt,
+            "scacchiera_attesa": self._attesa_della_scacchiera,
             "salvataggio": lambda d: self._interruttore("autosave_enabled", _("Salvataggio automatico"), (_("attivo"), _("non attivo")), d),
             "stile": lambda d: self._interruttore("menu_numerati", _("Stile dei menu"), (_("numeri"), _("parole")), d),
             "colori": self._colori,
@@ -192,6 +198,27 @@ class Impostazioni:
         if nuovo is not None and nuovo != attuale:
             storage.SetValue("default_multipv", nuovo)
             engine.SetMultipv(nuovo)
+            _bip()
+
+    def _attesa_della_scacchiera(self, dialogo):
+        """I millisecondi che nella scacchiera interattiva un tasto aspetta il
+        secondo, la lettera il numero della casa e l'1 o lo 0 l'altra cifra
+        del risultato (Gabriele, collaudo della scacchiera)."""
+        from . import finestra_scacchiera
+
+        attuale = finestra_scacchiera.attesa_dei_comandi()
+        titolo = _("Tempo di attesa dei comandi della scacchiera (ms)")
+        nuovo = self.finestra.chiedi_valore(
+            dialogo,
+            titolo,
+            _("Tempo di attesa dei comandi della scacchiera (ms) [{cur}]: ").format(cur=attuale),
+            attuale,
+            "intero",
+            finestra_scacchiera.ATTESA_MINIMA,
+            finestra_scacchiera.ATTESA_MASSIMA,
+        )
+        if nuovo is not None and nuovo != attuale:
+            storage.SetValue(finestra_scacchiera.CHIAVE_ATTESA, nuovo)
             _bip()
 
     @staticmethod

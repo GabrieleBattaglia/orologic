@@ -422,3 +422,70 @@ def test_una_partita_col_ciclo_d_attesa_vero(finestra, monkeypatch):
         fine.set()
         for tasto in ".\r":
             finestra.faccia.premi(tasto)
+
+
+def test_i_risultati_rapidi_con_la_conferma(finestra, aperta, monkeypatch):
+    """Collaudo della scacchiera, Gabriele: 1 e 0, 0 e 1, 1 e 2 e
+    l'asterisco assegnano il risultato dove si puo', con la conferma; l'1
+    da solo, passata l'attesa, resta la prima traversa."""
+    domande, risposte = [], [True, False, True, True]
+
+    def chiedi(_genitore, domanda):
+        domande.append(domanda)
+        return risposte.pop(0)
+
+    monkeypatch.setattr(finestra_scacchiera, "chiedi_il_risultato", chiedi)
+    dialogo = aperta["apri"]()
+    assert dialogo.attesa_dei_comandi == finestra_scacchiera.ATTESA_PREDEFINITA
+    dialogo.attesa_dei_comandi = 150
+    _scrivi(dialogo, "10")
+    assert domande == ["Vince il Bianco, 1-0: assegno il risultato?"]
+    assert aperta["suonati"][-1] == "risultato"
+    assert _mandati(aperta) == ".1-0\r"
+    del aperta["premuti"][:]
+    # Esc continua la partita.
+    _scrivi(dialogo, "01")
+    assert domande[-1] == "Vince il Nero, 0-1: assegno il risultato?"
+    assert aperta["premuti"] == []
+    _scrivi(dialogo, "12*")
+    assert domande[-2:] == ["Patta, 1/2: assegno il risultato?", "Risultato non specificato, *: lo assegno?"]
+    assert _mandati(aperta) == ".1/2\r.*\r"
+    # L'1 da solo aspetta, poi va alla prima traversa; con un'altra cifra
+    # vale la traversa, poi l'altra.
+    _scrivi(dialogo, "e4")
+    _scrivi(dialogo, "1")
+    assert dialogo.scacchiera.cursore == chess.E4
+    assert pompa(lambda: dialogo.scacchiera.cursore == chess.E1, 2)
+    _scrivi(dialogo, "15")
+    assert dialogo.scacchiera.cursore == chess.E5
+    # Dove i risultati non ci sono, come su Lichess, l'1 va subito e
+    # l'asterisco suona il comando che manca.
+    finestra.comandi = [("draw", "draw : Proponi patta")]
+    _scrivi(dialogo, "1")
+    assert dialogo.scacchiera.cursore == chess.E1
+    _scrivi(dialogo, "*")
+    assert aperta["suonati"][-1] == "comando_assente"
+    assert len(domande) == 4
+
+
+def test_la_conferma_del_risultato(finestra):
+    """Invio sul pulsante Assegna, che ha il fuoco; Esc vale come Continua la
+    partita, che chiude con No."""
+    viste = {}
+
+    def guarda_e_continua():
+        dialogo = next(f for f in wx.GetTopLevelWindows() if isinstance(f, finestra_scacchiera.ConfermaDelRisultato))
+        viste.update(
+            titolo=dialogo.GetTitle(),
+            esc=dialogo.GetEscapeId(),
+            invio=dialogo.GetAffirmativeId(),
+            fuoco=wx.Window.FindFocus() is dialogo.assegna,
+            predefinito=dialogo.assegna.GetId() == wx.ID_YES,
+        )
+        dialogo.ProcessEvent(wx.CommandEvent(wx.wxEVT_BUTTON, dialogo.GetEscapeId()))
+
+    wx.CallLater(50, guarda_e_continua)
+    assert finestra_scacchiera.chiedi_il_risultato(finestra, "Patta, 1/2: assegno il risultato?") is False
+    assert viste["titolo"] == "Patta, 1/2: assegno il risultato?"
+    assert (viste["esc"], viste["invio"]) == (wx.ID_NO, wx.ID_YES)
+    assert viste["predefinito"]

@@ -332,3 +332,28 @@ def test_i_rami_del_censimento():
     assert plancia.e_un_ramo(amici, "gabry", ["gabry", "."]) and not plancia.e_un_ramo(amici, ".", ["gabry", "."])
     statistiche = ("C:\\o\\lichess_stats.py", "run_stats", 1)
     assert plancia.e_un_ramo(statistiche, "blitz", ["blitz", "."]) and not plancia.e_un_ramo(statistiche, "1", ["1", "2", "3", "."])
+
+
+def test_esc_risponde_alla_domanda_invio_o_esc_dalla_plancia_e_dall_area(finestra):
+    """Collaudo della scacchiera, Gabriele: alle domande di fine partita Esc
+    nella plancia non faceva niente, e bisognava scegliere la voce ESC."""
+    esiti = []
+
+    def nucleo():
+        esiti.append(enter_escape("Vuoi vedere come hai usato il tempo? "))
+        esiti.append(enter_escape("Desideri salvare i tempi? "))
+
+    finestra.avvia_il_nucleo(nucleo)
+    assert pompa(lambda: finestra.attesa.tipo == "sino")
+    finestra.vai_alla_plancia()
+    # Il cursore resta sulla voce INVIO, la prima: Esc risponde lo stesso.
+    evento = wx.KeyEvent(wx.wxEVT_KEY_DOWN)
+    evento.SetKeyCode(wx.WXK_ESCAPE)
+    finestra._tasto_della_plancia(evento)
+    assert pompa(lambda: esiti == [False] and finestra.attesa.tipo == "sino")
+    # E nell'area, come sempre.
+    evento = wx.KeyEvent(wx.wxEVT_CHAR)
+    evento.SetKeyCode(wx.WXK_ESCAPE)
+    evento.SetUnicodeKey(wx.WXK_ESCAPE)
+    finestra._carattere(evento)
+    assert pompa(lambda: esiti == [False, False] and not finestra.nucleo.is_alive())
