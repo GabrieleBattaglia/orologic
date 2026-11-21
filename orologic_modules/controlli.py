@@ -247,14 +247,15 @@ def _di(stato, bianco):
     """Lo stato del colore: inizio_turno, il residuo all'inizio del turno;
     ritardo, quello che resta del ritardo semplice; oltre, il tempo
     supplementare in corso, o None; periodi del byo-yomi e mosse del periodo
-    canadese che restano."""
+    canadese che restano; speso, i secondi corsi davvero nel turno, pause
+    escluse, per il tempo speso della mossa."""
     controllo = getattr(stato, "controllo", None)
     if not isinstance(controllo, dict):
         controllo = {}
         stato.controllo = controllo
     colore = "white" if bianco else "black"
     if colore not in controllo:
-        controllo[colore] = {"inizio_turno": 0.0, "ritardo": 0.0, "oltre": None, "periodi": 0, "mosse_periodo": 0}
+        controllo[colore] = {"inizio_turno": 0.0, "ritardo": 0.0, "oltre": None, "periodi": 0, "mosse_periodo": 0, "speso": 0.0}
     return controllo[colore]
 
 
@@ -301,6 +302,7 @@ def inizio_turno(stato, bianco):
         stato_del_colore = _di(stato, bianco)
         stato_del_colore["inizio_turno"] = _residuo(stato, bianco)
         stato_del_colore["ritardo"] = float(valore(fase, "ritardo", bianco)) if codice_di(fase) == "ritardo" else 0.0
+        stato_del_colore["speso"] = 0.0
 
 
 def scorri(stato, bianco, trascorso):
@@ -313,6 +315,8 @@ def scorri(stato, bianco, trascorso):
     stato_del_colore = _di(stato, bianco)
     avvisi = []
     residuo = _residuo(stato, bianco)
+    # Il tempo vero del turno, qualunque cosa faccia l'orologio.
+    stato_del_colore["speso"] = stato_del_colore.get("speso", 0.0) + trascorso
     if stato_del_colore["oltre"] == "contasu":
         _imposta(stato, bianco, residuo + trascorso)
         return avvisi
@@ -353,6 +357,29 @@ def scorri(stato, bianco, trascorso):
             avvisi.append((_("{chi}: periodo consumato, ne restano {n}.").format(chi=_nome(stato, bianco), n=restano), "periodo"))
     _imposta(stato, bianco, residuo)
     return avvisi
+
+
+def tempo_speso(stato, bianco, inizio, adesso):
+    """I secondi spesi per la mossa, interi, per il tempo della mossa nel
+    post partita e il tag emt del PGN. Se l'orologio e' sceso del tempo vero
+    del turno, la differenza dei residui arrotondati, come sempre: residuo
+    di prima meno tempo speso piu' quello che la mossa da' torna il residuo
+    scritto nel tag clk. Se non lo segue, come col ritardo semplice, che lo
+    tiene fermo, o coi tempi supplementari, che lo ricaricano, il tempo vero
+    del turno (Gabriele, collaudo della finestra degli orologi). Si chiama
+    col lucchetto dei tempi preso, prima di a_mossa_fatta."""
+    misurato = _di(stato, bianco).get("speso", 0.0)
+    if abs((inizio - adesso) - misurato) < 0.5:
+        return max(0, tempo.intero(inizio) - tempo.intero(adesso))
+    return tempo.intero(misurato)
+
+
+def tempo_in_piu(stato, bianco):
+    """Col conta in su, i secondi oltre il tempo; None se il tempo non e' finito."""
+    controllo = (getattr(stato, "controllo", None) or {}).get("white" if bianco else "black") or {}
+    if controllo.get("oltre") != "contasu":
+        return None
+    return _residuo(stato, bianco)
 
 
 def scaduto(stato, bianco):
@@ -403,7 +430,8 @@ def a_turno_passato(stato, registro):
     quello della fase in cui il colore giochera' la prossima; per una fase
     nuova la differenza del ritardo Bronstein, o il ritardo intero; poi il
     turno dell'avversario comincia. Il registro va in stato.rettifiche, per
-    annullare la mossa. Restituisce il residuo del colore che ha mosso."""
+    annullare la mossa. Restituisce il residuo del colore che ha mosso, per
+    il tag clk: zero se conta in su."""
     with _blocco():
         bianco = registro["bianco"]
         vecchia = _fase(stato, bianco, registro["fase"])
@@ -423,7 +451,9 @@ def a_turno_passato(stato, registro):
             stato.rettifiche = rettifiche
         rettifiche.append({chiave: valore_ for chiave, valore_ in registro.items() if chiave != "avviso"})
         inizio_turno(stato, _tocca_al_bianco(stato))
-        residuo = _residuo(stato, bianco)
+        # Col conta in su il tempo e' finito: nel tag clk resta zero, non il
+        # tempo in piu' che l'orologio conta.
+        residuo = 0.0 if _di(stato, bianco)["oltre"] == "contasu" else _residuo(stato, bianco)
     if registro.get("avviso"):
         testo, suono = registro["avviso"]
         print(testo)

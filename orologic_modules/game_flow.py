@@ -21,7 +21,6 @@ from . import (
     orologio,
     storage,
     strato,
-    tempo,
     ui,
     version,
 )
@@ -808,7 +807,9 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         if current_turn_clock_before is None
                         else (current_turn_clock_before)
                     )
-                    time_spent = max(0, tempo.intero(prima) - tempo.intero(dopo))
+                    # Il tempo speso secondo la tipologia: col ritardo e coi
+                    # tempi supplementari l'orologio non lo segue.
+                    time_spent = controlli.tempo_speso(game_state, mosso_bianco, prima, dopo)
                     registro = controlli.a_mossa_fatta(game_state, mosso_bianco)
                 game_state.board.push(move)
                 game_state.switch_turn()

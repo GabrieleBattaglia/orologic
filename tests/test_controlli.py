@@ -174,3 +174,44 @@ def test_il_filo_dell_orologio(monkeypatch):
     assert cade.flag_fallen and cade.bianco_scaduto
     assert not conta.flag_fallen
     assert conta.white_remaining > 0.2
+
+
+def _speso(stato, inizio):
+    bianco = stato.active_color == "white"
+    with orologio.blocco():
+        return controlli.tempo_speso(stato, bianco, inizio, stato.white_remaining if bianco else stato.black_remaining)
+
+
+def test_il_tempo_speso_per_il_post_partita():
+    # Quando l'orologio segue il tempo vero, la differenza arrotondata di
+    # sempre, che tiene d'accordo i tag clk ed emt.
+    stato = _partita((60, "dopo", {"inc": 5}, 0))
+    _corre(stato, 10.4)
+    assert _speso(stato, 60) == 10
+    # Col ritardo semplice l'orologio resta fermo: conta il tempo vero.
+    stato = _partita((60, "ritardo", {"ritardo": 5}, 0))
+    _corre(stato, 3)
+    assert stato.white_remaining == 60
+    assert _speso(stato, 60) == 3
+    # Entrando nel byo-yomi l'orologio si ricarica: conta il tempo vero.
+    stato = _partita((10, "byoyomi", {"periodo": 5, "periodi": 3}, 0))
+    _corre(stato, 12)
+    assert _speso(stato, 10) == 12
+    # Il turno dopo riparte da zero.
+    _mossa(stato)
+    _corre(stato, 2)
+    assert _speso(stato, stato.controllo["black"]["inizio_turno"]) == 2
+
+
+def test_il_conta_in_su_nel_tag_clk_e_nel_riepilogo():
+    from orologic_modules import tempo_app
+
+    stato = _partita((5, "contasu", {}, 0))
+    _corre(stato, 7)
+    assert controlli.tempo_in_piu(stato, True) == 2
+    assert controlli.tempo_in_piu(stato, False) is None
+    assert _mossa(stato) == 0.0
+    righe = tempo_app._tempi_finali(stato)
+    assert righe[0].startswith("Tempo in piu' del Bianco: ")
+    assert righe[1].startswith("Tempo rimasto al Nero: ")
+    assert "\n" not in righe[1]

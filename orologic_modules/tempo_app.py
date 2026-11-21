@@ -278,16 +278,8 @@ def _loop_tempo(game_state, clock_config):
 
     # Visualizzazione a schermo
     print("\n" + "" + _("Riepilogo Sessione Tempo") + "")
-    print(
-        _("Tempo rimasto al Bianco: {time}").format(
-            time=board_utils.FormatTime(game_state.white_remaining)
-        )
-    )
-    print(
-        _("Tempo rimasto al Nero: {time}").format(
-            time=board_utils.FormatTime(game_state.black_remaining)
-        )
-    )
+    for riga in _tempi_finali(game_state):
+        print(riga)
     print(_("Numero di mosse giocate: {n}").format(n=n_mosse))
     print(
         _("Tempo totale di gioco: {time}").format(
@@ -316,6 +308,25 @@ def _loop_tempo(game_state, clock_config):
     )
 
     key(_("Premi un tasto qualsiasi per tornare al menu'..."), attesa=7200)
+
+
+def _tempi_finali(game_state, per_il_file=False):
+    """Il tempo rimasto ai due colori, con le frasi di sempre, quelle dello
+    schermo e quelle del file, che finiscono a capo; col conta in su,
+    finito il tempo, il tempo in piu'."""
+    righe = []
+    for bianco in (True, False):
+        in_piu = controlli.tempo_in_piu(game_state, bianco)
+        if in_piu is not None:
+            testo = _("Tempo in piu' del Bianco: {time}") if bianco else _("Tempo in piu' del Nero: {time}")
+            righe.append(testo.format(time=board_utils.FormatTime(in_piu)) + ("\n" if per_il_file else ""))
+            continue
+        if per_il_file:
+            testo = _("Tempo rimasto al Bianco: {time}\n") if bianco else _("Tempo rimasto al Nero: {time}\n")
+        else:
+            testo = _("Tempo rimasto al Bianco: {time}") if bianco else _("Tempo rimasto al Nero: {time}")
+        righe.append(testo.format(time=board_utils.FormatTime(game_state.white_remaining if bianco else game_state.black_remaining)))
+    return righe
 
 
 def _salva_report_tempo(
@@ -355,12 +366,7 @@ def _salva_report_tempo(
         file_content += f"{num_mossa}. {w_move}" + (f" {b_move}\n" if b_move else "\n")
 
     file_content += _("STATISTICHE FINALI:\n")
-    file_content += _("Tempo rimasto al Bianco: {time}\n").format(
-        time=board_utils.FormatTime(game_state.white_remaining)
-    )
-    file_content += _("Tempo rimasto al Nero: {time}\n").format(
-        time=board_utils.FormatTime(game_state.black_remaining)
-    )
+    file_content += "".join(_tempi_finali(game_state, per_il_file=True))
     file_content += _("Numero di mosse giocate: {n}\n").format(n=n_mosse)
     file_content += _("Tempo totale di gioco: {time}\n").format(
         time=board_utils.FormatTime(tempo_gioco)
