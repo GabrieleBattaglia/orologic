@@ -1,13 +1,7 @@
 Collaudo della scacchiera interattiva, tappa 1, Orologic 9, ramo gui, 21 novembre 2026: NVDA, il braille e le orecchie. Accanto a ogni voce scrivi ok, oppure cosa non va.
 Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py; arbitra una partita, poi una contro il motore, e se puoi una su Lichess.
-Domanda 1: al prompt delle mosse, a riga vuota, lo spazio apre la scacchiera; con un carattere gia' scritto lo spazio resta uno spazio. Esc la chiude. Va bene?
-Domanda 2: le frecce, Alt, Maiuscolo e Ctrl con sinistra e destra, una lettera col numero, un numero solo, u e 9: il cursore e il braille stanno sulla casa giusta, e l'annuncio arriva subito dopo NVDA, interrompendolo?
-Domanda 3: spazio per sollevare, posare e scambiare, Invio per muovere, Ctrl con spazio per il pezzo in mano: la mossa arriva a Orologic, e quella che non vale ti dice perche'?
-Domanda 4: l'arrocco col Re in g o in c, e la promozione con l'elenco dei pezzi: funzionano?
-Domanda 5: Tab, l, L, m, le lettere dei pezzi, W e w, da F1 a F5 e C: dicono quello che ti aspetti? La b sola aspetta un attimo il numero, poi dice gli alfieri neri: il ritardo ti va bene?
-Domanda 6: Backspace ferma il tempo e apre il menu dei comandi; Backspace nel menu lo fa ripartire, Esc chiude il menu e il tempo resta fermo. Ti torna, o anche Esc deve farlo ripartire?
-Domanda 7: con la scacchiera aperta senti la mossa dell'avversario, o del motore, e le risposte di Orologic, senza il prompt che si rinfresca?
-Domanda 8: una domanda di Orologic, per esempio .6 dal menu, chiude la scacchiera; risposto, la scacchiera si riapre da sola. A fine partita si chiude. Va bene?
-Domanda 9: i suoni scelti all'ascolto, nella scacchiera vera: sollevare, posare, rimettere, aprire, il bordo, un suono per lato con Alt, e i sei del no. Ti tornano? suoni_della_scacchiera.txt li elenca per Acu_Maker.
-Domanda 10: i testi nuovi, l'aiuto col punto di domanda, Sollevato, Posato, In mano, Nessun pezzo in mano, i motivi della mossa che non vale, Dal Bianco e Dal Nero, Qui la scacchiera e' solo da guardare: li approvi?
-Esito:
+* Tutto perfetto fin qui, grandissimo lavoro.
+* Mi è venuto in mente che servono 4 comandi rapidi per assegnare i risultati dove possibile. Potremmo fare così: 1 e 0 attivano anche loro il timer e aspettano un tempo n. Poi 10 vince il bianco, 01 il nero, 12 patta e * non specificato. Facciamo però che si chiede conferma: invio sì, esc si continua. Ovviamente dove gioco.
+* Poi aggiungerei l'opzione nelle impostazioni: tempo attesa comandi scacchiera, nelle impostazioni, in cui chiediamo i millisecondi per queste attese: 700 di default.
+* Fatto ciò, questa fase è promossa a pieni voti.
+* Ups, mentre chiudevo orologic dopo il collaudo, ho scoperto un piccolo bug. Le domande a fine partita, tipo vuoi vedere come hai usato il tempo eccetera. Quelle che prevedono invio|ESCAPE. Invio funziona, esc, no... Devo sceglierlo dal menu altrimenti non fa nulla.
