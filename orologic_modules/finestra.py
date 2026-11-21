@@ -776,9 +776,14 @@ class Finestra(wx.Frame):
                 self._al_cursore()
 
     def annuncia(self, righe):
-        """Righe da annunciare per una finestra di dialogo, come il testo che
-        arriva da se': solo se gli annunci sono attivi."""
-        self._di(list(righe), False)
+        """Righe da annunciare per una finestra di dialogo, solo se gli
+        annunci sono attivi, e sempre in coda: arrivano dopo la voce che lo
+        screen reader sta leggendo, e non la interrompono (Gabriele,
+        collaudo della finestra del prompt)."""
+        if not self.annunci["attivi"]:
+            return
+        for riga in righe:
+            self.sintesi.dici(riga, self.annunci["uscita"], self.annunci["destinazione"], interrompi=False)
 
     def _di(self, righe, dal_tasto):
         """Gli annunci, secondo le impostazioni: dal_tasto e' vero per la

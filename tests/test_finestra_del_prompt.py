@@ -37,7 +37,8 @@ def test_i_simboli_e_le_loro_regole():
     assert codici[:4] == ["b", "n", "bp", "np"]
     assert set(codici) == modello_prompt.lettere() | {"bp", "np"}
     regole = modello_prompt._regole()
-    assert modello_prompt.regole_del_simbolo("b") == [regole["estese"]]
+    # La regola della v no: nella finestra la forma estesa e' un interruttore.
+    assert modello_prompt.regole_del_simbolo("b") == []
     assert modello_prompt.regole_del_simbolo("bp") == [regole["percentuali"]]
     assert modello_prompt.regole_del_simbolo("m") == [regole["dopo_la_mossa"], regole["scacchiera"]]
     assert modello_prompt.regole_del_simbolo("o") == []
@@ -196,7 +197,32 @@ def test_aggiornamento_spiegazione_e_annunci(prova):
     d.prompt.GetEventHandler().ProcessEvent(evento)
     regole = modello_prompt.regole_del_simbolo("m")
     assert d.spiegazione.GetValue() == "\n".join([d.prompt.GetString(2), *regole])
-    assert p.annunci[-1] == regole
+    # L'annuncio arriva dopo il ritardo, in coda alla voce letta da NVDA.
+    assert p.annunci == []
+    assert pompa(lambda: p.annunci == [regole])
+
+
+def test_verboso_o_breve_in_coda_e_solo_l_ultimo_annuncio(prova):
+    p = prova("%b %n %m")
+    d = p.dialogo
+    pompa(lambda: False, 0.5)
+    del p.annunci[:]
+    p.seleziona(d.disponibili, "%i il tuo tempo, dove hai un colore: Easyfish e Lichess")
+    d._spiega(d.disponibili, annuncia=True)
+    assert d.spiegazione.GetValue().split("\n")[-1] == "breve"
+    # Lo Spazio: la voce si riscrive, e in coda si annuncia il nuovo stato.
+    p.tasto(d.disponibili, wx.WXK_SPACE)
+    assert d.spiegazione.GetValue().split("\n")[-1] == "verboso"
+    assert pompa(lambda: p.annunci == [["verboso"]])
+    # Scorrendo in fretta si annuncia solo l'ultima voce; un simbolo senza
+    # regole e senza forma estesa non annuncia niente.
+    p.seleziona(d.disponibili, "%a il tempo dell'avversario, dove hai un colore")
+    d._spiega(d.disponibili, annuncia=True)
+    p.seleziona(d.disponibili, "%o nome dell'avversario")
+    d._spiega(d.disponibili, annuncia=True)
+    pompa(lambda: False, 0.5)
+    assert p.annunci == [["verboso"]]
+    assert d.spiegazione.GetValue() == "%o nome dell'avversario"
 
 
 def test_ok_lascia_com_era_il_modello_che_non_cambia(prova):
@@ -240,13 +266,17 @@ def prompt_di_prima():
 
 def test_dalle_impostazioni_ok_salva_annulla_no(finestra, prompt_di_prima, monkeypatch):
     monkeypatch.setitem(finestra.annunci, "attivi", True)
+    # Anche se il testo che arriva interrompe, la spiegazione va in coda.
+    monkeypatch.setitem(finestra.annunci, "testo_interrompe", True)
     modello_prompt.salva("%b %n %m")
 
     def aggiungi_e_conferma(dialogo):
         dialogo.disponibili.SetSelection(0)
         dialogo.aggiungi()
-        # Gli annunci attivi: le regole del simbolo vanno alla sintesi.
-        assert modello_prompt._regole()["percentuali"] in finestra.sintesi.testi()
+        # Gli annunci attivi: le regole del simbolo vanno alla sintesi, in coda.
+        regola = modello_prompt._regole()["percentuali"]
+        assert pompa(lambda: regola in finestra.sintesi.testi())
+        assert all(not interrompi for testo, _chiave, _dove, interrompi in finestra.sintesi.chiamate if testo == regola)
         dialogo.conferma()
 
     _con_la_finestra_del_prompt(finestra, aggiungi_e_conferma)

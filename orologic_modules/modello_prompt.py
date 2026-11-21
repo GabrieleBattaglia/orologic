@@ -191,11 +191,11 @@ def simboli():
 
 
 def regole_del_simbolo(codice):
-    """Le regole dell'aiuto che riguardano il simbolo, per la spiegazione."""
+    """Le regole dell'aiuto che riguardano il simbolo, per la spiegazione.
+    Non quella della v: nella finestra la forma estesa e' un interruttore,
+    e la v la mette Orologic (Gabriele, collaudo della finestra)."""
     regole = _regole()
     righe = []
-    if codice in ESTESE:
-        righe.append(regole["estese"])
     if codice in ("bp", "np"):
         righe.append(regole["percentuali"])
     if codice == "m":

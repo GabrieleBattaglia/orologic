@@ -274,6 +274,10 @@ def chiedi_valore(genitore, titolo, domanda, valore, tipo="testo", minimo=0, mas
 
 # Il segnaposto del testo libero fra i simboli disponibili: non si esaurisce.
 TESTO_LIBERO = None
+# I millisecondi fra la voce scelta e l'annuncio della sua spiegazione: lo
+# screen reader legge prima la voce, e l'annuncio le si mette in coda invece
+# di passarle davanti (Gabriele, collaudo della finestra del prompt).
+RITARDO_DELL_ANNUNCIO = 300
 
 
 def _seleziona(lista, indice):
@@ -309,6 +313,8 @@ class FinestraPrompt(wx.Dialog):
         self._verbosi = {}
         self._chiedi_testo = chiedi_testo
         self._annuncia = annuncia or (lambda _righe: None)
+        # L'annuncio in attesa del suo ritardo: uno nuovo prende il suo posto.
+        self._annuncio = None
         self._suono_d_errore = suono_d_errore or wx.Bell
         pannello = pannello_scorrevole(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -409,24 +415,59 @@ class FinestraPrompt(wx.Dialog):
         _seleziona(self.disponibili, nei_disponibili)
         _seleziona(self.prompt, nel_prompt)
 
-    def _spiega(self, lista, annuncia=False):
-        """La spiegazione della voce scelta nell'elenco: la voce, poi le
-        regole dell'aiuto che la riguardano, che sono quelle che si
-        annunciano: la voce la legge gia' lo screen reader."""
+    def _scelto(self, lista):
+        """Il codice e il verboso della voce scelta nell'elenco; il codice e'
+        None per un testo libero, e la voce None se non c'e' scelta."""
         indice = lista.GetSelection()
         if indice == wx.NOT_FOUND:
-            return
+            return None
         if lista is self.disponibili:
             voce = self.voci_disponibili()[indice]
-            riga = self._etichetta_disponibile(voce)
-            regole = [] if voce is TESTO_LIBERO else modello_prompt.regole_del_simbolo(voce)
+            return voce, self._verbosi.get(voce, False)
+        elemento = self.elementi[indice]
+        return elemento.get("codice"), elemento.get("verboso", False)
+
+    @staticmethod
+    def _stato(codice, verboso):
+        """In coda alla spiegazione dei simboli con la forma estesa: verboso
+        se e' accesa, breve se e' spenta."""
+        if codice not in modello_prompt.ESTESE:
+            return []
+        return [_("verboso") if verboso else _("breve")]
+
+    def _spiega(self, lista, annuncia=False):
+        """La spiegazione della voce scelta nell'elenco: la voce, le regole
+        dell'aiuto che la riguardano e, per i simboli con la forma estesa,
+        verboso o breve. Si annuncia tutto tranne la voce, che la legge gia'
+        lo screen reader."""
+        scelto = self._scelto(lista)
+        if scelto is None:
+            return
+        codice, verboso = scelto
+        indice = lista.GetSelection()
+        if lista is self.disponibili:
+            riga = self._etichetta_disponibile(codice)
         else:
-            elemento = self.elementi[indice]
-            riga = self.etichetta_dell_elemento(elemento)
-            regole = [] if "testo" in elemento else modello_prompt.regole_del_simbolo(elemento["codice"])
-        self.spiegazione.ChangeValue("\n".join([riga, *regole]))
-        if annuncia and regole:
-            self._annuncia(regole)
+            riga = self.etichetta_dell_elemento(self.elementi[indice])
+        coda = [] if codice is None else [*modello_prompt.regole_del_simbolo(codice), *self._stato(codice, verboso)]
+        self.spiegazione.ChangeValue("\n".join([riga, *coda]))
+        if annuncia:
+            self._annuncia_dopo(coda)
+
+    def _annuncia_dopo(self, righe):
+        """L'annuncio parte dopo RITARDO_DELL_ANNUNCIO, in coda alla voce che
+        lo screen reader legge; uno nuovo prende il posto di quello in
+        attesa, cosi' scorrendo l'elenco si sente solo l'ultimo."""
+        if self._annuncio is not None:
+            self._annuncio.Stop()
+            self._annuncio = None
+        if righe:
+            self._annuncio = wx.CallLater(RITARDO_DELL_ANNUNCIO, self._annuncia_ora, list(righe))
+
+    def _annuncia_ora(self, righe):
+        self._annuncio = None
+        if self:
+            self._annuncia(righe)
 
     def _fuoco_a_un_elenco(self, evento):
         evento.Skip()
@@ -565,6 +606,8 @@ class FinestraPrompt(wx.Dialog):
             elemento["verboso"] = not elemento["verboso"]
         self._riempi()
         self._spiega(lista)
+        # Dopo la voce riletta, solo il nuovo stato: verboso o breve.
+        self._annuncia_dopo(self._stato(*self._scelto(lista)))
         self.aggiorna()
 
     def riscrivi_il_testo(self):
