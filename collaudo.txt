@@ -1,9 +1,10 @@
 Collaudo della finestra degli orologi di Orologic 9, ramo gui, 21 novembre 2026: solo quello che una prova automatica non vede, NVDA, le orecchie e le partite vere. Accanto a ogni voce scrivi ok, oppure cosa non va.
 Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py, poi la voce orologi del menu principale.
-Domanda 1: l'elenco con i sommari si legge bene? Invio su un orologio ti porta alla scheda, Canc chiede conferma ed elimina?
-Domanda 2: con Crea nuovo e Modifica i campi compaiono, e col Tab li trovi nell'ordine, con i nomi giusti, coi colori quando togli la spunta?
-Domanda 3: cambiando tipologia compaiono le combo giuste, incremento, ritardo, periodi, minuti e mosse del periodo?
-Domanda 4: in una partita arbitrata o in Tempo, prova almeno l'incremento prima della mossa, il ritardo semplice e il byo-yomi: i tempi fanno quello che ti aspetti, e senti gli annunci e i suoni del byo-yomi?
-Domanda 5: in quella partita, nel post partita, come hai usato il tempo dice per ogni mossa il tempo vero, anche col ritardo semplice e nel byo-yomi?
-Domanda 6: i nomi e le spiegazioni delle tipologie, e i suoni nuovi della finestra, vanno bene?
-Esito:
+* Il pulsante vedi è inutile, dato che il campo di visualizzazione è già presente, pensavo non ci stesse in finestra, invece c'è e va bene così però lo voglio più largo, va a capo troppo spesso.
+* Bisogna però migliorare l'inserimento tempi per gli allarmi. Mi pare che prenda anche dei dati che non sono numeri, inoltre accetta più allarmi con lo stesso tempo. Verifica anche se c'è un controllo che accetti solo valori più bassi del tempo totale, anche in caso che nero e bianco abbiano control time differenti.
+* La 4 e la 5 le farò in futuro, considerale ok.
+
+Fatto ciò, ti metto il prompt per il prossimo passo.
+Ora ti racconto un'altra cosa che faremo. In impostazioni, la voce pulizia.
+
+Questa aprirà una finestra con un'area di testo che racconta la situazione attuale di tutti i file che si accumulano nell'app che sono sostanzialmente nella cartella txt e pgn, dimmi tu se ce ne sono altri potenziali ma non credo. L'area di testo riporterà il loro numero e il peso occupato. In più dirà quanti di questi sono più vecchi di t e il loro peso. Poi un elenco riporterà tutti i file in ordine di vecchiaia, dal più vecchio. Canc elimina il file mandandolo nel cestino. Ci saranno i pulsanti elimina tutto e elimina più vecchi di... e qui un elenco permetterà di selezionare t che andrà da 7 a 1095 giorni. Poi il solo pulsante chiudi che non cancella niente. t viene poi salvato e sarà permanente, di default come ora è 365. Ci sarà anche il pulsante ripristina date ai file vecchi, codice già presente nella vecchia orologic. Questa finestra comparirà spontaneamente anche quando t è trascorso, senza che l'utente debba aprirla in autonomia.
