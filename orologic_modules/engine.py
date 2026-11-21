@@ -5,6 +5,7 @@ import datetime
 import math
 import os
 import re
+import subprocess
 import sys
 import time
 
@@ -218,7 +219,10 @@ def InitEngine():
     )
     if os.path.exists(path):
         try:
-            ENGINE = chess.engine.SimpleEngine.popen_uci(path)
+            # Senza la sua finestra: dal pacchetto senza console, su Windows,
+            # Stockfish ne aprirebbe una nera tutta sua.
+            opzioni = {"creationflags": subprocess.CREATE_NO_WINDOW} if sys.platform == "win32" else {}
+            ENGINE = chess.engine.SimpleEngine.popen_uci(path, **opzioni)
             _configura_opzioni(cfg)
             forza.update(
                 tipo="livello", valore=cfg.get("skill_level", 20), profondita=None

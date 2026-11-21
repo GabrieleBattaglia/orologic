@@ -1,7 +1,7 @@
 # Orologic: cio' che si fa all'avvio, prima di importare il resto del programma.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
 
-"""L'avvio, tappa T5 della GUI (Piano della GUI.txt, S3 e S4).
+"""L'avvio, tappe T5a e T5b della GUI (Piano della GUI.txt, S3 e S4).
 
 config sceglie la lingua all'importazione, con polipo di GBUtils, e in
 console la chiede al primo avvio. Nella finestra non c'e' una console da cui
@@ -18,6 +18,7 @@ hanno il nome che Windows da' loro nella loro lingua, italiano, English.
 import ctypes
 import json
 import os
+import sys
 
 import percorsi
 
@@ -143,8 +144,48 @@ def scegli_la_lingua_se_serve(chiedi=scegli_nella_finestra):
     return codice
 
 
+def apri_la_console():
+    """Il pacchetto non ha console (S3): con --cli se ne apre una sua, e
+    tastiera e schermo vanno li', come nel terminale di sempre. Da sorgente,
+    o se una console c'e' gia', non fa niente."""
+    if not getattr(sys, "frozen", False):
+        return False
+    kernel32 = ctypes.WinDLL("kernel32")
+    if kernel32.GetConsoleWindow() or not kernel32.AllocConsole():
+        return False
+    kernel32.SetConsoleTitleW("Orologic")
+    sys.stdin = open("CONIN$", encoding="utf-8")  # noqa: SIM115 - resta aperto per tutta la vita del programma
+    sys.stdout = open("CONOUT$", "w", encoding="utf-8", buffering=1)  # noqa: SIM115
+    sys.stderr = open("CONOUT$", "w", encoding="utf-8", buffering=1)  # noqa: SIM115
+    return True
+
+
+def uscite_mute():
+    """Nel pacchetto senza console, prima che la finestra prenda lo schermo,
+    stdout e stderr non ci sono: una scrittura diretta cadrebbe in errore.
+    Vanno nel vuoto finche' la finestra non li prende."""
+    for nome in ("stdout", "stderr"):
+        if getattr(sys, nome) is None:
+            setattr(sys, nome, open(os.devnull, "w", encoding="utf-8"))  # noqa: SIM115
+
+
+def installazione_a_posto():
+    """Il mutex che l'installatore cerca, e dal programma compilato la
+    versione giusta in App installate (T5c)."""
+    from . import installazione, version
+
+    installazione.tieni_il_mutex()
+    if getattr(sys, "frozen", False):
+        installazione.aggiorna_la_versione(version.VERSION, os.path.dirname(sys.executable))
+
+
 def prepara(argomenti):
-    """Prima di importare il resto di Orologic: nella finestra la lingua del
-    primo avvio."""
-    if "--cli" not in argomenti:
+    """Prima di importare il resto di Orologic: il mutex e App installate;
+    col --cli la console del pacchetto; nella finestra la lingua del primo
+    avvio."""
+    installazione_a_posto()
+    if "--cli" in argomenti:
+        apri_la_console()
+    else:
+        uscite_mute()
         scegli_la_lingua_se_serve()
