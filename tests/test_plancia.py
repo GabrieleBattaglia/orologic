@@ -135,6 +135,15 @@ def test_l_albero_dei_menu(finestra, monkeypatch):
     assert rami_della_plancia(finestra) == [(0, ".: Esci"), (0, "analizza: Analisi"), (0, "orologi: Orologi")]
     assert "Orologi" not in finestra.area.GetValue()
     assert finestra.plancia.ItemHasChildren(voce_della_plancia(finestra, "orologi: Orologi"))
+    # Il primo menu lascia il fuoco sull'area, all'inizio del benvenuto.
+    pompa(lambda: False, 0.2)
+    assert wx.Window.FindFocus() is finestra.area
+    assert finestra.area.GetInsertionPoint() == 0
+    assert finestra.suonati == []
+    # Alla plancia si va con F5, col suo suono.
+    evento = wx.KeyEvent(wx.wxEVT_CHAR_HOOK)
+    evento.SetKeyCode(wx.WXK_F5)
+    finestra._tasto_della_finestra(evento)
     assert pompa(lambda: wx.Window.FindFocus() is finestra.plancia)
     assert finestra.suonati == ["spostamento_f5"]
     # Freccia destra sul ramo: Orologic entra, e il ramo si apre.

@@ -32,7 +32,8 @@ attorno al ramo aperto: Invio su una di loro fa tornare Orologic fin li' e
 poi la sceglie. Il fuoco segue la domanda: alla plancia per un menu,
 all'area per un testo, una mossa o un tasto, INVIO ed ESC compresi; F5 va
 alla plancia, F6 all'area, e Tab e Shift+Tab passano dall'una all'altra.
-Ogni passaggio ha il suo suono, quelli di MeTeOra. Mentre la plancia
+Solo il primo menu, all'avvio, lascia il fuoco sull'area, all'inizio del
+benvenuto. Ogni passaggio ha il suo suono, quelli di MeTeOra. Mentre la plancia
 aspetta, cio' che si scrive nell'area non va al nucleo: il fuoco torna alla
 plancia.
 
@@ -450,6 +451,8 @@ class Finestra(wx.Frame):
         # della finestra torna li'.
         self.fuoco = "console"
         self.fuoco_voluto = "console"
+        # Il primo menu della sessione non porta via il fuoco dall'area.
+        self.primo_menu = True
         self.terminale = Terminale()
         # Le righe chiuse della console; la riga in corso viene dopo. Durante
         # il cruscotto continuano a raccogliersi, e tornano a fine partita.
@@ -762,7 +765,14 @@ class Finestra(wx.Frame):
         elif self.meta is not None:
             return
         self._riscrivi_la_plancia()
-        if attesa.tipo == "menu":
+        if attesa.tipo == "menu" and self.primo_menu:
+            # All'avvio il fuoco resta sull'area, all'inizio del benvenuto, e
+            # alla plancia si va con F5 (Gabriele, collaudo del 21 novembre
+            # 2026); dal menu dopo il fuoco segue la domanda.
+            self.primo_menu = False
+            self.area.SetInsertionPoint(0)
+            self.area.ShowPosition(0)
+        elif attesa.tipo == "menu":
             self._sposta_il_fuoco("plancia")
         elif attesa.tipo in ("area", "sino"):
             self._sposta_il_fuoco("console")
