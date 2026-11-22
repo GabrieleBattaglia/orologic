@@ -580,6 +580,9 @@ class Finestra(wx.Frame):
         # ogni elemento dell'albero.
         self.albero = plancia.Albero()
         self.attesa = Attesa(None)
+        # Vero mentre sono aperte le impostazioni chieste dal nucleo, con la
+        # voce impostazioni del menu principale: il nucleo e' fermo.
+        self.impostazioni_del_nucleo = False
         self.voci_della_plancia = {}
         # La strada verso una voce: (percorso, voce finale), i passi fatti, e
         # la voce da selezionare all'arrivo, come (livello, chiave).
@@ -1376,9 +1379,22 @@ class Finestra(wx.Frame):
     def _impostazioni_dal_nucleo(self, richiesta):
         try:
             if self:
+                self.impostazioni_del_nucleo = True
                 self.impostazioni()
         finally:
+            self.impostazioni_del_nucleo = False
             richiesta.chiuse.set()
+
+    def motore_in_uso(self):
+        """Vero quando il nucleo potrebbe usare il motore, e cambiarlo lo
+        farebbe cadere: dentro una partita, o mentre lavora, cioe' sempre
+        tranne quando aspetta una scelta della plancia o le impostazioni del
+        menu principale. Con Ctrl e virgola le impostazioni si aprono in ogni
+        momento; il motore si cambia solo a nucleo fermo. Chiesto da Gabriele
+        il 22 novembre 2026, dal collaudo della T5."""
+        if strato.dentro_una_partita():
+            return True
+        return not (self.attesa.tipo == "menu" or self.impostazioni_del_nucleo)
 
     def orologi(self):
         """La finestra degli orologi, dalla voce orologi del menu principale,

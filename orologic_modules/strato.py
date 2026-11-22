@@ -170,6 +170,11 @@ def partita():
             _faccia.cruscotto(None)
 
 
+def dentro_una_partita():
+    """Vero dentro la zona di una partita."""
+    return _partite > 0
+
+
 def in_partita(funzione):
     """Il decoratore delle funzioni di gioco: tutta la funzione e' la zona
     di una partita."""

@@ -569,6 +569,11 @@ class Impostazioni:
                 self.elenco_del_motore = None
 
     def cambia_il_motore(self, voce, dialogo):
+        # Mentre una partita o un'analisi lo usano, cambiarlo lo farebbe
+        # cadere: le righe si guardano, ma non si cambia niente.
+        if self.finestra.motore_in_uso():
+            self.finestra.avvisa(dialogo, _("Il motore e' in uso: si puo' cambiare da un menu, a partita o analisi finita."))
+            return
         if voce == "cerca":
             self._cerca_il_motore()
         elif voce == "scarica":

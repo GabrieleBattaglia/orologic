@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-22 20:25+0100\n"
+"POT-Creation-Date: 2026-11-22 21:01+0100\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -1490,7 +1490,7 @@ msgstr "Takes time away from black (paused)"
 msgid "Scacchiera testuale"
 msgstr "Textual chessboard"
 
-#: orologic_modules/config.py:198 orologic_modules/finestra_scacchiera.py:778
+#: orologic_modules/config.py:198 orologic_modules/finestra_scacchiera.py:775
 msgid "Commento mossa"
 msgstr "Comment the move"
 
@@ -1912,8 +1912,8 @@ msgstr ""
 #: orologic_modules/finestra_pulizia.py:110
 #: orologic_modules/finestra_ricerca.py:201
 #: orologic_modules/finestra_ricerca.py:274
-#: orologic_modules/finestra_scacchiera.py:285
-#: orologic_modules/finestra_scacchiera.py:312
+#: orologic_modules/finestra_scacchiera.py:282
+#: orologic_modules/finestra_scacchiera.py:309
 msgid "Chiudi"
 msgstr "Close"
 
@@ -2085,7 +2085,7 @@ msgid "Motore {n} pronto."
 msgstr "Engine {n} ready."
 
 #: orologic_modules/easyfish/game_mode.py:1406 orologic_modules/engine.py:238
-#: orologic_modules/impostazioni.py:692
+#: orologic_modules/impostazioni.py:697
 #, python-brace-format
 msgid "Errore motore: {e}"
 msgstr "Engine error: {e}"
@@ -2905,17 +2905,17 @@ msgstr "Current engine configuration:"
 msgid "Nessuna configurazione trovata."
 msgstr "No configuration found."
 
-#: orologic_modules/engine.py:2091 orologic_modules/impostazioni.py:595
+#: orologic_modules/engine.py:2091 orologic_modules/impostazioni.py:600
 #, python-brace-format
 msgid "Inserisci il percorso dove e' salvato il motore UCI [{default}]: "
 msgstr "Enter the path where the UCI engine is saved [{default}]: "
 
-#: orologic_modules/engine.py:2103 orologic_modules/impostazioni.py:602
+#: orologic_modules/engine.py:2103 orologic_modules/impostazioni.py:607
 #, python-brace-format
 msgid "Inserisci il nome dell'eseguibile del motore [{default}]: "
 msgstr "Enter the name of the engine executable [{default}]: "
 
-#: orologic_modules/engine.py:2121 orologic_modules/impostazioni.py:611
+#: orologic_modules/engine.py:2121 orologic_modules/impostazioni.py:616
 msgid ""
 "Il file specificato non esiste. Verifica il percorso e il nome "
 "dell'eseguibile."
@@ -2939,20 +2939,20 @@ msgstr ""
 "Info: the engine is on a different drive, an absolute path will be saved "
 "(non-portable configuration)."
 
-#: orologic_modules/engine.py:2155 orologic_modules/impostazioni.py:619
+#: orologic_modules/engine.py:2155 orologic_modules/impostazioni.py:624
 msgid "Inserisci la dimensione della hash table (min: 1, max: 4096 MB): "
 msgstr "Enter the size of the hash table (min: 1, max: 4096 MB): "
 
-#: orologic_modules/engine.py:2166 orologic_modules/impostazioni.py:621
+#: orologic_modules/engine.py:2166 orologic_modules/impostazioni.py:626
 #, python-brace-format
 msgid "Inserisci il numero di core da utilizzare (min: 1, max: {max_cores}): "
 msgstr "Enter the number of cores to use (min: 1, max: {max_cores}): "
 
-#: orologic_modules/engine.py:2176 orologic_modules/impostazioni.py:622
+#: orologic_modules/engine.py:2176 orologic_modules/impostazioni.py:627
 msgid "Inserisci il livello di skill (min: 0, max: 20): "
 msgstr "Enter the skill level (min: 0, max: 20): "
 
-#: orologic_modules/engine.py:2185 orologic_modules/impostazioni.py:623
+#: orologic_modules/engine.py:2185 orologic_modules/impostazioni.py:628
 msgid "Inserisci il move overhead in millisecondi (min: 0, max: 500): "
 msgstr "Enter the move overhead in milliseconds (min: 0, max: 500): "
 
@@ -2970,32 +2970,32 @@ msgid "Console"
 msgstr "Console"
 
 #: orologic_modules/finestra_editor.py:32
-#: orologic_modules/finestra_scacchiera.py:234
-#: orologic_modules/finestra_scacchiera.py:259
+#: orologic_modules/finestra_scacchiera.py:231
+#: orologic_modules/finestra_scacchiera.py:256
 msgid "Frecce: una casa nelle quattro direzioni; al bordo si fermano."
 msgstr "Arrows: one square in the four directions; they stop at the edge."
 
 #: orologic_modules/finestra_editor.py:33
-#: orologic_modules/finestra_scacchiera.py:235
-#: orologic_modules/finestra_scacchiera.py:260
+#: orologic_modules/finestra_scacchiera.py:232
+#: orologic_modules/finestra_scacchiera.py:257
 msgid "Alt con le frecce: oltre il bordo, dall'altra parte."
 msgstr "Alt with the arrows: past the edge, to the other side."
 
 #: orologic_modules/finestra_editor.py:34
-#: orologic_modules/finestra_scacchiera.py:240
-#: orologic_modules/finestra_scacchiera.py:264
+#: orologic_modules/finestra_scacchiera.py:237
+#: orologic_modules/finestra_scacchiera.py:261
 msgid "Da a ad h, poi da 1 a 8: salta a quella casa."
 msgstr "a to h, then 1 to 8: jumps to that square."
 
 #: orologic_modules/finestra_editor.py:35
-#: orologic_modules/finestra_scacchiera.py:241
-#: orologic_modules/finestra_scacchiera.py:265
+#: orologic_modules/finestra_scacchiera.py:238
+#: orologic_modules/finestra_scacchiera.py:262
 msgid "Da 1 a 8: la traversa, nella colonna di adesso."
 msgstr "1 to 8: the rank, in the current file."
 
 #: orologic_modules/finestra_editor.py:36
-#: orologic_modules/finestra_scacchiera.py:243
-#: orologic_modules/finestra_scacchiera.py:266
+#: orologic_modules/finestra_scacchiera.py:240
+#: orologic_modules/finestra_scacchiera.py:263
 msgid "9: gira la scacchiera."
 msgstr "9: flips the board."
 
@@ -3108,7 +3108,7 @@ msgid "Li' c'e' un Re: spostalo prima."
 msgstr "There is a King there: move it first."
 
 #: orologic_modules/finestra_editor.py:312
-#: orologic_modules/finestra_scacchiera.py:707
+#: orologic_modules/finestra_scacchiera.py:704
 #, python-brace-format
 msgid "Posato: {pezzo}"
 msgstr "Put down: {pezzo}"
@@ -3690,31 +3690,31 @@ msgstr "Nothing to repair."
 msgid "Riparazione in corso..."
 msgstr "Repairing..."
 
-#: orologic_modules/finestra_scacchiera.py:151
+#: orologic_modules/finestra_scacchiera.py:148
 msgid "Vince il Bianco, 1-0: assegno il risultato?"
 msgstr "White wins, 1-0: assign the result?"
 
-#: orologic_modules/finestra_scacchiera.py:152
+#: orologic_modules/finestra_scacchiera.py:149
 msgid "Vince il Nero, 0-1: assegno il risultato?"
 msgstr "Black wins, 0-1: assign the result?"
 
-#: orologic_modules/finestra_scacchiera.py:153
+#: orologic_modules/finestra_scacchiera.py:150
 msgid "Patta, 1/2: assegno il risultato?"
 msgstr "Draw, 1/2: assign the result?"
 
-#: orologic_modules/finestra_scacchiera.py:154
+#: orologic_modules/finestra_scacchiera.py:151
 msgid "Risultato non specificato, *: lo assegno?"
 msgstr "Result not specified, *: assign it?"
 
-#: orologic_modules/finestra_scacchiera.py:168
+#: orologic_modules/finestra_scacchiera.py:165
 msgid "Assegna"
 msgstr "Assign"
 
-#: orologic_modules/finestra_scacchiera.py:169
+#: orologic_modules/finestra_scacchiera.py:166
 msgid "Continua la partita"
 msgstr "Continue the game"
 
-#: orologic_modules/finestra_scacchiera.py:216
+#: orologic_modules/finestra_scacchiera.py:213
 msgid ""
 "Invio: posa il pezzo sollevato, e la mossa entra nella partita o nella "
 "variante."
@@ -3722,7 +3722,7 @@ msgstr ""
 "Enter: puts down the lifted piece, and the move goes into the game or the "
 "variation."
 
-#: orologic_modules/finestra_scacchiera.py:217
+#: orologic_modules/finestra_scacchiera.py:214
 msgid ""
 "Alt con a e d: la mossa precedente e la successiva; Alt con q ed e: la prima"
 " e l'ultima."
@@ -3730,7 +3730,7 @@ msgstr ""
 "Alt with a and d: the previous and the next move; Alt with q and e: the "
 "first and the last."
 
-#: orologic_modules/finestra_scacchiera.py:218
+#: orologic_modules/finestra_scacchiera.py:215
 msgid ""
 "Alt con w e x: la variante sopra e quella sotto; Alt con z: fuori dalla "
 "variante."
@@ -3738,31 +3738,31 @@ msgstr ""
 "Alt with w and x: the variation above and the one below; Alt with z: out of "
 "the variation."
 
-#: orologic_modules/finestra_scacchiera.py:219
+#: orologic_modules/finestra_scacchiera.py:216
 msgid ""
 "Alt con s: l'analisi; Alt con r: i suoi secondi; Alt con t: le sue linee."
 msgstr ""
 "Alt with s: the analysis; Alt with r: its seconds; Alt with t: its lines."
 
-#: orologic_modules/finestra_scacchiera.py:220
+#: orologic_modules/finestra_scacchiera.py:217
 msgid "Alt con c: il commento della mossa; C: scrivere il commento."
 msgstr "Alt with c: the comment on the move; C: write the comment."
 
-#: orologic_modules/finestra_scacchiera.py:221
+#: orologic_modules/finestra_scacchiera.py:218
 msgid "Alt con u: taglia la mossa; Alt con b: la scacchiera a caratteri."
 msgstr "Alt with u: cuts the move; Alt with b: the board in characters."
 
-#: orologic_modules/finestra_scacchiera.py:222
+#: orologic_modules/finestra_scacchiera.py:219
 msgid "Backspace: il menu dei comandi dell'esploratore."
 msgstr "Backspace: the explorer's command menu."
 
-#: orologic_modules/finestra_scacchiera.py:223
-#: orologic_modules/finestra_scacchiera.py:231
-#: orologic_modules/finestra_scacchiera.py:252
+#: orologic_modules/finestra_scacchiera.py:220
+#: orologic_modules/finestra_scacchiera.py:228
+#: orologic_modules/finestra_scacchiera.py:249
 msgid "?: questo aiuto. Esc chiude la scacchiera."
 msgstr "?: this help. Esc closes the board."
 
-#: orologic_modules/finestra_scacchiera.py:228
+#: orologic_modules/finestra_scacchiera.py:225
 msgid ""
 "Invio: posa il pezzo sollevato, se la mossa vale, e la mossa entra nella "
 "partita."
@@ -3770,17 +3770,17 @@ msgstr ""
 "Enter: puts down the lifted piece, if the move is legal, and the move goes "
 "into the game."
 
-#: orologic_modules/finestra_scacchiera.py:229
-#: orologic_modules/finestra_scacchiera.py:250
+#: orologic_modules/finestra_scacchiera.py:226
+#: orologic_modules/finestra_scacchiera.py:247
 msgid "C: un commento alla mossa."
 msgstr "C: a comment on the move."
 
-#: orologic_modules/finestra_scacchiera.py:230
+#: orologic_modules/finestra_scacchiera.py:227
 msgid "Backspace: il menu dei comandi di Easyfish."
 msgstr "Backspace: Easyfish's command menu."
 
-#: orologic_modules/finestra_scacchiera.py:236
-#: orologic_modules/finestra_scacchiera.py:261
+#: orologic_modules/finestra_scacchiera.py:233
+#: orologic_modules/finestra_scacchiera.py:258
 msgid ""
 "Maiuscolo con sinistra e destra: le diagonali che salgono; Ctrl con sinistra"
 " e destra: quelle che scendono."
@@ -3788,8 +3788,8 @@ msgstr ""
 "Shift with Left and Right: the rising diagonals; Ctrl with Left and Right: "
 "the falling ones."
 
-#: orologic_modules/finestra_scacchiera.py:237
-#: orologic_modules/finestra_scacchiera.py:262
+#: orologic_modules/finestra_scacchiera.py:234
+#: orologic_modules/finestra_scacchiera.py:259
 msgid ""
 "Spazio: solleva il pezzo; sulla sua casa lo posa, su un'altra piena prende "
 "quello."
@@ -3797,16 +3797,16 @@ msgstr ""
 "Space: lifts the piece; on its own square puts it down, on another occupied "
 "one takes that one."
 
-#: orologic_modules/finestra_scacchiera.py:238
+#: orologic_modules/finestra_scacchiera.py:235
 msgid "Invio: posa il pezzo sollevato, se la mossa vale."
 msgstr "Enter: puts down the lifted piece, if the move is legal."
 
-#: orologic_modules/finestra_scacchiera.py:239
-#: orologic_modules/finestra_scacchiera.py:263
+#: orologic_modules/finestra_scacchiera.py:236
+#: orologic_modules/finestra_scacchiera.py:260
 msgid "Ctrl con spazio: il pezzo in mano."
 msgstr "Ctrl with Space: the piece in hand."
 
-#: orologic_modules/finestra_scacchiera.py:242
+#: orologic_modules/finestra_scacchiera.py:239
 msgid ""
 "1 e 0, 0 e 1, 1 e 2, asterisco: dove si assegna il risultato, 1-0, 0-1, "
 "patta o non specificato, con la conferma."
@@ -3814,24 +3814,24 @@ msgstr ""
 "1 and 0, 0 and 1, 1 and 2, asterisk: where results are assigned, 1-0, 0-1, "
 "draw or unspecified, with confirmation."
 
-#: orologic_modules/finestra_scacchiera.py:244
-#: orologic_modules/finestra_scacchiera.py:267
+#: orologic_modules/finestra_scacchiera.py:241
+#: orologic_modules/finestra_scacchiera.py:264
 msgid "R N B Q K P, e in minuscolo: dove sono quei pezzi, bianchi e neri."
 msgstr ""
 "R N B Q K P, and in lowercase: where those pieces are, white and black."
 
-#: orologic_modules/finestra_scacchiera.py:245
-#: orologic_modules/finestra_scacchiera.py:268
+#: orologic_modules/finestra_scacchiera.py:242
+#: orologic_modules/finestra_scacchiera.py:265
 msgid "W: tutti i pezzi bianchi; w: tutti i neri."
 msgstr "W: all the white pieces; w: all the black ones."
 
-#: orologic_modules/finestra_scacchiera.py:246
-#: orologic_modules/finestra_scacchiera.py:269
+#: orologic_modules/finestra_scacchiera.py:243
+#: orologic_modules/finestra_scacchiera.py:266
 msgid "Tab: la casa, coi pezzi che la difendono e la attaccano."
 msgstr "Tab: the square, with the pieces defending and attacking it."
 
-#: orologic_modules/finestra_scacchiera.py:247
-#: orologic_modules/finestra_scacchiera.py:270
+#: orologic_modules/finestra_scacchiera.py:244
+#: orologic_modules/finestra_scacchiera.py:267
 msgid ""
 "l: l'ultima mossa; L: le ultime due; u: alla casa d'arrivo dell'ultima "
 "mossa."
@@ -3839,17 +3839,17 @@ msgstr ""
 "l: the last move; L: the last two; u: to the arrival square of the last "
 "move."
 
-#: orologic_modules/finestra_scacchiera.py:248
-#: orologic_modules/finestra_scacchiera.py:271
+#: orologic_modules/finestra_scacchiera.py:245
+#: orologic_modules/finestra_scacchiera.py:268
 msgid "m: le mosse possibili del pezzo sollevato, o di quello sulla casa."
 msgstr ""
 "m: the possible moves of the lifted piece, or of the one on the square."
 
-#: orologic_modules/finestra_scacchiera.py:249
+#: orologic_modules/finestra_scacchiera.py:246
 msgid "Da F1 a F5: gli orologi, come da .1 a .5."
 msgstr "F1 to F5: the clocks, like .1 to .5."
 
-#: orologic_modules/finestra_scacchiera.py:251
+#: orologic_modules/finestra_scacchiera.py:248
 msgid ""
 "Backspace: la pausa e il menu dei comandi; nel menu, Backspace fa ripartire "
 "il tempo."
@@ -3857,42 +3857,42 @@ msgstr ""
 "Backspace: pause and the commands menu; in the menu, Backspace restarts the "
 "clock."
 
-#: orologic_modules/finestra_scacchiera.py:279
-#: orologic_modules/finestra_scacchiera.py:283
+#: orologic_modules/finestra_scacchiera.py:276
+#: orologic_modules/finestra_scacchiera.py:280
 msgid "Aiuto della scacchiera"
 msgstr "Board help"
 
-#: orologic_modules/finestra_scacchiera.py:301
-#: orologic_modules/finestra_scacchiera.py:308
+#: orologic_modules/finestra_scacchiera.py:298
+#: orologic_modules/finestra_scacchiera.py:305
 msgid "Comandi della partita"
 msgstr "Game commands"
 
 #: orologic_modules/easyfish/easyfish_app.py:246
 #: orologic_modules/easyfish/interaction.py:437
-#: orologic_modules/finestra_scacchiera.py:353
-#: orologic_modules/finestra_scacchiera.py:369
+#: orologic_modules/finestra_scacchiera.py:350
+#: orologic_modules/finestra_scacchiera.py:366
 #: orologic_modules/lichess_app.py:966
 msgid "Scacchiera"
 msgstr "Board"
 
-#: orologic_modules/finestra_scacchiera.py:508
+#: orologic_modules/finestra_scacchiera.py:505
 msgid "Qui la scacchiera e' solo da guardare."
 msgstr "Here the board is only for watching."
 
-#: orologic_modules/finestra_scacchiera.py:649
+#: orologic_modules/finestra_scacchiera.py:646
 msgid "Dal Nero"
 msgstr "Black's side"
 
-#: orologic_modules/finestra_scacchiera.py:649
+#: orologic_modules/finestra_scacchiera.py:646
 msgid "Dal Bianco"
 msgstr "White's side"
 
-#: orologic_modules/finestra_scacchiera.py:710
+#: orologic_modules/finestra_scacchiera.py:707
 #, python-brace-format
 msgid "Sollevato: {pezzo}"
 msgstr "Lifted: {pezzo}"
 
-#: orologic_modules/finestra_scacchiera.py:730
+#: orologic_modules/finestra_scacchiera.py:727
 #: orologic_modules/lichess_app.py:744
 msgid "Promozione"
 msgstr "Promotion"
@@ -4564,29 +4564,37 @@ msgstr "download Stockfish"
 msgid "modificare manualmente la configurazione"
 msgstr "manually change the configuration"
 
-#: orologic_modules/impostazioni.py:552 orologic_modules/impostazioni.py:594
+#: orologic_modules/impostazioni.py:552 orologic_modules/impostazioni.py:599
 msgid "Percorso del motore"
 msgstr "Engine path"
 
-#: orologic_modules/impostazioni.py:553 orologic_modules/impostazioni.py:601
+#: orologic_modules/impostazioni.py:553 orologic_modules/impostazioni.py:606
 msgid "Eseguibile del motore"
 msgstr "Engine executable"
 
-#: orologic_modules/impostazioni.py:554 orologic_modules/impostazioni.py:619
+#: orologic_modules/impostazioni.py:554 orologic_modules/impostazioni.py:624
 msgid "Hash table (MB)"
 msgstr "Hash table (MB)"
 
-#: orologic_modules/impostazioni.py:555 orologic_modules/impostazioni.py:620
+#: orologic_modules/impostazioni.py:555 orologic_modules/impostazioni.py:625
 msgid "Core da utilizzare"
 msgstr "Cores to use"
 
-#: orologic_modules/impostazioni.py:556 orologic_modules/impostazioni.py:622
+#: orologic_modules/impostazioni.py:556 orologic_modules/impostazioni.py:627
 msgid "Livello di skill"
 msgstr "Skill level"
 
-#: orologic_modules/impostazioni.py:557 orologic_modules/impostazioni.py:623
+#: orologic_modules/impostazioni.py:557 orologic_modules/impostazioni.py:628
 msgid "Move overhead (ms)"
 msgstr "Move overhead (ms)"
+
+#: orologic_modules/impostazioni.py:575
+msgid ""
+"Il motore e' in uso: si puo' cambiare da un menu, a partita o analisi "
+"finita."
+msgstr ""
+"The engine is in use: you can change it from a menu, once the game or the "
+"analysis is over."
 
 #: orologic_modules/lichess_app.py:52
 #, python-brace-format

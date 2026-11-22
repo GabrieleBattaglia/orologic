@@ -311,10 +311,8 @@ def test_un_suono_per_evento_firmato_da_orologic():
     assert len(set(nomi)) == len(nomi)
     impronte = {repr(Acusticator.preset(nome)) for nome in nomi}
     assert len(impronte) == len(nomi)
-    # I provvisori dell'editor si firmano dopo l'ascolto di Gabriele.
-    for evento, nome in suoni.items():
-        if evento not in finestra_scacchiera.PROVVISORI:
-            assert "orologic" in Acusticator.usato_da(nome), nome
+    for nome in nomi:
+        assert "orologic" in Acusticator.usato_da(nome), nome
     assert set(finestra_scacchiera.GIRI.values()) <= set(suoni)
     cartella = pathlib.Path(finestra_scacchiera.__file__).parent
     sorgente = "".join((cartella / nome).read_text(encoding="utf-8") for nome in ("finestra_scacchiera.py", "finestra_editor.py"))

@@ -198,6 +198,30 @@ def finestra(app, request):
         pompa(lambda: False, 0.1)
 
 
+@pytest.fixture
+def impostazioni_rimesse():
+    """Le impostazioni della cartella delle prove come erano prima della
+    prova: chi cambia i nomi dei pezzi, il prompt o il volume li ritrova al
+    loro posto per le prove dopo. Senza, il Pedone rinominato dalle prove
+    dei suoni arrivava alla scacchiera interattiva, 22 novembre 2026."""
+    from orologic_modules import config, localizzazione, modello_prompt
+
+    cartella = os.path.dirname(config.DB_FILE)
+    copia = cartella + ".copia"
+    shutil.rmtree(copia, ignore_errors=True)
+    shutil.copytree(cartella, copia)
+    volume = config.VOLUME
+    try:
+        yield
+    finally:
+        config.VOLUME = volume
+        shutil.rmtree(cartella, ignore_errors=True)
+        shutil.copytree(copia, cartella)
+        shutil.rmtree(copia, ignore_errors=True)
+        localizzazione.ricarica()
+        modello_prompt._cache["modello"] = None
+
+
 def righe_dell_area(vera):
     return vera.area.GetValue().split("\n")
 

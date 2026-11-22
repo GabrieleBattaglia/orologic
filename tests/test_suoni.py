@@ -77,7 +77,7 @@ def _risposte(*valori):
 
 
 @pytest.fixture
-def gestore(finestra, monkeypatch):
+def gestore(finestra, monkeypatch, impostazioni_rimesse):
     def risposte(*valori):
         # Una fila sola per le due domande, nell'ordine in cui arrivano.
         risposta = _risposte(*valori)
@@ -86,6 +86,8 @@ def gestore(finestra, monkeypatch):
 
     # Un avviso sarebbe un dialogo modale, fermo per sempre sul desktop nascosto.
     monkeypatch.setattr(finestra, "avvisa", lambda _genitore, testo: pytest.fail(testo))
+    # Il nucleo fermo in un menu: il motore si puo' cambiare.
+    monkeypatch.setattr(finestra, "motore_in_uso", lambda: False)
     finestra.gestore.risposte = risposte
     yield finestra.gestore
     if finestra.gestore.lavoro is not None:

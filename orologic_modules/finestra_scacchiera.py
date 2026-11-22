@@ -70,8 +70,8 @@ COMANDI_DELL_ESPLORATORE = "adqewxzusbc"
 VALORI_DELL_ESPLORATORE = {"r": ("Secondi analisi: ", 1, 1800, 2), "t": ("Linee analisi: ", 1, 20, 3)}
 
 # I suoni della scacchiera, un preset per evento, dalla collezione di GBUtils,
-# scelti da Gabriele all'ascolto alla cieca del 21 novembre 2026,
-# strumenti/ascolto_scacchiera.py: sollevare e posare la coppia votata 5,
+# scelti da Gabriele all'ascolto alla cieca del 21 novembre 2026, raccontato
+# in Piano della GUI.txt: sollevare e posare la coppia votata 5,
 # rimettere la meta' che posa della coppia votata 4, subito sotto; al bordo
 # uno dei due votati 5, e per passare dall'altra parte, uno per lato, gli
 # altri del gruppo del bordo, in ordine di voto. I suoni del no, uno per
@@ -93,7 +93,8 @@ SUONI = {
     "da_guardare": "orecchio_che_cerca",
     "nessuna_mossa": "filtro_eta_minima",
     "risultato": "casella_liberi_spuntata",
-    # L'editor della scacchiera di Easyfish, provvisori come gli altri.
+    # L'editor della scacchiera di Easyfish, presi fra i preset senza firme e
+    # approvati da Gabriele il 22 novembre 2026, firmati in GBUtils V313.
     "metti": "casella_tuoi_spuntata",
     "togli": "casella_tuoi_tolta",
     "da_capo": "filtro_regione",
@@ -101,10 +102,6 @@ SUONI = {
     "posizione_illegale": "filtro_tratto_no",
 }
 GIRI = {SU: "giro_su", GIU: "giro_giu", SINISTRA: "giro_sinistra", DESTRA: "giro_destra"}
-# I suoni dell'editor della scacchiera di Easyfish, del 22 novembre 2026,
-# presi fra i preset senza firme: si firmano in GBUtils dopo l'ascolto di
-# Gabriele, come quelli della prima tappa.
-PROVVISORI = {"metti", "togli", "da_capo", "re_da_spostare", "posizione_illegale"}
 # Le azioni che fanno suonare ogni evento, per suoni_della_scacchiera.txt,
 # l'elenco che Gabriele usa con Acu_Maker: lo scrive strumenti/elenco_suoni.py.
 AZIONI = {

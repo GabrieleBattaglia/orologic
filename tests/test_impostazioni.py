@@ -6,8 +6,6 @@ cambi voce per voce, con le scelte e i campi sostituiti da risposte scritte.
 Il motore non parte mai: InitEngine e CloseEngine si segnano. I file delle
 impostazioni della cartella delle prove si rimettono com'erano."""
 
-import os
-import shutil
 
 import pytest
 import wx
@@ -25,13 +23,9 @@ from orologic_modules import (
 
 
 @pytest.fixture
-def gestore(finestra, monkeypatch):
+def gestore(finestra, monkeypatch, impostazioni_rimesse):
     """Il gestore della finestra vera, con le risposte in fila e i file
     rimessi a posto."""
-    cartella = os.path.dirname(config.DB_FILE)
-    copia = cartella + ".copia"
-    shutil.rmtree(copia, ignore_errors=True)
-    shutil.copytree(cartella, copia)
     risposte = []
     chieste = []
 
@@ -45,23 +39,18 @@ def gestore(finestra, monkeypatch):
     monkeypatch.setattr(finestra, "scegli", rispondi("scelta"))
     monkeypatch.setattr(finestra, "chiedi_valore", rispondi("valore"))
     monkeypatch.setattr(finestra, "avvisa", lambda _genitore, testo: chieste.append(("avviso", testo)))
+    # Il nucleo fermo in un menu: il motore si puo' cambiare.
+    monkeypatch.setattr(finestra, "motore_in_uso", lambda: False)
     monkeypatch.setattr(impostazioni, "Acusticator", type("Muto", (), {"__call__": lambda *_a, **_o: None, "play": staticmethod(lambda *_a, **_o: None)})())
     motore = []
     monkeypatch.setattr(engine, "InitEngine", lambda: motore.append("avviato"))
     monkeypatch.setattr(engine, "CloseEngine", lambda: motore.append("chiuso"))
-    volume = config.VOLUME
     finestra.gestore.risposte, finestra.gestore.chieste, finestra.gestore.motore = risposte, chieste, motore
     try:
         yield finestra.gestore
     finally:
         if finestra.gestore.lavoro is not None:
             finestra.gestore.lavoro.join(5)
-        config.VOLUME = volume
-        shutil.rmtree(cartella, ignore_errors=True)
-        shutil.copytree(copia, cartella)
-        shutil.rmtree(copia, ignore_errors=True)
-        localizzazione.ricarica()
-        modello_prompt._cache["modello"] = None
 
 
 def test_le_righe_coi_testi_di_orologic(gestore):
@@ -153,6 +142,43 @@ def test_il_motore(gestore, tmp_path):
         "scaricare Stockfish",
         "modificare manualmente la configurazione",
     ]
+
+
+def test_il_motore_in_uso_non_si_cambia(gestore, monkeypatch):
+    prima = storage.LoadDB().get("engine_config")
+    monkeypatch.setattr(gestore.finestra, "motore_in_uso", lambda: True)
+    for voce in ("cerca", "scarica", "manuale", "percorso", "eseguibile", "hash", "core", "skill", "overhead"):
+        gestore.cambia_il_motore(voce, None)
+    avviso = ("avviso", "Il motore e' in uso: si puo' cambiare da un menu, a partita o analisi finita.")
+    assert gestore.chieste == [avviso] * 9
+    assert gestore.lavoro is None and gestore.motore == []
+    assert storage.LoadDB().get("engine_config") == prima
+    # Le righe del motore si guardano lo stesso.
+    assert gestore.riga_del_motore("hash").startswith("Hash table (MB): ")
+
+
+def test_quando_il_motore_e_in_uso(finestra):
+    from orologic_modules.finestra import Attesa
+
+    prima = finestra.attesa
+    try:
+        finestra.attesa = Attesa("menu")
+        assert not finestra.motore_in_uso()
+        # Dentro una partita no, anche a un menu, come quelli di Easyfish.
+        with strato.partita():
+            assert finestra.motore_in_uso()
+        # Mentre il nucleo lavora, o aspetta una mossa, un testo, un tasto o
+        # un si' o no, no.
+        for tipo in (None, "area", "sino"):
+            finestra.attesa = Attesa(tipo)
+            assert finestra.motore_in_uso(), tipo
+        # Le impostazioni della voce del menu principale: il nucleo aspetta.
+        finestra.attesa = Attesa(None)
+        finestra.impostazioni_del_nucleo = True
+        assert not finestra.motore_in_uso()
+    finally:
+        finestra.attesa = prima
+        finestra.impostazioni_del_nucleo = False
 
 
 def test_scaricare_stockfish_chiude_prima_il_motore(gestore, monkeypatch):
