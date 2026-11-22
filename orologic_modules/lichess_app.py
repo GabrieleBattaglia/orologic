@@ -1,6 +1,7 @@
 # Orologic, Orolichess: menu, profilo e sfide.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
+import contextlib
 import json
 import os
 import queue
@@ -16,6 +17,7 @@ from GBUtils import Acusticator, dgt, enter_escape, key, menu
 from . import (
     board_utils,
     config,
+    cruscotto,
     lichess_board,
     lichess_eventi,
     lichess_profiler,
@@ -598,18 +600,7 @@ def handle_exploration_command(user_input, game_state):
             adsr=[10, 0, 100, 20],
         )
         menu(
-            {
-                "-": _("Riepilogo dei pezzi Bianchi"),
-                "+": _("Riepilogo dei pezzi Neri"),
-                "-[a-h]": _("Esplora colonna"),
-                "-[1-8]": _("Esplora traversa"),
-                "-[casa]": _("Dettagli su una casa (es. -e4)"),
-                "/[a-h]": _("Diagonale ascendente destra"),
-                "\\[a-h]": _("Diagonale ascendente sinistra"),
-                ",[P,N,B,R,Q,K]": _("Posizioni di un pezzo specifico"),
-                ".b": _("Mostra la scacchiera grafica"),
-                ".": _("Arrenditi o esci dal puzzle"),
-            },
+            comandi_del_puzzle(aiuto=True),
             show_only=True,
             p=_("Comandi di esplorazione disponibili:"),
             ordered=False,
@@ -617,6 +608,49 @@ def handle_exploration_command(user_input, game_state):
         return True
 
     return False
+
+
+def comandi_del_puzzle(aiuto=False):
+    """I comandi del puzzle: quelli dell'aiuto, .?, e per la plancia della
+    finestra anche la soluzione."""
+    comandi = {
+        "-": _("Riepilogo dei pezzi Bianchi"),
+        "+": _("Riepilogo dei pezzi Neri"),
+        "-[a-h]": _("Esplora colonna"),
+        "-[1-8]": _("Esplora traversa"),
+        "-[casa]": _("Dettagli su una casa (es. -e4)"),
+        "/[a-h]": _("Diagonale ascendente destra"),
+        "\\[a-h]": _("Diagonale ascendente sinistra"),
+        ",[P,N,B,R,Q,K]": _("Posizioni di un pezzo specifico"),
+        ".b": _("Mostra la scacchiera grafica"),
+        ".": _("Arrenditi o esci dal puzzle"),
+    }
+    if not aiuto:
+        comandi["s"] = _("Soluzione del Puzzle")
+    return comandi
+
+
+class StatoDelPuzzle:
+    """Lo stato che il puzzle da' al cruscotto della finestra: la
+    scacchiera, dal lato di chi risolve, i giocatori della partita da cui
+    viene, e le righe del puzzle, con le mosse trovate."""
+
+    def __init__(self, board, puz, game_info):
+        self.scacchiera_del_cruscotto = board
+        self.human_color = board.turn
+        giocatori = {giocatore.get("color"): giocatore.get("name") for giocatore in game_info.get("players", []) if isinstance(giocatore, dict)}
+        self.white_player = giocatori.get("white") or ""
+        self.black_player = giocatori.get("black") or ""
+        self.puz = puz
+        self.righe_in_piu = []
+
+    def aggiorna(self, trovate, totale):
+        self.righe_in_piu = [
+            _("Puzzle {id}").format(id=self.puz.get("id")),
+            _("Difficolta' (Rating Lichess): {r}").format(r=self.puz.get("rating")),
+            _("Tema: {t}").format(t=", ".join(self.puz.get("themes", []))),
+            _("Mosse trovate: {n} di {tot}.").format(n=trovate, tot=totale),
+        ]
 
 
 def fetch_puzzle(token=None, daily=False, difficulty=None, angle=None):
@@ -821,54 +855,72 @@ def menu_puzzle(db):
             print(_("Impossibile caricare il puzzle."))
             continue
 
-        puz = puzzle_data["puzzle"]
-        game_info = puzzle_data.get("game", {})
+        risolvi_il_puzzle(token, puzzle_data)
 
-        print(_("Puzzle {id}").format(id=puz.get("id")))
-        print(_("Difficolta' (Rating Lichess): {r}").format(r=puz.get("rating")))
-        print(_("Tema: {t}").format(t=", ".join(puz.get("themes", []))))
 
-        import io
+def risolvi_il_puzzle(token, puzzle_data):
+    """Un puzzle di Lichess: la posizione, la soluzione mossa per mossa, il
+    risultato a Lichess. Nella finestra sul cruscotto, con la scacchiera
+    interattiva dal lato di chi risolve."""
+    puz = puzzle_data["puzzle"]
+    game_info = puzzle_data.get("game", {})
 
-        last_move_san = None
-        board = board_utils.CustomBoard()
+    import io
 
-        if "pgn" in game_info and "initialPly" in puz:
-            try:
-                pgn_game = chess.pgn.read_game(io.StringIO(game_info["pgn"]))
-                node = pgn_game
-                ply = 0
-                initial_ply = puz["initialPly"]
+    last_move_san = None
+    board = board_utils.CustomBoard()
 
-                board = board_utils.CustomBoard()
-                moves_to_push = []
-                while node.variations and ply <= initial_ply:
-                    node = node.variations[0]
-                    moves_to_push.append(node.move)
-                    ply += 1
+    if "pgn" in game_info and "initialPly" in puz:
+        try:
+            pgn_game = chess.pgn.read_game(io.StringIO(game_info["pgn"]))
+            node = pgn_game
+            ply = 0
+            initial_ply = puz["initialPly"]
 
-                for m in moves_to_push:
-                    board.push(m)
+            board = board_utils.CustomBoard()
+            moves_to_push = []
+            while node.variations and ply <= initial_ply:
+                node = node.variations[0]
+                moves_to_push.append(node.move)
+                ply += 1
 
-                if node.move and node.parent:
-                    last_move_san = board_utils.DescribeMove(
-                        node.move, node.parent.board()
-                    )
-            # Le risposte di Lichess possono cambiare forma: si rinuncia a
-            # questo dato e si prosegue.
-            except Exception as e:  # noqa: BLE001
-                print(_("Errore nel parsing del PGN: {e}").format(e=e))
-                # Fallback
-                if puz.get("fen"):
-                    board = board_utils.CustomBoard(puz["fen"])
-                    last_move_san = puz.get("lastMove")
-        elif puz.get("fen"):
-            board = board_utils.CustomBoard(puz["fen"])
-            last_move_san = puz.get("lastMove")
+            for m in moves_to_push:
+                board.push(m)
 
-        print("\n" + describe_board(board, last_move_san))
-        ui.report_all_pieces(board, not board.turn)
-        ui.report_all_pieces(board, board.turn)
+            if node.move and node.parent:
+                last_move_san = board_utils.DescribeMove(
+                    node.move, node.parent.board()
+                )
+        # Le risposte di Lichess possono cambiare forma: si rinuncia a
+        # questo dato e si prosegue.
+        except Exception as e:  # noqa: BLE001
+            print(_("Errore nel parsing del PGN: {e}").format(e=e))
+            # Fallback
+            if puz.get("fen"):
+                board = board_utils.CustomBoard(puz["fen"])
+                last_move_san = puz.get("lastMove")
+    elif puz.get("fen"):
+        board = board_utils.CustomBoard(puz["fen"])
+        last_move_san = puz.get("lastMove")
+
+    # La zona di una partita: nella finestra l'area diventa il cruscotto,
+    # con la scacchiera dal lato di chi risolve, e il prompt vale come
+    # quello delle mosse.
+    with strato.partita():
+        soluzione = puz.get("solution", [])
+        stato = StatoDelPuzzle(board, puz, game_info)
+        totale = (len(soluzione) + 1) // 2
+        stato.aggiorna(0, totale)
+        strato.fornisci(lambda: cruscotto.dati_di(stato), comandi_del_puzzle())
+        # Nella finestra la descrizione si legge in una finestra sua; nel
+        # cruscotto restano le righe del puzzle.
+        with strato.da_leggere(_("Puzzle {id}").format(id=puz.get("id"))):
+            print(_("Puzzle {id}").format(id=puz.get("id")))
+            print(_("Difficolta' (Rating Lichess): {r}").format(r=puz.get("rating")))
+            print(_("Tema: {t}").format(t=", ".join(puz.get("themes", []))))
+            print("\n" + describe_board(board, last_move_san))
+            ui.report_all_pieces(board, not board.turn)
+            ui.report_all_pieces(board, board.turn)
         Acusticator(
             [
                 "c5",
@@ -892,7 +944,6 @@ def menu_puzzle(db):
             _("\nSuggerimento: digita . per uscire, .? per l'aiuto sulle esplorazioni")
         )
 
-        soluzione = puz.get("solution", [])
         mossa_idx = 0
         risolto = False
         result_sent = False
@@ -904,11 +955,18 @@ def menu_puzzle(db):
 
             last_5 = get_last_moves_san(board, 5)
             prompt_text = f"\n{last_5} > " if last_5 else "\n> "
-            user_input = dgt(prompt_text).strip()
+            stato.aggiorna((mossa_idx + 1) // 2, totale)
+            strato.fornisci(lambda: cruscotto.dati_di(stato), comandi_del_puzzle())
+            with strato.prompt_di_gioco():
+                user_input = dgt(prompt_text).strip()
             if not user_input:
                 continue
 
-            if handle_exploration_command(user_input, board):
+            # L'aiuto e la scacchiera, nella finestra, si leggono a parte.
+            titolo = {".?": _("Comandi di esplorazione disponibili:").rstrip(":"), ".b": _("Scacchiera")}.get(user_input.lower())
+            with strato.da_leggere(titolo) if titolo else contextlib.nullcontext():
+                gestito = handle_exploration_command(user_input, board)
+            if gestito:
                 if user_input.lower() != ".b" and user_input != ".?":
                     continue
 
@@ -1014,40 +1072,40 @@ def menu_puzzle(db):
                 Acusticator(["a3", 0.15, 0, config.VOLUME], kind=2, adsr=[5, 20, 0, 75])
                 print(_("Mossa errata, riprova."))
 
-        if risolto:
-            if not result_sent:
-                send_puzzle_result(token, puz.get("id"), win=True)
-                result_sent = True
-            Acusticator(
-                [
-                    "c5",
-                    0.1,
-                    -0.5,
-                    config.VOLUME,
-                    "e5",
-                    0.1,
-                    0,
-                    config.VOLUME,
-                    "g5",
-                    0.1,
-                    0.5,
-                    config.VOLUME,
-                    "c6",
-                    0.2,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 90, 0],
-            )
-            print(_("\nCongratulazioni! Hai risolto il puzzle!"))
-            end_time = time.time()
-            elapsed = int(end_time - start_time)
-            mins = elapsed // 60
-            secs = elapsed % 60
-            time_str = f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
-            print(_("Tempo impiegato: {t}").format(t=time_str))
-            enter_escape(_("Premi Invio per continuare..."))
+    if risolto:
+        if not result_sent:
+            send_puzzle_result(token, puz.get("id"), win=True)
+            result_sent = True
+        Acusticator(
+            [
+                "c5",
+                0.1,
+                -0.5,
+                config.VOLUME,
+                "e5",
+                0.1,
+                0,
+                config.VOLUME,
+                "g5",
+                0.1,
+                0.5,
+                config.VOLUME,
+                "c6",
+                0.2,
+                0,
+                config.VOLUME,
+            ],
+            kind=1,
+            adsr=[2, 8, 90, 0],
+        )
+        print(_("\nCongratulazioni! Hai risolto il puzzle!"))
+        end_time = time.time()
+        elapsed = int(end_time - start_time)
+        mins = elapsed // 60
+        secs = elapsed % 60
+        time_str = f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
+        print(_("Tempo impiegato: {t}").format(t=time_str))
+        enter_escape(_("Premi Invio per continuare..."))
 
 
 def fetch_user_profile(username, token=None):
