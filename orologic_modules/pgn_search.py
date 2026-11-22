@@ -24,6 +24,13 @@ from GBUtils import contesto_ssl, dgt, enter_escape, key, menu
 
 from orologic_modules import board_utils, engine, strato
 from orologic_modules.config import _
+from orologic_modules.lettura_pgn import (  # noqa: F401
+    OGNI_QUANTO,
+    RighePGN,
+    _partita_da_tenere,
+    estrai_info,
+    pulita,
+)
 
 # Entry point
 
@@ -228,7 +235,6 @@ def _carica_archivio():
 
 BLOCCO = 65536
 LIMITE_DELLO_SCARICAMENTO = 3600.0
-OGNI_QUANTO = 3.0
 
 
 def tipo_di_sorgente(testo):
@@ -255,43 +261,6 @@ def _apri_indirizzo(indirizzo):
     return urllib.request.urlopen(req, timeout=30, context=contesto_ssl())
 
 
-def _partita_da_tenere(game):
-    """vuota, esclusa o buona: i record senza mosse ne' intestazioni vere si
-    saltano, le partite che non partono dalla posizione standard si
-    escludono."""
-    has_real_headers = False
-    for val in game.headers.values():
-        if val not in ("?", "*", "????.??.??"):
-            has_real_headers = True
-            break
-    has_moves = len(list(game.mainline_moves())) > 0
-    if not has_real_headers and not has_moves:
-        return "vuota"
-
-    # Escludi varianti non standard (Setup/FEN personalizzato e Chess960)
-    is_setup = game.headers.get("SetUp") == "1"
-    is_chess960 = game.headers.get("Variant", "").lower() in (
-        "chess960",
-        "fischerandom",
-        "fischer random",
-    )
-
-    is_non_standard = False
-    if is_setup:
-        fen = game.headers.get("FEN", "").strip()
-        if fen:
-            normalized_fen = " ".join(fen.split()[:4]).lower()
-            standard_normalized = (
-                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -".lower()
-            )
-            if normalized_fen != standard_normalized:
-                is_non_standard = True
-
-    if is_chess960 or is_non_standard:
-        return "esclusa"
-    return "buona"
-
-
 def leggi_le_partite(pgn_text, avanzamento=None, interrotta=None, fermato=None):
     """Le partite del testo PGN: (partite, escluse). avanzamento(n) riceve
     le partite lette, alla prima buona e poi ogni tre secondi; interrotta(e)
@@ -299,7 +268,7 @@ def leggi_le_partite(pgn_text, avanzamento=None, interrotta=None, fermato=None):
     lettura e tiene le partite lette fin li'."""
     games = []
     # Le righe vuote in mezzo alle mosse non chiudono la partita.
-    pgn_io = board_utils.RighePGN(pgn_text)
+    pgn_io = RighePGN(pgn_text)
     count = 0
     excluded_count = 0
     last_print = 0.0
@@ -376,12 +345,6 @@ def righe_dell_esito(valide, excluded_count):
     return righe
 
 
-def pulita(testo):
-    """Una riga del terminale per la finestra: senza i ritorni a capo e con
-    uno spazio solo fra le parole, come le vuole il display braille."""
-    return " ".join(testo.split())
-
-
 def scrivi_pgn(percorso, games, indici):
     """Le partite di indici nel file, con varianti e commenti."""
     with open(percorso, "w", encoding="utf-8") as f:
@@ -416,55 +379,6 @@ def _nella_finestra(indirizzo):
 
 
 # Estrazione info headers
-
-
-def estrai_info(games):
-    """Estrae gli headers rilevanti da ogni partita.
-
-    Accetta partite intere oppure le sole intestazioni lette con
-    chess.pgn.read_headers: Easyfish, con .pa, filtra cosi' i file da
-    molte partite senza leggerne le mosse.
-
-    Returns:
-        list[dict] con chiavi: White, Black, Result, WhiteElo, BlackElo,
-                               Event, Date, Year, ECO
-    """
-    info_list = []
-    for g in games:
-        h = getattr(g, "headers", g)
-        year = None
-        date_str = h.get("Date", "????.??.??")
-        if date_str and len(date_str) >= 4:
-            try:
-                year = int(date_str[:4])
-            except (ValueError, TypeError):
-                pass
-
-        w_elo = None
-        b_elo = None
-        try:
-            w_elo = int(h.get("WhiteElo", ""))
-        except (ValueError, TypeError):
-            pass
-        try:
-            b_elo = int(h.get("BlackElo", ""))
-        except (ValueError, TypeError):
-            pass
-
-        info_list.append(
-            {
-                "White": h.get("White", "?"),
-                "Black": h.get("Black", "?"),
-                "Result": h.get("Result", "*"),
-                "WhiteElo": w_elo,
-                "BlackElo": b_elo,
-                "Event": h.get("Event", "?"),
-                "Date": date_str,
-                "Year": year,
-                "ECO": h.get("ECO", ""),
-            }
-        )
-    return info_list
 
 
 # Statistiche

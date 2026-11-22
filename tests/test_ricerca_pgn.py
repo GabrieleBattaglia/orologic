@@ -12,6 +12,7 @@ Windows, la vista della partita e l'elenco delle partite sono sostituite, i
 suoni e gli annunci si segnano."""
 
 import io
+import itertools
 import os
 import pathlib
 import sys
@@ -21,7 +22,13 @@ import pytest
 import wx
 from conftest import pompa
 
-from orologic_modules import archivio_pgn, board_utils, finestra_ricerca, pgn_search
+from orologic_modules import (
+    archivio_pgn,
+    board_utils,
+    finestra_ricerca,
+    lettura_pgn,
+    pgn_search,
+)
 from orologic_modules.easyfish import pgn_handler
 
 ARCHIVIO = """[Event "Prova"]
@@ -365,10 +372,32 @@ def test_la_riga_vuota_in_mezzo_alle_mosse_non_spezza_la_partita(tmp_path):
     file.write_text(RIGHE_VUOTE, encoding="utf-8")
     voci = pgn_handler._leggi_intestazioni(str(file))
     assert [voce[1].get("Event", "?") for voce in voci] == ["A", "B", "C", "?", "?", "X", "Y"]
-    letta = chess.pgn.read_game(board_utils.RighePGN(pgn_handler._testo_del_file(str(file)), voci[0][0]))
+    letta = chess.pgn.read_game(lettura_pgn.RighePGN(pgn_handler._testo_del_file(str(file)), voci[0][0]))
     assert len(list(letta.mainline_moves())) == 3
     giochi = board_utils.validate_and_clean_pgn(RIGHE_VUOTE)[0]
     assert len(giochi) == 7
+
+
+def test_la_lettura_in_parallelo_da_lo_stesso_archivio(monkeypatch):
+    # Pezzi piccoli e nessuna soglia: anche un testo breve va in parallelo,
+    # in due processi, che caricano soltanto lettura_pgn e python-chess.
+    testo = (ARCHIVIO + "\n" + RIGHE_VUOTE + "\n" + VARIANTI + "\n") * 6
+    monkeypatch.setattr(lettura_pgn, "SOGLIA_IN_PARALLELO", 0)
+    monkeypatch.setattr(lettura_pgn, "PEZZO", len(testo) // 5)
+    tagli = lettura_pgn._tagli(testo)
+    assert len(tagli) > 3 and all(testo.startswith("[Event", taglio) for taglio in tagli[1:-1])
+
+    def firma(pezzi, schede, info):
+        return pezzi, [(s.inizio, s.fine, s.mosse.tobytes(), [linea.tobytes() for linea in s.linee], s.fuori, s.problemi) for s in schede], info
+
+    in_fila = firma(*lettura_pgn.leggi(testo, processi=1))
+    assert firma(*lettura_pgn.leggi(testo, processi=2)) == in_fila
+    # I pezzi coprono tutto il testo, senza buchi.
+    assert in_fila[0][0][0] == 0 and in_fila[0][-1][1] == len(testo)
+    assert all(a[1] == b[0] for a, b in itertools.pairwise(in_fila[0]))
+    # Fermata subito, tiene il testo com'e'.
+    pezzi, schede, _info = lettura_pgn.leggi(testo, processi=2, fermato=lambda: True)
+    assert schede == [] and pezzi == [(0, len(testo), None)]
 
 
 def test_le_modifiche_al_testo_delle_partite():
@@ -483,18 +512,26 @@ def test_la_finestra_passa_a_easyfish_e_all_analisi(monkeypatch):
 
 
 class Prova:
-    def __init__(self, monkeypatch, ricerca, file=None):
+    def __init__(self, monkeypatch, ricerca, file=None, appunti=""):
         self.suoni = []
         self.domande = []
         self.avvisi = []
         self.detti = []
         self.partite = []
         self.scelte = []
+        self.file_chiesti = 0
         self.azione = None
         self.risposta = True
         self.salva_in = None
+
+        def scegli_il_file(_genitore):
+            self.file_chiesti += 1
+            return file
+
+        # Gli appunti veri di chi lavora non entrano mai nelle prove.
+        monkeypatch.setattr(finestra_ricerca.pyperclip, "paste", lambda: appunti)
         monkeypatch.setattr(finestra_ricerca, "suona", self.suoni.append)
-        monkeypatch.setattr(finestra_ricerca, "scegli_il_file", lambda _genitore: file)
+        monkeypatch.setattr(finestra_ricerca, "scegli_il_file", scegli_il_file)
         monkeypatch.setattr(finestra_ricerca, "scegli_dove_salvare", lambda _genitore: self.salva_in)
         monkeypatch.setattr(finestra_ricerca, "mostra_la_partita", self._partita)
         monkeypatch.setattr(finestra_ricerca, "scegli", self._scegli)
@@ -547,8 +584,8 @@ class Prova:
 def prova(app, monkeypatch):
     aperte = []
 
-    def apri(ricerca, file=None):
-        aperta = Prova(monkeypatch, ricerca, file)
+    def apri(ricerca, file=None, appunti=""):
+        aperta = Prova(monkeypatch, ricerca, file, appunti)
         aperte.append(aperta)
         return aperta
 
@@ -595,6 +632,25 @@ def test_si_apre_sul_file_e_lo_carica_nel_filo(prova, file_pgn):
     assert testi[2:] == ["Non classificate (4 partite)", "Con errori (4 partite)"]
     assert pompa(lambda: wx.Window.FindFocus() is d.albero)
     assert d.schede.GetPageText(0) == "Partite" and d.schede.GetPageText(1) == "Filtri"
+
+
+def test_all_ingresso_prima_gli_appunti(prova, file_pgn, tmp_path):
+    # Il percorso di un file .pgn: lo carica, senza chiedere il file.
+    p = prova(archivio_pgn.Ricerca(), appunti=f'"{file_pgn}"')
+    assert pompa(lambda: p.dialogo.ricerca.archivio is not None and not p.dialogo.in_corso())
+    assert p.file_chiesti == 0 and p.dialogo.ricerca.righe[0] == "Rilevato percorso file: " + file_pgn
+    # Un testo PGN, anche senza intestazioni.
+    p = prova(archivio_pgn.Ricerca(), appunti="1. e4 e5 2. Nf3 Nc6 1-0")
+    assert pompa(lambda: p.dialogo.ricerca.archivio is not None and not p.dialogo.in_corso())
+    assert p.file_chiesti == 0 and len(p.dialogo.ricerca.archivio) == 1
+    # Il resto chiede il file: un testo qualsiasi, un indirizzo, un file che
+    # non e' un PGN, un PGN che non c'e'.
+    altro = tmp_path / "appunti.txt"
+    altro.write_text("niente", encoding="utf-8")
+    for appunti in ("la spesa di domani: 1. pane", "https://lichess.org/api/games/user/prova", str(altro), str(tmp_path / "manca.pgn"), ""):
+        p = prova(archivio_pgn.Ricerca(), appunti=appunti)
+        assert pompa(lambda p=p: p.file_chiesti == 1), appunti
+        assert p.dialogo.ricerca.archivio is None
 
 
 def test_annullato_il_file_resta_aperta_vuota(prova):

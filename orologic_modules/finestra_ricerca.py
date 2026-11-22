@@ -5,11 +5,13 @@
 novembre 2026 (Piano della GUI.txt) e come l'ha voluta dopo il collaudo del
 22 novembre.
 
-Si apre sulla finestra standard di Windows per scegliere il file; Dagli
-appunti carica un indirizzo o un testo PGN, come la ricerca del terminale, e
-il profilatore di Lichess passa il suo indirizzo direttamente. Il caricamento
-gira in un filo, con l'avanzamento ogni tre secondi; Esc lo ferma e tiene
-quello che e' arrivato.
+Si apre guardando gli appunti: il percorso di un file PGN o un testo PGN si
+caricano subito, altrimenti si sceglie il file con la finestra standard di
+Windows. Dagli appunti carica anche un indirizzo, come la ricerca del
+terminale, e il profilatore di Lichess passa il suo indirizzo direttamente.
+Il caricamento gira in un filo, con tutti i processori per gli archivi
+grandi e l'avanzamento ogni tre secondi; Esc lo ferma e tiene quello che
+e' arrivato.
 
 Due schede. Partite: in cima le statistiche generali dell'archivio, poi
 l'albero delle mosse, un albero nativo di Windows a selezione singola,
@@ -29,8 +31,8 @@ Invio su un ramo lo apre o lo chiude, su una foglia mostra la partita, coi
 pulsanti Passa a Easyfish, Analisi automatica, Analisi manuale e Chiudi.
 Dopo l'albero, con Tab: Inizio, Partite del ramo (il tasto 0 del terminale),
 Salva il PGN (il tasto s), Percorso, che legge la linea fino alla voce,
-Classifica, che scrive il codice ECO alle non classificate, e Ripara i
-problemi. Alt+1 porta all'archivio, Alt+2 all'albero, Alt+3 ai pulsanti,
+Classifica, che scrive il codice ECO alle non classificate, e Ripara gli
+errori. Alt+1 porta all'archivio, Alt+2 all'albero, Alt+3 ai pulsanti,
 Alt+4 al primo filtro.
 
 Lo stato resta in archivio_pgn.Ricerca: dopo Easyfish o l'analisi la
@@ -38,6 +40,7 @@ finestra si riapre allo stesso punto, coi filtri di prima.
 """
 
 import os
+import re
 import threading
 
 import chess.pgn
@@ -103,6 +106,30 @@ def testo_della_partita(game):
     righe = [f"{chiave}: {valore}" for chiave, valore in game.headers.items() if valore and valore not in ("?", "????.??.??")]
     righe.append(game.accept(chess.pgn.StringExporter(headers=False, variations=True, comments=True, columns=None)))
     return "\n".join(righe)
+
+
+# Un testo PGN: una riga d'intestazione, o la prima mossa col suo numero.
+PGN_NEL_TESTO = re.compile(r'^\s*\[[A-Za-z]\w* "|(?:^|\s)1\.\s*(?:[a-h][1-8]|[NBRQK][a-h1-8x]|O-O)', re.MULTILINE)
+
+
+def sorgente_negli_appunti():
+    """(tipo, sorgente) se negli appunti c'e' il percorso di un file .pgn o
+    un testo PGN, altrimenti None. Gli indirizzi no: un collegamento
+    copiato per altro farebbe partire uno scaricamento; per quelli c'e'
+    Dagli appunti."""
+    try:
+        testo = pyperclip.paste()
+    # Gli appunti possono essere occupati o contenere di tutto.
+    except Exception:  # noqa: BLE001
+        return None
+    testo = (testo or "").strip().strip('"')
+    if not testo:
+        return None
+    if "\n" not in testo and testo.lower().endswith(".pgn") and os.path.isfile(testo):
+        return "file", testo
+    if PGN_NEL_TESTO.search(testo):
+        return "testo", testo
+    return None
 
 
 def scegli_il_file(genitore):
@@ -276,7 +303,7 @@ class FinestraRicerca(wx.Dialog):
                 indirizzo, ricerca.indirizzo = ricerca.indirizzo, None
                 wx.CallAfter(self._carica_se_aperta, "url", indirizzo)
             else:
-                wx.CallAfter(self._apri_se_aperta)
+                wx.CallAfter(self._all_ingresso)
 
     def _pagina_delle_partite(self, pagina):
         # L'ordine di creazione e' quello del Tab, e ogni controllo prende
@@ -303,7 +330,7 @@ class FinestraRicerca(wx.Dialog):
         self.pulsante_salva = wx.Button(pagina, label=_("&Salva il PGN"))
         self.pulsante_percorso = wx.Button(pagina, label=_("&Percorso"))
         self.pulsante_classifica = wx.Button(pagina, label=_("C&lassifica"))
-        self.pulsante_ripara = wx.Button(pagina, label=_("Ripara i pro&blemi"))
+        self.pulsante_ripara = wx.Button(pagina, label=_("Ripara gli &errori"))
         for pulsante in (self.pulsante_inizio, self.pulsante_partite, self.pulsante_salva, self.pulsante_percorso, self.pulsante_classifica):
             riga.Add(pulsante, 0, wx.RIGHT, 5)
         riga.Add(self.pulsante_ripara, 0)
@@ -344,9 +371,17 @@ class FinestraRicerca(wx.Dialog):
 
     # I lavori lunghi: il caricamento, Classifica e Ripara.
 
-    def _apri_se_aperta(self):
-        if self:
+    def _all_ingresso(self):
+        """Prima gli appunti: il percorso di un file PGN o un testo PGN si
+        caricano subito, altrimenti si sceglie il file. Chiesto da Gabriele
+        il 22 novembre 2026, dopo il collaudo."""
+        if not self:
+            return
+        sorgente = sorgente_negli_appunti()
+        if sorgente is None:
             self.apri_file()
+        else:
+            self.carica(*sorgente)
 
     def _carica_se_aperta(self, tipo, sorgente):
         if self:

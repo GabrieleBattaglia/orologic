@@ -25,8 +25,6 @@ partite che non cambiano si copiano com'erano, anche quelle che la ricerca
 non carica.
 """
 
-import array
-import bisect
 import codecs
 import contextlib
 import io
@@ -41,15 +39,24 @@ import chess.pgn
 from . import board_utils, config, pgn_search
 from .config import _
 
-# Le date come le vuole il PGN, e quelle che si sanno riscrivere.
-DATA = re.compile(r"^(\d{4}|\?{4})\.(\d{2}|\?{2})\.(\d{2}|\?{2})$")
+# La lettura sta in lettura_pgn, leggera, per i processi paralleli; i
+# nomi restano anche qui, per chi usa l'archivio.
+from .lettura_pgn import (  # noqa: F401
+    DATA,
+    MASSIMI_ERRORI,
+    Scheda,
+    _Costruttore,
+    _scheda,
+    codice,
+    leggi,
+    mossa,
+    risultato_della_posizione,
+)
+
+# Le date che si sanno riscrivere come le vuole il PGN.
 DATA_DA_RISCRIVERE = re.compile(r"^(\d{4})(?:[-/.](\d{1,2}|\?\?)(?:[-/.](\d{1,2}|\?\?))?)?$")
 INTESTAZIONE = re.compile(r'^\[\s*([A-Za-z0-9][A-Za-z0-9_+#=:-]*)\s+"((?:[^"\\]|\\.)*)"\s*\]\s*$')
 SEGNO = re.compile(r"(1-0|0-1|1/2-1/2|\*)(\s*)$")
-# Il messaggio di python-chess per una mossa che non va: la mossa e la
-# posizione, col colore che muove e il numero della mossa in fondo.
-MOSSA_SBAGLIATA = re.compile(r"san: '([^']*)' in \S+ ([wb]) \S+ \S+ \d+ (\d+)")
-MASSIMI_ERRORI = 5
 # Le intestazioni obbligatorie che mancano si aggiungono con questi valori.
 VALORI_IGNOTI = {"Date": "????.??.??", "Result": "*"}
 
@@ -65,17 +72,6 @@ def tipi_dei_problemi():
         ("codifica", _("Caratteri illeggibili")),
         ("doppioni", _("Partite doppie")),
     )
-
-
-# Le mosse come numeri da due byte: da, a e promozione.
-
-
-def codice(mossa):
-    return mossa.from_square | (mossa.to_square << 6) | ((mossa.promotion or 0) << 12)
-
-
-def mossa(numero):
-    return chess.Move(numero & 63, (numero >> 6) & 63, (numero >> 12) or None)
 
 
 # La lettura.
@@ -104,192 +100,6 @@ def decodifica(dati):
         parti.append(pezzo)
         posizione += len(pezzo)
     return "".join(parti), cattive, a_capo, bom
-
-
-class _Costruttore(chess.pgn.GameBuilder):
-    """Il costruttore di python-chess, che in piu' ricorda le intestazioni
-    scritte davvero, la posizione finale della linea principale e il segno
-    del risultato in fondo alle mosse. Gli errori vanno nella partita, non
-    nel registro: finiscono nel ramo Con errori."""
-
-    def begin_game(self):
-        super().begin_game()
-        self.game = self.Game.without_tag_roster()
-        self.variation_stack = [self.game]
-        self.presenti = set()
-        self.scacchiera = None
-        self.segno = None
-
-    def visit_header(self, tagname, tagvalue):
-        self.presenti.add(tagname)
-        super().visit_header(tagname, tagvalue)
-
-    def visit_board(self, board):
-        # La prima e' la scacchiera della linea principale, che poi va avanti
-        # mossa dopo mossa: alla fine e' la posizione finale.
-        if self.scacchiera is None:
-            self.scacchiera = board
-
-    def visit_result(self, result):
-        self.segno = result
-        super().visit_result(result)
-
-    def handle_error(self, error):
-        self.game.errors.append(error)
-
-    def result(self):
-        return self.game, self.presenti, self.scacchiera, self.segno
-
-
-class Scheda:
-    """Una partita dell'archivio: dove sta nel testo, le mosse della linea
-    principale, le linee delle varianti dalla prima mossa, se sta fuori
-    dall'albero, il matto e la promozione per i filtri, e i problemi come
-    {tipo: valore}, o None."""
-
-    __slots__ = ("fine", "fuori", "inizio", "linee", "mosse", "problemi")
-
-    def __init__(self, inizio, fine, mosse, linee, fuori, problemi):
-        self.inizio = inizio
-        self.fine = fine
-        self.mosse = mosse
-        self.linee = linee
-        self.fuori = fuori
-        self.problemi = problemi
-
-    def spostata(self, inizio, fine):
-        return Scheda(inizio, fine, self.mosse, self.linee, self.fuori, self.problemi)
-
-
-def _linee(game):
-    """Le linee delle varianti, ognuna dalla prima mossa fino alla sua fine,
-    senza la ricorsione: le partite lunghe non hanno limiti."""
-    linee = []
-    percorso = []
-    pila = [(game, 0, True)]
-    while pila:
-        nodo, profondita, principale = pila.pop()
-        if profondita:
-            del percorso[profondita - 1 :]
-            percorso.append(codice(nodo.move))
-        figli = nodo.variations
-        if not figli:
-            if not principale:
-                linee.append(array.array("H", percorso))
-            continue
-        for numero in range(len(figli) - 1, -1, -1):
-            pila.append((figli[numero], profondita + 1, principale and numero == 0))
-    return linee or ()
-
-
-def risultato_della_posizione(scacchiera):
-    """Il risultato che la posizione finale impone: il matto o lo stallo."""
-    if scacchiera is None:
-        return None
-    if scacchiera.is_checkmate():
-        return "0-1" if scacchiera.turn == chess.WHITE else "1-0"
-    if scacchiera.is_stalemate():
-        return "1/2-1/2"
-    return None
-
-
-def _mossa_sbagliata(errore):
-    """La mossa che non va, come 23... Qxf7, o il messaggio di python-chess."""
-    trovata = MOSSA_SBAGLIATA.search(str(errore))
-    if trovata is None:
-        return pgn_search.pulita(str(errore))
-    san, colore, numero = trovata.groups()
-    return f"{numero}. {san}" if colore == "w" else f"{numero}... {san}"
-
-
-def _problemi(game, presenti, scacchiera, segno):
-    trovati = {}
-    if game.errors:
-        trovati["mosse"] = _mossa_sbagliata(game.errors[0])
-    mancanti = tuple(tag for tag in chess.pgn.TAG_ROSTER if tag not in presenti)
-    if mancanti:
-        trovati["intestazioni"] = mancanti
-    risultato = game.headers.get("Result", "*")
-    atteso = risultato_della_posizione(scacchiera)
-    if atteso is not None and risultato != atteso:
-        trovati["risultato"] = ("posizione", atteso)
-    elif segno is not None and "Result" in presenti and segno != risultato:
-        trovati["risultato"] = ("segno", segno)
-    data = game.headers.get("Date")
-    if data is not None and not DATA.match(data):
-        trovati["data"] = data
-    elo = [f"{tag} {valore}" for tag in ("WhiteElo", "BlackElo") if (valore := game.headers.get(tag)) not in (None, "", "?", "-") and not valore.isdigit()]
-    if elo:
-        trovati["elo"] = ", ".join(elo)
-    return trovati or None
-
-
-def _scheda(letta, inizio, fine, fuori):
-    """(scheda, info) di una partita letta col costruttore."""
-    game, presenti, scacchiera, segno = letta
-    mosse = array.array("H", (codice(m) for m in game.mainline_moves()))
-    scheda = Scheda(inizio, fine, mosse, _linee(game), fuori, _problemi(game, presenti, scacchiera, segno))
-    info = pgn_search.estrai_info([game.headers])[0]
-    info["Mosse"] = (len(mosse) + 1) // 2
-    info["Matto"] = scacchiera is not None and scacchiera.is_checkmate()
-    info["Promozione"] = any(numero >> 12 for numero in mosse)
-    return scheda, info
-
-
-def leggi(testo, cattive=(), avanzamento=None, interrotta=None, fermato=None):
-    """Le partite del testo: (pezzi, schede, info). pezzi e' tutto il testo
-    a pezzi, (inizio, fine, scheda o None), anche quello che non e' una
-    partita, perche' il file si possa riscrivere senza perdere niente.
-    avanzamento(n), interrotta(e) e fermato() come in leggi_le_partite."""
-    righe = board_utils.RighePGN(testo)
-    pezzi, schede, info = [], [], []
-    letture_fallite = 0
-    contate = 0
-    ultima = 0.0
-    while True:
-        inizio = righe.tell()
-        if fermato is not None and fermato():
-            break
-        try:
-            letta = chess.pgn.read_game(righe, Visitor=_Costruttore)
-        # Gli archivi PGN arrivano da fuori e possono essere malformati
-        # in modi imprevedibili.
-        except Exception as e:  # noqa: BLE001
-            if righe.tell() > inizio:
-                pezzi.append((inizio, righe.tell(), None))
-                continue
-            letture_fallite += 1
-            if letture_fallite >= MASSIMI_ERRORI:
-                if interrotta is not None:
-                    interrotta(e)
-                break
-            continue
-        letture_fallite = 0
-        fine = righe.tell()
-        if letta is None:
-            break
-        contate += 1
-        game = letta[0]
-        esito = pgn_search._partita_da_tenere(game)
-        if esito == "vuota":
-            pezzi.append((inizio, fine, None))
-            continue
-        scheda, dati = _scheda(letta, inizio, fine, esito == "esclusa")
-        primo = bisect.bisect_left(cattive, inizio)
-        if primo < len(cattive) and cattive[primo] < fine:
-            scheda.problemi = {**(scheda.problemi or {}), "codifica": True}
-        pezzi.append((inizio, fine, len(schede)))
-        schede.append(scheda)
-        info.append(dati)
-        adesso = time.time()
-        if adesso - ultima >= pgn_search.OGNI_QUANTO:
-            if avanzamento is not None:
-                avanzamento(contate)
-            ultima = adesso
-    # Quello che resta, letto o no, si tiene com'e'.
-    if righe.tell() < len(testo) or inizio < len(testo):
-        pezzi.append((inizio, len(testo), None))
-    return pezzi, schede, info
 
 
 def _scarica(indirizzo, righe, avanzamento=None, fermato=None):
@@ -835,7 +645,7 @@ def carica_le_aperture():
 
 def classifica(archivio, indici, aperture, avanzamento=None, fermato=None):
     """Le intestazioni ECO, Opening e Variation da eco.db per le partite di
-    indici che le mosse fanno riconoscere: (cambi, riconosciute).
+    indici che le mosse fanno riconoscere: {partita: testo nuovo}.
     avanzamento(percentuale) ogni tre secondi; fermato() ferma il lavoro e
     tiene quello che e' fatto."""
     cambi = {}

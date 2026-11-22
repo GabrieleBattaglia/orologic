@@ -4,9 +4,16 @@
 import atexit
 import datetime
 import json
+import multiprocessing
 import os
 import sys
 import warnings
+
+# I processi della lettura dei PGN in parallelo, lettura_pgn.py, nel
+# pacchetto compilato ripartono da questo file: qui fanno il loro lavoro ed
+# escono, senza caricare il resto di Orologic ne' aprire finestre.
+if __name__ == "__main__":
+    multiprocessing.freeze_support()
 
 from GBUtils import (
     Acusticator,

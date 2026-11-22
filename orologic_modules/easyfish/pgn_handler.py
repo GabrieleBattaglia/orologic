@@ -12,8 +12,9 @@ import pyperclip
 from GBUtils import Acusticator, dgt, key, menu
 
 from .. import ui
-from ..board_utils import RighePGN, format_pgn_comments, validate_and_clean_pgn
+from ..board_utils import format_pgn_comments, validate_and_clean_pgn
 from ..config import _, maiuscole_nomi, percorso_salvataggio, sanitize_filename
+from ..lettura_pgn import RighePGN
 from .constants import (
     DEFAULT_BLACK_SURENAME,
     DEFAULT_EVENT,

@@ -11,6 +11,7 @@ from GBUtils import Acusticator
 
 from . import config, localizzazione, modello_prompt, orologio, tempo
 from .config import _
+from .lettura_pgn import RighePGN
 
 LARGHEZZA_BRAILLE = 40
 
@@ -774,97 +775,6 @@ def ParseTime(prompt):
 
 def parse_mmss_to_seconds(time_str):
     return tempo.da_mmss(time_str)
-
-
-FINE_DELLA_PARTITA = frozenset(("1-0", "0-1", "1/2-1/2", "*"))
-
-
-class RighePGN:
-    """Un testo PGN riga per riga, per chess.pgn.read_game e read_headers,
-    senza copiarlo: tell() dice dove si e'.
-
-    Per python-chess una riga vuota in mezzo alle mosse chiude la partita;
-    per pgn-extract, ChessBase e lo standard la chiude il segno del
-    risultato. Cosi' una partita col commento iniziale staccato dalle mosse
-    da una riga vuota diventava due pezzi: le intestazioni col commento, e
-    le mosse senza intestazioni. Qui le righe vuote di una partita che non
-    ha ancora il suo segno si saltano, se dopo non comincia un'altra
-    partita; quelle dentro un commento restano. Scoperto il 22 novembre
-    2026 sull'archivio di Gabriele, con 37 partite fatte a pezzi."""
-
-    def __init__(self, testo, posizione=0):
-        self.testo = testo
-        self.posizione = posizione
-        self.nel_commento = False
-        # fuori, intestazioni, mosse o chiusa: a che punto e' la partita.
-        self.stato = "fuori"
-
-    def tell(self):
-        return self.posizione
-
-    def _riga(self):
-        fine = self.testo.find("\n", self.posizione)
-        fine = len(self.testo) if fine < 0 else fine + 1
-        riga = self.testo[self.posizione : fine]
-        self.posizione = fine
-        return riga
-
-    def readline(self):
-        riga = self._riga()
-        if riga and riga.isspace() and not self.nel_commento and self.stato in ("intestazioni", "mosse"):
-            ripresa = self.posizione
-            seguente = self._riga()
-            while seguente and seguente.isspace():
-                seguente = self._riga()
-            if not seguente or seguente.startswith(("[", "%")):
-                self.posizione = ripresa
-                return riga
-            riga = seguente
-        self._segui(riga)
-        return riga
-
-    def _segui(self, riga):
-        """Lo stato della partita dopo la riga."""
-        if not riga or riga.isspace():
-            return
-        if not self.nel_commento:
-            if riga.startswith("["):
-                self.stato = "intestazioni"
-                return
-            if riga.startswith("%"):
-                return
-        fuori = self._fuori_dai_commenti(riga).rsplit(None, 1)
-        if fuori:
-            self.stato = "chiusa" if fuori[-1] in FINE_DELLA_PARTITA else "mosse"
-        elif self.stato in ("fuori", "intestazioni"):
-            self.stato = "mosse"
-
-    def _fuori_dai_commenti(self, riga):
-        """La riga senza i commenti, fra graffe o dopo il punto e virgola."""
-        if not self.nel_commento and "{" not in riga and ";" not in riga:
-            return riga
-        pezzi = []
-        inizio = 0
-        while inizio < len(riga):
-            if self.nel_commento:
-                chiusa = riga.find("}", inizio)
-                if chiusa < 0:
-                    break
-                self.nel_commento = False
-                inizio = chiusa + 1
-                continue
-            graffa = riga.find("{", inizio)
-            punto = riga.find(";", inizio)
-            if punto >= 0 and (graffa < 0 or punto < graffa):
-                pezzi.append(riga[inizio:punto])
-                break
-            if graffa < 0:
-                pezzi.append(riga[inizio:])
-                break
-            pezzi.append(riga[inizio:graffa])
-            self.nel_commento = True
-            inizio = graffa + 1
-        return "".join(pezzi)
 
 
 def validate_and_clean_pgn(pgn_text):
