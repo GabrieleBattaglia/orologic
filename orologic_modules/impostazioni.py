@@ -64,6 +64,7 @@ VOCI = (
     "nomi",
     "prompt",
     "scacchiera_attesa",
+    "righe_area",
     "salvataggio",
     "stile",
     "colori",
@@ -133,6 +134,10 @@ class Impostazioni:
             from . import finestra_scacchiera
 
             return _riga(_("Tempo di attesa dei comandi della scacchiera (ms)"), finestra_scacchiera.attesa_dei_comandi())
+        if voce == "righe_area":
+            from . import finestra
+
+            return _("Quante righe conservo nell'area principale? {n}").format(n=finestra.righe_da_tenere())
         if voce == "salvataggio":
             return _("Salvataggio automatico: {stato}").format(stato=_("attivo") if db.get("autosave_enabled") else _("non attivo"))
         if voce == "stile":
@@ -159,6 +164,7 @@ class Impostazioni:
             "nomi": self._nomi,
             "prompt": self._prompt,
             "scacchiera_attesa": self._attesa_della_scacchiera,
+            "righe_area": self._righe_dell_area,
             "salvataggio": lambda d: self._interruttore("autosave_enabled", _("Salvataggio automatico"), (_("attivo"), _("non attivo")), d),
             "stile": lambda d: self._interruttore("menu_numerati", _("Stile dei menu"), (_("numeri"), _("parole")), d),
             "colori": self._colori,
@@ -219,6 +225,28 @@ class Impostazioni:
         )
         if nuovo is not None and nuovo != attuale:
             storage.SetValue(finestra_scacchiera.CHIAVE_ATTESA, nuovo)
+            _bip()
+
+    def _righe_dell_area(self, dialogo):
+        """Le righe che l'area principale conserva: oltre, le piu' vecchie se
+        ne vanno (Gabriele, collaudo del 22 novembre 2026: di piu' servono di
+        rado e appesantiscono lo scorrimento)."""
+        from . import finestra
+
+        attuale = finestra.righe_da_tenere()
+        nuovo = self.finestra.chiedi_valore(
+            dialogo,
+            _("Quante righe conservo nell'area principale?"),
+            _("Quante righe conservo nell'area principale? [{cur}]: ").format(cur=attuale),
+            attuale,
+            "intero",
+            finestra.RIGHE_MINIME,
+            finestra.RIGHE_MASSIME,
+        )
+        if nuovo is not None and nuovo != attuale:
+            storage.SetValue(finestra.CHIAVE_DELLE_RIGHE, nuovo)
+            if hasattr(self.finestra, "righe_tenute"):
+                self.finestra.righe_tenute = nuovo
             _bip()
 
     @staticmethod

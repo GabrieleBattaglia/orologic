@@ -2,7 +2,8 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
 
 """La ricerca PGN nella finestra, come l'ha descritta Gabriele il 21
-novembre 2026 (Piano della GUI.txt).
+novembre 2026 (Piano della GUI.txt) e come l'ha voluta dopo il collaudo del
+22 novembre.
 
 Si apre sulla finestra standard di Windows per scegliere il file; Dagli
 appunti carica un indirizzo o un testo PGN, come la ricerca del terminale, e
@@ -10,22 +11,30 @@ il profilatore di Lichess passa il suo indirizzo direttamente. Il caricamento
 gira in un filo, con l'avanzamento ogni tre secondi; Esc lo ferma e tiene
 quello che e' arrivato.
 
-In cima le statistiche generali dell'archivio; poi i dieci filtri del
-terminale, con per etichetta la loro domanda, Applica i filtri e Azzera i
-filtri; poi l'albero delle mosse, un albero nativo di Windows a selezione
-singola, costruito un ramo alla volta quando si apre. Ogni voce ha la riga
-del terminale, con la mossa descritta, la mossa, le partite, la percentuale
-fra le mosse dello stesso punto e le statistiche; la foglia e' la partita,
-quando un ramo ne ha una sola. Invio su un ramo lo apre o lo chiude, su una
-foglia mostra la partita, coi pulsanti Passa a Easyfish, Analisi automatica,
-Analisi manuale e Chiudi.
+Due schede. Partite: in cima le statistiche generali dell'archivio, poi
+l'albero delle mosse, un albero nativo di Windows a selezione singola,
+costruito un ramo alla volta quando si apre, e i pulsanti. Filtri: i dieci
+filtri del terminale, con per etichetta la loro domanda, quelli delle mosse,
+del matto e della promozione, Applica i filtri e Azzera i filtri.
 
-Dopo l'albero, con Tab: Inizio, Partite del ramo (il tasto 0 del
-terminale), Salva il PGN (il tasto s), Percorso, che legge la linea fino
-alla voce, e Chiudi.
+Ogni mossa dell'albero ha la riga del terminale, con la mossa descritta, la
+mossa, le partite, la percentuale fra le mosse dello stesso punto e le
+statistiche; le partite che ci arrivano da una variante dei commenti sono
+contate a parte, fuori dalle statistiche. La foglia e' la partita, quando un
+ramo ne ha una sola. In fondo alla radice Non classificate, le partite senza
+mosse, da una posizione di studio o senza codice ECO, e Problemi, un ramo per
+tipo, coi doppioni cercati da un filo mentre si naviga.
 
-Lo stato resta in pgn_search.Ricerca: dopo Easyfish o l'analisi la finestra
-si riapre allo stesso punto, coi filtri di prima.
+Invio su un ramo lo apre o lo chiude, su una foglia mostra la partita, coi
+pulsanti Passa a Easyfish, Analisi automatica, Analisi manuale e Chiudi.
+Dopo l'albero, con Tab: Inizio, Partite del ramo (il tasto 0 del terminale),
+Salva il PGN (il tasto s), Percorso, che legge la linea fino alla voce,
+Classifica, che scrive il codice ECO alle non classificate, e Ripara i
+problemi. Alt+1 porta all'archivio, Alt+2 all'albero, Alt+3 ai pulsanti,
+Alt+4 al primo filtro.
+
+Lo stato resta in archivio_pgn.Ricerca: dopo Easyfish o l'analisi la
+finestra si riapre allo stesso punto, coi filtri di prima.
 """
 
 import os
@@ -37,7 +46,7 @@ import wx
 from GBUtils import Acusticator
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
-from . import aspetto, config, dialoghi, pgn_search
+from . import archivio_pgn, aspetto, config, dialoghi, pgn_search
 from .config import _
 
 SUONI = {
@@ -52,8 +61,8 @@ def suona(evento):
 
 
 def domande_dei_filtri():
-    """I filtri del terminale: chiave, domanda e tipo, il massimo per i
-    numeri."""
+    """I filtri: chiave, domanda e tipo, il massimo per i numeri. I primi
+    dieci sono quelli del terminale."""
     return (
         ("white", _("Nome giocatore Bianco (vuoto=qualsiasi): "), "testo"),
         ("black", _("Nome giocatore Nero (vuoto=qualsiasi): "), "testo"),
@@ -65,6 +74,10 @@ def domande_dei_filtri():
         ("year_from", _("Anno dal (0=nessun limite): "), 2100),
         ("year_to", _("Anno al (0=nessun limite): "), 2100),
         ("eco", _("Codice ECO (es. 'B', 'B90', vuoto=qualsiasi): "), "testo"),
+        ("mosse_min", _("Con almeno queste mosse (0=nessun limite): "), 1000),
+        ("mosse_max", _("Con meno di queste mosse (0=nessun limite): "), 1000),
+        ("matto", _("Terminata con il matto"), "casella"),
+        ("promozione", _("Con promozione"), "casella"),
     )
 
 
@@ -75,6 +88,7 @@ def risultati():
         ("1-0", _("Vittoria Bianco (1-0)")),
         ("0-1", _("Vittoria Nero (0-1)")),
         ("1/2-1/2", _("Patta (1/2-1/2)")),
+        ("*", _("Non specificato (*)")),
     )
 
 
@@ -173,21 +187,36 @@ class VistaDellaPartita(wx.Dialog):
 
 
 class Nodo:
-    """I dati di una voce dell'albero: le mosse dalla posizione iniziale, le
-    partite che le hanno giocate, e la partita, se la voce e' una foglia."""
+    """I dati di una voce dell'albero. chiave la distingue fra le sorelle,
+    per tornarci; tipo e' radice, mosse, non_classificate, gruppo,
+    problemi, problema o foglia. indici sono le partite della voce, per le
+    mosse quelle che l'hanno giocata; percorso le mosse dalla posizione
+    iniziale; linee le linee delle varianti che passano di li', [(partita,
+    linea)], e varianti le partite che ci arrivano solo da una variante;
+    partita la partita della foglia; problema il tipo, nel ramo Problemi."""
 
-    def __init__(self, percorso, indici, partita=None):
-        self.percorso = percorso
+    def __init__(self, chiave, tipo, indici=(), percorso=(), linee=(), varianti=(), partita=None, problema=None):
+        self.chiave = chiave
+        self.tipo = tipo
         self.indici = indici
+        self.percorso = percorso
+        self.linee = linee
+        self.varianti = varianti
         self.partita = partita
+        self.problema = problema
         self.popolato = False
+
+    def tutte(self):
+        """Le partite della voce: quelle giocate, poi quelle delle varianti."""
+        return [*self.indici, *(indice for indice, _linea in self.varianti)]
 
 
 class FinestraRicerca(wx.Dialog):
-    """ricerca e' lo stato, pgn_search.Ricerca; chiedi_conferma(genitore,
-    testo) chiede si' o no, avvisa(genitore, testo) dice cosa non e'
-    andato, annuncia(righe) le dice in coda, se gli annunci sono attivi. uscita, alla chiusura, e'
-    (azione, indice) per Easyfish o l'analisi, o None."""
+    """ricerca e' lo stato, archivio_pgn.Ricerca; chiedi_conferma(genitore,
+    testo) chiede si' o no, avvisa(genitore, testo) dice cosa non e' andato
+    o com'e' andata, annuncia(righe) le dice in coda, se gli annunci sono
+    attivi. uscita, alla chiusura, e' (azione, indice) per Easyfish o
+    l'analisi, o None."""
 
     def __init__(self, genitore, ricerca, chiedi_conferma, avvisa, annuncia):
         super().__init__(genitore, title=_("Ricerca PGN"), style=STILE_ADATTABILE)
@@ -197,62 +226,26 @@ class FinestraRicerca(wx.Dialog):
         self._annuncia = annuncia
         self.uscita = None
         self.indici = []
-        # Durante il caricamento: l'evento che lo ferma, e il filo.
+        # Durante il caricamento, Classifica o Ripara: l'evento che li ferma,
+        # e il filo.
         self._fermato = None
         self.filo = None
+        # La ricerca dei doppioni, mentre si naviga.
+        self._fermati_i_doppioni = None
+        self.filo_doppioni = None
+        self.avanzamento_doppioni = 0
         pannello = pannello_scorrevole(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
-        # L'ordine di creazione e' quello del Tab, e ogni controllo prende
-        # il nome del testo creato subito prima.
-        riga = wx.BoxSizer(wx.HORIZONTAL)
-        self.pulsante_file = wx.Button(pannello, label=_("Apri &file"))
-        self.pulsante_appunti = wx.Button(pannello, label=_("Dagli &appunti"))
-        riga.Add(self.pulsante_file, 0, wx.RIGHT, 5)
-        riga.Add(self.pulsante_appunti, 0)
-        sizer.Add(riga, 0, wx.ALL, 5)
-        sizer.Add(wx.StaticText(pannello, label=_("Archivio")), 0, wx.LEFT | wx.RIGHT, 5)
-        self.riepilogo = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_DONTWRAP)
-        self.riepilogo.SetName(_("Archivio"))
-        sizer.Add(self.riepilogo, 0, wx.EXPAND | wx.ALL, 5)
-        griglia = wx.FlexGridSizer(cols=4, vgap=5, hgap=5)
-        griglia.AddGrowableCol(1)
-        griglia.AddGrowableCol(3)
-        self.campi = {}
-        for chiave, domanda, tipo in domande_dei_filtri():
-            etichetta = etichetta_della_domanda(domanda)
-            griglia.Add(wx.StaticText(pannello, label=etichetta), 0, wx.ALIGN_CENTER_VERTICAL)
-            if tipo == "testo":
-                campo = wx.TextCtrl(pannello)
-            elif tipo == "risultato":
-                campo = wx.Choice(pannello, choices=[testo for _codice, testo in risultati()])
-                campo.SetSelection(0)
-            else:
-                campo = wx.SpinCtrl(pannello, min=0, max=tipo, initial=0)
-            campo.SetName(etichetta)
-            self.campi[chiave] = campo
-            griglia.Add(campo, 1, wx.EXPAND)
-        sizer.Add(griglia, 0, wx.EXPAND | wx.ALL, 5)
-        riga = wx.BoxSizer(wx.HORIZONTAL)
-        self.pulsante_applica = wx.Button(pannello, label=_("Appli&ca i filtri"))
-        self.pulsante_azzera = wx.Button(pannello, label=_("A&zzera i filtri"))
-        riga.Add(self.pulsante_applica, 0, wx.RIGHT, 5)
-        riga.Add(self.pulsante_azzera, 0)
-        sizer.Add(riga, 0, wx.ALL, 5)
-        self.etichetta_dell_albero = wx.StaticText(pannello, label=_("Nessun archivio caricato."))
-        sizer.Add(self.etichetta_dell_albero, 0, wx.LEFT | wx.RIGHT, 5)
-        self.albero = wx.TreeCtrl(pannello, style=wx.TR_HAS_BUTTONS | wx.TR_SINGLE)
-        self.albero.SetName(_("Nessun archivio caricato."))
-        sizer.Add(self.albero, 1, wx.EXPAND | wx.ALL, 5)
-        riga = wx.BoxSizer(wx.HORIZONTAL)
-        self.pulsante_inizio = wx.Button(pannello, label=_("&Inizio"))
-        self.pulsante_partite = wx.Button(pannello, label=_("Partite del &ramo"))
-        self.pulsante_salva = wx.Button(pannello, label=_("&Salva il PGN"))
-        self.pulsante_percorso = wx.Button(pannello, label=_("&Percorso"))
+        self.schede = wx.Notebook(pannello)
+        self.pagina_partite = wx.Panel(self.schede)
+        self.pagina_filtri = wx.Panel(self.schede)
+        self.schede.AddPage(self.pagina_partite, _("Partite"))
+        self.schede.AddPage(self.pagina_filtri, _("Filtri"))
+        self._pagina_delle_partite(self.pagina_partite)
+        self._pagina_dei_filtri(self.pagina_filtri)
+        sizer.Add(self.schede, 1, wx.EXPAND | wx.ALL, 5)
         chiudi = wx.Button(pannello, wx.ID_CANCEL, _("Chiudi"))
-        for pulsante in (self.pulsante_inizio, self.pulsante_partite, self.pulsante_salva, self.pulsante_percorso):
-            riga.Add(pulsante, 0, wx.RIGHT, 5)
-        riga.Add(chiudi, 0)
-        sizer.Add(riga, 0, wx.ALL, 5)
+        sizer.Add(chiudi, 0, wx.ALL, 5)
         pannello.SetSizer(sizer)
         aspetto.applica_alla_finestra(self)
         self.riepilogo.SetMinSize(wx.Size(-1, self.riepilogo.GetCharHeight() * 6))
@@ -269,11 +262,14 @@ class FinestraRicerca(wx.Dialog):
         self.pulsante_partite.Bind(wx.EVT_BUTTON, lambda _evento: self.partite_del_ramo())
         self.pulsante_salva.Bind(wx.EVT_BUTTON, lambda _evento: self.salva())
         self.pulsante_percorso.Bind(wx.EVT_BUTTON, lambda _evento: self.percorso())
+        self.pulsante_classifica.Bind(wx.EVT_BUTTON, lambda _evento: self.classifica())
+        self.pulsante_ripara.Bind(wx.EVT_BUTTON, lambda _evento: self.ripara())
         self.albero.Bind(wx.EVT_TREE_ITEM_EXPANDING, lambda evento: self._popola(evento.GetItem()))
         self.albero.Bind(wx.EVT_TREE_ITEM_ACTIVATED, lambda evento: self.attiva(evento.GetItem()))
         self._mostra()
         if ricerca.archivio is not None:
             self.albero.SetFocus()
+            self._cerca_i_doppioni()
         else:
             self.riepilogo.SetFocus()
             if ricerca.indirizzo:
@@ -282,7 +278,71 @@ class FinestraRicerca(wx.Dialog):
             else:
                 wx.CallAfter(self._apri_se_aperta)
 
-    # Il caricamento.
+    def _pagina_delle_partite(self, pagina):
+        # L'ordine di creazione e' quello del Tab, e ogni controllo prende
+        # il nome del testo creato subito prima.
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        riga = wx.BoxSizer(wx.HORIZONTAL)
+        self.pulsante_file = wx.Button(pagina, label=_("Apri &file"))
+        self.pulsante_appunti = wx.Button(pagina, label=_("Dagli &appunti"))
+        riga.Add(self.pulsante_file, 0, wx.RIGHT, 5)
+        riga.Add(self.pulsante_appunti, 0)
+        sizer.Add(riga, 0, wx.ALL, 5)
+        sizer.Add(wx.StaticText(pagina, label=_("Archivio")), 0, wx.LEFT | wx.RIGHT, 5)
+        self.riepilogo = wx.TextCtrl(pagina, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_DONTWRAP)
+        self.riepilogo.SetName(_("Archivio"))
+        sizer.Add(self.riepilogo, 0, wx.EXPAND | wx.ALL, 5)
+        self.etichetta_dell_albero = wx.StaticText(pagina, label=_("Nessun archivio caricato."))
+        sizer.Add(self.etichetta_dell_albero, 0, wx.LEFT | wx.RIGHT, 5)
+        self.albero = wx.TreeCtrl(pagina, style=wx.TR_HAS_BUTTONS | wx.TR_SINGLE)
+        self.albero.SetName(_("Nessun archivio caricato."))
+        sizer.Add(self.albero, 1, wx.EXPAND | wx.ALL, 5)
+        riga = wx.BoxSizer(wx.HORIZONTAL)
+        self.pulsante_inizio = wx.Button(pagina, label=_("&Inizio"))
+        self.pulsante_partite = wx.Button(pagina, label=_("Partite del &ramo"))
+        self.pulsante_salva = wx.Button(pagina, label=_("&Salva il PGN"))
+        self.pulsante_percorso = wx.Button(pagina, label=_("&Percorso"))
+        self.pulsante_classifica = wx.Button(pagina, label=_("C&lassifica"))
+        self.pulsante_ripara = wx.Button(pagina, label=_("Ripara i pro&blemi"))
+        for pulsante in (self.pulsante_inizio, self.pulsante_partite, self.pulsante_salva, self.pulsante_percorso, self.pulsante_classifica):
+            riga.Add(pulsante, 0, wx.RIGHT, 5)
+        riga.Add(self.pulsante_ripara, 0)
+        sizer.Add(riga, 0, wx.ALL, 5)
+        pagina.SetSizer(sizer)
+
+    def _pagina_dei_filtri(self, pagina):
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        griglia = wx.FlexGridSizer(cols=4, vgap=5, hgap=5)
+        griglia.AddGrowableCol(1)
+        griglia.AddGrowableCol(3)
+        self.campi = {}
+        for chiave, domanda, tipo in domande_dei_filtri():
+            etichetta = etichetta_della_domanda(domanda)
+            if tipo == "casella":
+                griglia.Add((0, 0))
+                campo = wx.CheckBox(pagina, label=etichetta)
+            else:
+                griglia.Add(wx.StaticText(pagina, label=etichetta), 0, wx.ALIGN_CENTER_VERTICAL)
+                if tipo == "testo":
+                    campo = wx.TextCtrl(pagina)
+                elif tipo == "risultato":
+                    campo = wx.Choice(pagina, choices=[testo for _codice, testo in risultati()])
+                    campo.SetSelection(0)
+                else:
+                    campo = wx.SpinCtrl(pagina, min=0, max=tipo, initial=0)
+            campo.SetName(etichetta)
+            self.campi[chiave] = campo
+            griglia.Add(campo, 1, wx.EXPAND)
+        sizer.Add(griglia, 0, wx.EXPAND | wx.ALL, 5)
+        riga = wx.BoxSizer(wx.HORIZONTAL)
+        self.pulsante_applica = wx.Button(pagina, label=_("Appli&ca i filtri"))
+        self.pulsante_azzera = wx.Button(pagina, label=_("A&zzera i filtri"))
+        riga.Add(self.pulsante_applica, 0, wx.RIGHT, 5)
+        riga.Add(self.pulsante_azzera, 0)
+        sizer.Add(riga, 0, wx.ALL, 5)
+        pagina.SetSizer(sizer)
+
+    # I lavori lunghi: il caricamento, Classifica e Ripara.
 
     def _apri_se_aperta(self):
         if self:
@@ -292,11 +352,12 @@ class FinestraRicerca(wx.Dialog):
         if self:
             self.carica(tipo, sorgente)
 
-    def carica_in_corso(self):
+    def in_corso(self):
+        """Vero mentre si carica, si classifica o si ripara."""
         return self._fermato is not None
 
     def apri_file(self):
-        if self.carica_in_corso():
+        if self.in_corso():
             suona("no")
             return
         percorso = scegli_il_file(self)
@@ -305,7 +366,7 @@ class FinestraRicerca(wx.Dialog):
 
     def dagli_appunti(self):
         """Come il terminale: un percorso, un indirizzo o il testo PGN."""
-        if self.carica_in_corso():
+        if self.in_corso():
             suona("no")
             return
         try:
@@ -320,41 +381,54 @@ class FinestraRicerca(wx.Dialog):
             return
         self.carica(pgn_search.tipo_di_sorgente(testo), testo)
 
-    def carica(self, tipo, sorgente):
-        """Il caricamento nel filo: l'avanzamento nell'area dell'archivio e
-        alla voce; alla fine l'albero, o l'avviso di cosa non e' andato."""
+    def _lavora(self, testo, lavoro, finito):
+        """lavoro(avanzamento, fermato) nel filo; finito(risultato) alla fine,
+        nella finestra. L'avanzamento va nell'area dell'archivio e alla voce."""
+        self._ferma_i_doppioni()
         fermato = self._fermato = threading.Event()
-        testo = _("Analisi del PGN in corso...")
+        self.schede.SetSelection(0)
         self.riepilogo.ChangeValue(testo)
         self.riepilogo.SetFocus()
         self._annuncia([testo])
-        self.filo = threading.Thread(target=self._carica_nel_filo, args=(tipo, sorgente, fermato), name="ricerca_pgn", daemon=True)
+
+        def nel_filo():
+            try:
+                risultato = lavoro(lambda riga: wx.CallAfter(self._avanzamento, riga), fermato.is_set)
+            # Gli archivi PGN arrivano da fuori e possono essere malformati
+            # in modi imprevedibili, e il disco puo' rifiutarsi: il filo non
+            # deve morire in silenzio.
+            except Exception as errore:  # noqa: BLE001
+                risultato = (None, [str(errore)])
+            wx.CallAfter(self._lavorato, finito, risultato)
+
+        self.filo = threading.Thread(target=nel_filo, name="ricerca_pgn", daemon=True)
         self.filo.start()
 
-    def _carica_nel_filo(self, tipo, sorgente, fermato):
-        try:
-            archivio, righe = pgn_search.carica_archivio(tipo, sorgente, lambda testo: wx.CallAfter(self._avanzamento, testo), fermato.is_set)
-        # Gli archivi PGN arrivano da fuori e possono essere malformati
-        # in modi imprevedibili: il filo non deve morire in silenzio.
-        except Exception as errore:  # noqa: BLE001
-            archivio, righe = None, [str(errore)]
-        wx.CallAfter(self._caricato, archivio, righe)
+    def _lavorato(self, finito, risultato):
+        if not self:
+            return
+        self._fermato = None
+        finito(risultato)
+
+    def carica(self, tipo, sorgente):
+        """Il caricamento nel filo; alla fine l'albero, o l'avviso di cosa
+        non e' andato."""
+        self._lavora(_("Analisi del PGN in corso..."), lambda avanzamento, fermato: archivio_pgn.carica(tipo, sorgente, avanzamento, fermato), self._caricato)
 
     def _avanzamento(self, testo):
-        if not self or not self.carica_in_corso():
+        if not self or not self.in_corso():
             return
         self.riepilogo.ChangeValue(testo)
         self._annuncia([testo])
 
-    def _caricato(self, archivio, righe):
-        if not self:
-            return
-        self._fermato = None
+    def _caricato(self, risultato):
+        archivio, righe = risultato
         if archivio is None:
             self._mostra()
             suona("no")
             self._avvisa(self, "\n".join(righe))
             (self.albero if self.ricerca.archivio is not None else self.riepilogo).SetFocus()
+            self._cerca_i_doppioni()
             return
         self.ricerca.archivio = archivio
         self.ricerca.righe = righe
@@ -363,11 +437,78 @@ class FinestraRicerca(wx.Dialog):
         self._mostra()
         self.albero.SetFocus()
         self._annuncia([righe[-1]])
+        self._cerca_i_doppioni()
 
     def ferma(self):
-        """Esc durante il caricamento: si tiene quello che e' arrivato."""
+        """Esc durante un lavoro: si tiene quello che e' fatto."""
         if self._fermato is not None:
             self._fermato.set()
+
+    # I doppioni, in un filo, mentre si naviga.
+
+    def _cerca_i_doppioni(self):
+        archivio = self.ricerca.archivio
+        if archivio is None or archivio.doppioni_cercati or self._fermati_i_doppioni is not None:
+            return
+        fermati = self._fermati_i_doppioni = threading.Event()
+        self.avanzamento_doppioni = 0
+        self._rinfresca_i_problemi()
+
+        def nel_filo():
+            try:
+                doppioni = archivio_pgn.cerca_i_doppioni(archivio, lambda pct: wx.CallAfter(self._doppioni_al, archivio, pct), fermati.is_set)
+            # Come nel caricamento: il filo non deve morire in silenzio.
+            except Exception:  # noqa: BLE001
+                doppioni = {}
+            if doppioni is not None:
+                wx.CallAfter(self._doppioni_trovati, archivio, doppioni)
+
+        self.filo_doppioni = threading.Thread(target=nel_filo, name="doppioni", daemon=True)
+        self.filo_doppioni.start()
+
+    def _ferma_i_doppioni(self):
+        if self._fermati_i_doppioni is not None:
+            self._fermati_i_doppioni.set()
+            self._fermati_i_doppioni = None
+
+    def _doppioni_al(self, archivio, pct):
+        if not self or archivio is not self.ricerca.archivio or self._fermati_i_doppioni is None:
+            return
+        self.avanzamento_doppioni = pct
+        self._rinfresca_i_problemi()
+
+    def _doppioni_trovati(self, archivio, doppioni):
+        if not self or archivio is not self.ricerca.archivio or self._fermati_i_doppioni is None:
+            return
+        self._fermati_i_doppioni = None
+        archivio_pgn.segna_i_doppioni(archivio, doppioni)
+        self._rinfresca_i_problemi(finita=True)
+
+    def _voce_dei_problemi(self):
+        radice = self.albero.GetRootItem()
+        if not radice.IsOk():
+            return None
+        return next((figlio for figlio in self.figli(radice) if self.albero.GetItemData(figlio).tipo == "problemi"), None)
+
+    def _rinfresca_i_problemi(self, finita=False):
+        """La voce Problemi dice a che punto e' la ricerca dei doppioni; alla
+        fine, se il ramo e' gia' aperto, vi si aggiungono i doppioni."""
+        voce = self._voce_dei_problemi()
+        archivio = self.ricerca.archivio
+        if voce is None or archivio is None:
+            return
+        nodo = self.albero.GetItemData(voce)
+        nodo.indici = archivio.con_problemi(self.indici)
+        avanzamento = None if archivio.doppioni_cercati else self.avanzamento_doppioni
+        self.albero.SetItemText(voce, archivio_pgn.voce_dei_problemi(len(nodo.indici), avanzamento))
+        self.albero.SetItemHasChildren(voce, bool(nodo.indici))
+        if not finita or not nodo.popolato:
+            return
+        doppioni = archivio.problemi(nodo.indici).get("doppioni")
+        if doppioni:
+            nome = dict(archivio_pgn.tipi_dei_problemi())["doppioni"]
+            figlio = self.albero.AppendItem(voce, archivio_pgn.voce_del_gruppo(nome, len(doppioni)), data=Nodo("doppioni", "problema", doppioni, problema="doppioni"))
+            self.albero.SetItemHasChildren(figlio, True)
 
     # L'archivio, i filtri e l'albero.
 
@@ -376,7 +517,7 @@ class FinestraRicerca(wx.Dialog):
         archivio = self.ricerca.archivio
         righe = list(self.ricerca.righe)
         if archivio is not None:
-            righe += pgn_search.righe_dell_archivio(archivio)
+            righe += archivio_pgn.righe_dell_archivio(archivio)
         self.riepilogo.ChangeValue("\n".join(righe) if righe else _("Nessun archivio caricato."))
         self.riepilogo.SetInsertionPoint(0)
         self.metti_i_filtri(self.ricerca.filtri)
@@ -385,7 +526,9 @@ class FinestraRicerca(wx.Dialog):
     def metti_i_filtri(self, filtri):
         for chiave, campo in self.campi.items():
             valore = filtri.get(chiave)
-            if isinstance(campo, wx.TextCtrl):
+            if isinstance(campo, wx.CheckBox):
+                campo.SetValue(bool(valore))
+            elif isinstance(campo, wx.TextCtrl):
                 campo.ChangeValue(valore or "")
             elif isinstance(campo, wx.Choice):
                 codici = [codice for codice, _testo in risultati()]
@@ -394,11 +537,14 @@ class FinestraRicerca(wx.Dialog):
                 campo.SetValue(valore or 0)
 
     def filtri_dei_campi(self):
-        """I filtri dei campi, con le chiavi del terminale: un campo vuoto o
-        a zero non filtra."""
+        """I filtri dei campi, con le chiavi del terminale: un campo vuoto, a
+        zero o spento non filtra."""
         filtri = {}
         for chiave, campo in self.campi.items():
-            if isinstance(campo, wx.TextCtrl):
+            if isinstance(campo, wx.CheckBox):
+                if campo.GetValue():
+                    filtri[chiave] = True
+            elif isinstance(campo, wx.TextCtrl):
                 valore = campo.GetValue().strip()
                 if valore:
                     filtri[chiave] = valore.upper() if chiave == "eco" else valore
@@ -411,7 +557,7 @@ class FinestraRicerca(wx.Dialog):
         return filtri
 
     def applica(self):
-        if self.ricerca.archivio is None or self.carica_in_corso():
+        if self.ricerca.archivio is None or self.in_corso():
             suona("no")
             return
         self.ricerca.filtri = self.filtri_dei_campi()
@@ -420,7 +566,7 @@ class FinestraRicerca(wx.Dialog):
         self._annuncia([self.etichetta_dell_albero.GetLabel()])
 
     def azzera(self):
-        if self.ricerca.archivio is None or self.carica_in_corso():
+        if self.ricerca.archivio is None or self.in_corso():
             suona("no")
             return
         self.ricerca.filtri = {}
@@ -439,23 +585,28 @@ class FinestraRicerca(wx.Dialog):
             testo = _("Nessun archivio caricato.")
         else:
             self.indici = pgn_search.applica_filtri(archivio.info, self.ricerca.filtri)
-            totale = len(archivio.games)
+            totale = len(archivio)
             pct = len(self.indici) / totale * 100 if totale else 0.0
             testo = pgn_search.pulita(_("Partite corrispondenti: {n} di {tot} ({pct:.2f}%)").format(n=len(self.indici), tot=totale, pct=pct))
         self.etichetta_dell_albero.SetLabel(testo)
         self.albero.SetName(testo)
         if archivio is None:
             return
-        radice = self.albero.AddRoot(pgn_search.voce_della_radice(archivio, self.indici, self.ricerca.filtri), data=Nodo((), self.indici))
+        radice = self.albero.AddRoot(archivio_pgn.voce_della_radice(archivio, self.indici, self.ricerca.filtri), data=Nodo(None, "radice", self.indici))
         self._popola(radice)
         self.albero.Expand(radice)
         voce = self._trova(radice, posizione) if posizione else radice
         self.albero.SelectItem(voce)
         self.albero.EnsureVisible(voce)
 
+    def _aggiungi(self, voce, testo, nodo, con_figli=False):
+        figlio = self.albero.AppendItem(voce, testo, data=nodo)
+        if con_figli:
+            self.albero.SetItemHasChildren(figlio, True)
+        return figlio
+
     def _popola(self, voce):
-        """I figli della voce, la prima volta che servono: le mosse dalla
-        piu' giocata, poi le partite che finiscono li'."""
+        """I figli della voce, la prima volta che servono."""
         if not voce.IsOk():
             return
         nodo = self.albero.GetItemData(voce)
@@ -463,16 +614,64 @@ class FinestraRicerca(wx.Dialog):
             return
         nodo.popolato = True
         archivio = self.ricerca.archivio
-        scacchiera = pgn_search.scacchiera_del_percorso(nodo.percorso)
-        rami, finite = archivio.figli(nodo.indici, len(nodo.percorso))
-        for mossa, indici in rami:
-            testo = pgn_search.voce_del_ramo(archivio, scacchiera, mossa, indici, len(nodo.indici), self.ricerca.filtri)
-            foglia = indici[0] if len(indici) == 1 else None
-            figlio = self.albero.AppendItem(voce, testo, data=Nodo((*nodo.percorso, mossa), indici, foglia))
-            if foglia is None:
-                self.albero.SetItemHasChildren(figlio, True)
+        if nodo.tipo == "radice":
+            nell_albero = [indice for indice in nodo.indici if archivio.nell_albero(indice)]
+            self._aggiungi_le_mosse(voce, (), nell_albero, archivio.linee_di(nell_albero))
+            self._aggiungi_i_rami_fuori(voce, nodo.indici)
+        elif nodo.tipo == "mosse":
+            self._aggiungi_le_mosse(voce, nodo.percorso, nodo.indici, nodo.linee)
+        elif nodo.tipo == "non_classificate":
+            senza_mosse, studio, senza_eco = archivio.non_classificate(nodo.indici)
+            for chiave, nome, indici in (("senza_mosse", _("Senza mosse"), senza_mosse), ("studio", _("Da una posizione di studio"), studio)):
+                if indici:
+                    self._aggiungi(voce, archivio_pgn.voce_del_gruppo(nome, len(indici)), Nodo(chiave, "gruppo", indici), True)
+            if senza_eco:
+                figlio = Nodo("senza_eco", "mosse", senza_eco, linee=archivio.linee_di(senza_eco))
+                self._aggiungi(voce, archivio_pgn.voce_del_gruppo(_("Senza codice ECO"), len(senza_eco)), figlio, True)
+        elif nodo.tipo == "gruppo":
+            for indice in nodo.indici:
+                self._aggiungi(voce, archivio.partita(indice), Nodo(("partita", indice), "foglia", [indice], partita=indice))
+        elif nodo.tipo == "problemi":
+            trovati = archivio.problemi(nodo.indici)
+            for tipo, nome in archivio_pgn.tipi_dei_problemi():
+                if trovati.get(tipo):
+                    self._aggiungi(voce, archivio_pgn.voce_del_gruppo(nome, len(trovati[tipo])), Nodo(tipo, "problema", trovati[tipo], problema=tipo), True)
+        elif nodo.tipo == "problema":
+            for indice in nodo.indici:
+                foglia = Nodo(("partita", indice), "foglia", [indice], partita=indice, problema=nodo.problema)
+                self._aggiungi(voce, archivio_pgn.voce_del_problema(archivio, indice, nodo.problema), foglia)
+
+    def _aggiungi_le_mosse(self, voce, percorso, indici, linee):
+        """Le mosse dalla piu' giocata, poi le partite che finiscono li', e
+        quelle che ci finiscono con una variante."""
+        archivio = self.ricerca.archivio
+        scacchiera = archivio_pgn.scacchiera_del_percorso(percorso)
+        rami, finite, finite_varianti = archivio.figli(indici, linee, len(percorso))
+        for giocata, partite, coppie, varianti in rami:
+            testo = archivio_pgn.voce_del_ramo(archivio, scacchiera, giocata, partite, varianti, len(indici), self.ricerca.filtri)
+            foglia = None
+            if len(partite) == 1 and not varianti:
+                foglia = partite[0]
+            elif not partite and len(varianti) == 1:
+                foglia = varianti[0][0]
+            nodo = Nodo(archivio_pgn.codice(giocata), "mosse", partite, (*percorso, giocata), coppie, varianti, foglia)
+            self._aggiungi(voce, testo, nodo, foglia is None)
         for indice in finite:
-            self.albero.AppendItem(voce, archivio.partita(indice), data=Nodo(nodo.percorso, [indice], indice))
+            self._aggiungi(voce, archivio.partita(indice), Nodo(("partita", indice), "foglia", [indice], percorso, partita=indice))
+        for indice, linea in finite_varianti:
+            nodo = Nodo(("partita", indice), "foglia", [], percorso, varianti=[(indice, linea)], partita=indice)
+            self._aggiungi(voce, archivio_pgn.voce_della_variante_finita(archivio, indice), nodo)
+
+    def _aggiungi_i_rami_fuori(self, voce, indici):
+        """In fondo alla radice: Non classificate, se ce ne sono, e Problemi."""
+        archivio = self.ricerca.archivio
+        senza_mosse, studio, senza_eco = archivio.non_classificate(indici)
+        fuori = sorted([*senza_mosse, *studio, *senza_eco])
+        if fuori:
+            self._aggiungi(voce, archivio_pgn.voce_del_gruppo(_("Non classificate"), len(fuori)), Nodo("non_classificate", "non_classificate", fuori), True)
+        con_problemi = archivio.con_problemi(indici)
+        avanzamento = None if archivio.doppioni_cercati else self.avanzamento_doppioni
+        self._aggiungi(voce, archivio_pgn.voce_dei_problemi(len(con_problemi), avanzamento), Nodo("problemi", "problemi", con_problemi), bool(con_problemi))
 
     def figli(self, voce):
         figlio, biscotto = self.albero.GetFirstChild(voce)
@@ -480,25 +679,31 @@ class FinestraRicerca(wx.Dialog):
             yield figlio
             figlio, biscotto = self.albero.GetNextChild(voce, biscotto)
 
+    def antenati(self, voce):
+        """La voce e quelle che la contengono, fino alla radice, coi nodi."""
+        while voce.IsOk():
+            yield voce, self.albero.GetItemData(voce)
+            voce = self.albero.GetItemParent(voce)
+
+    def chiavi(self, voce):
+        """La posizione della voce: le chiavi dalla radice, per tornarci."""
+        return tuple(reversed([nodo.chiave for _voce, nodo in self.antenati(voce) if nodo.tipo != "radice"]))
+
     def _trova(self, radice, posizione):
-        """La voce di posizione, (percorso, partita), aprendo i rami lungo la
-        strada; dove la strada non c'e' piu', l'ultima voce trovata."""
-        percorso, partita = posizione
+        """La voce di posizione, aprendo i rami lungo la strada; dove la
+        strada non c'e' piu', l'ultima voce trovata."""
         voce = radice
-        for passo in range(1, len(percorso) + 1):
+        for chiave in posizione:
             self._popola(voce)
-            prossima = next((figlio for figlio in self.figli(voce) if self.albero.GetItemData(figlio).percorso == percorso[:passo]), None)
+            prossima = next((figlio for figlio in self.figli(voce) if self.albero.GetItemData(figlio).chiave == chiave), None)
             if prossima is None:
                 return voce
             voce = prossima
-        if partita is not None and self.albero.GetItemData(voce).partita != partita:
-            self._popola(voce)
-            voce = next((figlio for figlio in self.figli(voce) if self.albero.GetItemData(figlio).partita == partita), voce)
         return voce
 
     def selezionata(self):
         """La voce selezionata e il suo nodo, o (None, None)."""
-        if self.ricerca.archivio is None or self.carica_in_corso():
+        if self.ricerca.archivio is None or self.in_corso():
             return None, None
         voce = self.albero.GetSelection()
         if not voce.IsOk():
@@ -528,48 +733,53 @@ class FinestraRicerca(wx.Dialog):
     def mostra_partita(self, indice):
         """La vista della partita: vero se si va a Easyfish o all'analisi,
         e la finestra si chiude con l'uscita."""
-        azione = mostra_la_partita(self, testo_della_partita(self.ricerca.archivio.games[indice]))
+        azione = mostra_la_partita(self, testo_della_partita(self.ricerca.archivio.partita_intera(indice)))
         if azione is None:
             return False
-        _voce, nodo = self.selezionata()
-        self.ricerca.posizione = (nodo.percorso, nodo.partita) if nodo is not None else None
+        voce, _nodo = self.selezionata()
+        self.ricerca.posizione = self.chiavi(voce) if voce is not None else None
         self.uscita = (azione, indice)
+        self._ferma_i_doppioni()
         finisci(self, wx.ID_OK)
         return True
 
     def inizio(self):
-        if self.ricerca.archivio is None or self.carica_in_corso():
+        if self.ricerca.archivio is None or self.in_corso():
             suona("no")
             return
         self.ricerca.posizione = None
         self.ricostruisci()
+        self.schede.SetSelection(0)
         self.albero.SetFocus()
 
     def partite_del_ramo(self):
         """Il tasto 0 del terminale: le partite del ramo, con le mosse che
-        seguono; Invio mostra la partita, e chiudendola si torna all'elenco."""
+        seguono, quelle delle varianti in fondo; Invio mostra la partita, e
+        chiudendola si torna all'elenco."""
         _voce, nodo = self.selezionata()
-        if nodo is None or not nodo.indici:
+        if nodo is None or not nodo.tutte():
             suona("no")
             return
         archivio = self.ricerca.archivio
-        scacchiera = pgn_search.scacchiera_del_percorso(nodo.percorso)
+        scacchiera = archivio_pgn.scacchiera_del_percorso(nodo.percorso)
+        profondita = len(nodo.percorso)
+        partite = [(indice, None) for indice in nodo.indici] + list(nodo.varianti)
         with wx.BusyCursor():
-            voci = [archivio.voce_della_lista(scacchiera, indice, len(nodo.percorso), numero) for numero, indice in enumerate(nodo.indici, 1)]
+            voci = [archivio.voce_della_lista(scacchiera, indice, profondita, numero, linea) for numero, (indice, linea) in enumerate(partite, 1)]
         scelta = 0
         while True:
             scelta = scegli(self, wx.StripMenuCodes(_("Partite del &ramo")), voci, scelta)
-            if scelta is None or self.mostra_partita(nodo.indici[scelta]):
+            if scelta is None or self.mostra_partita(partite[scelta][0]):
                 return
 
     def salva(self):
         """Il tasto s del terminale: le partite della voce in un file, con
-        varianti e commenti."""
+        varianti e commenti, com'erano."""
         _voce, nodo = self.selezionata()
-        if nodo is None or not nodo.indici:
+        if nodo is None or not nodo.tutte():
             suona("no")
             return
-        if not self.ricerca.filtri and not nodo.percorso:
+        if not self.ricerca.filtri and nodo.tipo == "radice":
             avviso = pgn_search.pulita(
                 _("\nAttenzione: non ci sono filtri attivi. " "Il file salvato sarebbe una copia dell'archivio originale.")
             )
@@ -580,13 +790,14 @@ class FinestraRicerca(wx.Dialog):
             return
         if not os.path.splitext(percorso)[1]:
             percorso += ".pgn"
+        partite = nodo.tutte()
         try:
-            pgn_search.scrivi_pgn(percorso, self.ricerca.archivio.games, nodo.indici)
+            archivio_pgn.scrivi_pgn(percorso, self.ricerca.archivio, partite)
         except OSError as errore:
             suona("no")
             self._avvisa(self, pgn_search.pulita(_("Errore nel salvataggio: {e}").format(e=errore)))
             return
-        self._annuncia([pgn_search.pulita(_("Salvate {n} partite in: {path}").format(n=len(nodo.indici), path=percorso))])
+        self._annuncia([pgn_search.pulita(_("Salvate {n} partite in: {path}").format(n=len(partite), path=percorso))])
 
     def percorso(self):
         """La linea dalla prima mossa alla voce selezionata, alla voce."""
@@ -594,18 +805,102 @@ class FinestraRicerca(wx.Dialog):
         if nodo is None:
             suona("no")
             return
-        self._annuncia([pgn_search.sequenza_del_percorso(nodo.percorso)])
+        self._annuncia([archivio_pgn.sequenza_del_percorso(nodo.percorso)])
+
+    def classifica(self):
+        """Dal ramo Non classificate: il codice ECO, l'apertura e la variante
+        da eco.db alle partite senza codice ECO, dove le mosse lo dicono."""
+        voce, nodo = self.selezionata()
+        if nodo is None or not any(antenato.tipo == "non_classificate" for _voce, antenato in self.antenati(voce)):
+            suona("no")
+            return
+        archivio = self.ricerca.archivio
+        senza_mosse, studio, senza_eco = archivio.non_classificate(self.indici)
+        if not senza_eco:
+            suona("no")
+            self._annuncia([_("Nessuna partita da classificare.")])
+            return
+        self.ricerca.posizione = self.chiavi(voce)
+
+        def lavoro(avanzamento, fermato):
+            aperture = archivio_pgn.carica_le_aperture()
+            cambi = archivio_pgn.classifica(archivio, senza_eco, aperture, lambda pct: avanzamento(_("Classificazione: {pct}%").format(pct=pct)), fermato)
+            righe = [_("Classificate {n} partite su {m}.").format(n=len(cambi), m=len(senza_eco))]
+            if len(cambi) < len(senza_eco):
+                righe.append(_("Le altre restano senza codice ECO: le loro mosse non si trovano in eco.db."))
+            if senza_mosse or studio:
+                righe.append(_("Le partite senza mosse o da una posizione di studio non si classificano."))
+            nuovo, altre = archivio_pgn.applica_le_modifiche(archivio, cambi)
+            return nuovo, righe + altre
+
+        self._lavora(_("Classificazione delle aperture in corso..."), lavoro, self._modificato)
+
+    def ripara(self):
+        """Dal ramo Problemi tutti i tipi, da un suo sottoramo quel tipo: le
+        riparazioni possibili, e il resoconto."""
+        voce, nodo = self.selezionata()
+        if nodo is None:
+            suona("no")
+            return
+        archivio = self.ricerca.archivio
+        ramo = next((antenato for _voce, antenato in self.antenati(voce) if antenato.tipo in ("problema", "problemi")), None)
+        if ramo is None or not ramo.indici:
+            suona("no")
+            return
+        tipi = {ramo.problema} if ramo.tipo == "problema" else {tipo for tipo, _nome in archivio_pgn.tipi_dei_problemi()}
+        if "doppioni" in tipi and not archivio.doppioni_cercati:
+            suona("no")
+            self._annuncia([_("La ricerca dei doppioni non e' finita: riprova fra poco.")])
+            return
+        indici = list(ramo.indici)
+        self.ricerca.posizione = self.chiavi(voce)
+
+        def lavoro(_avanzamento, _fermato):
+            cambi, tolte, conti = archivio_pgn.ripara(archivio, indici, tipi)
+            righe = archivio_pgn.righe_della_riparazione(conti)
+            nuovo, altre = archivio_pgn.applica_le_modifiche(archivio, cambi, tolte, riscrivi_comunque=bool(conti["codifica"]))
+            return nuovo, (righe or [_("Niente da riparare.")]) + altre
+
+        self._lavora(_("Riparazione in corso..."), lavoro, self._modificato)
+
+    def _modificato(self, risultato):
+        """Dopo Classifica o Ripara: l'archivio nuovo, l'albero allo stesso
+        punto, dove c'e' ancora, e il resoconto."""
+        archivio, righe = risultato
+        if archivio is None:
+            suona("no")
+        else:
+            self.ricerca.archivio = archivio
+        self._mostra()
+        self.albero.SetFocus()
+        self._avvisa(self, "\n".join(righe))
+        self._cerca_i_doppioni()
+
+    def vai_alla_sezione(self, numero):
+        """Alt+1 l'archivio, Alt+2 l'albero, Alt+3 i pulsanti, Alt+4 il primo
+        filtro."""
+        if numero == 4:
+            self.schede.SetSelection(1)
+            next(iter(self.campi.values())).SetFocus()
+            return
+        self.schede.SetSelection(0)
+        (self.riepilogo, self.albero, self.pulsante_inizio)[numero - 1].SetFocus()
 
     def _chiudi(self, _evento=None):
-        """Chiudi, Esc fuori dal caricamento, o la X: un caricamento in corso
-        si ferma, e la finestra si chiude senza uscita."""
+        """Chiudi, Esc fuori da un lavoro, o la X: un lavoro in corso si
+        ferma, la ricerca dei doppioni anche, e la finestra si chiude senza
+        uscita."""
         self.ferma()
+        self._ferma_i_doppioni()
         finisci(self, wx.ID_CANCEL)
 
     def _tasto(self, evento):
         codice = evento.GetKeyCode()
-        if codice == wx.WXK_ESCAPE and not evento.HasAnyModifiers() and self.carica_in_corso():
+        if codice == wx.WXK_ESCAPE and not evento.HasAnyModifiers() and self.in_corso():
             self.ferma()
+            return
+        if evento.GetModifiers() == wx.MOD_ALT and ord("1") <= codice <= ord("4"):
+            self.vai_alla_sezione(codice - ord("0"))
             return
         if dialoghi.premuto_invio(evento):
             oggetto = evento.GetEventObject()

@@ -259,3 +259,30 @@ def test_l_attesa_dei_comandi_della_scacchiera(gestore):
     _tipo, titolo, domanda, valore, genere, minimo, massimo = gestore.chieste[0]
     assert titolo == "Tempo di attesa dei comandi della scacchiera (ms)"
     assert (domanda, valore, genere, minimo, massimo) == ("Tempo di attesa dei comandi della scacchiera (ms) [700]: ", 700, "intero", 200, 3000)
+
+
+def test_le_righe_dell_area_principale(gestore):
+    """Gabriele, collaudo del 22 novembre 2026: di serie 200 righe; il
+    valore nuovo vale subito, e l'area tiene solo quelle."""
+    from orologic_modules import finestra as modulo_finestra
+
+    assert gestore.riga("righe_area") == "Quante righe conservo nell'area principale? 200"
+    gestore.risposte.append(50)
+    gestore.cambia("righe_area", None)
+    assert storage.LoadDB()[modulo_finestra.CHIAVE_DELLE_RIGHE] == 50
+    assert gestore.riga("righe_area") == "Quante righe conservo nell'area principale? 50"
+    _tipo, titolo, domanda, valore, genere, minimo, massimo = gestore.chieste[0]
+    assert titolo == "Quante righe conservo nell'area principale?"
+    assert (domanda, valore, genere, minimo, massimo) == ("Quante righe conservo nell'area principale? [200]: ", 200, "intero", 20, 10000)
+    finestra = gestore.finestra
+    assert finestra.righe_tenute == 50
+    di_prima = finestra.righe
+    try:
+        finestra.righe = [f"riga {numero}" for numero in range(70)]
+        assert finestra._taglia_il_registro() == 20
+        assert len(finestra.righe) == 50 and finestra.righe[0] == "riga 20"
+        # Fino a un quarto in piu' restano tutte.
+        finestra.righe.extend(["altra"] * 12)
+        assert finestra._taglia_il_registro() == 0
+    finally:
+        finestra.righe = di_prima

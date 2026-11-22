@@ -1,18 +1,13 @@
-Collaudo delle note sulla scacchiera, Orologic 9, ramo gui, 21 novembre 2026: NVDA e le orecchie. Accanto a ogni voce scrivi ok, oppure cosa non va.
-Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py; arbitra una partita.
-* Aggiungo delle note via via che trovo cose da sistemare. Cancello le prove andate bene.
-* arbitra, scelgo orologio con invio. Compare la domanda sul tipo di partita: il cursore però non atterra sulla domanda ma in un punto precedente della finestra di testo, di solito sul messaggio di benenuto.
-* Aggiungi una nuova voce nelle impostazioni: "Quante righe conservo nell'area principale?" Default = 200. Di più sono raramente utili e appesantiscono lo scrolling.
-
-Prima della ricerca: python orologic.py, menu principale, ricerca.
-* Nel filtro risultati manca "*" non specificato.
-* Nell'albero manca un ramo che raccolga tutte quelle partite che non possono essere classificate per apertura, magari perchè sono prive di mosse in quanto contengono posizioni di studio.
-* Servirebbe anche, se chessPGN lo consente, un ramo che raccolga tutte le partite con problemi, errori o cose da sistemare e, sempre se possibile, che sia poi suddiviso al suo interno con rami che indichino le tipologie di problemi. Tieni conto che l'utente potrebbe aprire DB con centinaia di migliaia di partite, quindi un thread separato dovrebbe occuparsi di popolare il ramo dei problemi, mentre l'utente naviga e fa altro. Il processo, se non concluso, verrebbe terminato se si esce da ricerca pgn. Quando ci si trova in questo ramo, problemi, un pulsante ripara potrebbe tentare una riparazione automatica dove possibile e terminare con un report di quanto fatto. Sul ramo delle non classificate invece, un pulsante classifica potrebbe fare il lavoro di classificazione usando eco.db già in possesso di orologic. Se realizzi questa feature, salva prima una copia di backup del file originale nella cartella pgn di orologic.
-* Io sposterei tutta la parte dei filtri in un secondo tab della stessa finestra.
-* Aggiungerei i filtri: "Con almeno x mosse" e "Con meno di x mosse"
-* Aggiungerei i filtri: checkbox "Terminata con il matto" di default disattiva e, "Con promozione" di default disattiva.
-Domanda 10: una scelta mia, da confermare: nell'albero entrano solo le mosse giocate, non le varianti dei commenti; nel terminale entravano anche quelle, e una partita commentata finiva in piu' rami. Va bene cosi'?
-* No, per studio sarebbe utile che una partita con una variante di una determinata apertura fosse visibile anche da chi studia quella partura. Questo però non dovrebbe falsare le statistiche. Ci si riesce?
-* La finestra di ricerca è molto grande. Servono dei tasti rapidi che portino alle diverse sezioni. Sicuramente all'all'albero, al primo filtro, ai pulsanti. Trova un set di tasti, applicali e riportali nel manuale.
-* Nel manuale assicurati che ci sia una apposita sessione che raccolga tutti i tasti rapidi dell'applicazione, suddivisi per settore e dentro ai settori, alfabeticamente.
-* Domanda. Nel test ho passato una partita ad Easyfish ed ho notato che quella sezione non è ancora fatta. Confermi? Chiedo perchè non me la citavi fra le cose da fare, ma è praticamente ancora da sistemare.
+Collaudo, Orologic 9, ramo gui, 22 novembre 2026: NVDA e le orecchie. Accanto a ogni voce scrivi ok, oppure cosa non va.
+Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py.
+Domanda 1: arbitra, scegli l'orologio con Invio: alla domanda sulla variante standard il cursore sta sulla domanda, non piu' sul benvenuto?
+Domanda 2: Impostazioni, la voce Quante righe conservo nell'area principale? 200; cambiala, per esempio a 50, e guarda che l'area tenga solo le ultime. Va?
+Prima della ricerca: menu principale, ricerca. Servono un PGN con varianti nei commenti e uno con qualche problema; per Classifica e Ripara usa delle copie.
+Domanda 3: le due schede, Partite e Filtri, e Ctrl+Tab; Alt+1 porta all'archivio, Alt+2 all'albero, Alt+3 ai pulsanti, Alt+4 al primo filtro. Va?
+Domanda 4: i filtri nuovi: Non specificato (*) fra i risultati, Con almeno queste mosse, Con meno di queste mosse, Terminata con il matto e Con promozione. Le mosse si contano coi numeri delle mosse, non con le semimosse: va bene?
+Domanda 5: le varianti dei commenti nell'albero, contate a parte, come (12 partite, piu' 3 dalle varianti), coi rami di sole varianti e le foglie in una variante; in Partite del ramo in fondo, segnate variante. Va?
+Domanda 6: in fondo alla radice Non classificate, coi gruppi Senza mosse, Da una posizione di studio e Senza codice ECO, e Classifica; guarda anche la copia di sicurezza nella cartella pgn. Va?
+Domanda 7: Problemi, coi suoi tipi e le foglie che dicono cosa non va, la ricerca dei doppioni con la percentuale sulla voce, e Ripara i problemi, dal ramo e da un tipo, col resoconto. Va?
+Domanda 8: se hai un archivio grande, di centinaia di migliaia di partite: il tempo del caricamento, la memoria, e la ricerca dei doppioni mentre navighi. Com'e'?
+Domanda 9: il manuale: la sezione 1.8 Tasti rapidi, finestra per finestra e in ordine alfabetico, e il 2.8 della ricerca. Va?
+Domanda 10: i testi nuovi: le schede Partite e Filtri; i pulsanti Classifica, con la l, e Ripara i problemi, con la b, perche' le lettere di Ripara sono gia' tutte prese; i cinque filtri nuovi; i rami Non classificate, Senza mosse, Da una posizione di studio, Senza codice ECO, Problemi e i sette tipi; le righe del resoconto; Quante righe conservo nell'area principale? Li approvi?

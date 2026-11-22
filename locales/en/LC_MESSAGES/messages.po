@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-21 22:48+0100\n"
+"POT-Creation-Date: 2026-11-22 07:22+0100\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -73,22 +73,22 @@ msgstr ""
 #: orologic_modules/easyfish/interaction.py:151
 #: orologic_modules/easyfish/interaction.py:160
 #: orologic_modules/easyfish/interaction.py:169
-#: orologic_modules/impostazioni.py:137 orologic_modules/impostazioni.py:162
+#: orologic_modules/impostazioni.py:142 orologic_modules/impostazioni.py:168
 msgid "attivo"
 msgstr "active"
 
-#: orologic.py:181 orologic_modules/impostazioni.py:137
-#: orologic_modules/impostazioni.py:162
+#: orologic.py:181 orologic_modules/impostazioni.py:142
+#: orologic_modules/impostazioni.py:168
 msgid "non attivo"
 msgstr "not active"
 
-#: orologic.py:182 orologic_modules/impostazioni.py:139
-#: orologic_modules/impostazioni.py:163
+#: orologic.py:182 orologic_modules/impostazioni.py:144
+#: orologic_modules/impostazioni.py:169
 msgid "numeri"
 msgstr "numbers"
 
-#: orologic.py:182 orologic_modules/impostazioni.py:139
-#: orologic_modules/impostazioni.py:163
+#: orologic.py:182 orologic_modules/impostazioni.py:144
+#: orologic_modules/impostazioni.py:169
 msgid "parole"
 msgstr "words"
 
@@ -96,44 +96,44 @@ msgstr "words"
 msgid "Analisi: tempo, linee e soglie di giudizio"
 msgstr "Analysis: time, lines and judgement thresholds"
 
-#: orologic.py:185 orologic_modules/impostazioni.py:127
+#: orologic.py:185 orologic_modules/impostazioni.py:128
 #, python-brace-format
 msgid "Motore scacchistico: {nome}"
 msgstr "Chess engine: {nome}"
 
-#: orologic.py:186 orologic_modules/impostazioni.py:129
-#: orologic_modules/impostazioni.py:465
+#: orologic.py:186 orologic_modules/impostazioni.py:130
+#: orologic_modules/impostazioni.py:493
 msgid "Nomi dei pezzi, delle colonne e delle mosse"
 msgstr "Names of pieces, files and moves"
 
-#: orologic.py:187 orologic_modules/impostazioni.py:125
-#: orologic_modules/impostazioni.py:264
+#: orologic.py:187 orologic_modules/impostazioni.py:126
+#: orologic_modules/impostazioni.py:292
 #, python-brace-format
 msgid "Il mio nome: {nome}"
 msgstr "My name: {nome}"
 
-#: orologic.py:188 orologic_modules/impostazioni.py:125
-#: orologic_modules/impostazioni.py:264
+#: orologic.py:188 orologic_modules/impostazioni.py:126
+#: orologic_modules/impostazioni.py:292
 msgid "non ancora scritto"
 msgstr "not written yet"
 
-#: orologic.py:190 orologic_modules/impostazioni.py:131
+#: orologic.py:190 orologic_modules/impostazioni.py:132
 #, python-brace-format
 msgid "Prompt di gioco: {modello}"
 msgstr "Game prompt: {modello}"
 
-#: orologic.py:193 orologic_modules/impostazioni.py:137
+#: orologic.py:193 orologic_modules/impostazioni.py:142
 #, python-brace-format
 msgid "Salvataggio automatico: {stato}"
 msgstr "Autosave: {stato}"
 
-#: orologic.py:194 orologic_modules/impostazioni.py:139
+#: orologic.py:194 orologic_modules/impostazioni.py:144
 #, python-brace-format
 msgid "Stile dei menu: {stato}"
 msgstr "Menu style: {stato}"
 
-#: orologic.py:195 orologic_modules/impostazioni.py:143
-#: orologic_modules/impostazioni.py:288
+#: orologic.py:195 orologic_modules/impostazioni.py:148
+#: orologic_modules/impostazioni.py:316
 #, python-brace-format
 msgid "Volume dei suoni: {vol}%"
 msgstr "Sound volume: {vol}%"
@@ -268,7 +268,7 @@ msgstr ""
 "Loading game from clipboard..."
 
 #: orologic.py:378 orologic_modules/game_flow.py:989
-#: orologic_modules/gioca.py:82 orologic_modules/pgn_search.py:1660
+#: orologic_modules/gioca.py:82 orologic_modules/pgn_search.py:1463
 msgid ""
 "Il motore scacchistico non e' configurato. Vuoi configurarlo ora? (INVIO per"
 " si', ESC per no): "
@@ -277,12 +277,12 @@ msgstr ""
 " yes, ESC for no): "
 
 #: orologic.py:384 orologic_modules/game_flow.py:1000
-#: orologic_modules/pgn_search.py:1666
+#: orologic_modules/pgn_search.py:1469
 msgid "Impossibile inizializzare il motore. Analisi annullata."
 msgstr "Could not initialize engine. Analysis cancelled."
 
 #: orologic.py:390 orologic_modules/game_flow.py:1008
-#: orologic_modules/pgn_search.py:1673
+#: orologic_modules/pgn_search.py:1476
 msgid "Desideri l'analisi automatica? (INVIO per si', ESC per manuale): "
 msgstr "Do you want automatic analysis? (ENTER for yes, ESC for manual): "
 
@@ -375,10 +375,278 @@ msgstr "interrupts the current announcement"
 msgid "si accoda all'annuncio in corso"
 msgstr "queues after the current announcement"
 
-#: orologic_modules/annunci.py:112 orologic_modules/impostazioni.py:88
+#: orologic_modules/annunci.py:112 orologic_modules/impostazioni.py:89
 #, python-brace-format
 msgid "{etichetta}: {valore}"
 msgstr "{etichetta}: {valore}"
+
+#: orologic_modules/archivio_pgn.py:60
+msgid "Mosse illegali o illeggibili"
+msgstr "Illegal or unreadable moves"
+
+#: orologic_modules/archivio_pgn.py:61
+msgid "Intestazioni obbligatorie mancanti"
+msgstr "Missing required headers"
+
+#: orologic_modules/archivio_pgn.py:62
+msgid "Risultato che non torna"
+msgstr "Inconsistent result"
+
+#: orologic_modules/archivio_pgn.py:63
+msgid "Date malformate"
+msgstr "Malformed dates"
+
+#: orologic_modules/archivio_pgn.py:64
+msgid "Elo non numerici"
+msgstr "Non-numeric Elo"
+
+#: orologic_modules/archivio_pgn.py:65
+msgid "Caratteri illeggibili"
+msgstr "Unreadable characters"
+
+#: orologic_modules/archivio_pgn.py:66
+msgid "Partite doppie"
+msgstr "Duplicate games"
+
+#: orologic_modules/archivio_pgn.py:325 orologic_modules/pgn_search.py:140
+msgid ""
+"Scaricamento interrotto dall'utente. Elaborazione delle partite caricate "
+"finora..."
+msgstr "Download interrupted by user. Processing the games loaded so far..."
+
+#: orologic_modules/archivio_pgn.py:335 orologic_modules/pgn_search.py:157
+msgid ""
+"Tempo massimo di scaricamento (60 minuti) raggiunto. Elaborazione delle "
+"partite caricate finora..."
+msgstr ""
+"Maximum download time (60 minutes) reached. Processing the games loaded so "
+"far..."
+
+#: orologic_modules/archivio_pgn.py:339 orologic_modules/pgn_search.py:166
+#, python-brace-format
+msgid ""
+"\r"
+"Scaricamento in corso: {mb:.2f} MB ({elapsed:.0f}s)...\r"
+msgstr ""
+"\r"
+"Downloading: {mb:.2f} MB ({elapsed:.0f}s)...\r"
+
+#: orologic_modules/archivio_pgn.py:355 orologic_modules/pgn_search.py:110
+#, python-brace-format
+msgid "Rilevato percorso file: {path}"
+msgstr "File path detected: {path}"
+
+#: orologic_modules/archivio_pgn.py:360 orologic_modules/pgn_search.py:117
+#, python-brace-format
+msgid "Errore nella lettura del file: {e}"
+msgstr "Error reading file: {e}"
+
+#: orologic_modules/archivio_pgn.py:364 orologic_modules/pgn_search.py:122
+#, python-brace-format
+msgid "Rilevato URL: {url}"
+msgstr "URL detected: {url}"
+
+#: orologic_modules/archivio_pgn.py:371 orologic_modules/pgn_search.py:180
+#, python-brace-format
+msgid "Errore HTTP durante il download: {code} {reason}"
+msgstr "HTTP error downloading: {code} {reason}"
+
+#: orologic_modules/archivio_pgn.py:373 orologic_modules/pgn_search.py:185
+#, python-brace-format
+msgid "Errore nel download: {e}"
+msgstr "Download error: {e}"
+
+#: orologic_modules/archivio_pgn.py:378
+#: orologic_modules/finestra_ricerca.py:380 orologic_modules/pgn_search.py:101
+msgid "Gli appunti sono vuoti."
+msgstr "The clipboard is empty."
+
+#: orologic_modules/archivio_pgn.py:381 orologic_modules/pgn_search.py:199
+msgid "Il testo negli appunti non sembra contenere dati PGN validi."
+msgstr "The text in the clipboard does not appear to contain valid PGN data."
+
+#: orologic_modules/archivio_pgn.py:388 orologic_modules/pgn_search.py:193
+msgid "Nessun contenuto PGN trovato."
+msgstr "No PGN content found."
+
+#: orologic_modules/archivio_pgn.py:393 orologic_modules/pgn_search.py:207
+#, python-brace-format
+msgid ""
+"\r"
+"Partite caricate: {n}..."
+msgstr ""
+"\r"
+"Loaded games: {n}..."
+
+#: orologic_modules/archivio_pgn.py:396 orologic_modules/pgn_search.py:214
+#, python-brace-format
+msgid ""
+"Lettura interrotta: il PGN non e' leggibile da questo punto in poi. {errore}"
+msgstr ""
+"Reading interrupted: the PGN is not readable from this point on. {errore}"
+
+#: orologic_modules/archivio_pgn.py:400
+msgid "Lettura fermata: tengo le partite lette finora."
+msgstr "Reading stopped: keeping the games read so far."
+
+#: orologic_modules/archivio_pgn.py:513
+#, python-brace-format
+msgid "{bianco} vs {nero}, {risultato}"
+msgstr "{bianco} vs {nero}, {risultato}"
+
+#: orologic_modules/archivio_pgn.py:538
+msgid "variante"
+msgstr "variation"
+
+#: orologic_modules/archivio_pgn.py:555
+#, python-brace-format
+msgid "{ramo} ({n} partite) | {statistiche}"
+msgstr "{ramo} ({n} games) | {statistiche}"
+
+#: orologic_modules/archivio_pgn.py:555 orologic_modules/pgn_search.py:957
+#: orologic_modules/pgn_search.py:1245
+msgid "(radice)"
+msgstr "(root)"
+
+#: orologic_modules/archivio_pgn.py:571
+#, python-brace-format
+msgid "{descrizione} ({mossa}): {partita}"
+msgstr "{descrizione} ({mossa}): {partita}"
+
+#: orologic_modules/archivio_pgn.py:573
+#, python-brace-format
+msgid "{descrizione} ({mossa}): {partita}, in una variante"
+msgstr "{descrizione} ({mossa}): {partita}, in a variation"
+
+#: orologic_modules/archivio_pgn.py:575
+#, python-brace-format
+msgid "{descrizione} ({mossa}) ({v} partite dalle varianti)"
+msgstr "{descrizione} ({mossa}) ({v} games from variations)"
+
+#: orologic_modules/archivio_pgn.py:579
+#, python-brace-format
+msgid ""
+"{descrizione} ({mossa}) ({n} partite, piu' {v} dalle varianti) = {pct:.1f}% "
+"| {statistiche}"
+msgstr ""
+"{descrizione} ({mossa}) ({n} games, plus {v} from variations) = {pct:.1f}% |"
+" {statistiche}"
+
+#: orologic_modules/archivio_pgn.py:581
+#, python-brace-format
+msgid "{descrizione} ({mossa}) ({n} partite) = {pct:.1f}% | {statistiche}"
+msgstr "{descrizione} ({mossa}) ({n} games) = {pct:.1f}% | {statistiche}"
+
+#: orologic_modules/archivio_pgn.py:586
+#, python-brace-format
+msgid "{partita}, in una variante"
+msgstr "{partita}, in a variation"
+
+#: orologic_modules/archivio_pgn.py:591
+#, python-brace-format
+msgid "{ramo} ({n} partite)"
+msgstr "{ramo} ({n} games)"
+
+#: orologic_modules/archivio_pgn.py:598 orologic_modules/archivio_pgn.py:599
+msgid "Problemi"
+msgstr "Problems"
+
+#: orologic_modules/archivio_pgn.py:599
+#, python-brace-format
+msgid "{ramo} ({n} partite), ricerca dei doppioni al {pct}%"
+msgstr "{ramo} ({n} games), duplicate search at {pct}%"
+
+#: orologic_modules/archivio_pgn.py:611
+#, python-brace-format
+msgid "la posizione dice {risultato}"
+msgstr "the position says {risultato}"
+
+#: orologic_modules/archivio_pgn.py:612
+#, python-brace-format
+msgid "in fondo alle mosse {segno}"
+msgstr "at the end of the moves {segno}"
+
+#: orologic_modules/archivio_pgn.py:614
+#, python-brace-format
+msgid "uguale alla partita {n}"
+msgstr "same as game {n}"
+
+#: orologic_modules/archivio_pgn.py:622
+#, python-brace-format
+msgid "{partita}: {dettaglio}"
+msgstr "{partita}: {dettaglio}"
+
+#: orologic_modules/archivio_pgn.py:643 orologic_modules/pgn_search.py:54
+#, python-brace-format
+msgid ""
+"\n"
+"Attenzione: l'archivio contiene solo {n} partite (minimo consigliato: 20)."
+msgstr ""
+"\n"
+"Attention: the archive contains only {n} games (recommended minimum: 20)."
+
+#: orologic_modules/archivio_pgn.py:836
+#, python-brace-format
+msgid "Intestazioni aggiunte: {n} partite."
+msgstr "Headers added: {n} games."
+
+#: orologic_modules/archivio_pgn.py:837
+#, python-brace-format
+msgid "Risultati corretti: {n}."
+msgstr "Results corrected: {n}."
+
+#: orologic_modules/archivio_pgn.py:838
+#, python-brace-format
+msgid "Date riscritte: {n}."
+msgstr "Dates rewritten: {n}."
+
+#: orologic_modules/archivio_pgn.py:839
+#, python-brace-format
+msgid "Doppioni tolti: {n}."
+msgstr "Duplicates removed: {n}."
+
+#: orologic_modules/archivio_pgn.py:840
+#, python-brace-format
+msgid "Partite coi caratteri riletti: {n}."
+msgstr "Games with their characters reread: {n}."
+
+#: orologic_modules/archivio_pgn.py:841
+#, python-brace-format
+msgid "Mosse illegali, da sistemare a mano: {n} partite."
+msgstr "Illegal moves, to fix by hand: {n} games."
+
+#: orologic_modules/archivio_pgn.py:842
+#, python-brace-format
+msgid "Risultati da verificare a mano: {n}."
+msgstr "Results to check by hand: {n}."
+
+#: orologic_modules/archivio_pgn.py:843
+#, python-brace-format
+msgid "Date da riscrivere a mano: {n}."
+msgstr "Dates to rewrite by hand: {n}."
+
+#: orologic_modules/archivio_pgn.py:844
+#, python-brace-format
+msgid "Elo non numerici, da sistemare a mano: {n} partite."
+msgstr "Non-numeric Elo, to fix by hand: {n} games."
+
+#: orologic_modules/archivio_pgn.py:890
+msgid "copia"
+msgstr "backup"
+
+#: orologic_modules/archivio_pgn.py:971
+msgid "Le modifiche restano nell'archivio aperto: per tenerle, Salva il PGN."
+msgstr "The changes stay in the open archive: to keep them, Save PGN."
+
+#: orologic_modules/archivio_pgn.py:974
+#, python-brace-format
+msgid "Copia di sicurezza: {percorso}"
+msgstr "Backup copy: {percorso}"
+
+#: orologic_modules/archivio_pgn.py:976
+#, python-brace-format
+msgid "File riscritto: {percorso}"
+msgstr "File rewritten: {percorso}"
 
 #: orologic_modules/aspetto.py:59
 msgid "Nero puro"
@@ -1295,8 +1563,8 @@ msgstr "News (changelog)"
 msgid "Orologi (crea, vedi, elimina)"
 msgstr "Clocks (create, view, delete)"
 
-#: orologic_modules/config.py:223 orologic_modules/finestra_ricerca.py:97
-#: orologic_modules/finestra_ricerca.py:193 orologic_modules/pgn_search.py:41
+#: orologic_modules/config.py:223 orologic_modules/finestra_ricerca.py:111
+#: orologic_modules/finestra_ricerca.py:222 orologic_modules/pgn_search.py:41
 msgid "Ricerca PGN"
 msgstr "PGN search"
 
@@ -1612,185 +1880,185 @@ msgstr "Black has {tempo} more."
 msgid "Messaggi:"
 msgstr "Messages:"
 
-#: orologic_modules/dialoghi.py:70
+#: orologic_modules/dialoghi.py:68
 msgid "Impostazioni"
 msgstr "Settings"
 
-#: orologic_modules/dialoghi.py:87
+#: orologic_modules/dialoghi.py:85
 msgid "Filtro delle voci:"
 msgstr "Item filter:"
 
-#: orologic_modules/dialoghi.py:89
+#: orologic_modules/dialoghi.py:87
 msgid "Filtro delle voci"
 msgstr "Item filter"
 
-#: orologic_modules/dialoghi.py:91
+#: orologic_modules/dialoghi.py:89
 #, python-brace-format
 msgid ""
 "{titolo}. Invio cambia la voce, Esc chiude, Maiuscolo con Tab va al filtro."
 msgstr ""
 "{titolo}. Enter changes the item, Esc closes, Shift+Tab goes to the filter."
 
-#: orologic_modules/dialoghi.py:94 orologic_modules/finestra_orologi.py:205
+#: orologic_modules/dialoghi.py:92 orologic_modules/finestra_orologi.py:205
 #: orologic_modules/finestra_pulizia.py:110
-#: orologic_modules/finestra_ricerca.py:160
-#: orologic_modules/finestra_ricerca.py:251
+#: orologic_modules/finestra_ricerca.py:174
+#: orologic_modules/finestra_ricerca.py:247
 #: orologic_modules/finestra_scacchiera.py:222
 #: orologic_modules/finestra_scacchiera.py:249
 msgid "Chiudi"
 msgstr "Close"
 
-#: orologic_modules/dialoghi.py:141
+#: orologic_modules/dialoghi.py:139
 #, python-brace-format
 msgid "Nessuna voce contiene {testo}."
 msgstr "No item contains {testo}."
 
-#: orologic_modules/dialoghi.py:177
+#: orologic_modules/dialoghi.py:175
 #, python-brace-format
 msgid "{titolo}. Invio conferma, Esc annulla."
 msgstr "{titolo}. Enter confirms, Esc cancels."
 
-#: orologic_modules/dialoghi.py:181 orologic_modules/dialoghi.py:243
+#: orologic_modules/dialoghi.py:179 orologic_modules/dialoghi.py:241
 msgid "Conferma"
 msgstr "Confirm"
 
-#: orologic_modules/dialoghi.py:184 orologic_modules/dialoghi.py:246
-#: orologic_modules/dialoghi.py:350 orologic_modules/dialoghi.py:827
+#: orologic_modules/dialoghi.py:182 orologic_modules/dialoghi.py:244
+#: orologic_modules/dialoghi.py:348 orologic_modules/dialoghi.py:825
 #: orologic_modules/lichess_app.py:2004 orologic_modules/lichess_app.py:2039
 #: orologic_modules/lichess_app.py:2179
 #: orologic_modules/lichess_profiler.py:592
 msgid "Annulla"
 msgstr "Cancel"
 
-#: orologic_modules/dialoghi.py:312
+#: orologic_modules/dialoghi.py:310
 msgid "Prompt di gioco"
 msgstr "Game prompt"
 
-#: orologic_modules/dialoghi.py:328 orologic_modules/dialoghi.py:330
+#: orologic_modules/dialoghi.py:326 orologic_modules/dialoghi.py:328
 msgid "Disponibili"
 msgstr "Available"
 
-#: orologic_modules/dialoghi.py:331 orologic_modules/dialoghi.py:333
+#: orologic_modules/dialoghi.py:329 orologic_modules/dialoghi.py:331
 msgid "Spiegazione"
 msgstr "Explanation"
 
-#: orologic_modules/dialoghi.py:334 orologic_modules/dialoghi.py:336
+#: orologic_modules/dialoghi.py:332 orologic_modules/dialoghi.py:334
 msgid "Prompt"
 msgstr "Prompt"
 
-#: orologic_modules/dialoghi.py:337
+#: orologic_modules/dialoghi.py:335
 msgid "Aggiornamento in secondi, da 0, statico, a 120:"
 msgstr "Update in seconds, from 0, static, to 120:"
 
-#: orologic_modules/dialoghi.py:343 orologic_modules/dialoghi.py:345
-#: orologic_modules/dialoghi.py:820 orologic_modules/dialoghi.py:822
+#: orologic_modules/dialoghi.py:341 orologic_modules/dialoghi.py:343
+#: orologic_modules/dialoghi.py:818 orologic_modules/dialoghi.py:820
 msgid "Anteprima"
 msgstr "Preview"
 
-#: orologic_modules/dialoghi.py:347 orologic_modules/dialoghi.py:824
+#: orologic_modules/dialoghi.py:345 orologic_modules/dialoghi.py:822
 msgid "OK"
 msgstr "OK"
 
-#: orologic_modules/dialoghi.py:423
+#: orologic_modules/dialoghi.py:421
 msgid "(verboso)"
 msgstr "(verbose)"
 
-#: orologic_modules/dialoghi.py:427
+#: orologic_modules/dialoghi.py:425
 #, python-brace-format
 msgid "Testo libero: {testo}"
 msgstr "Free text: {testo}"
 
-#: orologic_modules/dialoghi.py:431 orologic_modules/impostazioni.py:394
+#: orologic_modules/dialoghi.py:429 orologic_modules/impostazioni.py:422
 msgid "Testo libero"
 msgstr "Free text"
 
-#: orologic_modules/dialoghi.py:463
+#: orologic_modules/dialoghi.py:461
 msgid "verboso"
 msgstr "verbose"
 
-#: orologic_modules/dialoghi.py:463
+#: orologic_modules/dialoghi.py:461
 msgid "breve"
 msgstr "short"
 
-#: orologic_modules/dialoghi.py:677 orologic_modules/dialoghi.py:682
-#: orologic_modules/impostazioni.py:150
+#: orologic_modules/dialoghi.py:675 orologic_modules/dialoghi.py:680
+#: orologic_modules/impostazioni.py:155
 msgid "Offrimi un caffè"
 msgstr "Buy me a coffee"
 
-#: orologic_modules/dialoghi.py:683
+#: orologic_modules/dialoghi.py:681
 msgid "Dona con &PayPal"
 msgstr "Donate with &PayPal"
 
-#: orologic_modules/dialoghi.py:684 orologic_modules/pub.py:22
+#: orologic_modules/dialoghi.py:682 orologic_modules/pub.py:22
 msgid "&Chiudi"
 msgstr "&Close"
 
-#: orologic_modules/dialoghi.py:738
+#: orologic_modules/dialoghi.py:736
 msgid "Caratteri plancia"
 msgstr "Control panel text"
 
-#: orologic_modules/dialoghi.py:739
+#: orologic_modules/dialoghi.py:737
 msgid "Caratteri area centrale"
 msgstr "Central area text"
 
-#: orologic_modules/dialoghi.py:740
+#: orologic_modules/dialoghi.py:738
 msgid "Sfondo plancia"
 msgstr "Control panel background"
 
-#: orologic_modules/dialoghi.py:741
+#: orologic_modules/dialoghi.py:739
 msgid "Sfondo area"
 msgstr "Area background"
 
-#: orologic_modules/dialoghi.py:747 orologic_modules/finestra.py:486
+#: orologic_modules/dialoghi.py:745 orologic_modules/finestra.py:500
 msgid "Plancia"
 msgstr "Control panel"
 
-#: orologic_modules/dialoghi.py:747
+#: orologic_modules/dialoghi.py:745
 msgid "Area centrale"
 msgstr "Central area"
 
-#: orologic_modules/dialoghi.py:770 orologic_modules/impostazioni.py:141
+#: orologic_modules/dialoghi.py:768 orologic_modules/impostazioni.py:146
 msgid "Colori e dimensioni"
 msgstr "Colors and sizes"
 
-#: orologic_modules/dialoghi.py:786
+#: orologic_modules/dialoghi.py:784
 msgid "Rosso (%):"
 msgstr "Red (%):"
 
-#: orologic_modules/dialoghi.py:786
+#: orologic_modules/dialoghi.py:784
 msgid "Verde (%):"
 msgstr "Green (%):"
 
-#: orologic_modules/dialoghi.py:786
+#: orologic_modules/dialoghi.py:784
 msgid "Blu (%):"
 msgstr "Blue (%):"
 
-#: orologic_modules/dialoghi.py:792 orologic_modules/dialoghi.py:794
-#: orologic_modules/dialoghi.py:813 orologic_modules/dialoghi.py:815
+#: orologic_modules/dialoghi.py:790 orologic_modules/dialoghi.py:792
+#: orologic_modules/dialoghi.py:811 orologic_modules/dialoghi.py:813
 msgid "Applica a:"
 msgstr "Apply to:"
 
-#: orologic_modules/dialoghi.py:797 orologic_modules/dialoghi.py:799
+#: orologic_modules/dialoghi.py:795 orologic_modules/dialoghi.py:797
 msgid "Colori predefiniti:"
 msgstr "Preset colors:"
 
-#: orologic_modules/dialoghi.py:803
+#: orologic_modules/dialoghi.py:801
 msgid "Colori"
 msgstr "Colors"
 
-#: orologic_modules/dialoghi.py:806 orologic_modules/dialoghi.py:808
+#: orologic_modules/dialoghi.py:804 orologic_modules/dialoghi.py:806
 msgid "Dimensione (pt):"
 msgstr "Size (pt):"
 
-#: orologic_modules/dialoghi.py:819
+#: orologic_modules/dialoghi.py:817
 msgid "Dimensioni"
 msgstr "Sizes"
 
-#: orologic_modules/dialoghi.py:821
+#: orologic_modules/dialoghi.py:819
 msgid "Così appare il testo della finestra."
 msgstr "This is how the window text looks."
 
-#: orologic_modules/dialoghi.py:850 orologic_modules/impostazioni.py:336
+#: orologic_modules/dialoghi.py:848 orologic_modules/impostazioni.py:364
 msgid "Salva colore"
 msgstr "Save color"
 
@@ -1806,7 +2074,7 @@ msgid "Motore {n} pronto."
 msgstr "Engine {n} ready."
 
 #: orologic_modules/easyfish/game_mode.py:1403 orologic_modules/engine.py:238
-#: orologic_modules/impostazioni.py:664
+#: orologic_modules/impostazioni.py:692
 #, python-brace-format
 msgid "Errore motore: {e}"
 msgstr "Engine error: {e}"
@@ -2626,17 +2894,17 @@ msgstr "Current engine configuration:"
 msgid "Nessuna configurazione trovata."
 msgstr "No configuration found."
 
-#: orologic_modules/engine.py:2091 orologic_modules/impostazioni.py:567
+#: orologic_modules/engine.py:2091 orologic_modules/impostazioni.py:595
 #, python-brace-format
 msgid "Inserisci il percorso dove e' salvato il motore UCI [{default}]: "
 msgstr "Enter the path where the UCI engine is saved [{default}]: "
 
-#: orologic_modules/engine.py:2103 orologic_modules/impostazioni.py:574
+#: orologic_modules/engine.py:2103 orologic_modules/impostazioni.py:602
 #, python-brace-format
 msgid "Inserisci il nome dell'eseguibile del motore [{default}]: "
 msgstr "Enter the name of the engine executable [{default}]: "
 
-#: orologic_modules/engine.py:2121 orologic_modules/impostazioni.py:583
+#: orologic_modules/engine.py:2121 orologic_modules/impostazioni.py:611
 msgid ""
 "Il file specificato non esiste. Verifica il percorso e il nome "
 "dell'eseguibile."
@@ -2660,20 +2928,20 @@ msgstr ""
 "Info: the engine is on a different drive, an absolute path will be saved "
 "(non-portable configuration)."
 
-#: orologic_modules/engine.py:2155 orologic_modules/impostazioni.py:591
+#: orologic_modules/engine.py:2155 orologic_modules/impostazioni.py:619
 msgid "Inserisci la dimensione della hash table (min: 1, max: 4096 MB): "
 msgstr "Enter the size of the hash table (min: 1, max: 4096 MB): "
 
-#: orologic_modules/engine.py:2166 orologic_modules/impostazioni.py:593
+#: orologic_modules/engine.py:2166 orologic_modules/impostazioni.py:621
 #, python-brace-format
 msgid "Inserisci il numero di core da utilizzare (min: 1, max: {max_cores}): "
 msgstr "Enter the number of cores to use (min: 1, max: {max_cores}): "
 
-#: orologic_modules/engine.py:2176 orologic_modules/impostazioni.py:594
+#: orologic_modules/engine.py:2176 orologic_modules/impostazioni.py:622
 msgid "Inserisci il livello di skill (min: 0, max: 20): "
 msgstr "Enter the skill level (min: 0, max: 20): "
 
-#: orologic_modules/engine.py:2185 orologic_modules/impostazioni.py:595
+#: orologic_modules/engine.py:2185 orologic_modules/impostazioni.py:623
 msgid "Inserisci il move overhead in millisecondi (min: 0, max: 500): "
 msgstr "Enter the move overhead in milliseconds (min: 0, max: 500): "
 
@@ -2681,12 +2949,12 @@ msgstr "Enter the move overhead in milliseconds (min: 0, max: 500): "
 msgid "Configurazione del motore salvata."
 msgstr "Engine configuration saved."
 
-#: orologic_modules/finestra.py:481
+#: orologic_modules/finestra.py:495
 #, python-brace-format
 msgid "Orologic {versione}"
 msgstr "Orologic {versione}"
 
-#: orologic_modules/finestra.py:488
+#: orologic_modules/finestra.py:502
 msgid "Console"
 msgstr "Console"
 
@@ -2857,7 +3125,7 @@ msgid "Piu' vecchi di {durata}: {n} file, {peso}"
 msgstr "Older than {durata}: {n} file(s), {peso}"
 
 #: orologic_modules/finestra_pulizia.py:84
-#: orologic_modules/impostazioni.py:149
+#: orologic_modules/impostazioni.py:154
 msgid "Pulizia"
 msgstr "Cleanup"
 
@@ -2922,163 +3190,210 @@ msgid "Mando nel cestino i {n} file piu' vecchi di {durata}, {peso}?"
 msgstr "Move the {n} files older than {durata}, {peso}, to the Recycle Bin?"
 
 #: orologic_modules/easyfish/pgn_handler.py:148
-#: orologic_modules/finestra_ricerca.py:58 orologic_modules/pgn_search.py:951
+#: orologic_modules/finestra_ricerca.py:67 orologic_modules/pgn_search.py:741
 msgid "Nome giocatore Bianco (vuoto=qualsiasi): "
 msgstr "White player name (blank=any): "
 
 #: orologic_modules/easyfish/pgn_handler.py:151
-#: orologic_modules/finestra_ricerca.py:59 orologic_modules/pgn_search.py:957
+#: orologic_modules/finestra_ricerca.py:68 orologic_modules/pgn_search.py:747
 msgid "Nome giocatore Nero (vuoto=qualsiasi): "
 msgstr "Black player name (blank=any): "
 
-#: orologic_modules/finestra_ricerca.py:60 orologic_modules/pgn_search.py:964
+#: orologic_modules/finestra_ricerca.py:69 orologic_modules/pgn_search.py:754
 msgid "Nome giocatore (cerca in bianco E nero, vuoto=qualsiasi): "
 msgstr "Player name (searches as both White and Black, blank=any): "
 
 #: orologic_modules/easyfish/pgn_handler.py:161
-#: orologic_modules/finestra_ricerca.py:61 orologic_modules/pgn_search.py:980
+#: orologic_modules/finestra_ricerca.py:70 orologic_modules/pgn_search.py:770
 msgid "Scegli risultato: "
 msgstr "Choose result: "
 
-#: orologic_modules/finestra_ricerca.py:62 orologic_modules/pgn_search.py:989
+#: orologic_modules/finestra_ricerca.py:71 orologic_modules/pgn_search.py:779
 msgid "ELO minimo (0=nessun limite): "
 msgstr "Minimum ELO (0=no limit): "
 
-#: orologic_modules/finestra_ricerca.py:63 orologic_modules/pgn_search.py:1002
+#: orologic_modules/finestra_ricerca.py:72 orologic_modules/pgn_search.py:792
 msgid "ELO massimo (0=nessun limite): "
 msgstr "Maximum ELO (0=no limit): "
 
-#: orologic_modules/finestra_ricerca.py:64 orologic_modules/pgn_search.py:1014
+#: orologic_modules/finestra_ricerca.py:73 orologic_modules/pgn_search.py:804
 msgid "Nome evento (vuoto=qualsiasi): "
 msgstr "Event Name (blank=any): "
 
-#: orologic_modules/finestra_ricerca.py:65 orologic_modules/pgn_search.py:1021
+#: orologic_modules/finestra_ricerca.py:74 orologic_modules/pgn_search.py:811
 msgid "Anno dal (0=nessun limite): "
 msgstr "Year since (0=no limit): "
 
-#: orologic_modules/finestra_ricerca.py:66 orologic_modules/pgn_search.py:1034
+#: orologic_modules/finestra_ricerca.py:75 orologic_modules/pgn_search.py:824
 msgid "Anno al (0=nessun limite): "
 msgstr "Year to (0=no limit): "
 
-#: orologic_modules/finestra_ricerca.py:67 orologic_modules/pgn_search.py:1043
+#: orologic_modules/finestra_ricerca.py:76 orologic_modules/pgn_search.py:833
 msgid "Codice ECO (es. 'B', 'B90', vuoto=qualsiasi): "
 msgstr "ECO code (e.g. 'B', 'B90', blank=any): "
 
+#: orologic_modules/finestra_ricerca.py:77
+msgid "Con almeno queste mosse (0=nessun limite): "
+msgstr "With at least these moves (0=no limit): "
+
+#: orologic_modules/finestra_ricerca.py:78
+msgid "Con meno di queste mosse (0=nessun limite): "
+msgstr "With fewer than these moves (0=no limit): "
+
+#: orologic_modules/finestra_ricerca.py:79
+msgid "Terminata con il matto"
+msgstr "Ended in checkmate"
+
+#: orologic_modules/finestra_ricerca.py:80
+msgid "Con promozione"
+msgstr "With promotion"
+
 #: orologic_modules/easyfish/pgn_handler.py:158
-#: orologic_modules/finestra_ricerca.py:74 orologic_modules/pgn_search.py:977
+#: orologic_modules/finestra_ricerca.py:87 orologic_modules/pgn_search.py:767
 msgid "Qualsiasi risultato"
 msgstr "Any result"
 
 #: orologic_modules/easyfish/pgn_handler.py:155
-#: orologic_modules/finestra_ricerca.py:75 orologic_modules/pgn_search.py:974
+#: orologic_modules/finestra_ricerca.py:88 orologic_modules/pgn_search.py:764
 msgid "Vittoria Bianco (1-0)"
 msgstr "White Victory (1-0)"
 
 #: orologic_modules/easyfish/pgn_handler.py:156
-#: orologic_modules/finestra_ricerca.py:76 orologic_modules/pgn_search.py:975
+#: orologic_modules/finestra_ricerca.py:89 orologic_modules/pgn_search.py:765
 msgid "Vittoria Nero (0-1)"
 msgstr "Black victory (0-1)"
 
 #: orologic_modules/easyfish/pgn_handler.py:157
-#: orologic_modules/finestra_ricerca.py:77 orologic_modules/pgn_search.py:976
+#: orologic_modules/finestra_ricerca.py:90 orologic_modules/pgn_search.py:766
 msgid "Patta (1/2-1/2)"
 msgstr "Draw (1/2-1/2)"
 
-#: orologic_modules/finestra_ricerca.py:97
-#: orologic_modules/finestra_ricerca.py:109
+#: orologic_modules/finestra_ricerca.py:91
+msgid "Non specificato (*)"
+msgstr "Unspecified (*)"
+
+#: orologic_modules/finestra_ricerca.py:111
+#: orologic_modules/finestra_ricerca.py:123
 msgid "Partite PGN (*.pgn)|*.pgn|Tutti i file (*.*)|*.*"
 msgstr "PGN games (*.pgn)|*.pgn|All files (*.*)|*.*"
 
-#: orologic_modules/finestra_ricerca.py:109
-#: orologic_modules/finestra_ricerca.py:249
+#: orologic_modules/finestra_ricerca.py:123
+#: orologic_modules/finestra_ricerca.py:303
 msgid "&Salva il PGN"
 msgstr "&Save PGN"
 
-#: orologic_modules/finestra_ricerca.py:145
-#: orologic_modules/finestra_ricerca.py:149
-#: orologic_modules/finestra_ricerca.py:151
-#: orologic_modules/pgn_search.py:1651
+#: orologic_modules/finestra_ricerca.py:159
+#: orologic_modules/finestra_ricerca.py:163
+#: orologic_modules/finestra_ricerca.py:165
+#: orologic_modules/pgn_search.py:1454
 msgid "Partita selezionata"
 msgstr "Selected game"
 
-#: orologic_modules/finestra_ricerca.py:155
+#: orologic_modules/finestra_ricerca.py:169
 msgid "Passa a &Easyfish"
 msgstr "Send to &Easyfish"
 
-#: orologic_modules/finestra_ricerca.py:155
+#: orologic_modules/finestra_ricerca.py:169
 msgid "Analisi &automatica"
 msgstr "&Automatic analysis"
 
-#: orologic_modules/finestra_ricerca.py:155
+#: orologic_modules/finestra_ricerca.py:169
 msgid "Analisi &manuale"
 msgstr "&Manual analysis"
 
-#: orologic_modules/finestra_ricerca.py:208
+#: orologic_modules/finestra_ricerca.py:242
+msgid "Partite"
+msgstr "Games"
+
+#: orologic_modules/finestra_ricerca.py:243 orologic_modules/pgn_search.py:681
+msgid "Filtri"
+msgstr "Filters"
+
+#: orologic_modules/finestra_ricerca.py:286
 msgid "Apri &file"
 msgstr "Open &file"
 
-#: orologic_modules/finestra_ricerca.py:209
+#: orologic_modules/finestra_ricerca.py:287
 msgid "Dagli &appunti"
 msgstr "From &clipboard"
 
-#: orologic_modules/finestra_ricerca.py:213
-#: orologic_modules/finestra_ricerca.py:215
+#: orologic_modules/finestra_ricerca.py:291
+#: orologic_modules/finestra_ricerca.py:293
 msgid "Archivio"
 msgstr "Archive"
 
-#: orologic_modules/finestra_ricerca.py:236
-msgid "Appli&ca i filtri"
-msgstr "&Apply filters"
-
-#: orologic_modules/finestra_ricerca.py:237
-msgid "A&zzera i filtri"
-msgstr "&Reset filters"
-
-#: orologic_modules/finestra_ricerca.py:241
-#: orologic_modules/finestra_ricerca.py:244
-#: orologic_modules/finestra_ricerca.py:380
-#: orologic_modules/finestra_ricerca.py:439
+#: orologic_modules/finestra_ricerca.py:295
+#: orologic_modules/finestra_ricerca.py:298
+#: orologic_modules/finestra_ricerca.py:521
+#: orologic_modules/finestra_ricerca.py:585
 msgid "Nessun archivio caricato."
 msgstr "No archive loaded."
 
-#: orologic_modules/finestra_ricerca.py:247
+#: orologic_modules/finestra_ricerca.py:301
 msgid "&Inizio"
 msgstr "S&tart"
 
-#: orologic_modules/finestra_ricerca.py:248
-#: orologic_modules/finestra_ricerca.py:561
+#: orologic_modules/finestra_ricerca.py:302
+#: orologic_modules/finestra_ricerca.py:771
 msgid "Partite del &ramo"
 msgstr "Branch &games"
 
-#: orologic_modules/finestra_ricerca.py:250
+#: orologic_modules/finestra_ricerca.py:304
 msgid "&Percorso"
 msgstr "&Path"
 
-#: orologic_modules/finestra_ricerca.py:315 orologic_modules/pgn_search.py:97
+#: orologic_modules/finestra_ricerca.py:305
+msgid "C&lassifica"
+msgstr "C&lassify"
+
+#: orologic_modules/finestra_ricerca.py:306
+msgid "Ripara i pro&blemi"
+msgstr "Repair pro&blems"
+
+#: orologic_modules/finestra_ricerca.py:338
+msgid "Appli&ca i filtri"
+msgstr "&Apply filters"
+
+#: orologic_modules/finestra_ricerca.py:339
+msgid "A&zzera i filtri"
+msgstr "&Reset filters"
+
+#: orologic_modules/finestra_ricerca.py:376 orologic_modules/pgn_search.py:97
 msgid "Impossibile accedere agli appunti."
 msgstr "Unable to access clipboard."
 
-#: orologic_modules/finestra_ricerca.py:319 orologic_modules/pgn_search.py:101
-#: orologic_modules/pgn_search.py:415
-msgid "Gli appunti sono vuoti."
-msgstr "The clipboard is empty."
-
-#: orologic_modules/finestra_ricerca.py:327 orologic_modules/pgn_search.py:203
+#: orologic_modules/finestra_ricerca.py:416 orologic_modules/pgn_search.py:203
 msgid "Analisi del PGN in corso..."
 msgstr "PGN analysis in progress..."
 
-#: orologic_modules/finestra_ricerca.py:430 orologic_modules/pgn_search.py:943
+#: orologic_modules/finestra_ricerca.py:576 orologic_modules/pgn_search.py:733
 msgid "Tutti i filtri sono stati rimossi (azzerati)."
 msgstr "All filters have been removed (reset)."
 
 #: orologic_modules/easyfish/pgn_handler.py:174
-#: orologic_modules/finestra_ricerca.py:444 orologic_modules/pgn_search.py:893
+#: orologic_modules/finestra_ricerca.py:590 orologic_modules/pgn_search.py:683
 #, python-brace-format
 msgid "Partite corrispondenti: {n} di {tot} ({pct:.2f}%)"
 msgstr "Matching games: {n} of {tot} ({pct:.2f}%)"
 
-#: orologic_modules/finestra_ricerca.py:574
-#: orologic_modules/pgn_search.py:1604
+#: orologic_modules/finestra_ricerca.py:625
+msgid "Senza mosse"
+msgstr "Without moves"
+
+#: orologic_modules/finestra_ricerca.py:625
+msgid "Da una posizione di studio"
+msgstr "From a study position"
+
+#: orologic_modules/finestra_ricerca.py:630
+msgid "Senza codice ECO"
+msgstr "Without ECO code"
+
+#: orologic_modules/finestra_ricerca.py:671
+msgid "Non classificate"
+msgstr "Unclassified"
+
+#: orologic_modules/finestra_ricerca.py:784
+#: orologic_modules/pgn_search.py:1407
 msgid ""
 "\n"
 "Attenzione: non ci sono filtri attivi. Il file salvato sarebbe una copia dell'archivio originale."
@@ -3086,21 +3401,61 @@ msgstr ""
 "\n"
 "Warning: there are no active filters. The saved file would be a copy of the original archive."
 
-#: orologic_modules/finestra_ricerca.py:576
+#: orologic_modules/finestra_ricerca.py:786
 msgid "Salvo lo stesso?"
 msgstr "Save anyway?"
 
-#: orologic_modules/finestra_ricerca.py:587
-#: orologic_modules/pgn_search.py:1640
+#: orologic_modules/finestra_ricerca.py:798
+#: orologic_modules/pgn_search.py:1443
 #, python-brace-format
 msgid "Errore nel salvataggio: {e}"
 msgstr "Save error: {e}"
 
-#: orologic_modules/finestra_ricerca.py:589
-#: orologic_modules/pgn_search.py:1636
+#: orologic_modules/finestra_ricerca.py:800
+#: orologic_modules/pgn_search.py:1439
 #, python-brace-format
 msgid "Salvate {n} partite in: {path}"
 msgstr "Saved {n} games in: {path}"
+
+#: orologic_modules/finestra_ricerca.py:821
+msgid "Nessuna partita da classificare."
+msgstr "No games to classify."
+
+#: orologic_modules/finestra_ricerca.py:827
+#, python-brace-format
+msgid "Classificazione: {pct}%"
+msgstr "Classification: {pct}%"
+
+#: orologic_modules/finestra_ricerca.py:828
+#, python-brace-format
+msgid "Classificate {n} partite su {m}."
+msgstr "Classified {n} games out of {m}."
+
+#: orologic_modules/finestra_ricerca.py:830
+msgid ""
+"Le altre restano senza codice ECO: le loro mosse non si trovano in eco.db."
+msgstr "The others stay without an ECO code: their moves are not in eco.db."
+
+#: orologic_modules/finestra_ricerca.py:832
+msgid ""
+"Le partite senza mosse o da una posizione di studio non si classificano."
+msgstr "Games without moves or from a study position cannot be classified."
+
+#: orologic_modules/finestra_ricerca.py:836
+msgid "Classificazione delle aperture in corso..."
+msgstr "Classifying the openings..."
+
+#: orologic_modules/finestra_ricerca.py:853
+msgid "La ricerca dei doppioni non e' finita: riprova fra poco."
+msgstr "The duplicate search is not finished: try again shortly."
+
+#: orologic_modules/finestra_ricerca.py:862
+msgid "Niente da riparare."
+msgstr "Nothing to repair."
+
+#: orologic_modules/finestra_ricerca.py:864
+msgid "Riparazione in corso..."
+msgstr "Repairing..."
 
 #: orologic_modules/finestra_scacchiera.py:128
 msgid "Vince il Bianco, 1-0: assegno il risultato?"
@@ -3598,7 +3953,7 @@ msgstr "What's your name? It goes into saved games: "
 msgid "Giocatore"
 msgstr "Player"
 
-#: orologic_modules/gioca.py:65 orologic_modules/impostazioni.py:265
+#: orologic_modules/gioca.py:65 orologic_modules/impostazioni.py:293
 msgid "Il tuo nome, INVIO per lasciarlo com'e': "
 msgstr "Your name, ENTER to keep it as it is: "
 
@@ -3811,135 +4166,149 @@ msgstr ""
 "\n"
 "Play against the engine: "
 
-#: orologic_modules/impostazioni.py:119 orologic_modules/impostazioni.py:186
+#: orologic_modules/impostazioni.py:120 orologic_modules/impostazioni.py:192
 msgid "Tempo analisi default (sec)"
 msgstr "Default analysis time (sec)"
 
-#: orologic_modules/impostazioni.py:121 orologic_modules/impostazioni.py:196
+#: orologic_modules/impostazioni.py:122 orologic_modules/impostazioni.py:202
 msgid "Linee analisi default (multipv)"
 msgstr "Default analysis lines (multipv)"
 
-#: orologic_modules/impostazioni.py:135 orologic_modules/impostazioni.py:210
+#: orologic_modules/impostazioni.py:136 orologic_modules/impostazioni.py:216
 msgid "Tempo di attesa dei comandi della scacchiera (ms)"
 msgstr "Board commands wait time (ms)"
 
-#: orologic_modules/impostazioni.py:147 orologic_modules/impostazioni.py:321
+#: orologic_modules/impostazioni.py:140
+#, python-brace-format
+msgid "Quante righe conservo nell'area principale? {n}"
+msgstr "How many lines do I keep in the main area? {n}"
+
+#: orologic_modules/impostazioni.py:152 orologic_modules/impostazioni.py:349
 msgid "Lingua"
 msgstr "Language"
 
-#: orologic_modules/impostazioni.py:150
+#: orologic_modules/impostazioni.py:155
 msgid "Entra al PUB"
 msgstr "Join the PUB"
 
-#: orologic_modules/impostazioni.py:150 orologic_modules/pub.py:163
+#: orologic_modules/impostazioni.py:155 orologic_modules/pub.py:163
 msgid "Chiedi aiuto al PUB"
 msgstr "Ask the PUB for help"
 
-#: orologic_modules/impostazioni.py:162
+#: orologic_modules/impostazioni.py:168
 msgid "Salvataggio automatico"
 msgstr "Autosave"
 
-#: orologic_modules/impostazioni.py:163
+#: orologic_modules/impostazioni.py:169
 msgid "Stile dei menu"
 msgstr "Menu style"
 
-#: orologic_modules/impostazioni.py:186 orologic_modules/ui.py:1310
+#: orologic_modules/impostazioni.py:192 orologic_modules/ui.py:1310
 #, python-brace-format
 msgid "Tempo analisi default (sec) [{cur}]: "
 msgstr "Default analysis time (sec) [{cur}]: "
 
-#: orologic_modules/impostazioni.py:196 orologic_modules/ui.py:1323
+#: orologic_modules/impostazioni.py:202 orologic_modules/ui.py:1323
 #, python-brace-format
 msgid "Linee analisi default (multipv) [{cur}]: "
 msgstr "Default analysis lines (multipv) [{cur}]: "
 
-#: orologic_modules/impostazioni.py:214
+#: orologic_modules/impostazioni.py:220
 #, python-brace-format
 msgid "Tempo di attesa dei comandi della scacchiera (ms) [{cur}]: "
 msgstr "Board commands wait time (ms) [{cur}]: "
 
-#: orologic_modules/impostazioni.py:230
+#: orologic_modules/impostazioni.py:239
+msgid "Quante righe conservo nell'area principale?"
+msgstr "How many lines do I keep in the main area?"
+
+#: orologic_modules/impostazioni.py:240
+#, python-brace-format
+msgid "Quante righe conservo nell'area principale? [{cur}]: "
+msgstr "How many lines do I keep in the main area? [{cur}]: "
+
+#: orologic_modules/impostazioni.py:258
 msgid "Soglia Inesattezza"
 msgstr "Inaccuracy Threshold"
 
-#: orologic_modules/impostazioni.py:230
+#: orologic_modules/impostazioni.py:258
 msgid "Soglia Errore"
 msgstr "Mistake Threshold"
 
-#: orologic_modules/impostazioni.py:230
+#: orologic_modules/impostazioni.py:258
 msgid "Soglia Svarione"
 msgstr "Blunder Threshold"
 
-#: orologic_modules/impostazioni.py:243 orologic_modules/ui.py:1354
+#: orologic_modules/impostazioni.py:271 orologic_modules/ui.py:1354
 #, python-brace-format
 msgid "Soglia Inesattezza [{cur}]: "
 msgstr "Inaccuracy Threshold [{cur}]: "
 
-#: orologic_modules/impostazioni.py:244 orologic_modules/ui.py:1361
+#: orologic_modules/impostazioni.py:272 orologic_modules/ui.py:1361
 #, python-brace-format
 msgid "Soglia Errore [{cur}]: "
 msgstr "Mistake Threshold [{cur}]: "
 
-#: orologic_modules/impostazioni.py:245 orologic_modules/ui.py:1368
+#: orologic_modules/impostazioni.py:273 orologic_modules/ui.py:1368
 #, python-brace-format
 msgid "Soglia Svarione [{cur}]: "
 msgstr "Blunder Threshold [{cur}]: "
 
-#: orologic_modules/impostazioni.py:289 orologic_modules/ui.py:1284
+#: orologic_modules/impostazioni.py:317 orologic_modules/ui.py:1284
 msgid "Inserisci nuovo volume (0-100): "
 msgstr "Insert new volume (0-100): "
 
-#: orologic_modules/impostazioni.py:315
+#: orologic_modules/impostazioni.py:343
 #, python-brace-format
 msgid "{adesso}; dal riavvio {prossima}"
 msgstr "{adesso}; {prossima} after restart"
 
-#: orologic_modules/impostazioni.py:336
+#: orologic_modules/impostazioni.py:364
 msgid "Nome del colore:"
 msgstr "Color name:"
 
-#: orologic_modules/impostazioni.py:364
+#: orologic_modules/impostazioni.py:392
 msgid "Grazie se vorrai offrire un caffè all'autore."
 msgstr "Thank you if you would like to buy the author a coffee."
 
-#: orologic_modules/impostazioni.py:449 orologic_modules/impostazioni.py:489
+#: orologic_modules/impostazioni.py:477 orologic_modules/impostazioni.py:517
 #, python-brace-format
 msgid "Genere per '{nome}'"
 msgstr "Gender for '{nome}'"
 
-#: orologic_modules/impostazioni.py:521
+#: orologic_modules/impostazioni.py:549
 msgid "cercare un motore nel tuo pc"
 msgstr "search for an engine on your PC"
 
-#: orologic_modules/impostazioni.py:522
+#: orologic_modules/impostazioni.py:550
 msgid "scaricare Stockfish"
 msgstr "download Stockfish"
 
-#: orologic_modules/impostazioni.py:523
+#: orologic_modules/impostazioni.py:551
 msgid "modificare manualmente la configurazione"
 msgstr "manually change the configuration"
 
-#: orologic_modules/impostazioni.py:524 orologic_modules/impostazioni.py:566
+#: orologic_modules/impostazioni.py:552 orologic_modules/impostazioni.py:594
 msgid "Percorso del motore"
 msgstr "Engine path"
 
-#: orologic_modules/impostazioni.py:525 orologic_modules/impostazioni.py:573
+#: orologic_modules/impostazioni.py:553 orologic_modules/impostazioni.py:601
 msgid "Eseguibile del motore"
 msgstr "Engine executable"
 
-#: orologic_modules/impostazioni.py:526 orologic_modules/impostazioni.py:591
+#: orologic_modules/impostazioni.py:554 orologic_modules/impostazioni.py:619
 msgid "Hash table (MB)"
 msgstr "Hash table (MB)"
 
-#: orologic_modules/impostazioni.py:527 orologic_modules/impostazioni.py:592
+#: orologic_modules/impostazioni.py:555 orologic_modules/impostazioni.py:620
 msgid "Core da utilizzare"
 msgstr "Cores to use"
 
-#: orologic_modules/impostazioni.py:528 orologic_modules/impostazioni.py:594
+#: orologic_modules/impostazioni.py:556 orologic_modules/impostazioni.py:622
 msgid "Livello di skill"
 msgstr "Skill level"
 
-#: orologic_modules/impostazioni.py:529 orologic_modules/impostazioni.py:595
+#: orologic_modules/impostazioni.py:557 orologic_modules/impostazioni.py:623
 msgid "Move overhead (ms)"
 msgstr "Move overhead (ms)"
 
@@ -8134,90 +8503,9 @@ msgstr "Flag dropped: Time's up for {chi}."
 msgid "Caricamento archivio dagli appunti..."
 msgstr "Loading archive from clipboard..."
 
-#: orologic_modules/pgn_search.py:54 orologic_modules/pgn_search.py:579
-#, python-brace-format
-msgid ""
-"\n"
-"Attenzione: l'archivio contiene solo {n} partite (minimo consigliato: 20)."
-msgstr ""
-"\n"
-"Attention: the archive contains only {n} games (recommended minimum: 20)."
-
 #: orologic_modules/pgn_search.py:58
 msgid "Desideri proseguire ugualmente? (INVIO per si', ESC per annullare): "
 msgstr "Do you want to continue anyway? (ENTER for yes, ESC to cancel): "
-
-#: orologic_modules/pgn_search.py:110 orologic_modules/pgn_search.py:393
-#, python-brace-format
-msgid "Rilevato percorso file: {path}"
-msgstr "File path detected: {path}"
-
-#: orologic_modules/pgn_search.py:117 orologic_modules/pgn_search.py:398
-#, python-brace-format
-msgid "Errore nella lettura del file: {e}"
-msgstr "Error reading file: {e}"
-
-#: orologic_modules/pgn_search.py:122 orologic_modules/pgn_search.py:401
-#, python-brace-format
-msgid "Rilevato URL: {url}"
-msgstr "URL detected: {url}"
-
-#: orologic_modules/pgn_search.py:140 orologic_modules/pgn_search.py:451
-msgid ""
-"Scaricamento interrotto dall'utente. Elaborazione delle partite caricate "
-"finora..."
-msgstr "Download interrupted by user. Processing the games loaded so far..."
-
-#: orologic_modules/pgn_search.py:157 orologic_modules/pgn_search.py:461
-msgid ""
-"Tempo massimo di scaricamento (60 minuti) raggiunto. Elaborazione delle "
-"partite caricate finora..."
-msgstr ""
-"Maximum download time (60 minutes) reached. Processing the games loaded so "
-"far..."
-
-#: orologic_modules/pgn_search.py:166 orologic_modules/pgn_search.py:465
-#, python-brace-format
-msgid ""
-"\r"
-"Scaricamento in corso: {mb:.2f} MB ({elapsed:.0f}s)...\r"
-msgstr ""
-"\r"
-"Downloading: {mb:.2f} MB ({elapsed:.0f}s)...\r"
-
-#: orologic_modules/pgn_search.py:180 orologic_modules/pgn_search.py:408
-#, python-brace-format
-msgid "Errore HTTP durante il download: {code} {reason}"
-msgstr "HTTP error downloading: {code} {reason}"
-
-#: orologic_modules/pgn_search.py:185 orologic_modules/pgn_search.py:410
-#, python-brace-format
-msgid "Errore nel download: {e}"
-msgstr "Download error: {e}"
-
-#: orologic_modules/pgn_search.py:193 orologic_modules/pgn_search.py:422
-msgid "Nessun contenuto PGN trovato."
-msgstr "No PGN content found."
-
-#: orologic_modules/pgn_search.py:199 orologic_modules/pgn_search.py:418
-msgid "Il testo negli appunti non sembra contenere dati PGN validi."
-msgstr "The text in the clipboard does not appear to contain valid PGN data."
-
-#: orologic_modules/pgn_search.py:207 orologic_modules/pgn_search.py:427
-#, python-brace-format
-msgid ""
-"\r"
-"Partite caricate: {n}..."
-msgstr ""
-"\r"
-"Loaded games: {n}..."
-
-#: orologic_modules/pgn_search.py:214 orologic_modules/pgn_search.py:430
-#, python-brace-format
-msgid ""
-"Lettura interrotta: il PGN non e' leggibile da questo punto in poi. {errore}"
-msgstr ""
-"Reading interrupted: the PGN is not readable from this point on. {errore}"
 
 #: orologic_modules/pgn_search.py:357
 msgid "Nessuna partita valida trovata nel PGN."
@@ -8246,87 +8534,58 @@ msgstr ""
 msgid "Caricate {n} partite valide."
 msgstr "Loaded {n} valid games."
 
-#: orologic_modules/pgn_search.py:434
-msgid "Lettura fermata: tengo le partite lette finora."
-msgstr "Reading stopped: keeping the games read so far."
-
-#: orologic_modules/pgn_search.py:507
-#, python-brace-format
-msgid "{bianco} vs {nero}, {risultato}"
-msgstr "{bianco} vs {nero}, {risultato}"
-
-#: orologic_modules/pgn_search.py:542
-#, python-brace-format
-msgid "{ramo} ({n} partite) | {statistiche}"
-msgstr "{ramo} ({n} games) | {statistiche}"
-
-#: orologic_modules/pgn_search.py:542 orologic_modules/pgn_search.py:1154
-#: orologic_modules/pgn_search.py:1442
-msgid "(radice)"
-msgstr "(root)"
-
-#: orologic_modules/pgn_search.py:556
-#, python-brace-format
-msgid "{descrizione} ({mossa}): {partita}"
-msgstr "{descrizione} ({mossa}): {partita}"
-
-#: orologic_modules/pgn_search.py:558
-#, python-brace-format
-msgid "{descrizione} ({mossa}) ({n} partite) = {pct:.1f}% | {statistiche}"
-msgstr "{descrizione} ({mossa}) ({n} games) = {pct:.1f}% | {statistiche}"
-
-#: orologic_modules/pgn_search.py:751
+#: orologic_modules/pgn_search.py:541
 msgid "+0% =0% -0%"
 msgstr "+0% =0% -0%"
 
-#: orologic_modules/pgn_search.py:755
+#: orologic_modules/pgn_search.py:545
 #, python-brace-format
 msgid "+{pw:.0f}% ={pd:.0f}% -{pl:.0f}%"
 msgstr "+{pw:.0f}% ={pd:.0f}% -{pl:.0f}%"
 
-#: orologic_modules/pgn_search.py:769
+#: orologic_modules/pgn_search.py:559
 msgid "B:0% P:0% N:0%"
 msgstr "W:0% D:0% B:0%"
 
-#: orologic_modules/pgn_search.py:773
+#: orologic_modules/pgn_search.py:563
 #, python-brace-format
 msgid "B:{pw:.0f}% P:{pd:.0f}% N:{pb:.0f}%"
 msgstr "W:{pw:.0f}% D:{pd:.0f}% B:{pb:.0f}%"
 
-#: orologic_modules/pgn_search.py:792
+#: orologic_modules/pgn_search.py:582
 msgid "Archivio PGN Caricato"
 msgstr "PGN Archive Loaded"
 
-#: orologic_modules/pgn_search.py:793
+#: orologic_modules/pgn_search.py:583
 #, python-brace-format
 msgid "Partite totali: {n}"
 msgstr "Total games: {n}"
 
-#: orologic_modules/pgn_search.py:795
+#: orologic_modules/pgn_search.py:585
 msgid "Statistiche Risultati"
 msgstr "Results statistics"
 
-#: orologic_modules/pgn_search.py:796
+#: orologic_modules/pgn_search.py:586
 #, python-brace-format
 msgid "  Vittorie Bianco: {n} ({p:.1f}%)"
 msgstr "  White Wins: {n} ({p:.1f}%)"
 
-#: orologic_modules/pgn_search.py:797
+#: orologic_modules/pgn_search.py:587
 #, python-brace-format
 msgid "  Patte:           {n} ({p:.1f}%)"
 msgstr "  Draws:      {n} ({p:.1f}%)"
 
-#: orologic_modules/pgn_search.py:798
+#: orologic_modules/pgn_search.py:588
 #, python-brace-format
 msgid "  Vittorie Nero:   {n} ({p:.1f}%)"
 msgstr "  Black Wins: {n} ({p:.1f}%)"
 
-#: orologic_modules/pgn_search.py:801
+#: orologic_modules/pgn_search.py:591
 #, python-brace-format
 msgid "  Altre/ND:        {n} ({p:.1f}%)"
 msgstr "  Other/NA:   {n} ({p:.1f}%)"
 
-#: orologic_modules/pgn_search.py:821
+#: orologic_modules/pgn_search.py:611
 #, python-brace-format
 msgid ""
 "\n"
@@ -8335,26 +8594,26 @@ msgstr ""
 "\n"
 "Unique Players:      {n}"
 
-#: orologic_modules/pgn_search.py:822
+#: orologic_modules/pgn_search.py:612
 #, python-brace-format
 msgid "Eventi univoci:        {n}"
 msgstr "Unique events:       {n}"
 
-#: orologic_modules/pgn_search.py:825
+#: orologic_modules/pgn_search.py:615
 #, python-brace-format
 msgid "Anni univoci:          {n} ({min} - {max})"
 msgstr "Unique years:        {n} ({min} - {max})"
 
-#: orologic_modules/pgn_search.py:830
+#: orologic_modules/pgn_search.py:620
 msgid "Anni univoci:          N/D"
 msgstr "Unique years:        N/A"
 
-#: orologic_modules/pgn_search.py:831
+#: orologic_modules/pgn_search.py:621
 #, python-brace-format
 msgid "Aperture ECO univoche: {n}"
 msgstr "Unique ECO openings: {n}"
 
-#: orologic_modules/pgn_search.py:838
+#: orologic_modules/pgn_search.py:628
 #, no-python-format, python-brace-format
 msgid ""
 "\n"
@@ -8363,81 +8622,77 @@ msgstr ""
 "\n"
 "Main player detected: {player} (present in >=90{pct} of the games)."
 
-#: orologic_modules/pgn_search.py:840
+#: orologic_modules/pgn_search.py:630
 msgid "Le statistiche dell'albero saranno relative al suo punteggio (+ = -)."
 msgstr ""
 "The tree's statistics will be relative to this player's score (+ = -)."
 
-#: orologic_modules/pgn_search.py:891
-msgid "Filtri"
-msgstr "Filters"
-
-#: orologic_modules/pgn_search.py:900
+#: orologic_modules/pgn_search.py:690
 #, python-brace-format
 msgid "Giocatore Bianco: [{v}]"
 msgstr "White Player: [{v}]"
 
-#: orologic_modules/pgn_search.py:901 orologic_modules/pgn_search.py:904
-#: orologic_modules/pgn_search.py:907 orologic_modules/pgn_search.py:910
-#: orologic_modules/pgn_search.py:918 orologic_modules/pgn_search.py:925
+#: orologic_modules/pgn_search.py:691 orologic_modules/pgn_search.py:694
+#: orologic_modules/pgn_search.py:697 orologic_modules/pgn_search.py:700
+#: orologic_modules/pgn_search.py:708 orologic_modules/pgn_search.py:715
 msgid "qualsiasi"
 msgstr "any"
 
-#: orologic_modules/pgn_search.py:903
+#: orologic_modules/pgn_search.py:693
 #, python-brace-format
 msgid "Giocatore Nero: [{v}]"
 msgstr "Black Player: [{v}]"
 
-#: orologic_modules/pgn_search.py:906
+#: orologic_modules/pgn_search.py:696
 #, python-brace-format
 msgid "Giocatore (bianco o nero): [{v}]"
 msgstr "Player (white or black): [{v}]"
 
-#: orologic_modules/pgn_search.py:909
+#: orologic_modules/pgn_search.py:699
 #, python-brace-format
 msgid "Risultato: [{v}]"
 msgstr "Result: [{v}]"
 
-#: orologic_modules/pgn_search.py:912
+#: orologic_modules/pgn_search.py:702
 #, python-brace-format
 msgid "ELO minimo: [{v}]"
 msgstr "Minimum ELO: [{v}]"
 
-#: orologic_modules/pgn_search.py:913 orologic_modules/pgn_search.py:916
-#: orologic_modules/pgn_search.py:920 orologic_modules/pgn_search.py:923
+#: orologic_modules/pgn_search.py:703 orologic_modules/pgn_search.py:706
+#: orologic_modules/pgn_search.py:710 orologic_modules/pgn_search.py:713
 msgid "nessun limite"
 msgstr "no limits"
 
-#: orologic_modules/pgn_search.py:915
+#: orologic_modules/pgn_search.py:705
 #, python-brace-format
 msgid "ELO massimo: [{v}]"
 msgstr "Maximum ELO: [{v}]"
 
-#: orologic_modules/pgn_search.py:918
+#: orologic_modules/pgn_search.py:708
 #, python-brace-format
 msgid "Evento: [{v}]"
 msgstr "Event: [{v}]"
 
-#: orologic_modules/pgn_search.py:919
+#: orologic_modules/pgn_search.py:709
 #, python-brace-format
 msgid "Anno dal: [{v}]"
 msgstr "Year since: [{v}]"
 
-#: orologic_modules/pgn_search.py:922
+#: orologic_modules/pgn_search.py:712
 #, python-brace-format
 msgid "Anno al: [{v}]"
 msgstr "Year to: [{v}]"
 
-#: orologic_modules/pgn_search.py:925
+#: orologic_modules/pgn_search.py:715
 #, python-brace-format
 msgid "Codice ECO: [{v}]"
 msgstr "ECO code: [{v}]"
 
-#: orologic_modules/pgn_search.py:926
+#: orologic_modules/pgn_search.py:716
 msgid "Torna al menu' principale (Esci)"
 msgstr "Return to main menu (Exit)"
 
-#: orologic_modules/pgn_search.py:932
+#: orologic_modules/pgn_search.py:722
 msgid ""
 "\n"
 "Scegli un filtro o premi INVIO per procedere all'albero: "
@@ -8445,7 +8700,7 @@ msgstr ""
 "\n"
 "Choose a filter or press ENTER to proceed to the tree: "
 
-#: orologic_modules/pgn_search.py:1243
+#: orologic_modules/pgn_search.py:1046
 msgid ""
 "\n"
 "Nessuna mossa disponibile a questo livello."
@@ -8453,7 +8708,7 @@ msgstr ""
 "\n"
 "No moves available at this level."
 
-#: orologic_modules/pgn_search.py:1253 orologic_modules/pgn_search.py:1355
+#: orologic_modules/pgn_search.py:1056 orologic_modules/pgn_search.py:1158
 msgid ""
 "\n"
 "Una sola partita rimasta nel ramo. Passaggio all'analisi..."
@@ -8461,11 +8716,11 @@ msgstr ""
 "\n"
 "Only one game left in the branch. Moving on to analysis..."
 
-#: orologic_modules/pgn_search.py:1347
+#: orologic_modules/pgn_search.py:1150
 msgid "Numero non valido."
 msgstr "Invalid number."
 
-#: orologic_modules/pgn_search.py:1456
+#: orologic_modules/pgn_search.py:1259
 #, python-brace-format
 msgid ""
 "\n"
@@ -8474,7 +8729,7 @@ msgstr ""
 "\n"
 "Branch: {ramo} | {n} games | {stats}"
 
-#: orologic_modules/pgn_search.py:1464
+#: orologic_modules/pgn_search.py:1267
 msgid ""
 "\n"
 "Mosse disponibili:"
@@ -8482,55 +8737,55 @@ msgstr ""
 "\n"
 "Available moves:"
 
-#: orologic_modules/pgn_search.py:1489
+#: orologic_modules/pgn_search.py:1292
 msgid "Aiuto Navigazione Albero"
 msgstr "Tree Navigation Help"
 
-#: orologic_modules/pgn_search.py:1490
+#: orologic_modules/pgn_search.py:1293
 msgid "  w = Ramo precedente (su)"
 msgstr "  w = Previous branch (up)"
 
-#: orologic_modules/pgn_search.py:1491
+#: orologic_modules/pgn_search.py:1294
 msgid "  x = Ramo successivo (giu')"
 msgstr "  x = Next branch (down)"
 
-#: orologic_modules/pgn_search.py:1492
+#: orologic_modules/pgn_search.py:1295
 msgid "  d = Scendi nel ramo selezionato"
 msgstr "  d = Go down the selected branch"
 
-#: orologic_modules/pgn_search.py:1493
+#: orologic_modules/pgn_search.py:1296
 msgid "  a = Risali di un livello"
 msgstr "  a = Go up one level"
 
-#: orologic_modules/pgn_search.py:1494
+#: orologic_modules/pgn_search.py:1297
 msgid "  1-9 = Seleziona direttamente un ramo"
 msgstr "  1-9 = Select a branch directly"
 
-#: orologic_modules/pgn_search.py:1495
+#: orologic_modules/pgn_search.py:1298
 msgid "  0 = Sfoglia le partite del ramo corrente"
 msgstr "  0 = Browse games of the current branch"
 
-#: orologic_modules/pgn_search.py:1496
+#: orologic_modules/pgn_search.py:1299
 msgid "  s = Salva PGN con le partite filtrate"
 msgstr "  s = Save PGN with filtered games"
 
-#: orologic_modules/pgn_search.py:1497
+#: orologic_modules/pgn_search.py:1300
 msgid "  t = Ripeti informazioni ramo corrente"
 msgstr "  t = Repeat current branch information"
 
-#: orologic_modules/pgn_search.py:1498
+#: orologic_modules/pgn_search.py:1301
 msgid "  ? = Questo aiuto"
 msgstr "  ? = This help"
 
-#: orologic_modules/pgn_search.py:1499
+#: orologic_modules/pgn_search.py:1302
 msgid "  . = Esci dall'albero"
 msgstr "  . = Exit the tree"
 
-#: orologic_modules/pgn_search.py:1516
+#: orologic_modules/pgn_search.py:1319
 msgid "Nessuna partita nel ramo corrente."
 msgstr "No games in the current branch."
 
-#: orologic_modules/pgn_search.py:1544
+#: orologic_modules/pgn_search.py:1347
 msgid ""
 "\n"
 "Scegli una partita (. per tornare): "
@@ -8538,15 +8793,15 @@ msgstr ""
 "\n"
 "Choose a game (. to return): "
 
-#: orologic_modules/pgn_search.py:1609
+#: orologic_modules/pgn_search.py:1412
 msgid "Desideri procedere ugualmente? (INVIO per si', ESC per annullare): "
 msgstr "Do you want to proceed anyway? (ENTER for yes, ESC to cancel): "
 
-#: orologic_modules/pgn_search.py:1614
+#: orologic_modules/pgn_search.py:1417
 msgid "Nessuna partita da salvare."
 msgstr "No game to save."
 
-#: orologic_modules/pgn_search.py:1618
+#: orologic_modules/pgn_search.py:1421
 msgid "Nome del file da salvare (senza estensione): "
 msgstr "Name of the file to save (without extension): "
 

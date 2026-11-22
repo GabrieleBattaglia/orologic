@@ -382,204 +382,6 @@ def pulita(testo):
     return " ".join(testo.split())
 
 
-def carica_archivio(tipo, sorgente, avanzamento=None, fermato=None):
-    """Per la finestra: l'archivio da un file, da un indirizzo o da un
-    testo, come tipo_di_sorgente; restituisce (Archivio o None, righe). Le
-    righe dell'avanzamento vanno ad avanzamento, al piu' ogni tre secondi;
-    fermato(), vero, ferma lo scaricamento o la lettura e tiene quello che
-    e' arrivato. Gira in un filo: non tocca la finestra."""
-    righe = []
-    if tipo == "file":
-        righe.append(pulita(_("Rilevato percorso file: {path}").format(path=sorgente)))
-        try:
-            with open(sorgente, encoding="utf-8", errors="replace") as f:
-                pgn_text = f.read()
-        except OSError as e:
-            righe.append(pulita(_("Errore nella lettura del file: {e}").format(e=e)))
-            return None, righe
-    elif tipo == "url":
-        righe.append(pulita(_("Rilevato URL: {url}").format(url=sorgente)))
-        try:
-            pgn_text = _scarica(sorgente, righe, avanzamento, fermato)
-        # Gli archivi PGN arrivano da fuori e possono essere malformati
-        # in modi imprevedibili.
-        except Exception as e:  # noqa: BLE001
-            if isinstance(e, urllib.error.HTTPError):
-                righe.append(pulita(_("Errore HTTP durante il download: {code} {reason}").format(code=e.code, reason=e.reason)))
-            else:
-                righe.append(pulita(_("Errore nel download: {e}").format(e=e)))
-            return None, righe
-    else:
-        pgn_text = sorgente.strip()
-        if not pgn_text:
-            righe.append(_("Gli appunti sono vuoti."))
-            return None, righe
-        if "[" not in pgn_text and "1." not in pgn_text:
-            righe.append(_("Il testo negli appunti non sembra contenere dati PGN validi."))
-            return None, righe
-
-    if not pgn_text or not pgn_text.strip():
-        righe.append(_("Nessun contenuto PGN trovato."))
-        return None, righe
-
-    def letti(count):
-        if avanzamento is not None:
-            avanzamento(pulita(_("\rPartite caricate: {n}...").format(n=count)))
-
-    def interrotta(e):
-        righe.append(pulita(_("Lettura interrotta: il PGN non e' leggibile da questo punto in poi. {errore}").format(errore=e)))
-
-    games, esclusi = leggi_le_partite(pgn_text, letti, interrotta, fermato)
-    if fermato is not None and fermato() and games:
-        righe.append(_("Lettura fermata: tengo le partite lette finora."))
-    righe.extend(pulita(riga) for riga in righe_dell_esito(len(games), esclusi))
-    if not games:
-        return None, righe
-    return Archivio(games, esclusi), righe
-
-
-def _scarica(indirizzo, righe, avanzamento=None, fermato=None):
-    """Il testo dell'indirizzo, a blocchi: Esc, cioe' fermato, e il limite
-    dei sessanta minuti tengono quello che e' arrivato, come nel terminale."""
-    data = []
-    downloaded = 0
-    start_time = time.time()
-    last_print = start_time
-    with _apri_indirizzo(indirizzo) as resp:
-        while True:
-            if fermato is not None and fermato():
-                righe.append(pulita(_("Scaricamento interrotto dall'utente. Elaborazione delle partite caricate finora...")))
-                break
-            chunk = resp.read(BLOCCO)
-            if not chunk:
-                break
-            data.append(chunk)
-            downloaded += len(chunk)
-            now = time.time()
-            elapsed = now - start_time
-            if elapsed > LIMITE_DELLO_SCARICAMENTO:
-                righe.append(pulita(_("Tempo massimo di scaricamento (60 minuti) raggiunto. Elaborazione delle partite caricate finora...")))
-                break
-            if now - last_print >= OGNI_QUANTO and avanzamento is not None:
-                mb = downloaded / (1024 * 1024)
-                avanzamento(pulita(_("\rScaricamento in corso: {mb:.2f} MB ({elapsed:.0f}s)...\r").format(mb=mb, elapsed=elapsed)))
-                last_print = now
-    return b"".join(data).decode("utf-8", errors="replace")
-
-
-# L'albero della finestra, senza wx
-
-
-class Archivio:
-    """Le partite caricate nella finestra, con le loro intestazioni, le
-    mosse della linea principale, che fanno l'albero, e il giocatore
-    principale. Le varianti dei commenti nell'albero non entrano: una
-    partita sta in un ramo solo, quello che si e' giocato."""
-
-    def __init__(self, games, esclusi=0):
-        self.games = games
-        self.esclusi = esclusi
-        self.info = estrai_info(games)
-        self.mosse = [list(game.mainline_moves()) for game in games]
-        self.giocatore_comune = _trova_giocatore_comune(self.info)
-
-    def figli(self, indici, profondita):
-        """Dopo tante mosse quante profondita, le mosse giocate nelle
-        partite di indici: [(mossa, indici)], dalla piu' giocata, a parita'
-        nell'ordine dell'archivio, e le partite che finiscono li'."""
-        gruppi = {}
-        finite = []
-        for indice in indici:
-            mosse = self.mosse[indice]
-            if len(mosse) > profondita:
-                gruppi.setdefault(mosse[profondita], []).append(indice)
-            else:
-                finite.append(indice)
-        rami = sorted(gruppi.items(), key=lambda coppia: len(coppia[1]), reverse=True)
-        return rami, finite
-
-    def statistiche(self, indici, filtri):
-        return _formato_statistiche(self.info, indici, filtri, self.giocatore_comune)
-
-    def partita(self, indice):
-        """Bianco vs Nero, risultato."""
-        info = self.info[indice]
-        return _("{bianco} vs {nero}, {risultato}").format(bianco=info["White"], nero=info["Black"], risultato=info["Result"])
-
-    def continuazione(self, scacchiera, indice, profondita, quante=5):
-        """Le mosse che seguono il ramo, come nel terminale: 2... Nc6 3. Bb5 a6."""
-        board = scacchiera.copy(stack=False)
-        parti = []
-        for mossa in self.mosse[indice][profondita : profondita + quante]:
-            san = board.san(mossa)
-            if board.turn == chess.WHITE:
-                parti.append(f"{board.fullmove_number}. {san}")
-            elif not parti:
-                parti.append(f"{board.fullmove_number}... {san}")
-            else:
-                parti.append(san)
-            board.push(mossa)
-        return " ".join(parti)
-
-    def voce_della_lista(self, scacchiera, indice, profondita, numero):
-        """Una riga delle partite del ramo, come le stampava il terminale."""
-        info = self.info[indice]
-        valore = info["Result"]
-        continuazione = self.continuazione(scacchiera, indice, profondita)
-        if continuazione:
-            valore += ", " + continuazione
-        return "{w} vs {b} ({num}): {valore}".format(w=info["White"], b=info["Black"], num=numero, valore=valore)
-
-
-def scacchiera_del_percorso(percorso):
-    board = chess.Board()
-    for mossa in percorso:
-        board.push(mossa)
-    return board
-
-
-def voce_della_radice(archivio, indici, filtri):
-    return _("{ramo} ({n} partite) | {statistiche}").format(ramo=_("(radice)"), n=len(indici), statistiche=archivio.statistiche(indici, filtri))
-
-
-def voce_del_ramo(archivio, scacchiera, mossa, indici, totale, filtri):
-    """La voce di una mossa, con le statistiche del terminale; con una
-    partita sola e' la foglia, e dice la partita."""
-    san = scacchiera.san(mossa)
-    try:
-        descrizione = board_utils.DescribeMove(mossa, scacchiera)
-    # Gli archivi PGN arrivano da fuori e possono essere malformati
-    # in modi imprevedibili.
-    except Exception:  # noqa: BLE001
-        descrizione = san
-    if len(indici) == 1:
-        return _("{descrizione} ({mossa}): {partita}").format(descrizione=descrizione, mossa=san, partita=archivio.partita(indici[0]))
-    pct = len(indici) / totale * 100 if totale else 0
-    return _("{descrizione} ({mossa}) ({n} partite) = {pct:.1f}% | {statistiche}").format(
-        descrizione=descrizione, mossa=san, n=len(indici), pct=pct, statistiche=archivio.statistiche(indici, filtri))
-
-
-def sequenza_del_percorso(percorso):
-    """La linea dalla prima mossa: 1. e4 e5 2. Nf3, o (radice)."""
-    board = chess.Board()
-    mosse = []
-    for mossa in percorso:
-        mosse.append(board.san(mossa))
-        board.push(mossa)
-    return _formatta_sequenza_mosse(mosse)
-
-
-def righe_dell_archivio(archivio):
-    """Le statistiche generali del terminale, per l'area in cima alla
-    finestra."""
-    righe = [pulita(riga) for riga in righe_delle_statistiche(len(archivio.games), archivio.info)]
-    if archivio.giocatore_comune:
-        righe.extend(pulita(riga) for riga in righe_del_giocatore_comune(archivio.giocatore_comune))
-    if len(archivio.games) < 20:
-        righe.append(pulita(_("\nAttenzione: l'archivio contiene solo {n} partite (minimo consigliato: 20).").format(n=len(archivio.games))))
-    return [riga for riga in righe if riga]
-
-
 def scrivi_pgn(percorso, games, indici):
     """Le partite di indici nel file, con varianti e commenti."""
     with open(percorso, "w", encoding="utf-8") as f:
@@ -593,30 +395,18 @@ def scrivi_pgn(percorso, games, indici):
             f.write("\n\n")
 
 
-class Ricerca:
-    """Lo stato della ricerca nella finestra, che resta fra un'apertura e
-    l'altra: dopo Easyfish o l'analisi si torna allo stesso punto.
-    indirizzo e' quello del profilatore, da caricare alla prima apertura;
-    posizione la voce dell'albero, come (percorso, partita)."""
-
-    def __init__(self, indirizzo=None):
-        self.indirizzo = indirizzo
-        self.archivio = None
-        self.righe = []
-        self.filtri = {}
-        self.posizione = None
-
-
 def _nella_finestra(indirizzo):
     """La ricerca nella finestra: si apre, e a ogni uscita verso Easyfish o
     l'analisi si riapre al ritorno, allo stesso punto."""
-    ricerca = Ricerca(indirizzo)
+    from orologic_modules import archivio_pgn
+
+    ricerca = archivio_pgn.Ricerca(indirizzo)
     while True:
         uscita = strato.ricerca_pgn(ricerca)
         if uscita is None:
             return
         azione, indice = uscita
-        game = ricerca.archivio.games[indice]
+        game = ricerca.archivio.partita_intera(indice)
         if azione == "easyfish":
             from orologic_modules.easyfish import easyfish_app
 
@@ -1137,6 +927,19 @@ def applica_filtri(info_list, filtri):
             game_eco = info["ECO"].upper() if info["ECO"] else ""
             if not game_eco.startswith(feco):
                 continue
+
+        # I filtri della finestra: le mosse, il matto e la promozione, che
+        # l'archivio della finestra mette nelle intestazioni.
+        mosse_min = filtri.get("mosse_min")
+        if mosse_min and info.get("Mosse", 0) < mosse_min:
+            continue
+        mosse_max = filtri.get("mosse_max")
+        if mosse_max and info.get("Mosse", 0) >= mosse_max:
+            continue
+        if filtri.get("matto") and not info.get("Matto"):
+            continue
+        if filtri.get("promozione") and not info.get("Promozione"):
+            continue
 
         indici.append(i)
 

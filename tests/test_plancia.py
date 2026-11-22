@@ -164,6 +164,9 @@ def test_l_albero_dei_menu(finestra, monkeypatch):
     assert pompa(lambda: finestra.attesa.tipo == "sino")
     assert rami_della_plancia(finestra)[4:8] == [(1, "crea: Nuovo orologio"), (2, "Confermi?"), (3, "INVIO"), (3, "ESC")]
     assert pompa(lambda: wx.Window.FindFocus() is finestra.area)
+    # Il cursore sulla domanda, non sul benvenuto dove l'aveva lasciato il
+    # primo menu.
+    assert finestra.area.GetLineText(finestra._riga_e_colonna()[0]).startswith("Confermi?")
     attiva(finestra, "INVIO")
     assert pompa(lambda: finestra.attesa.tipo == "area" and "Nome:" in finestra.area.GetValue())
     for tasto in "Lampo\r":

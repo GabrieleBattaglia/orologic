@@ -108,6 +108,42 @@ margin: 1em 0;
 </li>
 <li><a href="#cap-1-7">1.7. Installare o Scompattare</a>
 </li>
+<li><a href="#cap-1-8">1.8. Tasti rapidi</a>
+<ul>
+<li><a href="#cap-1-8-1">1.8.1. La finestra principale</a>
+</li>
+<li><a href="#cap-1-8-2">1.8.2. La plancia</a>
+</li>
+<li><a href="#cap-1-8-3">1.8.3. La console</a>
+</li>
+<li><a href="#cap-1-8-4">1.8.4. La scacchiera</a>
+</li>
+<li><a href="#cap-1-8-5">1.8.5. Comandi della partita, la conferma del risultato e l'aiuto della scacchiera</a>
+</li>
+<li><a href="#cap-1-8-6">1.8.6. Le impostazioni</a>
+</li>
+<li><a href="#cap-1-8-7">1.8.7. Il prompt di gioco</a>
+</li>
+<li><a href="#cap-1-8-8">1.8.8. Colori e dimensioni</a>
+</li>
+<li><a href="#cap-1-8-9">1.8.9. Gli orologi</a>
+</li>
+<li><a href="#cap-1-8-10">1.8.10. La pulizia</a>
+</li>
+<li><a href="#cap-1-8-11">1.8.11. La ricerca PGN</a>
+</li>
+<li><a href="#cap-1-8-12">1.8.12. La partita selezionata</a>
+</li>
+<li><a href="#cap-1-8-13">1.8.13. Le scelte da un elenco e i valori da scrivere</a>
+</li>
+<li><a href="#cap-1-8-14">1.8.14. Offrimi un caffè</a>
+</li>
+<li><a href="#cap-1-8-15">1.8.15. Entra al PUB e Chiedi aiuto al PUB</a>
+</li>
+<li><a href="#cap-1-8-16">1.8.16. La scelta della lingua</a>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#cap-2">2. Opzioni del Menu Principale</a>
@@ -307,6 +343,7 @@ margin: 1em 0;
     <li><code>Alt+F4</code>: chiude Orologic, come Ctrl+C nel terminale.</li>
     <li><code>Ctrl+V</code>: incolla nella console, fino al primo a capo.</li>
 </ul>
+<p>Tutti i tasti della finestra, finestra per finestra, sono nella sezione 1.8.</p>
 
 <h4 id="cap-1-3-3">1.3.3. Le partite: il cruscotto e gli annunci</h4>
 <p>Durante una partita, nell'arbitraggio, in Tempo, contro il motore e su Lichess, la console diventa un <strong>cruscotto</strong> che si riscrive da solo ogni secondo: dall'alto i giocatori e lo stato della partita, la scacchiera, gli orologi a parole, le ultime mosse a parole, con le due semimosse sulla stessa riga, il consumo dell'orologio di chi ha mosso e il tempo speso, poi gli ultimi messaggi e in fondo il prompt. Puoi fermarti su una riga, per esempio quella degli orologi: si aggiorna senza spostarti. A fine partita torna la console intera, con tutto quello che è stato scritto.</p>
@@ -470,6 +507,185 @@ margin: 1em 0;
     <li><strong>Stockfish</strong> non è in nessuno dei due: Orologic lo scarica da sé dalle impostazioni del motore, sezione 2.9.3, e ti propone gli aggiornamenti.</li>
 </ul>
 <p>Il programma non è firmato digitalmente: la prima volta Windows può mostrare l'avviso di SmartScreen. È normale: scegli Ulteriori informazioni, poi Esegui comunque.</p>
+<h3 id="cap-1-8">1.8. Tasti rapidi</h3>
+<p>Qui ci sono tutti i tasti della finestra, finestra per finestra, e dentro ogni finestra in ordine alfabetico. Le lettere sottolineate dei pulsanti si premono con Alt. Nelle finestre degli orologi, del prompt di gioco, dei colori, del caffè e del PUB un Invio che si ripete entro 0,65 secondi, col tasto tenuto giù, non conta. Gli avvisi e le domande Sì o No sono le finestre di Windows, col No già scelto. Nel terminale, con <code>--cli</code>, valgono i comandi della sezione 1.3.5 e del capitolo 2.</p>
+<h4 id="cap-1-8-1">1.8.1. La finestra principale</h4>
+<p>Valgono nella finestra principale, non nelle finestre aperte sopra.</p>
+<ul>
+    <li><code>Alt+F4</code>: chiude Orologic, come Ctrl+C nel terminale: il programma ha cinque secondi per chiudersi da solo.</li>
+    <li><code>Ctrl+virgola</code>: apre le impostazioni, sezione 2.9.2; se sono già aperte non fa niente.</li>
+    <li><code>F5</code>: va alla plancia.</li>
+    <li><code>F6</code>: va alla console.</li>
+    <li><code>Tab e Maiuscolo+Tab</code>: passano dalla plancia alla console e dalla console alla plancia.</li>
+</ul>
+
+<h4 id="cap-1-8-2">1.8.2. La plancia</h4>
+<ul>
+    <li><code>Esc</code>: vale come Esc nel menu che aspetta, o nella domanda Invio o Esc, su qualunque voce sia il cursore.</li>
+    <li><code>Freccia destra</code>: su un ramo di menu: Orologic entra in quel menu.</li>
+    <li><code>Freccia sinistra</code>: su un ramo aperto torna al menu di sopra; su una voce del ramo porta al ramo.</li>
+    <li><code>Invio</code>: su un ramo chiuso lo apre, su un ramo aperto lo chiude, su una foglia la sceglie; sulle voci INVIO ed ESC di una domanda manda quel tasto. In partita, su un comando, lo scrive nel prompt e lo manda; se il valore è libero ne scrive l'inizio e porta alla console; su un comando con dei valori apre o chiude il ramo.</li>
+</ul>
+
+<h4 id="cap-1-8-3">1.8.3. La console</h4>
+<ul>
+    <li><code>Backspace</code>: nelle domande a testo cancella l'ultimo carattere scritto; altrimenti va a Orologic, come nel terminale.</li>
+    <li><code>Canc, Ctrl+X, Ctrl+Z e Ctrl+Y</code>: non fanno niente: la console non si modifica.</li>
+    <li><code>Ctrl+V e Maiuscolo+Ins</code>: incollano nel prompt gli appunti, fino al primo a capo.</li>
+    <li><code>Esc</code>: nelle domande a testo svuota la riga scritta; altrimenti va a Orologic, come nel terminale.</li>
+    <li><code>Frecce, Pagina su, Pagina giù, Home e Fine</code>: percorrono la console, per rileggerla.</li>
+    <li><code>Invio</code>: consegna la risposta, come nel terminale.</li>
+    <li><code>Lettere, cifre e simboli</code>: si scrivono nel prompt, e il cursore torna sulla sua riga; mentre Orologic aspetta una scelta di menu portano alla plancia.</li>
+    <li><code>Spazio</code>: in partita, al prompt delle mosse e a riga vuota: apre la scacchiera, sezione 1.3.4.</li>
+</ul>
+
+<h4 id="cap-1-8-4">1.8.4. La scacchiera</h4>
+<p>Valgono con la scacchiera aperta, sezione 1.3.4. Le lettere e le cifre senza Alt né Ctrl; con Alt o Ctrl non fanno niente.</p>
+<ul>
+    <li><code>*</code>: il risultato non specificato, con la conferma, dove la modalità ha il comando .1-0, come nell'arbitraggio.</li>
+    <li><code>0 poi 1</code>: vince il Nero, 0-1, con la conferma, dove la modalità ha il comando .1-0.</li>
+    <li><code>1 poi 0</code>: vince il Bianco, 1-0, con la conferma, dove la modalità ha il comando .1-0.</li>
+    <li><code>1 poi 2</code>: patta, con la conferma, dove la modalità ha il comando .1-0.</li>
+    <li><code>9</code>: gira la scacchiera.</li>
+    <li><code>?</code>: apre l'aiuto della scacchiera.</li>
+    <li><code>Alt+frecce</code>: oltre il bordo, dall'altra parte.</li>
+    <li><code>b, da sola</code>: passata l'attesa, dice dove sono gli alfieri neri.</li>
+    <li><code>Backspace</code>: ferma il tempo, dove c'è il comando .p, e apre Comandi della partita; senza comandi suona il no.</li>
+    <li><code>C</code>: il commento alla mossa, dove la modalità ha il comando .c.</li>
+    <li><code>Ctrl+Freccia sinistra e Ctrl+Freccia destra</code>: le diagonali che scendono.</li>
+    <li><code>Ctrl+Spazio</code>: dice il pezzo che hai in mano.</li>
+    <li><code>Da 1 a 8, da soli</code>: la traversa, nella colonna di adesso; dove si assegna il risultato l'1 aspetta prima l'eventuale seconda cifra.</li>
+    <li><code>Da F1 a F5</code>: come i comandi da .1 a .5, dove la modalità li ha.</li>
+    <li><code>Esc</code>: chiude la scacchiera.</li>
+    <li><code>Frecce</code>: una casa alla volta; al bordo si fermano, con un suono.</li>
+    <li><code>Invio</code>: posa il pezzo sollevato, e la mossa va a Orologic; per la promozione si apre la scelta del pezzo. Non vale nella partita osservata su Lichess.</li>
+    <li><code>L</code>: le ultime due mosse.</li>
+    <li><code>l</code>: l'ultima mossa.</li>
+    <li><code>m</code>: le mosse possibili.</li>
+    <li><code>Maiuscolo+Freccia sinistra e Maiuscolo+Freccia destra</code>: le diagonali che salgono.</li>
+    <li><code>R N B Q K P, e le minuscole</code>: dove sono quei pezzi: le maiuscole i bianchi, le minuscole i neri.</li>
+    <li><code>Spazio</code>: solleva il pezzo; sulla sua casa lo posa; su un'altra casa piena prende quello. Non vale nella partita osservata su Lichess.</li>
+    <li><code>Tab</code>: dice la casa, coi pezzi che la difendono e quelli che la attaccano.</li>
+    <li><code>u</code>: va alla casa d'arrivo dell'ultima mossa.</li>
+    <li><code>Una lettera da a ad h, poi un numero da 1 a 8</code>: entro l'attesa va a quella casa. L'attesa si sceglie nelle impostazioni, da 200 a 3000 millisecondi: di partenza è 700.</li>
+    <li><code>W</code>: tutti i pezzi bianchi.</li>
+    <li><code>w</code>: tutti i pezzi neri.</li>
+</ul>
+
+<h4 id="cap-1-8-5">1.8.5. Comandi della partita, la conferma del risultato e l'aiuto della scacchiera</h4>
+<ul>
+    <li><code>Backspace</code>: in Comandi della partita fa ripartire il tempo e chiude, anche dall'elenco dei valori.</li>
+    <li><code>Esc</code>: chiude; nella conferma del risultato continua la partita.</li>
+    <li><code>Invio</code>: in Comandi della partita sceglie il comando: su un comando con dei valori apre il loro elenco, su uno col valore libero lo chiede in un campo. Nella conferma del risultato lo assegna.</li>
+</ul>
+
+<h4 id="cap-1-8-6">1.8.6. Le impostazioni</h4>
+<p>Valgono anche negli elenchi dei nomi e del motore.</p>
+<ul>
+    <li><code>Esc</code>: chiude.</li>
+    <li><code>Invio</code>: sulla lista cambia la voce; nel filtro torna alla lista.</li>
+    <li><code>Maiuscolo+Tab</code>: dalla lista va al filtro.</li>
+</ul>
+
+<h4 id="cap-1-8-7">1.8.7. Il prompt di gioco</h4>
+<ul>
+    <li><code>Canc</code>: nel Prompt rimette il simbolo fra i Disponibili.</li>
+    <li><code>Ctrl+Freccia su e Ctrl+Freccia giù</code>: nel Prompt spostano l'elemento prima o dopo.</li>
+    <li><code>Esc</code>: chiude senza salvare.</li>
+    <li><code>Invio</code>: nei Disponibili mette il simbolo in fondo al prompt, e su Testo libero chiede il testo; nel Prompt, su un testo libero, lo fa riscrivere.</li>
+    <li><code>Spazio</code>: nei due elenchi accende o spegne la forma estesa.</li>
+</ul>
+
+<h4 id="cap-1-8-8">1.8.8. Colori e dimensioni</h4>
+<ul>
+    <li><code>Ctrl+Tab</code>: passa da una scheda all'altra.</li>
+    <li><code>Esc</code>: chiude e rimette i colori di prima.</li>
+    <li><code>Invio</code>: su Applica a mette il colore, o la dimensione, nella voce scelta; su Colori predefiniti porta il colore nei cursori; su Salva colore chiede il nome; altrove vale OK.</li>
+</ul>
+
+<h4 id="cap-1-8-9">1.8.9. Gli orologi</h4>
+<ul>
+    <li><code>Alt+A</code>: Annulla, nei campi di un orologio.</li>
+    <li><code>Alt+M</code>: Modifica.</li>
+    <li><code>Alt+S</code>: Salva, nei campi di un orologio.</li>
+    <li><code>Canc</code>: sull'elenco chiede se eliminare l'orologio; su Fasi toglie la fase, ma non la prima; su Allarmi toglie l'allarme.</li>
+    <li><code>Esc</code>: nei campi vale Annulla; fuori dai campi chiude.</li>
+    <li><code>Invio</code>: su un orologio mostra la sua scheda; su Crea nuovo apre i campi; su Nuova fase aggiunge una fase; su Nuovo allarme lo aggiunge a un minuto, e su un allarme porta ai suoi minuti; nelle ore, nei minuti e nei secondi dell'allarme lo conferma; negli altri campi non fa niente, così non si salva per sbaglio.</li>
+</ul>
+
+<h4 id="cap-1-8-10">1.8.10. La pulizia</h4>
+<ul>
+    <li><code>Alt+P</code>: Elimina più vecchi di, con la conferma.</li>
+    <li><code>Alt+R</code>: Ripristina le date dei file vecchi.</li>
+    <li><code>Alt+T</code>: Elimina tutto, con la conferma.</li>
+    <li><code>Canc</code>: sull'elenco manda il file nel cestino.</li>
+    <li><code>Esc</code>: chiude.</li>
+</ul>
+
+<h4 id="cap-1-8-11">1.8.11. La ricerca PGN</h4>
+<p>Sezione 2.8.</p>
+<ul>
+    <li><code>Alt+1</code>: va all'area Archivio.</li>
+    <li><code>Alt+2</code>: va all'albero delle mosse.</li>
+    <li><code>Alt+3</code>: va ai pulsanti, cominciando da Inizio.</li>
+    <li><code>Alt+4</code>: va al primo filtro, nella scheda Filtri.</li>
+    <li><code>Alt+A</code>: Dagli appunti.</li>
+    <li><code>Alt+B</code>: Ripara i problemi.</li>
+    <li><code>Alt+C</code>: Applica i filtri, nella scheda Filtri.</li>
+    <li><code>Alt+F</code>: Apri file.</li>
+    <li><code>Alt+I</code>: Inizio.</li>
+    <li><code>Alt+L</code>: Classifica.</li>
+    <li><code>Alt+P</code>: Percorso.</li>
+    <li><code>Alt+R</code>: Partite del ramo.</li>
+    <li><code>Alt+S</code>: Salva il PGN.</li>
+    <li><code>Alt+Z</code>: Azzera i filtri, nella scheda Filtri.</li>
+    <li><code>Ctrl+Tab</code>: passa dalla scheda Partite alla scheda Filtri e viceversa.</li>
+    <li><code>Esc</code>: durante il caricamento, Classifica o Ripara li ferma, e tiene quello che è fatto; altrimenti chiude la ricerca.</li>
+    <li><code>Freccia destra e Freccia sinistra</code>: nell'albero aprono e chiudono i rami.</li>
+    <li><code>Invio</code>: nell'albero apre o chiude il ramo, e sulla foglia mostra la partita; in un filtro applica i filtri; nell'elenco Partite del ramo mostra la partita.</li>
+</ul>
+
+<h4 id="cap-1-8-12">1.8.12. La partita selezionata</h4>
+<p>La partita che la ricerca PGN mostra.</p>
+<ul>
+    <li><code>Alt+A</code>: Analisi automatica.</li>
+    <li><code>Alt+E</code>: Passa a Easyfish.</li>
+    <li><code>Alt+M</code>: Analisi manuale.</li>
+    <li><code>Esc</code>: torna alla ricerca.</li>
+</ul>
+
+<h4 id="cap-1-8-13">1.8.13. Le scelte da un elenco e i valori da scrivere</h4>
+<p>Sono le finestre piccole che chiedono una scelta, come la lingua o la promozione, o un valore, come un commento o un numero.</p>
+<ul>
+    <li><code>Esc</code>: annulla.</li>
+    <li><code>Frecce</code>: nei campi numerici cambiano il valore.</li>
+    <li><code>Invio</code>: conferma la voce scelta o il valore scritto.</li>
+</ul>
+
+<h4 id="cap-1-8-14">1.8.14. Offrimi un caffè</h4>
+<ul>
+    <li><code>Alt+C</code>: Chiudi.</li>
+    <li><code>Alt+P</code>: Dona con PayPal.</li>
+    <li><code>Esc</code>: chiude.</li>
+    <li><code>Invio</code>: nel testo chiude.</li>
+</ul>
+
+<h4 id="cap-1-8-15">1.8.15. Entra al PUB e Chiedi aiuto al PUB</h4>
+<ul>
+    <li><code>Alt+A</code>: nella prima schermata Apri nel programma di posta; nei passi Annulla.</li>
+    <li><code>Alt+C</code>: Chiudi.</li>
+    <li><code>Alt+O</code>: OK, nei passi.</li>
+    <li><code>Alt+P</code>: Passo per passo.</li>
+    <li><code>Esc</code>: chiude.</li>
+    <li><code>Invio</code>: nel testo preme il pulsante predefinito.</li>
+</ul>
+
+<h4 id="cap-1-8-16">1.8.16. La scelta della lingua</h4>
+<p>Al primo avvio, quando ci sono più lingue.</p>
+<ul>
+    <li><code>Esc</code>: lascia la lingua di Windows, o l'italiano.</li>
+    <li><code>Frecce e Invio</code>: scelgono la lingua.</li>
+</ul>
 
 <h2 id="cap-2">2. Opzioni del Menu Principale</h2>
 <p>All'avvio di Orologic, vieni accolto da una schermata di benvenuto. Nella finestra le opzioni del menu principale sono nella plancia; nel terminale, digitando <code>?</code> e premendo Invio verranno mostrate. Ecco una descrizione di ciascuna di esse.</p>
@@ -916,8 +1132,15 @@ margin: 1em 0;
 <h3 id="cap-2-8">2.8. Ricerca PGN (ricerca)</h3>
 <p>La modalità <code>ricerca</code> è uno strumento avanzato di Orologic progettato per esplorare, filtrare e studiare archivi e database PGN contenenti centinaia o migliaia di partite. Consente di estrarre le statistiche sulle aperture, navigare l'albero delle mosse e passare direttamente all'analisi di una specifica partita.</p>
 <p><strong>Nella finestra</strong> la voce <code>ricerca</code> apre la finestra della ricerca PGN, che parte dalla finestra standard di Windows per scegliere il file da aprire. Il pulsante Apri file la riapre per un altro archivio; Dagli appunti carica quello che c'è negli appunti, un percorso, un indirizzo o il testo PGN, come nel terminale; dal profilatore di Lichess l'indirizzo delle partite del giocatore arriva da solo. Mentre le partite si caricano, l'area Archivio e la voce dicono a che punto si è, ogni tre secondi, ed Esc ferma lo scaricamento o la lettura e tiene le partite arrivate fin lì.</p>
-<p>Nell'area Archivio ci sono le statistiche generali e, se c'è, il giocatore principale. Sotto, i dieci filtri del terminale, con la loro domanda per etichetta: Invio in un filtro, o il pulsante Applica i filtri, ricostruisce l'albero con le sole partite che passano, e Azzera i filtri li toglie tutti. Poi l'albero delle mosse, un albero di Windows: la radice ha le partite e le statistiche di tutto l'insieme; ogni mossa ha la sua descrizione, la mossa, le partite, la percentuale fra le mosse dello stesso punto e le statistiche, <code>B:X% P:Y% N:Z%</code> o <code>+X% =Y% -Z%</code> come nel terminale. Le frecce lo percorrono, destra e sinistra aprono e chiudono i rami, e Invio su un ramo lo apre o lo chiude. Quando un ramo ha una partita sola diventa una foglia, che dice i giocatori e il risultato: Invio la mostra, con le intestazioni e le mosse, e i pulsanti Passa a Easyfish, Analisi automatica, Analisi manuale e Chiudi. Nell'albero entrano le mosse giocate, non le varianti dei commenti.</p>
-<p>Dopo l'albero, con Tab, i pulsanti. Inizio torna alla radice, coi rami chiusi. Partite del ramo elenca le partite della voce scelta, con le cinque mosse che seguono: Invio mostra la partita, e chiusa la partita si torna all'elenco. Salva il PGN salva le partite della voce scelta nel file che scegli con la finestra di Windows; dalla radice e senza filtri chiede prima, perché sarebbe una copia dell'archivio. Percorso dice, se gli annunci sono attivi, la linea dalla prima mossa alla voce scelta, per esempio <code>1. e4 e5 2. Nf3</code>. Chiudi, o Esc, torna al menu principale. Dopo Easyfish o l'analisi la ricerca si riapre allo stesso punto, coi filtri di prima.</p>
+<p>La finestra ha due schede, Partite e Filtri, e <code>Ctrl+Tab</code> passa dall'una all'altra. Nella scheda Partite ci sono, in quest'ordine, Apri file e Dagli appunti, l'area Archivio, con le statistiche generali e, se c'è, il giocatore principale, l'albero delle mosse e i pulsanti. Nella scheda Filtri ci sono i dieci filtri del terminale, con la loro domanda per etichetta, poi Con almeno queste mosse e Con meno di queste mosse, contate coi numeri delle mosse, e le caselle Terminata con il matto e Con promozione, spente all'avvio; fra i risultati c'è anche Non specificato (*). Invio in un filtro, o il pulsante Applica i filtri, ricostruisce l'albero con le sole partite che passano, e Azzera i filtri li toglie tutti.</p>
+<p>L'albero delle mosse è un albero di Windows: la radice ha le partite e le statistiche di tutto l'insieme; ogni mossa ha la sua descrizione, la mossa, le partite, la percentuale fra le mosse dello stesso punto e le statistiche, <code>B:X% P:Y% N:Z%</code> o <code>+X% =Y% -Z%</code> come nel terminale. Le frecce lo percorrono, destra e sinistra aprono e chiudono i rami, e Invio su un ramo lo apre o lo chiude. Quando un ramo ha una partita sola diventa una foglia, che dice i giocatori e il risultato: Invio la mostra, con le intestazioni e le mosse, e i pulsanti Passa a Easyfish, Analisi automatica, Analisi manuale e Chiudi.</p>
+<p>Nell'albero entrano anche le varianti dei commenti, perché chi studia un'apertura veda le partite commentate che ne parlano, ma contate a parte: un ramo dice per esempio <code>(12 partite, piu' 3 dalle varianti)</code>, e la percentuale e le statistiche sono solo delle 12 partite giocate. Un ramo che ha solo partite dalle varianti dice quante sono, senza statistiche; se ne ha una sola è una foglia, che finisce con <code>in una variante</code>.</p>
+<p>In fondo alla radice, dopo le mosse, ci sono due rami. <strong>Non classificate</strong> raccoglie le partite che l'albero delle aperture non sa mettere a posto, in tre gruppi: Senza mosse; Da una posizione di studio, cioè le partite che partono da una posizione data, o Chess960, che il terminale esclude; Senza codice ECO, le partite con le mosse ma senza l'intestazione ECO, col loro albero delle mosse. Da qualunque voce di questo ramo il pulsante Classifica cerca l'apertura delle partite senza codice ECO in <code>eco.db</code>, lo stesso archivio delle aperture dell'arbitraggio, e scrive le intestazioni ECO, Opening e, se c'è, Variation; alla fine dice quante ne ha classificate.</p>
+<p><strong>Problemi</strong> raccoglie le partite con qualcosa da sistemare, un ramo per tipo, e ogni foglia dice cosa non va. Mosse illegali o illeggibili, con la mossa, per esempio <code>23... Qxf7</code>: la partita si ferma lì. Intestazioni obbligatorie mancanti, coi loro nomi, fra le sette che il PGN vuole sempre: Event, Site, Date, Round, White, Black e Result. Risultato che non torna, col matto o lo stallo sulla scacchiera, o col segno in fondo alle mosse. Date malformate. Elo non numerici. Caratteri illeggibili: le partite di un file che non è tutto in UTF-8, lette con la codifica di Windows. Partite doppie, con la partita di cui sono la copia: le cerca un filo a parte, mentre navighi, e la voce Problemi dice a che punto è; uscendo dalla ricerca si ferma.</p>
+<p>Il pulsante Ripara i problemi, dal ramo Problemi, ripara tutti i tipi, e da un suo ramo solo quel tipo: aggiunge le intestazioni mancanti, col punto interrogativo; corregge il risultato dove la posizione lo dice; riscrive come vuole il PGN le date come <code>2024-05-03</code>; riscrive il file in UTF-8; toglie le copie delle partite doppie, tenendo la prima. Le mosse illegali, gli Elo, le date che non si capiscono, come <code>03.05.2024</code>, e i risultati che la posizione non decide restano da sistemare a mano: il resoconto alla fine li conta.</p>
+<p>Classifica e Ripara cambiano solo quello che serve, le intestazioni e il segno del risultato, e lasciano il resto della partita com'era. Se l'archivio viene da un file, prima di riscriverlo ne fanno una copia di sicurezza nella cartella <code>pgn</code> di Orologic, col nome del file, la parola copia, la data e l'ora; poi riscrivono il file con tutte le partite, anche quelle che non cambiano e quelle che la ricerca non carica. Se l'archivio viene dagli appunti o da Lichess, le modifiche restano nell'archivio aperto, e le tieni con Salva il PGN.</p>
+<p>Dopo l'albero, con Tab, i pulsanti. Inizio torna alla radice, coi rami chiusi. Partite del ramo elenca le partite della voce scelta, con le cinque mosse che seguono, e in fondo quelle che ci arrivano da una variante, segnate <code>variante</code>: Invio mostra la partita, e chiusa la partita si torna all'elenco. Salva il PGN salva le partite della voce scelta, com'erano nell'archivio, nel file che scegli con la finestra di Windows; dalla radice e senza filtri chiede prima, perché sarebbe una copia dell'archivio. Percorso dice, se gli annunci sono attivi, la linea dalla prima mossa alla voce scelta, per esempio <code>1. e4 e5 2. Nf3</code>. Poi Classifica e Ripara i problemi. Chiudi, o Esc, torna al menu principale. Dopo Easyfish o l'analisi la ricerca si riapre allo stesso punto, coi filtri di prima.</p>
+<p>La finestra è grande, e quattro tasti portano alle sue parti: <code>Alt+1</code> all'area Archivio, <code>Alt+2</code> all'albero, <code>Alt+3</code> ai pulsanti, cominciando da Inizio, <code>Alt+4</code> al primo filtro, nella scheda Filtri. Tutti i tasti della ricerca sono nella sezione 1.8.11.</p>
 <p><strong>Nel terminale</strong>, con <code>--cli</code>, la ricerca funziona come descritto dal 2.8.1 al 2.8.5.</p>
 
 <h4 id="cap-2-8-1">2.8.1. Come caricare le partite</h4>
@@ -1021,7 +1244,7 @@ margin: 1em 0;
 
 <h4 id="cap-2-9-2">2.9.2. Il sottomenu Impostazioni (impostazioni)</h4>
 <p><strong>Nella finestra</strong> tutte le impostazioni stanno in un luogo solo, che si apre con <code>Ctrl+virgola</code> da qualunque punto, o con la voce <code>impostazioni</code> del menu principale. È un elenco, una riga per voce, con il nome e il valore di adesso, per esempio <code>Volume dei suoni: 40%</code>. Invio su una riga apre la sua scelta: una lista, un campo per un numero o un testo, che ha per etichetta la domanda del terminale, oppure un secondo elenco. Esc chiude. Con <code>Maiuscolo+Tab</code> vai al filtro: restano solo le voci il cui nome contiene quello che scrivi, senza badare a maiuscole e accenti, e Invio nel filtro torna all'elenco.</p>
-<p>Le voci sono quelle del terminale, una per valore: il tempo e le linee dell'analisi e le tre soglie, il tuo nome, che nella finestra puoi anche togliere lasciando il campo vuoto, il motore, i nomi, il prompt, il salvataggio automatico, lo stile dei menu, che serve solo al terminale, i colori e le dimensioni dei caratteri, sezione 2.9.9, e il volume. Poi le cinque voci degli annunci, sezione 1.3.3, e la Lingua, che vale dal riavvio. In fondo tre voci comuni a tutti i programmi di Gabriele con la finestra: Offrimi un caffè, sezione 6, Entra al PUB e Chiedi aiuto al PUB, sezione 4. Prima di queste, la voce Pulizia apre la finestra della pulizia dei file, sezione 1.4.</p>
+<p>Le voci sono quelle del terminale, una per valore: il tempo e le linee dell'analisi e le tre soglie, il tuo nome, che nella finestra puoi anche togliere lasciando il campo vuoto, il motore, i nomi, il prompt, le righe che l'area principale conserva, 200 di partenza, oltre le quali le più vecchie se ne vanno, il salvataggio automatico, lo stile dei menu, che serve solo al terminale, i colori e le dimensioni dei caratteri, sezione 2.9.9, e il volume. Poi le cinque voci degli annunci, sezione 1.3.3, e la Lingua, che vale dal riavvio. In fondo tre voci comuni a tutti i programmi di Gabriele con la finestra: Offrimi un caffè, sezione 6, Entra al PUB e Chiedi aiuto al PUB, sezione 4. Prima di queste, la voce Pulizia apre la finestra della pulizia dei file, sezione 1.4.</p>
 <p><strong>Nel terminale</strong> le impostazioni sono un sottomenu, come sempre:</p>
 <p>La voce <code>impostazioni</code> del menu principale apre un sottomenu che raccoglie tutto quello che si configura una volta e si cambia di rado. Fino alla versione 8.20 il motore, i nomi e il volume stavano nel menu principale, e le altre impostazioni erano un'unica sequenza di domande da attraversare tutta per cambiarne una sola. Come per gli orologi, si resta nel sottomenu finché non si digita il punto, così si possono sistemare più cose di seguito. Le voci sono otto. Le due che sono interruttori dicono nell'etichetta com'è messa la cosa in quel momento, per esempio "Salvataggio automatico: non attivo": sceglierle basta a cambiare stato, senza domande in più, e al giro dopo il menu dice il valore nuovo. Anche il motore, il prompt e il volume si presentano con il loro stato, cioè il nome del motore in uso, il modello del prompt e il volume su cento.</p>
 <ul>

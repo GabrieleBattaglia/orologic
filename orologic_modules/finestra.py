@@ -84,9 +84,12 @@ from .config import _
 # cicli d'attesa guardano l'orologio prima di kbhit, e un rinfresco a tempo
 # che cade al giro dopo un tasto non e' un eco.
 ECO_MASSIMO = 0.015
-# Le righe che l'area tiene; oltre, le piu' vecchie se ne vanno a gruppi.
-RIGHE_TENUTE = 5000
-RIGHE_TOLTE_ALLA_VOLTA = 200
+# Le righe che l'area tiene, dalle impostazioni, coi loro limiti; oltre, le
+# piu' vecchie se ne vanno a gruppi, di un quarto delle tenute.
+CHIAVE_DELLE_RIGHE = "righe_dell_area"
+RIGHE_PREDEFINITE = 200
+RIGHE_MINIME = 20
+RIGHE_MASSIME = 10000
 # Quanti secondi il nucleo ha per chiudersi da solo, quando si chiude la finestra.
 ATTESA_DELLA_CHIUSURA = 5.0
 # Quante risposte la plancia da' da sola per arrivare a una voce: oltre,
@@ -464,6 +467,17 @@ class Terminale:
         return testo[: max(self.colonna, len(testo.rstrip()))]
 
 
+def righe_da_tenere():
+    """Le righe che l'area principale conserva, dalle impostazioni."""
+    from . import storage
+
+    try:
+        valore = int(storage.LoadDB().get(CHIAVE_DELLE_RIGHE, RIGHE_PREDEFINITE))
+    except (TypeError, ValueError):
+        valore = RIGHE_PREDEFINITE
+    return min(max(valore, RIGHE_MINIME), RIGHE_MASSIME)
+
+
 def _parte_nuova(riga, detta):
     """Cio' che di una riga va annunciato, sapendo che detta e' gia' stata
     sentita: niente se e' la stessa, la sola coda se la riga la continua,
@@ -529,6 +543,8 @@ class Finestra(wx.Frame):
         # Le righe chiuse della console; la riga in corso viene dopo. Durante
         # il cruscotto continuano a raccogliersi, e tornano a fine partita.
         self.righe = []
+        # Quante l'area ne conserva: le impostazioni lo cambiano.
+        self.righe_tenute = righe_da_tenere()
         # Il cruscotto: chi da' i dati, i messaggi della partita, le righe
         # mostrate come coppie (sezione, testo), l'orologio che lo rinfresca.
         self.fornitore = None
@@ -758,15 +774,17 @@ class Finestra(wx.Frame):
             self._mostra(chiuse, self.terminale.visibile())
 
     def _taglia_il_registro(self):
-        """Le righe piu' vecchie se ne vanno a gruppi; restituisce quante."""
-        if len(self.righe) <= RIGHE_TENUTE + RIGHE_TOLTE_ALLA_VOLTA:
+        """Le righe piu' vecchie se ne vanno a gruppi, finche' restano le
+        righe da tenere; restituisce quante."""
+        if len(self.righe) <= self.righe_tenute + max(10, self.righe_tenute // 4):
             return 0
-        del self.righe[:RIGHE_TOLTE_ALLA_VOLTA]
+        tolte = len(self.righe) - self.righe_tenute
+        del self.righe[:tolte]
         if self.inizio_della_foglia is not None:
             riga, colonna = self.inizio_della_foglia
-            riga -= RIGHE_TOLTE_ALLA_VOLTA
+            riga -= tolte
             self.inizio_della_foglia = (riga, colonna) if riga >= 0 else (0, 0)
-        return RIGHE_TOLTE_ALLA_VOLTA
+        return tolte
 
     def _mostra(self, chiuse, visibile):
         """Le righe chiuse prendono il posto della riga in corso, che va in
@@ -923,6 +941,13 @@ class Finestra(wx.Frame):
             if not self._alla_risposta_della_foglia(foglia):
                 self._sposta_il_fuoco("plancia")
         elif attesa.tipo in ("area", "sino"):
+            if self.fornitore is None and wx.Window.FindFocus() is not self.area:
+                # Il fuoco arriva all'area, dalla plancia: il cursore sulla
+                # domanda, anche se era rimasto piu' su, per esempio sul
+                # benvenuto dove lo lascia il primo menu (Gabriele, collaudo
+                # del 22 novembre 2026). Chi e' gia' nell'area e rilegge piu'
+                # su resta dov'e', e cosi' chi rilegge il cruscotto.
+                self._al_cursore()
             self._sposta_il_fuoco("console")
 
     def _alla_risposta_della_foglia(self, inizio):
