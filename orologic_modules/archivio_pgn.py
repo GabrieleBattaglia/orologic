@@ -55,7 +55,7 @@ VALORI_IGNOTI = {"Date": "????.??.??", "Result": "*"}
 
 
 def tipi_dei_problemi():
-    """I sottorami del ramo Problemi, nell'ordine in cui si mostrano."""
+    """I sottorami del ramo Con errori, nell'ordine in cui si mostrano."""
     return (
         ("mosse", _("Mosse illegali o illeggibili")),
         ("intestazioni", _("Intestazioni obbligatorie mancanti")),
@@ -106,30 +106,11 @@ def decodifica(dati):
     return "".join(parti), cattive, a_capo, bom
 
 
-class _Righe:
-    """Il testo riga per riga, per python-chess, senza copiarlo: tell() dice
-    dove si e', e il pezzo di ogni partita si ritrova."""
-
-    def __init__(self, testo):
-        self.testo = testo
-        self.posizione = 0
-
-    def readline(self):
-        fine = self.testo.find("\n", self.posizione)
-        fine = len(self.testo) if fine < 0 else fine + 1
-        riga = self.testo[self.posizione : fine]
-        self.posizione = fine
-        return riga
-
-    def tell(self):
-        return self.posizione
-
-
 class _Costruttore(chess.pgn.GameBuilder):
     """Il costruttore di python-chess, che in piu' ricorda le intestazioni
     scritte davvero, la posizione finale della linea principale e il segno
     del risultato in fondo alle mosse. Gli errori vanno nella partita, non
-    nel registro: finiscono nel ramo Problemi."""
+    nel registro: finiscono nel ramo Con errori."""
 
     def begin_game(self):
         super().begin_game()
@@ -260,7 +241,7 @@ def leggi(testo, cattive=(), avanzamento=None, interrotta=None, fermato=None):
     a pezzi, (inizio, fine, scheda o None), anche quello che non e' una
     partita, perche' il file si possa riscrivere senza perdere niente.
     avanzamento(n), interrotta(e) e fermato() come in leggi_le_partite."""
-    righe = _Righe(testo)
+    righe = board_utils.RighePGN(testo)
     pezzi, schede, info = [], [], []
     letture_fallite = 0
     contate = 0
@@ -433,7 +414,7 @@ class Archivio:
 
     def partita_intera(self, indice):
         """La partita come la legge python-chess, con varianti e commenti."""
-        return chess.pgn.read_game(io.StringIO(self.testo_della_partita(indice)))
+        return chess.pgn.read_game(board_utils.RighePGN(self.testo_della_partita(indice)))
 
     def nell_albero(self, indice):
         scheda = self.schede[indice]
@@ -592,11 +573,11 @@ def voce_del_gruppo(nome, n):
 
 
 def voce_dei_problemi(n, avanzamento=None):
-    """La voce del ramo Problemi; avanzamento, la percentuale della ricerca
+    """La voce del ramo Con errori; avanzamento, la percentuale della ricerca
     dei doppioni, finche' non e' finita."""
     if avanzamento is None:
-        return voce_del_gruppo(_("Problemi"), n)
-    return _("{ramo} ({n} partite), ricerca dei doppioni al {pct}%").format(ramo=_("Problemi"), n=n, pct=avanzamento)
+        return voce_del_gruppo(_("Con errori"), n)
+    return _("{ramo} ({n} partite), ricerca dei doppioni al {pct}%").format(ramo=_("Con errori"), n=n, pct=avanzamento)
 
 
 def dettaglio(tipo, valore):
@@ -943,7 +924,7 @@ def riscritto(archivio, cambi, tolte=()):
     testo = "".join(parti)
     for nuovo in da_rileggere:
         inizio, fine, _indice = next(pezzo for pezzo in pezzi if pezzo[2] == nuovo)
-        letta = chess.pgn.read_game(_Righe(testo[inizio:fine]), Visitor=_Costruttore)
+        letta = chess.pgn.read_game(board_utils.RighePGN(testo[inizio:fine]), Visitor=_Costruttore)
         scheda, dati = _scheda(letta, inizio, fine, pgn_search._partita_da_tenere(letta[0]) == "esclusa")
         scheda.problemi = _senza(scheda.problemi, ("codifica",))
         schede[nuovo] = scheda

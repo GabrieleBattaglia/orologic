@@ -22,7 +22,7 @@ mossa, le partite, la percentuale fra le mosse dello stesso punto e le
 statistiche; le partite che ci arrivano da una variante dei commenti sono
 contate a parte, fuori dalle statistiche. La foglia e' la partita, quando un
 ramo ne ha una sola. In fondo alla radice Non classificate, le partite senza
-mosse, da una posizione di studio o senza codice ECO, e Problemi, un ramo per
+mosse, da una posizione di studio o senza codice ECO, e Con errori, un ramo per
 tipo, coi doppioni cercati da un filo mentre si naviga.
 
 Invio su un ramo lo apre o lo chiude, su una foglia mostra la partita, coi
@@ -193,7 +193,7 @@ class Nodo:
     mosse quelle che l'hanno giocata; percorso le mosse dalla posizione
     iniziale; linee le linee delle varianti che passano di li', [(partita,
     linea)], e varianti le partite che ci arrivano solo da una variante;
-    partita la partita della foglia; problema il tipo, nel ramo Problemi."""
+    partita la partita della foglia; problema il tipo, nel ramo Con errori."""
 
     def __init__(self, chiave, tipo, indici=(), percorso=(), linee=(), varianti=(), partita=None, problema=None):
         self.chiave = chiave
@@ -491,7 +491,7 @@ class FinestraRicerca(wx.Dialog):
         return next((figlio for figlio in self.figli(radice) if self.albero.GetItemData(figlio).tipo == "problemi"), None)
 
     def _rinfresca_i_problemi(self, finita=False):
-        """La voce Problemi dice a che punto e' la ricerca dei doppioni; alla
+        """La voce Con errori dice a che punto e' la ricerca dei doppioni; alla
         fine, se il ramo e' gia' aperto, vi si aggiungono i doppioni."""
         voce = self._voce_dei_problemi()
         archivio = self.ricerca.archivio
@@ -663,7 +663,7 @@ class FinestraRicerca(wx.Dialog):
             self._aggiungi(voce, archivio_pgn.voce_della_variante_finita(archivio, indice), nodo)
 
     def _aggiungi_i_rami_fuori(self, voce, indici):
-        """In fondo alla radice: Non classificate, se ce ne sono, e Problemi."""
+        """In fondo alla radice: Non classificate, se ce ne sono, e Con errori."""
         archivio = self.ricerca.archivio
         senza_mosse, studio, senza_eco = archivio.non_classificate(indici)
         fuori = sorted([*senza_mosse, *studio, *senza_eco])
@@ -836,7 +836,7 @@ class FinestraRicerca(wx.Dialog):
         self._lavora(_("Classificazione delle aperture in corso..."), lavoro, self._modificato)
 
     def ripara(self):
-        """Dal ramo Problemi tutti i tipi, da un suo sottoramo quel tipo: le
+        """Dal ramo Con errori tutti i tipi, da un suo sottoramo quel tipo: le
         riparazioni possibili, e il resoconto."""
         voce, nodo = self.selezionata()
         if nodo is None:

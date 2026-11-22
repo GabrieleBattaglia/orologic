@@ -22,6 +22,7 @@ import wx
 from conftest import pompa
 
 from orologic_modules import archivio_pgn, board_utils, finestra_ricerca, pgn_search
+from orologic_modules.easyfish import pgn_handler
 
 ARCHIVIO = """[Event "Prova"]
 [White "Rossi"]
@@ -295,6 +296,81 @@ def test_la_lettura_tiene_tutto_il_testo_e_la_codifica(tmp_path):
     assert archivio_pgn.riscritto(caricato, {}).testo == caricato.testo
 
 
+# Le righe vuote in mezzo alle mosse, come nell'archivio di Gabriele del 22
+# novembre 2026: il commento iniziale staccato dalle mosse, un commento con
+# una riga vuota dentro, due righe vuote dopo le intestazioni; poi due
+# partite senza intestazioni e una senza segno, che restano separate.
+RIGHE_VUOTE = """[Event "A"]
+[White "Capablanca"]
+[Black "Alekhine"]
+[Result "1-0"]
+
+{ https://www.youtube.com/watch?v=prova }
+
+1. d4 { commento } 1... d5 2. c4 1-0
+
+[Event "B"]
+[White "Uno"]
+[Black "Due"]
+[Result "0-1"]
+
+{ prima riga
+
+seconda riga } 1. e4 e5 0-1
+
+[Event "C"]
+[White "Tre"]
+[Black "Quattro"]
+[Result "1/2-1/2"]
+
+
+1. c4 c5 1/2-1/2
+
+1. e4 e5 1-0
+
+1. d4 d5 0-1
+
+[Event "X"]
+[White "Senza"]
+[Black "Segno"]
+
+1. e4 e5
+
+[Event "Y"]
+[White "Cinque"]
+[Black "Sei"]
+[Result "*"]
+
+1. Nf3 *
+"""
+
+
+def test_la_riga_vuota_in_mezzo_alle_mosse_non_spezza_la_partita(tmp_path):
+    caricato = archivio(RIGHE_VUOTE)
+    assert [info.get("Event") for info in caricato.info] == ["A", "B", "C", "?", "?", "X", "Y"]
+    assert [len(scheda.mosse) for scheda in caricato.schede] == [3, 2, 2, 2, 2, 2, 1]
+    assert caricato.schede[0].problemi == {"intestazioni": ("Site", "Date", "Round")}
+    prima = caricato.partita_intera(0)
+    assert prima.comment == "https://www.youtube.com/watch?v=prova"
+    assert len(list(prima.mainline_moves())) == 3
+    assert "prima riga\n\nseconda riga" in caricato.partita_intera(1).comment
+    # Classifica mette le intestazioni in cima, non fra il commento e le mosse.
+    nuovo = archivio_pgn.metti_le_intestazioni(caricato.testo_della_partita(0), {"ECO": "D06"})
+    assert nuovo.index('[ECO "D06"]') < nuovo.index("{ https")
+    assert len(archivio(nuovo)) == 1
+    # Il terminale, Easyfish e gli appunti leggono allo stesso modo.
+    partite, _escluse = pgn_search.leggi_le_partite(RIGHE_VUOTE)
+    assert [len(list(partita.mainline_moves())) for partita in partite] == [3, 2, 2, 2, 2, 2, 1]
+    file = tmp_path / "righe_vuote.pgn"
+    file.write_text(RIGHE_VUOTE, encoding="utf-8")
+    voci = pgn_handler._leggi_intestazioni(str(file))
+    assert [voce[1].get("Event", "?") for voce in voci] == ["A", "B", "C", "?", "?", "X", "Y"]
+    letta = chess.pgn.read_game(board_utils.RighePGN(pgn_handler._testo_del_file(str(file)), voci[0][0]))
+    assert len(list(letta.mainline_moves())) == 3
+    giochi = board_utils.validate_and_clean_pgn(RIGHE_VUOTE)[0]
+    assert len(giochi) == 7
+
+
 def test_le_modifiche_al_testo_delle_partite():
     partita = '[Event "A"]\n[White "B"]\n\n1. e4 e5 1-0\n\n'
     assert archivio_pgn.metti_le_intestazioni(partita, {"White": 'Lo "zio"', "Site": "?"}) == '[Event "A"]\n[White "Lo \\"zio\\""]\n[Site "?"]\n\n1. e4 e5 1-0\n\n'
@@ -516,7 +592,7 @@ def test_si_apre_sul_file_e_lo_carica_nel_filo(prova, file_pgn):
     testi = p.testi(radice)
     assert len(testi) == 4 and "(e4) (3 partite)" in testi[0] and testi[1].endswith("(d4): Rossi vs Neri, 1/2-1/2")
     # Nessuna ha il codice ECO, e a tutte mancano delle intestazioni.
-    assert testi[2:] == ["Non classificate (4 partite)", "Problemi (4 partite)"]
+    assert testi[2:] == ["Non classificate (4 partite)", "Con errori (4 partite)"]
     assert pompa(lambda: wx.Window.FindFocus() is d.albero)
     assert d.schede.GetPageText(0) == "Partite" and d.schede.GetPageText(1) == "Filtri"
 
@@ -695,12 +771,12 @@ def test_problemi_e_ripara_nella_finestra(prova, tmp_path, monkeypatch):
     d = p.dialogo
     assert pompa(lambda: d.ricerca.archivio is not None and not d.in_corso())
     assert p.finiti_i_doppioni()
-    problemi = p.voce("Problemi")
-    assert d.albero.GetItemText(problemi) == "Problemi (4 partite)"
+    problemi = p.voce("Con errori")
+    assert d.albero.GetItemText(problemi) == "Con errori (4 partite)"
     assert p.testi(problemi) == [
         "Mosse illegali o illeggibili (1 partite)", "Intestazioni obbligatorie mancanti (2 partite)", "Risultato che non torna (1 partite)",
         "Date malformate (1 partite)", "Elo non numerici (1 partite)", "Partite doppie (1 partite)"]
-    data = p.voce("Problemi", "Date malformate", "Primo")
+    data = p.voce("Con errori", "Date malformate", "Primo")
     assert d.albero.GetItemText(data) == "Primo vs Secondo, 1-0: 2024-05-03"
     # Da un tipo, solo quel tipo.
     d.albero.SelectItem(data)
@@ -709,13 +785,13 @@ def test_problemi_e_ripara_nella_finestra(prova, tmp_path, monkeypatch):
     assert p.avvisi[-1].split("\n")[0] == "Date riscritte: 1."
     assert '[Date "2024.05.03"]' in file.read_text(encoding="utf-8")
     assert p.finiti_i_doppioni()
-    # Dal ramo Problemi, tutti: restano Elo e la mossa illegale.
-    d.albero.SelectItem(p.voce("Problemi"))
+    # Dal ramo Con errori, tutti: restano Elo e la mossa illegale.
+    d.albero.SelectItem(p.voce("Con errori"))
     d.ripara()
     assert pompa(lambda: not d.in_corso() and len(p.avvisi) == 2)
     assert p.avvisi[-1].split("\n")[:3] == ["Intestazioni aggiunte: 1 partite.", "Risultati corretti: 1.", "Doppioni tolti: 1."]
     assert p.finiti_i_doppioni()
-    assert p.testi(p.voce("Problemi")) == ["Mosse illegali o illeggibili (1 partite)", "Elo non numerici (1 partite)"]
+    assert p.testi(p.voce("Con errori")) == ["Mosse illegali o illeggibili (1 partite)", "Elo non numerici (1 partite)"]
     assert len(os.listdir(tmp_path / "pgn")) == 2
 
 
@@ -727,7 +803,7 @@ def test_classifica_nella_finestra(prova, tmp_path, monkeypatch):
     d = p.dialogo
     assert pompa(lambda: d.ricerca.archivio is not None and not d.in_corso())
     radice = d.albero.GetRootItem()
-    assert [testo.split(" (")[0] for testo in p.testi(radice)][-2:] == ["Non classificate", "Problemi"]
+    assert [testo.split(" (")[0] for testo in p.testi(radice)][-2:] == ["Non classificate", "Con errori"]
     fuori = p.voce("Non classificate")
     assert p.testi(fuori) == ["Senza mosse (1 partite)", "Da una posizione di studio (1 partite)", "Senza codice ECO (1 partite)"]
     assert p.testi(p.voce("Non classificate", "Da una posizione")) == ["Studio vs Finale, 1-0"]

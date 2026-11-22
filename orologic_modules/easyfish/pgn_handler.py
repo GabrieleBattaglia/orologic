@@ -12,7 +12,7 @@ import pyperclip
 from GBUtils import Acusticator, dgt, key, menu
 
 from .. import ui
-from ..board_utils import format_pgn_comments, validate_and_clean_pgn
+from ..board_utils import RighePGN, format_pgn_comments, validate_and_clean_pgn
 from ..config import _, maiuscole_nomi, percorso_salvataggio, sanitize_filename
 from .constants import (
     DEFAULT_BLACK_SURENAME,
@@ -72,14 +72,20 @@ def _leggi_intestazioni(percorso):
     rileggerla per intero. Le mosse non si leggono: un database scaricato da
     Lichess ne ha centinaia, e per elencarle bastano i tag."""
     voci = []
-    with open(percorso, encoding="utf-8-sig", errors="replace") as f:
-        while True:
-            posizione = f.tell()
-            intestazioni = chess.pgn.read_headers(f)
-            if intestazioni is None:
-                break
-            voci.append((posizione, intestazioni))
+    righe = RighePGN(_testo_del_file(percorso))
+    while True:
+        posizione = righe.tell()
+        intestazioni = chess.pgn.read_headers(righe)
+        if intestazioni is None:
+            break
+        voci.append((posizione, intestazioni))
     return voci
+
+
+def _testo_del_file(percorso):
+    """Il testo del file; le posizioni di _leggi_intestazioni valgono qui."""
+    with open(percorso, encoding="utf-8-sig", errors="replace") as f:
+        return f.read()
 
 
 def _istante_del_file(nome, intestazioni):
@@ -248,10 +254,7 @@ def ScegliPartitaDallaCartella():
         if scelta is None:
             return None
         voci = [voci[int(scelta)]]
-    posizione = voci[0][0]
-    with open(percorso, encoding="utf-8-sig", errors="replace") as f:
-        f.seek(posizione)
-        return chess.pgn.read_game(f)
+    return chess.pgn.read_game(RighePGN(_testo_del_file(percorso), voci[0][0]))
 
 
 def InitNewPGN(board=None, tags=None):

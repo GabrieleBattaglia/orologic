@@ -10,7 +10,6 @@ visualizzare statistiche, applicare filtri interattivi e navigare
 un albero delle aperture con statistiche W/D/L per ogni ramo.
 """
 
-import io
 import os
 import sys
 import time
@@ -299,7 +298,8 @@ def leggi_le_partite(pgn_text, avanzamento=None, interrotta=None, fermato=None):
     l'errore, se il testo non si legge piu'; fermato(), vero, ferma la
     lettura e tiene le partite lette fin li'."""
     games = []
-    pgn_io = io.StringIO(pgn_text)
+    # Le righe vuote in mezzo alle mosse non chiudono la partita.
+    pgn_io = board_utils.RighePGN(pgn_text)
     count = 0
     excluded_count = 0
     last_print = 0.0
