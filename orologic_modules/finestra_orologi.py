@@ -34,7 +34,7 @@ import wx
 from GBUtils import Acusticator
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
-from . import aspetto, clock, config, controlli, storage, temi, tempo
+from . import aspetto, clock, config, controlli, dialoghi, storage, temi, tempo
 from .config import _
 
 # Come nel terminale: al piu' quattro fasi e cinque allarmi.
@@ -44,9 +44,6 @@ ORE_MASSIME = 23
 MOSSE_MASSIME = 200
 LUNGHEZZA_DEL_NOME = 60
 LUNGHEZZA_DELLA_NOTA = 200
-# Un Invio entro tanti secondi dall'apertura, o dall'Invio di prima, e' un
-# tasto tenuto giu', o rimandato da NVDA: non fa niente.
-GRAZIA_INVIO = 0.65
 COLORI = ("white", "black")
 
 
@@ -82,10 +79,6 @@ def suona(evento):
         _bip()
     else:
         SUONI[evento]()
-
-
-def _premuto_invio(evento):
-    return evento.GetKeyCode() in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER) and not evento.HasAnyModifiers()
 
 
 def _premuto_canc(evento):
@@ -675,10 +668,10 @@ class FinestraOrologi(wx.Dialog):
             if oggetto in azioni:
                 azioni[oggetto]()
                 return
-        if _premuto_invio(evento):
+        if dialoghi.premuto_invio(evento):
             adesso = time.monotonic()
             precedente, self.ultimo_invio = self.ultimo_invio, adesso
-            if evento.IsAutoRepeat() or adesso - precedente < GRAZIA_INVIO:
+            if evento.IsAutoRepeat() or adesso - precedente < dialoghi.GRAZIA_INVIO:
                 return
             if oggetto is self.elenco:
                 if self.scelto() is None:
