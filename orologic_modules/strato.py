@@ -34,6 +34,7 @@ tests/test_strato.py.
 
 import contextlib
 import functools
+import io
 import os
 import shutil
 
@@ -93,6 +94,21 @@ class FacciaTerminale:
 
     def interrompi_la_scelta_con(self, evento):
         """Il terminale non ha la plancia: menu legge i tasti da se'."""
+        return None
+
+    def di_gioco(self, valore):
+        """Il terminale non ha la scacchiera interattiva."""
+        return False
+
+    def da_leggere(self, titolo, righe):
+        """Il terminale le ha gia' stampate."""
+
+    def navigatore(self, game, nodo):
+        """Il terminale non ha il navigatore: c'e' l'esploratore."""
+        return None, False
+
+    def editor_della_scacchiera(self, fen):
+        """Il terminale ha il suo editor, a comandi."""
         return None
 
 
@@ -220,3 +236,48 @@ def fine_del_gioco():
     """Il gioco e' finito, anche se la funzione di gioco continua, per
     esempio col riepilogo: il cruscotto lascia il posto alla console."""
     _faccia.cruscotto(None)
+
+
+@contextlib.contextmanager
+def prompt_di_gioco():
+    """Finche' e' aperta, le domande di dgt e di key valgono come il prompt
+    delle mosse, che legge i tasti con kbhit e getwch: nella finestra lo
+    spazio a riga vuota apre la scacchiera interattiva, e la scacchiera resta
+    aperta. Serve a Easyfish, il cui menu legge una riga e l'esploratore un
+    tasto."""
+    precedente = _faccia.di_gioco(True)
+    try:
+        yield
+    finally:
+        _faccia.di_gioco(precedente)
+
+
+@contextlib.contextmanager
+def da_leggere(titolo):
+    """Nella finestra, quello che si stampa qui dentro va in una finestra da
+    leggere, col titolo, quando la zona si chiude: le analisi e gli aiuti,
+    che nel cruscotto non ci stanno. Nel terminale si stampa come sempre."""
+    if not con_la_plancia():
+        yield
+        return
+    raccolte = io.StringIO()
+    with contextlib.redirect_stdout(raccolte):
+        yield
+    righe = [riga.rstrip() for riga in raccolte.getvalue().replace("\r", "\n").split("\n") if riga.strip()]
+    if righe:
+        _faccia.da_leggere(titolo, righe)
+
+
+def navigatore(game, nodo):
+    """Nella finestra, il navigatore della partita, l'albero delle mosse e
+    delle varianti, aperto su nodo; il nucleo aspetta che si chiuda, e
+    riceve (nodo scelto o None, vero se la partita e' cambiata). Nel
+    terminale (None, False)."""
+    return _faccia.navigatore(game, nodo)
+
+
+def editor_della_scacchiera(fen):
+    """Nella finestra, l'editor della scacchiera aperto sulla posizione fen;
+    il nucleo aspetta, e riceve il FEN nuovo, o None se si e' annullato.
+    Nel terminale None, e il nucleo usa il suo editor."""
+    return _faccia.editor_della_scacchiera(fen)

@@ -273,6 +273,35 @@ def chiedi_valore(genitore, titolo, domanda, valore, tipo="testo", minimo=0, mas
         return dialogo.valore
 
 
+class FinestraDaLeggere(wx.Dialog):
+    """Righe da leggere, in un testo navigabile col titolo per nome, e
+    Chiudi; Esc chiude. Servono alle analisi e agli aiuti di Easyfish, che
+    nel cruscotto non ci stanno."""
+
+    def __init__(self, genitore, titolo, righe):
+        super().__init__(genitore, title=titolo, style=STILE_ADATTABILE)
+        pannello = pannello_scorrevole(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        self.testo = wx.TextCtrl(pannello, value="\n".join(righe), style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
+        self.testo.SetName(titolo)
+        sizer.Add(self.testo, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(wx.Button(pannello, wx.ID_CANCEL, _("Chiudi")), 0, wx.ALL | wx.ALIGN_RIGHT, 5)
+        pannello.SetSizer(sizer)
+        aspetto.applica_alla_finestra(self)
+        self.testo.SetMinSize(wx.Size(-1, self.testo.GetCharHeight() * 10))
+        adatta_finestra(self, pannello, (560, 420))
+        self.Maximize()
+        self.testo.SetInsertionPoint(0)
+        self.testo.SetFocus()
+
+
+def da_leggere(genitore, titolo, righe):
+    """Apre una FinestraDaLeggere e aspetta che si chiuda; le prove la
+    sostituiscono."""
+    with FinestraDaLeggere(genitore, titolo, righe) as dialogo:
+        dialogo.ShowModal()
+
+
 # Il segnaposto del testo libero fra i simboli disponibili: non si esaurisce.
 TESTO_LIBERO = None
 # I millisecondi fra la voce scelta e l'annuncio della sua spiegazione: lo

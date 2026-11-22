@@ -85,6 +85,10 @@ def dati_di(stato, board=None):
         # tasto, e la partita che si osserva soltanto.
         "vista_ferma": bool(getattr(stato, "vista_ferma", False)),
         "da_guardare": bool(getattr(stato, "solo_da_guardare", False)),
+        # Easyfish: dove si e', per la scacchiera, easyfish o esploratore, e
+        # le righe sulla posizione, la linea, il seguito e il commento.
+        "contesto": getattr(stato, "contesto_della_scacchiera", None),
+        "in_piu": list(getattr(stato, "righe_in_piu", []) or []),
     }
 
 
@@ -241,6 +245,7 @@ def _riga_degli_orologi(dati):
 def righe(dati, messaggi):
     """Le righe del cruscotto, come coppie (sezione, testo), senza il prompt."""
     risultato = _righe_delle_informazioni(dati)
+    risultato.extend(("info", testo) for testo in dati.get("in_piu", ()))
     if dati["board"] is not None:
         risultato.extend(("scacchiera", riga) for riga in scacchiera(dati["board"], dati["mio"] == chess.BLACK))
     risultato.extend(_riga_degli_orologi(dati))

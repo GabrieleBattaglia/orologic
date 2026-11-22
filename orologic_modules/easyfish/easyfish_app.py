@@ -10,7 +10,7 @@ import chess.engine
 import pyperclip
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
-from .. import config, ui
+from .. import config, cruscotto, strato, ui
 from .. import engine as orologic_engine
 
 # DRY: Uso le utility di Orologic
@@ -18,13 +18,13 @@ from ..board_utils import (
     CustomBoard,
     DescribeMove,
     GameState,
-    NormalizeMove,
     accoda_commento,
     format_pv_descriptively,
     mosse_fino_al_nodo,
     testo_valutazione,
 )
 from ..config import _
+from . import posizione
 from .constants import MNMAIN
 from .drawing import drawing_menu, verbalize_drawings
 from .engine_handler import ShowStats
@@ -236,11 +236,15 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
             )
         )
     elif cmd == ".?":
-        menu(d=MNMAIN, show_only=True)
+        # Nella finestra l'elenco e' tutto da leggere: a pagine aspetterebbe
+        # un tasto fra l'una e l'altra, e quel tasto la' non si vede.
+        with strato.da_leggere(_("Comandi di Easyfish")):
+            menu(d=MNMAIN, show_only=True, pager=0 if strato.con_la_plancia() else 20)
     elif cmd in ui.COMANDI_SCACCHIERA or cmd in (".m", ".bm"):
         # Scacchiera e materiale sono quelli di tutte le altre modalita':
         # qui il menu stampava una scacchiera grezza, senza le colonne.
-        ui.comandi_lettura(".m" if cmd in (".m", ".bm") else ".s", game, board=board)
+        with strato.da_leggere(_("Scacchiera")):
+            ui.comandi_lettura(".m" if cmd in (".m", ".bm") else ".s", game, board=board)
     elif cmd == ".gp":
         CopyPGNToClipboard(game)
     elif cmd == ".i":
@@ -480,29 +484,22 @@ def _stampa_deviata():
         builtins.print = originale
 
 
-def _semimosse_dopo(node):
-    """Quante semimosse, varianti comprese, vengono dopo questo nodo."""
-    conto = 0
-    da_visitare = list(node.variations)
-    while da_visitare:
-        figlio = da_visitare.pop()
-        conto += 1
-        da_visitare.extend(figlio.variations)
-    return conto
-
-
 def _apri_partita(game):
     """La scacchiera e il nodo finale di una partita da aprire in Easyfish.
 
     Serve a .pg e alle partite che arrivano da altri moduli: in tutti e due i
-    casi ci si ritrova sull'ultima mossa della linea principale.
+    casi ci si ritrova sull'ultima mossa della linea principale. La
+    posizione di partenza e' quella della partita, anche negli scacchi 960.
     """
-    board = CustomBoard()
-    if "FEN" in game.headers:
-        board.set_fen(game.headers["FEN"])
-    for move in game.mainline_moves():
-        board.push(move)
-    return board, game.end()
+    nodo = game.end()
+    return posizione.scacchiera_del_nodo(game, nodo), nodo
+
+
+def _nel_terminale(board):
+    """La scacchiera stampata, nel terminale: nella finestra c'e' il
+    cruscotto, che la mostra gia'."""
+    if not strato.con_la_plancia():
+        print(board)
 
 
 def run(partita=None):
@@ -510,8 +507,10 @@ def run(partita=None):
 
     partita, se c'e', e' un chess.pgn.Game che Easyfish apre subito, come
     dopo .pg: cosi' arrivano le partite scelte nel profilatore di Lichess.
+    Nella finestra Easyfish e' la zona di una partita: l'area diventa il
+    cruscotto, e i prompt valgono come quello delle mosse.
     """
-    with _stampa_deviata():
+    with _stampa_deviata(), strato.partita():
         _esegui(partita)
 
 
@@ -549,7 +548,7 @@ def _esegui(partita=None):
         game = partita
         board, node = _apri_partita(game)
         print(_("Nuova partita caricata."))
-        print(board)
+        _nel_terminale(board)
 
     # DRY: GameState
     fake_clock = {
@@ -573,6 +572,7 @@ def _esegui(partita=None):
     is_modified = False
     last_checked_state = None
     sharing_window = None
+    stato = posizione.Stato("easyfish")
 
     while True:
         if sharing_window and not sharing_window.is_active():
@@ -611,7 +611,10 @@ def _esegui(partita=None):
                 sharing_window.update_board(board, node)
 
         prompt = GetDynamicPrompt(board, node)
-        key_command = dgt(prompt=prompt, kind="s", smin=1, smax=8192).strip()
+        stato.aggiorna(game, board, node)
+        strato.fornisci(lambda: cruscotto.dati_di(stato), MNMAIN)
+        with strato.prompt_di_gioco():
+            key_command = dgt(prompt=prompt, kind="s", smin=1, smax=8192).strip()
 
         if not key_command:
             continue
@@ -772,18 +775,33 @@ def _esegui(partita=None):
                     )
 
                 game_state.board = board
-                print(board)
+                _nel_terminale(board)
 
             elif cmd == ".e":
+                # L'esploratore parte dalla mossa dove si e', non dall'inizio.
                 print(_("Accesso alla modalità esplorazione..."))
                 mod_in_exp, final_node = ExplorerMode(
-                    game, engine, sharing_window=sharing_window
+                    game, engine, sharing_window=sharing_window, nodo=node
                 )
                 node = final_node
-                board = node.board()
+                board = posizione.scacchiera_del_nodo(game, node)
                 game_state.board = board
                 if mod_in_exp:
                     is_modified = True
+
+            elif cmd == ".na":
+                if not strato.con_la_plancia():
+                    print(_("Il navigatore della partita c'e' nella finestra: nel terminale usa .e"))
+                    continue
+                scelto, cambiata = strato.navigatore(game, node)
+                if cambiata:
+                    is_modified = True
+                if scelto is not None:
+                    node = scelto
+                # Dopo un taglio la mossa di prima puo' non esserci piu'.
+                node = posizione.ancora_nella_partita(node)
+                board = posizione.scacchiera_del_nodo(game, node)
+                game_state.board = board
 
             elif cmd == ".d":
                 if drawing_menu(game, node):
@@ -840,7 +858,7 @@ def _esegui(partita=None):
                     game_state.board = board
                     is_modified = is_corrected
                     print(_("Nuova partita caricata."))
-                    print(board)
+                    _nel_terminale(board)
                 else:
                     print(_("PGN non valido o appunti vuoti."))
 
@@ -848,18 +866,8 @@ def _esegui(partita=None):
                 # Si ritira la mossa in cui ci si trova, con il suo seguito.
                 # Senza seguito, il caso dell'errore di battitura, sparisce
                 # subito; con un seguito si chiede, perche' si perde di piu'.
-                seguito = _semimosse_dopo(node)
-                if seguito == 1:
-                    domanda = _(
-                        "La mossa ha un seguito di 1 semimossa, che sparira' "
-                        "con lei. Confermi? (INVIO per si', ESC per no): "
-                    )
-                else:
-                    domanda = _(
-                        "La mossa ha un seguito di {n} semimosse, che "
-                        "spariranno con lei. Confermi? (INVIO per si', "
-                        "ESC per no): "
-                    ).format(n=seguito)
+                seguito = posizione.semimosse_dopo(node)
+                domanda = posizione.domanda_del_taglio(seguito)
                 if not node.parent:
                     print(_("Impossibile eliminare l'inizio della partita."))
                 elif seguito == 0 or enter_escape(domanda):
@@ -883,7 +891,7 @@ def _esegui(partita=None):
                     game_state.board = board
                     is_modified = False
                     print(_("Nuova partita caricata."))
-                    print(board)
+                    _nel_terminale(board)
 
             elif cmd == ".fg":
                 fen_from_clip = pyperclip.paste()
@@ -906,7 +914,7 @@ def _esegui(partita=None):
                         game, node = InitNewPGN(board)
                         game_state.board = board
                         is_modified = False
-                        print(board)
+                        _nel_terminale(board)
                     except ValueError:
                         print(_("Stringa FEN non valida."))
 
@@ -926,9 +934,14 @@ def _esegui(partita=None):
                         "Accesso all'editor. ATTENZIONE: Al termine dell'editing, la partita corrente verrà salvata e ne inizierà una nuova dalla posizione impostata."
                     )
                 )
-                new_fen = BoardEditor(
-                    starting_fen=board.fen(), sharing_window=sharing_window
-                )
+                if strato.con_la_plancia():
+                    # Nella finestra l'editor ha la scacchiera interattiva, e
+                    # Annulla lascia la partita com'e'.
+                    new_fen = strato.editor_della_scacchiera(board.fen())
+                else:
+                    new_fen = BoardEditor(
+                        starting_fen=board.fen(), sharing_window=sharing_window
+                    )
                 if new_fen:
                     if is_modified:
                         SaveGameToFile(game)
@@ -938,12 +951,13 @@ def _esegui(partita=None):
                     game_state.board = board
                     is_modified = False
                     print(_("Nuova partita avviata dalla posizione editata."))
-                    print(board)
+                    _nel_terminale(board)
 
             elif cmd_clean in (".a", ".al"):
-                info, info_fen = _comandi_analisi(
-                    cmd_clean, board, engine, number_command, info, info_fen
-                )
+                with strato.da_leggere(_("Analisi")):
+                    info, info_fen = _comandi_analisi(
+                        cmd_clean, board, engine, number_command, info, info_fen
+                    )
 
             elif cmd_clean == ".ac":
                 info, info_fen, scritto = _analisi_nel_commento(
@@ -955,9 +969,10 @@ def _esegui(partita=None):
             elif cmd_clean == ".l":
                 # La lista delle mosse e' quella di tutte le altre
                 # modalita': qui le mosse si ricostruiscono dal PGN.
-                ui.comandi_lettura(
-                    ".l", game, board=board, mosse=mosse_fino_al_nodo(node)
-                )
+                with strato.da_leggere(_("Lista delle mosse")):
+                    ui.comandi_lettura(
+                        ".l", game, board=board, mosse=mosse_fino_al_nodo(node)
+                    )
 
             else:
                 print(
@@ -967,7 +982,9 @@ def _esegui(partita=None):
                 )
 
         elif key_command.startswith("_"):
-            node.comment = key_command[1:]
+            # Il testo nuovo prende il posto di quello scritto prima, e le
+            # analisi di .ac e i disegni restano.
+            posizione.metti_il_testo(node, key_command[1:])
             is_modified = True
             print(_("Commento registrato."))
 
@@ -976,35 +993,7 @@ def _esegui(partita=None):
 
             if handle_exploration_command(key_command, game_state):
                 continue
-            move_san = NormalizeMove(key_command)
-            move = None
-            try:
-                move = board.parse_san(move_san)
-            except ValueError:
-                pass
-
-            if (
-                not move
-                and len(move_san) == 3
-                and move_san[0].islower()
-                and move_san[1].islower()
-                and move_san[2].isdigit()
-            ):
-                try:
-                    move_capture = move_san[0] + "x" + move_san[1:]
-                    move = board.parse_san(move_capture)
-                except ValueError:
-                    pass
-
-            if not move and move_san and move_san[0] == "b":
-                try:
-                    move = board.parse_san("B" + move_san[1:])
-                except ValueError:
-                    if len(move_san) == 3:
-                        try:
-                            move = board.parse_san("Bx" + move_san[1:])
-                        except ValueError:
-                            pass
+            move = posizione.leggi_la_mossa(board, key_command)
 
             if move:
                 print(DescribeMove(move, board))
@@ -1026,9 +1015,11 @@ def _esegui(partita=None):
                             _("Sovrascrivi linea (Invio) o Aggiungi Variante (Esc)? ")
                         )
                         if scelta:
-                            # Invio -> Sovrascrivi (cancella le altre e tieni questa come principale)
-                            node.variations.clear()
-                            node = node.add_variation(move)
+                            # Invio -> Sovrascrivi: la mossa nuova prende il
+                            # posto della linea principale; le varianti
+                            # restano, prima sparivano anche loro.
+                            node.variations.pop(0)
+                            node = node.add_main_variation(move)
                             print(_("Linea sovrascritta."))
                         else:
                             # Esc -> Aggiungi variante

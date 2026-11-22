@@ -583,10 +583,10 @@ def _comandi_informativi(cmd, board, game_state, engine_instance):
     if ui.comandi_lettura(cmd, game_state, board=board):
         return True
     elif cmd == ".a":
-        lines = analysis_utils.get_lines_from_engine(
+        # Chiamava get_lines_from_engine, che non c'e': la partita cadeva.
+        for line in analysis_utils.RunAnalysis(
             board, engine_instance, orologic_engine.analysis_time, 1
-        )
-        for line in lines:
+        ):
             print(line)
     elif cmd == ".?":
         menu(MNGAME, show_only=True)

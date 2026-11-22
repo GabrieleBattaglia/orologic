@@ -132,6 +132,41 @@ class ApriRicerca(ApriImpostazioni):
         self.uscita = None
 
 
+class ApriLettura(ApriImpostazioni):
+    """Nella fila del testo, le righe da leggere in una finestra, col loro
+    titolo: le analisi e gli aiuti di Easyfish, che nel cruscotto non ci
+    stanno; il nucleo aspetta che si chiuda."""
+
+    def __init__(self, titolo, righe):
+        super().__init__()
+        self.titolo = titolo
+        self.righe = list(righe)
+
+
+class ApriNavigatore(ApriImpostazioni):
+    """Nella fila del testo, il navigatore della partita di Easyfish, aperto
+    sul nodo; alla chiusura nodo e' quello scelto, o None, e modificata dice
+    se la partita e' cambiata."""
+
+    def __init__(self, game, nodo):
+        super().__init__()
+        self.game = game
+        self.nodo = nodo
+        self.scelto = None
+        self.modificata = False
+
+
+class ApriEditor(ApriImpostazioni):
+    """Nella fila del testo, l'editor della scacchiera di Easyfish sulla
+    posizione fen; alla chiusura fen e' quella nuova, o None se si e'
+    annullato."""
+
+    def __init__(self, fen):
+        super().__init__()
+        self.fen = fen
+        self.nuova = None
+
+
 class CambioDiForma:
     """Nella fila del testo, il punto in cui l'area cambia forma: il
     fornitore dei dati del cruscotto, o None per tornare alla console. Sta
@@ -149,10 +184,13 @@ class Attesa:
     domanda di enter_escape, con la domanda; "area", un testo, una mossa o
     un tasto; None, niente, perche' lavora. Sta nella fila del testo perche'
     plancia e fuoco cambino dopo il testo scritto prima. gioco e' vero per il
-    prompt delle mosse, che legge i tasti con kbhit e getwch: li' lo spazio
-    apre la scacchiera interattiva."""
+    prompt delle mosse, che legge i tasti con kbhit e getwch, e per i
+    prompt di Easyfish, con strato.prompt_di_gioco: li' lo spazio apre la
+    scacchiera interattiva. tasto e' vero quando il nucleo legge un tasto
+    solo, con key, come l'esploratore di Easyfish: ogni tasto e' una
+    risposta intera."""
 
-    def __init__(self, tipo, voci=(), prompt="", vuoto=None, sito=None, alla_radice=False, gioco=False):
+    def __init__(self, tipo, voci=(), prompt="", vuoto=None, sito=None, alla_radice=False, gioco=False, tasto=False):
         self.tipo = tipo
         self.voci = list(voci)
         self.prompt = prompt
@@ -160,6 +198,7 @@ class Attesa:
         self.sito = sito
         self.alla_radice = alla_radice
         self.gioco = gioco
+        self.tasto = tasto
 
 
 def _sito_della_chiamata():
@@ -186,6 +225,10 @@ class FacciaFinestra:
         # tipo, e se e' il prompt delle mosse.
         self._attesa = None
         self._gioco = False
+        self._tasto = False
+        # Vero dentro strato.prompt_di_gioco: le domande di dgt e key valgono
+        # come il prompt delle mosse.
+        self._di_gioco = False
         # L'evento che interrompe la scelta della plancia, se c'e'.
         self._interruttore = None
         self._lucchetto = threading.Lock()
@@ -216,10 +259,17 @@ class FacciaFinestra:
 
     def _aspetta(self, attesa):
         """Mette in fila l'Attesa, se cambia cio' che il nucleo aspetta."""
-        if attesa.tipo in ("menu", "sino") or attesa.tipo != self._attesa or attesa.gioco != self._gioco:
+        if attesa.tipo in ("menu", "sino") or attesa.tipo != self._attesa or attesa.gioco != self._gioco or attesa.tasto != self._tasto:
             self._attesa = attesa.tipo
             self._gioco = attesa.gioco
+            self._tasto = attesa.tasto
             self._metti(attesa)
+
+    def di_gioco(self, valore):
+        """strato.prompt_di_gioco: restituisce il valore di prima."""
+        precedente = self._di_gioco
+        self._di_gioco = valore
+        return precedente
 
     def kbhit(self):
         self._controlla_chiusura()
@@ -239,7 +289,7 @@ class FacciaFinestra:
         sempre una risposta. Per una domanda di enter_escape la plancia
         tiene il suo Si' e No finche' arriva il tasto."""
         if self._attesa != "sino":
-            self._aspetta(Attesa("area"))
+            self._aspetta(Attesa("area", gioco=self._di_gioco, tasto=True))
         tasto = self._prendi(attesa)
         if tasto is not None:
             self._causa = "tasto"
@@ -301,6 +351,24 @@ class FacciaFinestra:
         self._apri_e_aspetta(richiesta)
         return richiesta.uscita
 
+    def da_leggere(self, titolo, righe):
+        """Le analisi e gli aiuti di Easyfish in una finestra da leggere; il
+        nucleo aspetta che si chiuda."""
+        self._apri_e_aspetta(ApriLettura(titolo, righe))
+
+    def navigatore(self, game, nodo):
+        """Il navigatore della partita di Easyfish: (nodo scelto o None,
+        vero se la partita e' cambiata)."""
+        richiesta = ApriNavigatore(game, nodo)
+        self._apri_e_aspetta(richiesta)
+        return richiesta.scelto, richiesta.modificata
+
+    def editor_della_scacchiera(self, fen):
+        """L'editor della scacchiera di Easyfish: il FEN nuovo, o None."""
+        richiesta = ApriEditor(fen)
+        self._apri_e_aspetta(richiesta)
+        return richiesta.nuova
+
     def _apri_e_aspetta(self, richiesta):
         self._aspetta(Attesa(None))
         self._metti(richiesta)
@@ -316,7 +384,7 @@ class FacciaFinestra:
         """Una riga, come la console la da' a input: i caratteri con l'eco
         se eco e' vero, Backspace cancella, Esc svuota la riga, Invio la
         consegna."""
-        self._aspetta(Attesa("area"))
+        self._aspetta(Attesa("area", gioco=self._di_gioco))
         scritti = []
         while True:
             tasto = self._prendi()
@@ -621,8 +689,10 @@ class Finestra(wx.Frame):
 
     def premi_nel_prompt(self, tasto):
         """Un tasto al nucleo, come digitato, tenendo il conto dei caratteri
-        della riga: Invio ed Esc la chiudono, Backspace ne toglie uno."""
-        if tasto in ("\r", "\x1b"):
+        della riga: Invio ed Esc la chiudono, Backspace ne toglie uno. Dove
+        il nucleo legge un tasto solo, ogni tasto e' una risposta intera, e la
+        riga resta vuota."""
+        if tasto in ("\r", "\x1b") or self.attesa.tasto:
             self.digitati = 0
         elif tasto == "\x08":
             self.digitati = max(0, self.digitati - 1)
@@ -726,6 +796,15 @@ class Finestra(wx.Frame):
                 continue
             if isinstance(testo, ApriRicerca):
                 wx.CallAfter(self._ricerca_dal_nucleo, testo)
+                continue
+            if isinstance(testo, ApriLettura):
+                wx.CallAfter(self._lettura_dal_nucleo, testo)
+                continue
+            if isinstance(testo, ApriNavigatore):
+                wx.CallAfter(self._navigatore_dal_nucleo, testo)
+                continue
+            if isinstance(testo, ApriEditor):
+                wx.CallAfter(self._editor_dal_nucleo, testo)
                 continue
             if isinstance(testo, ApriImpostazioni):
                 wx.CallAfter(self._impostazioni_dal_nucleo, testo)
@@ -1203,7 +1282,9 @@ class Finestra(wx.Frame):
             self.ultimo_comando = cammino
             for carattere in nodo.testo:
                 self.premi_nel_prompt(carattere)
-            if nodo.invio:
+            # Dove il nucleo legge un tasto solo, come l'esploratore di
+            # Easyfish, il comando di una lettera e' gia' la risposta.
+            if nodo.invio and not (self.attesa.tasto and len(nodo.testo) == 1):
                 self.premi_nel_prompt("\r")
             else:
                 self.vai_all_area()
@@ -1366,6 +1447,52 @@ class Finestra(wx.Frame):
         try:
             if self:
                 richiesta.uscita = self.ricerca_pgn(richiesta.ricerca)
+        finally:
+            richiesta.chiuse.set()
+
+    # Easyfish: le righe da leggere, il navigatore e l'editor. Si aprono
+    # sopra la scacchiera, se e' aperta, perche' il fuoco vi torni.
+
+    def _sopra(self):
+        return self.dialogo_scacchiera or self
+
+    def leggi(self, titolo, righe):
+        """Le righe in una finestra da leggere, con Chiudi."""
+        genitore = self._sopra()
+        dialoghi.da_leggere(genitore, titolo, righe)
+        if genitore is self:
+            self._rimetti_il_fuoco()
+
+    def _lettura_dal_nucleo(self, richiesta):
+        try:
+            if self:
+                self.leggi(richiesta.titolo, richiesta.righe)
+        finally:
+            richiesta.chiuse.set()
+
+    def _navigatore_dal_nucleo(self, richiesta):
+        try:
+            if self:
+                from . import finestra_navigatore
+
+                genitore = self._sopra()
+                richiesta.scelto, richiesta.modificata = finestra_navigatore.naviga(
+                    genitore, richiesta.game, richiesta.nodo, self.chiedi_conferma, self.chiedi_valore, self.annuncia
+                )
+                if genitore is self:
+                    self._rimetti_il_fuoco()
+        finally:
+            richiesta.chiuse.set()
+
+    def _editor_dal_nucleo(self, richiesta):
+        try:
+            if self:
+                from . import finestra_editor
+
+                genitore = self._sopra()
+                richiesta.nuova = finestra_editor.modifica(genitore, self, richiesta.fen)
+                if genitore is self:
+                    self._rimetti_il_fuoco()
         finally:
             richiesta.chiuse.set()
 

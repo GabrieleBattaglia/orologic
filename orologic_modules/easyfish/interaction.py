@@ -3,14 +3,37 @@
 
 import chess
 import chess.engine
-from GBUtils import dgt, key, menu
+from GBUtils import dgt, enter_escape, key, menu
 
+from .. import cruscotto, strato
 from .. import engine as orologic_engine
-from ..board_utils import CustomBoard
+from ..board_utils import CustomBoard, DescribeMove
 from ..config import _
-from .analysis_utils import GetPrincipalVariationSan
+from . import posizione
 from .constants import MNEDITOR, MNEXPLORER
-from .utils import InsertedCounter
+from .utils import InsertedCounter, suona_annulla
+
+
+def errori_della_posizione(board):
+    """Perche' la posizione non e' legale, una riga per motivo: l'editor
+    a comandi del terminale e quello della finestra."""
+    status = board.status()
+    voci = (
+        (chess.STATUS_NO_WHITE_KING, _("- Manca il Re bianco.")),
+        (chess.STATUS_NO_BLACK_KING, _("- Manca il Re nero.")),
+        (chess.STATUS_TOO_MANY_KINGS, _("- Troppi Re sulla scacchiera.")),
+        (chess.STATUS_TOO_MANY_WHITE_PIECES, _("- Troppi pezzi bianchi.")),
+        (chess.STATUS_TOO_MANY_BLACK_PIECES, _("- Troppi pezzi neri.")),
+        (chess.STATUS_TOO_MANY_WHITE_PAWNS, _("- Troppi pedoni bianchi.")),
+        (chess.STATUS_TOO_MANY_BLACK_PAWNS, _("- Troppi pedoni neri.")),
+        (chess.STATUS_PAWNS_ON_BACKRANK, _("- Pedoni in prima o ottava traversa.")),
+        (chess.STATUS_OPPOSITE_CHECK, _("- Il giocatore che non ha il turno è sotto scacco.")),
+        (chess.STATUS_TOO_MANY_CHECKERS, _("- Troppi scacchi simultanei.")),
+        (chess.STATUS_IMPOSSIBLE_CHECK, _("- Posizione di scacco impossibile.")),
+        (chess.STATUS_BAD_CASTLING_RIGHTS, _("- Diritti di arrocco non validi.")),
+        (chess.STATUS_INVALID_EP_SQUARE, _("- Casa en passant non valida.")),
+    )
+    return [testo for bandiera, testo in voci if status & bandiera]
 
 
 def BoardEditor(starting_fen=None, sharing_window=None):
@@ -65,34 +88,9 @@ def BoardEditor(starting_fen=None, sharing_window=None):
                 if tmp_board.is_valid():
                     break
                 else:
-                    status = tmp_board.status()
                     print(_("Posizione illegale:"))
-                    if status & chess.STATUS_NO_WHITE_KING:
-                        print(_("- Manca il Re bianco."))
-                    if status & chess.STATUS_NO_BLACK_KING:
-                        print(_("- Manca il Re nero."))
-                    if status & chess.STATUS_TOO_MANY_KINGS:
-                        print(_("- Troppi Re sulla scacchiera."))
-                    if status & chess.STATUS_TOO_MANY_WHITE_PIECES:
-                        print(_("- Troppi pezzi bianchi."))
-                    if status & chess.STATUS_TOO_MANY_BLACK_PIECES:
-                        print(_("- Troppi pezzi neri."))
-                    if status & chess.STATUS_TOO_MANY_WHITE_PAWNS:
-                        print(_("- Troppi pedoni bianchi."))
-                    if status & chess.STATUS_TOO_MANY_BLACK_PAWNS:
-                        print(_("- Troppi pedoni neri."))
-                    if status & chess.STATUS_PAWNS_ON_BACKRANK:
-                        print(_("- Pedoni in prima o ottava traversa."))
-                    if status & chess.STATUS_OPPOSITE_CHECK:
-                        print(_("- Il giocatore che non ha il turno è sotto scacco."))
-                    if status & chess.STATUS_TOO_MANY_CHECKERS:
-                        print(_("- Troppi scacchi simultanei."))
-                    if status & chess.STATUS_IMPOSSIBLE_CHECK:
-                        print(_("- Posizione di scacco impossibile."))
-                    if status & chess.STATUS_BAD_CASTLING_RIGHTS:
-                        print(_("- Diritti di arrocco non validi."))
-                    if status & chess.STATUS_INVALID_EP_SQUARE:
-                        print(_("- Casa en passant non valida."))
+                    for riga in errori_della_posizione(tmp_board):
+                        print(riga)
                     print(
                         _(
                             "\nCorreggi la posizione per poter uscire o usa '.i' / '.v' per resettare."
@@ -284,9 +282,14 @@ def BoardEditor(starting_fen=None, sharing_window=None):
     return tmp_board.fen()
 
 
-def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
-    """Modalità esplorazione per navigare nella partita."""
-    node = game
+def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None, nodo=None):
+    """Modalità esplorazione per navigare nella partita, dalla mossa nodo,
+    o dall'inizio. Nella finestra l'area e' il cruscotto, e la scacchiera
+    interattiva manda i comandi con Alt davanti."""
+    node = game if nodo is None else nodo
+    stato = posizione.Stato("esploratore")
+    # Il commento si dice quando si arriva sulla mossa, non a ogni tasto.
+    commentato = None
     # Fondamentale: usiamo la scacchiera del PGN come base per la sincronizzazione
     initial_board = game.board()
     analysis_time = analysis_time_default
@@ -317,8 +320,9 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
         if var_index >= variant_count:
             var_index = 0
 
-        if node.comment:
+        if node.comment and node is not commentato:
             print(node.comment)
+        commentato = node
 
         p_node = node.parent
         if p_node and p_node.move:
@@ -367,7 +371,10 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
         if variant_count > 1:
             prompt += f" [V{var_index + 1}/{variant_count}]"
 
-        command = key(prompt=prompt)
+        stato.aggiorna(game, current_board, node, var_index)
+        strato.fornisci(lambda: cruscotto.dati_di(stato), MNEXPLORER)
+        with strato.prompt_di_gioco():
+            command = key(prompt=prompt)
 
         from ..lichess_board import handle_exploration_command
 
@@ -382,7 +389,8 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
             else:
                 print(_("Nessuna mossa precedente"))
         elif command == "?":
-            menu(d=MNEXPLORER, show_only=True)
+            with strato.da_leggere(_("Comandi dell'esploratore")):
+                menu(d=MNEXPLORER, show_only=True, pager=0 if strato.con_la_plancia() else 20)
         elif command == "d":
             if variant_count > 0:
                 node = node.variations[var_index]
@@ -395,13 +403,13 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
         elif command == "x":  # Next Variant
             if variant_count > 1:
                 var_index = (var_index + 1) % variant_count
-                print(f"Variante {var_index + 1}: {node.variations[var_index].san()}")
+                print(_("Variante {n}: {mossa}").format(n=var_index + 1, mossa=node.variations[var_index].san()))
             else:
                 print(_("Nessuna variante alternativa."))
         elif command == "w":  # Prev Variant
             if variant_count > 1:
                 var_index = (var_index - 1 + variant_count) % variant_count
-                print(f"Variante {var_index + 1}: {node.variations[var_index].san()}")
+                print(_("Variante {n}: {mossa}").format(n=var_index + 1, mossa=node.variations[var_index].san()))
             else:
                 print(_("Nessuna variante alternativa."))
         elif command == "q":
@@ -426,9 +434,14 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
             current_board = SyncBoardToNode(node)
             cb = CustomBoard()
             cb.set_fen(current_board.fen())
-            print(cb)
+            with strato.da_leggere(_("Scacchiera")):
+                print(cb)
         elif command == "u":
-            # UNDO/CUT - Elimina mossa corrente e figli
+            # Taglia la mossa col suo seguito: con un seguito si chiede, come
+            # .u del menu, perche' si perde di piu'; prima tagliava e basta.
+            seguito = posizione.semimosse_dopo(node)
+            if node.parent and seguito and not enter_escape(posizione.domanda_del_taglio(seguito)):
+                continue
             if node.parent:
                 parent = node.parent
                 if node in parent.variations:
@@ -436,6 +449,7 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
                     node = parent
                     current_board = SyncBoardToNode(node)
                     is_modified = True
+                    suona_annulla()
                     print(_("Mossa/Variante eliminata. Tornati indietro."))
                     var_index = 0
                 else:
@@ -453,54 +467,70 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None):
             current_board = SyncBoardToNode(node)
             print(_("Analisi in corso..."))
             if engine:
-                try:
-                    info_list = engine.analyse(
-                        current_board,
-                        chess.engine.Limit(time=analysis_time),
-                        multipv=local_multipv,
-                    )
-                    if not isinstance(info_list, list):
-                        info_list = [info_list]
-                    for i, info in enumerate(info_list):
-                        pv = info.get("pv", [])
-                        if not pv:
-                            continue
-                        score_val = info.get("score").pov(current_board.turn)
-                        eval_str = (
-                            f"M{abs(score_val.mate())}"
-                            if score_val.is_mate()
-                            else f"{score_val.score(mate_score=10000) / 100:+.2f}"
+                with strato.da_leggere(_("Analisi")):
+                    try:
+                        info_list = engine.analyse(
+                            current_board,
+                            chess.engine.Limit(time=analysis_time),
+                            multipv=local_multipv,
                         )
-                        wdl = info.get("wdl")
-                        wdl_str = (
-                            f"({wdl[0] / 10:.1f}/{wdl[1] / 10:.1f}/{wdl[2] / 10:.1f}) "
-                            if wdl
-                            else ""
-                        )
-                        line_san = " ".join(GetPrincipalVariationSan(current_board, pv))
-                        print(f"{i + 1}. {eval_str} {wdl_str}{line_san}")
-                # Contorno dell'editor: si prosegue.
-                except Exception as e:  # noqa: BLE001
-                    print(_("Analisi fallita: {e}").format(e=e))
+                        for riga in posizione.righe_dell_analisi(current_board, info_list):
+                            print(riga)
+                    # Contorno dell'editor: si prosegue.
+                    except Exception as e:  # noqa: BLE001
+                        print(_("Analisi fallita: {e}").format(e=e))
             else:
                 print(_("Motore non disponibile."))
         elif command == "r":
-            analysis_time = dgt(
-                prompt=_("Secondi analisi: "),
-                kind="i",
-                imin=1,
-                imax=1800,
-                default=analysis_time,
-            )
+            # Nel prompt di gioco: la scacchiera manda r e i secondi insieme.
+            with strato.prompt_di_gioco():
+                analysis_time = dgt(
+                    prompt=_("Secondi analisi: "),
+                    kind="i",
+                    imin=1,
+                    imax=1800,
+                    default=analysis_time,
+                )
         elif command == "t":
-            local_multipv = dgt(
-                prompt=_("Linee analisi: "),
-                kind="i",
-                imin=1,
-                imax=20,
-                default=local_multipv,
-            )
+            with strato.prompt_di_gioco():
+                local_multipv = dgt(
+                    prompt=_("Linee analisi: "),
+                    kind="i",
+                    imin=1,
+                    imax=20,
+                    default=local_multipv,
+                )
             print(_("Linee impostate a {n}").format(n=local_multipv))
+        elif command == "i":
+            # Una mossa nella partita o nella variante: dalla scacchiera, con
+            # Invio; nel terminale si scrive. Se c'e' gia', ci si va.
+            with strato.prompt_di_gioco():
+                testo = dgt(prompt=_("Mossa da aggiungere: "), kind="s", smin=0, smax=20, default="").strip()
+            if not testo:
+                continue
+            mossa = posizione.leggi_la_mossa(current_board, testo)
+            if mossa is None:
+                colore = _("Bianco") if current_board.turn == chess.WHITE else _("Nero")
+                print(_("{k}: mossa illegale per il {c}.").format(k=testo, c=colore))
+                continue
+            print(DescribeMove(mossa, current_board))
+            esistente = next((variante for variante in node.variations if variante.move == mossa), None)
+            if esistente is not None:
+                node = esistente
+            else:
+                nuova_variante = bool(node.variations)
+                node = node.add_variation(mossa)
+                is_modified = True
+                if nuova_variante:
+                    print(_("Nuova variante creata."))
+            current_board = SyncBoardToNode(node)
+            var_index = 0
+        elif command == "_":
+            with strato.prompt_di_gioco():
+                testo = dgt(prompt=_("Commento: "), kind="s", smin=0, smax=2000, default="")
+            posizione.metti_il_testo(node, testo)
+            is_modified = True
+            print(_("Commento registrato."))
         elif command == ".":
             print()
             return is_modified, node

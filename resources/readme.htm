@@ -142,6 +142,14 @@ margin: 1em 0;
 </li>
 <li><a href="#cap-1-8-16">1.8.16. La scelta della lingua</a>
 </li>
+<li><a href="#cap-1-8-17">1.8.17. La scacchiera nell'esploratore di Easyfish</a>
+</li>
+<li><a href="#cap-1-8-18">1.8.18. L'editor della scacchiera</a>
+</li>
+<li><a href="#cap-1-8-19">1.8.19. Il navigatore della partita</a>
+</li>
+<li><a href="#cap-1-8-20">1.8.20. Le finestre da leggere</a>
+</li>
 </ul>
 </li>
 </ul>
@@ -686,6 +694,62 @@ margin: 1em 0;
     <li><code>Esc</code>: lascia la lingua di Windows, o l'italiano.</li>
     <li><code>Frecce e Invio</code>: scelgono la lingua.</li>
 </ul>
+<h4 id="cap-1-8-17">1.8.17. La scacchiera nell'esploratore di Easyfish</h4>
+<p>Valgono con la scacchiera aperta nell'esploratore, sezione 2.5.3; gli altri tasti sono quelli della sezione 1.8.4.</p>
+<ul>
+    <li><code>Alt+a</code>: la mossa precedente.</li>
+    <li><code>Alt+b</code>: la scacchiera a caratteri, in una finestra da leggere.</li>
+    <li><code>Alt+c</code>: il commento della mossa.</li>
+    <li><code>Alt+d</code>: la mossa successiva, nella variante scelta.</li>
+    <li><code>Alt+e</code>: l'ultima mossa della linea principale.</li>
+    <li><code>Alt+q</code>: la prima mossa.</li>
+    <li><code>Alt+r</code>: i secondi dell'analisi.</li>
+    <li><code>Alt+s</code>: l'analisi, in una finestra da leggere.</li>
+    <li><code>Alt+t</code>: le linee dell'analisi.</li>
+    <li><code>Alt+u</code>: taglia la mossa, con la conferma se ha un seguito.</li>
+    <li><code>Alt+w</code>: la variante sopra.</li>
+    <li><code>Alt+x</code>: la variante sotto.</li>
+    <li><code>Alt+z</code>: fuori dalla variante.</li>
+    <li><code>Backspace</code>: il menu dei comandi dell'esploratore.</li>
+    <li><code>C</code>: scrive il commento della mossa.</li>
+    <li><code>Invio</code>: posa il pezzo sollevato, e la mossa entra nella partita; se la mossa ha già un seguito, in una variante nuova.</li>
+    <li><code>Le lettere dei pezzi, W, w e Tab</code>: le risposte le dice la scacchiera stessa, con le parole di Orologic.</li>
+</ul>
+
+<h4 id="cap-1-8-18">1.8.18. L'editor della scacchiera</h4>
+<p>L'editor di Easyfish, il comando .be, sezione 2.5. Le frecce, i salti e il 9 sono quelli della sezione 1.8.4.</p>
+<ul>
+    <li><code>Alt con la lettera di un pezzo</code>: dove sono quei pezzi: Alt e la lettera i neri, Alt, Maiuscolo e la lettera i bianchi; R N B Q K P.</li>
+    <li><code>Alt+i</code>: Posizione iniziale.</li>
+    <li><code>Alt+v</code>: Svuota, che lascia i due Re.</li>
+    <li><code>Alt+w e Alt+Maiuscolo+W</code>: tutti i pezzi neri e tutti i bianchi.</li>
+    <li><code>Canc</code>: svuota la casa, ma non quella di un Re.</li>
+    <li><code>Esc</code>: annulla, e la partita resta com'era.</li>
+    <li><code>Invio</code>: posa il pezzo sollevato sulla casa scelta, senza le regole del gioco.</li>
+    <li><code>R N B Q K P, e le minuscole</code>: mettono quel pezzo sulla casa, bianco o nero; il Re vi si sposta.</li>
+    <li><code>Spazio</code>: solleva il pezzo.</li>
+    <li><code>Tab</code>: dalla scacchiera ai campi del tratto, degli arrocchi, dell'en passant e del numero della mossa, e ai pulsanti.</li>
+</ul>
+
+<h4 id="cap-1-8-19">1.8.19. Il navigatore della partita</h4>
+<p>Il comando .na di Easyfish, sezione 2.5.</p>
+<ul>
+    <li><code>Alt+a</code>: Analizza.</li>
+    <li><code>Alt+c</code>: Commento.</li>
+    <li><code>Alt+m</code>: Promuovi la variante.</li>
+    <li><code>Alt+t</code>: Taglia.</li>
+    <li><code>Alt+v</code>: Vai alla posizione.</li>
+    <li><code>Esc</code>: torna a Easyfish dov'era.</li>
+    <li><code>Freccia destra e Freccia sinistra</code>: aprono e chiudono le varianti.</li>
+    <li><code>Invio</code>: porta Easyfish alla mossa della voce.</li>
+</ul>
+
+<h4 id="cap-1-8-20">1.8.20. Le finestre da leggere</h4>
+<p>Le analisi, gli aiuti, la lista delle mosse e la scacchiera a caratteri di Easyfish.</p>
+<ul>
+    <li><code>Esc</code>: chiude, e si torna dov'eri.</li>
+    <li><code>Frecce, Pagina su, Pagina giù, Home e Fine</code>: percorrono il testo.</li>
+</ul>
 
 <h2 id="cap-2">2. Opzioni del Menu Principale</h2>
 <p>All'avvio di Orologic, vieni accolto da una schermata di benvenuto. Nella finestra le opzioni del menu principale sono nella plancia; nel terminale, digitando <code>?</code> e premendo Invio verranno mostrate. Ecco una descrizione di ciascuna di esse.</p>
@@ -980,6 +1044,9 @@ margin: 1em 0;
 
 <h3 id="cap-2-5">2.5. Easyfish (Interfaccia a riga di comando per Stockfish)</h3>
 <p>Easyfish è un modulo speciale accessibile dal menu principale. Offre un'interfaccia a riga di comando fluida e diretta per studiare, creare varianti e analizzare. Il gioco contro il motore, che fino alla 8.41.5 stava qui, ha ora la sua voce nel menu principale, sezione 2.4. I comandi speciali sono tutti preceduti dal punto (<code>.</code>). Inoltre, in tutte le modalità di Easyfish (nel menu principale, durante la partita contro il motore e nell'esploratore) sono pienamente supportati i <strong>comandi di ispezione della scacchiera</strong> descritti nella sezione 2.1.4 (<code>/[col]</code>, <code>\[col]</code>, <code>-[col|trv|casa]</code> e <code>,[Pezzo]</code>).</p>
+<p><strong>Nella finestra</strong> Easyfish è come una partita: l'area diventa il cruscotto, coi giocatori, la posizione, la scacchiera, le ultime mosse e, in più, la linea dove sei, la principale o una variante col suo livello, il seguito con le sue varianti e il commento della mossa. I comandi col punto stanno nella plancia, nel ramo dei comandi. Lo spazio a riga vuota apre la scacchiera interattiva, sezione 1.3.4: Invio vi scrive la mossa, C il commento, Backspace apre il menu dei comandi di Easyfish. Le analisi, l'elenco dei comandi, la lista delle mosse e la scacchiera a caratteri si aprono in una finestra da leggere, che Esc chiude.</p>
+<p>Il comando <code>.na</code> apre il <strong>navigatore della partita</strong>: le mosse in un albero di Windows, la linea principale in fila sotto la partita, e ogni variante come ramo sotto la mossa che sostituisce, con le sue mosse e le sue varianti allo stesso modo. Ogni voce dice il numero, la mossa, la mossa a parole, i segni come ! e ?, e il commento. Invio, o Vai alla posizione, porta Easyfish a quella mossa. Commento riscrive il testo del commento, e tiene le analisi e i disegni; Taglia toglie la mossa col suo seguito, dopo la conferma; Promuovi la variante la fa salire di un gradino, al posto della linea da cui si stacca; Analizza chiede al motore le linee della posizione, coi secondi e le linee dell'analisi di Orologic, e le mostra in una finestra da leggere. Chiudi, o Esc, torna a Easyfish dov'era. Nel terminale <code>.na</code> non c'è: c'è l'esploratore, sezione 2.5.3.</p>
+<p>Nella finestra <code>.be</code> apre l'<strong>editor della scacchiera</strong> con la scacchiera interattiva, coi suoi spostamenti e i suoi salti. Le lettere dei pezzi, R N B Q K P per il Bianco e le minuscole per il Nero, mettono quel pezzo sulla casa, e il Re vi si sposta; Alt con quelle lettere dice dove sono quei pezzi, e Alt con W e w tutti i bianchi e tutti i neri; lo spazio solleva un pezzo e Invio lo posa sulla casa scelta, senza le regole del gioco; Canc svuota la casa. La casa di un Re non si copre e non si svuota: il Re va spostato. Con Tab ci sono i campi del resto della posizione, il tratto, i quattro arrocchi, la casa dell'en passant e il numero della mossa, poi Posizione iniziale, Svuota, che lascia i due Re, OK e Annulla. OK controlla la posizione e, se non è legale, dice perché; Annulla, o Esc, lascia la partita com'era. Nel terminale l'editor resta quello a comandi della sezione 2.5.2.</p>
 
 <h4 id="cap-2-5-1">2.5.1. Iniziare e Gestire la Partita</h4>
 <ul>
@@ -1057,7 +1124,10 @@ margin: 1em 0;
     <li><code>z</code>: Esci dalla variante attuale e risali di livello, tornando alla deviazione padre. (Funziona da Lvl1 in su).</li>
     <li><code>u</code>: Elimina ("taglia") il ramo in cui ti trovi, ripulendo l'albero.</li>
     <li><code>s</code>: Richiedi al motore un'analisi istantanea della posizione.</li>
+    <li><code>i</code>: aggiungi una mossa alla partita, o una variante nuova se la mossa dove sei ha già un seguito; se la mossa c'è già, ci vai.</li>
+    <li><code>_</code>: scrivi il commento della mossa: prende il posto del testo di prima, e le analisi e i disegni restano.</li>
 </ul>
+<p>L'esploratore parte dalla mossa dove sei, e <code>u</code> chiede conferma quando la mossa ha un seguito. Nella finestra l'area è il cruscotto, e con la scacchiera aperta i comandi di una lettera si danno con Alt davanti: Alt con a e d la mossa precedente e la successiva, Alt con q ed e la prima e l'ultima, Alt con w e x la variante sopra e quella sotto, Alt con z fuori dalla variante, Alt con s l'analisi, Alt con r e t i suoi secondi e le sue linee, Alt con c il commento, Alt con u il taglio, Alt con b la scacchiera a caratteri. Invio aggiunge la mossa, C scrive il commento, e i pezzi e le case, con le loro lettere e Tab, li dice la scacchiera stessa. Tutti i tasti sono nella sezione 1.8.17.</p>
 
 <h4 id="cap-2-5-4">2.5.4. Menu Disegno (.d)</h4>
 <p>Il comando <code>.d</code> apre un sottomenu dedicato all'inserimento di annotazioni grafiche (frecce e cerchi colorati) sulla scacchiera. Queste annotazioni vengono associate in modo permanente alla mossa corrente all'interno del file PGN, e verranno stampate fedelmente se esporti la scacchiera in PDF.</p>

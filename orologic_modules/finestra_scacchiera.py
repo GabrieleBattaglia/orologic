@@ -21,12 +21,15 @@ scacchiera; quando il nucleo torna al prompt delle mosse, la finestra
 principale la riapre.
 """
 
+import contextlib
+import io
+
 import chess
 import wx
 from GBUtils import Acusticator
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
-from . import aspetto, config, localizzazione, plancia, storage
+from . import aspetto, config, localizzazione, plancia, storage, ui
 from .config import _
 from .scacchiera import (
     DESTRA,
@@ -60,6 +63,11 @@ GIRO_DELLA_POSIZIONE = 150
 # finestra principale la riaprira'.
 CHIUSA_PER_UNA_DOMANDA = wx.ID_HIGHEST + 71
 PROMOZIONI = (chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT)
+# L'esploratore di Easyfish legge un tasto solo: dalla scacchiera i suoi
+# comandi di una lettera vanno con Alt davanti (Piano della GUI.txt, scelte
+# di Gabriele del 21 novembre 2026); r e t chiedono prima il valore.
+COMANDI_DELL_ESPLORATORE = "adqewxzusbc"
+VALORI_DELL_ESPLORATORE = {"r": ("Secondi analisi: ", 1, 1800, 2), "t": ("Linee analisi: ", 1, 20, 3)}
 
 # I suoni della scacchiera, un preset per evento, dalla collezione di GBUtils,
 # scelti da Gabriele all'ascolto alla cieca del 21 novembre 2026,
@@ -85,8 +93,18 @@ SUONI = {
     "da_guardare": "orecchio_che_cerca",
     "nessuna_mossa": "filtro_eta_minima",
     "risultato": "casella_liberi_spuntata",
+    # L'editor della scacchiera di Easyfish, provvisori come gli altri.
+    "metti": "casella_tuoi_spuntata",
+    "togli": "casella_tuoi_tolta",
+    "da_capo": "filtro_regione",
+    "re_da_spostare": "casella_senza_acciacchi_tolta",
+    "posizione_illegale": "filtro_tratto_no",
 }
 GIRI = {SU: "giro_su", GIU: "giro_giu", SINISTRA: "giro_sinistra", DESTRA: "giro_destra"}
+# I suoni dell'editor della scacchiera di Easyfish, del 22 novembre 2026,
+# presi fra i preset senza firme: si firmano in GBUtils dopo l'ascolto di
+# Gabriele, come quelli della prima tappa.
+PROVVISORI = {"metti", "togli", "da_capo", "re_da_spostare", "posizione_illegale"}
 # Le azioni che fanno suonare ogni evento, per suoni_della_scacchiera.txt,
 # l'elenco che Gabriele usa con Acu_Maker: lo scrive strumenti/elenco_suoni.py.
 AZIONI = {
@@ -106,6 +124,11 @@ AZIONI = {
     "da_guardare": "Spazio o Invio nella partita osservata su Lichess, dove la scacchiera è solo da guardare",
     "nessuna_mossa": "u quando non c'è ancora nessuna mossa giocata",
     "risultato": "1 e 0, 0 e 1, 1 e 2, o l'asterisco, dove si assegna il risultato: si apre la conferma",
+    "metti": "Nell'editor della scacchiera di Easyfish, la lettera di un pezzo lo mette sulla casa",
+    "togli": "Nell'editor, Canc svuota la casa",
+    "da_capo": "Nell'editor, Posizione iniziale o Svuota",
+    "re_da_spostare": "Nell'editor, un pezzo sulla casa di un Re, o Canc su un Re: il Re va spostato prima",
+    "posizione_illegale": "Nell'editor, OK con una posizione illegale: si dice cosa non va",
 }
 
 
@@ -184,8 +207,29 @@ def chiavi_dei_comandi(comandi):
     return forme
 
 
-def righe_d_aiuto():
-    """L'aiuto dei tasti della scacchiera, una riga per tasto."""
+def righe_d_aiuto(contesto=None):
+    """L'aiuto dei tasti della scacchiera, una riga per tasto; nei contesti
+    di Easyfish quelli che vi valgono."""
+    if contesto == "esploratore":
+        return [
+            *_righe_comuni(),
+            _("Invio: posa il pezzo sollevato, e la mossa entra nella partita o nella variante."),
+            _("Alt con a e d: la mossa precedente e la successiva; Alt con q ed e: la prima e l'ultima."),
+            _("Alt con w e x: la variante sopra e quella sotto; Alt con z: fuori dalla variante."),
+            _("Alt con s: l'analisi; Alt con r: i suoi secondi; Alt con t: le sue linee."),
+            _("Alt con c: il commento della mossa; C: scrivere il commento."),
+            _("Alt con u: taglia la mossa; Alt con b: la scacchiera a caratteri."),
+            _("Backspace: il menu dei comandi dell'esploratore."),
+            _("?: questo aiuto. Esc chiude la scacchiera."),
+        ]
+    if contesto == "easyfish":
+        return [
+            *_righe_comuni(),
+            _("Invio: posa il pezzo sollevato, se la mossa vale, e la mossa entra nella partita."),
+            _("C: un commento alla mossa."),
+            _("Backspace: il menu dei comandi di Easyfish."),
+            _("?: questo aiuto. Esc chiude la scacchiera."),
+        ]
     return [
         _("Frecce: una casa nelle quattro direzioni; al bordo si fermano."),
         _("Alt con le frecce: oltre il bordo, dall'altra parte."),
@@ -209,14 +253,33 @@ def righe_d_aiuto():
     ]
 
 
+def _righe_comuni():
+    """Le righe dell'aiuto che valgono in Easyfish come nelle partite."""
+    return [
+        _("Frecce: una casa nelle quattro direzioni; al bordo si fermano."),
+        _("Alt con le frecce: oltre il bordo, dall'altra parte."),
+        _("Maiuscolo con sinistra e destra: le diagonali che salgono; Ctrl con sinistra e destra: quelle che scendono."),
+        _("Spazio: solleva il pezzo; sulla sua casa lo posa, su un'altra piena prende quello."),
+        _("Ctrl con spazio: il pezzo in mano."),
+        _("Da a ad h, poi da 1 a 8: salta a quella casa."),
+        _("Da 1 a 8: la traversa, nella colonna di adesso."),
+        _("9: gira la scacchiera."),
+        _("R N B Q K P, e in minuscolo: dove sono quei pezzi, bianchi e neri."),
+        _("W: tutti i pezzi bianchi; w: tutti i neri."),
+        _("Tab: la casa, coi pezzi che la difendono e la attaccano."),
+        _("l: l'ultima mossa; L: le ultime due; u: alla casa d'arrivo dell'ultima mossa."),
+        _("m: le mosse possibili del pezzo sollevato, o di quello sulla casa."),
+    ]
+
+
 class Aiuto(wx.Dialog):
     """L'aiuto dei tasti, in un testo navigabile; Esc lo chiude."""
 
-    def __init__(self, genitore):
+    def __init__(self, genitore, righe=None):
         super().__init__(genitore, title=_("Aiuto della scacchiera"), style=STILE_ADATTABILE)
         pannello = pannello_scorrevole(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
-        self.testo = wx.TextCtrl(pannello, value="\n".join(righe_d_aiuto()), style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
+        self.testo = wx.TextCtrl(pannello, value="\n".join(righe or righe_d_aiuto()), style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
         self.testo.SetName(_("Aiuto della scacchiera"))
         sizer.Add(self.testo, 1, wx.EXPAND | wx.ALL, 5)
         sizer.Add(wx.Button(pannello, wx.ID_CANCEL, _("Chiudi")), 0, wx.ALL | wx.ALIGN_RIGHT, 5)
@@ -286,8 +349,8 @@ class FinestraScacchiera(wx.Dialog):
     da' il cruscotto, i comandi della modalita', la faccia per scrivere nel
     prompt, la sintesi e le domande."""
 
-    def __init__(self, finestra):
-        super().__init__(finestra, title=_("Scacchiera"), style=STILE_ADATTABILE)
+    def __init__(self, finestra, genitore=None):
+        super().__init__(genitore or finestra, title=_("Scacchiera"), style=STILE_ADATTABILE)
         self.finestra = finestra
         dati = self._dati() or {}
         board = dati.get("board") or chess.Board()
@@ -397,17 +460,44 @@ class FinestraScacchiera(wx.Dialog):
 
     # Il nucleo.
 
+    def contesto(self):
+        """Dove si e': None nelle partite, easyfish nel menu principale di
+        Easyfish, esploratore nel suo esploratore."""
+        return (self._dati() or {}).get("contesto")
+
     def scrivi(self, testo):
         """Scrive nel prompt del nucleo, come digitato, e preme Invio. Con la
         scacchiera di .s ferma, il nucleo aspetta un tasto per tornare al
-        prompt: lo spazio, che non entra nella riga."""
+        prompt: lo spazio, che non entra nella riga. L'esploratore di
+        Easyfish legge un tasto solo: un comando di una lettera e' gia' la
+        risposta, senza Invio."""
         if self.chiusa:
             return
         if (self._dati() or {}).get("vista_ferma"):
             self.finestra.premi_nel_prompt(" ")
         for carattere in testo:
             self.finestra.premi_nel_prompt(carattere)
-        self.finestra.premi_nel_prompt("\r")
+        if not (len(testo) == 1 and self.contesto() == "esploratore"):
+            self.finestra.premi_nel_prompt("\r")
+
+    def chiedi(self, comando):
+        """Un comando che dice qualcosa della posizione, come ,N o -e4: al
+        nucleo, o, dove il nucleo legge un tasto solo, qui, con le stesse
+        parole."""
+        if self.contesto() != "esploratore":
+            self.scrivi(comando)
+            return
+        self.di_qui(comando)
+
+    def di_qui(self, comando):
+        """Il comando di esplorazione detto dalla scacchiera stessa: le
+        parole di Orologic, raccolte e annunciate."""
+        uscita = io.StringIO()
+        with contextlib.redirect_stdout(uscita):
+            ui.esplora_scacchiera(comando, self.scacchiera.board.copy())
+        testo = " ".join(uscita.getvalue().split())
+        if testo:
+            self.annuncia(testo)
 
     def da_guardare(self):
         """Vero dove la scacchiera e' solo da guardare, come nella partita
@@ -458,8 +548,13 @@ class FinestraScacchiera(wx.Dialog):
             return
         if codice == wx.WXK_TAB and modificatori == wx.MOD_NONE:
             self._chiudi_la_lettera()
-            self.scrivi("-" + chess.square_name(self.scacchiera.cursore))
+            self.chiedi("-" + chess.square_name(self.scacchiera.cursore))
             return
+        if modificatori in (wx.MOD_ALT, wx.MOD_ALT | wx.MOD_SHIFT) and ord("A") <= codice <= ord("Z"):
+            self._chiudi_la_lettera()
+            lettera = chr(codice) if modificatori & wx.MOD_SHIFT else chr(codice).lower()
+            if self.alt(lettera):
+                return
         if wx.WXK_F1 <= codice <= wx.WXK_F5 and modificatori == wx.MOD_NONE:
             self._chiudi_la_lettera()
             numero = codice - wx.WXK_F1 + 1
@@ -540,7 +635,7 @@ class FinestraScacchiera(wx.Dialog):
         dice gli alfieri neri, l'1 va alla prima traversa; lo 0 e le altre
         lettere non hanno altro."""
         if lettera == "b":
-            self.scrivi(",b")
+            self.chiedi(",b")
         elif lettera == "1":
             self._carattere_della_scacchiera("1")
 
@@ -553,11 +648,11 @@ class FinestraScacchiera(wx.Dialog):
             self.disegna()
             self.annuncia(_("Dal Nero") if self.scacchiera.dal_nero else _("Dal Bianco"))
         elif carattere in "RNBQKPrnbqkp":
-            self.scrivi("," + carattere)
+            self.chiedi("," + carattere)
         elif carattere == "W":
-            self.scrivi("-")
+            self.chiedi("-")
         elif carattere == "w":
-            self.scrivi("+")
+            self.chiedi("+")
         elif carattere in "lL":
             self.annuncia(self.scacchiera.ultime_mosse(1 if carattere == "l" else 2))
         elif carattere == "u":
@@ -573,9 +668,29 @@ class FinestraScacchiera(wx.Dialog):
         elif carattere == "C":
             self.commento()
         elif carattere == "?":
-            with Aiuto(self) as aiuto:
+            with Aiuto(self, self.righe_d_aiuto()) as aiuto:
                 aiuto.ShowModal()
             self.area.SetFocus()
+
+    def righe_d_aiuto(self):
+        return righe_d_aiuto(self.contesto())
+
+    def alt(self, lettera):
+        """Alt e una lettera: nell'esploratore di Easyfish i suoi comandi di
+        una lettera. Vero se la lettera vale."""
+        if self.contesto() != "esploratore":
+            return False
+        if lettera in VALORI_DELL_ESPLORATORE:
+            domanda, minimo, massimo, valore = VALORI_DELL_ESPLORATORE[lettera]
+            valore = self.finestra.chiedi_valore(self, _(domanda).rstrip(": "), _(domanda), valore, "intero", minimo, massimo)
+            self.area.SetFocus()
+            if valore is not None:
+                self.scrivi(f"{lettera}{valore}")
+            return True
+        if lettera in COMANDI_DELL_ESPLORATORE:
+            self.scrivi(lettera)
+            return True
+        return False
 
     # I pezzi.
 
@@ -625,7 +740,8 @@ class FinestraScacchiera(wx.Dialog):
         san = self.scacchiera.san(mossa)
         self.scacchiera.sollevato = None
         suona("posa")
-        self.scrivi(san)
+        # Nell'esploratore la mossa entra col suo comando, i.
+        self.scrivi("i" + san if self.contesto() == "esploratore" else san)
         self.disegna()
 
     # Il risultato.
@@ -649,13 +765,20 @@ class FinestraScacchiera(wx.Dialog):
     # Il commento e il menu.
 
     def commento(self):
-        if not self._ha(".c"):
+        """C: il commento alla mossa, col comando della modalita': .c nelle
+        partite, il trattino basso in Easyfish."""
+        chiavi = chiavi_dei_comandi(self.finestra.comandi)
+        if ".c" in chiavi:
+            prima = ".c "
+        elif any(chiave.startswith("_") for chiave in chiavi):
+            prima = "_"
+        else:
             suona("comando_assente")
             return
         testo = self.finestra.chiedi_valore(self, _("Commento mossa"), _("Commento mossa"), "", "testo", 0, 500)
         self.area.SetFocus()
         if testo:
-            self.scrivi(".c " + testo)
+            self.scrivi(prima + testo)
 
     def menu(self):
         """Backspace: la pausa, dove c'e', e il menu dei comandi della
