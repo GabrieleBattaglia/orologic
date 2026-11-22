@@ -19,28 +19,19 @@ all'uscita come sempre.
 
 import threading
 
-import chess.engine
 import wx
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
 from . import aspetto, dialoghi
 from . import engine as orologic_engine
 from .config import _
-from .easyfish import posizione
+from .easyfish import analysis_utils, posizione
 
 
 def analizza(board):
     """L'analisi della posizione col motore di Orologic, come righe; le
     prove la sostituiscono."""
-    motore = orologic_engine.ENGINE
-    if motore is None:
-        return [_("Motore non disponibile.")]
-    try:
-        analisi = motore.analyse(board, chess.engine.Limit(time=orologic_engine.analysis_time), multipv=orologic_engine.multipv)
-    # Il motore e' un processo separato che puo' non rispondere.
-    except Exception as errore:  # noqa: BLE001
-        return [_("Analisi fallita: {e}").format(e=errore)]
-    return posizione.righe_dell_analisi(board, analisi) or [_("Nessuna linea trovata.")]
+    return analysis_utils.analizza(board, orologic_engine.ENGINE, orologic_engine.analysis_time, orologic_engine.multipv)[1]
 
 
 class Navigatore(wx.Dialog):

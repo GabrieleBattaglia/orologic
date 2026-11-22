@@ -448,3 +448,56 @@ def test_l_analisi_della_partita_col_motore_non_cade():
     with contextlib.redirect_stdout(uscita):
         assert game_mode._comandi_informativi(".a", chess.Board(), types.SimpleNamespace(a_punteggio=False), Motore())
     assert "e4" in uscita.getvalue()
+
+
+def test_l_intestazione_dell_analisi_dice_tutto_il_motore():
+    """Gabriele, 22 novembre 2026: il motore, la ricerca e tutte le opzioni
+    in uso, poi le linee, tante quante chieste."""
+    import types
+
+    from orologic_modules.easyfish import analysis_utils
+
+    opzioni = {
+        "Threads": chess.engine.Option("Threads", "spin", 1, 1, 1024, None),
+        "Hash": chess.engine.Option("Hash", "spin", 16, 1, 33554432, None),
+        "Clear Hash": chess.engine.Option("Clear Hash", "button", None, None, None, None),
+        "Ponder": chess.engine.Option("Ponder", "check", False, None, None, None),
+        "SyzygyPath": chess.engine.Option("SyzygyPath", "string", "", None, None, None),
+    }
+    chieste = []
+
+    class Motore:
+        def __init__(self):
+            self.id = {"name": "Stockfish 17", "author": "the Stockfish developers"}
+            self.options = opzioni
+            self.protocol = types.SimpleNamespace(config={"Threads": 4, "Hash": 256})
+
+        def analyse(self, _board, limite, multipv=1):
+            chieste.append((limite.time, multipv))
+            comune = {"time": 2.0, "depth": 22, "seldepth": 31, "nodes": 3456789, "nps": 1728394, "hashfull": 123, "tbhits": 0}
+            return [
+                {**comune, "pv": [chess.Move.from_uci("e2e4")], "score": chess.engine.PovScore(chess.engine.Cp(30), chess.WHITE)},
+                {**comune, "pv": [chess.Move.from_uci("d2d4")], "score": chess.engine.PovScore(chess.engine.Cp(25), chess.WHITE)},
+            ]
+
+    analisi, righe = analysis_utils.analizza(chess.Board(), Motore(), 2.0, 3)
+    assert chieste == [(2.0, 3)] and len(analisi) == 2
+    assert righe == [
+        "Motore: Stockfish 17, di the Stockfish developers.",
+        "Tempo: 2.00 secondi.",
+        "Profondita': 22, selettiva 31.",
+        "Nodi: 3456789.",
+        "Nodi al secondo: 1728394.",
+        "Hash occupata: 12.3%.",
+        "Posizioni trovate nelle tablebase: 0.",
+        "Linee: 3 chieste, 2 avute.",
+        "Opzioni del motore:",
+        "Threads: 4",
+        "Hash: 256",
+        "Ponder: no",
+        "SyzygyPath: vuota",
+        "Le linee:",
+        "1. +0.30 e4",
+        "2. +0.25 d4",
+    ]
+    assert analysis_utils.analizza(chess.Board(), None, 1, 3) == (None, ["Motore non disponibile."])

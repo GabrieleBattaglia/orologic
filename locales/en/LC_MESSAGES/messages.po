@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-22 08:12+0100\n"
+"POT-Creation-Date: 2026-11-22 09:13+0100\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -338,11 +338,13 @@ msgstr "Response to a key press"
 msgid "Il testo che arriva da sé"
 msgstr "Text that arrives on its own"
 
-#: orologic_modules/annunci.py:92 orologic_modules/pub.py:53
+#: orologic_modules/annunci.py:92
+#: orologic_modules/easyfish/analysis_utils.py:79 orologic_modules/pub.py:53
 msgid "sì"
 msgstr "yes"
 
-#: orologic_modules/annunci.py:92 orologic_modules/pub.py:53
+#: orologic_modules/annunci.py:92
+#: orologic_modules/easyfish/analysis_utils.py:79 orologic_modules/pub.py:53
 msgid "no"
 msgstr "no"
 
@@ -799,12 +801,12 @@ msgstr "Unexpected error parsing PGN: {error}"
 #: orologic_modules/board_utils.py:937 orologic_modules/controlli.py:289
 #: orologic_modules/cruscotto.py:69 orologic_modules/cruscotto.py:225
 #: orologic_modules/easyfish/constants.py:26
-#: orologic_modules/easyfish/easyfish_app.py:728
-#: orologic_modules/easyfish/easyfish_app.py:1032
+#: orologic_modules/easyfish/easyfish_app.py:722
+#: orologic_modules/easyfish/easyfish_app.py:1026
 #: orologic_modules/easyfish/game_mode.py:41
 #: orologic_modules/easyfish/game_mode.py:563
 #: orologic_modules/easyfish/interaction.py:111
-#: orologic_modules/easyfish/interaction.py:513
+#: orologic_modules/easyfish/interaction.py:504
 #: orologic_modules/engine.py:1399 orologic_modules/finestra_editor.py:84
 #: orologic_modules/game_flow.py:1057 orologic_modules/lichess_app.py:1520
 #: orologic_modules/lichess_app.py:2035 orologic_modules/lichess_app.py:2170
@@ -821,12 +823,12 @@ msgstr "White"
 #: orologic_modules/board_utils.py:937 orologic_modules/controlli.py:289
 #: orologic_modules/cruscotto.py:70 orologic_modules/cruscotto.py:226
 #: orologic_modules/easyfish/constants.py:28
-#: orologic_modules/easyfish/easyfish_app.py:728
-#: orologic_modules/easyfish/easyfish_app.py:1032
+#: orologic_modules/easyfish/easyfish_app.py:722
+#: orologic_modules/easyfish/easyfish_app.py:1026
 #: orologic_modules/easyfish/game_mode.py:42
 #: orologic_modules/easyfish/game_mode.py:563
 #: orologic_modules/easyfish/interaction.py:111
-#: orologic_modules/easyfish/interaction.py:513
+#: orologic_modules/easyfish/interaction.py:504
 #: orologic_modules/engine.py:1400 orologic_modules/finestra_editor.py:84
 #: orologic_modules/game_flow.py:1058 orologic_modules/lichess_app.py:1520
 #: orologic_modules/lichess_app.py:2035 orologic_modules/lichess_app.py:2170
@@ -1905,7 +1907,7 @@ msgstr ""
 "{titolo}. Enter changes the item, Esc closes, Shift+Tab goes to the filter."
 
 #: orologic_modules/dialoghi.py:92 orologic_modules/dialoghi.py:288
-#: orologic_modules/finestra_navigatore.py:80
+#: orologic_modules/finestra_navigatore.py:71
 #: orologic_modules/finestra_orologi.py:205
 #: orologic_modules/finestra_pulizia.py:110
 #: orologic_modules/finestra_ricerca.py:174
@@ -2082,7 +2084,7 @@ msgstr ""
 msgid "Motore {n} pronto."
 msgstr "Engine {n} ready."
 
-#: orologic_modules/easyfish/game_mode.py:1403 orologic_modules/engine.py:238
+#: orologic_modules/easyfish/game_mode.py:1406 orologic_modules/engine.py:238
 #: orologic_modules/impostazioni.py:692
 #, python-brace-format
 msgid "Errore motore: {e}"
@@ -2239,7 +2241,7 @@ msgstr ""
 "\n"
 "Variation added."
 
-#: orologic_modules/easyfish/easyfish_app.py:388
+#: orologic_modules/easyfish/easyfish_app.py:382
 #: orologic_modules/easyfish/posizione.py:41 orologic_modules/engine.py:609
 #, python-brace-format
 msgid "[BM: {bm}]"
@@ -2261,7 +2263,7 @@ msgstr ""
 "\n"
 "Enter comment: "
 
-#: orologic_modules/easyfish/easyfish_app.py:387
+#: orologic_modules/easyfish/easyfish_app.py:381
 #: orologic_modules/easyfish/posizione.py:41 orologic_modules/engine.py:660
 #, python-brace-format
 msgid "[Val: {ev}]"
@@ -3111,99 +3113,81 @@ msgstr "There is a King there: move it first."
 msgid "Posato: {pezzo}"
 msgstr "Put down: {pezzo}"
 
-#: orologic_modules/easyfish/analysis_utils.py:68
-#: orologic_modules/easyfish/interaction.py:483
-#: orologic_modules/finestra_navigatore.py:37
-msgid "Motore non disponibile."
-msgstr "Engine not available."
-
-#: orologic_modules/easyfish/analysis_utils.py:91
-#: orologic_modules/easyfish/interaction.py:481
-#: orologic_modules/finestra_navigatore.py:42
-#, python-brace-format
-msgid "Analisi fallita: {e}"
-msgstr "Analysis failed: {e}"
-
-#: orologic_modules/easyfish/easyfish_app.py:383
-#: orologic_modules/easyfish/game_mode.py:1252
-#: orologic_modules/finestra_navigatore.py:43
-msgid "Nessuna linea trovata."
-msgstr "No lines found."
-
-#: orologic_modules/finestra_navigatore.py:53
+#: orologic_modules/finestra_navigatore.py:44
 msgid "Navigatore della partita"
 msgstr "Game navigator"
 
-#: orologic_modules/finestra_navigatore.py:63
-#: orologic_modules/finestra_navigatore.py:65
+#: orologic_modules/finestra_navigatore.py:54
+#: orologic_modules/finestra_navigatore.py:56
 msgid "Mosse e varianti"
 msgstr "Moves and variations"
 
-#: orologic_modules/finestra_navigatore.py:70
+#: orologic_modules/finestra_navigatore.py:61
 msgid "&Vai alla posizione"
 msgstr "&Go to position"
 
-#: orologic_modules/finestra_navigatore.py:71
+#: orologic_modules/finestra_navigatore.py:62
 msgid "&Commento"
 msgstr "&Comment"
 
-#: orologic_modules/finestra_navigatore.py:72
+#: orologic_modules/finestra_navigatore.py:63
 msgid "&Taglia"
 msgstr "Cu&t"
 
-#: orologic_modules/finestra_navigatore.py:73
+#: orologic_modules/finestra_navigatore.py:64
 msgid "Pro&muovi la variante"
 msgstr "Pro&mote variation"
 
-#: orologic_modules/finestra_navigatore.py:74
+#: orologic_modules/finestra_navigatore.py:65
 msgid "&Analizza"
 msgstr "&Analyze"
 
-#: orologic_modules/finestra_navigatore.py:134
+#: orologic_modules/finestra_navigatore.py:125
 msgid "Commento"
 msgstr "Comment"
 
-#: orologic_modules/finestra_navigatore.py:134
+#: orologic_modules/finestra_navigatore.py:125
 msgid "Commento della mossa"
 msgstr "Comment on the move"
 
-#: orologic_modules/easyfish/easyfish_app.py:396
-#: orologic_modules/easyfish/easyfish_app.py:989
-#: orologic_modules/easyfish/interaction.py:533
-#: orologic_modules/finestra_navigatore.py:141
+#: orologic_modules/easyfish/easyfish_app.py:390
+#: orologic_modules/easyfish/easyfish_app.py:983
+#: orologic_modules/easyfish/interaction.py:524
+#: orologic_modules/finestra_navigatore.py:132
 msgid "Commento registrato."
 msgstr "Comment recorded."
 
-#: orologic_modules/easyfish/easyfish_app.py:872
+#: orologic_modules/easyfish/easyfish_app.py:866
 #: orologic_modules/easyfish/interaction.py:462
-#: orologic_modules/finestra_navigatore.py:147
+#: orologic_modules/finestra_navigatore.py:138
 msgid "Impossibile eliminare l'inizio della partita."
 msgstr "Unable to delete the start of the game."
 
-#: orologic_modules/easyfish/easyfish_app.py:879
+#: orologic_modules/easyfish/easyfish_app.py:873
 #: orologic_modules/easyfish/interaction.py:453
-#: orologic_modules/finestra_navigatore.py:158
+#: orologic_modules/finestra_navigatore.py:149
 msgid "Mossa/Variante eliminata. Tornati indietro."
 msgstr "Move or variation deleted. Back to the previous position."
 
-#: orologic_modules/easyfish/easyfish_app.py:683
-#: orologic_modules/finestra_navigatore.py:166
+#: orologic_modules/easyfish/easyfish_app.py:677
+#: orologic_modules/finestra_navigatore.py:157
 msgid "Questa linea è già la principale."
 msgstr "This line is already the main one."
 
-#: orologic_modules/easyfish/easyfish_app.py:681
-#: orologic_modules/finestra_navigatore.py:173
+#: orologic_modules/easyfish/easyfish_app.py:675
+#: orologic_modules/finestra_navigatore.py:164
 msgid "Variante promossa a linea principale!"
 msgstr "Variation promoted to main line!"
 
 #: orologic_modules/easyfish/interaction.py:468
-#: orologic_modules/finestra_navigatore.py:181
+#: orologic_modules/finestra_navigatore.py:172
 msgid "Analisi in corso..."
 msgstr "Analysis in progress..."
 
-#: orologic_modules/easyfish/easyfish_app.py:957
+#: orologic_modules/easyfish/easyfish_app.py:951
+#: orologic_modules/easyfish/game_mode.py:589
 #: orologic_modules/easyfish/interaction.py:470
-#: orologic_modules/finestra_navigatore.py:194
+#: orologic_modules/finestra_navigatore.py:185
 msgid "Analisi"
 msgstr "Analysis"
 
@@ -4001,35 +3985,35 @@ msgid "Scacco matto! Vince {winner}."
 msgstr "Checkmate! {winner} wins."
 
 #: orologic_modules/easyfish/easyfish_app.py:122
-#: orologic_modules/easyfish/game_mode.py:666
-#: orologic_modules/easyfish/game_mode.py:812
+#: orologic_modules/easyfish/game_mode.py:669
+#: orologic_modules/easyfish/game_mode.py:815
 #: orologic_modules/game_flow.py:466
 msgid "Patta per stallo!"
 msgstr "Draw by stalemate!"
 
 #: orologic_modules/easyfish/easyfish_app.py:148
-#: orologic_modules/easyfish/game_mode.py:692
-#: orologic_modules/easyfish/game_mode.py:840
+#: orologic_modules/easyfish/game_mode.py:695
+#: orologic_modules/easyfish/game_mode.py:843
 #: orologic_modules/game_flow.py:493
 msgid "Patta per materiale insufficiente!"
 msgstr "Draw by insufficient material!"
 
-#: orologic_modules/easyfish/game_mode.py:868
+#: orologic_modules/easyfish/game_mode.py:871
 #: orologic_modules/game_flow.py:520
 msgid "Patta per la regola delle 75 mosse!"
 msgstr "Draw by the 75-move rule!"
 
-#: orologic_modules/easyfish/game_mode.py:896
+#: orologic_modules/easyfish/game_mode.py:899
 #: orologic_modules/game_flow.py:547
 msgid "Patta per ripetizione della posizione (5 volte)!"
 msgstr "Draw by fivefold repetition!"
 
-#: orologic_modules/easyfish/game_mode.py:924
+#: orologic_modules/easyfish/game_mode.py:927
 #: orologic_modules/game_flow.py:574
 msgid "Patta per la regola delle 50 mosse!"
 msgstr "Draw by the 50-move rule!"
 
-#: orologic_modules/easyfish/game_mode.py:952
+#: orologic_modules/easyfish/game_mode.py:955
 #: orologic_modules/game_flow.py:601
 msgid "Patta per triplice ripetizione della posizione!"
 msgstr "Draw by threefold repetition!"
@@ -4128,7 +4112,7 @@ msgstr ""
 "Invalid move '{move}'. Alternatives:\n"
 "{alternatives}"
 
-#: orologic_modules/easyfish/game_mode.py:1413
+#: orologic_modules/easyfish/game_mode.py:1416
 #: orologic_modules/game_flow.py:914
 msgid "Partita terminata."
 msgstr "Game over."
@@ -9407,6 +9391,7 @@ msgstr "The server response is not understandable."
 msgid "{casa}, {pezzo}"
 msgstr "{casa}, {pezzo}"
 
+#: orologic_modules/easyfish/analysis_utils.py:82
 #: orologic_modules/scacchiera.py:118
 msgid "vuota"
 msgstr "empty"
@@ -10494,6 +10479,102 @@ msgstr "Updated analysis thresholds."
 msgid "Impostazioni dell'analisi aggiornate."
 msgstr "Analysis settings updated."
 
+#: orologic_modules/easyfish/analysis_utils.py:83
+#, python-brace-format
+msgid "{opzione}: {valore}"
+msgstr "{opzione}: {valore}"
+
+#: orologic_modules/easyfish/analysis_utils.py:104
+#, python-brace-format
+msgid "Motore: {nome}, di {autore}."
+msgstr "Engine: {nome}, by {autore}."
+
+#: orologic_modules/easyfish/analysis_utils.py:104
+#, python-brace-format
+msgid "Motore: {nome}."
+msgstr "Engine: {nome}."
+
+#: orologic_modules/easyfish/analysis_utils.py:106
+#, python-brace-format
+msgid "Tempo: {s:.2f} secondi."
+msgstr "Time: {s:.2f} seconds."
+
+#: orologic_modules/easyfish/analysis_utils.py:109
+#, python-brace-format
+msgid "Profondita': {p}, selettiva {s}."
+msgstr "Depth: {p}, selective {s}."
+
+#: orologic_modules/easyfish/analysis_utils.py:111
+#, python-brace-format
+msgid "Profondita': {p}."
+msgstr "Depth: {p}."
+
+#: orologic_modules/easyfish/analysis_utils.py:113
+#, python-brace-format
+msgid "Nodi: {n}."
+msgstr "Nodes: {n}."
+
+#: orologic_modules/easyfish/analysis_utils.py:115
+#, python-brace-format
+msgid "Nodi al secondo: {n}."
+msgstr "Nodes per second: {n}."
+
+#: orologic_modules/easyfish/analysis_utils.py:117
+#, python-brace-format
+msgid "Hash occupata: {p:.1f}%."
+msgstr "Hash used: {p:.1f}%."
+
+#: orologic_modules/easyfish/analysis_utils.py:119
+#, python-brace-format
+msgid "Posizioni trovate nelle tablebase: {n}."
+msgstr "Tablebase hits: {n}."
+
+#: orologic_modules/easyfish/analysis_utils.py:121
+#, python-brace-format
+msgid "Carico della CPU: {p:.1f}%."
+msgstr "CPU load: {p:.1f}%."
+
+#: orologic_modules/easyfish/analysis_utils.py:123
+#, python-brace-format
+msgid "Fattore di ramificazione: {f:.2f}."
+msgstr "Branching factor: {f:.2f}."
+
+#: orologic_modules/easyfish/analysis_utils.py:125
+#, python-brace-format
+msgid "Messaggio del motore: {testo}"
+msgstr "Engine message: {testo}"
+
+#: orologic_modules/easyfish/analysis_utils.py:127
+#, python-brace-format
+msgid "Linee: {chieste} chieste, {avute} avute."
+msgstr "Lines: {chieste} requested, {avute} received."
+
+#: orologic_modules/easyfish/analysis_utils.py:130
+msgid "Opzioni del motore:"
+msgstr "Engine options:"
+
+#: orologic_modules/easyfish/analysis_utils.py:140
+#: orologic_modules/easyfish/analysis_utils.py:165
+#: orologic_modules/easyfish/interaction.py:474
+msgid "Motore non disponibile."
+msgstr "Engine not available."
+
+#: orologic_modules/easyfish/analysis_utils.py:146
+#: orologic_modules/easyfish/analysis_utils.py:188
+#, python-brace-format
+msgid "Analisi fallita: {e}"
+msgstr "Analysis failed: {e}"
+
+#: orologic_modules/easyfish/analysis_utils.py:152
+msgid "Le linee:"
+msgstr "The lines:"
+
+#: orologic_modules/easyfish/analysis_utils.py:155
+#: orologic_modules/easyfish/easyfish_app.py:377
+#: orologic_modules/easyfish/game_mode.py:1255
+msgid "Nessuna linea trovata."
+msgstr "No lines found."
+
 #: orologic_modules/easyfish/constants.py:23
 msgid "Orologic's Game"
 msgstr "Orologic's Game"
@@ -10911,18 +10992,18 @@ msgid "{p}INIZIO {n}. "
 msgstr "{p}START {n}. "
 
 #: orologic_modules/easyfish/easyfish_app.py:96
-#: orologic_modules/easyfish/game_mode.py:640
-#: orologic_modules/easyfish/game_mode.py:784
+#: orologic_modules/easyfish/game_mode.py:643
+#: orologic_modules/easyfish/game_mode.py:787
 msgid "Scacco matto!"
 msgstr "Checkmate!"
 
 #: orologic_modules/easyfish/easyfish_app.py:174
-#: orologic_modules/easyfish/game_mode.py:718
+#: orologic_modules/easyfish/game_mode.py:721
 msgid "Patta per la regola delle 50/75 mosse!"
 msgstr "Draw by the 50/75-move rule!"
 
 #: orologic_modules/easyfish/easyfish_app.py:200
-#: orologic_modules/easyfish/game_mode.py:744
+#: orologic_modules/easyfish/game_mode.py:747
 msgid "Patta per ripetizione della posizione!"
 msgstr "Draw by repetition of the position!"
 
@@ -10963,51 +11044,50 @@ msgid ""
 msgstr "Shared board orientation set: per turn (dynamic)."
 
 #: orologic_modules/easyfish/easyfish_app.py:302
-#: orologic_modules/easyfish/easyfish_app.py:363
+#: orologic_modules/easyfish/easyfish_app.py:357
 msgid "Motore non caricato in Orologic."
 msgstr "Engine not loaded in Orologic."
 
-#: orologic_modules/easyfish/easyfish_app.py:305
-#: orologic_modules/easyfish/easyfish_app.py:367
+#: orologic_modules/easyfish/easyfish_app.py:307
+#: orologic_modules/easyfish/easyfish_app.py:361
 #, python-brace-format
 msgid "Analisi posizione corrente per {s} secondi."
 msgstr "Current position analysis for {s} seconds."
 
-#: orologic_modules/easyfish/easyfish_app.py:319
-#: orologic_modules/easyfish/easyfish_app.py:377
-#, python-brace-format
-msgid "Errore analisi: {e}"
-msgstr "Analysis error: {e}"
-
-#: orologic_modules/easyfish/easyfish_app.py:326
+#: orologic_modules/easyfish/easyfish_app.py:320
 msgid "L'ultima analisi riguarda un'altra posizione: rifalla con .a"
 msgstr "The last analysis is of another position: run it again with .a"
 
-#: orologic_modules/easyfish/easyfish_app.py:334
+#: orologic_modules/easyfish/easyfish_app.py:328
 #, python-brace-format
 msgid "Ci sono solo {n} linee di analisi disponibili"
 msgstr "There are only {n} analysis lines available"
 
-#: orologic_modules/easyfish/easyfish_app.py:340
+#: orologic_modules/easyfish/easyfish_app.py:334
 msgid "Migliore:"
 msgstr "Best:"
 
-#: orologic_modules/easyfish/easyfish_app.py:342
+#: orologic_modules/easyfish/easyfish_app.py:336
 #, python-brace-format
 msgid "{n}° scelta:"
 msgstr "Choice {n}:"
 
-#: orologic_modules/easyfish/easyfish_app.py:345
+#: orologic_modules/easyfish/easyfish_app.py:339
 msgid "Prima devi eseguire l'analisi con il comando .a"
 msgstr "First you need to run the analysis with the .a command"
 
-#: orologic_modules/easyfish/easyfish_app.py:389
+#: orologic_modules/easyfish/easyfish_app.py:371
+#, python-brace-format
+msgid "Errore analisi: {e}"
+msgstr "Analysis error: {e}"
+
+#: orologic_modules/easyfish/easyfish_app.py:383
 #: orologic_modules/easyfish/posizione.py:41
 #, python-brace-format
 msgid "[Linea: {linea}]"
 msgstr "[Line: {linea}]"
 
-#: orologic_modules/easyfish/easyfish_app.py:409
+#: orologic_modules/easyfish/easyfish_app.py:403
 msgid ""
 "\n"
 "Attivazione condivisione scacchiera (finestra grafica per didattica)..."
@@ -11015,15 +11095,15 @@ msgstr ""
 "\n"
 "Activation of board sharing (graphic window for teaching)..."
 
-#: orologic_modules/easyfish/easyfish_app.py:412
+#: orologic_modules/easyfish/easyfish_app.py:406
 msgid "ISTRUZIONI:"
 msgstr "INSTRUCTIONS:"
 
-#: orologic_modules/easyfish/easyfish_app.py:413
+#: orologic_modules/easyfish/easyfish_app.py:407
 msgid "- Puoi condividere la nuova finestra su Meet, Zoom o Teams."
 msgstr "- You can share the new window on Meet, Zoom or Teams."
 
-#: orologic_modules/easyfish/easyfish_app.py:416
+#: orologic_modules/easyfish/easyfish_app.py:410
 msgid ""
 "- Per continuare ad inserire comandi, ricordati di riportare il focus "
 "(cliccare) su questa finestra di testo della console."
@@ -11031,7 +11111,7 @@ msgstr ""
 "- To continue entering commands, remember to return the focus (click) to "
 "this console text window."
 
-#: orologic_modules/easyfish/easyfish_app.py:466
+#: orologic_modules/easyfish/easyfish_app.py:460
 msgid ""
 "\n"
 "Condivisione scacchiera disattivata."
@@ -11039,7 +11119,7 @@ msgstr ""
 "\n"
 "Board sharing disabled."
 
-#: orologic_modules/easyfish/easyfish_app.py:521
+#: orologic_modules/easyfish/easyfish_app.py:515
 msgid ""
 "\n"
 "Benvenuto in Easyfish, la tua interfaccia testuale con il motore scacchistico.\n"
@@ -11049,7 +11129,7 @@ msgstr ""
 "Welcome to Easyfish, your text-based chess engine interface.\n"
 "\tHave fun!"
 
-#: orologic_modules/easyfish/easyfish_app.py:534
+#: orologic_modules/easyfish/easyfish_app.py:528
 msgid ""
 "Il motore scacchistico non e' configurato, ma e' necessario per Easyfish. "
 "Vuoi configurarlo ora? (INVIO per si', ESC per no): "
@@ -11057,17 +11137,17 @@ msgstr ""
 "The chess engine is not configured, but is required for Easyfish. Do you "
 "want to set it up now? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/easyfish/easyfish_app.py:539
+#: orologic_modules/easyfish/easyfish_app.py:533
 msgid "Inizializzazione Motore Orologic per Easyfish..."
 msgstr "Orologic Engine Initialization for Easyfish..."
 
-#: orologic_modules/easyfish/easyfish_app.py:550
-#: orologic_modules/easyfish/easyfish_app.py:860
-#: orologic_modules/easyfish/easyfish_app.py:893
+#: orologic_modules/easyfish/easyfish_app.py:544
+#: orologic_modules/easyfish/easyfish_app.py:854
+#: orologic_modules/easyfish/easyfish_app.py:887
 msgid "Nuova partita caricata."
 msgstr "New game loaded."
 
-#: orologic_modules/easyfish/easyfish_app.py:600
+#: orologic_modules/easyfish/easyfish_app.py:594
 msgid ""
 "\n"
 "Finestra di condivisione scacchiera chiusa."
@@ -11075,88 +11155,88 @@ msgstr ""
 "\n"
 "Board sharing window closed."
 
-#: orologic_modules/easyfish/easyfish_app.py:650
+#: orologic_modules/easyfish/easyfish_app.py:644
 msgid "Chiusa variante. Ritorno al nodo padre."
 msgstr "Variation closed. Returning to the parent node."
 
-#: orologic_modules/easyfish/easyfish_app.py:656
-#: orologic_modules/easyfish/easyfish_app.py:887
+#: orologic_modules/easyfish/easyfish_app.py:650
+#: orologic_modules/easyfish/easyfish_app.py:881
 msgid "Salvataggio partita in corso..."
 msgstr "Saving game in progress..."
 
-#: orologic_modules/easyfish/easyfish_app.py:685
+#: orologic_modules/easyfish/easyfish_app.py:679
 msgid "Errore: nodo non trovato nelle varianti."
 msgstr "Error: Node not found in variations."
 
-#: orologic_modules/easyfish/easyfish_app.py:689
+#: orologic_modules/easyfish/easyfish_app.py:683
 msgid "Non sei in una variante o non ci sono alternative da promuovere."
 msgstr "You are not in a variation or there are no alternatives to promote."
 
-#: orologic_modules/easyfish/easyfish_app.py:707
+#: orologic_modules/easyfish/easyfish_app.py:701
 #: orologic_modules/easyfish/interaction.py:191
 msgid "Numero mossa: "
 msgstr "Move number: "
 
-#: orologic_modules/easyfish/easyfish_app.py:715
+#: orologic_modules/easyfish/easyfish_app.py:709
 msgid "B per Bianco, N per Nero: "
 msgstr "B for White, N for Black: "
 
-#: orologic_modules/easyfish/easyfish_app.py:730
+#: orologic_modules/easyfish/easyfish_app.py:724
 #, python-brace-format
 msgid "Salto alla mossa {n} ({c})..."
 msgstr "Jump to move {n} ({c})..."
 
-#: orologic_modules/easyfish/easyfish_app.py:772
+#: orologic_modules/easyfish/easyfish_app.py:766
 #, python-brace-format
 msgid "Mossa {n} {c} non raggiunta (fine partita)."
 msgstr "Move {n} {c} not reached (game over)."
 
-#: orologic_modules/easyfish/easyfish_app.py:782
+#: orologic_modules/easyfish/easyfish_app.py:776
 msgid "Accesso alla modalità esplorazione..."
 msgstr "Entering exploration mode..."
 
-#: orologic_modules/easyfish/easyfish_app.py:794
+#: orologic_modules/easyfish/easyfish_app.py:788
 msgid "Il navigatore della partita c'e' nella finestra: nel terminale usa .e"
 msgstr "The game navigator is in the window: in the terminal use .e"
 
-#: orologic_modules/easyfish/easyfish_app.py:828
+#: orologic_modules/easyfish/easyfish_app.py:822
 msgid "Opzione non valida. Usa: .cso on | .cso off"
 msgstr "Invalid option. Use: .cso on | .cso off"
 
-#: orologic_modules/easyfish/easyfish_app.py:832
+#: orologic_modules/easyfish/easyfish_app.py:826
 msgid "attivata"
 msgstr "activated"
 
-#: orologic_modules/easyfish/easyfish_app.py:832
+#: orologic_modules/easyfish/easyfish_app.py:826
 msgid "disattivata"
 msgstr "deactivated"
 
-#: orologic_modules/easyfish/easyfish_app.py:835
+#: orologic_modules/easyfish/easyfish_app.py:829
 #, python-brace-format
 msgid "Visualizzazione dell'output di testo sotto la scacchiera {status}."
 msgstr "Display of text output below the board {status}."
 
-#: orologic_modules/easyfish/easyfish_app.py:845
+#: orologic_modules/easyfish/easyfish_app.py:839
 msgid "Incolla una nuova posizione PGN dagli appunti..."
 msgstr "Paste a new PGN position from the clipboard..."
 
-#: orologic_modules/easyfish/easyfish_app.py:851
+#: orologic_modules/easyfish/easyfish_app.py:845
 msgid "ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova."
 msgstr "ATTENTION: The current game will be saved and a new one will begin."
 
-#: orologic_modules/easyfish/easyfish_app.py:863
+#: orologic_modules/easyfish/easyfish_app.py:857
 msgid "PGN non valido o appunti vuoti."
 msgstr "Invalid PGN or blank clipboard."
 
-#: orologic_modules/easyfish/easyfish_app.py:899
+#: orologic_modules/easyfish/easyfish_app.py:893
 msgid "Spiacente, appunti vuoti. Copia prima un FEN valido."
 msgstr "Sorry, blank clipboard. Copy a valid FEN first."
 
-#: orologic_modules/easyfish/easyfish_app.py:901
+#: orologic_modules/easyfish/easyfish_app.py:895
 msgid "Incolla una nuova posizione FEN dagli appunti..."
 msgstr "Paste a new FEN position from the clipboard..."
 
-#: orologic_modules/easyfish/easyfish_app.py:907
+#: orologic_modules/easyfish/easyfish_app.py:901
 msgid ""
 "FEN valido. ATTENZIONE: La partita corrente verrà salvata e ne inizierà una "
 "nuova da questa posizione."
@@ -11164,19 +11244,19 @@ msgstr ""
 "Valid FEN. ATTENTION: The current game will be saved and a new one will "
 "start from this position."
 
-#: orologic_modules/easyfish/easyfish_app.py:919
+#: orologic_modules/easyfish/easyfish_app.py:913
 msgid "Stringa FEN non valida."
 msgstr "Invalid FEN string."
 
-#: orologic_modules/easyfish/easyfish_app.py:922
+#: orologic_modules/easyfish/easyfish_app.py:916
 msgid "Nuova partita. La corrente verrà salvata."
 msgstr "New game. The current will be saved."
 
-#: orologic_modules/easyfish/easyfish_app.py:925
+#: orologic_modules/easyfish/easyfish_app.py:919
 msgid "Nuova scacchiera pronta. Si parte!"
 msgstr "New chessboard ready. Let's go!"
 
-#: orologic_modules/easyfish/easyfish_app.py:934
+#: orologic_modules/easyfish/easyfish_app.py:928
 msgid ""
 "Accesso all'editor. ATTENZIONE: Al termine dell'editing, la partita corrente"
 " verrà salvata e ne inizierà una nuova dalla posizione impostata."
@@ -11184,15 +11264,15 @@ msgstr ""
 "Access to the editor. ATTENTION: At the end of the editing, the current game"
 " will be saved and a new one will start from the set position."
 
-#: orologic_modules/easyfish/easyfish_app.py:953
+#: orologic_modules/easyfish/easyfish_app.py:947
 msgid "Nuova partita avviata dalla posizione editata."
 msgstr "New game started from the edited position."
 
-#: orologic_modules/easyfish/easyfish_app.py:972
+#: orologic_modules/easyfish/easyfish_app.py:966
 msgid "Lista delle mosse"
 msgstr "Move list"
 
-#: orologic_modules/easyfish/easyfish_app.py:980
+#: orologic_modules/easyfish/easyfish_app.py:974
 #, python-brace-format
 msgid ""
 "Spiacente, {cmd} non è un comando valido.\n"
@@ -11201,25 +11281,25 @@ msgstr ""
 "Sorry, {cmd} is not a valid command.\n"
 "Type '.?' for the menu."
 
-#: orologic_modules/easyfish/easyfish_app.py:1013
+#: orologic_modules/easyfish/easyfish_app.py:1007
 msgid "Mossa diversa trovata."
 msgstr "Different move found."
 
-#: orologic_modules/easyfish/easyfish_app.py:1015
+#: orologic_modules/easyfish/easyfish_app.py:1009
 msgid "Sovrascrivi linea (Invio) o Aggiungi Variante (Esc)? "
 msgstr "Overwrite Line (Enter) or Add Variation (Esc)? "
 
-#: orologic_modules/easyfish/easyfish_app.py:1023
+#: orologic_modules/easyfish/easyfish_app.py:1017
 msgid "Linea sovrascritta."
 msgstr "Overwritten line."
 
-#: orologic_modules/easyfish/easyfish_app.py:1027
-#: orologic_modules/easyfish/interaction.py:525
+#: orologic_modules/easyfish/easyfish_app.py:1021
+#: orologic_modules/easyfish/interaction.py:516
 msgid "Nuova variante creata."
 msgstr "New variation created."
 
-#: orologic_modules/easyfish/easyfish_app.py:1034
-#: orologic_modules/easyfish/interaction.py:514
+#: orologic_modules/easyfish/easyfish_app.py:1028
+#: orologic_modules/easyfish/interaction.py:505
 #, python-brace-format
 msgid "{k}: mossa illegale per il {c}."
 msgstr "{k}: Illegal move for {c}."
@@ -11309,7 +11389,7 @@ msgid "Il livello di Lichess va da 1 a 8, per esempio .f3."
 msgstr "The Lichess level goes from 1 to 8, for example .f3."
 
 #: orologic_modules/easyfish/game_mode.py:334
-#: orologic_modules/easyfish/game_mode.py:618
+#: orologic_modules/easyfish/game_mode.py:621
 #, python-brace-format
 msgid "Errore durante l'impostazione del livello: {e}"
 msgstr "Error setting level: {e}"
@@ -11413,20 +11493,20 @@ msgstr "Unrecognized time: use hours:minutes:seconds or seconds."
 msgid "il motore"
 msgstr "the engine"
 
-#: orologic_modules/easyfish/game_mode.py:609
+#: orologic_modules/easyfish/game_mode.py:612
 #, python-brace-format
 msgid "Livello di forza del motore impostato a {n} (Skill Level)."
 msgstr "Engine skill level set to {n} (Skill Level)."
 
-#: orologic_modules/easyfish/game_mode.py:614
+#: orologic_modules/easyfish/game_mode.py:617
 msgid "Il livello deve essere compreso tra 0 e 20."
 msgstr "The level must be between 0 and 20."
 
-#: orologic_modules/easyfish/game_mode.py:991
+#: orologic_modules/easyfish/game_mode.py:994
 msgid "Motore non disponibile. Configuralo nelle impostazioni."
 msgstr "Engine not available. Configure it in the settings."
 
-#: orologic_modules/easyfish/game_mode.py:998
+#: orologic_modules/easyfish/game_mode.py:1001
 msgid ""
 "La posizione e' gia' conclusa: torna a una mossa precedente per giocare "
 "contro il motore."
@@ -11434,119 +11514,119 @@ msgstr ""
 "The position is already over: go back to an earlier move to play against the"
 " engine."
 
-#: orologic_modules/easyfish/game_mode.py:1004
+#: orologic_modules/easyfish/game_mode.py:1007
 msgid "Nuova Partita contro il Motore"
 msgstr "New Game against the Engine"
 
-#: orologic_modules/easyfish/game_mode.py:1008
+#: orologic_modules/easyfish/game_mode.py:1011
 msgid "Partita a tempo"
 msgstr "Timed game"
 
-#: orologic_modules/easyfish/game_mode.py:1009
+#: orologic_modules/easyfish/game_mode.py:1012
 msgid "Tempo per mossa motore"
 msgstr "Time for engine move"
 
-#: orologic_modules/easyfish/game_mode.py:1010
+#: orologic_modules/easyfish/game_mode.py:1013
 msgid "Senza tempo (Amichevole)"
 msgstr "No time limit (Friendly)"
 
-#: orologic_modules/easyfish/game_mode.py:1012
+#: orologic_modules/easyfish/game_mode.py:1015
 msgid "Modalita' di gioco: "
 msgstr "Game modes: "
 
-#: orologic_modules/easyfish/game_mode.py:1029
+#: orologic_modules/easyfish/game_mode.py:1032
 msgid "Tuo tempo partita"
 msgstr "Your game time"
 
-#: orologic_modules/easyfish/game_mode.py:1034
+#: orologic_modules/easyfish/game_mode.py:1037
 msgid "Usare stesso tempo per il motore? (INVIO per no, ESC per si'): "
 msgstr "Use same time for engine? (ENTER for no, ESC for yes): "
 
-#: orologic_modules/easyfish/game_mode.py:1040
+#: orologic_modules/easyfish/game_mode.py:1043
 msgid "Tempo partita motore"
 msgstr "Engine game time"
 
-#: orologic_modules/easyfish/game_mode.py:1048
+#: orologic_modules/easyfish/game_mode.py:1051
 msgid "Secondi per mossa motore: "
 msgstr "Seconds per engine move: "
 
-#: orologic_modules/easyfish/game_mode.py:1054
+#: orologic_modules/easyfish/game_mode.py:1057
 msgid "Secondi riflessione motore: "
 msgstr "Engine thinking seconds: "
 
-#: orologic_modules/easyfish/game_mode.py:1080
+#: orologic_modules/easyfish/game_mode.py:1083
 msgid "Giochi col BIANCO."
 msgstr "You play with WHITE."
 
-#: orologic_modules/easyfish/game_mode.py:1086
+#: orologic_modules/easyfish/game_mode.py:1089
 msgid "Giochi col NERO."
 msgstr "You play with BLACK."
 
-#: orologic_modules/easyfish/game_mode.py:1118
+#: orologic_modules/easyfish/game_mode.py:1121
 msgid "Tempo scaduto! Partita terminata."
 msgstr "Time's up! Game over."
 
-#: orologic_modules/easyfish/game_mode.py:1174
+#: orologic_modules/easyfish/game_mode.py:1177
 msgid "Vuoi davvero abbandonare? (INVIO per si', ESC per no): "
 msgstr "Do you really want to resign? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/easyfish/game_mode.py:1177
+#: orologic_modules/easyfish/game_mode.py:1180
 msgid "Hai abbandonato."
 msgstr "You resigned."
 
-#: orologic_modules/easyfish/game_mode.py:1201
+#: orologic_modules/easyfish/game_mode.py:1204
 msgid "Formato non valido. Usa .e1200 o .e 1200."
 msgstr "Invalid format. Use .e1200 or .e 1200."
 
-#: orologic_modules/easyfish/game_mode.py:1208
+#: orologic_modules/easyfish/game_mode.py:1211
 msgid "Il motore non supporta la configurazione diretta dell'Elo."
 msgstr "The engine does not support direct Elo configuration."
 
-#: orologic_modules/easyfish/game_mode.py:1222
+#: orologic_modules/easyfish/game_mode.py:1225
 #, python-brace-format
 msgid "Forza del motore impostata a Rating Elo: {n}."
 msgstr "Engine strength set to Elo Rating: {n}."
 
-#: orologic_modules/easyfish/game_mode.py:1228
+#: orologic_modules/easyfish/game_mode.py:1231
 msgid "Valore Elo non accettato dal motore."
 msgstr "Elo value not accepted by the engine."
 
-#: orologic_modules/easyfish/game_mode.py:1231
+#: orologic_modules/easyfish/game_mode.py:1234
 #, python-brace-format
 msgid " Range consentito per questo motore: {min}-{max}."
 msgstr " Allowed range for this engine: {min}-{max}."
 
-#: orologic_modules/easyfish/game_mode.py:1238
+#: orologic_modules/easyfish/game_mode.py:1241
 #, python-brace-format
 msgid "Errore durante l'impostazione dell'Elo: {e}"
 msgstr "Error setting Elo: {e}"
 
-#: orologic_modules/easyfish/game_mode.py:1250
+#: orologic_modules/easyfish/game_mode.py:1253
 msgid "Variante suggerita aggiunta all'albero."
 msgstr "Suggested variation added to the tree."
 
-#: orologic_modules/easyfish/game_mode.py:1281
+#: orologic_modules/easyfish/game_mode.py:1284
 #, python-brace-format
 msgid "Annullate {n} semimosse. Tocca a te."
 msgstr "{n} half-moves undone. It's your turn."
 
-#: orologic_modules/easyfish/game_mode.py:1287
+#: orologic_modules/easyfish/game_mode.py:1290
 msgid "Impossibile annullare."
 msgstr "Unable to cancel."
 
-#: orologic_modules/easyfish/game_mode.py:1321
+#: orologic_modules/easyfish/game_mode.py:1324
 msgid "Mossa illegale."
 msgstr "Illegal move."
 
-#: orologic_modules/easyfish/game_mode.py:1324
+#: orologic_modules/easyfish/game_mode.py:1327
 msgid "Input non valido."
 msgstr "Invalid input."
 
-#: orologic_modules/easyfish/game_mode.py:1396
+#: orologic_modules/easyfish/game_mode.py:1399
 msgid "Il motore abbandona o stallo."
 msgstr "The engine resigns or it is stalemate."
 
-#: orologic_modules/easyfish/game_mode.py:1407
+#: orologic_modules/easyfish/game_mode.py:1410
 msgid ""
 "\n"
 "Partita interrotta."
@@ -11554,7 +11634,7 @@ msgstr ""
 "\n"
 "Game interrupted."
 
-#: orologic_modules/easyfish/game_mode.py:1437
+#: orologic_modules/easyfish/game_mode.py:1440
 #, python-brace-format
 msgid "Risultato: {r}"
 msgstr "Result: {r}"
@@ -11919,24 +11999,24 @@ msgstr "No alternative variations."
 msgid "Errore: Impossibile trovare la mossa nella lista varianti del padre."
 msgstr "Error: The move could not be found in the parent's variation list."
 
-#: orologic_modules/easyfish/interaction.py:488
+#: orologic_modules/easyfish/interaction.py:479
 msgid "Secondi analisi: "
 msgstr "Analysis seconds: "
 
-#: orologic_modules/easyfish/interaction.py:497
+#: orologic_modules/easyfish/interaction.py:488
 msgid "Linee analisi: "
 msgstr "Analysis lines: "
 
-#: orologic_modules/easyfish/interaction.py:503
+#: orologic_modules/easyfish/interaction.py:494
 #, python-brace-format
 msgid "Linee impostate a {n}"
 msgstr "Lines set to {n}"
 
-#: orologic_modules/easyfish/interaction.py:508
+#: orologic_modules/easyfish/interaction.py:499
 msgid "Mossa da aggiungere: "
 msgstr "Move to add: "
 
-#: orologic_modules/easyfish/interaction.py:530
+#: orologic_modules/easyfish/interaction.py:521
 msgid "Commento: "
 msgstr "Comment: "
 
@@ -14709,3 +14789,6 @@ msgstr "Nobody."
 
 #~ msgid "Tempo dell'allarme (mm:ss):"
 #~ msgstr "Alarm time (mm:ss):"
+
+#~ msgid "si'"
+#~ msgstr ""

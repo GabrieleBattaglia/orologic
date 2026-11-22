@@ -24,7 +24,7 @@ from ..board_utils import (
     testo_valutazione,
 )
 from ..config import _
-from . import posizione
+from . import analysis_utils, posizione
 from .constants import MNMAIN
 from .drawing import drawing_menu, verbalize_drawings
 from .engine_handler import ShowStats
@@ -301,22 +301,16 @@ def _comandi_analisi(cmd_clean, board, engine, number_command, info, info_fen):
         if not engine:
             print(_("Motore non caricato in Orologic."))
         else:
-            sec = number_command if number_command > 0 else 1
+            # Senza numero i secondi delle impostazioni; le linee sono
+            # sempre quelle delle impostazioni, con l'intestazione del motore.
+            sec = number_command if number_command > 0 else orologic_engine.analysis_time
             print(_("Analisi posizione corrente per {s} secondi.").format(s=sec))
-            limit = chess.engine.Limit(time=sec)
-            try:
-                info_result = engine.analyse(
-                    board, limit, multipv=orologic_engine.multipv
-                )
-                info = info_result
+            analisi, righe = analysis_utils.analizza(board, engine, sec, orologic_engine.multipv)
+            for riga in righe:
+                print(riga)
+            if analisi:
+                info = analisi
                 info_fen = board.fen()
-                if isinstance(info, list):
-                    ShowStats(board, info[0])
-                elif isinstance(info, dict):
-                    ShowStats(board, info)
-            # Contorno di Easyfish: si prosegue.
-            except Exception as e:  # noqa: BLE001
-                print(_("Errore analisi: {e}").format(e=e))
     elif cmd_clean == ".al":
         # Le linee valgono solo per la posizione analizzata: dopo una mossa
         # le loro mosse non sono piu' legali, e python-chess, chiamato a

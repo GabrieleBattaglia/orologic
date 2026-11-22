@@ -584,10 +584,13 @@ def _comandi_informativi(cmd, board, game_state, engine_instance):
         return True
     elif cmd == ".a":
         # Chiamava get_lines_from_engine, che non c'e': la partita cadeva.
-        for line in analysis_utils.RunAnalysis(
-            board, engine_instance, orologic_engine.analysis_time, 1
-        ):
-            print(line)
+        # Ora e' l'analisi di Easyfish, con l'intestazione del motore e le
+        # linee delle impostazioni; nella finestra, da leggere.
+        with strato.da_leggere(_("Analisi")):
+            for line in analysis_utils.analizza(
+                board, engine_instance, orologic_engine.analysis_time, orologic_engine.multipv
+            )[1]:
+                print(line)
     elif cmd == ".?":
         menu(MNGAME, show_only=True)
     elif cmd.startswith(".s") and len(cmd) > 2 and cmd[2:].isdigit():

@@ -9,7 +9,7 @@ from .. import cruscotto, strato
 from .. import engine as orologic_engine
 from ..board_utils import CustomBoard, DescribeMove
 from ..config import _
-from . import posizione
+from . import analysis_utils, posizione
 from .constants import MNEDITOR, MNEXPLORER
 from .utils import InsertedCounter, suona_annulla
 
@@ -468,17 +468,8 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None, nod
             print(_("Analisi in corso..."))
             if engine:
                 with strato.da_leggere(_("Analisi")):
-                    try:
-                        info_list = engine.analyse(
-                            current_board,
-                            chess.engine.Limit(time=analysis_time),
-                            multipv=local_multipv,
-                        )
-                        for riga in posizione.righe_dell_analisi(current_board, info_list):
-                            print(riga)
-                    # Contorno dell'editor: si prosegue.
-                    except Exception as e:  # noqa: BLE001
-                        print(_("Analisi fallita: {e}").format(e=e))
+                    for riga in analysis_utils.analizza(current_board, engine, analysis_time, local_multipv)[1]:
+                        print(riga)
             else:
                 print(_("Motore non disponibile."))
         elif command == "r":

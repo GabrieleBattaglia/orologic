@@ -5,6 +5,7 @@ import chess
 import chess.engine
 
 from ..config import _
+from .posizione import righe_dell_analisi
 
 
 def GetPrincipalVariationSan(board, pv):
@@ -57,6 +58,102 @@ def FormatAnalysisInfo(board, info):
     seldepth = info.get("seldepth", 0)
 
     return f"{time_spent:.0f}S Prof:{depth}/{seldepth} CP: {eval_str}{wdl_str}\nBL: {line_san}"
+
+
+def opzioni_del_motore(engine):
+    """Le opzioni del motore col valore in uso, una riga ciascuna: quelle
+    scelte da Orologic, o quelle di partenza del motore. I pulsanti, come
+    Clear Hash, non hanno un valore e restano fuori."""
+    try:
+        opzioni = engine.options
+    # Un motore finto, o che non risponde, non ha opzioni da dire.
+    except Exception:  # noqa: BLE001
+        return []
+    in_uso = getattr(getattr(engine, "protocol", None), "config", None) or {}
+    righe = []
+    for nome, opzione in opzioni.items():
+        if getattr(opzione, "type", None) in ("button", "reset"):
+            continue
+        valore = in_uso.get(nome, getattr(opzione, "default", None))
+        if isinstance(valore, bool):
+            valore = _("sì") if valore else _("no")
+        elif valore in (None, "", "<empty>"):
+            # Stockfish scrive <empty> per le stringhe vuote.
+            valore = _("vuota")
+        righe.append(_("{opzione}: {valore}").format(opzione=nome, valore=valore))
+    return righe
+
+
+def righe_del_motore(engine, analisi, chieste):
+    """L'intestazione dell'analisi, una riga per dato: il motore, il tempo,
+    la profondita', i nodi, l'hash occupata, le tablebase, il carico della
+    CPU, il fattore di ramificazione, il messaggio del motore, le linee
+    chieste e avute, e le opzioni in uso. I dati della ricerca sono quelli
+    della linea migliore; quelli che il motore non da' non si dicono."""
+    elenco = analisi if isinstance(analisi, list) else [analisi]
+    prima = elenco[0] if elenco else {}
+    righe = []
+    try:
+        identita = engine.id
+    # Un motore finto, o che non risponde, non dice chi e'.
+    except Exception:  # noqa: BLE001
+        identita = {}
+    nome = identita.get("name")
+    if nome:
+        autore = identita.get("author")
+        righe.append(_("Motore: {nome}, di {autore}.").format(nome=nome, autore=autore) if autore else _("Motore: {nome}.").format(nome=nome))
+    if prima.get("time") is not None:
+        righe.append(_("Tempo: {s:.2f} secondi.").format(s=prima["time"]))
+    if prima.get("depth") is not None:
+        if prima.get("seldepth") is not None:
+            righe.append(_("Profondita': {p}, selettiva {s}.").format(p=prima["depth"], s=prima["seldepth"]))
+        else:
+            righe.append(_("Profondita': {p}.").format(p=prima["depth"]))
+    if prima.get("nodes") is not None:
+        righe.append(_("Nodi: {n}.").format(n=prima["nodes"]))
+    if prima.get("nps") is not None:
+        righe.append(_("Nodi al secondo: {n}.").format(n=prima["nps"]))
+    if prima.get("hashfull") is not None:
+        righe.append(_("Hash occupata: {p:.1f}%.").format(p=prima["hashfull"] / 10))
+    if prima.get("tbhits") is not None:
+        righe.append(_("Posizioni trovate nelle tablebase: {n}.").format(n=prima["tbhits"]))
+    if prima.get("cpuload") is not None:
+        righe.append(_("Carico della CPU: {p:.1f}%.").format(p=prima["cpuload"] / 10))
+    if prima.get("ebf") is not None:
+        righe.append(_("Fattore di ramificazione: {f:.2f}.").format(f=prima["ebf"]))
+    if prima.get("string"):
+        righe.append(_("Messaggio del motore: {testo}").format(testo=prima["string"]))
+    avute = sum(1 for info in elenco if info.get("pv"))
+    righe.append(_("Linee: {chieste} chieste, {avute} avute.").format(chieste=chieste, avute=avute))
+    opzioni = opzioni_del_motore(engine)
+    if opzioni:
+        righe.append(_("Opzioni del motore:"))
+        righe.extend(opzioni)
+    return righe
+
+
+def analizza(board, engine, secondi, linee):
+    """L'analisi della posizione, uguale in tutte le modalita': (analisi, o
+    None se non c'e', righe), con l'intestazione di righe_del_motore e poi
+    le linee, tante quante linee."""
+    if not engine:
+        return None, [_("Motore non disponibile.")]
+    try:
+        analisi = engine.analyse(board, chess.engine.Limit(time=secondi), multipv=linee)
+    # Il motore e' un processo separato che puo' non rispondere:
+    # senza analisi si prosegue.
+    except Exception as e:  # noqa: BLE001
+        return None, [_("Analisi fallita: {e}").format(e=e)]
+    if not isinstance(analisi, list):
+        analisi = [analisi]
+    righe = righe_del_motore(engine, analisi, linee)
+    trovate = righe_dell_analisi(board, analisi)
+    if trovate:
+        righe.append(_("Le linee:"))
+        righe.extend(trovate)
+    else:
+        righe.append(_("Nessuna linea trovata."))
+    return analisi, righe
 
 
 def RunAnalysis(board, engine, time_limit, multipv_count):
