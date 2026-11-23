@@ -1,20 +1,27 @@
 Collaudo, Orologic 9, ramo gui, 22 novembre 2026: NVDA e le orecchie. Accanto a ogni voce scrivi ok, oppure cosa non va.
 Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py.
 Prima della ricerca: menu principale, ricerca. Servono un PGN con varianti nei commenti e uno con qualche problema; per Classifica e Ripara usa delle copie.
-Domanda 1: ricerca su GBChessDB.pgn, che ora carica con tutti i processori: quanto ci mette da te, e NVDA resta pronto mentre carica?
-Domanda 2: le partite sono 38.662, come per pe.exe, e nel ramo Con errori restano 4 Elo non numerici e 3 date malformate. Va?
-Domanda 3: entrando nella ricerca col percorso di un file .pgn negli appunti, o con un testo PGN, il caricamento parte da solo; con altro negli appunti si apre la scelta del file. Va?
-Domanda 4: i testi nuovi, il ramo Con errori e il pulsante Ripara gli errori con Alt+E: li approvi?
-Domanda 5: durante una partita o un'analisi, Ctrl e virgola, Motore scacchistico: le righe si leggono, ma ogni cambio dice Il motore e' in uso: si puo' cambiare da un menu, a partita o analisi finita. Da un menu, o dalla voce impostazioni, si cambia come prima. Va, e approvi il testo?
+* Prove superate ottimo lavoro.
+* Ho provato a riparare le date, mi ha detto di averne aggiustate 2 su 3 e che 1 è da scrivere a mano. Verifica che le abbia riparate bene e non abbia introdotto problemi, la copia di confronto l'ha salvata nella cartella come speicifcato nel codice.
+* Ti chiedo una modifica impostante. Quando visualizzo una partita, qui dalla ricerca, mostramela nel suo formato pgn originale e dammi la possibilità di correggere a mano quello che non va, o anche sempliciemente quello che voglio. Quando faccio indietro, o altri controlli per chiudere, verifichi se sono stati modificati dei caratteri, poi verifichi se si tratta di una partita valida e mi chiedi se salvarla nel db. A quel punto la sovrascrivi all'originale, così posso effettuare le correzioni anche manualmente.
+* Aggiungi un filtro: Cerca testo. Una stringa da cercare con l'operatore "in", quindi anche parziale. Così posso cercare nel tag event, nel tag site ma anche nei commenti alle varie partite.
+* Filtri, non sono chiari i filtri anno dal anno a che chiedono un numero. Cioè se in anno da scrivo 1, indico partite del 2026? Qui bisogna renderli molto più chiari e usare delle caselle con gli anni presenti del DB, un filtro impostato con l'anno più lontano e l'altro con l'anno più recente, poi le frecce verticali scorrono e pgup e pgdn scorrono a passi grandi, oppure digito le 4 cifre.
+
 Prima di Easyfish: menu principale, easyfish; meglio con una partita con varianti e commenti, per esempio dalla ricerca PGN con Passa a Easyfish.
-Domanda 6: il cruscotto di Easyfish: i giocatori, la posizione, la linea, principale o variante col suo livello, il seguito con le varianti e il commento; i comandi col punto nella plancia. Va?
-Domanda 7: lo spazio a riga vuota apre la scacchiera: Invio scrive la mossa, C il commento, Backspace il menu dei comandi di Easyfish; .? e .a si aprono in una finestra da leggere, che Esc chiude. Va?
+* Prima voce del menù, esci dall'applicazione va corretto con Indietro.
+* Il comando .al, a cui ho aggiunto un 3, perchè mi dice che c'è una sola linea d'analisi disponibile? Nelle impostazioni ne ho settata 1, ma il comando .al ha la precedenza e significa che in quel punto ne voglio n. Dove non specificato invece, come in .a# uso il valore impostato nelle impostazioni.
+* Nella finestra in cui mostri le linee d'analisi, aggiungi il pulsante "Rendi verbosa", prima di "chiudi". Se lo premo (effetto audio), e nel testo spariscono i dati header del motore e la o le linee vengono riscritte in forma verbosa in questo modo:
+Linea 1: (mainline)
+34. pedone domodossola cattura en passant in como 6, Alfiere firenze 4
+...
+Linea 3:
+...
+* .b correggi in mostra scacchiera mini. Così la distinguiamo da quella interattiva con spazio.
+* .d dobbiamo progettare una finestra interattiva per la faccenda dei sisegni, sullo stile di quella di composizione prompt.
+* Qui e altrove, manca nel menù, la voce: "Spazio - per accedere alla scacchiera interattiva.
+
 Domanda 8: .e, l'esploratore, che parte dalla mossa dove sei; sul cruscotto la variante scelta; con la scacchiera aperta Alt con a d q e w x z u s r t c b; Invio aggiunge la mossa; i pezzi e Tab li dice la scacchiera. Va?
-Domanda 9: .na, il navigatore della partita: l'albero delle mosse e delle varianti, le sue voci, Invio che porta Easyfish alla mossa, e i pulsanti Commento, Taglia, Promuovi la variante e Analizza. Va?
-Domanda 10: .be, l'editor: le lettere dei pezzi, Alt per sapere dove sono, spazio e Invio, Canc, il Re che non si copre; i campi del tratto, degli arrocchi, dell'en passant e del numero; OK che dice cosa non va, Annulla. Va?
-Domanda 11: i difetti corretti: Sovrascrivi che ora tiene le varianti; il commento col trattino basso che tiene analisi e disegni; u dell'esploratore che chiede conferma; .a nella partita col motore che non cade. Va?
-Domanda 12: i testi nuovi: Navigatore della partita, Mosse e varianti, i pulsanti Vai alla posizione, Commento, Taglia, Promuovi la variante e Analizza; Editor della scacchiera coi campi Tratto, i quattro arrocchi, Casa dell'en passant, Numero della mossa, Posizione iniziale e Svuota; le righe del cruscotto, Linea principale, Variante livello, Seguito, Scelta, Fine della linea, Commento; i comandi nuovi .na, i e il trattino basso; Mossa da aggiungere. Li approvi?
-Domanda 13: l'analisi della posizione, con .a, con s nell'esploratore, con Analizza nel navigatore e con .a nella partita contro il motore: in cima il motore, il tempo, la profondita', i nodi, l'hash occupata, le tablebase, il messaggio del motore, le linee chieste e avute e tutte le opzioni in uso; poi le linee, tante quante nelle impostazioni. Manca qualcosa, e i testi nuovi li approvi?
-Prima dei puzzle: Lichess, Puzzle, il puzzle del giorno o uno nuovo.
-Domanda 14: la descrizione del puzzle in una finestra da leggere; il cruscotto con la scacchiera dal tuo lato, il puzzle, la difficolta', il tema e le mosse trovate; lo spazio che apre la scacchiera, Invio che scrive la mossa, Backspace col menu e la soluzione; .? e .b da leggere. Va?
-Domanda 15: il testo nuovo Mosse trovate: 1 di 2. Lo approvi?
+* Sì. Anche qui aggiungi il pulsante per rendere verbosa la linea e metti il cursore direttamente sull'inizio della linea d'analisi, quando apro questa finesta.
+Il resto di puzzle ok.
+
+* Problemi in memoboard. Esc non funziona per dire no.
