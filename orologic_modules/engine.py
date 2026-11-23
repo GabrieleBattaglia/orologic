@@ -890,7 +890,17 @@ def AnalyzeGame(pgn_game, is_corrected=False):
         extra_prompt = ""
 
         if current_node.comment and comment_auto_read:
-            print(_("Commento:"), current_node.comment)
+            # Il commento senza i comandi fra quadre del PGN, e i disegni
+            # detti a parole: prima uscivano i codici, come [%cal Ge2e4]
+            # (Gabriele, 23 novembre 2026).
+            from .easyfish import posizione
+
+            commento = posizione.testo_del_commento(current_node.comment)
+            if commento:
+                print(_("Commento:"), commento)
+            disegni = posizione.testo_dei_disegni(current_node)
+            if disegni:
+                print(disegni)
         elif current_node.comment and not comment_auto_read:
             Acusticator(["c7", 0.024, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0])
 

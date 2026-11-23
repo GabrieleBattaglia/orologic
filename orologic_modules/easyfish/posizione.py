@@ -21,6 +21,7 @@ import chess.pgn
 
 from ..board_utils import CustomBoard, DescribeMove, NormalizeMove
 from ..config import _
+from .drawing import verbalize_drawings
 
 # I comandi fra quadre del PGN, come i disegni e gli orologi: [%cal Ge2e4].
 COMANDI_PGN = re.compile(r"\[%[^\]]*\]")
@@ -54,6 +55,15 @@ def testo_del_commento(commento):
     if valutazione:
         testo = " ".join(filter(None, (testo, _("valutazione {v}").format(v=valutazione.group(1)))))
     return testo
+
+
+def testo_dei_disegni(nodo):
+    """Le frecce e i cerchi della mossa, con le frasi del terminale, o la
+    stringa vuota: Disegni: Freccia da Empoli 2 ad Empoli 4 (verde). Si
+    dicono dovunque ci si muova fra le mosse, perche' testo_del_commento
+    toglie i loro comandi fra quadre (Gabriele, 23 novembre 2026)."""
+    elenco = verbalize_drawings(nodo)
+    return _("Disegni: {elenco}").format(elenco=elenco) if elenco else ""
 
 
 def testo_libero(commento):
@@ -224,6 +234,9 @@ def righe_della_posizione(nodo, board, scelta=None):
     commento = testo_del_commento(nodo.comment)
     if commento:
         righe.append(_("Commento: {testo}").format(testo=commento))
+    disegni = testo_dei_disegni(nodo)
+    if disegni:
+        righe.append(disegni)
     return righe
 
 
@@ -240,6 +253,9 @@ def voce_della_mossa(nodo, board):
     commento = testo_del_commento(nodo.comment)
     if commento:
         voce += ". " + _("Commento: {testo}").format(testo=commento)
+    disegni = testo_dei_disegni(nodo)
+    if disegni:
+        voce += ". " + disegni
     return voce
 
 
@@ -254,6 +270,9 @@ def voce_della_partita(game):
     commento = testo_del_commento(game.comment)
     if commento:
         voce += ". " + _("Commento: {testo}").format(testo=commento)
+    disegni = testo_dei_disegni(game)
+    if disegni:
+        voce += ". " + disegni
     return voce
 
 

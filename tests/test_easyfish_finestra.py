@@ -111,7 +111,7 @@ def test_le_voci_del_navigatore():
     variante, testo, seguito = voci[2][2][0]
     assert variante.san() == "Bc4" and testo.startswith("Variante: 2. Bc4, ")
     assert [nodo.san() for nodo, _testo, _varianti in seguito] == ["Nf6"]
-    assert voci[3][1].endswith(". Commento: Buona [Val: +0.30]")
+    assert voci[3][1].endswith(". Commento: Buona [Val: +0.30]. Disegni: Freccia da Bologna 8 ad Como 6 (verde)")
     assert posizione.voce_della_partita(game) == "Uno vs Due, *"
 
 

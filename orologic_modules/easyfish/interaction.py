@@ -320,8 +320,15 @@ def ExplorerMode(game, engine, analysis_time_default=2, sharing_window=None, nod
         if var_index >= variant_count:
             var_index = 0
 
-        if node.comment and node is not commentato:
-            print(node.comment)
+        if node is not commentato:
+            # Il commento senza i comandi fra quadre del PGN, e i disegni
+            # detti a parole: prima uscivano i codici, come [%cal Ge2e4].
+            commento = posizione.testo_del_commento(node.comment)
+            if commento:
+                print(commento)
+            disegni = posizione.testo_dei_disegni(node)
+            if disegni:
+                print(disegni)
         commentato = node
 
         p_node = node.parent
