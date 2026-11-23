@@ -355,7 +355,9 @@ def async_spectator_loop(q, game_state):
             and not ui.vista_ferma(game_state)
             and time.time() - last_refresh >= refresh_interval
         ):
-            refresh_line()
+            # Il rinfresco periodico: nella finestra non si annuncia.
+            with strato.rinfresco():
+                refresh_line()
             last_refresh = time.time()
         try:
             msg = q.get_nowait()
@@ -869,7 +871,9 @@ def async_play_loop(q, game_state):
             and not ui.vista_ferma(game_state)
             and time.time() - last_refresh >= refresh_interval
         ):
-            refresh_line()
+            # Il rinfresco periodico: nella finestra non si annuncia.
+            with strato.rinfresco():
+                refresh_line()
             last_refresh = time.time()
         try:
             msg = q.get_nowait()

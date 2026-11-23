@@ -185,17 +185,14 @@ def _dopo_la_partita(partita, stato):
         print(_("Errore durante la copia del PGN negli appunti: {error}").format(error=e))
     if mosse < MOSSE_PER_L_ANALISI:
         return
-    # Due domande distinte, come chiede la issue 69: prima l'analisi
-    # automatica, poi Easyfish. Al collaudo della 8.43.2 l'OAA stava dietro
-    # alla domanda sull'analisi, e chi rispondeva no non la vedeva.
+    # Due domande distinte, come chiede la issue 69: prima Easyfish, e solo a
+    # chi risponde no l'analisi automatica (Gabriele, collaudo del 23 novembre
+    # 2026, sera). Cosi' l'analisi e' l'ultima cosa: il suo riepilogo resta
+    # nell'area col cursore sulla prima riga, e nessuna domanda dopo lo
+    # riporta in fondo. Prima l'OAA veniva prima di Easyfish.
     chess960_utils.verifica_motore_chess960(
         engine.ENGINE, partita.headers.get("Variant", "") == "Chess960"
     )
-    if enter_escape(
-        _("Vuoi l'analisi automatica OAA della partita? (INVIO per si', ESC per no): ")
-    ):
-        engine.cache_analysis.clear()
-        engine.AnalisiAutomatica(board_utils.CopyPgnGame(partita))
     if enter_escape(
         _(
             "Vuoi aprire la partita in Easyfish, per analizzarla tu? (INVIO per "
@@ -205,6 +202,12 @@ def _dopo_la_partita(partita, stato):
         from .easyfish import easyfish_app
 
         easyfish_app.run(partita)
+        return
+    if enter_escape(
+        _("Vuoi l'analisi automatica OAA della partita? (INVIO per si', ESC per no): ")
+    ):
+        engine.cache_analysis.clear()
+        engine.AnalisiAutomatica(board_utils.CopyPgnGame(partita))
 
 
 def libero():

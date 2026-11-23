@@ -199,7 +199,9 @@ def async_arbitration_input(game_state, get_prompt, comandi=None):
             and not ui.vista_ferma(game_state)
             and time.time() - last_refresh >= refresh_interval
         ):
-            refresh_line()
+            # Il rinfresco periodico: nella finestra non si annuncia.
+            with strato.rinfresco():
+                refresh_line()
             last_refresh = time.time()
 
         if strato.kbhit():

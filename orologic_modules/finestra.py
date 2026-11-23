@@ -271,6 +271,9 @@ class FacciaFinestra:
         self._causa = None
         self._quando = 0.0
         self._chiusura = threading.Event()
+        # Dentro strato.rinfresco: quello che si scrive e' il rinfresco
+        # periodico del prompt, che la finestra non annuncia.
+        self._rinfresco = False
         self.avvisa = None
 
     # Il lato del nucleo.
@@ -466,7 +469,13 @@ class FacciaFinestra:
     def cruscotto(self, fornitore, comandi=None):
         self._metti(CambioDiForma(fornitore, comandi))
 
+    def rinfresco(self, acceso):
+        """strato.rinfresco: le scritture di adesso sono un rinfresco."""
+        self._rinfresco = acceso
+
     def scrivi(self, testo, causa=None):
+        if self._rinfresco:
+            causa = "rinfresco"
         if causa is None:
             causa = self._causa
             if causa == "eco" and time.monotonic() - self._quando > ECO_MASSIMO:
@@ -1021,23 +1030,27 @@ class Finestra(wx.Frame):
             ultima_causa = causa
             if causa == "tasto":
                 dal_tasto = True
+            # Il rinfresco periodico del prompt si scrive, ma non si dice e
+            # non e' un messaggio.
+            rinfresco = causa == "rinfresco"
             for riga in self.terminale.applica(testo):
                 chiuse.append(riga)
-                if riga.strip() and riga.rstrip() != self.detta.rstrip():
+                if not rinfresco and riga.strip() and riga.rstrip() != self.detta.rstrip():
                     messaggi.append(riga)
                 nuovo = _parte_nuova(riga, self.detta)
-                if nuovo:
+                if nuovo and not rinfresco:
                     da_dire.append(nuovo)
                 self.detta = ""
             # L'eco si aggiunge a cio' che e' gia' stato sentito pezzo per
             # pezzo: con i tasti rapidi l'eco e l'Invio arrivano insieme.
-            if causa == "eco":
+            if causa in ("eco", "rinfresco"):
                 self.detta = self.terminale.visibile()
         visibile = self.terminale.visibile()
         if visibile.strip():
             # Con la scacchiera aperta la riga del prompt non si dice: la
             # scacchiera dice gia' cio' che serve, e il prompt si rinfresca.
-            if ultima_causa != "eco" and self.dialogo_scacchiera is None:
+            # Nemmeno il rinfresco periodico del prompt.
+            if ultima_causa not in ("eco", "rinfresco") and self.dialogo_scacchiera is None:
                 nuovo = _parte_nuova(visibile, self.detta)
                 if nuovo:
                     da_dire.append(nuovo)

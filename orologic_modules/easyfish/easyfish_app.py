@@ -482,6 +482,9 @@ def run(partita=None):
     Nella finestra Easyfish e' la zona di una partita: l'area diventa il
     cruscotto, e i prompt valgono come quello delle mosse.
     """
+    # Easyfish analizza con la forza della configurazione, anche dopo una
+    # partita contro il motore indebolito.
+    orologic_engine.forza_della_configurazione()
     with _stampa_deviata(), strato.partita():
         _esegui(partita)
 

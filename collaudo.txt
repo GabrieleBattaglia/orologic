@@ -1,9 +1,6 @@
-Collaudo, Orologic 9, ramo gui, 23 novembre 2026, sera: NVDA e le orecchie. Accanto a ogni voce scrivi ok, oppure cosa non va.
-Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py.
-Prima dell'OAA: una tua partita, meglio se finita con un abbandono davanti a un matto e con gli orologi, per esempio di Lichess; analisi automatica a un secondo per mossa.
-* OAA. Ci sono alcune cose che non vanno. Ho eseguito una OAA, la puoi vedere nella cartella txt. Come prima cosa, ho perso l'inizio perchè la finestra di testo me l'ha tagliata, partiva da mossa 27. Poi io la trovo cambiata, non vedo più Linea principale, variante 1 eccetera, le cose che c'erano prima, cioè i titoli di testo che mi permettevano di capire quale linea stavo leggendo. Però ne ho potuto vedere solo una parte. Le hai tolte tu? Se sì, perchè?
-* Dopo aver calcolato l'OAA, il cursore è finito a fine testo, non all'inizio ma ricordavo che mi avevi detto il contrario. E poi mi chiede se voglio passare la partita ad easyfish. Non va bene questa domanda, dovrebbe prima chiedermi di easyfish, se dico no, propormi la OAA.
-
-Prima del braille: un arbitraggio con l'orologio che corre, la barra braille accesa.
-Domanda 13: fermo sul prompt senza toccare niente, la barra segue l'orologio ogni secondo, anche in pausa; al primo tasto torna la riga normale, gia' aggiornata. Sali a rileggere piu' su: la barra resta dove leggi, e il cursore non si muove. Va?
-* Aggiornamento barra ok, il cursore resta dove l'ho messo ma il prompt viene continuamente letto da nvda a ripetizione. Non so se dipende dagli annunci automatici. Dovremmo far sì che questo non avvenga e mantenere gli annunci, se sono loro la causa, solo dove servono.
+Collaudo, Orologic 9, ramo gui, 23 novembre 2026, notte: NVDA e le orecchie. Accanto a ogni voce scrivi ok, oppure cosa non va.
+Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py; una partita di carriera contro Stockfish, con l'orologio e il prompt che si aggiorna.
+Domanda 1: in partita il prompt che si rinfresca non si sente piu' a ogni secondo; le mosse e i messaggi si annunciano come prima, e la barra segue l'orologio. Va?
+Domanda 2: a fine partita Orologic chiede prima se aprire la partita in Easyfish; con Esc chiede l'analisi automatica, con Invio va in Easyfish e l'analisi non la chiede. Va?
+Domanda 3: l'analisi automatica letta nell'area: Ctrl+Home porta alla prima riga, Orologic Analisi Automatica, e la trovi intera, coi titoli (Variante 1): e Linea principale:; il cursore resta sulla prima riga anche al menu. Va?
+Domanda 4: le valutazioni dell'analisi sono sensate: in una posizione persa le alternative non danno piu' +0.00, e Stockfish fa quasi sempre la prima scelta del motore. Va?

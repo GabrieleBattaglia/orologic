@@ -393,6 +393,29 @@ def InitEngine():
     return False
 
 
+def forza_della_configurazione():
+    """Il motore torna alla forza della configurazione, quella con cui
+    analizza: dopo una partita restava alla forza dell'avversario, in
+    carriera limitato all'Elo del modello, e l'analisi automatica del 23
+    novembre 2026 ne usciva con valutazioni sbagliate, per esempio
+    un'alternativa a +0.00 in una posizione persa. Si chiama all'inizio
+    di ogni analisi; la partita dopo rimette la sua forza da se'."""
+    if ENGINE is None:
+        return
+    livello = storage.LoadDB().get("engine_config", {}).get("skill_level", 20)
+    opzioni = getattr(ENGINE, "options", {})
+    try:
+        if "UCI_LimitStrength" in opzioni:
+            ENGINE.configure({"UCI_LimitStrength": False})
+        if "Skill Level" in opzioni:
+            ENGINE.configure({"Skill Level": livello})
+    # Il motore e' un processo separato che puo' non rispondere: si
+    # analizza con la forza che ha.
+    except Exception:  # noqa: BLE001
+        return
+    forza.update(tipo="livello", valore=livello, profondita=None)
+
+
 def CloseEngine():
     global ENGINE
     if ENGINE:
@@ -990,6 +1013,7 @@ def _comandi_valutazione(cmd, current_node):
 
 
 def AnalyzeGame(pgn_game, is_corrected=False):
+    forza_della_configurazione()
     print(_("\nModalita' analisi.\nHeaders della partita:\n"))
     for k, v in pgn_game.headers.items():
         print(f"  {k}: {v}")
@@ -1977,6 +2001,7 @@ def AnalisiAutomatica(pgn_game):
             return f"{final_cp / 100:+.2f}"
 
     print(_("Analisi Automatica della Partita"))
+    forza_della_configurazione()
 
     # Caricamento configurazione soglie da DB
     db = storage.LoadDB()

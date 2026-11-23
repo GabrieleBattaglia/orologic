@@ -100,6 +100,9 @@ class FacciaTerminale:
         """Il terminale non ha la scacchiera interattiva."""
         return False
 
+    def rinfresco(self, acceso):
+        """Nel terminale il rinfresco si scrive come il resto."""
+
     def da_leggere(self, titolo, righe, verbosa=None, inizio=None):
         """Il terminale le ha gia' stampate."""
 
@@ -251,6 +254,20 @@ def fine_del_gioco():
     """Il gioco e' finito, anche se la funzione di gioco continua, per
     esempio col riepilogo: il cruscotto lascia il posto alla console."""
     _faccia.cruscotto(None)
+
+
+@contextlib.contextmanager
+def rinfresco():
+    """Il rinfresco periodico del prompt, come gli orologi che corrono:
+    nella finestra il testo cambia e va alla barra braille, ma non si
+    annuncia, perche' non e' niente di nuovo da dire (Gabriele, collaudo del
+    23 novembre 2026: in partita il prompt si sentiva a ogni secondo). Nel
+    terminale non cambia niente."""
+    _faccia.rinfresco(True)
+    try:
+        yield
+    finally:
+        _faccia.rinfresco(False)
 
 
 @contextlib.contextmanager
