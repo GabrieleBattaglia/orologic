@@ -970,7 +970,7 @@ class FinestraRicerca(wx.Dialog):
 
     def classifica(self):
         """Dal ramo Non classificate: il codice ECO, l'apertura e la variante
-        da eco.db alle partite senza codice ECO, dove le mosse lo dicono."""
+        da eco.pgn alle partite senza codice ECO, dove le mosse lo dicono."""
         voce, nodo = self.selezionata()
         if nodo is None or not any(antenato.tipo == "non_classificate" for _voce, antenato in self.antenati(voce)):
             suona("no")
@@ -988,7 +988,7 @@ class FinestraRicerca(wx.Dialog):
             cambi = archivio_pgn.classifica(archivio, senza_eco, aperture, lambda pct: avanzamento(_("Classificazione: {pct}%").format(pct=pct)), fermato)
             righe = [_("Classificate {n} partite su {m}.").format(n=len(cambi), m=len(senza_eco))]
             if len(cambi) < len(senza_eco):
-                righe.append(_("Le altre restano senza codice ECO: le loro mosse non si trovano in eco.db."))
+                righe.append(_("Le altre restano senza codice ECO: le loro mosse non si trovano in eco.pgn."))
             if senza_mosse or studio:
                 righe.append(_("Le partite senza mosse o da una posizione di studio non si classificano."))
             nuovo, altre = archivio_pgn.applica_le_modifiche(archivio, cambi)

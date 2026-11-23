@@ -575,10 +575,27 @@ class GameState:
 _eco_database_cache = {}
 
 
-def LoadEcoDatabaseWithFEN(filename="eco.db"):
-    db_path = config.resource_path(os.path.join("resources", filename))
-    if db_path in _eco_database_cache:
-        return _eco_database_cache[db_path]
+def percorso_eco(filename="eco.pgn"):
+    """eco.pgn di pgn-extract: quello scaricato con pe, nella cartella
+    pgn-extract accanto al programma, se c'e', perche' pe lo aggiorna e puo'
+    essere piu' ricco; altrimenti quello del pacchetto, in resources. E' lo
+    stesso file: eco.db era il suo nome in Orologic fino alla 9.0.0."""
+    scaricato = config.percorso_salvataggio(os.path.join("pgn-extract", filename))
+    if os.path.isfile(scaricato):
+        return scaricato
+    return config.resource_path(os.path.join("resources", filename))
+
+
+def LoadEcoDatabaseWithFEN(filename="eco.pgn"):
+    db_path = percorso_eco(filename)
+    # Con la data del file nella chiave, un eco.pgn aggiornato da pe si
+    # rilegge senza riavviare.
+    try:
+        chiave = (db_path, os.path.getmtime(db_path))
+    except OSError:
+        chiave = (db_path, None)
+    if chiave in _eco_database_cache:
+        return _eco_database_cache[chiave]
 
     eco_entries = {}
     if not os.path.exists(db_path):
@@ -706,7 +723,7 @@ def rileva_apertura(mosse, eco_db, tolleranza=6):
     l'apertura si chiude, oppure nulla e zero se non si riconosce niente.
 
     Il metodo e' quello di pgn-extract, il programma da cui proviene il
-    nostro eco.db: si cercano le posizioni della partita nella tabella
+    nostro eco.pgn: si cercano le posizioni della partita nella tabella
     delle linee catalogate e si tiene la corrispondenza piu' specifica,
     cioe' quella la cui linea e' piu' lunga. Non ci si ferma alla prima
     posizione che manca, perche' le linee catalogate non formano una

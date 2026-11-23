@@ -42,7 +42,7 @@ def radice_app():
 
 
 def resource_path(relative_path):
-    """Percorso di una risorsa inclusa nel pacchetto (manuale, changelog, eco.db)."""
+    """Percorso di una risorsa inclusa nel pacchetto (manuale, changelog, eco.pgn)."""
     return _percorso_risorsa(relative_path)
 
 

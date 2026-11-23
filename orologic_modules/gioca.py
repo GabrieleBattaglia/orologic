@@ -96,7 +96,7 @@ def _classifica_apertura(partita):
     riconosce. Nel Fischer Random non c'e' apertura da classificare."""
     if partita.headers.get("Variant", "") == "Chess960":
         return
-    database = board_utils.LoadEcoDatabaseWithFEN("eco.db")
+    database = board_utils.LoadEcoDatabaseWithFEN("eco.pgn")
     if not database:
         return
     scacchiera = partita.board()

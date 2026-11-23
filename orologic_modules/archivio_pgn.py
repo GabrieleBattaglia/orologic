@@ -646,13 +646,13 @@ def righe_della_riparazione(conti):
 
 
 def carica_le_aperture():
-    """eco.db, senza le righe che stampa nell'area principale."""
+    """eco.pgn, senza le righe che stampa nell'area principale."""
     with contextlib.redirect_stdout(io.StringIO()):
-        return board_utils.LoadEcoDatabaseWithFEN("eco.db")
+        return board_utils.LoadEcoDatabaseWithFEN("eco.pgn")
 
 
 def classifica(archivio, indici, aperture, avanzamento=None, fermato=None):
-    """Le intestazioni ECO, Opening e Variation da eco.db per le partite di
+    """Le intestazioni ECO, Opening e Variation da eco.pgn per le partite di
     indici che le mosse fanno riconoscere: {partita: testo nuovo}.
     avanzamento(percentuale) ogni tre secondi; fermato() ferma il lavoro e
     tiene quello che e' fatto."""

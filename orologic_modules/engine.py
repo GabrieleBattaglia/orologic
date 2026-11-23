@@ -1738,7 +1738,7 @@ def _parametri_analisi_automatica(pgn_game, db):
         )
     ):
         print(_("Rilevo la fine della teoria d'apertura..."))
-        eco_db = board_utils.LoadEcoDatabaseWithFEN("eco.db")
+        eco_db = board_utils.LoadEcoDatabaseWithFEN("eco.pgn")
         if eco_db:
             # La ricerca guarda tutta l'apertura e tiene la linea piu'
             # specifica: prima si fermava alla prima posizione mancante e

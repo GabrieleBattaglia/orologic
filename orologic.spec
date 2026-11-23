@@ -51,7 +51,7 @@ a = Analysis(
     datas=[voce for voce in lettori if dentro(voce)] + cataloghi + [
         ('resources/readme.htm', 'resources'),
         ('resources/changelog.htm', 'resources'),
-        ('resources/eco.db', 'resources'),
+        ('resources/eco.pgn', 'resources'),
         # La collezione dei suoni, da cui gli allarmi dell'orologio prendono
         # le loro voci per nome: da compilato Acusticator la cerca nella
         # radice del pacchetto, e senza gli allarmi resterebbero muti.

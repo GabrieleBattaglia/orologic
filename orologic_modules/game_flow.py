@@ -93,7 +93,7 @@ def RiprendiPartita(dati_partita):
     orologio.avvia(game_state)
     db = storage.LoadDB()
     autosave_is_on = db.get("autosave_enabled", False)
-    eco_database = board_utils.LoadEcoDatabaseWithFEN("eco.db")
+    eco_database = board_utils.LoadEcoDatabaseWithFEN("eco.pgn")
     print("\n" + "Riepilogo Partita")
     print(
         _("Bianco: {player} - Tempo: {time}").format(
@@ -1063,7 +1063,7 @@ def StartGame(clock_config):
     event_default = default_pgn.get("Event", "Orologic Game")
     site_default = default_pgn.get("Site", _("Sede sconosciuta"))
     round_default = default_pgn.get("Round", "Round 1")
-    eco_database = board_utils.LoadEcoDatabaseWithFEN("eco.db")
+    eco_database = board_utils.LoadEcoDatabaseWithFEN("eco.pgn")
     # Le sette voci dell'intestazione si chiedevano con sette blocchi identici
     # di prompt, suono e ripiego sul valore precedente: ora e' un giro solo.
     CAMPI_PGN = (
