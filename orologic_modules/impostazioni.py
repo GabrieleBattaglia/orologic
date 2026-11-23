@@ -78,8 +78,9 @@ VOCI = (
 )
 VOCI_DEL_MOTORE = ("cerca", "scarica", "manuale", "percorso", "eseguibile", "hash", "core", "skill", "overhead")
 # Le soglie dell'analisi, coi loro limiti come nel terminale: ognuna sta
-# sopra quella di prima.
-SOGLIE = {"soglia_inesattezza": ("inesattezza", 10, 200), "soglia_errore": ("errore", None, 500), "soglia_svarione": ("svarione", None, 2000)}
+# sopra quella di prima. Sono punti percentuali di calo della probabilita'
+# di vittoria, come Lichess, non piu' centesimi (Gabriele, 23 novembre 2026).
+SOGLIE = {"soglia_inesattezza": ("calo_inesattezza", 1, 30), "soglia_errore": ("calo_errore", None, 60), "soglia_svarione": ("calo_svarione", None, 90)}
 # I suoni delle voci, gli stessi delle altre app per le stesse funzioni.
 SUONI = {"caffe": "donazione", "caffe_paypal": "ciechino_caffe_paypal", "pub_entra": "mess_pub_entra", "pub_aiuto": "mess_pub_aiuto"}
 
@@ -121,7 +122,8 @@ class Impostazioni:
         if voce == "analisi_linee":
             return _riga(_("Linee analisi default (multipv)"), db.get("default_multipv", 3))
         if voce in SOGLIE:
-            return _riga(self._nome_della_soglia(voce), self._soglie(db)[SOGLIE[voce][0]])
+            # Punti percentuali di calo della probabilita' di vittoria.
+            return _riga(self._nome_della_soglia(voce), f"{self._soglie(db)[SOGLIE[voce][0]]}%")
         if voce == "giocatore":
             return _("Il mio nome: {nome}").format(nome=db.get(gioca.CHIAVE_NOME) or _("non ancora scritto"))
         if voce == "motore":
@@ -261,16 +263,16 @@ class Impostazioni:
         soglie = self._soglie(storage.LoadDB())
         chiave, minimo, massimo = SOGLIE[voce]
         # Ognuna sta sopra quella di prima e sotto quella dopo.
-        if chiave == "inesattezza":
-            massimo = min(massimo, soglie["errore"] - 1)
-        elif chiave == "errore":
-            minimo, massimo = soglie["inesattezza"] + 1, min(massimo, soglie["svarione"] - 1)
+        if chiave == "calo_inesattezza":
+            massimo = min(massimo, soglie["calo_errore"] - 1)
+        elif chiave == "calo_errore":
+            minimo, massimo = soglie["calo_inesattezza"] + 1, min(massimo, soglie["calo_svarione"] - 1)
         else:
-            minimo = soglie["errore"] + 1
+            minimo = soglie["calo_errore"] + 1
         domande = {
-            "inesattezza": _("Soglia Inesattezza [{cur}]: "),
-            "errore": _("Soglia Errore [{cur}]: "),
-            "svarione": _("Soglia Svarione [{cur}]: "),
+            "calo_inesattezza": _("Soglia Inesattezza [{cur}]: "),
+            "calo_errore": _("Soglia Errore [{cur}]: "),
+            "calo_svarione": _("Soglia Svarione [{cur}]: "),
         }
         attuale = soglie[chiave]
         nuovo = self.finestra.chiedi_valore(

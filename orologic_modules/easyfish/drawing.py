@@ -87,33 +87,27 @@ def verbalize_color(color_code):
     return colors.get(color_code, _("sconosciuto"))
 
 
+def descrivi_freccia(codice):
+    """Freccia da Firenze 8 a Bologna 4 (verde): ad solo davanti a una
+    casa che comincia per a, come Ancona 4 (Gabriele, 23 novembre 2026;
+    prima ad dappertutto). codice e' come nel PGN, Ge2e4."""
+    arrivo = verbalize_square(codice[3:5])
+    modello = _("Freccia da {sq1} ad {sq2} ({col})") if arrivo[:1].lower() == "a" else _("Freccia da {sq1} a {sq2} ({col})")
+    return modello.format(sq1=verbalize_square(codice[1:3]), sq2=arrivo, col=verbalize_color(codice[:1]))
+
+
+def descrivi_cerchio(codice):
+    """Cerchio su Firenze 6 (giallo); codice come nel PGN, Yf6."""
+    return _("Cerchio su {sq} ({col})").format(sq=verbalize_square(codice[1:3]), col=verbalize_color(codice[:1]))
+
+
 def verbalize_drawings(node):
     arrows, circles = get_drawings_from_node(node)
     if not arrows and not circles:
         return ""
 
-    lines = []
-    for a in arrows:
-        if len(a) >= 5:
-            color = a[0]
-            sq1 = a[1:3]
-            sq2 = a[3:5]
-            lines.append(
-                _("Freccia da {sq1} ad {sq2} ({col})").format(
-                    sq1=verbalize_square(sq1),
-                    sq2=verbalize_square(sq2),
-                    col=verbalize_color(color),
-                )
-            )
-    for c in circles:
-        if len(c) >= 3:
-            color = c[0]
-            sq1 = c[1:3]
-            lines.append(
-                _("Cerchio su {sq} ({col})").format(
-                    sq=verbalize_square(sq1), col=verbalize_color(color)
-                )
-            )
+    lines = [descrivi_freccia(a) for a in arrows if len(a) >= 5]
+    lines.extend(descrivi_cerchio(c) for c in circles if len(c) >= 3)
     return ", ".join(lines)
 
 

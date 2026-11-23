@@ -26,6 +26,13 @@ DEFAULT_DB = {
         "svarione": 250,
         "mossa_buona": 20,
         "mossa_geniale_gap": 180,
+        # Il giudizio dell'OAA dal calo della probabilita' di vittoria, in
+        # punti percentuali, come Lichess (Gabriele, 23 novembre 2026):
+        # inesattezza, errore e svarione al 5, 10 e 15. Le tre soglie in
+        # centesimi di prima restano solo per chi ha un database vecchio.
+        "calo_inesattezza": 5,
+        "calo_errore": 10,
+        "calo_svarione": 15,
     },
     "engine_config": {},
     "localization": {},

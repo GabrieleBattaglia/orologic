@@ -120,12 +120,12 @@ def test_tempo_e_linee_dell_analisi(registro, gestore, monkeypatch):
 
 
 def test_le_soglie(registro, gestore, monkeypatch):
-    monkeypatch.setattr(ui, "dgt", _risposte(1.0, 3, 40, 120, 300))
+    monkeypatch.setattr(ui, "dgt", _risposte(1.0, 3, 4, 9, 14))
     monkeypatch.setattr(ui, "enter_escape", lambda *_a, **_o: True)
     ui.ImpostazioniAnalisi()
     # Nel terminale le tre soglie hanno un bip solo, in fondo: e' il terzo.
     bip = registro.prendi()[-1]
-    gestore.risposte(45)
+    gestore.risposte(6)
     gestore.cambia("soglia_inesattezza", None)
     assert registro.prendi() == [bip]
 

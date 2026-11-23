@@ -81,9 +81,9 @@ def test_la_finestra_dei_disegni(disegni):
     d = disegni["apri"](game, attuale)
     voci = [d.elenco.GetString(n) for n in range(d.elenco.GetCount())]
     assert voci == [
-        "1. e4: Freccia da Empoli 2 ad Empoli 4 (verde)",
+        "1. e4: Freccia da Empoli 2 a Empoli 4 (verde)",
         "2. f4: Cerchio su Firenze 4 (rosso)",
-        "2... Nc6: Freccia da Firenze 8 ad Bologna 4 (rosso) [mossa attuale]",
+        "2... Nc6: Freccia da Firenze 8 a Bologna 4 (rosso) [mossa attuale]",
         "2... Nc6: Cerchio su Como 6 (verde) [mossa attuale]",
     ]
     assert disegni["suonati"] == ["apri"]

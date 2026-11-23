@@ -5,6 +5,7 @@ import datetime
 import math
 import os
 import re
+import statistics
 import subprocess
 import sys
 import time
@@ -12,30 +13,11 @@ import time
 import chess
 import chess.engine
 import chess.pgn
-import numpy as np
 import pyperclip
 from GBUtils import Acusticator, dgt, key, menu
 
-from . import board_utils, config, localizzazione, storage, ui, version
+from . import board_utils, config, localizzazione, storage, tempo, ui, version
 from .config import _
-
-
-def calculate_win_probability(score_obj, turn):
-    """
-    Calcola la probabilità di vittoria (0.0 - 1.0) dal punto di vista di chi deve muovere (turn).
-    Usa wdl(model='lichess') se disponibile, altrimenti sigmoide sui CP.
-    """
-    try:
-        # WDL dal punto di vista del giocatore di turno
-        w = score_obj.pov(turn).wdl(model="lichess").expectation()
-        return w
-    except (AttributeError, ValueError, ZeroDivisionError):
-        # Fallback: Sigmoide sui CP (dal punto di vista del giocatore)
-        cp = score_obj.pov(turn).score(mate_score=10000)
-        if cp is None:
-            return 0.5
-        # Formula sigmoide inversa: 50 + 50 * ... (restituisce %, divido per 100)
-        return 0.5 + 0.5 * (2 / (1 + math.exp(-0.00368208 * cp)) - 1)
 
 
 def calculate_move_accuracy(w_before, w_after):
@@ -43,55 +25,67 @@ def calculate_move_accuracy(w_before, w_after):
     Calcola accuratezza mossa (0-100) basata su Delta W (perdita di probabilità).
     w_before: Probabilità vittoria PRIMA della mossa (dal punto di vista di chi muove).
     w_after: Probabilità vittoria DOPO la mossa (dal punto di vista di chi HA mosso).
+    Come Lichess per intero (Gabriele, 23 novembre 2026): se la mossa non
+    perde niente vale 100; altrimenti la formula della sua pagina
+    sull'accuratezza, piu' un punto d'incertezza, fra 0 e 100. Li' Win% va
+    da 0 a 100: per questo delta_w si moltiplica per cento.
     """
-    delta_w = max(0.0, w_before - w_after)
-    # Formula di Lichess, dalla sua pagina sull'accuratezza:
-    #   Accuracy% = 103.1668 * exp(-0.04354 * (Win%prima - Win%dopo)) - 3.1669
-    # Li' Win% va da 0 a 100, mentre calculate_win_probability restituisce un
-    # valore fra 0 e 1: per questo delta_w si moltiplica per cento. Il dubbio
-    # che stava scritto qui era legittimo, ma la scelta era quella giusta.
-    acc = 103.1668 * math.exp(-0.04354 * delta_w * 100) - 3.1669
-    return max(0.0, min(100.0, acc))
+    if w_after >= w_before:
+        return 100.0
+    delta_w = w_before - w_after
+    acc = 103.1668100711649 * math.exp(-0.04354415386753951 * delta_w * 100) - 3.166924740191411
+    return max(0.0, min(100.0, acc + 1))
 
 
-def calculate_game_accuracy_numpy(accuracies):
-    """
-    Calcola Game Accuracy usando numpy:
-    1. Finestre scorrevoli per volatilità (sigma).
-    2. Media ponderata su sigma.
-    3. Media armonica.
-    4. Media tra le due.
-    """
-    if not accuracies:
-        return 0.0
-    acc_array = np.array(accuracies)
-    n = len(acc_array)
+def percentuale_di_vittoria(punteggio):
+    """La probabilita' di vittoria del Bianco in percento, come la calcola
+    Lichess: i centesimi limitati a piu' o meno mille, il matto a mille."""
+    return 50 + 50 * (2 / (1 + math.exp(-0.00368208 * _centesimi(punteggio.white()))) - 1)
 
-    # Finestre scorrevoli
-    window_size = max(3, int(n / 10))
-    sigmas = []
-    for i in range(n):
-        start = max(0, i - window_size)
-        end = min(n, i + window_size + 1)
-        window = acc_array[start:end]
-        if len(window) > 1:
-            sigma = np.std(window)
-        else:
-            sigma = 1.0
-        sigmas.append(sigma if sigma > 0 else 1.0)
 
-    sigmas = np.array(sigmas)
+def _centesimi(punteggio):
+    """I centesimi di un punteggio dal suo lato, limitati come fa Lichess a
+    piu' o meno mille; un matto vale mille, per chi lo da'."""
+    if punteggio.is_mate():
+        return 1000 if punteggio > chess.engine.Cp(0) else -1000
+    return max(-1000, min(1000, punteggio.score()))
 
-    # Media Ponderata
-    weighted_mean = np.average(acc_array, weights=sigmas)
 
-    # Media Armonica
-    # L'accuratezza di una mossa vale almeno uno: con un epsilon minuscolo
-    # bastava una singola mossa a zero per azzerare questa componente e
-    # dimezzare il risultato finale, che non e' quello che si vuole dire.
-    harmonic_mean = len(acc_array) / np.sum(1.0 / np.maximum(acc_array, 1.0))
+def _vittoria_dal_lato(punteggio, colore):
+    vittoria = percentuale_di_vittoria(punteggio)
+    return vittoria if colore == chess.WHITE else 100 - vittoria
 
-    return (weighted_mean + harmonic_mean) / 2
+
+def precisione_della_partita(mosse):
+    """La precisione di ogni giocatore come la calcola Lichess
+    (AccuracyPercent.gameAccuracy): ogni mossa pesa quanto e' tesa la
+    posizione, la deviazione standard della probabilita' di vittoria in una
+    finestra di mosse, fra 0,5 e 12; poi la media pesata e la media
+    armonica, e la media fra le due. mosse sono i risultati dell'analisi in
+    ordine, con colore, vittoria_prima, vittoria_dopo e precisione. Prima la
+    finestra guardava quanto oscillava la precisione del giocatore, e i
+    numeri non erano quelli di Lichess (Gabriele, 23 novembre 2026).
+    Restituisce {colore: precisione}, con None per chi non ha mosse."""
+    risultato = {chess.WHITE: None, chess.BLACK: None}
+    if not mosse:
+        return risultato
+    valori = [mosse[0]["vittoria_prima"]] + [mossa["vittoria_dopo"] for mossa in mosse]
+    larghezza = max(2, min(8, len(mosse) // 10))
+    if len(valori) >= larghezza:
+        scorrevoli = [valori[inizio : inizio + larghezza] for inizio in range(len(valori) - larghezza + 1)]
+    else:
+        scorrevoli = [valori]
+    finestre = [valori[:larghezza]] * max(0, min(larghezza, len(valori)) - 2) + scorrevoli
+    pesi = [max(0.5, min(12.0, statistics.pstdev(finestra))) for finestra in finestre]
+    for colore in chess.COLORS:
+        coppie = [(mossa["precisione"], peso) for mossa, peso in zip(mosse, pesi, strict=False) if mossa["colore"] == colore]
+        if not coppie:
+            continue
+        pesata = sum(valore * peso for valore, peso in coppie) / sum(peso for _valore, peso in coppie)
+        # Come Lichess: una mossa a zero azzera la media armonica.
+        armonica = 0.0 if any(valore <= 0 for valore, _peso in coppie) else len(coppie) / sum(1 / valore for valore, _peso in coppie)
+        risultato[colore] = (pesata + armonica) / 2
+    return risultato
 
 
 def estimate_elo_poly(accuracy):
@@ -100,6 +94,157 @@ def estimate_elo_poly(accuracy):
     """
     acc = accuracy
     return 2.05 + 12.9 * acc - 0.256 * (acc**2) + 0.00401 * (acc**3)
+
+
+# Quanto puo' cambiare la precisione dello stesso giocatore da una partita
+# all'altra: l'Elo stimato da una partita sola e' un intervallo.
+MARGINE_DELLA_PRECISIONE = 5
+
+
+def intervallo_elo(precisione):
+    """L'Elo stimato come intervallo, arrotondato alla decina: da una
+    partita sola un numero secco diceva troppo (Gabriele, 23 novembre
+    2026)."""
+    basso = estimate_elo_poly(max(0.0, precisione - MARGINE_DELLA_PRECISIONE))
+    alto = estimate_elo_poly(min(100.0, precisione + MARGINE_DELLA_PRECISIONE))
+    return int(round(basso, -1)), int(round(alto, -1))
+
+
+# Le fasi della partita, in ordine: una volta passati alla successiva non si torna.
+FASI = ("apertura", "mediogioco", "finale")
+
+
+def fase_della_posizione(board):
+    """La fase della posizione, come il Divider di Lichess semplificato:
+    finale con sei pezzi o meno fra donne, torri, alfieri e cavalli;
+    mediogioco con dieci o meno, con una prima traversa sguarnita, cioe'
+    con meno di quattro pezzi, o dalla sedicesima mossa; apertura
+    altrimenti."""
+    pezzi = sum(len(board.pieces(tipo, colore)) for tipo in (chess.KNIGHT, chess.BISHOP, chess.ROOK, chess.QUEEN) for colore in chess.COLORS)
+    if pezzi <= 6:
+        return "finale"
+    sguarnita = (
+        chess.popcount(board.occupied_co[chess.WHITE] & chess.BB_RANK_1) < 4
+        or chess.popcount(board.occupied_co[chess.BLACK] & chess.BB_RANK_8) < 4
+    )
+    if pezzi <= 10 or sguarnita or board.fullmove_number > 15:
+        return "mediogioco"
+    return "apertura"
+
+
+def _nome_della_fase(fase):
+    return {"apertura": _("apertura"), "mediogioco": _("mediogioco"), "finale": _("finale")}[fase]
+
+
+def _nome_della_mossa(nodo):
+    """23. Qxf7 o 23... Qxf7."""
+    prima = nodo.parent.board()
+    return f"{prima.fullmove_number}{'.' if prima.turn == chess.WHITE else '...'} {prima.san(nodo.move)}"
+
+
+def _tempi_delle_mosse(pgn_game):
+    """{nodo: secondi spesi} dagli orologi del PGN, [%clk]: l'orologio di
+    prima dello stesso giocatore, meno quello di adesso, piu' l'incremento.
+    La prima mossa di ognuno parte dal tempo iniziale di TimeControl, se
+    c'e'. Vuoto se il PGN non ha orologi."""
+    base = None
+    incremento = 0
+    controllo = re.fullmatch(r"(\d+)(?:\+(\d+))?", pgn_game.headers.get("TimeControl", "").strip())
+    if controllo:
+        base = int(controllo.group(1))
+        incremento = int(controllo.group(2) or 0)
+    tempi = {}
+    ultimo = {chess.WHITE: base, chess.BLACK: base}
+    for nodo in pgn_game.mainline():
+        orologio = nodo.clock()
+        if orologio is None:
+            continue
+        chi = not nodo.turn()
+        if ultimo[chi] is not None and ultimo[chi] - orologio + incremento >= 0:
+            tempi[nodo] = ultimo[chi] - orologio + incremento
+        ultimo[chi] = orologio
+    return tempi
+
+
+ERRORI = ("Inesattezza", "Errore", "Svarione")
+
+
+def _statistiche_nuove(lines, pgn_game, analizzate, nomi):
+    """Le statistiche nuove del riepilogo, volute da Gabriele il 23 novembre
+    2026: le mosse come il motore, la precisione per fase, i momenti
+    decisivi e, se il PGN ha gli orologi, l'uso del tempo. nomi e'
+    {colore: nome}."""
+    per_colore = {colore: [mossa for mossa in analizzate if mossa["colore"] == colore] for colore in chess.COLORS}
+    ordine = (chess.WHITE, chess.BLACK)
+    if analizzate:
+        lines.append(_("Mosse come il motore:"))
+        for colore in ordine:
+            mosse = per_colore[colore]
+            if mosse:
+                prima = sum(1 for mossa in mosse if mossa["rango"] == 0) / len(mosse) * 100
+                tre = sum(1 for mossa in mosse if mossa["rango"] is not None and mossa["rango"] < 3) / len(mosse) * 100
+                lines.append(
+                    _("  {nome}: prima scelta {p1:.0f}%, fra le prime tre {p3:.0f}%, su {n} mosse.").format(
+                        nome=nomi[colore], p1=prima, p3=tre, n=len(mosse)
+                    )
+                )
+        lines.append(_("Precisione per fase:"))
+        for colore in ordine:
+            for fase in FASI:
+                mosse = [mossa for mossa in per_colore[colore] if mossa["fase"] == fase]
+                if mosse:
+                    lines.append(
+                        _("  {nome}, {fase}: precisione media {acc:.1f}%, perdita media {acpl:.0f} centesimi, su {n} mosse.").format(
+                            nome=nomi[colore],
+                            fase=_nome_della_fase(fase),
+                            acc=statistics.mean(mossa["precisione"] for mossa in mosse),
+                            acpl=statistics.mean(min(mossa["centipawn_loss"], 1000) for mossa in mosse),
+                            n=len(mosse),
+                        )
+                    )
+
+        def calo(mossa):
+            return _vittoria_dal_lato_dei_valori(mossa, "vittoria_prima") - _vittoria_dal_lato_dei_valori(mossa, "vittoria_dopo")
+
+        momenti = sorted((mossa for mossa in analizzate if calo(mossa) >= 1), key=calo, reverse=True)[:3]
+        if momenti:
+            lines.append(_("Momenti decisivi:"))
+            for mossa in momenti:
+                lines.append(
+                    _("  {mossa}, {nome}: la probabilità di vittoria del Bianco passa dal {prima:.0f}% al {dopo:.0f}%.").format(
+                        mossa=_nome_della_mossa(mossa["node"]), nome=nomi[mossa["colore"]], prima=mossa["vittoria_prima"], dopo=mossa["vittoria_dopo"]
+                    )
+                )
+    tempi = _tempi_delle_mosse(pgn_game)
+    if not tempi:
+        return
+    giudizi = {mossa["node"]: mossa["classification"] for mossa in analizzate}
+    lines.append(_("Uso del tempo:"))
+    for colore in ordine:
+        suoi = {nodo: secondi for nodo, secondi in tempi.items() if nodo.turn() != colore}
+        if not suoi:
+            continue
+        totale = sum(suoi.values())
+        lines.append(
+            _("  {nome}: in media {media} per mossa, {totale} in tutto.").format(
+                nome=nomi[colore], media=tempo.parlato(totale / len(suoi)), totale=tempo.parlato(totale)
+            )
+        )
+        lunghe = sorted(suoi.items(), key=lambda voce: voce[1], reverse=True)[:3]
+        elenco = "; ".join(_("{mossa} in {durata}").format(mossa=_nome_della_mossa(nodo), durata=tempo.parlato(secondi)) for nodo, secondi in lunghe)
+        lines.append(_("  {nome}, le mosse più lunghe: {elenco}.").format(nome=nomi[colore], elenco=elenco))
+        sugli_errori = sum(secondi for nodo, secondi in suoi.items() if giudizi.get(nodo) in ERRORI)
+        if sugli_errori and totale:
+            lines.append(
+                _("  {nome}: {tempo} sulle mosse giudicate inesattezza, errore o svarione, il {p:.0f}% del suo tempo.").format(
+                    nome=nomi[colore], tempo=tempo.parlato(sugli_errori), p=sugli_errori / totale * 100
+                )
+            )
+
+
+def _vittoria_dal_lato_dei_valori(mossa, chiave):
+    """La probabilita' di vittoria di chi ha mosso, dai valori del Bianco."""
+    return mossa[chiave] if mossa["colore"] == chess.WHITE else 100 - mossa[chiave]
 
 
 # Globali Motore
@@ -1422,14 +1567,16 @@ def genera_sommario_analitico_txt(
     lines.append(f"  {w_n}: {calc_avg(cpl_d['w']):.2f}")
     lines.append(f"  {b_n}: {calc_avg(cpl_d['b']):.2f}")
 
-    if accuracies:
-        acc_w = calculate_game_accuracy_numpy(accuracies["w"])
-        acc_b = calculate_game_accuracy_numpy(accuracies["b"])
-        elo_w = estimate_elo_poly(acc_w)
-        elo_b = estimate_elo_poly(acc_b)
+    # La precisione come Lichess, dalle mosse analizzate: la teoria no.
+    analizzate = [risultato for risultato in results if "precisione" in risultato]
+    precisioni = precisione_della_partita(analizzate)
+    acc_w, acc_b = precisioni[chess.WHITE], precisioni[chess.BLACK]
+    if analizzate:
         lines.append(_("Precisione Stimata (0-100%):"))
-        lines.append(f"  {w_n}: {acc_w:.1f}% (ELO Stimato: {int(elo_w)})")
-        lines.append(f"  {b_n}: {acc_b:.1f}% (ELO Stimato: {int(elo_b)})")
+        for nome, precisione in ((w_n, acc_w), (b_n, acc_b)):
+            if precisione is not None:
+                da, a = intervallo_elo(precisione)
+                lines.append(_("  {nome}: {acc:.1f}%, Elo stimato fra {da} e {a}").format(nome=nome, acc=precisione, da=da, a=a))
 
     lines.append(_("Errori commessi:"))
     for t in ["Mossa Geniale", "Mossa Buona", "Inesattezza", "Errore", "Svarione"]:
@@ -1444,6 +1591,8 @@ def genera_sommario_analitico_txt(
                     b_val=s["b"],
                 )
             )
+
+    _statistiche_nuove(lines, pgn_game, analizzate, {chess.WHITE: w_n, chess.BLACK: b_n})
 
     lines.append("")
     lines.append(_("Dettaglio Analisi:"))
@@ -1460,7 +1609,7 @@ def genera_sommario_analitico_txt(
     lines.append("")
     lines.append(_("Riepilogo Partita"))
     lines.append(_("Esito Finale: {e}").format(e=esito_str))
-    if accuracies:
+    if acc_w is not None and acc_b is not None:
         lines.append(
             _("Precisione: {w} ({a_w:.1f}%) vs {b} ({a_b:.1f}%)").format(
                 w=w_n, a_w=acc_w, b=b_n, a_b=acc_b
@@ -1487,6 +1636,8 @@ def genera_sommario_analitico_txt(
     # Il riepilogo testuale e' un di piu' rispetto al PGN gia' salvato.
     except Exception as e:  # noqa: BLE001
         print(_("Errore salvataggio TXT: {e}").format(e=e))
+        return None
+    return f_p
 
 
 def _parametri_analisi_automatica(pgn_game, db):
@@ -1718,13 +1869,14 @@ def _classifica_mossa(
 
     eval_after_move e' la valutazione della mossa giocata dalla posizione
     prima, come quella delle alternative, quindi i matti si confrontano con
-    lo stesso conto. Restituisce la classificazione, i centesimi di pedone
-    persi e la valutazione della mossa, che il ramo della mossa migliore
-    prende dalla linea migliore.
+    lo stesso conto. Il giudizio guarda quanto cala la probabilita' di
+    vittoria, come Lichess, coi punti delle soglie calo_*: in una partita
+    gia' decisa un pedone in meno non e' uno svarione (Gabriele, 23
+    novembre 2026). Restituisce la classificazione, i centesimi di pedone
+    persi, limitati come fa Lichess a piu' o meno mille, e la valutazione
+    della mossa, che il ramo della mossa migliore prende dalla linea
+    migliore.
     """
-    soglia_inesattezza = soglie["inesattezza"]
-    soglia_errore = soglie["errore"]
-    soglia_svarione = soglie["svarione"]
     soglia_mossa_buona = soglie["mossa_buona"]
     soglia_mossa_geniale_gap = soglie["mossa_geniale_gap"]
     best_alternative_move = best_alternative["move"]
@@ -1752,18 +1904,16 @@ def _classifica_mossa(
     else:
         best_pov_score = best_alternative["score"].pov(turn)
         played_pov_score = eval_after_move.pov(turn)
+        centipawn_loss = max(0, _centesimi(best_pov_score) - _centesimi(played_pov_score))
 
         matto_disponibile = best_pov_score.is_mate() and best_pov_score.mate() > 0
         matto_conservato = played_pov_score.is_mate() and played_pov_score.mate() > 0
-        if matto_disponibile and not matto_conservato:
-            # Il matto c'era ed e' stato lasciato andare.
-            classification = "Svarione"
-            centipawn_loss = 5000
-        elif matto_disponibile and matto_conservato:
-            # Un altro matto, magari piu' lungo, resta comunque vincente:
-            # prima finiva fra gli svarioni con cinquemila centesimi di
-            # perdita e rovinava accuratezza e stima Elo della partita.
-            # I due matti si contano dalla stessa posizione, quella prima.
+        matto_subito = played_pov_score.is_mate() and played_pov_score.mate() < 0
+        matto_gia_subito = best_pov_score.is_mate() and best_pov_score.mate() < 0
+        if matto_disponibile and matto_conservato:
+            # Un altro matto, magari piu' lungo, resta comunque vincente. I
+            # due matti si contano dalla stessa posizione, quella prima: uno
+            # piu' lento anche di una mossa e' un'inesattezza.
             mosse_migliore = abs(best_pov_score.mate())
             mosse_giocata = abs(played_pov_score.mate())
             if mosse_giocata > mosse_migliore:
@@ -1771,20 +1921,24 @@ def _classifica_mossa(
             else:
                 classification = "Mossa Buona"
             centipawn_loss = 0
+        elif matto_disponibile:
+            # Il matto lasciato andare, come Lichess: inesattezza se si
+            # resta sopra di dieci pedoni, errore sopra sette, svarione
+            # altrimenti.
+            resta = played_pov_score.score(mate_score=100000)
+            classification = "Inesattezza" if resta > 999 else "Errore" if resta > 700 else "Svarione"
+        elif matto_subito and not matto_gia_subito:
+            # Il matto che si subisce, come Lichess: inesattezza se si era
+            # gia' sotto di dieci pedoni, errore di sette, svarione altrimenti.
+            prima = best_pov_score.score(mate_score=100000)
+            classification = "Inesattezza" if prima < -999 else "Errore" if prima < -700 else "Svarione"
         else:
-            score_best = best_pov_score.score(mate_score=30000)
-            score_played = played_pov_score.score(mate_score=30000)
-
-            if score_best is not None and score_played is not None:
-                centipawn_loss = max(0, score_best - score_played)
-            else:
-                centipawn_loss = 0
-
-            if centipawn_loss >= soglia_svarione:
+            calo = _vittoria_dal_lato(best_alternative["score"], turn) - _vittoria_dal_lato(eval_after_move, turn)
+            if calo >= soglie["calo_svarione"]:
                 classification = "Svarione"
-            elif centipawn_loss >= soglia_errore:
+            elif calo >= soglie["calo_errore"]:
                 classification = "Errore"
-            elif centipawn_loss >= soglia_inesattezza:
+            elif calo >= soglie["calo_inesattezza"]:
                 classification = "Inesattezza"
             elif centipawn_loss <= soglia_mossa_buona:
                 classification = "Mossa Buona"
@@ -1888,6 +2042,7 @@ def AnalisiAutomatica(pgn_game):
     # o con root_moves alla stessa profondita'. Prima la mossa giocata si
     # valutava da un'altra ricerca, sulla posizione dopo, e il matto si
     # contava in due modi (Gabriele, 23 novembre 2026).
+    fase = FASI[0]
     for i, node in enumerate(mainline_nodes):
         if key(attesa=0.002) in ("\x1b", "esc"):
             Acusticator(["c3", 0.3, 0.5, config.VOLUME], kind=2)
@@ -1936,16 +2091,17 @@ def AnalisiAutomatica(pgn_game):
         if giocata is None:
             continue
 
-        # Calcolo Precisione, con le due valutazioni dalla stessa posizione:
-        # la mossa migliore vale il 100%.
-        try:
-            w_before = calculate_win_probability(best_alternative["score"], turn)
-            w_after = calculate_win_probability(giocata["score"], turn)
-            accuracies[color_key].append(calculate_move_accuracy(w_before, w_after))
-        # Una singola mossa che non si riesce ad annotare non deve
-        # fermare l'analisi di tutta la partita.
-        except Exception:  # noqa: BLE001, S110
-            pass
+        # La probabilita' di vittoria del Bianco prima e dopo la mossa, come
+        # la calcola Lichess, dalla stessa posizione: la mossa migliore vale
+        # il 100%.
+        vittoria_prima = percentuale_di_vittoria(best_alternative["score"])
+        vittoria_dopo = percentuale_di_vittoria(giocata["score"])
+        precisione = calculate_move_accuracy(
+            _vittoria_dal_lato(best_alternative["score"], turn) / 100, _vittoria_dal_lato(giocata["score"], turn) / 100
+        )
+        accuracies[color_key].append(precisione)
+        rango = next((indice for indice, info in enumerate(analysis_before) if info["move"] == node.move), None)
+        fase = max(fase, fase_della_posizione(parent_board), key=FASI.index)
         CPL_STATISTICS_CAP = 1000
         classification, centipawn_loss, eval_after_move = _classifica_mossa(
             node,
@@ -1988,6 +2144,25 @@ def AnalisiAutomatica(pgn_game):
                 cl=classification_labels[classification], cpl=centipawn_loss / 100
             )
 
+        # La confutazione dell'errore: dopo la mossa sbagliata, la risposta
+        # migliore dell'avversario col suo seguito (Gabriele, 23 novembre
+        # 2026). Una linea di matto resta intera; a fine partita la linea va
+        # nel commento, per non allungare la partita.
+        if classification in ERRORI:
+            confutazione = giocata["pv"][1:]
+            if matto is None and truncate_length > 0:
+                confutazione = confutazione[:truncate_length]
+            if confutazione:
+                if not node.variations:
+                    comment_str += " " + _("[OAA: Confutazione: {linea}]").format(
+                        linea=node.board().variation_san(confutazione)
+                    )
+                elif node.variations[0].move != confutazione[0]:
+                    var_node = node.add_variation(confutazione[0])
+                    if len(confutazione) > 1:
+                        var_node.add_line(confutazione[1:])
+                    var_node.comment = _("[OAA: Confutazione]")
+
         node.comment = (
             (node.comment.strip() + " " + comment_str).strip()
             if node.comment
@@ -2021,8 +2196,9 @@ def AnalisiAutomatica(pgn_game):
                             # Una linea di matto resta intera.
                             resto = pv[1:]
                         else:
+                            # Dal lato del Bianco, come [Val:] e il riepilogo.
                             commento_variante = _("[OAA: Alt: {s}]").format(
-                                s=_format_score(score_obj, turn)
+                                s=_format_score(score_obj, chess.WHITE)
                             )
                             resto = pv[1:truncate_length] if truncate_length > 0 else pv[1:]
 
@@ -2037,6 +2213,12 @@ def AnalisiAutomatica(pgn_game):
                 "centipawn_loss": centipawn_loss,
                 "alternatives_info": analysis_before,
                 "eval_after_move": eval_after_move,
+                "colore": turn,
+                "vittoria_prima": vittoria_prima,
+                "vittoria_dopo": vittoria_dopo,
+                "precisione": precisione,
+                "rango": rango,
+                "fase": fase,
             }
         )
 
@@ -2044,6 +2226,7 @@ def AnalisiAutomatica(pgn_game):
     pgn_game.headers["Annotator"] = _("Orologic V{v} (Auto)").format(v=version.VERSION)
     duration = time.time() - start_time
 
+    percorso_txt = None
     try:
         pgn_string_formatted = board_utils.format_pgn_comments(str(pgn_game))
         base_name = _("{w}_vs_{b}_auto_{d}").format(
@@ -2061,7 +2244,7 @@ def AnalisiAutomatica(pgn_game):
         print(_("PGN analizzato salvato come: {path}").format(path=full_pgn_path))
 
         # Genera TXT con durata
-        genera_sommario_analitico_txt(
+        percorso_txt = genera_sommario_analitico_txt(
             pgn_game,
             sanitized_pgn_name.replace(".pgn", ""),
             analysis_results,
@@ -2080,6 +2263,13 @@ def AnalisiAutomatica(pgn_game):
     except Exception as e:  # noqa: BLE001
         print(_("Errore durante il salvataggio: {e}").format(e=e))
 
+    # Nella finestra l'analisi si legge nell'area, intera e senza voce,
+    # dalla sua prima riga (Gabriele, 23 novembre 2026).
+    from . import strato
+
+    if percorso_txt and strato.con_la_plancia() and ui.enter_escape(_("Vuoi leggere l'analisi nell'area? (INVIO per si', ESC per no): ")):
+        with open(percorso_txt, encoding="utf-8") as file:
+            strato.nell_area(file.read())
     print(_("Ritorno al menu principale."))
     Acusticator(
         [

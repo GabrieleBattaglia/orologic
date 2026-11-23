@@ -92,13 +92,8 @@ def disegni_della_partita(game):
 
 
 def descrizione(forma, codice):
-    """Freccia da Empoli 2 ad Empoli 4 (verde), con le frasi del terminale."""
-    colore = drawing.verbalize_color(codice[:1])
-    if forma == "freccia":
-        return _("Freccia da {sq1} ad {sq2} ({col})").format(
-            sq1=drawing.verbalize_square(codice[1:3]), sq2=drawing.verbalize_square(codice[3:5]), col=colore
-        )
-    return _("Cerchio su {sq} ({col})").format(sq=drawing.verbalize_square(codice[1:3]), col=colore)
+    """Freccia da Empoli 2 a Empoli 4 (verde), con le frasi del terminale."""
+    return drawing.descrivi_freccia(codice) if forma == "freccia" else drawing.descrivi_cerchio(codice)
 
 
 def togli(nodo, forma, codice):

@@ -19,7 +19,7 @@ PGN = (
     "{ Apertura [%csl Gd4] } 1. e4 { Bel colpo [%cal Ge2e4,Rd1d8] [%csl Yf6] [%clk 0:05:00] } e5 2. Nf3 *\n"
 )
 DISEGNI = (
-    "Disegni: Freccia da Empoli 2 ad Empoli 4 (verde), Freccia da Domodossola 1 ad Domodossola 8 (rosso), "
+    "Disegni: Freccia da Empoli 2 a Empoli 4 (verde), Freccia da Domodossola 1 a Domodossola 8 (rosso), "
     "Cerchio su Firenze 6 (giallo)"
 )
 

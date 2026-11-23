@@ -1332,16 +1332,16 @@ def ImpostazioniAnalisi():
         engine.SetMultipv(new_pv)
 
     # Impostazioni Soglie Analisi
-    thresholds = db.get(
-        "analysis_thresholds", {"inesattezza": 50, "errore": 100, "svarione": 250}
-    )
+    # Le soglie sono punti percentuali di calo della probabilita' di
+    # vittoria, come Lichess, non piu' centesimi (Gabriele, 23 novembre 2026).
+    thresholds = {**storage.DEFAULT_DB["analysis_thresholds"], **db.get("analysis_thresholds", {})}
     print(
         _(
-            "\nSoglie Analisi Attuali: Inesattezza {i}cp, Errore {e}cp, Svarione {s}cp"
+            "\nSoglie analisi attuali, in punti di calo della probabilita' di vittoria: inesattezza {i}%, errore {e}%, svarione {s}%"
         ).format(
-            i=thresholds["inesattezza"],
-            e=thresholds["errore"],
-            s=thresholds["svarione"],
+            i=thresholds["calo_inesattezza"],
+            e=thresholds["calo_errore"],
+            s=thresholds["calo_svarione"],
         )
     )
     if enter_escape(
@@ -1349,33 +1349,35 @@ def ImpostazioniAnalisi():
             "Vuoi modificare le soglie di analisi? (INVIO per modificare, ESC per mantenere): "
         )
     ):
-        print(_("Inserisci le nuove soglie in centipawn (cp)."))
+        print(_("Inserisci le nuove soglie in punti percentuali di calo della probabilita' di vittoria."))
         t_ines = dgt(
-            _("Soglia Inesattezza [{cur}]: ").format(cur=thresholds["inesattezza"]),
+            _("Soglia Inesattezza [{cur}]: ").format(cur=thresholds["calo_inesattezza"]),
             kind="i",
-            imin=10,
-            imax=200,
-            default=thresholds["inesattezza"],
+            imin=1,
+            imax=30,
+            default=thresholds["calo_inesattezza"],
         )
         t_err = dgt(
-            _("Soglia Errore [{cur}]: ").format(cur=thresholds["errore"]),
+            _("Soglia Errore [{cur}]: ").format(cur=thresholds["calo_errore"]),
             kind="i",
             imin=t_ines + 1,
-            imax=500,
-            default=thresholds["errore"],
+            imax=60,
+            default=thresholds["calo_errore"],
         )
         t_svar = dgt(
-            _("Soglia Svarione [{cur}]: ").format(cur=thresholds["svarione"]),
+            _("Soglia Svarione [{cur}]: ").format(cur=thresholds["calo_svarione"]),
             kind="i",
             imin=t_err + 1,
-            imax=2000,
-            default=thresholds["svarione"],
+            imax=90,
+            default=thresholds["calo_svarione"],
         )
 
+        # Le altre soglie restano.
         db["analysis_thresholds"] = {
-            "inesattezza": t_ines,
-            "errore": t_err,
-            "svarione": t_svar,
+            **thresholds,
+            "calo_inesattezza": t_ines,
+            "calo_errore": t_err,
+            "calo_svarione": t_svar,
         }
         print(_("Soglie analisi aggiornate."))
         Acusticator(["f7", 0.09, 0, config.VOLUME, "d4", 0.07, 0, config.VOLUME])

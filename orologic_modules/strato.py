@@ -103,6 +103,10 @@ class FacciaTerminale:
     def da_leggere(self, titolo, righe, verbosa=None, inizio=None):
         """Il terminale le ha gia' stampate."""
 
+    def nell_area(self, testo):
+        """Nel terminale il testo da studiare si stampa."""
+        print(testo)
+
     def navigatore(self, game, nodo):
         """Il terminale non ha il navigatore: c'e' l'esploratore."""
         return None, False
@@ -298,6 +302,14 @@ def lettura_dalla_riga(testo):
     prima linea di un'analisi; fuori, e nel terminale, niente."""
     if _lettura is not None and _lettura["inizio"] is None:
         _lettura["inizio"] = testo
+
+
+def nell_area(testo):
+    """Un testo lungo da studiare, come il riepilogo dell'analisi
+    automatica: nella finestra va nell'area intero e senza voce, col
+    cursore sulla sua prima riga, che sola si annuncia; nel terminale si
+    stampa (Gabriele, 23 novembre 2026)."""
+    _faccia.nell_area(testo)
 
 
 def navigatore(game, nodo):

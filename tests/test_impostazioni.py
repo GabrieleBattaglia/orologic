@@ -57,7 +57,7 @@ def test_le_righe_coi_testi_di_orologic(gestore):
     righe = dict(gestore.righe())
     assert list(righe) == list(impostazioni.VOCI)
     assert righe["analisi_tempo"] == "Tempo analisi default (sec): 1.0"
-    assert righe["soglia_errore"] == "Soglia Errore: 100"
+    assert righe["soglia_errore"] == "Soglia Errore: 10%"
     assert righe["giocatore"] == "Il mio nome: non ancora scritto"
     assert righe["nomi"] == "Nomi dei pezzi, delle colonne e delle mosse"
     assert righe["scacchiera_attesa"] == "Tempo di attesa dei comandi della scacchiera (ms): 700"
@@ -70,21 +70,22 @@ def test_le_righe_coi_testi_di_orologic(gestore):
 
 
 def test_analisi_e_soglie(gestore):
-    gestore.risposte.extend([2.5, 120, 40])
+    # Le soglie sono punti di calo della probabilita' di vittoria, 5, 10 e 15.
+    gestore.risposte.extend([2.5, 12, 4])
     gestore.cambia("analisi_tempo", None)
     gestore.cambia("soglia_errore", None)
     gestore.cambia("soglia_inesattezza", None)
     db = storage.LoadDB()
     assert db["default_analysis_time"] == 2.5
     assert engine.analysis_time == 2.5
-    assert db["analysis_thresholds"]["errore"] == 120
-    assert db["analysis_thresholds"]["inesattezza"] == 40
+    assert db["analysis_thresholds"]["calo_errore"] == 12
+    assert db["analysis_thresholds"]["calo_inesattezza"] == 4
     # Le altre soglie restano.
     assert db["analysis_thresholds"]["mossa_geniale_gap"] == 180
     # I limiti come nel terminale: l'errore sopra l'inesattezza, sotto lo svarione.
     _tipo, titolo, domanda, _valore, genere, minimo, massimo = gestore.chieste[1]
-    assert (titolo, domanda, genere, minimo, massimo) == ("Soglia Errore", "Soglia Errore [100]: ", "intero", 51, 249)
-    assert gestore.chieste[2][-2:] == (10, 119)
+    assert (titolo, domanda, genere, minimo, massimo) == ("Soglia Errore", "Soglia Errore [10]: ", "intero", 6, 14)
+    assert gestore.chieste[2][-2:] == (1, 11)
 
 
 def test_il_nome_si_scrive_e_si_toglie(gestore):
