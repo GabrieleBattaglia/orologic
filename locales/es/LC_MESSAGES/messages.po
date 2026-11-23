@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-23 11:18+0100\n"
+"POT-Creation-Date: 2026-11-23 15:22+0100\n"
 "PO-Revision-Date: 2025-06-28 14:26+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: es <LL@li.org>\n"
@@ -837,10 +837,11 @@ msgstr "Error imprevisto al analizar el PGN: {error}"
 #: orologic_modules/game_flow.py:1057 orologic_modules/lichess_app.py:1578
 #: orologic_modules/lichess_app.py:2093 orologic_modules/lichess_app.py:2228
 #: orologic_modules/lichess_board.py:20 orologic_modules/lichess_board.py:651
-#: orologic_modules/lichess_board.py:974 orologic_modules/memoboard_app.py:962
-#: orologic_modules/memoboard_app.py:963
-#: orologic_modules/memoboard_app.py:1157
-#: orologic_modules/memoboard_app.py:1158
+#: orologic_modules/lichess_board.py:974
+#: orologic_modules/memoboard_app.py:1045
+#: orologic_modules/memoboard_app.py:1046
+#: orologic_modules/memoboard_app.py:1243
+#: orologic_modules/memoboard_app.py:1244
 #: orologic_modules/modello_prompt.py:490 orologic_modules/orologio.py:70
 #: orologic_modules/tempo_app.py:44 orologic_modules/ui.py:1187
 msgid "Bianco"
@@ -859,10 +860,11 @@ msgstr "Blanco"
 #: orologic_modules/game_flow.py:1058 orologic_modules/lichess_app.py:1578
 #: orologic_modules/lichess_app.py:2093 orologic_modules/lichess_app.py:2228
 #: orologic_modules/lichess_board.py:21 orologic_modules/lichess_board.py:652
-#: orologic_modules/lichess_board.py:974 orologic_modules/memoboard_app.py:962
-#: orologic_modules/memoboard_app.py:965
-#: orologic_modules/memoboard_app.py:1157
-#: orologic_modules/memoboard_app.py:1158
+#: orologic_modules/lichess_board.py:974
+#: orologic_modules/memoboard_app.py:1045
+#: orologic_modules/memoboard_app.py:1048
+#: orologic_modules/memoboard_app.py:1243
+#: orologic_modules/memoboard_app.py:1244
 #: orologic_modules/modello_prompt.py:490 orologic_modules/orologio.py:70
 #: orologic_modules/tempo_app.py:45 orologic_modules/ui.py:1188
 msgid "Nero"
@@ -1214,8 +1216,8 @@ msgstr "Relojes guardados"
 msgid "Nessun orologio salvato."
 msgstr "No hay relojes guardados."
 
-#: orologic_modules/clock.py:400 orologic_modules/memoboard_app.py:584
-#: orologic_modules/memoboard_app.py:617 orologic_modules/memoboard_app.py:695
+#: orologic_modules/clock.py:400 orologic_modules/memoboard_app.py:657
+#: orologic_modules/memoboard_app.py:690 orologic_modules/memoboard_app.py:768
 msgid ""
 "\n"
 "Premi un tasto per tornare al menu..."
@@ -3013,7 +3015,7 @@ msgstr "Orologic {versione}"
 msgid "Console"
 msgstr "Consola"
 
-#: orologic_modules/finestra.py:1177
+#: orologic_modules/finestra.py:1182
 msgid "Spazio: per accedere alla scacchiera interattiva"
 msgstr "Espacio: para acceder al tablero interactivo"
 
@@ -5859,9 +5861,9 @@ msgstr "Canales de TV no recuperados. {motivo}"
 #: orologic_modules/lichess_eventi.py:113
 #: orologic_modules/lichess_profiler.py:561
 #: orologic_modules/lichess_profiler.py:567
-#: orologic_modules/memoboard_app.py:90 orologic_modules/memoboard_app.py:425
-#: orologic_modules/memoboard_app.py:437 orologic_modules/memoboard_app.py:632
-#: orologic_modules/memoboard_app.py:673
+#: orologic_modules/memoboard_app.py:119 orologic_modules/memoboard_app.py:493
+#: orologic_modules/memoboard_app.py:505 orologic_modules/memoboard_app.py:705
+#: orologic_modules/memoboard_app.py:746
 msgid "Anonimo"
 msgstr "Anónimo"
 
@@ -8122,90 +8124,99 @@ msgstr "Brillante"
 msgid "Ok"
 msgstr "OK"
 
-#: orologic_modules/memoboard_app.py:36
+#: orologic_modules/memoboard_app.py:40
 msgid "Esercizio con i salti di cavallo"
 msgstr "Ejercicio de salto de caballo."
 
-#: orologic_modules/memoboard_app.py:37
+#: orologic_modules/memoboard_app.py:41
 msgid "Esercizio con le diagonali"
 msgstr "Ejercicio con diagonales"
 
-#: orologic_modules/memoboard_app.py:38
+#: orologic_modules/memoboard_app.py:42
 msgid "Questa casa è bianca o nera?"
 msgstr "¿Esta casilla es blanca o negra?"
 
-#: orologic_modules/memoboard_app.py:39
+#: orologic_modules/memoboard_app.py:43
 msgid "Affronta la sfida mista da 100 domande!"
 msgstr "¡Acepta el desafío mixto de 100 preguntas!"
 
-#: orologic_modules/memoboard_app.py:40
+#: orologic_modules/memoboard_app.py:44
 msgid "Mostra la classifica"
 msgstr "Mostrar la clasificación"
 
-#: orologic_modules/memoboard_app.py:41
+#: orologic_modules/memoboard_app.py:45
 msgid "per tornare ad Orologic"
 msgstr "para volver a Orologic"
 
-#: orologic_modules/memoboard_app.py:141
+#: orologic_modules/memoboard_app.py:174
 #, python-brace-format
 msgid "Il file dei punteggi non e' leggibile: {errore}"
 msgstr "El archivo de puntuaciones no es legible: {errore}"
 
-#: orologic_modules/memoboard_app.py:143
+#: orologic_modules/memoboard_app.py:176
 #, python-brace-format
 msgid "L'ho messo da parte come {copia}."
 msgstr "Lo dejé a un lado como {copia}."
 
-#: orologic_modules/memoboard_app.py:144
+#: orologic_modules/memoboard_app.py:177
 msgid "Le classifiche ripartono da zero."
 msgstr "Las clasificaciones empiezan desde cero."
 
-#: orologic_modules/memoboard_app.py:146
+#: orologic_modules/memoboard_app.py:179
 msgid "Attenzione: il prossimo salvataggio lo sovrascrivera'."
 msgstr "Advertencia: el próximo guardado lo sobrescribirá."
 
-#: orologic_modules/memoboard_app.py:159
+#: orologic_modules/memoboard_app.py:192
 #, python-brace-format
 msgid "Errore nel salvataggio dei punteggi: {e}"
 msgstr "Error al guardar las puntuaciones: {e}"
 
-#: orologic_modules/memoboard_app.py:276
+#: orologic_modules/memoboard_app.py:321
 msgid "Tempi di risposta."
 msgstr "Tiempos de respuesta."
 
-#: orologic_modules/memoboard_app.py:278
+#: orologic_modules/memoboard_app.py:323
 #, python-brace-format
 msgid "Piu' rapida {min:.1f} secondi, piu' lenta {max:.1f} secondi."
 msgstr "Más rápida {min:.1f} segundos, más lenta {max:.1f} segundos."
 
-#: orologic_modules/memoboard_app.py:282
+#: orologic_modules/memoboard_app.py:328
 #, python-brace-format
-msgid "Media {avg:.1f} secondi."
-msgstr "Promedio {avg:.1f} segundos."
+msgid "Media {avg:.1f} secondi, mediana {med:.1f}."
+msgstr "Promedio {avg:.1f} segundos, mediana {med:.1f}."
 
-#: orologic_modules/memoboard_app.py:286
+#: orologic_modules/memoboard_app.py:336
+#, python-brace-format
+msgid ""
+"Giuste {g}, mediana {mg:.1f} secondi; sbagliate {s}, mediana {ms:.1f} "
+"secondi."
+msgstr ""
+"Correctas {g}, mediana {mg:.1f} segundos; incorrectas {s}, mediana {ms:.1f} "
+"segundos."
+
+#: orologic_modules/memoboard_app.py:347
 msgid "Andamento nel corso della sessione."
 msgstr "Progreso durante la sesión."
 
-#: orologic_modules/memoboard_app.py:291
+#: orologic_modules/memoboard_app.py:353
 msgid "e' il riferimento"
 msgstr "es la referencia"
 
-#: orologic_modules/memoboard_app.py:293
+#: orologic_modules/memoboard_app.py:355
 #, python-brace-format
 msgid "cioe' {p:.0f}% piu' lento del primo"
 msgstr "es decir, un {p:.0f}% más lento que el primero"
 
-#: orologic_modules/memoboard_app.py:297
+#: orologic_modules/memoboard_app.py:359
 #, python-brace-format
 msgid "cioe' {p:.0f}% piu' rapido del primo"
 msgstr "es decir, un {p:.0f}% más rápido que el primero"
 
-#: orologic_modules/memoboard_app.py:301
+#: orologic_modules/memoboard_app.py:363
 msgid "come il primo"
 msgstr "como el primero"
 
-#: orologic_modules/memoboard_app.py:304
+#: orologic_modules/memoboard_app.py:366
 #, python-brace-format
 msgid ""
 "Quarto {idx}, domande da {start_q} a {end_q}: media {q_avg:.1f} secondi, "
@@ -8214,26 +8225,31 @@ msgstr ""
 "Cuarto {idx}, preguntas {start_q} a {end_q}: promedio {q_avg:.1f} segundos, "
 "{confronto}."
 
-#: orologic_modules/memoboard_app.py:338
+#: orologic_modules/memoboard_app.py:397
+#, python-brace-format
+msgid "Risposte esatte {p:.0f}%, giuste nette al minuto {n:.1f}."
+msgstr "Respuestas correctas {p:.0f}%, aciertos netos por minuto {n:.1f}."
+
+#: orologic_modules/memoboard_app.py:404
 msgid "Risultati Esercizio"
 msgstr "Resultados del ejercicio"
 
-#: orologic_modules/memoboard_app.py:340
+#: orologic_modules/memoboard_app.py:406
 #, python-brace-format
 msgid "Hai ottenuto {wins} risposte corrette su {rpt}."
 msgstr "Obtuviste {wins} respuestas correctas de {rpt}."
 
-#: orologic_modules/memoboard_app.py:343
+#: orologic_modules/memoboard_app.py:410
 #, python-brace-format
 msgid "Punteggio totale: {score:.0f} in {duration:.1f} secondi."
 msgstr "Puntuación total: {score:.0f} en {duration:.1f} segundos."
 
-#: orologic_modules/memoboard_app.py:348
+#: orologic_modules/memoboard_app.py:415
 #, python-brace-format
 msgid "Performance: {score_per_minute:.0f} punti al minuto."
 msgstr "Rendimiento: {score_per_minute:.0f} puntos por minuto."
 
-#: orologic_modules/memoboard_app.py:362
+#: orologic_modules/memoboard_app.py:429
 #, python-brace-format
 msgid ""
 "\n"
@@ -8242,7 +8258,7 @@ msgstr ""
 "\n"
 "Nota: Para calificar una puntuación en la clasificación debes realizar al menos {min_rpt} preguntas (has realizado {rpt})."
 
-#: orologic_modules/memoboard_app.py:368
+#: orologic_modules/memoboard_app.py:435
 #, python-brace-format
 msgid ""
 "Esercizio '{exercise_name}' ({date_str}):\n"
@@ -8251,7 +8267,7 @@ msgstr ""
 "Ejercicio '{exercise_name}' ({date_str}):\n"
 "  Respuestas correctas: {wins}/{rpt} en {duration:.1f}s. Puntos: {score:.0f} (Rendimiento: {score_per_minute:.0f} p/min) - No clasificado para la tabla (menos de {min_rpt} preguntas)."
 
-#: orologic_modules/memoboard_app.py:385 orologic_modules/memoboard_app.py:546
+#: orologic_modules/memoboard_app.py:453 orologic_modules/memoboard_app.py:619
 msgid ""
 "\n"
 "Premi un tasto per procedere..."
@@ -8259,7 +8275,7 @@ msgstr ""
 "\n"
 "Pulsa una tecla para continuar..."
 
-#: orologic_modules/memoboard_app.py:430
+#: orologic_modules/memoboard_app.py:498
 msgid ""
 "\n"
 "🏆 COMPLIMENTI! Ti sei guadagnato un posto nella Top 10 della classifica! 🏆"
@@ -8267,46 +8283,46 @@ msgstr ""
 "\n"
 "🏆 ¡ENHORABUENA! ¡Te has ganado un lugar en el Top 10 de la clasificación! 🏆"
 
-#: orologic_modules/memoboard_app.py:434
+#: orologic_modules/memoboard_app.py:502
 msgid "Il tuo nome per la classifica: "
 msgstr "Tu nombre para la clasificación: "
 
-#: orologic_modules/memoboard_app.py:465
+#: orologic_modules/memoboard_app.py:534
 #, python-brace-format
 msgid ""
 "\n"
-"🎉 Nuovo record personale per {username}! Precedente: {old_perf:.0f}, Attuale: {new_perf:.0f}."
+"🎉 Nuovo record personale per {username}! Precedente: {old_perf}, Attuale: {new_perf}."
 msgstr ""
 "\n"
-"🎉 ¡Nuevo récord personal para {username}! Anterior: {old_perf:.0f}, Actual: {new_perf:.0f}."
+"🎉 ¡Nuevo récord personal para {username}! Anterior: {old_perf}, Actual: {new_perf}."
 
-#: orologic_modules/memoboard_app.py:474
+#: orologic_modules/memoboard_app.py:545
 #, python-brace-format
 msgid ""
 "\n"
-"Hai ottenuto un punteggio inferiore al tuo precedente record ({old_perf:.0f} vs {new_perf:.0f})."
+"Hai ottenuto un punteggio inferiore al tuo precedente record ({old_perf} vs {new_perf})."
 msgstr ""
 "\n"
-"Has obtenido una puntuación inferior a tu récord anterior ({old_perf:.0f} vs {new_perf:.0f})."
+"Has obtenido una puntuación inferior a tu récord anterior ({old_perf} vs {new_perf})."
 
-#: orologic_modules/memoboard_app.py:477
+#: orologic_modules/memoboard_app.py:548
 msgid "s"
 msgstr "s"
 
-#: orologic_modules/memoboard_app.py:480
+#: orologic_modules/memoboard_app.py:551
 msgid ""
 "Vuoi sovrascrivere il tuo record personale con questo punteggio? (s/n): "
 msgstr "¿Quieres sobrescribir tu récord personal con esta puntuación? (s/n): "
 
-#: orologic_modules/memoboard_app.py:485
+#: orologic_modules/memoboard_app.py:556
 msgid "Record personale aggiornato con il nuovo punteggio."
 msgstr "Récord personal actualizado con la nueva puntuación."
 
-#: orologic_modules/memoboard_app.py:488
+#: orologic_modules/memoboard_app.py:559
 msgid "Il vecchio record personale è stato mantenuto."
 msgstr "Se ha mantenido el antiguo récord personal."
 
-#: orologic_modules/memoboard_app.py:498
+#: orologic_modules/memoboard_app.py:569
 msgid ""
 "\n"
 "Risultato salvato in classifica con successo!"
@@ -8314,7 +8330,7 @@ msgstr ""
 "\n"
 "¡Resultado guardado en el ranking con éxito!"
 
-#: orologic_modules/memoboard_app.py:503
+#: orologic_modules/memoboard_app.py:574
 #, python-brace-format
 msgid ""
 "Esercizio '{exercise_name}' per {username} ({date_str}):\n"
@@ -8323,7 +8339,7 @@ msgstr ""
 "Ejercicio '{exercise_name}' para {username} ({date_str}):\n"
 "  Respuestas correctas: {wins}/{rpt} en {duration:.1f}s. Puntos: {score:.0f}. Rendimiento: {score_per_minute:.0f} p/min. [CLASIFICADO]"
 
-#: orologic_modules/memoboard_app.py:522
+#: orologic_modules/memoboard_app.py:594
 msgid ""
 "\n"
 "Ottima prova! Purtroppo questo punteggio non è sufficiente per entrare nella Top 10."
@@ -8331,7 +8347,7 @@ msgstr ""
 "\n"
 "¡Excelente prueba! Lamentablemente esta puntuación no es suficiente para entrar en el Top 10."
 
-#: orologic_modules/memoboard_app.py:528
+#: orologic_modules/memoboard_app.py:600
 #, python-brace-format
 msgid ""
 "Esercizio '{exercise_name}' ({date_str}):\n"
@@ -8340,27 +8356,27 @@ msgstr ""
 "Ejercicio '{exercise_name}' ({date_str}):\n"
 "  Respuestas correctas: {wins}/{rpt} en {duration:.1f}s. Puntos: {score:.0f} (Rendimiento: {score_per_minute:.0f} p/min) - No clasificado."
 
-#: orologic_modules/memoboard_app.py:550
+#: orologic_modules/memoboard_app.py:623
 msgid "salti di cavallo"
 msgstr "saltos de caballo"
 
-#: orologic_modules/memoboard_app.py:551
+#: orologic_modules/memoboard_app.py:624
 msgid "diagonali"
 msgstr "diagonales"
 
-#: orologic_modules/memoboard_app.py:552
+#: orologic_modules/memoboard_app.py:625
 msgid "colore delle case"
 msgstr "color de las casillas"
 
-#: orologic_modules/memoboard_app.py:553
+#: orologic_modules/memoboard_app.py:626
 msgid "sfida mista"
 msgstr "desafío mixto"
 
-#: orologic_modules/memoboard_app.py:564 orologic_modules/memoboard_app.py:568
+#: orologic_modules/memoboard_app.py:637 orologic_modules/memoboard_app.py:641
 msgid "data sconosciuta"
 msgstr "fecha desconocida"
 
-#: orologic_modules/memoboard_app.py:582
+#: orologic_modules/memoboard_app.py:655
 msgid ""
 "\n"
 "Non ci sono ancora punteggi registrati per mostrare una classifica."
@@ -8368,7 +8384,7 @@ msgstr ""
 "\n"
 "Aún no hay puntuaciones registradas para mostrar una clasificación."
 
-#: orologic_modules/memoboard_app.py:587
+#: orologic_modules/memoboard_app.py:660
 msgid ""
 "\n"
 "Quale classifica vorresti vedere?"
@@ -8376,27 +8392,27 @@ msgstr ""
 "\n"
 "¿Qué clasificación te gustaría ver?"
 
-#: orologic_modules/memoboard_app.py:595
+#: orologic_modules/memoboard_app.py:668
 msgid "Classifica Esercizio Cavalli"
 msgstr "Clasificación Ejercicio Caballos"
 
-#: orologic_modules/memoboard_app.py:596
+#: orologic_modules/memoboard_app.py:669
 msgid "Classifica Esercizio Alfieri"
 msgstr "Clasificación del ejercicio de alfiles"
 
-#: orologic_modules/memoboard_app.py:597
+#: orologic_modules/memoboard_app.py:670
 msgid "Classifica Esercizio Colori"
 msgstr "Clasificación del ejercicio de colores"
 
-#: orologic_modules/memoboard_app.py:598
+#: orologic_modules/memoboard_app.py:671
 msgid "Classifica Sfida Mista"
 msgstr "Clasificación Desafío Mixto"
 
-#: orologic_modules/memoboard_app.py:602
+#: orologic_modules/memoboard_app.py:675
 msgid "Scelta non valida"
 msgstr "Opción no válida"
 
-#: orologic_modules/memoboard_app.py:614
+#: orologic_modules/memoboard_app.py:687
 #, python-brace-format
 msgid ""
 "\n"
@@ -8405,55 +8421,58 @@ msgstr ""
 "\n"
 "No se encontraron puntuaciones para el ejercicio '{selected_exercise}'."
 
-#: orologic_modules/memoboard_app.py:626
+#: orologic_modules/memoboard_app.py:699
 #, python-brace-format
 msgid "Classifica {exercise}, ordinata per punteggio totale."
 msgstr "Clasificación {exercise}, ordenada por puntuación total."
 
-#: orologic_modules/memoboard_app.py:638
+#: orologic_modules/memoboard_app.py:711
 #, python-brace-format
 msgid "{pos}. {user}, {score:.0f} punti."
 msgstr "{pos}. {user}, {score:.0f} puntos."
 
-#: orologic_modules/memoboard_app.py:644
+#: orologic_modules/memoboard_app.py:717
 #, python-brace-format
 msgid "{pmin:.0f} al minuto, risposte esatte {acc:.0f}%."
 msgstr "{pmin:.0f} por minuto, respuestas correctas {acc:.0f}%."
 
-#: orologic_modules/memoboard_app.py:648
+#: orologic_modules/memoboard_app.py:721
 #, python-brace-format
 msgid "Media {avg:.1f} secondi, durata {dur}."
 msgstr "Promedio {avg:.1f} segundos, duración {dur}."
 
-#: orologic_modules/memoboard_app.py:654 orologic_modules/memoboard_app.py:690
+#: orologic_modules/memoboard_app.py:727 orologic_modules/memoboard_app.py:763
 #, python-brace-format
 msgid "Ottenuto il {data}."
 msgstr "Obtenido el {data}."
 
-#: orologic_modules/memoboard_app.py:668
+#: orologic_modules/memoboard_app.py:741
 #, python-brace-format
 msgid ""
-"Classifica {exercise}, ordinata per punti al minuto, almeno venti domande."
+"Classifica {exercise}, ordinata per giuste nette al minuto, almeno venti "
+"domande."
 msgstr ""
-"Ranking {exercise}, ordenado por puntos por minuto, al menos veinte "
+"Ranking {exercise}, ordenado por aciertos netos por minuto, al menos veinte "
 "preguntas."
 
-#: orologic_modules/memoboard_app.py:678
+#: orologic_modules/memoboard_app.py:751
 #, python-brace-format
-msgid "{pos}. {user}, {pmin:.0f} punti al minuto."
-msgstr "{pos}. {user}, {pmin:.0f} puntos por minuto."
+msgid "{pos}. {user}, {nette:.1f} giuste nette al minuto."
+msgstr "{pos}. {user}, {nette:.1f} aciertos netos por minuto."
 
-#: orologic_modules/memoboard_app.py:684
+#: orologic_modules/memoboard_app.py:757
 #, python-brace-format
 msgid "{reps} domande, esatte {acc:.0f}%, media {avg:.1f} secondi."
 msgstr "{reps} preguntas, correctas {acc:.0f}%, media {avg:.1f} segundos."
 
-#: orologic_modules/memoboard_app.py:738 orologic_modules/memoboard_app.py:985
+#: orologic_modules/memoboard_app.py:815
+#: orologic_modules/memoboard_app.py:1068
 #, python-brace-format
 msgid "Mossa di cavallo: {sq1}-{sq2}"
 msgstr "Jugada del caballo: {sq1}-{sq2}"
 
-#: orologic_modules/memoboard_app.py:741 orologic_modules/memoboard_app.py:988
+#: orologic_modules/memoboard_app.py:818
+#: orologic_modules/memoboard_app.py:1071
 #, python-brace-format
 msgid ""
 "\n"
@@ -8462,14 +8481,14 @@ msgstr ""
 "\n"
 "Caballo: {sq1_spelling} {sq1_rank} y {sq2_spelling} {sq2_rank}?"
 
-#: orologic_modules/memoboard_app.py:830
-#: orologic_modules/memoboard_app.py:1041
+#: orologic_modules/memoboard_app.py:910
+#: orologic_modules/memoboard_app.py:1124
 #, python-brace-format
 msgid "Stessa diagonale: {sq1}-{sq2}"
 msgstr "Misma diagonal: {sq1}-{sq2}"
 
-#: orologic_modules/memoboard_app.py:833
-#: orologic_modules/memoboard_app.py:1044
+#: orologic_modules/memoboard_app.py:913
+#: orologic_modules/memoboard_app.py:1127
 #, python-brace-format
 msgid ""
 "\n"
@@ -8478,8 +8497,8 @@ msgstr ""
 "\n"
 "Alfil: {sq1_spelling} {sq1_rank} y {sq2_spelling} {sq2_rank}?"
 
-#: orologic_modules/memoboard_app.py:929
-#: orologic_modules/memoboard_app.py:1122
+#: orologic_modules/memoboard_app.py:1012
+#: orologic_modules/memoboard_app.py:1210
 #, python-brace-format
 msgid ""
 "\n"
@@ -8488,13 +8507,13 @@ msgstr ""
 "\n"
 "¿Color para {sq_spelling} {sq_rank}?"
 
-#: orologic_modules/memoboard_app.py:961
-#: orologic_modules/memoboard_app.py:1156
+#: orologic_modules/memoboard_app.py:1044
+#: orologic_modules/memoboard_app.py:1242
 #, python-brace-format
 msgid "Colore di {sq}"
 msgstr "Color de {sq}"
 
-#: orologic_modules/memoboard_app.py:1237
+#: orologic_modules/memoboard_app.py:1324
 #, python-brace-format
 msgid ""
 "\n"
@@ -8503,12 +8522,12 @@ msgstr ""
 "\n"
 "[Informe guardado en: txt/{filename}]"
 
-#: orologic_modules/memoboard_app.py:1243
+#: orologic_modules/memoboard_app.py:1330
 #, python-brace-format
 msgid "Errore durante il salvataggio del report: {e}"
 msgstr "Error al guardar el informe: {e}"
 
-#: orologic_modules/memoboard_app.py:1247
+#: orologic_modules/memoboard_app.py:1334
 msgid ""
 "Benvenuto in MemoBoard.\n"
 "Il tuo assistente per giocare a scacchi senza scacchiera.\n"
@@ -8518,7 +8537,7 @@ msgstr ""
 "Tu asistente para jugar al ajedrez sin tablero.\n"
 "Esta utilidad te ayuda a visualizar el tablero y a convertirte en un mejor jugador."
 
-#: orologic_modules/memoboard_app.py:1268
+#: orologic_modules/memoboard_app.py:1355
 msgid ""
 "\n"
 "Pronto ad allenarti? Scegli un esercizio dal menu."
@@ -8526,11 +8545,11 @@ msgstr ""
 "\n"
 "¿Listo para entrenar? Elige un ejercicio del menú."
 
-#: orologic_modules/memoboard_app.py:1271
+#: orologic_modules/memoboard_app.py:1358
 msgid "Comando non trovato"
 msgstr "Comando no encontrado"
 
-#: orologic_modules/memoboard_app.py:1278
+#: orologic_modules/memoboard_app.py:1365
 msgid ""
 "Indovina il colore della casa.\n"
 "Rispondi premendo ESC per il nero e INVIO per il bianco."
@@ -8538,7 +8557,7 @@ msgstr ""
 "Adivina el color de la casilla.\n"
 "Responde pulsando ESC para negro y ENTER para blanco."
 
-#: orologic_modules/memoboard_app.py:1283
+#: orologic_modules/memoboard_app.py:1370
 msgid ""
 "\n"
 "Bello! E buona fortuna con i colori, quante domande vuoi fare? "
@@ -8546,33 +8565,33 @@ msgstr ""
 "\n"
 "¡Elegante! Y suerte con los colores, ¿cuántas preguntas quieres hacer? "
 
-#: orologic_modules/memoboard_app.py:1290
-#: orologic_modules/memoboard_app.py:1333
-#: orologic_modules/memoboard_app.py:1376
+#: orologic_modules/memoboard_app.py:1377
+#: orologic_modules/memoboard_app.py:1421
+#: orologic_modules/memoboard_app.py:1465
 msgid "Pronto?"
 msgstr "¿Listo?"
 
-#: orologic_modules/memoboard_app.py:1291
-#: orologic_modules/memoboard_app.py:1334
-#: orologic_modules/memoboard_app.py:1377
+#: orologic_modules/memoboard_app.py:1378
+#: orologic_modules/memoboard_app.py:1422
+#: orologic_modules/memoboard_app.py:1466
 msgid " Inizio"
 msgstr " Inicio"
 
-#: orologic_modules/memoboard_app.py:1294
-#: orologic_modules/memoboard_app.py:1337
-#: orologic_modules/memoboard_app.py:1380
+#: orologic_modules/memoboard_app.py:1381
+#: orologic_modules/memoboard_app.py:1425
+#: orologic_modules/memoboard_app.py:1469
 msgid "I tuoi errori"
 msgstr "tus errores"
 
-#: orologic_modules/memoboard_app.py:1301
+#: orologic_modules/memoboard_app.py:1388
 #, python-brace-format
 msgid "> Domanda: {q} | La tua risposta: '{ua}', corretta: '{ca}'"
 msgstr "> Pregunta: {q} | Tu respuesta: '{ua}', correcta: '{ca}'"
 
-#: orologic_modules/memoboard_app.py:1304
-#: orologic_modules/memoboard_app.py:1347
-#: orologic_modules/memoboard_app.py:1390
-#: orologic_modules/memoboard_app.py:1464
+#: orologic_modules/memoboard_app.py:1391
+#: orologic_modules/memoboard_app.py:1435
+#: orologic_modules/memoboard_app.py:1479
+#: orologic_modules/memoboard_app.py:1554
 msgid ""
 "\n"
 "Premi un tasto per procedere alla classifica..."
@@ -8580,7 +8599,7 @@ msgstr ""
 "\n"
 "Pulsa una tecla para pasar a la clasificación..."
 
-#: orologic_modules/memoboard_app.py:1321
+#: orologic_modules/memoboard_app.py:1409
 msgid ""
 "Indovina se due case sono a un salto di cavallo.\n"
 "Rispondi premendo INVIO per sì e ESC per no."
@@ -8588,7 +8607,7 @@ msgstr ""
 "Adivina si dos casillas están a un salto de caballo.\n"
 "Responde pulsando ENTER para sí y ESC para no."
 
-#: orologic_modules/memoboard_app.py:1326
+#: orologic_modules/memoboard_app.py:1414
 msgid ""
 "\n"
 "Bene, divertiti con il salto del cavallo, quante domande vuoi fare? "
@@ -8596,31 +8615,31 @@ msgstr ""
 "\n"
 "Bueno, diviértete con los saltos del caballo, ¿cuántas preguntas quieres hacer? "
 
-#: orologic_modules/memoboard_app.py:1340
-#: orologic_modules/memoboard_app.py:1341
-#: orologic_modules/memoboard_app.py:1383
-#: orologic_modules/memoboard_app.py:1384
-#: orologic_modules/memoboard_app.py:1450
-#: orologic_modules/memoboard_app.py:1451
+#: orologic_modules/memoboard_app.py:1428
+#: orologic_modules/memoboard_app.py:1429
+#: orologic_modules/memoboard_app.py:1472
+#: orologic_modules/memoboard_app.py:1473
+#: orologic_modules/memoboard_app.py:1540
+#: orologic_modules/memoboard_app.py:1541
 msgid "Sì"
 msgstr "Sí"
 
-#: orologic_modules/memoboard_app.py:1340
-#: orologic_modules/memoboard_app.py:1341
-#: orologic_modules/memoboard_app.py:1383
-#: orologic_modules/memoboard_app.py:1384
-#: orologic_modules/memoboard_app.py:1450
-#: orologic_modules/memoboard_app.py:1451
+#: orologic_modules/memoboard_app.py:1428
+#: orologic_modules/memoboard_app.py:1429
+#: orologic_modules/memoboard_app.py:1472
+#: orologic_modules/memoboard_app.py:1473
+#: orologic_modules/memoboard_app.py:1540
+#: orologic_modules/memoboard_app.py:1541
 msgid "No"
 msgstr "No"
 
-#: orologic_modules/memoboard_app.py:1344
-#: orologic_modules/memoboard_app.py:1387
+#: orologic_modules/memoboard_app.py:1432
+#: orologic_modules/memoboard_app.py:1476
 #, python-brace-format
 msgid "> Domanda: {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
 msgstr "> Pregunta: {q} | Tu respuesta: '{ua}', correcta: '{ca}'"
 
-#: orologic_modules/memoboard_app.py:1364
+#: orologic_modules/memoboard_app.py:1453
 msgid ""
 "Indovina se due case sono sulla stessa diagonale.\n"
 "Rispondi premendo INVIO per sì e ESC per no."
@@ -8628,7 +8647,7 @@ msgstr ""
 "Adivina si dos casillas están en la misma diagonal.\n"
 "Responde pulsando ENTER para sí y ESC para no."
 
-#: orologic_modules/memoboard_app.py:1369
+#: orologic_modules/memoboard_app.py:1458
 msgid ""
 "\n"
 "Bene, divertiti con l'esercizio dell'alfiere, quante domande vuoi fare? "
@@ -8636,7 +8655,7 @@ msgstr ""
 "\n"
 "Bueno, diviértete con el ejercicio del alfil, ¿cuántas preguntas quieres hacer? "
 
-#: orologic_modules/memoboard_app.py:1425
+#: orologic_modules/memoboard_app.py:1515
 msgid ""
 "\n"
 "Benvenuto alla Sfida Mista!"
@@ -8644,12 +8663,12 @@ msgstr ""
 "\n"
 "¡Bienvenido al Reto Mixto!"
 
-#: orologic_modules/memoboard_app.py:1428
+#: orologic_modules/memoboard_app.py:1518
 msgid ""
 "Saranno presentate 100 domande di tipo casuale (colori, cavalli, alfieri)."
 msgstr "Se presentarán 100 preguntas aleatorias (colores, caballos, alfiles)."
 
-#: orologic_modules/memoboard_app.py:1433
+#: orologic_modules/memoboard_app.py:1523
 msgid ""
 "Questa è la prova definitiva delle tue abilità e della tua resistenza. Buona fortuna!\n"
 "Ricorda di rispondere con INVIO per sì/bianco e ESC per no/nero."
@@ -8657,25 +8676,25 @@ msgstr ""
 "Esta es la prueba definitiva de tus habilidades y resistencia. ¡Buena suerte!\n"
 "Recuerda responder con ENTER para sí/blanco y ESC para no/negro."
 
-#: orologic_modules/memoboard_app.py:1437
+#: orologic_modules/memoboard_app.py:1527
 msgid "Sei pronto per iniziare? Via!"
 msgstr "¿Estás listo para empezar? ¡Adelante!"
 
-#: orologic_modules/memoboard_app.py:1441
+#: orologic_modules/memoboard_app.py:1531
 msgid "SFIDA MISTA COMPLETATA!"
 msgstr "¡RETO MIXTO COMPLETADO!"
 
-#: orologic_modules/memoboard_app.py:1443
+#: orologic_modules/memoboard_app.py:1533
 msgid "I tuoi errori nella Sfida Mista"
 msgstr "Tus errores en el Reto Mixto"
 
-#: orologic_modules/memoboard_app.py:1454
-#: orologic_modules/memoboard_app.py:1460
+#: orologic_modules/memoboard_app.py:1544
+#: orologic_modules/memoboard_app.py:1550
 #, python-brace-format
 msgid "> {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
 msgstr "> {q} | Tu respuesta: '{ua}', correcta: '{ca}'"
 
-#: orologic_modules/memoboard_app.py:1503
+#: orologic_modules/memoboard_app.py:1594
 #, python-brace-format
 msgid ""
 "\n"
@@ -8686,7 +8705,7 @@ msgstr ""
 "MemoBoard terminado. Tiempo de ejecución: {minuti} minutos y {secondi} segundos.\n"
 "\tInforme guardado en: txt/{filename}. ¡Hasta luego!"
 
-#: orologic_modules/memoboard_app.py:1513
+#: orologic_modules/memoboard_app.py:1604
 #, python-brace-format
 msgid ""
 "\n"
@@ -15111,3 +15130,29 @@ msgstr "Ninguno."
 
 #~ msgid "Prima devi eseguire l'analisi con il comando .a"
 #~ msgstr "Primero necesitas ejecutar el análisis con el comando .a"
+
+#~ msgid "Media {avg:.1f} secondi."
+#~ msgstr "Promedio {avg:.1f} segundos."
+
+#~ msgid ""
+#~ "\n"
+#~ "🎉 Nuovo record personale per {username}! Precedente: {old_perf:.0f}, Attuale: {new_perf:.0f}."
+#~ msgstr ""
+#~ "\n"
+#~ "🎉 ¡Nuevo récord personal para {username}! Anterior: {old_perf:.0f}, Actual: {new_perf:.0f}."
+
+#~ msgid ""
+#~ "\n"
+#~ "Hai ottenuto un punteggio inferiore al tuo precedente record ({old_perf:.0f} vs {new_perf:.0f})."
+#~ msgstr ""
+#~ "\n"
+#~ "Has obtenido una puntuación inferior a tu récord anterior ({old_perf:.0f} vs {new_perf:.0f})."
+
+#~ msgid ""
+#~ "Classifica {exercise}, ordinata per punti al minuto, almeno venti domande."
+#~ msgstr ""
+#~ "Ranking {exercise}, ordenado por puntos por minuto, al menos veinte "
+#~ "preguntas."
+
+#~ msgid "{pos}. {user}, {pmin:.0f} punti al minuto."
+#~ msgstr "{pos}. {user}, {pmin:.0f} puntos por minuto."

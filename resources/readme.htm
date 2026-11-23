@@ -242,7 +242,7 @@ margin: 1em 0;
 </li>
 <li><a href="#cap-2-6">2.6. Memoboard (Allenamento alla cieca) (memoboard)</a>
 <ul>
-<li><a href="#cap-2-6-1">2.6.1. Funzionamento dei Punteggi (Punti al Minuto)</a>
+<li><a href="#cap-2-6-1">2.6.1. Funzionamento dei Punteggi (Giuste Nette al Minuto)</a>
 </li>
 <li><a href="#cap-2-6-2">2.6.2. Esercizi Disponibili e Feedback Acustico</a>
 </li>
@@ -1176,9 +1176,9 @@ margin: 1em 0;
 <h3 id="cap-2-6">2.6. Memoboard (Allenamento alla cieca) (memoboard)</h3>
 <p>Memoboard ti aiuta a familiarizzare con la scacchiera allenandoti a visualizzarla senza guardarla. Lo scopo è sviluppare una rapida visualizzazione mentale delle 64 case, fondamentale per il gioco alla cieca e per l'analisi profonda delle partite.</p>
 
-<h4 id="cap-2-6-1">2.6.1. Funzionamento dei Punteggi (Punti al Minuto)</h4>
-<p>Per stimolare il miglioramento, Memoboard calcola un punteggio basato su velocità e precisione. Ogni domanda parte con un valore massimo di 15.000 punti, decrescendo di 1 punto per ogni millisecondo impiegato per rispondere. Una risposta esatta aggiunge i punti restanti al totale, mentre una risposta errata non assegna punti.</p>
-<p>La classifica viene ordinata per <strong>Punti al Minuto</strong> (efficienza), calcolati dividendo il punteggio totale per il tempo impiegato in secondi (moltiplicato per 60). Questo premia la precisione e la rapidità di esecuzione rispetto a sessioni lunghe e lente.</p>
+<h4 id="cap-2-6-1">2.6.1. Funzionamento dei Punteggi (Giuste Nette al Minuto)</h4>
+<p>Per stimolare il miglioramento, Memoboard calcola un punteggio basato su velocità e precisione. Ogni domanda parte con un valore massimo di 15.000 punti, decrescendo di 1 punto per ogni millisecondo impiegato per rispondere. Una risposta esatta aggiunge i punti restanti al totale, mentre una risposta errata non assegna punti. Il tempo si misura dalla fine della breve pausa che lascia leggere la domanda, e i tasti premuti prima che la domanda arrivi vengono ignorati: un Invio di troppo non risponde alla domanda dopo, senza che tu l'abbia sentita.</p>
+<p>Negli esercizi singoli la classifica viene ordinata per <strong>Giuste Nette al Minuto</strong>: le risposte giuste meno quelle sbagliate, divise per i minuti della sessione, come le parole nette al minuto delle prove di dattilografia. Chi tira a indovinare fa circa zero, e la velocità conta una volta sola; i punti restano nel resoconto. La Sfida Mista, che ha sempre 100 domande, è ordinata per punti totali. Le classifiche salvate con le versioni precedenti, ordinate per punti al minuto, vengono ricalcolate da sole: ogni voce ha già le giuste, le domande e la durata.</p>
 
 <h4 id="cap-2-6-2">2.6.2. Esercizi Disponibili e Feedback Acustico</h4>
 <ul>
@@ -1192,16 +1192,16 @@ margin: 1em 0;
 <h4 id="cap-2-6-3">2.6.3. Classifiche e Qualificazione</h4>
 <p>Negli esercizi singoli (cavalli, alfieri, colori) l'utente può impostare un numero di domande compreso tra 5 e 300 (valori superiori a 300 vengono automaticamente ridotti a 300). Per evitare punteggi casuali o falsati, le sessioni si qualificano per la classifica Top 10 solo se vengono svolte <strong>almeno 20 domande</strong> (la Sfida Mista prevede invece 100 domande fisse).</p>
 <p>Il nome utente viene richiesto al termine della sessione solo se il punteggio ottenuto è sufficiente ad entrare nei primi 10 posti della classifica. Se l'utente è già presente in classifica per quell'esercizio, il nuovo record sostituisce automaticamente il precedente se migliore; se invece il punteggio è inferiore, il programma richiede conferma prima dell'eventuale sovrascrittura.</p>
-<p>Il comando <code>classifiche</code> visualizza una classifica dettagliata per ciascun esercizio, con indicazione di punti totali, accuratezza (Win%), punti al minuto e data del record. I punteggi vengono salvati nel file <code>memoboard_scores.json</code> nella cartella <code>settings</code> di Orologic.</p>
+<p>Il comando <code>classifiche</code> visualizza una classifica dettagliata per ciascun esercizio, con le giuste nette al minuto, il numero di domande, la percentuale di risposte esatte, il tempo medio e la data del record; per la Sfida Mista i punti totali, i punti al minuto, la percentuale di risposte esatte, il tempo medio, la durata e la data. I punteggi vengono salvati nel file <code>memoboard_scores.json</code> nella cartella <code>settings</code> di Orologic.</p>
 
 <h4 id="cap-2-6-4">2.6.4. Report di Sessione e Analisi dei Tempi</h4>
 <p>Al termine di ogni esercizio svolto in MemoBoard (inclusi quelli non qualificati o con punteggio inferiore al proprio record), Orologic genera o aggiorna immediatamente un file di report testuale individuale salvato nella cartella <code>txt/</code>.</p>
 <p>Il nome del file viene generato secondo lo schema <code>Memoboard_{tipologie}_{timestamp}.txt</code> (ad esempio <code>Memoboard_colori_20260725180345.txt</code> oppure <code>Memoboard_colori_cavalli_20260725180345.txt</code> se nella medesima sessione sono stati svolti più esercizi).</p>
 <p>Ciascun report include le seguenti informazioni per ogni esercizio svolto:</p>
 <ul>
-    <li><strong>Riepilogo risultati:</strong> numero di risposte corrette, tempo totale impiegato, punteggio ottenuto, performance in punti al minuto e lo stato di qualificazione in classifica.</li>
-    <li><strong>Statistiche sui tempi di risposta:</strong> tempo minimo, tempo massimo e tempo medio di risposta espressi in secondi.</li>
-    <li><strong>Analisi stanchezza per quartili cronologici:</strong> suddivisione dell'intera serie di domande in 4 quartili (Q1, Q2, Q3, Q4) per valutare l'andamento dei tempi medi e la variazione percentuale di affaticamento rispetto al primo quartile iniziale (Q1).</li>
+    <li><strong>Riepilogo risultati:</strong> numero di risposte corrette, percentuale di risposte esatte, giuste nette al minuto, tempo totale impiegato, punteggio ottenuto, performance in punti al minuto e lo stato di qualificazione in classifica.</li>
+    <li><strong>Statistiche sui tempi di risposta:</strong> tempo minimo, tempo massimo, tempo medio e mediano, in secondi; quando ci sono sia risposte giuste sia sbagliate, il numero e il tempo mediano delle une e delle altre. La mediana non risente di una distrazione lunga, la media sì.</li>
+    <li><strong>Analisi stanchezza per quartili cronologici:</strong> da 20 domande in su, suddivisione dell'intera serie di domande in 4 quartili (Q1, Q2, Q3, Q4) per valutare l'andamento dei tempi medi e la variazione percentuale di affaticamento rispetto al primo quartile iniziale (Q1).</li>
 </ul>
 
 <h3 id="cap-2-7">2.7. Tempo (Orologio nudo e crudo) (tempo)</h3>

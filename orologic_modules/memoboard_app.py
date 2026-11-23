@@ -10,11 +10,12 @@ import datetime
 import json
 import os
 import random
+import statistics
 import time
 
 from GBUtils import Acusticator, dgt, key, menu
 
-from . import config, localizzazione, storage, tempo
+from . import config, localizzazione, storage, strato, tempo
 from .config import _
 
 # COSTANTI
@@ -31,6 +32,9 @@ MIN_REPETITIONS_FOR_LEADERBOARD = (
     20  # Domande minime per qualificare la sessione nei giochi singoli
 )
 MAX_LEADERBOARD_ENTRIES = 10  # Numero massimo di posizioni in classifica
+# L'andamento per quarti si mostra da qui in su: con meno domande un quarto
+# ne ha una o due, e il confronto e' rumore.
+MINIMO_PER_I_QUARTI = 20
 
 mnu = {
     "cavalli": _("Esercizio con i salti di cavallo"),
@@ -75,6 +79,30 @@ def get_column_spelling(col_letter):
 # --- FUNZIONI GESTIONE PUNTEGGI (JSON) ---
 
 
+def nette_al_minuto(wins, repetitions, duration):
+    """Le giuste nette al minuto: le giuste meno le sbagliate, divise per i
+    minuti. E' la misura delle classifiche degli esercizi singoli dal 23
+    novembre 2026, al posto dei punti al minuto, che contavano la velocita'
+    due volte, nei punti e nella durata, e pesavano poco gli errori: in una
+    simulazione Invio a raffica, senza ascoltare, batteva chi rispondeva
+    sempre giusto in un secondo. Chi tira a indovinare fa zero (Gabriele)."""
+    if not duration or duration <= 0:
+        return 0.0
+    return (wins - (repetitions - wins)) / duration * 60
+
+
+def _metrica(ex_name):
+    """Il campo che ordina la classifica: i punti nella sfida mista, che ha
+    sempre cento domande, le giuste nette al minuto negli altri."""
+    return "score" if ex_name == "mixed" else "net_per_minute"
+
+
+def _misura(ex_name, valore):
+    """Il valore della misura come si legge: i punti interi, le nette con un
+    decimale."""
+    return f"{valore:.0f}" if ex_name == "mixed" else f"{valore:.1f}"
+
+
 def _deduplicate_scores(data):
     """
     Assicura che in ciascun esercizio ogni utente abbia un unico record (il migliore).
@@ -82,7 +110,7 @@ def _deduplicate_scores(data):
     cleaned = {"colors": [], "knights": [], "bishops": [], "mixed": []}
     for ex_name in cleaned:
         ex_list = data.get(ex_name, [])
-        metric_key = "score" if ex_name == "mixed" else "score_per_minute"
+        metric_key = _metrica(ex_name)
         best_by_user = {}
 
         for rec in ex_list:
@@ -90,6 +118,10 @@ def _deduplicate_scores(data):
                 continue
             user = config.maiuscole_nomi(rec.get("username", _("Anonimo")))
             rec["username"] = user
+            if metric_key == "net_per_minute" and "net_per_minute" not in rec:
+                # Le classifiche di prima si ricalcolano: ogni voce ha gia'
+                # giuste, domande e durata.
+                rec["net_per_minute"] = nette_al_minuto(rec.get("wins", 0), rec.get("repetitions", 0), rec.get("duration", 0))
             val = rec.get(metric_key, 0)
 
             if user not in best_by_user or val > best_by_user[user].get(metric_key, 0):
@@ -214,11 +246,15 @@ EX_NAME_MAP = {
 }
 
 
-def compute_time_stats(timeslist):
+def compute_time_stats(timeslist, esiti=None):
     """
     Calcola le statistiche sui tempi di risposta:
-    - Minimo, massimo e medio
-    - Suddivisione in quartili cronologici con medie e variazioni percentuali (indice di stanchezza)
+    - Minimo, massimo, media e mediana: la mediana non risente di una
+      distrazione lunga, la media si'
+    - Le giuste e le sbagliate, ognuna col suo numero e la sua mediana, se
+      esiti dice domanda per domanda se la risposta era giusta
+    - Da MINIMO_PER_I_QUARTI domande in su, la suddivisione in quartili
+      cronologici con medie e variazioni percentuali (indice di stanchezza)
     """
     if not timeslist:
         return None
@@ -226,11 +262,16 @@ def compute_time_stats(timeslist):
     min_t = min(timeslist)
     max_t = max(timeslist)
     avg_t = sum(timeslist) / len(timeslist)
+    median_t = statistics.median(timeslist)
+    giuste = sbagliate = None
+    if esiti is not None and len(esiti) == len(timeslist):
+        giuste = [t for t, esatta in zip(timeslist, esiti, strict=True) if esatta]
+        sbagliate = [t for t, esatta in zip(timeslist, esiti, strict=True) if not esatta]
 
     n = len(timeslist)
     quartiles_info = []
 
-    if n >= 4:
+    if n >= MINIMO_PER_I_QUARTI:
         chunk_size = n / 4.0
         chunks = []
         for i in range(4):
@@ -263,6 +304,9 @@ def compute_time_stats(timeslist):
         "min": min_t,
         "max": max_t,
         "avg": avg_t,
+        "median": median_t,
+        "giuste": giuste,
+        "sbagliate": sbagliate,
         "quartiles": quartiles_info,
     }
 
@@ -280,7 +324,23 @@ def format_time_stats_string(time_stats):
             min=time_stats["min"], max=time_stats["max"]
         )
     )
-    lines.append(_("Media {avg:.1f} secondi.").format(avg=time_stats["avg"]))
+    lines.append(
+        _("Media {avg:.1f} secondi, mediana {med:.1f}.").format(
+            avg=time_stats["avg"], med=time_stats["median"]
+        )
+    )
+    giuste, sbagliate = time_stats.get("giuste"), time_stats.get("sbagliate")
+    if giuste and sbagliate:
+        lines.append(
+            _(
+                "Giuste {g}, mediana {mg:.1f} secondi; sbagliate {s}, mediana {ms:.1f} secondi."
+            ).format(
+                g=len(giuste),
+                mg=statistics.median(giuste),
+                s=len(sbagliate),
+                ms=statistics.median(sbagliate),
+            )
+        )
 
     quartiles = time_stats.get("quartiles", [])
     if quartiles:
@@ -288,13 +348,14 @@ def format_time_stats_string(time_stats):
         for q in quartiles:
             idx = q["quartile"]
             pct_var = q["pct_var"]
+            # Una differenza che si legge 0% e' come il primo, non 0% piu' rapido.
             if idx == 1:
                 confronto = _("e' il riferimento")
-            elif pct_var > 0:
+            elif round(pct_var) > 0:
                 confronto = _("cioe' {p:.0f}% piu' lento del primo").format(
                     p=pct_var
                 )
-            elif pct_var < 0:
+            elif round(pct_var) < 0:
                 confronto = _("cioe' {p:.0f}% piu' rapido del primo").format(
                     p=abs(pct_var)
                 )
@@ -325,21 +386,26 @@ def report_and_update_scores(
     exercises_played=None,
     save_session_callback=None,
     timeslist=None,
+    esiti=None,
 ):
     """
     Mostra il report della sessione e aggiorna la classifica.
     """
     score_per_minute = (score / duration) * 60 if duration > 0 else 0
+    net_per_minute = nette_al_minuto(wins, rpt, duration)
+    esattezza = wins / rpt * 100 if rpt > 0 else 0.0
+    riga_delle_nette = _("Risposte esatte {p:.0f}%, giuste nette al minuto {n:.1f}.").format(p=esattezza, n=net_per_minute)
     average_time = duration / rpt if rpt > 0 else 0
     ex_label = EX_NAME_MAP.get(exercise_name, exercise_name)
 
-    time_stats = compute_time_stats(timeslist)
+    time_stats = compute_time_stats(timeslist, esiti)
     time_stats_str = format_time_stats_string(time_stats)
 
     print(_("Risultati Esercizio"))
     print(
         _("Hai ottenuto {wins} risposte corrette su {rpt}.").format(wins=wins, rpt=rpt)
     )
+    print(riga_delle_nette)
     print(
         _("Punteggio totale: {score:.0f} in {duration:.1f} secondi.").format(
             score=score, duration=duration
@@ -378,6 +444,7 @@ def report_and_update_scores(
                 score_per_minute=score_per_minute,
                 min_rpt=MIN_REPETITIONS_FOR_LEADERBOARD,
             )
+            log_entry += "\n  " + riga_delle_nette
             if time_stats_str:
                 log_entry += "\n" + time_stats_str
             session_logs.append(log_entry)
@@ -387,8 +454,8 @@ def report_and_update_scores(
         return
 
     # 2. Verifica qualificazione Top 10
-    ranking_metric = "score" if exercise_name == "mixed" else "score_per_minute"
-    new_performance = score if exercise_name == "mixed" else score_per_minute
+    ranking_metric = _metrica(exercise_name)
+    new_performance = score if exercise_name == "mixed" else net_per_minute
 
     ex_list = all_scores.get(exercise_name, [])
     sorted_ex_list = sorted(
@@ -445,6 +512,7 @@ def report_and_update_scores(
             "duration": duration,
             "average_time_per_guess": average_time,
             "score_per_minute": score_per_minute,
+            "net_per_minute": net_per_minute,
             "timestamp": datetime.datetime.now().isoformat(),
         }
 
@@ -463,17 +531,19 @@ def report_and_update_scores(
             if new_performance > old_perf:
                 print(
                     _(
-                        "\n🎉 Nuovo record personale per {username}! Precedente: {old_perf:.0f}, Attuale: {new_perf:.0f}."
+                        "\n🎉 Nuovo record personale per {username}! Precedente: {old_perf}, Attuale: {new_perf}."
                     ).format(
-                        username=username, old_perf=old_perf, new_perf=new_performance
+                        username=username,
+                        old_perf=_misura(exercise_name, old_perf),
+                        new_perf=_misura(exercise_name, new_performance),
                     )
                 )
                 ex_list[existing_index] = new_entry
             else:
                 print(
                     _(
-                        "\nHai ottenuto un punteggio inferiore al tuo precedente record ({old_perf:.0f} vs {new_perf:.0f})."
-                    ).format(old_perf=old_perf, new_perf=new_performance)
+                        "\nHai ottenuto un punteggio inferiore al tuo precedente record ({old_perf} vs {new_perf})."
+                    ).format(old_perf=_misura(exercise_name, old_perf), new_perf=_misura(exercise_name, new_performance))
                 )
                 si_key = _("s")
                 answer = key(
@@ -513,6 +583,7 @@ def report_and_update_scores(
                 score=score,
                 score_per_minute=score_per_minute,
             )
+            log_entry += "\n  " + riga_delle_nette
             if time_stats_str:
                 log_entry += "\n" + time_stats_str
             session_logs.append(log_entry)
@@ -537,6 +608,7 @@ def report_and_update_scores(
                 score=score,
                 score_per_minute=score_per_minute,
             )
+            log_entry += "\n  " + riga_delle_nette
             if time_stats_str:
                 log_entry += "\n" + time_stats_str
             session_logs.append(log_entry)
@@ -660,13 +732,13 @@ def show_leaderboard(all_scores):
     else:
         sorted_leaderboard = sorted(
             leaderboard_data,
-            key=lambda item: item.get("score_per_minute", 0),
+            key=lambda item: item.get("net_per_minute", 0),
             reverse=True,
         )[:MAX_LEADERBOARD_ENTRIES]
 
         print(
             _(
-                "Classifica {exercise}, ordinata per punti al minuto, almeno venti domande."
+                "Classifica {exercise}, ordinata per giuste nette al minuto, almeno venti domande."
             ).format(exercise=_nome_esercizio(selected_exercise))
         )
 
@@ -676,8 +748,8 @@ def show_leaderboard(all_scores):
             wins = item.get("wins", 0)
             precisione = (wins / reps) * 100 if reps else 0.0
             print(
-                _("{pos}. {user}, {pmin:.0f} punti al minuto.").format(
-                    pos=i, user=user, pmin=item.get("score_per_minute", 0)
+                _("{pos}. {user}, {nette:.1f} giuste nette al minuto.").format(
+                    pos=i, user=user, nette=item.get("net_per_minute", 0)
                 )
             )
             print(
@@ -705,8 +777,9 @@ def ExKnights(ripetitions):
     score = 0
     wins = 0
     scoretime = 15
-    timeex = time.time()
+    timeex = time.perf_counter()
     timeslist = []
+    esiti = []
     scoreslist = []
     errors_list = []
     knight_moves = [
@@ -721,6 +794,9 @@ def ExKnights(ripetitions):
     ]
 
     while ripetitions > 0:
+        # I tasti premuti prima che la domanda arrivi non le rispondono: un
+        # Invio di troppo rispondeva alla domanda dopo, senza averla sentita.
+        strato.svuota_tastiera()
         sq1 = random.choice(board)
         yes = random.choice([True, False])
         if not yes:
@@ -751,7 +827,7 @@ def ExKnights(ripetitions):
         )
         time.sleep(READING_TIME)
 
-        now = time.time()
+        now = time.perf_counter()
 
         user_says_yes = None
         while True:
@@ -763,11 +839,9 @@ def ExKnights(ripetitions):
                 user_says_yes = False
                 break
 
-        singlescore = (scoretime * 1000) - (time.time() - now) * 1000
-        singlescore = max(singlescore, 0)
-
-        elapsed_q = time.time() - now
+        elapsed_q = time.perf_counter() - now
         timeslist.append(elapsed_q)
+        singlescore = max((scoretime - elapsed_q) * 1000, 0)
         correct = user_says_yes == yes
         if correct:
             wins += 1
@@ -782,6 +856,7 @@ def ExKnights(ripetitions):
                 }
             )
 
+        esiti.append(correct)
         current_rep_index = initial_rpt - ripetitions
         progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
         current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
@@ -801,8 +876,8 @@ def ExKnights(ripetitions):
         Acusticator(sound_score, kind=1)
         ripetitions -= 1
 
-    duration = time.time() - timeex
-    return score, scoreslist, duration, timeslist, wins, errors_list
+    duration = time.perf_counter() - timeex
+    return score, scoreslist, duration, timeslist, wins, errors_list, esiti
 
 
 def ExBishops(ripetitions):
@@ -811,12 +886,16 @@ def ExBishops(ripetitions):
     score = 0
     wins = 0
     scoretime = 15
-    timeex = time.time()
+    timeex = time.perf_counter()
     timeslist = []
+    esiti = []
     scoreslist = []
     errors_list = []
 
     while ripetitions > 0:
+        # I tasti premuti prima che la domanda arrivi non le rispondono: un
+        # Invio di troppo rispondeva alla domanda dopo, senza averla sentita.
+        strato.svuota_tastiera()
         kd = random.choice(list(diagonals.keys()))
         sq1 = random.choice(diagonals[kd])
         yes = random.choice([True, False])
@@ -843,7 +922,7 @@ def ExBishops(ripetitions):
         )
         time.sleep(READING_TIME)
 
-        now = time.time()
+        now = time.perf_counter()
 
         user_says_yes = None
         while True:
@@ -855,11 +934,9 @@ def ExBishops(ripetitions):
                 user_says_yes = False
                 break
 
-        singlescore = (scoretime * 1000) - (time.time() - now) * 1000
-        singlescore = max(singlescore, 0)
-
-        elapsed_q = time.time() - now
+        elapsed_q = time.perf_counter() - now
         timeslist.append(elapsed_q)
+        singlescore = max((scoretime - elapsed_q) * 1000, 0)
         correct = user_says_yes == yes
         if correct:
             wins += 1
@@ -874,6 +951,7 @@ def ExBishops(ripetitions):
                 }
             )
 
+        esiti.append(correct)
         current_rep_index = initial_rpt - ripetitions
         progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
         current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
@@ -893,8 +971,8 @@ def ExBishops(ripetitions):
         Acusticator(sound_score, kind=1)
         ripetitions -= 1
 
-    duration = time.time() - timeex
-    return score, scoreslist, duration, timeslist, wins, errors_list
+    duration = time.perf_counter() - timeex
+    return score, scoreslist, duration, timeslist, wins, errors_list, esiti
 
 
 def ExMixed(ripetitions):
@@ -905,8 +983,9 @@ def ExMixed(ripetitions):
     score = 0
     wins = 0
     scoretime = 15
-    timeex = time.time()
+    timeex = time.perf_counter()
     timeslist = []
+    esiti = []
     scoreslist = []
     errors_list = []
     knight_moves = [
@@ -921,6 +1000,9 @@ def ExMixed(ripetitions):
     ]
 
     while ripetitions > 0:
+        # I tasti premuti prima che la domanda arrivi non le rispondono: un
+        # Invio di troppo rispondeva alla domanda dopo, senza averla sentita.
+        strato.svuota_tastiera()
         exercise_type = random.choice(["colors", "knights", "bishops"])
         correct = False
 
@@ -935,7 +1017,7 @@ def ExMixed(ripetitions):
             )
             time.sleep(READING_TIME)
 
-            now = time.time()
+            now = time.perf_counter()
             user_says_white = None
             while True:
                 s = key()
@@ -945,7 +1027,7 @@ def ExMixed(ripetitions):
                 elif s in ("\x1b", "esc"):
                     user_says_white = False
                     break
-            elapsed_q = time.time() - now
+            elapsed_q = time.perf_counter() - now
             timeslist.append(elapsed_q)
             singlescore = (scoretime * 1000) - (elapsed_q * 1000)
             singlescore = max(singlescore, 0)
@@ -998,7 +1080,7 @@ def ExMixed(ripetitions):
             )
             time.sleep(READING_TIME)
 
-            now = time.time()
+            now = time.perf_counter()
             user_says_yes = None
             while True:
                 s = key()
@@ -1008,7 +1090,7 @@ def ExMixed(ripetitions):
                 elif s in ("\x1b", "esc"):
                     user_says_yes = False
                     break
-            elapsed_q = time.time() - now
+            elapsed_q = time.perf_counter() - now
             timeslist.append(elapsed_q)
             singlescore = (scoretime * 1000) - (elapsed_q * 1000)
             singlescore = max(singlescore, 0)
@@ -1054,7 +1136,7 @@ def ExMixed(ripetitions):
             )
             time.sleep(READING_TIME)
 
-            now = time.time()
+            now = time.perf_counter()
             user_says_yes = None
             while True:
                 s = key()
@@ -1064,7 +1146,7 @@ def ExMixed(ripetitions):
                 elif s in ("\x1b", "esc"):
                     user_says_yes = False
                     break
-            elapsed_q = time.time() - now
+            elapsed_q = time.perf_counter() - now
             timeslist.append(elapsed_q)
             singlescore = (scoretime * 1000) - (elapsed_q * 1000)
             singlescore = max(singlescore, 0)
@@ -1083,6 +1165,7 @@ def ExMixed(ripetitions):
                     }
                 )
 
+        esiti.append(correct)
         current_rep_index = initial_rpt - ripetitions
         progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
         current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
@@ -1102,8 +1185,8 @@ def ExMixed(ripetitions):
         Acusticator(sound_score, kind=1)
         ripetitions -= 1
 
-    duration = time.time() - timeex
-    return score, scoreslist, duration, timeslist, wins, errors_list
+    duration = time.perf_counter() - timeex
+    return score, scoreslist, duration, timeslist, wins, errors_list, esiti
 
 
 def ExColors(ripetitions):
@@ -1112,12 +1195,16 @@ def ExColors(ripetitions):
     score = 0
     wins = 0
     scoretime = 15
-    timeex = time.time()
+    timeex = time.perf_counter()
     timeslist = []
+    esiti = []
     scoreslist = []
     errors_list = []
 
     while ripetitions > 0:
+        # I tasti premuti prima che la domanda arrivi non le rispondono: un
+        # Invio di troppo rispondeva alla domanda dopo, senza averla sentita.
+        strato.svuota_tastiera()
         sq = random.choice(board)
         print(
             _("\nColore per {sq_spelling} {sq_rank}?").format(
@@ -1128,7 +1215,7 @@ def ExColors(ripetitions):
         )
         time.sleep(READING_TIME)
 
-        now = time.time()
+        now = time.perf_counter()
 
         user_says_white = None
         while True:
@@ -1140,11 +1227,9 @@ def ExColors(ripetitions):
                 user_says_white = False
                 break
 
-        singlescore = (scoretime * 1000) - (time.time() - now) * 1000
-        singlescore = max(singlescore, 0)
-
-        elapsed_q = time.time() - now
+        elapsed_q = time.perf_counter() - now
         timeslist.append(elapsed_q)
+        singlescore = max((scoretime - elapsed_q) * 1000, 0)
         correct_is_white = get_square_color(sq) == "w"
         correct = user_says_white == correct_is_white
         if correct:
@@ -1160,6 +1245,7 @@ def ExColors(ripetitions):
                 }
             )
 
+        esiti.append(correct)
         current_rep_index = initial_rpt - ripetitions
         progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
         current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
@@ -1179,12 +1265,12 @@ def ExColors(ripetitions):
         Acusticator(sound_score, kind=1)
         ripetitions -= 1
 
-    duration = time.time() - timeex
-    return score, scoreslist, duration, timeslist, wins, errors_list
+    duration = time.perf_counter() - timeex
+    return score, scoreslist, duration, timeslist, wins, errors_list, esiti
 
 
 def main():
-    start_memoboard_time = time.time()
+    start_memoboard_time = time.perf_counter()
     session_start_dt = datetime.datetime.now()
     all_scores = load_scores()
     session_logs = []
@@ -1217,7 +1303,7 @@ def main():
                 pass
         current_session_filepath = target_path
 
-        endtime = time.time() - start_memoboard_time
+        endtime = time.perf_counter() - start_memoboard_time
         header = (
             ""
             f"Report Sessione MemoBoard (Orologic V{config.VERSION})\n"
@@ -1290,7 +1376,7 @@ def main():
             rpt = min(rpt, 300)
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
-            score, _elenco, duration, timeslist, wins, errors_list = ExColors(rpt)
+            score, _elenco, duration, timeslist, wins, errors_list, esiti = ExColors(rpt)
             if errors_list:
                 print(_("I tuoi errori"))
                 for err in errors_list:
@@ -1314,6 +1400,7 @@ def main():
                 exercises_played,
                 save_current_session_report,
                 timeslist,
+                esiti,
             )
 
         elif s == "cavalli":
@@ -1333,7 +1420,7 @@ def main():
             rpt = min(rpt, 300)
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
-            score, _elenco, duration, timeslist, wins, errors_list = ExKnights(rpt)
+            score, _elenco, duration, timeslist, wins, errors_list, esiti = ExKnights(rpt)
             if errors_list:
                 print(_("I tuoi errori"))
                 for err in errors_list:
@@ -1357,6 +1444,7 @@ def main():
                 exercises_played,
                 save_current_session_report,
                 timeslist,
+                esiti,
             )
 
         elif s == "alfieri":
@@ -1376,7 +1464,7 @@ def main():
             rpt = min(rpt, 300)
             key(prompt=_("Pronto?"))
             print(_(" Inizio"))
-            score, _elenco, duration, timeslist, wins, errors_list = ExBishops(rpt)
+            score, _elenco, duration, timeslist, wins, errors_list, esiti = ExBishops(rpt)
             if errors_list:
                 print(_("I tuoi errori"))
                 for err in errors_list:
@@ -1400,6 +1488,7 @@ def main():
                 exercises_played,
                 save_current_session_report,
                 timeslist,
+                esiti,
             )
 
         elif s == "classifiche":
@@ -1436,7 +1525,7 @@ def main():
             )
 
             key(prompt=_("Sei pronto per iniziare? Via!"))
-            score, _scoreslist, duration, timeslist, wins, errors_list = ExMixed(100)
+            score, _scoreslist, duration, timeslist, wins, errors_list, esiti = ExMixed(100)
             rpt = 100
 
             print(_("SFIDA MISTA COMPLETATA!"))
@@ -1474,6 +1563,7 @@ def main():
                 exercises_played,
                 save_current_session_report,
                 timeslist,
+                esiti,
             )
 
     save_scores(all_scores)
@@ -1495,7 +1585,7 @@ def main():
         kind=1,
         sync=True,
     )
-    endtime = time.time() - start_memoboard_time
+    endtime = time.perf_counter() - start_memoboard_time
 
     if session_logs:
         save_current_session_report()
