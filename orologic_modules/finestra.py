@@ -735,8 +735,6 @@ class Finestra(wx.Frame):
             self._manda("\r")
         elif codice == wx.WXK_BACK:
             self._manda("\x08")
-        elif codice == wx.WXK_ESCAPE:
-            self._manda("\x1b")
         elif codice != wx.WXK_NONE and codice >= 32 and not (evento.ControlDown() and not evento.AltDown()):
             self._manda(chr(codice))
         else:
@@ -745,6 +743,13 @@ class Finestra(wx.Frame):
 
     def _tasto_giu(self, evento):
         codice = evento.GetKeyCode()
+        # Esc nell'area non diventa mai un carattere: arrivano il gancio
+        # della finestra e la pressione, ma EVT_CHAR no, e il nucleo non lo
+        # riceveva in nessuna domanda (diario dei tasti, Gabriele, memoboard,
+        # 23 novembre 2026). Si prende qui, alla pressione.
+        if codice == wx.WXK_ESCAPE and not evento.HasAnyModifiers():
+            self._manda("\x1b")
+            return
         ctrl, shift = evento.ControlDown(), evento.ShiftDown()
         if (ctrl and codice == ord("V")) or (shift and codice == wx.WXK_INSERT):
             self._incolla()

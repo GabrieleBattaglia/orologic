@@ -3,8 +3,9 @@
 
 """La tabella delle diagonali era scritta a mano, ed era di 14 diagonali su
 26: Prox poteva dare per no due case sulla stessa diagonale, il 3% delle
-domande col no. Nella finestra Esc, alla prima domanda, risponde no
-(Gabriele, collaudo del 23 novembre 2026)."""
+domande col no. Nella finestra Esc, alla prima domanda, non rispondeva: il
+diario dei tasti ha mostrato che nell'area Esc arriva come pressione e mai
+come carattere (Gabriele, collaudo del 23 novembre 2026)."""
 
 import random
 
@@ -69,6 +70,30 @@ def test_esc_alla_prima_domanda_delle_diagonali_dice_no(finestra, monkeypatch):
     assert pompa(lambda: "Alfiere:" in finestra.area.GetValue(), 15)
     pompa(lambda: False, 0.3)
     # Il fuoco e' nell'area, e Esc da' la risposta: arriva la domanda dopo.
+    # Come col tasto vero, arriva la pressione e non il carattere.
     assert wx.Window.FindFocus() is finestra.area
-    _carattere(finestra, 27)
+    evento = wx.KeyEvent(wx.wxEVT_KEY_DOWN)
+    evento.SetKeyCode(wx.WXK_ESCAPE)
+    finestra._tasto_giu(evento)
     assert pompa(lambda: finestra.area.GetValue().count("Alfiere:") == 2, 10)
+
+
+def test_esc_nell_area_arriva_una_volta_sola(finestra):
+    """Se un giorno Esc arrivasse anche come carattere, non deve contare
+    due volte: il carattere va all'area, che non ne fa niente."""
+    from GBUtils import key
+
+    esiti = []
+
+    def nucleo():
+        esiti.append(key())
+        esiti.append(key(attesa=0.5, alla_scadenza="niente"))
+
+    finestra.avvia_il_nucleo(nucleo)
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.tasto)
+    giu = wx.KeyEvent(wx.wxEVT_KEY_DOWN)
+    giu.SetKeyCode(wx.WXK_ESCAPE)
+    finestra._tasto_giu(giu)
+    _carattere(finestra, wx.WXK_ESCAPE)
+    assert pompa(lambda: len(esiti) == 2)
+    assert esiti == ["\x1b", "niente"]

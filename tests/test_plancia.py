@@ -354,9 +354,9 @@ def test_esc_risponde_alla_domanda_invio_o_esc_dalla_plancia_e_dall_area(finestr
     evento.SetKeyCode(wx.WXK_ESCAPE)
     finestra._tasto_della_plancia(evento)
     assert pompa(lambda: esiti == [False] and finestra.attesa.tipo == "sino")
-    # E nell'area, come sempre.
-    evento = wx.KeyEvent(wx.wxEVT_CHAR)
+    # E nell'area, alla pressione: Esc li' non diventa mai un carattere
+    # (diario dei tasti, 23 novembre 2026).
+    evento = wx.KeyEvent(wx.wxEVT_KEY_DOWN)
     evento.SetKeyCode(wx.WXK_ESCAPE)
-    evento.SetUnicodeKey(wx.WXK_ESCAPE)
-    finestra._carattere(evento)
+    finestra._tasto_giu(evento)
     assert pompa(lambda: esiti == [False, False] and not finestra.nucleo.is_alive())
