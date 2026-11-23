@@ -183,6 +183,13 @@ def _configura_opzioni(cfg):
                 "Il motore non conosce queste opzioni, che restano com'erano: {elenco}"
             ).format(elenco=", ".join(ignorate))
         )
+    # Vittoria, patta e sconfitta in ogni analisi, per le linee e per Rendi
+    # verbosa: prima le chiedeva solo l'inizio di una partita contro il
+    # motore in Easyfish, e .a le dava solo dopo una partita (Gabriele,
+    # collaudo del 23 novembre 2026). Un motore che non le conosce non le
+    # da', senza avvisi.
+    if "UCI_ShowWDL" in ENGINE.options:
+        ENGINE.configure({"UCI_ShowWDL": True})
 
 
 def InitEngine():

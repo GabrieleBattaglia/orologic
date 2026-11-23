@@ -794,9 +794,6 @@ def ExKnights(ripetitions):
     ]
 
     while ripetitions > 0:
-        # I tasti premuti prima che la domanda arrivi non le rispondono: un
-        # Invio di troppo rispondeva alla domanda dopo, senza averla sentita.
-        strato.svuota_tastiera()
         sq1 = random.choice(board)
         yes = random.choice([True, False])
         if not yes:
@@ -826,6 +823,10 @@ def ExKnights(ripetitions):
             flush=True,
         )
         time.sleep(READING_TIME)
+        # I tasti premuti prima che parta il cronometro, anche durante la
+        # pausa di lettura, non rispondono: il secondo Invio di una doppia
+        # pressione rispondeva alla domanda dopo, con tempo zero.
+        strato.svuota_tastiera()
 
         now = time.perf_counter()
 
@@ -893,9 +894,6 @@ def ExBishops(ripetitions):
     errors_list = []
 
     while ripetitions > 0:
-        # I tasti premuti prima che la domanda arrivi non le rispondono: un
-        # Invio di troppo rispondeva alla domanda dopo, senza averla sentita.
-        strato.svuota_tastiera()
         kd = random.choice(list(diagonals.keys()))
         sq1 = random.choice(diagonals[kd])
         yes = random.choice([True, False])
@@ -921,6 +919,10 @@ def ExBishops(ripetitions):
             flush=True,
         )
         time.sleep(READING_TIME)
+        # I tasti premuti prima che parta il cronometro, anche durante la
+        # pausa di lettura, non rispondono: il secondo Invio di una doppia
+        # pressione rispondeva alla domanda dopo, con tempo zero.
+        strato.svuota_tastiera()
 
         now = time.perf_counter()
 
@@ -1000,9 +1002,6 @@ def ExMixed(ripetitions):
     ]
 
     while ripetitions > 0:
-        # I tasti premuti prima che la domanda arrivi non le rispondono: un
-        # Invio di troppo rispondeva alla domanda dopo, senza averla sentita.
-        strato.svuota_tastiera()
         exercise_type = random.choice(["colors", "knights", "bishops"])
         correct = False
 
@@ -1016,6 +1015,10 @@ def ExMixed(ripetitions):
                 flush=True,
             )
             time.sleep(READING_TIME)
+            # I tasti premuti prima che parta il cronometro, anche durante la
+            # pausa di lettura, non rispondono: il secondo Invio di una doppia
+            # pressione rispondeva alla domanda dopo, con tempo zero.
+            strato.svuota_tastiera()
 
             now = time.perf_counter()
             user_says_white = None
@@ -1079,6 +1082,10 @@ def ExMixed(ripetitions):
                 flush=True,
             )
             time.sleep(READING_TIME)
+            # I tasti premuti prima che parta il cronometro, anche durante la
+            # pausa di lettura, non rispondono: il secondo Invio di una doppia
+            # pressione rispondeva alla domanda dopo, con tempo zero.
+            strato.svuota_tastiera()
 
             now = time.perf_counter()
             user_says_yes = None
@@ -1135,6 +1142,10 @@ def ExMixed(ripetitions):
                 flush=True,
             )
             time.sleep(READING_TIME)
+            # I tasti premuti prima che parta il cronometro, anche durante la
+            # pausa di lettura, non rispondono: il secondo Invio di una doppia
+            # pressione rispondeva alla domanda dopo, con tempo zero.
+            strato.svuota_tastiera()
 
             now = time.perf_counter()
             user_says_yes = None
@@ -1202,9 +1213,6 @@ def ExColors(ripetitions):
     errors_list = []
 
     while ripetitions > 0:
-        # I tasti premuti prima che la domanda arrivi non le rispondono: un
-        # Invio di troppo rispondeva alla domanda dopo, senza averla sentita.
-        strato.svuota_tastiera()
         sq = random.choice(board)
         print(
             _("\nColore per {sq_spelling} {sq_rank}?").format(
@@ -1214,6 +1222,10 @@ def ExColors(ripetitions):
             flush=True,
         )
         time.sleep(READING_TIME)
+        # I tasti premuti prima che parta il cronometro, anche durante la
+        # pausa di lettura, non rispondono: il secondo Invio di una doppia
+        # pressione rispondeva alla domanda dopo, con tempo zero.
+        strato.svuota_tastiera()
 
         now = time.perf_counter()
 

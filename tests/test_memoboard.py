@@ -96,7 +96,11 @@ def test_quarti_da_venti_domande_e_differenza_nulla_come_il_primo():
     assert "Quarto 4, domande da 16 a 20: media 3.0 secondi, cioe' 50% piu' lento del primo." in testo
 
 
-def test_la_tastiera_si_svuota_prima_di_ogni_domanda(monkeypatch):
+def test_la_tastiera_si_svuota_alla_fine_della_pausa_di_lettura(monkeypatch):
+    """Svuotata prima della domanda non bastava: il secondo Invio di una
+    doppia pressione arrivava nella pausa di lettura e rispondeva alla
+    domanda dopo (Gabriele, 23 novembre 2026). Si svuota quando parte il
+    cronometro."""
     fatti = []
     monkeypatch.setattr(memoboard_app.strato, "svuota_tastiera", lambda: fatti.append("svuota"))
 
@@ -105,10 +109,10 @@ def test_la_tastiera_si_svuota_prima_di_ogni_domanda(monkeypatch):
         return "\r"
 
     monkeypatch.setattr(memoboard_app, "key", tasto)
-    monkeypatch.setattr(memoboard_app.time, "sleep", lambda _secondi: None)
+    monkeypatch.setattr(memoboard_app.time, "sleep", lambda _secondi: fatti.append("pausa"))
     monkeypatch.setattr(memoboard_app, "Acusticator", lambda *_a, **_k: None)
     risultato = memoboard_app.ExColors(3)
-    assert fatti == ["svuota", "tasto"] * 3
+    assert fatti == ["pausa", "svuota", "tasto"] * 3
     _punti, _elenco, durata, tempi, giuste, errori, esiti = risultato
     assert len(tempi) == len(esiti) == 3
     assert giuste == esiti.count(True)
