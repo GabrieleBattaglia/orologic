@@ -67,6 +67,7 @@ class Navigatore(wx.Dialog):
             ("taglia", _("&Taglia"), self.taglia),
             ("promuovi", _("Pro&muovi la variante"), self.promuovi),
             ("analizza", _("&Analizza"), self.analizza),
+            ("disegni", _("&Disegni"), self.disegni),
         ):
             pulsante = wx.Button(pannello, label=etichetta)
             pulsante.Bind(wx.EVT_BUTTON, lambda _evento, fai=azione: fai())
@@ -134,6 +135,17 @@ class Navigatore(wx.Dialog):
         self.modificata = True
         self.ricostruisci(nodo)
         self._annuncia([_("Commento registrato.")])
+
+    def disegni(self):
+        """La finestra dei disegni, coi nuovi sulla mossa della voce
+        (Gabriele, collaudo del 23 novembre 2026)."""
+        from . import finestra_disegni
+
+        nodo = self.selezionato()
+        if finestra_disegni.disegna(self, self.game, nodo, self._chiedi_conferma, self._annuncia):
+            self.modificata = True
+            self.ricostruisci(nodo)
+        self.albero.SetFocus()
 
     def taglia(self):
         """La mossa col suo seguito, dopo la conferma."""

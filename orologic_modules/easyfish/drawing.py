@@ -18,6 +18,25 @@ MNDRAWING = {
 }
 
 
+# I suoni del menu dei disegni, gli stessi nel terminale e nella finestra.
+
+
+def suono_del_menu():
+    Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME])
+
+
+def suono_dell_aggiunta():
+    Acusticator(["c5", 0.1, 0, config.VOLUME, "e5", 0.1, 0, config.VOLUME], kind=1)
+
+
+def suono_della_mossa_pulita():
+    Acusticator(["g4", 0.1, 0, config.VOLUME], kind=1)
+
+
+def suono_della_pulizia():
+    Acusticator(["g4", 0.1, 0, config.VOLUME, "c4", 0.2, 0, config.VOLUME], kind=1)
+
+
 def get_drawings_from_node(node):
     if not node or not node.comment:
         return [], []
@@ -112,7 +131,7 @@ def clear_all_drawings(curr_node):
 def drawing_menu(game, node):
     is_modified = False
     while True:
-        Acusticator(["c5", 0.05, 0, config.VOLUME, "e5", 0.05, 0, config.VOLUME])
+        suono_del_menu()
         choice = (
             dgt(
                 prompt=_(
@@ -200,9 +219,7 @@ def drawing_menu(game, node):
 
             set_drawings_to_node(node, arrows, circles)
             is_modified = True
-            Acusticator(
-                ["c5", 0.1, 0, config.VOLUME, "e5", 0.1, 0, config.VOLUME], kind=1
-            )
+            suono_dell_aggiunta()
 
         elif choice == "L":
             arrows, circles = get_drawings_from_node(node)
@@ -217,7 +234,7 @@ def drawing_menu(game, node):
             set_drawings_to_node(node, [], [])
             is_modified = True
             print(_("Tutti i disegni di questa mossa sono stati cancellati."))
-            Acusticator(["g4", 0.1, 0, config.VOLUME], kind=1)
+            suono_della_mossa_pulita()
 
         elif choice == "P":
             conf = (
@@ -242,9 +259,7 @@ def drawing_menu(game, node):
                         n=count
                     )
                 )
-                Acusticator(
-                    ["g4", 0.1, 0, config.VOLUME, "c4", 0.2, 0, config.VOLUME], kind=1
-                )
+                suono_della_pulizia()
 
         else:
             print(_("Scelta non valida."))

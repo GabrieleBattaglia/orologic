@@ -1,27 +1,14 @@
-Collaudo, Orologic 9, ramo gui, 22 novembre 2026: NVDA e le orecchie. Accanto a ogni voce scrivi ok, oppure cosa non va.
+Collaudo, Orologic 9, ramo gui, 23 novembre 2026: NVDA e le orecchie. Accanto a ogni voce scrivi ok, oppure cosa non va.
 Prima: dalla cartella E:\git\tmp\Orologic-gui, python orologic.py.
-Prima della ricerca: menu principale, ricerca. Servono un PGN con varianti nei commenti e uno con qualche problema; per Classifica e Ripara usa delle copie.
-* Prove superate ottimo lavoro.
-* Ho provato a riparare le date, mi ha detto di averne aggiustate 2 su 3 e che 1 è da scrivere a mano. Verifica che le abbia riparate bene e non abbia introdotto problemi, la copia di confronto l'ha salvata nella cartella come speicifcato nel codice.
-* Ti chiedo una modifica impostante. Quando visualizzo una partita, qui dalla ricerca, mostramela nel suo formato pgn originale e dammi la possibilità di correggere a mano quello che non va, o anche sempliciemente quello che voglio. Quando faccio indietro, o altri controlli per chiudere, verifichi se sono stati modificati dei caratteri, poi verifichi se si tratta di una partita valida e mi chiedi se salvarla nel db. A quel punto la sovrascrivi all'originale, così posso effettuare le correzioni anche manualmente.
-* Aggiungi un filtro: Cerca testo. Una stringa da cercare con l'operatore "in", quindi anche parziale. Così posso cercare nel tag event, nel tag site ma anche nei commenti alle varie partite.
-* Filtri, non sono chiari i filtri anno dal anno a che chiedono un numero. Cioè se in anno da scrivo 1, indico partite del 2026? Qui bisogna renderli molto più chiari e usare delle caselle con gli anni presenti del DB, un filtro impostato con l'anno più lontano e l'altro con l'anno più recente, poi le frecce verticali scorrono e pgup e pgdn scorrono a passi grandi, oppure digito le 4 cifre.
-
-Prima di Easyfish: menu principale, easyfish; meglio con una partita con varianti e commenti, per esempio dalla ricerca PGN con Passa a Easyfish.
-* Prima voce del menù, esci dall'applicazione va corretto con Indietro.
-* Il comando .al, a cui ho aggiunto un 3, perchè mi dice che c'è una sola linea d'analisi disponibile? Nelle impostazioni ne ho settata 1, ma il comando .al ha la precedenza e significa che in quel punto ne voglio n. Dove non specificato invece, come in .a# uso il valore impostato nelle impostazioni.
-* Nella finestra in cui mostri le linee d'analisi, aggiungi il pulsante "Rendi verbosa", prima di "chiudi". Se lo premo (effetto audio), e nel testo spariscono i dati header del motore e la o le linee vengono riscritte in forma verbosa in questo modo:
-Linea 1: (mainline)
-34. pedone domodossola cattura en passant in como 6, Alfiere firenze 4
-...
-Linea 3:
-...
-* .b correggi in mostra scacchiera mini. Così la distinguiamo da quella interattiva con spazio.
-* .d dobbiamo progettare una finestra interattiva per la faccenda dei sisegni, sullo stile di quella di composizione prompt.
-* Qui e altrove, manca nel menù, la voce: "Spazio - per accedere alla scacchiera interattiva.
-
-Domanda 8: .e, l'esploratore, che parte dalla mossa dove sei; sul cruscotto la variante scelta; con la scacchiera aperta Alt con a d q e w x z u s r t c b; Invio aggiunge la mossa; i pezzi e Tab li dice la scacchiera. Va?
-* Sì. Anche qui aggiungi il pulsante per rendere verbosa la linea e metti il cursore direttamente sull'inizio della linea d'analisi, quando apro questa finesta.
-Il resto di puzzle ok.
-
-* Problemi in memoboard. Esc non funziona per dire no.
+Prima della ricerca: menu principale, ricerca, su una copia di un archivio, non sul GBChessDB.pgn vero.
+Domanda 1: Invio su una partita la mostra nel suo PGN; correggi un'intestazione e chiudi: ti chiede se salvarla nell'archivio. Poi scrivi una mossa sbagliata: ti dice quale e ti chiede se tornare a correggerla. Va?
+Domanda 2: dopo una correzione, Classifica o Ripara, tornando al menu principale ti chiede se salvare nel file, poi se fare prima la copia di sicurezza; prova anche il no, e Alt+F4 da Easyfish dopo la ricerca. Va?
+Domanda 3: i filtri: Cerca testo, anche nei commenti, senza badare alle maiuscole; Anno dal e Anno al, con le frecce, Pagina su e Pagina giu' e quattro cifre. NVDA dice l'anno scelto una volta sola? Va?
+Domanda 4: i testi nuovi della ricerca: Cerca testo, Anno dal, Anno al, le domande del salvataggio, della copia e della partita corretta. Li approvi?
+Prima di Easyfish: menu principale, easyfish, con una partita con varianti e commenti.
+Domanda 5: la prima voce del menu si chiama Indietro, .b Mostra scacchiera mini, e .al3 analizza con tre linee anche se le impostazioni ne hanno una. Va, e approvi Analizza la posizione con # linee?
+Domanda 6: le finestre delle analisi, .a, .al, s nell'esploratore e Analizza nel navigatore: il cursore sulla prima linea, e Rendi verbosa col suo suono, banda_che_si_allarga, che riscrive le linee a parole. Va? Approvi Rendi verbosa e, per chi subisce il matto, matto subito in 3?
+Domanda 7: la voce Spazio: per accedere alla scacchiera interattiva, in cima alla plancia in partita, in Easyfish, nell'esploratore e nei puzzle. Va?
+Domanda 8: .d e Disegni nel navigatore: l'elenco dei disegni di tutta la partita con [mossa attuale], Canc col suono due_cadute_di_quinta, la forma, il colore, le case di partenza e di arrivo, Aggiungi e Pulisci tutto. Va?
+Domanda 9: i testi nuovi dei disegni: Disegni della partita, Forma, Freccia, Cerchio, Colore, Colonna e Traversa di partenza e di arrivo, Aggiungi, Pulisci tutto, Questo disegno c'e' gia', La freccia deve andare da una casa a un'altra, Cancello tutti i disegni della partita? Li approvi? E nel vecchio Freccia da Firenze 8 ad Bologna 4, cambio ad in a?
+Domanda 10: il memoboard: in quale esercizio e a quale domanda Esc non dice no? Nella finestra di prova l'esercizio dei cavalli risponde no con Esc.

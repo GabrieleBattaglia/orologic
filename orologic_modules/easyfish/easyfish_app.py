@@ -776,7 +776,11 @@ def _esegui(partita=None):
                 game_state.board = board
 
             elif cmd == ".d":
-                if drawing_menu(game, node):
+                # Nella finestra, la finestra dei disegni; nel terminale il menu.
+                modificata = strato.disegni(game, node)
+                if modificata is None:
+                    modificata = drawing_menu(game, node)
+                if modificata:
                     is_modified = True
                     if sharing_window and sharing_window.is_active():
                         sharing_window.trigger_update()

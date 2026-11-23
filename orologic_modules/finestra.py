@@ -161,6 +161,18 @@ class ApriNavigatore(ApriImpostazioni):
         self.modificata = False
 
 
+class ApriDisegni(ApriImpostazioni):
+    """Nella fila del testo, la finestra dei disegni di Easyfish, coi nuovi
+    sulla mossa nodo; alla chiusura modificata dice se la partita e'
+    cambiata."""
+
+    def __init__(self, game, nodo):
+        super().__init__()
+        self.game = game
+        self.nodo = nodo
+        self.modificata = False
+
+
 class ApriEditor(ApriImpostazioni):
     """Nella fila del testo, l'editor della scacchiera di Easyfish sulla
     posizione fen; alla chiusura fen e' quella nuova, o None se si e'
@@ -367,6 +379,13 @@ class FacciaFinestra:
         richiesta = ApriNavigatore(game, nodo)
         self._apri_e_aspetta(richiesta)
         return richiesta.scelto, richiesta.modificata
+
+    def disegni(self, game, nodo):
+        """La finestra dei disegni di Easyfish: vero se la partita e'
+        cambiata."""
+        richiesta = ApriDisegni(game, nodo)
+        self._apri_e_aspetta(richiesta)
+        return richiesta.modificata
 
     def editor_della_scacchiera(self, fen):
         """L'editor della scacchiera di Easyfish: il FEN nuovo, o None."""
@@ -813,6 +832,9 @@ class Finestra(wx.Frame):
                 continue
             if isinstance(testo, ApriEditor):
                 wx.CallAfter(self._editor_dal_nucleo, testo)
+                continue
+            if isinstance(testo, ApriDisegni):
+                wx.CallAfter(self._disegni_dal_nucleo, testo)
                 continue
             if isinstance(testo, ApriImpostazioni):
                 wx.CallAfter(self._impostazioni_dal_nucleo, testo)
@@ -1513,6 +1535,18 @@ class Finestra(wx.Frame):
                 richiesta.scelto, richiesta.modificata = finestra_navigatore.naviga(
                     genitore, richiesta.game, richiesta.nodo, self.chiedi_conferma, self.chiedi_valore, self.annuncia
                 )
+                if genitore is self:
+                    self._rimetti_il_fuoco()
+        finally:
+            richiesta.chiuse.set()
+
+    def _disegni_dal_nucleo(self, richiesta):
+        try:
+            if self:
+                from . import finestra_disegni
+
+                genitore = self._sopra()
+                richiesta.modificata = finestra_disegni.disegna(genitore, richiesta.game, richiesta.nodo, self.chiedi_conferma, self.annuncia)
                 if genitore is self:
                     self._rimetti_il_fuoco()
         finally:

@@ -111,6 +111,10 @@ class FacciaTerminale:
         """Il terminale ha il suo editor, a comandi."""
         return None
 
+    def disegni(self, game, nodo):
+        """Il terminale ha il menu .d."""
+        return None
+
 
 _faccia = FacciaTerminale()
 # Cio' che menu restituisce quando la scelta della plancia e' interrotta.
@@ -302,6 +306,13 @@ def navigatore(game, nodo):
     riceve (nodo scelto o None, vero se la partita e' cambiata). Nel
     terminale (None, False)."""
     return _faccia.navigatore(game, nodo)
+
+
+def disegni(game, nodo):
+    """Nella finestra, la finestra dei disegni della partita, coi nuovi
+    sulla mossa nodo; il nucleo aspetta, e riceve vero se la partita e'
+    cambiata. Nel terminale None, e il nucleo usa il menu .d."""
+    return _faccia.disegni(game, nodo)
 
 
 def editor_della_scacchiera(fen):
