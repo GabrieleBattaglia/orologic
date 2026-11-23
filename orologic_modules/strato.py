@@ -100,7 +100,7 @@ class FacciaTerminale:
         """Il terminale non ha la scacchiera interattiva."""
         return False
 
-    def da_leggere(self, titolo, righe):
+    def da_leggere(self, titolo, righe, verbosa=None, inizio=None):
         """Il terminale le ha gia' stampate."""
 
     def navigatore(self, game, nodo):
@@ -118,6 +118,8 @@ SCELTA_INTERROTTA = object()
 # Quante zone di partita sono aperte una dentro l'altra: una ripresa da
 # salvataggio automatico apre la partita dentro il menu che l'ha chiesta.
 _partite = 0
+# Dentro da_leggere, nella finestra: la forma verbosa e la riga del cursore.
+_lettura = None
 
 
 def imposta_faccia(faccia):
@@ -262,15 +264,36 @@ def da_leggere(titolo):
     """Nella finestra, quello che si stampa qui dentro va in una finestra da
     leggere, col titolo, quando la zona si chiude: le analisi e gli aiuti,
     che nel cruscotto non ci stanno. Nel terminale si stampa come sempre."""
+    global _lettura
     if not con_la_plancia():
         yield
         return
     raccolte = io.StringIO()
-    with contextlib.redirect_stdout(raccolte):
-        yield
+    precedente, _lettura = _lettura, {"verbosa": None, "inizio": None}
+    try:
+        with contextlib.redirect_stdout(raccolte):
+            yield
+        dettagli = _lettura
+    finally:
+        _lettura = precedente
     righe = [riga.rstrip() for riga in raccolte.getvalue().replace("\r", "\n").split("\n") if riga.strip()]
     if righe:
-        _faccia.da_leggere(titolo, righe)
+        _faccia.da_leggere(titolo, righe, **dettagli)
+
+
+def lettura_verbosa(righe):
+    """Dentro da_leggere, la forma verbosa di quello che si legge: la
+    finestra ha il pulsante Rendi verbosa, che la mette al posto del testo.
+    Fuori, e nel terminale, niente."""
+    if _lettura is not None:
+        _lettura["verbosa"] = list(righe)
+
+
+def lettura_dalla_riga(testo):
+    """Dentro da_leggere, la riga dove la finestra apre il cursore, come la
+    prima linea di un'analisi; fuori, e nel terminale, niente."""
+    if _lettura is not None and _lettura["inizio"] is None:
+        _lettura["inizio"] = testo
 
 
 def navigatore(game, nodo):

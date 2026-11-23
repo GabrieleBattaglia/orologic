@@ -27,7 +27,7 @@ def test_il_puzzle_nella_finestra(finestra, monkeypatch):
     mandati = []
     monkeypatch.setattr(lichess_app, "send_puzzle_result", lambda _token, _id, win: mandati.append(win))
     letture = []
-    monkeypatch.setattr(dialoghi, "da_leggere", lambda _genitore, titolo, righe: letture.append((titolo, righe)))
+    monkeypatch.setattr(dialoghi, "da_leggere", lambda _genitore, titolo, righe, *_resto: letture.append((titolo, righe)))
     finestra.avvia_il_nucleo(lambda: lichess_app.risolvi_il_puzzle(None, PUZZLE))
     assert pompa(lambda: finestra.fornitore is not None and finestra.attesa.tipo == "area" and finestra.attesa.gioco)
     # La descrizione, da leggere; nel cruscotto le righe del puzzle.

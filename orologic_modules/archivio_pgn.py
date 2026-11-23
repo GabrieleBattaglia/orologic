@@ -214,6 +214,8 @@ class Archivio:
         self.giocatore_comune = pgn_search._trova_giocatore_comune(info)
         # Il filo dei doppioni li segna qui, quando ha finito.
         self.doppioni_cercati = False
+        # Vero quando le modifiche non sono ancora nel file.
+        self.modificato = False
 
     def __len__(self):
         return len(self.schede)
@@ -291,6 +293,12 @@ class Archivio:
             for tipo in self.schede[indice].problemi or ():
                 trovati.setdefault(tipo, []).append(indice)
         return trovati
+
+    def con_il_testo(self, indici, cercato):
+        """Le partite di indici che hanno cercato nel loro testo, in
+        intestazioni, mosse o commenti, senza badare alle maiuscole."""
+        cercato = cercato.casefold()
+        return [indice for indice in indici if cercato in self.testo_della_partita(indice).casefold()]
 
     def con_problemi(self, indici):
         return [indice for indice in indici if self.schede[indice].problemi]
@@ -750,22 +758,77 @@ def _senza(problemi, tipi):
 
 
 def applica_le_modifiche(archivio, cambi, tolte=(), riscrivi_comunque=False):
-    """Le modifiche, nel file se l'archivio ne ha uno, dopo la copia di
-    sicurezza: (archivio nuovo, righe del resoconto). Senza file restano
-    nell'archivio aperto. riscrivi_comunque riscrive il file anche senza
-    cambi, per i caratteri."""
+    """Le modifiche nell'archivio aperto: (archivio nuovo, righe del
+    resoconto). Un archivio che viene da un file le scrive nel file
+    all'uscita dalla ricerca, dopo la domanda e, se la si vuole, la copia di
+    sicurezza (Gabriele, collaudo del 23 novembre 2026: c'e' chi lavora su
+    archivi da quattro giga, e una copia a ogni modifica sarebbe troppo).
+    riscrivi_comunque vale anche senza cambi, per i caratteri."""
     righe = []
     if not cambi and not tolte and not riscrivi_comunque:
         return archivio, righe
     nuovo = riscritto(archivio, cambi, tolte)
     if archivio.percorso is None:
         righe.append(_("Le modifiche restano nell'archivio aperto: per tenerle, Salva il PGN."))
-        return nuovo, righe
-    copia = copia_di_sicurezza(archivio.percorso)
-    righe.append(pgn_search.pulita(_("Copia di sicurezza: {percorso}").format(percorso=copia)))
-    scrivi_il_file(archivio.percorso, nuovo.testo, archivio.a_capo, archivio.bom)
-    righe.append(pgn_search.pulita(_("File riscritto: {percorso}").format(percorso=archivio.percorso)))
+    else:
+        nuovo.modificato = True
+        righe.append(_("Le modifiche vanno nel file quando esci dalla ricerca: te lo chiedo allora."))
     return nuovo, righe
+
+
+def salva_nel_file(archivio, con_la_copia):
+    """L'archivio modificato nel suo file, dopo la copia di sicurezza se
+    con_la_copia: le righe del resoconto. Gli errori di scrittura salgono."""
+    righe = []
+    if con_la_copia:
+        copia = copia_di_sicurezza(archivio.percorso)
+        righe.append(pgn_search.pulita(_("Copia di sicurezza: {percorso}").format(percorso=copia)))
+    scrivi_il_file(archivio.percorso, archivio.testo, archivio.a_capo, archivio.bom)
+    archivio.modificato = False
+    righe.append(pgn_search.pulita(_("File riscritto: {percorso}").format(percorso=archivio.percorso)))
+    return righe
+
+
+def motivo_non_valida(testo):
+    """Perche' il testo, corretto a mano, non e' una partita da tenere, o
+    None se lo e': una partita sola, con le mosse legali."""
+    _pezzi, schede, _info = leggi(testo.replace("\r\n", "\n").strip("\n") + "\n")
+    if not schede:
+        return _("non contiene una partita.")
+    if len(schede) > 1:
+        return _("contiene {n} partite, invece di una.").format(n=len(schede))
+    problemi = schede[0].problemi or {}
+    if "mosse" in problemi:
+        return _("la mossa {mossa} non e' legale o non si legge.").format(mossa=problemi["mosse"])
+    return None
+
+
+def con_la_partita(archivio, indice, testo):
+    """L'archivio con la partita indice sostituita dal testo, corretto a
+    mano e gia' controllato: (archivio nuovo, righe del resoconto). Gli a
+    capo in fondo restano quelli di prima."""
+    vecchio = archivio.testo_della_partita(indice)
+    coda = vecchio[len(vecchio.rstrip("\n")) :]
+    return applica_le_modifiche(archivio, {indice: testo.replace("\r\n", "\n").strip("\n") + coda})
+
+
+# La ricerca aperta, che chi chiude Orologic deve poter salvare: dopo
+# Easyfish o l'analisi l'archivio modificato e' ancora qui.
+_RICERCA_APERTA = {"ricerca": None}
+
+
+def ricerca_aperta():
+    return _RICERCA_APERTA["ricerca"]
+
+
+@contextlib.contextmanager
+def ricerca_in_corso(ricerca):
+    """La zona della ricerca, dalla prima apertura al ritorno al menu."""
+    _RICERCA_APERTA["ricerca"] = ricerca
+    try:
+        yield ricerca
+    finally:
+        _RICERCA_APERTA["ricerca"] = None
 
 
 class Ricerca:

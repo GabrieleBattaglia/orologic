@@ -285,9 +285,9 @@ def test_l_editor_della_scacchiera(finestra, monkeypatch):
 
 def test_il_navigatore_della_partita(finestra, monkeypatch):
     game = partita()
-    monkeypatch.setattr(finestra_navigatore, "analizza", lambda _board: ["1. +0.30 e5"])
+    monkeypatch.setattr(finestra_navigatore, "analizza", lambda _board: (["1. +0.30 e5"], None, None))
     letture = []
-    monkeypatch.setattr(finestra_navigatore.dialoghi, "da_leggere", lambda _genitore, titolo, righe: letture.append((titolo, righe)))
+    monkeypatch.setattr(finestra_navigatore.dialoghi, "da_leggere", lambda _genitore, titolo, righe, *_resto: letture.append((titolo, righe)))
     detti = []
     conferme = []
     nav = finestra_navigatore.Navigatore(finestra, game, game.end(), lambda _g, testo: conferme.append(testo) or True,
@@ -350,7 +350,7 @@ def test_easyfish_nella_finestra(finestra, monkeypatch):
     salvate = []
     monkeypatch.setattr(easyfish_app, "SaveGameToFile", salvate.append)
     letture = []
-    monkeypatch.setattr(dialoghi, "da_leggere", lambda _genitore, titolo, righe: letture.append((titolo, righe)))
+    monkeypatch.setattr(dialoghi, "da_leggere", lambda _genitore, titolo, righe, *_resto: letture.append((titolo, righe)))
     navigate = []
 
     def naviga(_genitore, partita_navigata, nodo, *_altro):

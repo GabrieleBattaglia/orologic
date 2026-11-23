@@ -27,7 +27,6 @@ from ..config import _
 from . import analysis_utils, posizione
 from .constants import MNMAIN
 from .drawing import drawing_menu, verbalize_drawings
-from .engine_handler import ShowStats
 from .image_exporter import export_board_pdf, image_settings_menu
 from .interaction import BoardEditor, ExplorerMode
 from .pgn_handler import (
@@ -288,55 +287,34 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
 
 
 def _comandi_analisi(cmd_clean, board, engine, number_command, info, info_fen):
-    """Analizza la posizione e rilegge le linee gia' trovate.
+    """Analizza la posizione: .a per i secondi chiesti, .al per le linee
+    chieste.
 
-    Restituisce il risultato dell'analisi, che il comando punto a elle
-    riusa senza interrogare di nuovo il motore, e il FEN della posizione
-    analizzata, che serve a .ac per sapere se quel risultato vale ancora.
+    Restituisce il risultato dell'analisi e il FEN della posizione
+    analizzata, che servono a .ac per sapere se quel risultato vale ancora.
     Le linee stavano su punto elle, che pero' in tutte le altre modalita' e'
     la lista delle mosse: era l'ultimo comando rimasto con due significati
     diversi.
     """
-    if cmd_clean == ".a":
-        if not engine:
-            print(_("Motore non caricato in Orologic."))
-        else:
-            # Senza numero i secondi delle impostazioni; le linee sono
-            # sempre quelle delle impostazioni, con l'intestazione del motore.
-            sec = number_command if number_command > 0 else orologic_engine.analysis_time
-            print(_("Analisi posizione corrente per {s} secondi.").format(s=sec))
-            analisi, righe = analysis_utils.analizza(board, engine, sec, orologic_engine.multipv)
-            for riga in righe:
-                print(riga)
-            if analisi:
-                info = analisi
-                info_fen = board.fen()
-    elif cmd_clean == ".al":
-        # Le linee valgono solo per la posizione analizzata: dopo una mossa
-        # le loro mosse non sono piu' legali, e python-chess, chiamato a
-        # scriverle, faceva cadere Easyfish.
-        if info and info_fen != board.fen():
-            print(
-                _("L'ultima analisi riguarda un'altra posizione: rifalla con .a")
-            )
-        elif info:
-            idx = number_command - 1 if number_command > 0 else 0
-            idx = max(idx, 0)
-            current_info_list = info if isinstance(info, list) else [info]
-            if idx >= len(current_info_list):
-                print(
-                    _("Ci sono solo {n} linee di analisi disponibili").format(
-                        n=len(current_info_list)
-                    )
-                )
-                idx = len(current_info_list) - 1
-            if idx == 0:
-                print(_("Migliore:"))
-            else:
-                print(_("{n}° scelta:").format(n=idx + 1))
-            ShowStats(board, current_info_list[idx])
-        else:
-            print(_("Prima devi eseguire l'analisi con il comando .a"))
+    if cmd_clean not in (".a", ".al"):
+        return info, info_fen
+    if not engine:
+        print(_("Motore non caricato in Orologic."))
+        return info, info_fen
+    # .a# analizza per # secondi, .al# con # linee; il valore che manca e'
+    # quello delle impostazioni, con l'intestazione del motore. Prima .al#
+    # rileggeva la linea # dell'ultima analisi, e con una linea sola nelle
+    # impostazioni rispondeva che ce n'era una sola (Gabriele, collaudo del
+    # 23 novembre 2026: il numero di .al ha la precedenza).
+    sec = number_command if cmd_clean == ".a" and number_command > 0 else orologic_engine.analysis_time
+    linee = number_command if cmd_clean == ".al" and number_command > 0 else orologic_engine.multipv
+    print(_("Analisi posizione corrente per {s} secondi.").format(s=sec))
+    analisi, righe = analysis_utils.analizza(board, engine, sec, linee)
+    for riga in righe:
+        print(riga)
+    if analisi:
+        info = analisi
+        info_fen = board.fen()
     return info, info_fen
 
 

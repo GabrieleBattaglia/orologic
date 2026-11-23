@@ -4,6 +4,7 @@
 import chess
 import chess.engine
 
+from .. import board_utils, strato
 from ..config import _
 from .posizione import righe_dell_analisi
 
@@ -153,7 +154,62 @@ def analizza(board, engine, secondi, linee):
         righe.extend(trovate)
     else:
         righe.append(_("Nessuna linea trovata."))
+    # Nella finestra da leggere: Rendi verbosa, e il cursore sulla prima
+    # linea (Gabriele, collaudo del 23 novembre 2026).
+    verbosa, inizio = dettagli_della_lettura(board, analisi, righe)
+    strato.lettura_verbosa(verbosa)
+    strato.lettura_dalla_riga(inizio)
     return analisi, righe
+
+
+def dettagli_della_lettura(board, analisi, righe):
+    """(forma verbosa o None, la riga della prima linea o None) di
+    un'analisi, per la finestra da leggere."""
+    verbosa = forma_verbosa(board, analisi) or None
+    trovate = righe_dell_analisi(board, analisi)
+    inizio = trovate[0] if trovate and trovate[0] in righe else None
+    return verbosa, inizio
+
+
+def _percentuali(wdl, colore):
+    """Vittoria, patta e sconfitta in millesimi, dal lato di colore."""
+    if hasattr(wdl, "pov"):
+        wdl = wdl.pov(colore)
+    return tuple(getattr(wdl, nome, None) for nome in ("wins", "draws", "losses")) if hasattr(wdl, "wins") else tuple(wdl[:3])
+
+
+def forma_verbosa(board, analisi):
+    """Le linee a parole, per Rendi verbosa, senza l'intestazione del
+    motore: Linea 1: +0.35, vittoria 52%, patta 40%, sconfitta 8%; sotto,
+    una riga per mossa, come la descrive Orologic, 34. pedone domodossola
+    cattura en passant in como 6, Alfiere firenze 4."""
+    righe = []
+    for indice, info in enumerate(analisi if isinstance(analisi, list) else [analisi]):
+        pv = info.get("pv", [])
+        if not pv or info.get("score") is None:
+            continue
+        punteggio = info.get("score").pov(board.turn)
+        if punteggio.is_mate():
+            matto = punteggio.mate()
+            valutazione = (_("matto in {n}") if matto > 0 else _("matto subito in {n}")).format(n=abs(matto))
+        else:
+            valutazione = f"{punteggio.score(mate_score=10000) / 100:+.2f}"
+        testa = _("Linea {n}: {valutazione}").format(n=indice + 1, valutazione=valutazione)
+        wdl = info.get("wdl")
+        if wdl:
+            vittoria, patta, sconfitta = _percentuali(wdl, board.turn)
+            testa += _(", vittoria {v}%, patta {p}%, sconfitta {s}%").format(v=round(vittoria / 10), p=round(patta / 10), s=round(sconfitta / 10))
+        righe.append(testa)
+        # Solo le mosse legali: una linea vecchia non fa cadere la finestra.
+        legali = []
+        prova = board.copy()
+        for mossa in pv:
+            if not prova.is_legal(mossa):
+                break
+            legali.append(mossa)
+            prova.push(mossa)
+        righe.extend(riga for riga in board_utils.format_pv_descriptively(board, legali).split("\n") if riga)
+    return righe
 
 
 def RunAnalysis(board, engine, time_limit, multipv_count):

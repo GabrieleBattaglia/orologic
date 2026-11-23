@@ -436,9 +436,14 @@ def test_i_problemi_e_la_riparazione(tmp_path, monkeypatch):
         "Intestazioni aggiunte: 1 partite.", "Risultati corretti: 1.", "Date riscritte: 1.", "Doppioni tolti: 1.",
         "Mosse illegali, da sistemare a mano: 1 partite.", "Elo non numerici, da sistemare a mano: 1 partite."]
     nuovo, righe = archivio_pgn.applica_le_modifiche(a, cambi, tolte)
+    # Il file non cambia finche' non si esce dalla ricerca.
+    assert righe == ["Le modifiche vanno nel file quando esci dalla ricerca: te lo chiedo allora."]
+    assert nuovo.modificato and not a.modificato
+    assert file.read_bytes() == PROBLEMI.encode("utf-8")
+    righe = archivio_pgn.salva_nel_file(nuovo, True)
     copia = righe[0].removeprefix("Copia di sicurezza: ")
     assert os.path.dirname(copia) == str(tmp_path / "pgn") and pathlib.Path(copia).read_bytes() == PROBLEMI.encode("utf-8")
-    assert righe[1] == "File riscritto: " + str(file)
+    assert righe[1] == "File riscritto: " + str(file) and not nuovo.modificato
     scritto = file.read_text(encoding="utf-8")
     assert scritto.count('[Event "C"]') == 1
     assert '[Date "2024.05.03"]' in scritto and '[Result "0-1"]' in scritto and "Qh4# 0-1" in scritto
@@ -462,7 +467,10 @@ def test_le_non_classificate_e_classifica(tmp_path, monkeypatch):
     nuovo, _righe = archivio_pgn.applica_le_modifiche(a, cambi)
     assert nuovo.info[0]["ECO"].startswith("C")
     assert nuovo.non_classificate(range(4)) == ([3], [2], [])
-    assert '[ECO "C' in file.read_text(encoding="utf-8")
+    assert '[ECO "C' not in file.read_text(encoding="utf-8")
+    # Senza la copia, solo il file.
+    assert archivio_pgn.salva_nel_file(nuovo, False) == ["File riscritto: " + str(file)]
+    assert '[ECO "C' in file.read_text(encoding="utf-8") and not (tmp_path / "pgn").exists()
 
 
 def test_i_filtri_nuovi():
@@ -521,6 +529,8 @@ class Prova:
         self.scelte = []
         self.file_chiesti = 0
         self.azione = None
+        self.correzione = None
+        self.risposte_in_fila = []
         self.risposta = True
         self.salva_in = None
 
@@ -540,11 +550,11 @@ class Prova:
 
     def _conferma(self, _genitore, testo):
         self.domande.append(testo)
-        return self.risposta
+        return self.risposte_in_fila.pop(0) if self.risposte_in_fila else self.risposta
 
-    def _partita(self, _genitore, testo):
+    def _partita(self, _genitore, testo, _chiedi_conferma, _avvisa):
         self.partite.append(testo)
-        return self.azione
+        return self.azione, self.correzione
 
     def _scegli(self, _genitore, titolo, voci, scelta=0):
         self.scelte.append((titolo, list(voci), scelta))
@@ -706,7 +716,7 @@ def test_invio_apre_i_rami_e_mostra_la_partita(prova):
     nc6 = p.voce("(e4)", "(e5)", "(Nf3)", "(Nc6)")
     d.albero.SelectItem(nc6)
     p.invio(d.albero)
-    assert p.partite[0].split("\n") == ["Event: Prova", "Date: 2020.01.01", "White: Rossi", "Black: Bianchi", "Result: 1-0", "1. e4 e5 2. Nf3 Nc6 1-0"]
+    assert p.partite[0].split("\n") == ['[Event "Prova"]', '[White "Rossi"]', '[Black "Bianchi"]', '[Result "1-0"]', '[Date "2020.01.01"]', "", "1. e4 e5 2. Nf3 Nc6 1-0"]
     assert d.uscita is None and d.IsShown()
     # Passa a Easyfish: l'uscita, e la posizione per il ritorno.
     p.azione = "easyfish"
@@ -727,9 +737,10 @@ def test_i_filtri(prova):
     p = prova(ricerca)
     d = p.dialogo
     nomi = [d.campi[chiave].GetName() for chiave, _domanda, _tipo in finestra_ricerca.domande_dei_filtri()]
-    assert nomi[:2] == ["Nome giocatore Bianco (vuoto=qualsiasi)", "Nome giocatore Nero (vuoto=qualsiasi)"]
-    assert nomi[3] == "Scegli risultato"
-    assert nomi[10:] == ["Con almeno queste mosse (0=nessun limite)", "Con meno di queste mosse (0=nessun limite)", "Terminata con il matto", "Con promozione"]
+    assert nomi[:3] == ["Cerca testo", "Nome giocatore Bianco (vuoto=qualsiasi)", "Nome giocatore Nero (vuoto=qualsiasi)"]
+    assert nomi[4] == "Scegli risultato"
+    assert nomi[8:10] == ["Anno dal", "Anno al"]
+    assert nomi[11:] == ["Con almeno queste mosse (0=nessun limite)", "Con meno di queste mosse (0=nessun limite)", "Terminata con il matto", "Con promozione"]
     assert d.campi["result"].GetString(4) == "Non specificato (*)"
     assert all(campo.GetParent() is d.pagina_filtri for campo in d.campi.values())
     d.campi["event"].ChangeValue("prova")
@@ -753,6 +764,47 @@ def test_i_filtri(prova):
     assert di_nuovo.etichetta_dell_albero.GetLabel() == "Partite corrispondenti: 0 di 4 (0.00%)"
 
 
+def test_cerca_testo_e_gli_anni(prova):
+    """Collaudo del 23 novembre 2026: Cerca testo trova anche nei commenti e
+    nelle intestazioni, senza badare alle maiuscole; gli anni sono elenchi
+    con gli anni dell'archivio, agli estremi non filtrano, Pagina su e giu'
+    saltano dieci anni, quattro cifre scelgono l'anno o il piu' vicino."""
+    ricerca = archivio_pgn.Ricerca()
+    ricerca.archivio = archivio()
+    p = prova(ricerca)
+    d = p.dialogo
+    d.campi["cerca"].ChangeValue("una VARIANTE")
+    p.invio(d.campi["cerca"])
+    assert ricerca.filtri == {"cerca": "una VARIANTE"}
+    assert d.etichetta_dell_albero.GetLabel() == "Partite corrispondenti: 1 di 4 (25.00%)"
+    d.campi["cerca"].ChangeValue("torneo")
+    p.invio(d.campi["cerca"])
+    assert d.etichetta_dell_albero.GetLabel() == "Partite corrispondenti: 1 di 4 (25.00%)"
+    d.azzera()
+    dal, al = d.campi["year_from"], d.campi["year_to"]
+    assert [dal.GetString(n) for n in range(dal.GetCount())] == ["2020", "2021"]
+    assert dal.GetStringSelection() == "2020" and al.GetStringSelection() == "2021"
+    # Agli estremi non filtrano: restano anche le due partite senza data.
+    assert d.filtri_dei_campi() == {}
+    dal.SetSelection(1)
+    assert d.filtri_dei_campi() == {"year_from": 2021}
+    p.invio(dal)
+    assert d.etichetta_dell_albero.GetLabel() == "Partite corrispondenti: 1 di 4 (25.00%)"
+    # Pagina su torna indietro, fino al primo; quattro cifre il piu' vicino.
+    evento = wx.KeyEvent(wx.wxEVT_KEY_DOWN)
+    evento.SetKeyCode(wx.WXK_PAGEUP)
+    evento.SetEventObject(dal)
+    d._tasto_dell_anno(evento)
+    assert dal.GetStringSelection() == "2020"
+    for cifra in "2099":
+        evento = wx.KeyEvent(wx.wxEVT_CHAR)
+        evento.SetUnicodeKey(ord(cifra))
+        evento.SetEventObject(dal)
+        d._cifra_dell_anno(evento)
+    assert dal.GetStringSelection() == "2021"
+    assert p.detti[-2:] == ["2020", "2021"]
+
+
 def test_alt_e_una_cifra_portano_alle_sezioni(prova):
     ricerca = archivio_pgn.Ricerca()
     ricerca.archivio = archivio()
@@ -760,7 +812,7 @@ def test_alt_e_una_cifra_portano_alle_sezioni(prova):
     d = p.dialogo
     p.alt(4)
     assert d.schede.GetSelection() == 1
-    assert pompa(lambda: wx.Window.FindFocus() is d.campi["white"])
+    assert pompa(lambda: wx.Window.FindFocus() is d.campi["cerca"])
     p.alt(1)
     assert d.schede.GetSelection() == 0
     assert pompa(lambda: wx.Window.FindFocus() is d.riepilogo)
@@ -785,7 +837,7 @@ def test_i_pulsanti(prova, tmp_path):
     assert p.scelte[0][0] == "Partite del ramo"
     assert p.scelte[0][1] == ["Rossi vs Bianchi (1): 1-0, 2. Nf3 Nc6", "Gialli vs Rossi (2): 1-0, 2. Nf3 Nf6"]
     assert p.scelte[1][2] == 1
-    assert "White: Gialli" in p.partite[0]
+    assert '[White "Gialli"]' in p.partite[0]
     # Salva il PGN: le partite della voce, com'erano.
     p.salva_in = str(tmp_path / "ramo")
     d.salva()
@@ -839,7 +891,8 @@ def test_problemi_e_ripara_nella_finestra(prova, tmp_path, monkeypatch):
     d.ripara()
     assert pompa(lambda: not d.in_corso() and p.avvisi)
     assert p.avvisi[-1].split("\n")[0] == "Date riscritte: 1."
-    assert '[Date "2024.05.03"]' in file.read_text(encoding="utf-8")
+    assert p.avvisi[-1].split("\n")[-1] == "Le modifiche vanno nel file quando esci dalla ricerca: te lo chiedo allora."
+    assert file.read_bytes() == PROBLEMI.encode("utf-8")
     assert p.finiti_i_doppioni()
     # Dal ramo Con errori, tutti: restano Elo e la mossa illegale.
     d.albero.SelectItem(p.voce("Con errori"))
@@ -848,7 +901,15 @@ def test_problemi_e_ripara_nella_finestra(prova, tmp_path, monkeypatch):
     assert p.avvisi[-1].split("\n")[:3] == ["Intestazioni aggiunte: 1 partite.", "Risultati corretti: 1.", "Doppioni tolti: 1."]
     assert p.finiti_i_doppioni()
     assert p.testi(p.voce("Con errori")) == ["Mosse illegali o illeggibili (1 partite)", "Elo non numerici (1 partite)"]
-    assert len(os.listdir(tmp_path / "pgn")) == 2
+    assert not (tmp_path / "pgn").exists() and file.read_bytes() == PROBLEMI.encode("utf-8")
+    # Uscendo: si salva, con la copia di sicurezza.
+    d._chiudi()
+    assert p.domande[-2:] == [
+        f"Hai modificato l'archivio. Salvo le modifiche nel file {file}? Se rispondi no, si perdono.",
+        "Prima di salvare faccio una copia di sicurezza del file, nella cartella pgn di Orologic?"]
+    assert os.listdir(tmp_path / "pgn") and '[Date "2024.05.03"]' in file.read_text(encoding="utf-8")
+    assert p.avvisi[-1].split("\n")[1] == f"File riscritto: {file}"
+    assert not d.ricerca.archivio.modificato
 
 
 def test_classifica_nella_finestra(prova, tmp_path, monkeypatch):
@@ -893,16 +954,86 @@ def test_esc_ferma_il_caricamento(prova):
 
 
 def test_la_vista_della_partita(app):
-    game = archivio().partita_intera(0)
-    vista = finestra_ricerca.VistaDellaPartita(None, finestra_ricerca.testo_della_partita(game))
-    try:
+    """Collaudo del 23 novembre 2026: la partita nel suo PGN, da correggere
+    a mano; uscendo, una partita valida si salva se lo si vuole, una che non
+    lo e' si torna a correggere o si lascia."""
+    testo = archivio().testo_della_partita(0).strip("\n")
+    domande, avvisi, risposte = [], [], []
+
+    def chiedi(_genitore, domanda):
+        domande.append(domanda)
+        return risposte.pop(0)
+
+    def vista_nuova():
+        vista = finestra_ricerca.VistaDellaPartita(None, testo, chiedi, lambda _genitore, avviso: avvisi.append(avviso))
         vista.Show()
-        assert vista.testo.GetValue().split("\n")[0] == "Event: Prova"
+        return vista
+
+    vista = vista_nuova()
+    try:
+        assert vista.testo.GetValue().split("\n")[0] == '[Event "Prova"]'
         assert [p.GetLabel() for p in vista.pulsanti.values()] == ["Passa a &Easyfish", "Analisi &automatica", "Analisi &manuale"]
         vista.scegli("manuale")
-        assert vista.azione == "manuale"
+        assert (vista.azione, vista.nuovo, domande) == ("manuale", None, [])
     finally:
         vista.Destroy()
+    # Corretta e valida: si salva.
+    vista = vista_nuova()
+    try:
+        vista.testo.SetValue(testo.replace('[White "Rossi"]', '[White "Rossini"]'))
+        risposte.append(True)
+        vista.scegli(None)
+        assert domande == ["La partita e' cambiata. La salvo nell'archivio?"]
+        assert vista.azione is None and '[White "Rossini"]' in vista.nuovo
+    finally:
+        vista.Destroy()
+    # Non valida: si torna a correggere, poi si lascia.
+    vista = vista_nuova()
+    try:
+        vista.testo.SetValue(testo.replace("2. Nf3", "2. Ke3"))
+        risposte.extend([True, False])
+        vista.scegli("easyfish")
+        assert avvisi == ["La partita corretta non e' valida: la mossa 2. Ke3 non e' legale o non si legge."]
+        assert vista.IsShown() and vista.azione is None
+        vista.scegli("easyfish")
+        assert domande[-1] == "Torno alla partita per correggerla? Se rispondi no, le correzioni si perdono."
+        assert vista.azione == "easyfish" and vista.nuovo is None
+    finally:
+        vista.Destroy()
+
+
+def test_la_partita_corretta_va_nell_archivio_e_nel_file_all_uscita(prova, tmp_path, monkeypatch):
+    monkeypatch.setattr(archivio_pgn.config, "percorso_salvataggio", lambda nome: str(tmp_path / nome))
+    file = tmp_path / "prova.pgn"
+    file.write_text(ARCHIVIO, encoding="utf-8")
+    p = prova(archivio_pgn.Ricerca(), str(file))
+    d = p.dialogo
+    assert pompa(lambda: d.ricerca.archivio is not None and not d.in_corso())
+    originale = d.ricerca.archivio.testo_della_partita(0)
+    p.correzione = originale.strip("\n").replace('[White "Rossi"]', '[White "Rossini"]')
+    d.mostra_partita(0)
+    assert p.partite == [originale.strip("\n")]
+    assert d.ricerca.archivio.info[0]["White"] == "Rossini" and d.ricerca.archivio.modificato
+    assert p.detti[-2:] == ["Partita salvata nell'archivio.", "Le modifiche vanno nel file quando esci dalla ricerca: te lo chiedo allora."]
+    assert file.read_text(encoding="utf-8") == ARCHIVIO
+    # Uscendo: si salva, senza la copia.
+    p.risposte_in_fila.extend([True, False])
+    d._chiudi()
+    assert not (tmp_path / "pgn").exists()
+    assert file.read_text(encoding="utf-8") == ARCHIVIO.replace('[White "Rossi"]\n[Black "Bianchi"]', '[White "Rossini"]\n[Black "Bianchi"]')
+
+
+def test_la_partita_corretta_si_perde_se_non_la_salvi(prova, tmp_path):
+    file = tmp_path / "prova.pgn"
+    file.write_text(ARCHIVIO, encoding="utf-8")
+    p = prova(archivio_pgn.Ricerca(), str(file))
+    d = p.dialogo
+    assert pompa(lambda: d.ricerca.archivio is not None and not d.in_corso())
+    p.correzione = d.ricerca.archivio.testo_della_partita(1).strip("\n").replace("0-1", "1-0")
+    d.mostra_partita(1)
+    p.risposte_in_fila.append(False)
+    d._chiudi()
+    assert file.read_text(encoding="utf-8") == ARCHIVIO and not d.ricerca.archivio.modificato
 
 
 def test_dal_nucleo_alla_finestra_e_ritorno(finestra, monkeypatch):
@@ -912,7 +1043,7 @@ def test_dal_nucleo_alla_finestra_e_ritorno(finestra, monkeypatch):
 
     ricerca = archivio_pgn.Ricerca()
     ricerca.archivio = archivio()
-    monkeypatch.setattr(finestra_ricerca, "mostra_la_partita", lambda _genitore, _testo: "automatica")
+    monkeypatch.setattr(finestra_ricerca, "mostra_la_partita", lambda _genitore, _testo, *_resto: ("automatica", None))
     uscite = []
 
     def nucleo():

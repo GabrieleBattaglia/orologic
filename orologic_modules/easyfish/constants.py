@@ -61,15 +61,15 @@ SAN_CHESSPIECES = {
 
 # Menus
 MNMAIN = {
-    ".": _("Esci dall'applicazione"),
+    ".": _("Indietro"),
     ".?": _("Mostra questo menu"),
     "_[commento]": _("Aggiungi un commento alla mossa corrente"),
     ".a#": _("Analizza la posizione per # secondi"),
-    ".al#": _("Vedi Linea/e di Analisi"),
+    ".al#": _("Analizza la posizione con # linee"),
     ".ac#": _(
         "Scrivi nel commento valutazione, mossa migliore e linea; con # nuova analisi"
     ),
-    ".b": _("Mostra la scacchiera"),
+    ".b": _("Mostra scacchiera mini"),
     ".be": _("Editor della scacchiera"),
     ".bm": _("Bilancio materiale"),
     ".d": _("Menu per disegnare frecce e cerchi"),
@@ -149,7 +149,7 @@ MNGAME = {
     ".5": _("Stato orologi/pausa"),
     ".l": _("Visualizza la lista mosse giocate"),
     ".a": _("Visualizza analisi posizione (CP, BestLine, WDL)"),
-    ".b": _("Mostra la scacchiera"),
+    ".b": _("Mostra scacchiera mini"),
     ".u": _("Annulla ultima semimossa (Undo)"),
     ".v": _("Aggiunge variante suggerita dal motore all'albero"),
     ".s#": _("Imposta il livello di forza del motore da 0 a 20 (es. .s10)"),

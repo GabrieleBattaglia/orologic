@@ -363,19 +363,21 @@ def _nella_finestra(indirizzo):
     l'analisi si riapre al ritorno, allo stesso punto."""
     from orologic_modules import archivio_pgn
 
-    ricerca = archivio_pgn.Ricerca(indirizzo)
-    while True:
-        uscita = strato.ricerca_pgn(ricerca)
-        if uscita is None:
-            return
-        azione, indice = uscita
-        game = ricerca.archivio.partita_intera(indice)
-        if azione == "easyfish":
-            from orologic_modules.easyfish import easyfish_app
+    # Fino al ritorno al menu la ricerca resta aperta: chi chiude Orologic
+    # da Easyfish o dall'analisi puo' ancora salvarne le modifiche.
+    with archivio_pgn.ricerca_in_corso(archivio_pgn.Ricerca(indirizzo)) as ricerca:
+        while True:
+            uscita = strato.ricerca_pgn(ricerca)
+            if uscita is None:
+                return
+            azione, indice = uscita
+            game = ricerca.archivio.partita_intera(indice)
+            if azione == "easyfish":
+                from orologic_modules.easyfish import easyfish_app
 
-            easyfish_app.run(partita=board_utils.CopyPgnGame(game))
-        else:
-            _avvia_analisi(game, automatica=azione == "automatica")
+                easyfish_app.run(partita=board_utils.CopyPgnGame(game))
+            else:
+                _avvia_analisi(game, automatica=azione == "automatica")
 
 
 # Estrazione info headers

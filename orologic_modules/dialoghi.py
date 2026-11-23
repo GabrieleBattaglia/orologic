@@ -273,32 +273,82 @@ def chiedi_valore(genitore, titolo, domanda, valore, tipo="testo", minimo=0, mas
         return dialogo.valore
 
 
+# Il suono di Rendi verbosa: qualcosa che si apre, una banda che si
+# allarga; firmato da Orologic in GBUtils V314.
+SUONO_DELLA_FORMA_VERBOSA = "banda_che_si_allarga"
+
+
 class FinestraDaLeggere(wx.Dialog):
     """Righe da leggere, in un testo navigabile col titolo per nome, e
     Chiudi; Esc chiude. Servono alle analisi e agli aiuti di Easyfish, che
-    nel cruscotto non ci stanno."""
+    nel cruscotto non ci stanno. Con verbosa, la forma verbosa del testo,
+    prima di Chiudi c'e' Rendi verbosa, che la mette al posto del testo col
+    suo suono: per le analisi, le linee con le mosse a parole e senza
+    l'intestazione del motore (Gabriele, collaudo del 23 novembre 2026).
+    inizio e' la riga dove si apre il cursore, come la prima linea
+    dell'analisi; senza, la prima."""
 
-    def __init__(self, genitore, titolo, righe):
+    def __init__(self, genitore, titolo, righe, verbosa=None, inizio=None, suona=None):
         super().__init__(genitore, title=titolo, style=STILE_ADATTABILE)
+        self.verbosa = list(verbosa) if verbosa else None
+        self._suona = suona or _suona_un_preset
         pannello = pannello_scorrevole(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
         self.testo = wx.TextCtrl(pannello, value="\n".join(righe), style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
         self.testo.SetName(titolo)
         sizer.Add(self.testo, 1, wx.EXPAND | wx.ALL, 5)
-        sizer.Add(wx.Button(pannello, wx.ID_CANCEL, _("Chiudi")), 0, wx.ALL | wx.ALIGN_RIGHT, 5)
+        riga = wx.BoxSizer(wx.HORIZONTAL)
+        self.pulsante_verboso = None
+        if self.verbosa:
+            self.pulsante_verboso = wx.Button(pannello, label=_("Rendi verbosa"))
+            self.pulsante_verboso.Bind(wx.EVT_BUTTON, lambda _evento: self.rendi_verbosa())
+            riga.Add(self.pulsante_verboso, 0, wx.RIGHT, 5)
+        riga.Add(wx.Button(pannello, wx.ID_CANCEL, _("Chiudi")), 0)
+        sizer.Add(riga, 0, wx.ALL | wx.ALIGN_RIGHT, 5)
         pannello.SetSizer(sizer)
         aspetto.applica_alla_finestra(self)
         self.testo.SetMinSize(wx.Size(-1, self.testo.GetCharHeight() * 10))
         adatta_finestra(self, pannello, (560, 420))
         self.Maximize()
-        self.testo.SetInsertionPoint(0)
+        self.testo.SetInsertionPoint(self._posizione_della_riga(righe, inizio))
         self.testo.SetFocus()
 
+    @staticmethod
+    def _posizione_della_riga(righe, inizio):
+        """Dove comincia la riga inizio nel testo, o 0. Si conta sul testo,
+        non con XYToPosition, che col testo che va a capo conta le righe a
+        schermo; nel controllo ricco ogni a capo vale un carattere."""
+        if inizio is None or inizio not in righe:
+            return 0
+        return sum(len(riga) + 1 for riga in righe[: righe.index(inizio)])
 
-def da_leggere(genitore, titolo, righe):
+    def rendi_verbosa(self):
+        """La forma verbosa al posto del testo, col cursore in cima; il
+        pulsante non serve piu' e si toglie."""
+        if not self.verbosa:
+            return
+        self._suona(SUONO_DELLA_FORMA_VERBOSA)
+        self.testo.SetValue("\n".join(self.verbosa))
+        self.testo.SetInsertionPoint(0)
+        self.testo.SetFocus()
+        self.verbosa = None
+        if self.pulsante_verboso is not None:
+            self.pulsante_verboso.Hide()
+            self.pulsante_verboso.GetContainingSizer().Layout()
+
+
+def _suona_un_preset(nome):
+    from GBUtils import Acusticator
+
+    from . import config
+
+    Acusticator.play(nome, volume=config.VOLUME)
+
+
+def da_leggere(genitore, titolo, righe, verbosa=None, inizio=None):
     """Apre una FinestraDaLeggere e aspetta che si chiuda; le prove la
     sostituiscono."""
-    with FinestraDaLeggere(genitore, titolo, righe) as dialogo:
+    with FinestraDaLeggere(genitore, titolo, righe, verbosa, inizio) as dialogo:
         dialogo.ShowModal()
 
 

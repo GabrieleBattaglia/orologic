@@ -100,6 +100,9 @@ SUONI_DEL_FUOCO = {"plancia": "spostamento_f5", "console": "spostamento_f6"}
 # La larghezza che lo strato dichiara: pulisci_riga scrive tanti spazi, che
 # l'area non mostra.
 COLONNE = 300
+# Il testo della voce della plancia che apre la scacchiera interattiva: non
+# si scrive nel prompt.
+APRI_LA_SCACCHIERA = "\x00scacchiera"
 
 
 class ApriImpostazioni:
@@ -137,10 +140,12 @@ class ApriLettura(ApriImpostazioni):
     titolo: le analisi e gli aiuti di Easyfish, che nel cruscotto non ci
     stanno; il nucleo aspetta che si chiuda."""
 
-    def __init__(self, titolo, righe):
+    def __init__(self, titolo, righe, verbosa=None, inizio=None):
         super().__init__()
         self.titolo = titolo
         self.righe = list(righe)
+        self.verbosa = verbosa
+        self.inizio = inizio
 
 
 class ApriNavigatore(ApriImpostazioni):
@@ -351,10 +356,10 @@ class FacciaFinestra:
         self._apri_e_aspetta(richiesta)
         return richiesta.uscita
 
-    def da_leggere(self, titolo, righe):
+    def da_leggere(self, titolo, righe, verbosa=None, inizio=None):
         """Le analisi e gli aiuti di Easyfish in una finestra da leggere; il
         nucleo aspetta che si chiuda."""
-        self._apri_e_aspetta(ApriLettura(titolo, righe))
+        self._apri_e_aspetta(ApriLettura(titolo, righe, verbosa, inizio))
 
     def navigatore(self, game, nodo):
         """Il navigatore della partita di Easyfish: (nodo scelto o None,
@@ -1142,7 +1147,13 @@ class Finestra(wx.Frame):
             self.voci_della_plancia = {}
             radice = albero.AddRoot("")
             if self.comandi and self.attesa.tipo != "menu":
-                selezionata = self._metti_i_comandi(radice, plancia.comandi_della_partita(self.comandi), ())
+                nodi = plancia.comandi_della_partita(self.comandi)
+                if self._scacchiera_disponibile():
+                    # La voce dello spazio, in cima: chi non lo ricorda apre
+                    # da qui la scacchiera interattiva (Gabriele, collaudo
+                    # del 23 novembre 2026).
+                    nodi.insert(0, plancia.Nodo(_("Spazio: per accedere alla scacchiera interattiva"), APRI_LA_SCACCHIERA))
+                selezionata = self._metti_i_comandi(radice, nodi, ())
             else:
                 selezionata = self._metti_i_menu(radice)
             if selezionata is not None and selezionata.IsOk():
@@ -1279,6 +1290,12 @@ class Finestra(wx.Frame):
             _tipo, nodo, cammino = dati
             if nodo.figli:
                 self.plancia.Toggle(voce)
+                return
+            if nodo.testo == APRI_LA_SCACCHIERA:
+                if self.si_apre_la_scacchiera():
+                    self.apri_la_scacchiera()
+                else:
+                    self.vai_all_area()
                 return
             # Il comando si scrive nel prompt come se lo si digitasse; quelli
             # coi valori liberi, come l'Elo, aspettano il resto nell'area.
@@ -1472,17 +1489,18 @@ class Finestra(wx.Frame):
     def _sopra(self):
         return self.dialogo_scacchiera or self
 
-    def leggi(self, titolo, righe):
-        """Le righe in una finestra da leggere, con Chiudi."""
+    def leggi(self, titolo, righe, verbosa=None, inizio=None):
+        """Le righe in una finestra da leggere, con Chiudi, e Rendi verbosa
+        se c'e' la forma verbosa."""
         genitore = self._sopra()
-        dialoghi.da_leggere(genitore, titolo, righe)
+        dialoghi.da_leggere(genitore, titolo, righe, verbosa, inizio)
         if genitore is self:
             self._rimetti_il_fuoco()
 
     def _lettura_dal_nucleo(self, richiesta):
         try:
             if self:
-                self.leggi(richiesta.titolo, richiesta.righe)
+                self.leggi(richiesta.titolo, richiesta.righe, richiesta.verbosa, richiesta.inizio)
         finally:
             richiesta.chiuse.set()
 
@@ -1517,9 +1535,12 @@ class Finestra(wx.Frame):
     def si_apre_la_scacchiera(self):
         """Vero se lo spazio apre la scacchiera: in partita, al prompt delle
         mosse ancora vuoto, con una posizione da mostrare."""
-        if self.fornitore is None or self.dialogo_scacchiera is not None:
-            return False
-        if self.attesa.tipo != "area" or not self.attesa.gioco or self.digitati:
+        return self.dialogo_scacchiera is None and not self.digitati and self._scacchiera_disponibile()
+
+    def _scacchiera_disponibile(self):
+        """Vero al prompt delle mosse, con una posizione da mostrare: qui la
+        scacchiera interattiva si puo' aprire."""
+        if self.fornitore is None or self.attesa.tipo != "area" or not self.attesa.gioco:
             return False
         try:
             dati = self.fornitore()
@@ -1624,6 +1645,13 @@ class Finestra(wx.Frame):
             return
         if self.chiudendo:
             return
+        # Una ricerca PGN con modifiche non ancora nel file, lasciata per
+        # Easyfish o l'analisi: prima di chiudere si chiede se salvarle.
+        from . import archivio_pgn, finestra_ricerca
+
+        ricerca = archivio_pgn.ricerca_aperta()
+        if ricerca is not None and self.dialogo_ricerca is None:
+            finestra_ricerca.salva_all_uscita(self, ricerca, self.chiedi_conferma, self.avvisa)
         self.chiudendo = True
         self.faccia.chiudi()
         inizio = time.monotonic()

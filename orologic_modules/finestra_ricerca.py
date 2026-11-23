@@ -42,8 +42,8 @@ finestra si riapre allo stesso punto, coi filtri di prima.
 import os
 import re
 import threading
+import time
 
-import chess.pgn
 import pyperclip
 import wx
 from GBUtils import Acusticator
@@ -51,6 +51,11 @@ from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
 from . import archivio_pgn, aspetto, config, dialoghi, pgn_search
 from .config import _
+
+# I filtri degli anni, elenchi con gli anni dell'archivio, e quanto si
+# aspetta fra una cifra e l'altra dell'anno scritto.
+ANNI = ("year_from", "year_to")
+PAUSA_FRA_LE_CIFRE = 1.5
 
 SUONI = {
     # Come il no della pulizia: un'azione che adesso non si puo' fare.
@@ -64,9 +69,13 @@ def suona(evento):
 
 
 def domande_dei_filtri():
-    """I filtri: chiave, domanda e tipo, il massimo per i numeri. I primi
-    dieci sono quelli del terminale."""
+    """I filtri: chiave, domanda e tipo, il massimo per i numeri. Dal
+    secondo all'undicesimo sono quelli del terminale; gli anni, dal 23
+    novembre 2026, sono elenchi con gli anni dell'archivio (Gabriele: lo 0
+    per nessun limite non era chiaro). Cerca testo cerca in tutto il testo
+    della partita, intestazioni, mosse e commenti."""
     return (
+        ("cerca", _("Cerca testo"), "testo"),
         ("white", _("Nome giocatore Bianco (vuoto=qualsiasi): "), "testo"),
         ("black", _("Nome giocatore Nero (vuoto=qualsiasi): "), "testo"),
         ("player", _("Nome giocatore (cerca in bianco E nero, vuoto=qualsiasi): "), "testo"),
@@ -74,8 +83,8 @@ def domande_dei_filtri():
         ("elo_min", _("ELO minimo (0=nessun limite): "), 4000),
         ("elo_max", _("ELO massimo (0=nessun limite): "), 4000),
         ("event", _("Nome evento (vuoto=qualsiasi): "), "testo"),
-        ("year_from", _("Anno dal (0=nessun limite): "), 2100),
-        ("year_to", _("Anno al (0=nessun limite): "), 2100),
+        ("year_from", _("Anno dal"), "anno"),
+        ("year_to", _("Anno al"), "anno"),
         ("eco", _("Codice ECO (es. 'B', 'B90', vuoto=qualsiasi): "), "testo"),
         ("mosse_min", _("Con almeno queste mosse (0=nessun limite): "), 1000),
         ("mosse_max", _("Con meno di queste mosse (0=nessun limite): "), 1000),
@@ -98,14 +107,6 @@ def risultati():
 def etichetta_della_domanda(domanda):
     """La domanda del terminale come etichetta: senza i due punti in fondo."""
     return " ".join(domanda.split()).rstrip(":").rstrip()
-
-
-def testo_della_partita(game):
-    """Le intestazioni che dicono qualcosa, come le stampava il terminale,
-    e le mosse, con varianti e commenti."""
-    righe = [f"{chiave}: {valore}" for chiave, valore in game.headers.items() if valore and valore not in ("?", "????.??.??")]
-    righe.append(game.accept(chess.pgn.StringExporter(headers=False, variations=True, comments=True, columns=None)))
-    return "\n".join(righe)
 
 
 # Un testo PGN: una riga d'intestazione, o la prima mossa col suo numero.
@@ -154,12 +155,36 @@ def scegli_dove_salvare(genitore):
         return dialogo.GetPath()
 
 
-def mostra_la_partita(genitore, testo):
-    """La partita, coi suoi pulsanti: easyfish, automatica, manuale, o
-    None per Chiudi; le prove la sostituiscono."""
-    with VistaDellaPartita(genitore, testo) as dialogo:
+def mostra_la_partita(genitore, testo, chiedi_conferma, avvisa):
+    """La partita nel suo PGN, da correggere a mano, coi suoi pulsanti:
+    (azione, testo nuovo o None). azione e' easyfish, automatica, manuale,
+    o None per Chiudi; il testo nuovo c'e' se e' cambiato, e' una partita
+    valida e si e' scelto di salvarlo. Le prove la sostituiscono."""
+    with VistaDellaPartita(genitore, testo, chiedi_conferma, avvisa) as dialogo:
         dialogo.ShowModal()
-        return dialogo.azione
+        return dialogo.azione, dialogo.nuovo
+
+
+def salva_all_uscita(genitore, ricerca, chiedi_conferma, avvisa):
+    """Uscendo dalla ricerca, o chiudendo Orologic, con un archivio da file
+    modificato: si chiede se salvare nel file, poi se fare prima la copia di
+    sicurezza (Gabriele, collaudo del 23 novembre 2026)."""
+    archivio = ricerca.archivio
+    if archivio is None or not archivio.modificato or archivio.percorso is None:
+        return
+    domanda = _("Hai modificato l'archivio. Salvo le modifiche nel file {percorso}? Se rispondi no, si perdono.")
+    if not chiedi_conferma(genitore, pgn_search.pulita(domanda.format(percorso=archivio.percorso))):
+        archivio.modificato = False
+        return
+    con_la_copia = chiedi_conferma(genitore, _("Prima di salvare faccio una copia di sicurezza del file, nella cartella pgn di Orologic?"))
+    try:
+        with wx.BusyCursor():
+            righe = archivio_pgn.salva_nel_file(archivio, con_la_copia)
+    except OSError as errore:
+        suona("no")
+        avvisa(genitore, pgn_search.pulita(_("Errore nel salvataggio: {e}").format(e=errore)))
+        return
+    avvisa(genitore, "\n".join(righe))
 
 
 def finisci(dialogo, codice):
@@ -178,18 +203,27 @@ def scegli(genitore, titolo, voci, scelta=0):
 
 
 class VistaDellaPartita(wx.Dialog):
-    """La partita scelta: le intestazioni e le mosse, da leggere, e i
-    pulsanti Passa a Easyfish, Analisi automatica, Analisi manuale e
-    Chiudi. azione dice il pulsante premuto, None per Chiudi o Esc."""
+    """La partita scelta nel suo PGN, com'e' nell'archivio, da leggere e da
+    correggere a mano, e i pulsanti Passa a Easyfish, Analisi automatica,
+    Analisi manuale e Chiudi. azione dice il pulsante premuto, None per
+    Chiudi o Esc. Uscendo, se il testo e' cambiato: una partita valida si
+    salva nell'archivio, se lo si vuole, in nuovo; una che non lo e' si
+    torna a correggere, o si lascia (Gabriele, collaudo del 23 novembre
+    2026)."""
 
-    def __init__(self, genitore, testo):
+    def __init__(self, genitore, testo, chiedi_conferma, avvisa):
         super().__init__(genitore, title=_("Partita selezionata"), style=STILE_ADATTABILE)
         self.azione = None
+        self.nuovo = None
+        self._chiedi_conferma = chiedi_conferma
+        self._avvisa = avvisa
         pannello = pannello_scorrevole(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(wx.StaticText(pannello, label=_("Partita selezionata")), 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
-        self.testo = wx.TextCtrl(pannello, value=testo, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
+        self.testo = wx.TextCtrl(pannello, value=testo, style=wx.TE_MULTILINE | wx.TE_RICH2)
         self.testo.SetName(_("Partita selezionata"))
+        # Il testo come lo da' il controllo, per sapere se e' cambiato.
+        self.originale = self.testo.GetValue()
         sizer.Add(self.testo, 1, wx.EXPAND | wx.ALL, 5)
         riga = wx.BoxSizer(wx.HORIZONTAL)
         self.pulsanti = {}
@@ -198,9 +232,12 @@ class VistaDellaPartita(wx.Dialog):
             pulsante.Bind(wx.EVT_BUTTON, lambda _evento, scelta=azione: self.scegli(scelta))
             self.pulsanti[azione] = pulsante
             riga.Add(pulsante, 0, wx.RIGHT, 5)
-        riga.Add(wx.Button(pannello, wx.ID_CANCEL, _("Chiudi")), 0)
+        chiudi = wx.Button(pannello, wx.ID_CANCEL, _("Chiudi"))
+        chiudi.Bind(wx.EVT_BUTTON, lambda _evento: self.scegli(None))
+        riga.Add(chiudi, 0)
         sizer.Add(riga, 0, wx.ALL, 5)
         pannello.SetSizer(sizer)
+        self.Bind(wx.EVT_CLOSE, lambda _evento: self.scegli(None))
         aspetto.applica_alla_finestra(self)
         self.testo.SetMinSize(wx.Size(-1, self.testo.GetCharHeight() * 10))
         adatta_finestra(self, pannello, (640, 480))
@@ -209,8 +246,28 @@ class VistaDellaPartita(wx.Dialog):
         self.testo.SetFocus()
 
     def scegli(self, azione):
+        """Un pulsante, Chiudi o Esc: prima la partita corretta, se c'e'."""
+        if not self._lascia_la_partita():
+            return
         self.azione = azione
-        finisci(self, wx.ID_OK)
+        finisci(self, wx.ID_OK if azione else wx.ID_CANCEL)
+
+    def _lascia_la_partita(self):
+        """Falso se si torna a correggere."""
+        testo = self.testo.GetValue()
+        if testo == self.originale:
+            return True
+        motivo = archivio_pgn.motivo_non_valida(testo)
+        if motivo is not None:
+            suona("no")
+            self._avvisa(self, _("La partita corretta non e' valida: {motivo}").format(motivo=motivo))
+            if self._chiedi_conferma(self, _("Torno alla partita per correggerla? Se rispondi no, le correzioni si perdono.")):
+                self.testo.SetFocus()
+                return False
+            return True
+        if self._chiedi_conferma(self, _("La partita e' cambiata. La salvo nell'archivio?")):
+            self.nuovo = testo
+        return True
 
 
 class Nodo:
@@ -248,6 +305,8 @@ class FinestraRicerca(wx.Dialog):
     def __init__(self, genitore, ricerca, chiedi_conferma, avvisa, annuncia):
         super().__init__(genitore, title=_("Ricerca PGN"), style=STILE_ADATTABILE)
         self.ricerca = ricerca
+        self._cifre = ""
+        self._ultima_cifra = 0.0
         self._chiedi_conferma = chiedi_conferma
         self._avvisa = avvisa
         self._annuncia = annuncia
@@ -352,6 +411,12 @@ class FinestraRicerca(wx.Dialog):
                 griglia.Add(wx.StaticText(pagina, label=etichetta), 0, wx.ALIGN_CENTER_VERTICAL)
                 if tipo == "testo":
                     campo = wx.TextCtrl(pagina)
+                elif tipo == "anno":
+                    # Gli anni dell'archivio, che metti_i_filtri riempie:
+                    # frecce, pagine a passi di dieci, o le quattro cifre.
+                    campo = wx.Choice(pagina, choices=[])
+                    campo.Bind(wx.EVT_KEY_DOWN, self._tasto_dell_anno)
+                    campo.Bind(wx.EVT_CHAR, self._cifra_dell_anno)
                 elif tipo == "risultato":
                     campo = wx.Choice(pagina, choices=[testo for _codice, testo in risultati()])
                     campo.SetSelection(0)
@@ -561,7 +626,13 @@ class FinestraRicerca(wx.Dialog):
     def metti_i_filtri(self, filtri):
         for chiave, campo in self.campi.items():
             valore = filtri.get(chiave)
-            if isinstance(campo, wx.CheckBox):
+            if chiave in ANNI:
+                anni = self.anni()
+                campo.Set(anni)
+                if anni:
+                    estremo = 0 if chiave == "year_from" else len(anni) - 1
+                    campo.SetSelection(anni.index(str(valore)) if str(valore) in anni else estremo)
+            elif isinstance(campo, wx.CheckBox):
                 campo.SetValue(bool(valore))
             elif isinstance(campo, wx.TextCtrl):
                 campo.ChangeValue(valore or "")
@@ -571,12 +642,24 @@ class FinestraRicerca(wx.Dialog):
             else:
                 campo.SetValue(valore or 0)
 
+    def anni(self):
+        """Gli anni delle partite dell'archivio, dal piu' lontano, come testi."""
+        archivio = self.ricerca.archivio
+        if archivio is None:
+            return []
+        return [str(anno) for anno in sorted({info["Year"] for info in archivio.info if info.get("Year")})]
+
     def filtri_dei_campi(self):
         """I filtri dei campi, con le chiavi del terminale: un campo vuoto, a
-        zero o spento non filtra."""
+        zero o spento non filtra, e gli anni nemmeno, quando stanno agli
+        estremi, cosi' le partite senza data restano."""
         filtri = {}
         for chiave, campo in self.campi.items():
-            if isinstance(campo, wx.CheckBox):
+            if chiave in ANNI:
+                scelto, ultimo = campo.GetSelection(), campo.GetCount() - 1
+                if scelto >= 0 and scelto != (0 if chiave == "year_from" else ultimo):
+                    filtri[chiave] = int(campo.GetString(scelto))
+            elif isinstance(campo, wx.CheckBox):
                 if campo.GetValue():
                     filtri[chiave] = True
             elif isinstance(campo, wx.TextCtrl):
@@ -590,6 +673,38 @@ class FinestraRicerca(wx.Dialog):
             elif campo.GetValue() > 0:
                 filtri[chiave] = campo.GetValue()
         return filtri
+
+    def _tasto_dell_anno(self, evento):
+        """Pagina su e Pagina giu' saltano dieci anni dell'elenco."""
+        campo = evento.GetEventObject()
+        passo = {wx.WXK_PAGEUP: -10, wx.WXK_PAGEDOWN: 10, wx.WXK_NUMPAD_PAGEUP: -10, wx.WXK_NUMPAD_PAGEDOWN: 10}.get(evento.GetKeyCode())
+        if passo is None or evento.HasAnyModifiers() or not campo.GetCount():
+            evento.Skip()
+            return
+        self._scegli_l_anno(campo, max(0, min(campo.GetCount() - 1, campo.GetSelection() + passo)))
+
+    def _cifra_dell_anno(self, evento):
+        """Quattro cifre di fila scelgono l'anno, o il piu' vicino che c'e'."""
+        codice = evento.GetUnicodeKey()
+        carattere = chr(codice) if codice not in (wx.WXK_NONE, 0) else ""
+        campo = evento.GetEventObject()
+        if not carattere.isdigit() or not campo.GetCount():
+            evento.Skip()
+            return
+        adesso = time.monotonic()
+        if adesso - self._ultima_cifra > PAUSA_FRA_LE_CIFRE:
+            self._cifre = ""
+        self._ultima_cifra = adesso
+        self._cifre += carattere
+        if len(self._cifre) < 4:
+            return
+        voluto, self._cifre = int(self._cifre), ""
+        anni = [int(campo.GetString(indice)) for indice in range(campo.GetCount())]
+        self._scegli_l_anno(campo, min(range(len(anni)), key=lambda indice: abs(anni[indice] - voluto)))
+
+    def _scegli_l_anno(self, campo, indice):
+        campo.SetSelection(indice)
+        self._annuncia([campo.GetString(indice)])
 
     def applica(self):
         if self.ricerca.archivio is None or self.in_corso():
@@ -620,6 +735,8 @@ class FinestraRicerca(wx.Dialog):
             testo = _("Nessun archivio caricato.")
         else:
             self.indici = pgn_search.applica_filtri(archivio.info, self.ricerca.filtri)
+            if self.ricerca.filtri.get("cerca"):
+                self.indici = archivio.con_il_testo(self.indici, self.ricerca.filtri["cerca"])
             totale = len(archivio)
             pct = len(self.indici) / totale * 100 if totale else 0.0
             testo = pgn_search.pulita(_("Partite corrispondenti: {n} di {tot} ({pct:.2f}%)").format(n=len(self.indici), tot=totale, pct=pct))
@@ -766,9 +883,18 @@ class FinestraRicerca(wx.Dialog):
     # La partita e i pulsanti.
 
     def mostra_partita(self, indice):
-        """La vista della partita: vero se si va a Easyfish o all'analisi,
-        e la finestra si chiude con l'uscita."""
-        azione = mostra_la_partita(self, testo_della_partita(self.ricerca.archivio.partita_intera(indice)))
+        """La vista della partita, nel suo PGN: vero se si va a Easyfish o
+        all'analisi, e la finestra si chiude con l'uscita. La partita
+        corretta a mano va nell'archivio aperto, e nel file all'uscita."""
+        archivio = self.ricerca.archivio
+        azione, nuovo = mostra_la_partita(self, archivio.testo_della_partita(indice).strip("\n"), self._chiedi_conferma, self._avvisa)
+        if nuovo is not None:
+            self.ricerca.archivio, righe = archivio_pgn.con_la_partita(archivio, indice, nuovo)
+            voce, _nodo = self.selezionata()
+            self.ricerca.posizione = self.chiavi(voce) if voce is not None else None
+            self._mostra()
+            self._annuncia([_("Partita salvata nell'archivio."), *righe])
+            self._cerca_i_doppioni()
         if azione is None:
             return False
         voce, _nodo = self.selezionata()
@@ -927,6 +1053,7 @@ class FinestraRicerca(wx.Dialog):
         uscita."""
         self.ferma()
         self._ferma_i_doppioni()
+        salva_all_uscita(self, self.ricerca, self._chiedi_conferma, self._avvisa)
         finisci(self, wx.ID_CANCEL)
 
     def _tasto(self, evento):

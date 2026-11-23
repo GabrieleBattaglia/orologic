@@ -29,9 +29,13 @@ from .easyfish import analysis_utils, posizione
 
 
 def analizza(board):
-    """L'analisi della posizione col motore di Orologic, come righe; le
-    prove la sostituiscono."""
-    return analysis_utils.analizza(board, orologic_engine.ENGINE, orologic_engine.analysis_time, orologic_engine.multipv)[1]
+    """L'analisi della posizione col motore di Orologic: (righe, forma
+    verbosa o None, riga della prima linea o None); le prove la
+    sostituiscono."""
+    analisi, righe = analysis_utils.analizza(board, orologic_engine.ENGINE, orologic_engine.analysis_time, orologic_engine.multipv)
+    if not analisi:
+        return righe, None, None
+    return (righe, *analysis_utils.dettagli_della_lettura(board, analisi, righe))
 
 
 class Navigatore(wx.Dialog):
@@ -172,17 +176,17 @@ class Navigatore(wx.Dialog):
         self._annuncia([_("Analisi in corso...")])
 
         def nel_filo():
-            righe = analizza(board)
-            wx.CallAfter(self._analizzata, righe)
+            wx.CallAfter(self._analizzata, analizza(board))
 
         self.filo = threading.Thread(target=nel_filo, name="navigatore", daemon=True)
         self.filo.start()
 
-    def _analizzata(self, righe):
+    def _analizzata(self, lettura):
         self.filo = None
         if not self:
             return
-        dialoghi.da_leggere(self, _("Analisi"), righe)
+        righe, verbosa, inizio = lettura
+        dialoghi.da_leggere(self, _("Analisi"), righe, verbosa, inizio)
         self.albero.SetFocus()
 
     def _finisci(self, codice):
