@@ -181,6 +181,9 @@ def finestra(app, request):
     # I suoni del fuoco si segnano, non si suonano.
     vera.suonati = []
     vera.suona = vera.suonati.append
+    # I messaggi braille della riga che cambia, a parte dagli annunci.
+    vera.al_braille_mandati = []
+    vera.al_braille = vera.al_braille_mandati.append
     # Col nucleo finto la finestra resta aperta, per leggerla; con Orologic
     # intero si chiude da sola, come nella vita vera.
     vera.chiudi_alla_fine = "orologic_parte" in request.node.name

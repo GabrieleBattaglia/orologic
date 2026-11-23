@@ -79,6 +79,12 @@ a = Analysis(
         'svglib',
         'svglib.svglib',
         *collect_submodules('accessible_output2.outputs'),
+        # Il documento del RichEdit dell'area, che cambia il testo senza
+        # toccare il cursore per il braille, in finestra.py.
+        'pythoncom',
+        'pywintypes',
+        'win32com',
+        'win32com.client',
     ],
     hookspath=[],
     hooksconfig={},

@@ -63,6 +63,7 @@ da sola; frecce, pagine, Home e Fine passano all'area, per leggere liberi;
 ogni altro tasto riporta il cursore al suo posto nella riga in corso.
 """
 
+import ctypes
 import getpass
 import io
 import os
@@ -73,7 +74,7 @@ import time
 import traceback
 
 import wx
-from GBsintesi import Sintesi
+from GBsintesi import AUTOMATICA, CON_IL_BRAILLE, Sintesi
 from GBUtils import Acusticator, sorgente_dei_tasti, sorgente_delle_scelte
 
 from . import annunci, aspetto, config, cruscotto, dialoghi, plancia, strato, version
@@ -87,6 +88,14 @@ ECO_MASSIMO = 0.015
 # Le righe che l'area tiene, dalle impostazioni, coi loro limiti; oltre, le
 # piu' vecchie se ne vanno a gruppi, di un quarto delle tenute.
 CHIAVE_DELLE_RIGHE = "righe_dell_area"
+# Il documento del RichEdit dell'area, per cambiare il testo senza toccare
+# il cursore: il messaggio che lo chiede e l'interfaccia ITextDocument.
+EM_GETOLEINTERFACE = 0x0400 + 60
+IID_ITEXTDOCUMENT = "{8CC497C0-A1DF-11CE-8098-00AA0047BE5D}"
+# Ogni quanti millesimi la riga del cursore torna alla barra finche' non
+# si preme un tasto, e quanto aspetta dopo un annuncio mandato alla barra.
+RIPASSO_DEL_BRAILLE = 1000
+RIPASSO_DOPO_UN_ANNUNCIO = 5000
 RIGHE_PREDEFINITE = 200
 RIGHE_MINIME = 20
 RIGHE_MASSIME = 10000
@@ -604,6 +613,7 @@ class Finestra(wx.Frame):
         self.plancia = wx.TreeCtrl(pannello, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_SINGLE)
         self.plancia.SetName(_("Plancia"))
         self.area = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_RICH2 | wx.TE_NOHIDESEL | wx.TE_DONTWRAP)
+        self.area.Bind(wx.EVT_WINDOW_DESTROY, self._area_distrutta)
         self.area.SetName(_("Console"))
         # Lo spazio orizzontale: la plancia a sinistra, l'area piu' larga.
         dimensionatore = wx.BoxSizer(wx.HORIZONTAL)
@@ -664,6 +674,16 @@ class Finestra(wx.Frame):
         self.mostrate = []
         self.orologio = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, lambda _evento: self._ridisegna(), self.orologio)
+        # Il braille del testo che cambia: NVDA rilegge l'area solo dopo un
+        # tasto, quindi la riga sotto il cursore, se e' cambiata dopo
+        # l'ultimo tasto, va alla barra come messaggio, rimandato ogni secondo
+        # finche' non se ne preme uno (Gabriele, 23 novembre 2026, prova del
+        # braille). Il documento del RichEdit cambia il testo senza toccare il
+        # cursore: None finche' non serve, False se non c'e'.
+        self.braille_indietro = False
+        self.ripasso_del_braille = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, lambda _evento: self._ripassa_il_braille(), self.ripasso_del_braille)
+        self.documento_dell_area = None
         # La riga in corso come l'utente l'ha gia' sentita o scritta.
         self.detta = ""
         self.programmato = False
@@ -717,7 +737,129 @@ class Finestra(wx.Frame):
 
     def _vai(self, riga, colonna):
         lunghezza = self.area.GetLineLength(riga)
-        self.area.SetInsertionPoint(self.area.XYToPosition(max(0, min(colonna, lunghezza)), riga))
+        posizione = self.area.XYToPosition(max(0, min(colonna, lunghezza)), riga)
+        # Dov'e' gia', il cursore non si tocca: ogni spostamento riporta la
+        # barra di NVDA sul cursore.
+        if posizione != self.area.GetInsertionPoint():
+            self.area.SetInsertionPoint(posizione)
+
+    # Il testo che cambia e il braille.
+
+    def _documento(self):
+        """Il documento del RichEdit, ITextDocument, che cambia il testo
+        senza toccare il cursore; None se non c'e', per esempio senza
+        pywin32: allora si cambia con Replace."""
+        if self.documento_dell_area is None:
+            self.documento_dell_area = False
+            try:
+                import pythoncom
+                import pywintypes
+                import win32com.client
+
+                puntatore = ctypes.c_void_p()
+                # Una copia propria di user32: i tipi degli argomenti cambiati
+                # su ctypes.windll.user32 varrebbero per tutto il processo.
+                manda = ctypes.WinDLL("user32").SendMessageW
+                manda.argtypes = (ctypes.c_void_p, ctypes.c_uint, ctypes.c_size_t, ctypes.POINTER(ctypes.c_void_p))
+                manda.restype = ctypes.c_ssize_t
+                manda(self.area.GetHandle(), EM_GETOLEINTERFACE, 0, ctypes.byref(puntatore))
+                if puntatore.value:
+                    sconosciuto = pythoncom.ObjectFromAddress(puntatore.value, pythoncom.IID_IUnknown)
+                    self.documento_dell_area = win32com.client.Dispatch(
+                        sconosciuto.QueryInterface(pywintypes.IID(IID_ITEXTDOCUMENT), pythoncom.IID_IDispatch)
+                    )
+            # Senza il documento si cambia il testo con Replace, come prima.
+            except Exception:  # noqa: BLE001, S110
+                pass
+        return self.documento_dell_area or None
+
+    def _area_distrutta(self, evento):
+        """L'area si chiude: il documento del RichEdit si lascia prima, o il
+        suo rilascio cadrebbe su un oggetto gia' distrutto e la memoria si
+        corromperebbe, come nelle prove del 23 novembre 2026."""
+        evento.Skip()
+        self.documento_dell_area = False
+        # E il ripasso del braille si ferma: un timer acceso che scatta su
+        # una finestra distrutta la fa cadere.
+        self.ripasso_del_braille.Stop()
+
+    def _sostituisci(self, inizio, fine, testo):
+        """Il testo dell'area da inizio a fine prende il posto: col documento
+        del RichEdit il cursore resta dov'era nel testo, e se si legge
+        altrove NVDA non riporta la barra sul cursore. Vero se il cursore non
+        e' stato toccato; senza documento si usa Replace, e lo si tocca."""
+        documento = self._documento()
+        if documento is not None:
+            try:
+                intervallo = documento.Range(inizio, fine)
+                intervallo.Text = testo.replace("\n", "\r")
+                self._con_lo_stile(intervallo)
+                return True
+            # Un documento che non risponde piu': da qui in poi Replace.
+            except Exception:  # noqa: BLE001
+                self.documento_dell_area = False
+        self.area.Replace(inizio, fine, testo)
+        return False
+
+    def _con_lo_stile(self, intervallo):
+        """Il testo scritto dal documento prende lo stile dell'area, i colori
+        e i caratteri di aspetto.py, come quello di Replace: il documento da
+        solo non lo applica."""
+        stile = self.area.GetDefaultStyle()
+        carattere = intervallo.Font
+        # I colori del documento sono COLORREF: rosso, verde e blu dal basso.
+        if stile.HasTextColour():
+            colore = stile.GetTextColour()
+            carattere.ForeColor = colore.Red() | colore.Green() << 8 | colore.Blue() << 16
+        if stile.HasBackgroundColour():
+            colore = stile.GetBackgroundColour()
+            carattere.BackColor = colore.Red() | colore.Green() << 8 | colore.Blue() << 16
+        if stile.HasFont() and stile.GetFont().IsOk():
+            font = stile.GetFont()
+            carattere.Size = font.GetPointSize()
+            if font.GetFaceName():
+                carattere.Name = font.GetFaceName()
+
+    def _riga_sotto_il_cursore(self):
+        _trovata, _colonna, riga = self.area.PositionToXY(self.area.GetInsertionPoint())
+        return self.area.GetLineText(riga)
+
+    def _braille_dopo_il_cambio(self, prima):
+        """Dopo un cambio del testo: se la riga sotto il cursore non e' piu'
+        quella di prima, e il fuoco e' sull'area, la riga va alla barra, e
+        il ripasso la rimanda finche' non si preme un tasto."""
+        if self._riga_sotto_il_cursore() == prima or wx.Window.FindFocus() is not self.area:
+            return
+        self.braille_indietro = True
+        self._ripassa_il_braille()
+        if not self.ripasso_del_braille.IsRunning():
+            self.ripasso_del_braille.Start(RIPASSO_DEL_BRAILLE)
+
+    def _ripassa_il_braille(self):
+        """La riga sotto il cursore alla barra, come messaggio, finche' NVDA
+        non l'ha riletta da se' dopo un tasto; col fuoco altrove, o con la
+        scacchiera aperta, il ripasso si ferma."""
+        if not self or not self.braille_indietro or wx.Window.FindFocus() is not self.area or self.dialogo_scacchiera is not None:
+            self._braille_letto()
+            return
+        riga = self._riga_sotto_il_cursore()
+        if riga.strip():
+            self.al_braille(riga)
+        if self.ripasso_del_braille.GetInterval() != RIPASSO_DEL_BRAILLE:
+            self.ripasso_del_braille.Start(RIPASSO_DEL_BRAILLE)
+
+    def _braille_letto(self):
+        """Un tasto: NVDA rilegge l'area da se', il ripasso si ferma."""
+        self.braille_indietro = False
+        if self.ripasso_del_braille.IsRunning():
+            self.ripasso_del_braille.Stop()
+
+    def al_braille(self, testo):
+        """Un messaggio solo alla barra, con lo screen reader degli annunci se
+        ha il braille, altrimenti col primo attivo, anche con gli annunci
+        spenti; le prove lo sostituiscono."""
+        uscita = self.annunci["uscita"] if self.annunci["uscita"] in CON_IL_BRAILLE else AUTOMATICA
+        self.sintesi.dici(testo, uscita, "braille")
 
     def _al_cursore(self):
         self._vai(self._riga_del_prompt(), self.terminale.colonna)
@@ -780,7 +922,9 @@ class Finestra(wx.Frame):
     def _tasto_della_finestra(self, evento):
         """I tasti di tutta la finestra, plancia e area: Ctrl e virgola le
         impostazioni, come nelle altre applicazioni (Gabriele, S1), F5 la
-        plancia, F6 l'area."""
+        plancia, F6 l'area. Ogni tasto fa rileggere l'area a NVDA: il
+        braille non va piu' rimandato."""
+        self._braille_letto()
         codice = evento.GetKeyCode()
         if evento.GetModifiers() == wx.MOD_CONTROL and codice == ord(","):
             self.impostazioni(suono=True)
@@ -933,18 +1077,22 @@ class Finestra(wx.Frame):
         nucleo; se l'utente rileggeva piu' su, resta dov'era."""
         riga, colonna = self._riga_e_colonna()
         sul_fondo = riga >= len(self.righe)
+        prima = self._riga_sotto_il_cursore()
         ultima = len(self.righe)
         inizio = self.area.XYToPosition(0, ultima)
-        self.area.Replace(inizio, inizio + self.area.GetLineLength(ultima), "\n".join([*chiuse, visibile]))
+        fermo = self._sostituisci(inizio, inizio + self.area.GetLineLength(ultima), "\n".join([*chiuse, visibile]))
         self.righe.extend(chiuse)
         tolte = self._taglia_il_registro()
         if tolte:
-            self.area.Remove(0, self.area.XYToPosition(0, tolte))
+            fermo = self._sostituisci(0, self.area.XYToPosition(0, tolte), "") and fermo
             riga -= tolte
         if sul_fondo:
             self._al_cursore()
-        else:
+        elif not fermo:
+            # Col documento il cursore e' rimasto dov'era: rimetterlo
+            # riporterebbe la barra di NVDA su di lui.
             self._vai(max(0, riga), colonna)
+        self._braille_dopo_il_cambio(prima)
 
     def _studia(self, testo):
         """Il testo da studiare nell'area: intero, senza voce, col cursore
@@ -964,6 +1112,12 @@ class Finestra(wx.Frame):
         self.studio = True
         self.vai_all_area()
         self.annuncia([righe[0]])
+        # Il cursore l'ha spostato Orologic: NVDA non rilegge, la prima riga
+        # va alla barra finche' non si preme un tasto.
+        self.braille_indietro = True
+        self._ripassa_il_braille()
+        if not self.ripasso_del_braille.IsRunning():
+            self.ripasso_del_braille.Start(RIPASSO_DEL_BRAILLE)
 
     # Il cruscotto.
 
@@ -1017,12 +1171,14 @@ class Finestra(wx.Frame):
             prompt_cambiato = self.mostrate[-1] != nuove[-1]
         else:
             numero, colonna, sezione, nella_sezione, prompt_cambiato = 0, 0, "prompt", 0, True
+        prima = self._riga_sotto_il_cursore()
         if len(nuove) == len(self.mostrate) and all(a[0] == b[0] for a, b in zip(nuove, self.mostrate, strict=True)):
-            # Stesse righe: si sostituiscono solo quelle cambiate, dal fondo.
+            # Stesse righe: si sostituiscono solo quelle cambiate, dal fondo,
+            # senza toccare il cursore dove il documento c'e'.
             for indice in range(len(nuove) - 1, -1, -1):
                 if nuove[indice][1] != self.mostrate[indice][1]:
                     inizio = self.area.XYToPosition(0, indice)
-                    self.area.Replace(inizio, inizio + self.area.GetLineLength(indice), nuove[indice][1])
+                    self._sostituisci(inizio, inizio + self.area.GetLineLength(indice), nuove[indice][1])
         else:
             self.area.ChangeValue("\n".join(testo for _sezione, testo in nuove))
         self.mostrate = nuove
@@ -1034,6 +1190,7 @@ class Finestra(wx.Frame):
                 self._vai(righe_della_sezione[min(nella_sezione, len(righe_della_sezione) - 1)], colonna)
             else:
                 self._al_cursore()
+        self._braille_dopo_il_cambio(prima)
 
     def annuncia(self, righe):
         """Righe da annunciare per una finestra di dialogo, solo se gli
@@ -1065,6 +1222,10 @@ class Finestra(wx.Frame):
         interrompi = annunci.interrompe(self.annunci, dal_tasto)
         for numero, riga in enumerate(righe):
             self.sintesi.dici(riga, self.annunci["uscita"], self.annunci["destinazione"], interrompi=interrompi and numero == 0)
+        if righe and self.annunci["destinazione"] != "sintesi" and self.braille_indietro:
+            # L'annuncio e' sulla barra: la riga del cursore torna fra un po',
+            # per non coprirlo subito.
+            self.ripasso_del_braille.Start(RIPASSO_DOPO_UN_ANNUNCIO)
 
     # La plancia e il fuoco.
 
