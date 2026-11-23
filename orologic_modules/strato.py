@@ -106,10 +106,6 @@ class FacciaTerminale:
     def da_leggere(self, titolo, righe, verbosa=None, inizio=None):
         """Il terminale le ha gia' stampate."""
 
-    def nell_area(self, testo):
-        """Nel terminale il testo da studiare si stampa."""
-        print(testo)
-
     def navigatore(self, game, nodo):
         """Il terminale non ha il navigatore: c'e' l'esploratore."""
         return None, False
@@ -321,12 +317,17 @@ def lettura_dalla_riga(testo):
         _lettura["inizio"] = testo
 
 
-def nell_area(testo):
+def leggi_in_una_finestra(titolo, righe):
     """Un testo lungo da studiare, come il riepilogo dell'analisi
-    automatica: nella finestra va nell'area intero e senza voce, col
-    cursore sulla sua prima riga, che sola si annuncia; nel terminale si
-    stampa (Gabriele, 23 novembre 2026)."""
-    _faccia.nell_area(testo)
+    automatica, in una finestra da leggere tutta sua: intero, righe vuote
+    comprese, col cursore sulla prima riga, Chiudi ed Esc; il nucleo
+    aspetta che si chiuda. Prima andava nell'area, dove l'inizio si perdeva
+    (Gabriele, collaudo del 23 novembre 2026, sera). Nel terminale si
+    stampa."""
+    if con_la_plancia():
+        _faccia.da_leggere(titolo, list(righe))
+    else:
+        print("\n".join(righe))
 
 
 def navigatore(game, nodo):

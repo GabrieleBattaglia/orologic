@@ -144,15 +144,6 @@ class ApriRicerca(ApriImpostazioni):
         self.uscita = None
 
 
-class TestoDaStudiare:
-    """Nella fila del testo, un testo lungo da studiare nell'area, come il
-    riepilogo dell'analisi automatica: entra intero e senza voce, col
-    cursore sulla prima riga. Il nucleo non aspetta."""
-
-    def __init__(self, testo):
-        self.testo = testo
-
-
 class ApriLettura(ApriImpostazioni):
     """Nella fila del testo, le righe da leggere in una finestra, col loro
     titolo: le analisi e gli aiuti di Easyfish, che nel cruscotto non ci
@@ -393,10 +384,6 @@ class FacciaFinestra:
         """Le analisi e gli aiuti di Easyfish in una finestra da leggere; il
         nucleo aspetta che si chiuda."""
         self._apri_e_aspetta(ApriLettura(titolo, righe, verbosa, inizio))
-
-    def nell_area(self, testo):
-        """Il testo da studiare va all'area, in fila col resto."""
-        self._metti(TestoDaStudiare(testo))
 
     def navigatore(self, game, nodo):
         """Il navigatore della partita di Easyfish: (nodo scelto o None,
@@ -672,10 +659,6 @@ class Finestra(wx.Frame):
         self.righe = []
         # Quante l'area ne conserva: le impostazioni lo cambiano.
         self.righe_tenute = righe_da_tenere()
-        # Un testo da studiare si conserva intero, con le righe da tenere
-        # dopo di lui; e alla domanda dopo il fuoco resta sull'area.
-        self.righe_da_studiare = 0
-        self.studio = False
         # Il cruscotto: chi da' i dati, i messaggi della partita, le righe
         # mostrate come coppie (sezione, testo), l'orologio che lo rinfresca.
         self.fornitore = None
@@ -1002,14 +985,6 @@ class Finestra(wx.Frame):
             if isinstance(testo, ApriLettura):
                 wx.CallAfter(self._lettura_dal_nucleo, testo)
                 continue
-            if isinstance(testo, TestoDaStudiare):
-                # Prima si mostra e si dice il testo arrivato prima.
-                self._mostra_nella_forma(chiuse, messaggi)
-                chiuse, messaggi = [], []
-                self._di(da_dire, dal_tasto)
-                da_dire = []
-                self._studia(testo.testo)
-                continue
             if isinstance(testo, ApriNavigatore):
                 wx.CallAfter(self._navigatore_dal_nucleo, testo)
                 continue
@@ -1071,9 +1046,8 @@ class Finestra(wx.Frame):
 
     def _taglia_il_registro(self):
         """Le righe piu' vecchie se ne vanno a gruppi, finche' restano le
-        righe da tenere, o quelle di un testo da studiare; restituisce
-        quante."""
-        tenute = max(self.righe_tenute, self.righe_da_studiare)
+        righe da tenere; restituisce quante."""
+        tenute = self.righe_tenute
         if len(self.righe) <= tenute + max(10, tenute // 4):
             return 0
         tolte = len(self.righe) - tenute
@@ -1106,31 +1080,6 @@ class Finestra(wx.Frame):
             # riporterebbe la barra di NVDA su di lui.
             self._vai(max(0, riga), colonna)
         self._braille_dopo_il_cambio(prima)
-
-    def _studia(self, testo):
-        """Il testo da studiare nell'area: intero, senza voce, col cursore
-        sulla prima riga, che sola si annuncia, e il fuoco sull'area, dove
-        resta anche alla domanda dopo. L'area lo conserva tutto, con le
-        righe da tenere dopo di lui. In partita, dove l'area e' il
-        cruscotto, va in una finestra da leggere."""
-        righe = testo.rstrip("\n").split("\n")
-        if not any(riga.strip() for riga in righe):
-            return
-        if self.fornitore is not None:
-            wx.CallAfter(self._lettura_dal_nucleo, ApriLettura(righe[0], righe))
-            return
-        self.righe_da_studiare = len(righe) + self.righe_tenute
-        self._mostra(righe, self.terminale.visibile())
-        self._vai(len(self.righe) - len(righe), 0)
-        self.studio = True
-        self.vai_all_area()
-        self.annuncia([righe[0]])
-        # Il cursore l'ha spostato Orologic: NVDA non rilegge, la prima riga
-        # va alla barra finche' non si preme un tasto.
-        self.braille_indietro = True
-        self._ripassa_il_braille()
-        if not self.ripasso_del_braille.IsRunning():
-            self.ripasso_del_braille.Start(RIPASSO_DEL_BRAILLE)
 
     # Il cruscotto.
 
@@ -1272,11 +1221,7 @@ class Finestra(wx.Frame):
             self.area.SetInsertionPoint(0)
             self.area.ShowPosition(0)
         elif attesa.tipo == "menu":
-            if self.studio:
-                # Dopo un testo da studiare il fuoco resta sull'area, sulla
-                # sua prima riga: alla plancia si va con F5.
-                self.studio = False
-            elif not self._alla_risposta_della_foglia(foglia):
+            if not self._alla_risposta_della_foglia(foglia):
                 self._sposta_il_fuoco("plancia")
         elif attesa.tipo in ("area", "sino"):
             if self.fornitore is None and wx.Window.FindFocus() is not self.area:
@@ -1287,8 +1232,6 @@ class Finestra(wx.Frame):
                 # su resta dov'e', e cosi' chi rilegge il cruscotto.
                 self._al_cursore()
             self._sposta_il_fuoco("console")
-            # Il fuoco e' gia' sull'area: il testo da studiare non lo trattiene oltre.
-            self.studio = False
 
     def _alla_risposta_della_foglia(self, inizio):
         """Dopo una foglia del menu, con gli annunci spenti, il fuoco va

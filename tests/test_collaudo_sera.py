@@ -105,3 +105,19 @@ def test_a_fine_partita_prima_easyfish_poi_l_analisi(monkeypatch):
 
 
 assert chess
+
+
+def test_la_finestra_da_leggere_riceve_tutte_le_righe(finestra, monkeypatch):
+    from orologic_modules import finestra as modulo_finestra
+
+    lette = []
+    monkeypatch.setattr(modulo_finestra.dialoghi, "da_leggere", lambda _genitore, titolo, righe, *_resto: lette.append((titolo, righe)))
+    fatto = []
+
+    def nucleo():
+        strato.leggi_in_una_finestra("Analisi Automatica della Partita", ["Orologic Analisi Automatica", "", "Statistiche:"])
+        fatto.append(True)
+
+    finestra.avvia_il_nucleo(nucleo)
+    assert pompa(lambda: fatto == [True])
+    assert lette == [("Analisi Automatica della Partita", ["Orologic Analisi Automatica", "", "Statistiche:"])]

@@ -287,3 +287,30 @@ def test_il_riepilogo_ha_le_statistiche_nuove_e_la_confutazione(monkeypatch, tmp
     alfiere = partita.variations[0].variations[0].variations[0].variations[0].variations[0]
     assert any(variante.comment == "[OAA: Confutazione]" for variante in alfiere.variations[1:])
     assert all(variante.comment == "[OAA: Alt: +0.00]" for variante in alfiere.parent.variations[1:])
+
+
+def test_nella_finestra_l_analisi_si_legge_in_una_finestra_sua(monkeypatch, tmp_path):
+    """Gabriele, collaudo del 23 novembre 2026, sera: nell'area l'inizio si
+    perdeva. Dopo la domanda l'analisi si apre in una finestra sua, intera,
+    righe vuote comprese."""
+    from orologic_modules import strato
+
+    partita = chess.pgn.read_game(io.StringIO(OROLOGI))
+    domande = []
+    lette = []
+    monkeypatch.setattr(engine, "percorso_salvataggio", lambda relativo: str(tmp_path / relativo))
+    monkeypatch.setattr(engine, "ENGINE", MotoreFinto(partita))
+    monkeypatch.setattr(engine, "key", lambda *_a, **_k: "")
+    monkeypatch.setattr(engine, "Acusticator", lambda *_a, **_k: None)
+    monkeypatch.setattr(engine.pyperclip, "copy", lambda *_a: None)
+    monkeypatch.setattr(engine, "_parametri_analisi_automatica", lambda *_a: (1, chess.engine.Limit(depth=1), 0, 2, None))
+    monkeypatch.setattr(strato, "con_la_plancia", lambda: True)
+    monkeypatch.setattr(engine.ui, "enter_escape", lambda domanda: domande.append(domanda) or True)
+    monkeypatch.setattr(strato, "leggi_in_una_finestra", lambda titolo, righe: lette.append((titolo, righe)))
+    engine.AnalisiAutomatica(partita)
+    assert domande == ["Vuoi leggere l'analisi in una finestra? (INVIO per si', ESC per no): "]
+    titolo, righe = lette[0]
+    assert titolo == "Analisi Automatica della Partita"
+    assert righe[0].startswith("Orologic Analisi Automatica [OAA]")
+    assert "" in righe
+    assert righe == next((tmp_path / "txt").glob("*.txt")).read_text(encoding="utf-8").rstrip("\n").split("\n")

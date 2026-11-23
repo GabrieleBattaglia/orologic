@@ -2288,13 +2288,14 @@ def AnalisiAutomatica(pgn_game):
     except Exception as e:  # noqa: BLE001
         print(_("Errore durante il salvataggio: {e}").format(e=e))
 
-    # Nella finestra l'analisi si legge nell'area, intera e senza voce,
-    # dalla sua prima riga (Gabriele, 23 novembre 2026).
+    # Nella finestra l'analisi si legge in una finestra sua, intera, dalla
+    # prima riga, con Chiudi (Gabriele, collaudo del 23 novembre 2026, sera:
+    # nell'area l'inizio si perdeva).
     from . import strato
 
-    if percorso_txt and strato.con_la_plancia() and ui.enter_escape(_("Vuoi leggere l'analisi nell'area? (INVIO per si', ESC per no): ")):
+    if percorso_txt and strato.con_la_plancia() and ui.enter_escape(_("Vuoi leggere l'analisi in una finestra? (INVIO per si', ESC per no): ")):
         with open(percorso_txt, encoding="utf-8") as file:
-            strato.nell_area(file.read())
+            strato.leggi_in_una_finestra(_("Analisi Automatica della Partita"), file.read().rstrip("\n").split("\n"))
     print(_("Ritorno al menu principale."))
     Acusticator(
         [
