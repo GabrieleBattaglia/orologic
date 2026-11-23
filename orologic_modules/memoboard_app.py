@@ -47,22 +47,23 @@ mnu = {
 # pescano a sorte, ma rendeva gli esercizi non ripetibili.
 board = [f"{colonna}{traversa}" for traversa in "12345678" for colonna in "ABCDEFGH"]
 
-diagonals = {
-    "A1H8": ["A1", "B2", "C3", "D4", "E5", "F6", "G7", "H8"],
-    "B1H7": ["B1", "C2", "D3", "E4", "F5", "G6", "H7"],
-    "C1H6": ["C1", "D2", "E3", "F4", "G5", "H6"],
-    "D1H5": ["D1", "E2", "F3", "G4", "H5"],
-    "E1H4": ["E1", "F2", "G3", "H4"],
-    "F1H3": ["F1", "G2", "H3"],
-    "G1H2": ["G1", "H2"],
-    "B1A2": ["B1", "A2"],
-    "C1A3": ["C1", "B2", "A3"],
-    "D1A4": ["D1", "C2", "B3", "A4"],
-    "E1A5": ["E1", "D2", "C3", "B4", "A5"],
-    "F1A6": ["F1", "E2", "D3", "C4", "B5", "A6"],
-    "G1A7": ["G1", "F2", "E3", "D4", "C5", "B6", "A7"],
-    "H1A8": ["H1", "G2", "F3", "E4", "D5", "C6", "B7", "A8"],
-}
+
+def _diagonali():
+    """Tutte le diagonali di almeno due case, col nome della prima e
+    dell'ultima, dalla traversa piu' bassa. Prima erano scritte a mano,
+    ed erano 14 su 26: mancavano quelle che partono dalle colonne A e H
+    sopra la prima traversa, come A2-G8, e Prox poteva dare per no due
+    case che sono sulla stessa diagonale, come B3 e D5 (23 novembre
+    2026)."""
+    gruppi = {}
+    for casa in board:
+        colonna, traversa = ord(casa[0]) - ord("A"), int(casa[1])
+        gruppi.setdefault(("sale", colonna - traversa), []).append(casa)
+        gruppi.setdefault(("scende", colonna + traversa), []).append(casa)
+    return {linea[0] + linea[-1]: linea for linea in gruppi.values() if len(linea) > 1}
+
+
+diagonals = _diagonali()
 
 
 def get_column_spelling(col_letter):
