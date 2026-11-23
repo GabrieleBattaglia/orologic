@@ -1,0 +1,18 @@
+Piano provvisorio per l'integrazione di pgn-extract in orologic. 23/11/2026.
+Terminata questa fase, cancella questo file.
+Aggiungiamo il riferimento a pgn-extract (pe) d'ora in avanti, sia nel manuale che nella sezione ringraziamenti.
+pe non farà parte del repo di orologic ma verrà scaricato al volo dalle copie che eseguono orologic, vedi più avanti.
+La funzione è collegata con una voce dal menù principale.
+All'apertura della finestra, orologic verifica la presenza di pe negli strumenti di orologic, se non lo trova, spiega e propone il download. Se fallisce, chiede se si desidera indicare il percorso. Se tutto è negativo si spiega che la funzione non è disponibile e si torna al menù principale.
+Se l'eseguibile è trovato, orologic controlla in background se vi sono aggiornamenti. Se presenti, chiede se si vuole aggiornare.
+La finestra avrà i seguenti oggetti, in ordine di tabulazione.
+File di input, db sorgente, funziona come il campo apri file nella funzione di ricerca, quindi prima appunti con molti pgn copiati, oppure indirizzo di file. Se non c'è, pulsante seleziona che porta alla maschera per selezionare un file.
+Elenco con tutti i parametri di pe, raccolti direttamente dall'eseguibile, all'apertura della finestra. Qui invio sposta il parametro nell'elenco successivo e lo toglie dai disponibili.
+Elenco, catena, con tutti i parametri scelti, qui ctrl+verticali li spostano (solo se il loro ordine ha senso, altrimenti restano fissi e non si spostano). Invio su ciascuno di questi, apre un campo di testo in cui si inserisce il valore. Questo viene validato e accettato o rifiutato con motivazione. Dopo averlo inserito, il valore compare dopo il parametro, nell'elenco dei parametri inseriti.
+COggetto per selezionare indirizzo e file di destinazione. Se esiste viene sovrascritto, altrimenti creato.
+Area di testo che mostra il comando pe composto fino a quel momento e una spiegazione dell'azione che verrà svolta.
+Un pulsante applica ed un pulsante esci che annulla l'operazione.
+Nei parametri scelti, se il valore è un secondo file sorgente, come nelle operazioni di unione, invece del campo di testo compare un terzo selettore di file.
+Se la destinazione viene sovrascritta, il file originale viene copiato nella cartella pgn con nome_backup_data_ora.pgn.
+Orologic può salvarsi un file con l'indice dei parametri restituiti da pe e relative spiegazioni d'uso prelevati dal sito. Tale indice verrà aggiornato contestualmente ad un eventuale aggiornamento dello stesso pe.
+Fammi sapere se è tutto chiaro e fammi tutte le domande che vuoii.
