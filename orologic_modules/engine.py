@@ -1243,17 +1243,15 @@ def _stampa_albero_pgn(
     eval_val = res.get("eval_after_move", "")  # Score object
     cpl = res.get("centipawn_loss", 0)
 
-    # 3. Formattazione Valutazione (ASSOLUTA: Riferita al BIANCO)
+    # 3. Formattazione Valutazione (ASSOLUTA: Riferita al BIANCO). Il matto
+    # si conta dopo la mossa e dice chi lo da': prima usciva Matto in -3.
     eval_str = ""
     if eval_val:
-        # Usa score.white() per avere sempre la valutazione dal punto di vista del bianco
-        white_score = eval_val.white()
-        if white_score.is_mate():
-            eval_str = _("Matto in {m}").format(
-                m=white_score.mate()
-            )  # Mate positivo = vince bianco, negativo = vince nero
+        matto = _matto_dopo(eval_val, node.board().turn)
+        if matto is not None:
+            eval_str = _maiuscola(matto)
         else:
-            cp_val = white_score.score(mate_score=30000)
+            cp_val = eval_val.white().score(mate_score=30000)
             if cp_val is not None:
                 eval_str = f"{cp_val / 100:+.2f}"  # Es. +0.33 (vantaggio bianco), -0.50 (vantaggio nero)
 
@@ -1282,7 +1280,7 @@ def _stampa_albero_pgn(
     # Commenti
     raw_comment = main_move_node.comment
     if raw_comment:
-        clean_comment = re.sub(r"\[OAA:.*?\]", "", raw_comment).strip()
+        clean_comment = re.sub(r"\[OAA\s*:.*?\]", "", raw_comment).strip()
         if clean_comment:
             lines.append(_("{p}  Note: {c}").format(p=prefix, c=clean_comment))
 
@@ -1297,8 +1295,9 @@ def _stampa_albero_pgn(
             var_dot = "." if node.board().turn == chess.WHITE else "..."
 
             var_info = ""
-            if variation.comment and "[OAA:" in variation.comment:
-                match = re.search(r"\[OAA: (.*?)\]", variation.comment)
+            # Il marcatore anche alla francese, [OAA : ...] con lo spazio.
+            if variation.comment:
+                match = re.search(r"\[OAA\s*:\s*(.*?)\]", variation.comment)
                 if match:
                     var_info = f" [{match.group(1)}]"
 
@@ -1617,14 +1616,111 @@ def _dati_motore(db):
     return engine_metadata
 
 
+# Il valore dei pezzi per riconoscere un sacrificio; il re non si sacrifica.
+VALORE_DEI_PEZZI = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9, chess.KING: 0}
+
+
+def _e_un_sacrificio(board, mossa):
+    """Vero se la mossa lascia il pezzo mosso dove l'avversario puo'
+    prenderlo guadagnando materiale: attaccato da un pezzo che vale meno, o
+    attaccato e non difeso, e la presa fatta, se c'e', vale meno di lui.
+    Sotto scacco non e' un sacrificio, si risponde per forza, e nemmeno col
+    re. Serve alla Mossa Geniale: prima bastava staccare la seconda mossa,
+    e su 547 mosse di sei partite le geniali erano 78, 34 delle quali
+    semplici riprese di un pezzo appena catturato (Gabriele, 23 novembre
+    2026)."""
+    if board.is_check():
+        return False
+    pezzo = board.piece_at(mossa.from_square)
+    if pezzo is None or pezzo.piece_type == chess.KING:
+        return False
+    if board.is_en_passant(mossa):
+        presa = VALORE_DEI_PEZZI[chess.PAWN]
+    else:
+        catturato = board.piece_at(mossa.to_square)
+        presa = VALORE_DEI_PEZZI[catturato.piece_type] if catturato else 0
+    dopo = board.copy(stack=False)
+    dopo.push(mossa)
+    valore = VALORE_DEI_PEZZI[dopo.piece_type_at(mossa.to_square)]
+    if presa >= valore:
+        return False
+    difeso = bool(dopo.attackers(pezzo.color, mossa.to_square))
+    for casa in dopo.attackers(not pezzo.color, mossa.to_square):
+        tipo = dopo.piece_type_at(casa)
+        if tipo == chess.KING:
+            # Il re prende solo un pezzo non difeso.
+            if not difeso:
+                return True
+        elif not difeso or VALORE_DEI_PEZZI[tipo] < valore:
+            return True
+    return False
+
+
+def _matto_dopo(punteggio, turno):
+    """Il matto dopo la mossa, a parole, o None se non c'e'. punteggio e'
+    la valutazione della mossa dalla posizione prima, come la da' il motore,
+    e conta anche la mossa stessa: dopo, chi da' matto ha una mossa in
+    meno, e se e' la mossa che da' matto e' scacco matto. Prima il conto
+    cambiava di uno fra la mossa migliore e le altre, e il commento non
+    diceva chi dava matto (Gabriele, 23 novembre 2026)."""
+    if punteggio is None:
+        return None
+    dal_lato = punteggio.pov(turno)
+    if not dal_lato.is_mate():
+        return None
+    mosse = dal_lato.mate()
+    if mosse > 0:
+        mosse -= 1
+        vincitore = turno
+    else:
+        mosse = -mosse
+        vincitore = not turno
+    if mosse == 0:
+        return _("scacco matto")
+    if vincitore == chess.WHITE:
+        return _("il Bianco dà matto in {m}").format(m=mosse)
+    return _("il Nero dà matto in {m}").format(m=mosse)
+
+
+def _maiuscola(testo):
+    return testo[:1].upper() + testo[1:]
+
+
+def _analizza_la_mossa(board, mossa, limit):
+    """La mossa giocata analizzata dalla stessa posizione e con lo stesso
+    limite delle alternative, con root_moves: prima si analizzava la
+    posizione dopo, con un'altra ricerca a un'altra profondita', e parte
+    della perdita era rumore. Restituisce una voce come quelle di
+    analyze_position_deep, con move, score e pv, o None."""
+    chiave = f"{board.fen()}_{mossa.uci()}_{limit.time}_{limit.depth}_{limit.nodes}"
+    if chiave in oaa_analysis_cache:
+        return oaa_analysis_cache[chiave]
+    try:
+        info = ENGINE.analyse(board, limit, root_moves=[mossa])
+    # L'interrogazione del motore puo' fallire in molti modi: senza
+    # analisi la mossa si salta.
+    except Exception:  # noqa: BLE001
+        return None
+    if isinstance(info, list):
+        info = info[0] if info else {}
+    score = info.get("score")
+    if score is None:
+        return None
+    risultato = {"rank": None, "move": mossa, "score": score, "pv": info.get("pv") or [mossa]}
+    oaa_analysis_cache[chiave] = risultato
+    return risultato
+
+
 def _classifica_mossa(
     node, analysis_before, best_alternative, eval_after_move, turn, soglie
 ):
     """Giudica la mossa giocata confrontandola con la migliore trovata.
 
-    Restituisce la classificazione, i centesimi di pedone persi e la
-    valutazione dopo la mossa, che il ramo della mossa migliore
-    sostituisce con quella del motore.
+    eval_after_move e' la valutazione della mossa giocata dalla posizione
+    prima, come quella delle alternative, quindi i matti si confrontano con
+    lo stesso conto. Restituisce la classificazione, i centesimi di pedone
+    persi e la valutazione della mossa, che il ramo della mossa migliore
+    prende dalla linea migliore.
     """
     soglia_inesattezza = soglie["inesattezza"]
     soglia_errore = soglie["errore"]
@@ -1638,20 +1734,21 @@ def _classifica_mossa(
     if node.move.uci() == best_alternative_move.uci():
         eval_after_move = best_alternative["score"]
 
+        classification = "Mossa Buona"
         if len(analysis_before) > 1:
             score_best = analysis_before[0]["score"].pov(turn).score(mate_score=30000)
             score_second_best = (
                 analysis_before[1]["score"].pov(turn).score(mate_score=30000)
             )
-            if score_best is not None and score_second_best is not None:
-                if (score_best - score_second_best) >= soglia_mossa_geniale_gap:
-                    classification = "Mossa Geniale"
-                else:
-                    classification = "Mossa Buona"
-            else:
-                classification = "Mossa Buona"
-        else:
-            classification = "Mossa Buona"
+            # Geniale e' la mossa unica che sacrifica materiale: senza il
+            # sacrificio e' una mossa buona, per esempio una ripresa.
+            if (
+                score_best is not None
+                and score_second_best is not None
+                and (score_best - score_second_best) >= soglia_mossa_geniale_gap
+                and _e_un_sacrificio(node.parent.board(), node.move)
+            ):
+                classification = "Mossa Geniale"
     else:
         best_pov_score = best_alternative["score"].pov(turn)
         played_pov_score = eval_after_move.pov(turn)
@@ -1666,6 +1763,7 @@ def _classifica_mossa(
             # Un altro matto, magari piu' lungo, resta comunque vincente:
             # prima finiva fra gli svarioni con cinquemila centesimi di
             # perdita e rovinava accuratezza e stima Elo della partita.
+            # I due matti si contano dalla stessa posizione, quella prima.
             mosse_migliore = abs(best_pov_score.mate())
             mosse_giocata = abs(played_pov_score.mate())
             if mosse_giocata > mosse_migliore:
@@ -1731,13 +1829,11 @@ def AnalisiAutomatica(pgn_game):
     thresholds = db.get(
         "analysis_thresholds", storage.DEFAULT_DB["analysis_thresholds"]
     )
-    soglie = {
-        "inesattezza": thresholds["inesattezza"],
-        "errore": thresholds["errore"],
-        "svarione": thresholds["svarione"],
-        "mossa_buona": 20,
-        "mossa_geniale_gap": 180,
-    }
+    # Tutte le soglie dal database, coi valori predefiniti di storage:
+    # quelle della mossa buona e della geniale erano scritte qui una seconda
+    # volta.
+    predefinite = storage.DEFAULT_DB["analysis_thresholds"]
+    soglie = {chiave: thresholds.get(chiave, valore) for chiave, valore in predefinite.items()}
     parametri = _parametri_analisi_automatica(pgn_game, db)
     if parametri is None:
         return
@@ -1787,7 +1883,11 @@ def AnalisiAutomatica(pgn_game):
     cpl_data = {"w": [], "b": []}
     accuracies = {"w": [], "b": []}
 
-    # NOTA: Rimosso analysis_after per forzare ricalcolo preciso
+    # Ogni mossa si giudica dalla posizione prima: le alternative con
+    # multipv, e la mossa giocata dalla stessa ricerca, se e' fra le linee,
+    # o con root_moves alla stessa profondita'. Prima la mossa giocata si
+    # valutava da un'altra ricerca, sulla posizione dopo, e il matto si
+    # contava in due modi (Gabriele, 23 novembre 2026).
     for i, node in enumerate(mainline_nodes):
         if key(attesa=0.002) in ("\x1b", "esc"):
             Acusticator(["c3", 0.3, 0.5, config.VOLUME], kind=2)
@@ -1796,6 +1896,8 @@ def AnalisiAutomatica(pgn_game):
 
         ply = i + 1
         if ply <= mosse_da_saltare:
+            # La teoria non entra nella precisione: col 100% gonfiava la
+            # precisione e l'Elo stimato, mentre il riepilogo la dice esclusa.
             analysis_results.append(
                 {
                     "node": node,
@@ -1803,19 +1905,16 @@ def AnalisiAutomatica(pgn_game):
                     "centipawn_loss": 0,
                     "alternatives_info": [],
                     "eval_after_move": None,
-                    "accuracy": 100.0,  # Teoria = 100%
                 }
             )
-            accuracies["w" if ply % 2 != 0 else "b"].append(100.0)
             continue
 
         parent_board = node.parent.board()
-        current_board = node.board()
         turn = parent_board.turn
         color_key = "w" if turn == chess.WHITE else "b"
 
         total_plys = len(mainline_nodes)
-        san = node.parent.board().san(node.move)
+        san = parent_board.san(node.move)
         san_str = san if ply % 2 != 0 else f"...{san}"
         elapsed_time = time.time() - start_time
         time_str = f"{int(elapsed_time // 60):02d}:{int(elapsed_time % 60):02d}"
@@ -1827,47 +1926,32 @@ def AnalisiAutomatica(pgn_game):
         )
 
         multipv_needed = max(3, num_varianti)
-
-        # 1. Analisi "BEFORE" (sulla posizione di partenza, per trovare la best move e alternative)
         analysis_before = analyze_position_deep(parent_board, limit, multipv_needed)
-
         if not analysis_before:
             continue
-        if truncate_length > 0:
-            for info in analysis_before:
-                if "pv" in info:
-                    info["pv"] = info["pv"][:truncate_length]
-
         best_alternative = analysis_before[0]
-
-        # 2. Analisi "AFTER" (valutazione precisa della mossa giocata)
-        analysis_after = analyze_position_deep(current_board, limit, multipv_count=1)
-
-        if not analysis_after:
+        giocata = next((info for info in analysis_before if info["move"] == node.move), None)
+        if giocata is None:
+            giocata = _analizza_la_mossa(parent_board, node.move, limit)
+        if giocata is None:
             continue
-        if truncate_length > 0:
-            for info in analysis_after:
-                if "pv" in info:
-                    info["pv"] = info["pv"][:truncate_length]
 
-        eval_after_move = analysis_after[0]["score"]
-
-        # Calcolo Precisione
+        # Calcolo Precisione, con le due valutazioni dalla stessa posizione:
+        # la mossa migliore vale il 100%.
         try:
-            w_before = calculate_win_probability(analysis_before[0]["score"], turn)
-            w_after = calculate_win_probability(analysis_after[0]["score"], turn)
-            move_acc = calculate_move_accuracy(w_before, w_after)
-            accuracies[color_key].append(move_acc)
+            w_before = calculate_win_probability(best_alternative["score"], turn)
+            w_after = calculate_win_probability(giocata["score"], turn)
+            accuracies[color_key].append(calculate_move_accuracy(w_before, w_after))
         # Una singola mossa che non si riesce ad annotare non deve
         # fermare l'analisi di tutta la partita.
-        except Exception:  # noqa: BLE001
-            move_acc = 0.0
+        except Exception:  # noqa: BLE001, S110
+            pass
         CPL_STATISTICS_CAP = 1000
         classification, centipawn_loss, eval_after_move = _classifica_mossa(
             node,
             analysis_before,
             best_alternative,
-            eval_after_move,
+            giocata["score"],
             turn,
             soglie,
         )
@@ -1878,30 +1962,27 @@ def AnalisiAutomatica(pgn_game):
         capped_loss = min(centipawn_loss, CPL_STATISTICS_CAP)
         cpl_data[color_key].append(capped_loss)
 
-        if eval_after_move.pov(turn).is_mate():
-            mate_val = abs(eval_after_move.pov(turn).mate())
-            comment_str = _("[OAA: {cl}. Matto in {m}]").format(
-                cl=classification_labels[classification], m=mate_val
+        matto = _matto_dopo(eval_after_move, turn)
+        if matto is not None:
+            comment_str = _("[OAA: {cl}. {matto}]").format(
+                cl=classification_labels[classification], matto=_maiuscola(matto)
             )
-
-            if classification not in ["Svarione", "Errore", "Inesattezza"]:
-                pv = analysis_after[0].get("pv")
-                if pv:
-                    next_game_move = None
-                    if node.variations:
-                        next_game_move = node.variations[0].move
-
-                    first_pv_move = pv[0]
-
-                    if not next_game_move or next_game_move != first_pv_move:
-                        var_node = node.add_variation(first_pv_move)
-                        if len(pv) > 1:
-                            var_node.add_line(pv[1:])
-
-                        var_node.comment = _("[OAA: Segue Matto in {m}]").format(
-                            m=mate_val
-                        )
-
+            # Il seguito dopo la mossa, intero: troncata, una linea di
+            # matto si fermerebbe prima del matto.
+            seguito = giocata["pv"][1:]
+            if classification not in ["Svarione", "Errore", "Inesattezza"] and seguito:
+                if not node.variations:
+                    # La partita finisce qui: una variante diventerebbe la
+                    # linea principale, e la partita si allungherebbe con
+                    # mosse mai giocate. La linea va nel commento.
+                    comment_str += " " + _("[OAA: Linea: {linea}]").format(
+                        linea=node.board().variation_san(seguito)
+                    )
+                elif node.variations[0].move != seguito[0]:
+                    var_node = node.add_variation(seguito[0])
+                    if len(seguito) > 1:
+                        var_node.add_line(seguito[1:])
+                    var_node.comment = _("[OAA: Segue: {matto}]").format(matto=matto)
         else:
             comment_str = _("[OAA: {cl}. Perdita: {cpl:+.2f}]").format(
                 cl=classification_labels[classification], cpl=centipawn_loss / 100
@@ -1923,31 +2004,31 @@ def AnalisiAutomatica(pgn_game):
                     continue
 
                 prima_mossa_variante = pv[0]
-                if prima_mossa_variante.uci() != node.move.uci():
+                if prima_mossa_variante != node.move:
                     # Controlla duplicati
                     exists = any(
-                        v.move.uci() == prima_mossa_variante.uci()
+                        v.move == prima_mossa_variante
                         for v in node.parent.variations
                     )
                     if not exists:
                         var_node = node.parent.add_variation(prima_mossa_variante)
                         score_obj = var_info.get("score")
-                        commento_variante = ""
-
-                        if score_obj and score_obj.pov(turn).is_mate():
-                            mate_in = abs(score_obj.pov(turn).mate())
-                            commento_variante = _("[OAA: Alt: Matto in {m}]").format(
-                                m=mate_in
+                        matto_alternativo = _matto_dopo(score_obj, turn)
+                        if matto_alternativo is not None:
+                            commento_variante = _("[OAA: Alt: {matto}]").format(
+                                matto=matto_alternativo
                             )
+                            # Una linea di matto resta intera.
+                            resto = pv[1:]
                         else:
-                            var_score_str = _format_score(score_obj, turn)
                             commento_variante = _("[OAA: Alt: {s}]").format(
-                                s=var_score_str
+                                s=_format_score(score_obj, turn)
                             )
+                            resto = pv[1:truncate_length] if truncate_length > 0 else pv[1:]
 
                         var_node.comment = commento_variante
-                        if len(pv) > 1:
-                            var_node.add_line(pv[1:])
+                        if resto:
+                            var_node.add_line(resto)
 
         analysis_results.append(
             {

@@ -853,9 +853,10 @@ margin: 1em 0;
 <h5 id="cap-2-1-5-1">2.1.5.1 Orologic Analisi Automatica (OAA)</h5>
 <p>Al termine della partita, potrai lanciare l'Analisi Automatica (OAA). Orologic sfrutterà il motore per esaminare ogni tua singola mossa, calcolando parametri avanzati come:</p>
 <ul>
-    <li><strong>Precisione (Game Accuracy):</strong> Un valore percentuale che riflette quanto le tue mosse si siano avvicinate alla perfezione suggerita dal motore (es. 95% = eccellente).</li>
+    <li><strong>Precisione (Game Accuracy):</strong> Un valore percentuale che riflette quanto le tue mosse si siano avvicinate alla perfezione suggerita dal motore (es. 95% = eccellente). Le mosse di teoria saltate all'inizio non entrano nel conto.</li>
     <li><strong>Rating Elo Stimato:</strong> Basato sulle performance della singola partita analizzata.</li>
-    <li><strong>Errori e Imprecisioni:</strong> Un conteggio di quante sviste gravi, imprecisioni o mosse brillanti sono state giocate.</li>
+    <li><strong>Errori e Imprecisioni:</strong> Un conteggio di quante sviste gravi, imprecisioni o mosse brillanti sono state giocate. Ogni mossa si giudica dalla posizione prima, con la stessa ricerca delle alternative. La Mossa Geniale è la mossa unica che sacrifica materiale: lascia il pezzo dove l'avversario può prenderlo guadagnando; una ripresa o una mossa forzata, anche se unica, è una Mossa Buona.</li>
+    <li><strong>Matti:</strong> il commento dice chi dà matto e in quante mosse dopo quella giocata, per esempio <code>[OAA: Mossa Buona. Il Bianco dà matto in 2]</code>, o <code>Scacco matto</code> per la mossa che lo dà. La linea di matto non si accorcia mai. Se la partita finisce lì, per esempio con l'abbandono, la linea va nel commento, <code>[OAA: Linea: ...]</code>, e non si aggiunge alla partita.</li>
 </ul>
 <p>Al termine dell'analisi, OAA genererà un report testuale completo (salvato nella cartella e apribile a schermo) con la cronaca della partita mossa per mossa e i consigli del motore. </p>
 
