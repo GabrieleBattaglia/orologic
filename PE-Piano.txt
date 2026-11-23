@@ -16,3 +16,19 @@ Nei parametri scelti, se il valore è un secondo file sorgente, come nelle opera
 Se la destinazione viene sovrascritta, il file originale viene copiato nella cartella pgn con nome_backup_data_ora.pgn.
 Orologic può salvarsi un file con l'indice dei parametri restituiti da pe e relative spiegazioni d'uso prelevati dal sito. Tale indice verrà aggiornato contestualmente ad un eventuale aggiornamento dello stesso pe.
 Fammi sapere se è tutto chiaro e fammi tutte le domande che vuoii.
+Decisioni del 24 novembre 2026, dalle domande di ClaudIA.
+Consenso: David J. Barnes ha risposto il 23 novembre 2026, è contento che pe entri in Orologic, anche nella distribuzione (issue 74).
+Cartella: pe sta in una cartella pgn-extract accanto all'eseguibile, come engine; fuori da git, dallo zip e dall'installatore.
+Scaricamento: pe, eco.pgn e COPYING, scaricati e aggiornati insieme.
+eco.pgn: resources/eco.db è l'eco.pgn di pe, identico a meno degli a capo; torna eco.pgn e Orologic lo usa col nome originale anche per classificare. Proposta di ClaudIA: quello scaricato con pe, se c'è, vale più di quello del pacchetto.
+Elenco dei disponibili: viene da pe -h. Ogni voce dice il parametro e la sua riga di pe -h, in inglese; F1 apre la guida estesa, dall'indice salvato dal sito, in una finestra da leggere con Chiudi ed Esc.
+Lingua: le spiegazioni restano in inglese, come le dà pe.
+Validazione: viene da una tabella di Orologic, parametro per parametro; un parametro che la tabella non conosce compare lo stesso, col valore senza controllo.
+Parametri di Orologic: -h, --help, --version, -A, -o e -a, che sono il campo della destinazione, e -l per i messaggi; non compaiono nell'elenco.
+Ripetibili: quelli che pe accetta più volte, come -T e --detag, restano fra i disponibili; gli altri, scelti, si tolgono.
+Varianti: -T diventa una voce per criterio, -Tw, -Tb, -Td, -Te, -Tr e gli altri; i valori a scelta chiusa, come i formati di -W e i livelli di -E, si scelgono da un elenco invece che dal campo di testo.
+Ordine: lo decide Orologic, -S prima di -t e -T e i file sorgente in fondo; nella catena i parametri restano nell'ordine di scelta, niente Ctrl+frecce.
+Unione: la voce altro file sorgente fra i disponibili, ripetibile, apre il selettore di file; nella catena compare col nome del file.
+Destinazione: non può essere il file sorgente; se lo è, Orologic lo dice e non applica.
+Copia di sicurezza: quella della Ricerca PGN, Nome copia data-ora.pgn nella cartella pgn, con la parola copia tradotta.
+Area dell'uscita, oggetto nuovo dopo l'area del comando: durante il lavoro una riga sola che si aggiorna con le partite lette; alla fine il resoconto, partite lette ed estratte, doppioni, errori raggruppati per tipo col loro numero e i primi esempi. L'uscita completa va in un file nella cartella txt, che un pulsante apre.
