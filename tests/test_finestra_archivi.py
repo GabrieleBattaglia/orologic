@@ -323,7 +323,7 @@ def test_la_voce_del_menu_principale_solo_nella_finestra(monkeypatch):
 
     monkeypatch.setattr(strato, "con_la_plancia", lambda: True)
     # menu di GBUtils ordina per chiave: archivi viene dopo arbitra, al
-    # quarto posto col punto (collaudo di Gabriele del 25 novembre 2026).
+    # quarto posto col punto (collaudo di Gabriele del 24 novembre 2026).
     ordinate = sorted(orologic._voci_del_menu_principale(), key=str.lower)
     assert ordinate[:4] == [".", "analizza", "arbitra", "archivi"]
     assert orologic._voci_del_menu_principale()["archivi"] == "PGN gestione archivi (pgn-extract)"

@@ -746,7 +746,7 @@ _NUMERO_IN_FONDO = re.compile(r"^(.*) \((\d+)\)$")
 def destinazione_proposta(sorgente):
     """Il risultato accanto al sorgente, col primo numero libero dopo il
     nome, come Windows: a1.pgn porta a a1 (1).pgn, e lavorando su a1 (1).pgn
-    il numero sale, a1 (2).pgn (Gabriele, 25 novembre 2026). Per il testo
+    il numero sale, a1 (2).pgn (Gabriele, 24 novembre 2026). Per il testo
     degli appunti, sorgente None, la cartella pgn di Orologic."""
     if sorgente:
         cartella_del_risultato = os.path.dirname(os.path.abspath(sorgente))
@@ -771,7 +771,7 @@ def copia_del_sorgente(sorgente):
     """Dopo un lavoro riuscito, la copia di sicurezza del sorgente nella
     cartella pgn, perche' l'utente possa cancellare l'originale quando il
     risultato gli piace: una per versione, cioe' niente copia nuova se ce
-    n'e' gia' una uguale byte per byte (Gabriele, 25 novembre 2026).
+    n'e' gia' una uguale byte per byte (Gabriele, 24 novembre 2026).
     Restituisce (percorso della copia, vero se e' nuova)."""
     from . import archivio_pgn
 

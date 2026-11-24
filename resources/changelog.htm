@@ -17,6 +17,32 @@ li { margin-bottom: 0.3em; }
 </head>
 <body>
 <h1>ChangeLog di Orologic</h1>
+<h2>Versione 9</h2>
+<h3>Versione 9.0</h3>
+<h4>9.0.0 (24 novembre 2026)</h4>
+<ul>
+  <li>+ [Finestra] Orologic parte in una finestra di Windows pensata per NVDA e il display braille. A sinistra la plancia, un albero con le voci dei menu scritte come nel terminale: le frecce e Invio scelgono, i rami aprono i sottomenu, le domande sì o no hanno le voci INVIO ed ESC. A destra la console, dove Orologic scrive e dove rispondi, e che si rilegge liberamente con le frecce. F5 porta alla plancia, F6 alla console, Ctrl+virgola alle impostazioni, e ogni passaggio del fuoco ha il suo suono.</li>
+  <li>+ [Finestra] Il terminale di sempre resta, con l'opzione --cli o col collegamento Orologic modalità a linea di comando, uguale alla versione 8; da qui in poi riceve soltanto correzioni, e le novità vanno nella finestra. Il pacchetto non apre più una console, e Stockfish gira senza finestra.</li>
+  <li>+ [Partite] Nell'arbitraggio, in Tempo, contro il motore e su Lichess la console diventa un cruscotto che si riscrive da solo: giocatori, scacchiera, orologi e ultime mosse a parole, messaggi e prompt; ti puoi fermare su una riga, e si aggiorna senza spostarti. La plancia mostra i comandi della modalità, coi loro valori, e Invio li manda.</li>
+  <li>+ [Accessibilità] Il testo nuovo si annuncia alla sintesi e al braille, con le sue impostazioni: se annunciare, con quale uscita, a chi, e se un annuncio nuovo interrompe o si accoda. La barra braille segue anche il testo che cambia da solo, come gli orologi, e chi legge più su resta dov'è; il prompt che si rinfresca non si ripete a ogni secondo.</li>
+  <li>+ [Scacchiera] La scacchiera interattiva, nell'arbitraggio, contro il motore e su Lichess: lo Spazio a riga vuota la apre. Ci si muove con le frecce e coi salti, si solleva e si posa il pezzo per muovere, si chiedono attacchi e difese, mosse possibili, pezzi e orologi, si assegna il risultato; ogni azione, anche ogni no, ha il suo suono. C'è anche nell'esploratore di Easyfish.</li>
+  <li>+ [Impostazioni] Tutte le impostazioni in una finestra sola, col filtro: motore, nomi, analisi, prompt, annunci, volume e lingua, che al primo avvio si sceglie in una finestra. Nuove finestre per i colori e le dimensioni dei caratteri, per comporre il prompt di gioco con due elenchi, per Offrimi un caffè, ed Entra al PUB e Chiedi aiuto al PUB.</li>
+  <li>+ [Orologi] Gli orologi in una finestra sola, per crearli, modificarli, vederli ed eliminarli, con le otto tipologie del controllo del tempo degli orologi DGT, una per fase; il tempo speso per mossa segue la tipologia, nel riepilogo e nel PGN.</li>
+  <li>+ [Pulizia] La pulizia dei file vecchi in una finestra, che si apre da sola all'avvio quando ce ne sono, e manda i file al cestino.</li>
+  <li>+ [Ricerca PGN] La ricerca PGN in una finestra: il file dagli appunti o dalla finestra di Windows, la lettura con tutti i processori, le schede Partite e Filtri, l'albero delle mosse un ramo alla volta con le varianti contate a parte, i rami Non classificate con Classifica e Con errori con Ripara gli errori, la copia di sicurezza prima di riscrivere il file, e il passaggio a Easyfish o all'analisi con il ritorno allo stesso punto.</li>
+  <li>+ [Archivi PGN] La voce nuova PGN gestione archivi, solo nella finestra, porta dentro Orologic pgn-extract di David J. Barnes, che Orologic scarica dal suo sito, con eco.pgn, la licenza e la guida, e propone di aggiornare. Si sceglie l'archivio, si compongono i parametri da due elenchi con i valori controllati, F1 apre la sezione della guida di ogni parametro; il risultato nasce accanto all'originale col primo numero libero, l'originale non si tocca e ha la sua copia di sicurezza nella cartella pgn. Il riassunto raggruppa i messaggi di pgn-extract, e il resoconto completo va nella cartella txt.</li>
+  <li>+ [Easyfish] Easyfish nella finestra: il cruscotto, la scacchiera nell'esploratore, il navigatore della partita, l'editor della scacchiera e la finestra dei disegni; analisi e aiuti in finestre da leggere, con Rendi verbosa. L'analisi della posizione dice anche tutto quello che il motore riferisce di sé.</li>
+  <li>+ [Lichess] I puzzle di Lichess nella finestra, sul cruscotto, con la scacchiera dal lato di chi risolve.</li>
+  <li>+ [Analisi] L'analisi automatica misura come Lichess: la precisione delle mosse e della partita, il giudizio dal calo della probabilità di vittoria, l'Elo stimato come intervallo, la confutazione degli errori, la Mossa Geniale per i sacrifici e statistiche nuove su fasi e tempi. Usa la forza piena del motore configurato, non quella ridotta della carriera, e nella finestra si legge in una finestra sua. Le soglie di inesattezza, errore e svarione sono in punti percentuali.</li>
+  <li>+ [Analisi] Il motore dà le percentuali di vittoria, patta e sconfitta fin dall'avvio, e i disegni della partita, frecce e cerchi, si dicono dovunque ci si muova fra le mosse.</li>
+  <li>+ [Memoboard] L'esercizio delle diagonali le usa tutte e 26; la classifica va per giuste nette al minuto, le statistiche sono più ricche, e la tastiera si svuota dopo la pausa di lettura.</li>
+  <li>+ [Installatore] Accanto allo zip c'è l'installatore Orologic-Setup, nelle cinque lingue: installa per il tuo utente senza amministratore, mette nel menu Start Orologic e Orologic modalità a linea di comando, si toglie da App installate e alla fine chiede se cancellare anche i dati. Issue 73.</li>
+  <li>* [PGN] Una riga vuota in mezzo alle mosse non spezza più la partita in due.</li>
+  <li>* [Core] L'archivio delle aperture eco.db si chiama di nuovo eco.pgn, il suo nome in pgn-extract; quando pgn-extract ne scarica uno più recente, Orologic usa quello.</li>
+  <li>+ [L10N] Tutte le frasi nuove in inglese, spagnolo, francese e portoghese.</li>
+  <li>+ [Manuale] Il manuale racconta la finestra, con i tasti di ogni finestra nella sezione 1.8, e la gestione degli archivi nella 2.9; David J. Barnes entra nei ringraziamenti.</li>
+</ul>
+<p>Con lei si chiudono le issue 73 e 74.</p>
 <h2>Versione 8</h2>
 <h3>Versione 8.46</h3>
 <h4>8.46.8 (21 novembre 2026)</h4>

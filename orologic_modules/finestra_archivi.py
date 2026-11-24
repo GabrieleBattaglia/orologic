@@ -26,7 +26,7 @@ I controlli, nell'ordine del Tab:
     cartella, e dopo un lavoro riuscito il numero dopo; non puo' essere un
     file sorgente, e se c'e' gia' se ne fa prima la copia di sicurezza nella
     cartella pgn. A lavoro riuscito anche il sorgente ha la sua copia nella
-    cartella pgn, una per versione (Gabriele, 25 novembre 2026);
+    cartella pgn, una per versione (Gabriele, 24 novembre 2026);
   Comando, il comando composto e cosa fara';
   Uscita, durante il lavoro una riga che si aggiorna, poi il riassunto;
   Applica, Apri il resoconto, l'uscita completa di pe nella cartella txt,
