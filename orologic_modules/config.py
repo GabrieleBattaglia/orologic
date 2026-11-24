@@ -230,7 +230,8 @@ MENU_CHOICES = {
 }
 
 # La voce della gestione degli archivi con pgn-extract, solo nella finestra,
-# dopo la ricerca PGN: il terminale riceve soltanto correzioni (decisione
+# dove l'ordine alfabetico del menu la mette, dopo arbitra: il terminale
+# riceve soltanto correzioni (decisione
 # del 22 novembre 2026), e orologic.py la aggiunge quando c'e' la plancia.
 VOCE_ARCHIVI = _("PGN gestione archivi (pgn-extract)")
 

@@ -253,8 +253,9 @@ def menu_impostazioni():
 
 
 def _voci_del_menu_principale():
-    """Le voci del menu principale; nella finestra, dopo la ricerca PGN,
-    anche PGN gestione archivi, con pgn-extract (issue 74)."""
+    """Le voci del menu principale; nella finestra anche archivi, PGN
+    gestione archivi con pgn-extract (issue 74). L'ordine lo fa menu di
+    GBUtils, alfabetico per chiave: archivi viene dopo arbitra."""
     if not strato.con_la_plancia():
         return config.MENU_CHOICES
     voci = {}

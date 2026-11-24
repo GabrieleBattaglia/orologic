@@ -319,8 +319,10 @@ def test_la_voce_del_menu_principale_solo_nella_finestra(monkeypatch):
     from orologic_modules import strato
 
     monkeypatch.setattr(strato, "con_la_plancia", lambda: True)
-    voci = list(orologic._voci_del_menu_principale())
-    assert voci[voci.index("ricerca") + 1] == "archivi"
+    # menu di GBUtils ordina per chiave: archivi viene dopo arbitra, al
+    # quarto posto col punto (collaudo di Gabriele del 25 novembre 2026).
+    ordinate = sorted(orologic._voci_del_menu_principale(), key=str.lower)
+    assert ordinate[:4] == [".", "analizza", "arbitra", "archivi"]
     assert orologic._voci_del_menu_principale()["archivi"] == "PGN gestione archivi (pgn-extract)"
     monkeypatch.setattr(strato, "con_la_plancia", lambda: False)
     assert "archivi" not in orologic._voci_del_menu_principale()
