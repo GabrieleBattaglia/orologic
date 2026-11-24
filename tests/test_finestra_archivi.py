@@ -113,7 +113,8 @@ def test_all_apertura_il_file_degli_appunti_e_la_destinazione(aperta, archivio):
     prova = aperta(appunti=archivio)
     dialogo = prova.dialogo
     assert dialogo.sorgente.GetValue() == archivio and dialogo.appunti is None
-    assert dialogo.destinazione.GetValue() == os.path.join(config.percorso_salvataggio("pgn"), "Archivio di prova pgn-extract.pgn")
+    # Accanto al sorgente, col primo numero libero.
+    assert dialogo.destinazione.GetValue() == os.path.join(os.path.dirname(archivio), "Archivio di prova (1).pgn")
     assert prova.file_chiesti == 0
     assert dialogo.FindFocus() is dialogo.disponibili
     comando = dialogo.comando.GetValue().split("\n")
@@ -127,10 +128,12 @@ def test_il_testo_pgn_degli_appunti(aperta):
     # Gli appunti arrivano senza gli spazi e gli a capo ai bordi.
     assert dialogo.appunti == ARCHIVIO.strip()
     assert dialogo.sorgente.GetValue() == "Il PGN degli appunti, 3 partite"
-    assert dialogo.destinazione.GetValue().endswith("appunti pgn-extract.pgn")
-    # Scritto a mano, il sorgente non e' piu' quello degli appunti.
+    assert dialogo.destinazione.GetValue() == os.path.join(config.percorso_salvataggio("pgn"), "appunti (1).pgn")
+    # Scritto a mano, il sorgente non e' piu' quello degli appunti; la
+    # destinazione proposta lo segue quando e' un file che c'e'.
     dialogo.sorgente.SetValue("C:\\altro.pgn")
     assert dialogo.appunti is None and dialogo.percorso_del_sorgente() == "C:\\altro.pgn"
+    assert dialogo.destinazione.GetValue().endswith("appunti (1).pgn")
 
 
 def test_senza_appunti_si_sceglie_il_file(aperta, archivio):
@@ -328,6 +331,45 @@ def test_la_voce_del_menu_principale_solo_nella_finestra(monkeypatch):
     assert "archivi" not in orologic._voci_del_menu_principale()
 
 
+def test_la_destinazione_proposta_segue_il_sorgente_ma_non_quella_scritta(aperta, archivio, tmp_path):
+    prova = aperta(appunti=archivio)
+    dialogo = prova.dialogo
+    altro = tmp_path / "Secondo (3).pgn"
+    altro.write_text(ARCHIVIO, encoding="utf-8")
+    dialogo.sorgente.SetValue(str(altro))
+    # Il numero del sorgente si toglie: si riparte dal primo libero.
+    assert dialogo.destinazione.GetValue() == str(tmp_path / "Secondo (1).pgn")
+    dialogo.destinazione.SetValue(str(tmp_path / "scelta da me.pgn"))
+    dialogo.sorgente.SetValue(archivio)
+    assert dialogo.destinazione.GetValue() == str(tmp_path / "scelta da me.pgn")
+
+
+@con_pe
+def test_il_lavoro_vero_numera_e_copia_il_sorgente_una_volta(aperta, archivio):
+    prova = aperta(appunti=archivio, pe=PE_VERO, aiuto=None)
+    dialogo = prova.dialogo
+    prova.aggiungi("-D")
+    copie = []
+    for numero in (1, 2):
+        destinazione = os.path.join(os.path.dirname(archivio), f"Archivio di prova ({numero}).pgn")
+        assert dialogo.destinazione.GetValue() == destinazione
+        dialogo.applica()
+        assert pompa(lambda: not dialogo.in_corso(), 20)
+        righe = dialogo.uscita.GetValue().split("\n")
+        assert righe[0] == f"Scritto: {destinazione}."
+        copie.append(righe[1])
+        os.remove(dialogo.resoconto)
+    # La prima volta la copia nasce, la seconda c'e' gia', uguale.
+    copia = copie[0].removeprefix("La copia di sicurezza del sorgente e' ").removesuffix(".")
+    assert os.path.dirname(copia) == config.percorso_salvataggio("pgn")
+    assert copie[1] == f"Il sorgente ha gia' la sua copia di sicurezza, uguale: {copia}."
+    with open(copia, encoding="utf-8") as file:
+        assert file.read() == ARCHIVIO
+    # Il terzo lavoro avra' il numero dopo.
+    assert dialogo.destinazione.GetValue().endswith("Archivio di prova (3).pgn")
+    os.remove(copia)
+
+
 @con_pe
 def test_il_lavoro_vero_con_la_copia_di_sicurezza(aperta, archivio, tmp_path):
     prova = aperta(appunti=archivio, pe=PE_VERO, aiuto=None)
@@ -347,6 +389,12 @@ def test_il_lavoro_vero_con_la_copia_di_sicurezza(aperta, archivio, tmp_path):
     with open(copia, encoding="utf-8") as file:
         assert file.read() == "il file di prima"
     os.remove(copia)
+    # E la copia del sorgente, a lavoro riuscito.
+    del_sorgente = righe[2].removeprefix("La copia di sicurezza del sorgente e' ").removesuffix(".")
+    assert os.path.isfile(del_sorgente)
+    os.remove(del_sorgente)
+    # Una destinazione scritta a mano resta quella.
+    assert dialogo.destinazione.GetValue() == str(destinazione)
     assert "Partite lette: 3; accettate dai criteri: 1." in righe
     assert righe[-1].startswith("Il resoconto completo e' in ")
     assert "[Event " in destinazione.read_text(encoding="utf-8")

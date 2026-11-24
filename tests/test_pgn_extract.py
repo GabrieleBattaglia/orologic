@@ -281,6 +281,34 @@ def test_la_destinazione_si_sostituisce_dopo_la_copia(tmp_path):
     assert pgn_extract.stesso_file(str(destinazione), str(tmp_path / "." / "archivio.pgn"))
 
 
+def test_la_destinazione_proposta_col_numero(tmp_path):
+    sorgente = tmp_path / "GBChessDB.pgn"
+    sorgente.write_text("x", encoding="utf-8")
+    assert pgn_extract.destinazione_proposta(str(sorgente)) == str(tmp_path / "GBChessDB (1).pgn")
+    (tmp_path / "GBChessDB (1).pgn").write_text("x", encoding="utf-8")
+    # Il file provvisorio di un lavoro in corso conta come occupato.
+    (tmp_path / "GBChessDB (2).pgn.pgn-extract.tmp").write_text("x", encoding="utf-8")
+    assert pgn_extract.destinazione_proposta(str(sorgente)) == str(tmp_path / "GBChessDB (3).pgn")
+    # Da un risultato il numero sale, non si somma.
+    assert pgn_extract.destinazione_proposta(str(tmp_path / "GBChessDB (1).pgn")) == str(tmp_path / "GBChessDB (3).pgn")
+    # Gli appunti nella cartella pgn di Orologic.
+    assert pgn_extract.destinazione_proposta(None) == os.path.join(config.percorso_salvataggio("pgn"), "appunti (1).pgn")
+
+
+def test_la_copia_del_sorgente_una_per_versione(tmp_path):
+    sorgente = tmp_path / "Torneo.pgn"
+    sorgente.write_text("prima", encoding="utf-8")
+    copia, nuova = pgn_extract.copia_del_sorgente(str(sorgente))
+    assert nuova and os.path.dirname(copia) == config.percorso_salvataggio("pgn")
+    assert pgn_extract.copia_del_sorgente(str(sorgente)) == (copia, False)
+    # Cambiato il sorgente, la copia e' nuova; quella di prima resta.
+    sorgente.write_text("dopo!", encoding="utf-8")
+    seconda, nuova = pgn_extract.copia_del_sorgente(str(sorgente))
+    assert nuova and seconda != copia and os.path.isfile(copia)
+    os.remove(copia)
+    os.remove(seconda)
+
+
 class _Risposta(io.BytesIO):
     def __enter__(self):
         return self

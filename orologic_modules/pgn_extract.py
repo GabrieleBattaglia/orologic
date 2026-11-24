@@ -25,6 +25,7 @@ Qui c'e' tutto quello che non e' finestra:
 """
 
 import dataclasses
+import filecmp
 import html
 import os
 import re
@@ -736,6 +737,59 @@ def file_degli_appunti(testo):
     with os.fdopen(descrittore, "w", encoding="utf-8") as file:
         file.write(testo)
     return percorso
+
+
+# Il numero che Orologic mette dopo il nome dei risultati, come Windows.
+_NUMERO_IN_FONDO = re.compile(r"^(.*) \((\d+)\)$")
+
+
+def destinazione_proposta(sorgente):
+    """Il risultato accanto al sorgente, col primo numero libero dopo il
+    nome, come Windows: a1.pgn porta a a1 (1).pgn, e lavorando su a1 (1).pgn
+    il numero sale, a1 (2).pgn (Gabriele, 25 novembre 2026). Per il testo
+    degli appunti, sorgente None, la cartella pgn di Orologic."""
+    if sorgente:
+        cartella_del_risultato = os.path.dirname(os.path.abspath(sorgente))
+        base, estensione = os.path.splitext(os.path.basename(sorgente))
+    else:
+        cartella_del_risultato = config.percorso_salvataggio("pgn")
+        os.makedirs(cartella_del_risultato, exist_ok=True)
+        base, estensione = _("appunti"), ".pgn"
+    numerato = _NUMERO_IN_FONDO.match(base)
+    if numerato:
+        base = numerato.group(1)
+    estensione = estensione or ".pgn"
+    numero = 1
+    while True:
+        candidato = os.path.join(cartella_del_risultato, f"{base} ({numero}){estensione}")
+        if not os.path.exists(candidato) and not os.path.exists(uscita_provvisoria(candidato)):
+            return candidato
+        numero += 1
+
+
+def copia_del_sorgente(sorgente):
+    """Dopo un lavoro riuscito, la copia di sicurezza del sorgente nella
+    cartella pgn, perche' l'utente possa cancellare l'originale quando il
+    risultato gli piace: una per versione, cioe' niente copia nuova se ce
+    n'e' gia' una uguale byte per byte (Gabriele, 25 novembre 2026).
+    Restituisce (percorso della copia, vero se e' nuova)."""
+    from . import archivio_pgn
+
+    cartella_pgn = config.percorso_salvataggio("pgn")
+    nome, estensione = os.path.splitext(os.path.basename(sorgente))
+    prefisso = f"{nome} {_('copia')} "
+    try:
+        dimensione = os.path.getsize(sorgente)
+        presenti = sorted(os.listdir(cartella_pgn)) if os.path.isdir(cartella_pgn) else []
+        for voce in presenti:
+            if not voce.startswith(prefisso) or not voce.lower().endswith((estensione or ".pgn").lower()):
+                continue
+            percorso = os.path.join(cartella_pgn, voce)
+            if os.path.getsize(percorso) == dimensione and filecmp.cmp(sorgente, percorso, shallow=False):
+                return percorso, False
+    except OSError:
+        pass
+    return archivio_pgn.copia_di_sicurezza(sorgente), True
 
 
 def uscita_provvisoria(destinazione):

@@ -21,9 +21,12 @@ I controlli, nell'ordine del Tab:
     comincia cosi', trattini esclusi; F1 apre la sua sezione della guida;
   Parametri scelti: Invio chiede il valore, col campo di testo, la scelta
     da un elenco o il selettore di file, e lo valida; Canc lo toglie; F1;
-  Destinazione, il file da scrivere, con Scegli la destinazione: non puo'
-    essere il file sorgente, e se c'e' gia' se ne fa prima la copia di
-    sicurezza nella cartella pgn;
+  Destinazione, il file da scrivere, con Scegli la destinazione: Orologic
+    propone il sorgente col primo numero libero, a1 (1).pgn, nella sua
+    cartella, e dopo un lavoro riuscito il numero dopo; non puo' essere un
+    file sorgente, e se c'e' gia' se ne fa prima la copia di sicurezza nella
+    cartella pgn. A lavoro riuscito anche il sorgente ha la sua copia nella
+    cartella pgn, una per versione (Gabriele, 25 novembre 2026);
   Comando, il comando composto e cosa fara';
   Uscita, durante il lavoro una riga che si aggiorna, poi il riassunto;
   Applica, Apri il resoconto, l'uscita completa di pe nella cartella txt,
@@ -240,6 +243,9 @@ class FinestraArchivi(wx.Dialog):
         self.scelti = []
         # Il testo PGN degli appunti, quando il sorgente e' quello.
         self.appunti = None
+        # La destinazione che Orologic ha proposto: finche' e' quella, segue
+        # il sorgente e, dopo un lavoro riuscito, il numero dopo.
+        self._proposta = None
         self._cercato = ""
         self._ultimo_tasto = 0.0
         self._fermato = None
@@ -414,27 +420,34 @@ class FinestraArchivi(wx.Dialog):
         if tipo == "testo":
             self.appunti = sorgente
             self.sorgente.ChangeValue(self._descrizione_degli_appunti())
-            nome = "appunti"
         else:
             self.appunti = None
             self.sorgente.ChangeValue(sorgente)
-            nome = os.path.splitext(os.path.basename(sorgente))[0]
-        if not self.destinazione.GetValue().strip():
-            # La cartella pgn, come per Salva il PGN della ricerca: su un
-            # Orologic appena installato non c'e' ancora.
-            cartella = config.percorso_salvataggio("pgn")
-            os.makedirs(cartella, exist_ok=True)
-            self.destinazione.ChangeValue(os.path.join(cartella, _("{nome} pgn-extract.pgn").format(nome=nome)))
+        self._proponi_la_destinazione()
         self.aggiorna()
+
+    def _proponi_la_destinazione(self):
+        """La destinazione accanto al sorgente col primo numero libero, se
+        e' vuota o e' ancora quella proposta: una scritta a mano resta."""
+        attuale = self.destinazione.GetValue().strip()
+        if attuale and attuale != self._proposta:
+            return
+        sorgente = self.percorso_del_sorgente()
+        if self.appunti is None and not (sorgente and os.path.isfile(sorgente)):
+            return
+        self._proposta = pgn_extract.destinazione_proposta(sorgente)
+        self.destinazione.ChangeValue(self._proposta)
 
     def _descrizione_degli_appunti(self):
         partite = self.appunti.count("[Event ") or 1
         return _("Il PGN degli appunti, {n} partite").format(n=partite)
 
     def _sorgente_scritto(self, evento):
-        """Scritto a mano: il testo degli appunti non vale piu'."""
+        """Scritto a mano: il testo degli appunti non vale piu', e la
+        destinazione proposta segue il file, se c'e'."""
         evento.Skip()
         self.appunti = None
+        self._proponi_la_destinazione()
         self.aggiorna()
 
     def percorso_del_sorgente(self):
@@ -689,6 +702,10 @@ class FinestraArchivi(wx.Dialog):
         else:
             cartella = os.path.dirname(os.path.abspath(sorgente))
         comando = pgn_extract.argomenti(self.pe, self.scelti, sorgente, uscita)
+        # Gli archivi veri da copiare a lavoro riuscito: non il file
+        # provvisorio degli appunti.
+        sorgenti = [] if provvisorio else [sorgente]
+        sorgenti += [scelto.valore for scelto in self.scelti if scelto.parametro.opzione == pgn_extract.ALTRO_SORGENTE and scelto.valore]
         self.resoconto = pgn_extract.percorso_del_resoconto(self.sorgente_descritto() if self.appunti is None else "appunti")
         fermato = self._fermato = threading.Event()
         self.pulsante_applica.Disable()
@@ -703,7 +720,7 @@ class FinestraArchivi(wx.Dialog):
             # deve morire in silenzio con la finestra in attesa.
             except Exception as eccezione:  # noqa: BLE001
                 esito = pgn_extract.Esito(None, False, pgn_extract.Riassunto(), self.resoconto, str(eccezione))
-            wx.CallAfter(self._finito, esito, uscita, destinazione, provvisorio)
+            wx.CallAfter(self._finito, esito, uscita, destinazione, provvisorio, sorgenti)
 
         self.filo = threading.Thread(target=nel_filo, name="pgn-extract", daemon=True)
         self.filo.start()
@@ -717,7 +734,7 @@ class FinestraArchivi(wx.Dialog):
         if self._al_braille is not None and self.FindFocus() is self.uscita:
             self._al_braille(riga)
 
-    def _finito(self, esito, uscita, destinazione, provvisorio):
+    def _finito(self, esito, uscita, destinazione, provvisorio, sorgenti=()):
         if not self:
             return
         self._fermato = None
@@ -736,8 +753,14 @@ class FinestraArchivi(wx.Dialog):
         else:
             if esito.codice:
                 righe.append(_("pgn-extract ha finito col codice {codice}.").format(codice=esito.codice))
+            riuscito = esito.codice == 0
             if uscita:
-                righe.extend(self._sostituisci(uscita, destinazione, esito.codice == 0))
+                scritte, riuscito = self._sostituisci(uscita, destinazione, riuscito)
+                righe.extend(scritte)
+            if riuscito and pgn_extract.serve_la_destinazione(self.scelti):
+                righe.extend(self._copie_dei_sorgenti(sorgenti))
+                # La prossima proposta: il numero dopo, per non sovrascrivere.
+                self._proponi_la_destinazione()
             righe.append(_("Finito in {secondi:.1f} secondi.").format(secondi=esito.secondi))
             righe.extend(esito.riassunto.righe())
         if uscita and os.path.exists(uscita):
@@ -757,17 +780,34 @@ class FinestraArchivi(wx.Dialog):
         self.uscita.SetFocus()
 
     def _sostituisci(self, uscita, destinazione, riuscito):
-        """Le righe della destinazione: scritta, con la copia di quella di
-        prima, o lasciata com'era."""
+        """(righe, scritta): la destinazione scritta, con la copia di quella
+        di prima se c'era, o lasciata com'era."""
         if not riuscito or not os.path.exists(uscita):
-            return [_("La destinazione non e' cambiata.")]
+            return [_("La destinazione non e' cambiata.")], False
         try:
             copia = pgn_extract.sostituisci(uscita, destinazione)
         except OSError as errore:
-            return [_("La destinazione non si scrive: {motivo}").format(motivo=errore)]
+            return [_("La destinazione non si scrive: {motivo}").format(motivo=errore)], False
         righe = [_("Scritto: {destinazione}.").format(destinazione=destinazione)]
         if copia:
             righe.append(_("La copia di sicurezza del file di prima e' {copia}.").format(copia=copia))
+        return righe, True
+
+    @staticmethod
+    def _copie_dei_sorgenti(sorgenti):
+        """Le copie di sicurezza dei sorgenti nella cartella pgn, una per
+        versione, e le righe che le dicono."""
+        righe = []
+        for sorgente in sorgenti:
+            try:
+                copia, nuova = pgn_extract.copia_del_sorgente(sorgente)
+            except OSError as errore:
+                righe.append(_("La copia di sicurezza di {sorgente} non si fa: {motivo}").format(sorgente=sorgente, motivo=errore))
+                continue
+            if nuova:
+                righe.append(_("La copia di sicurezza del sorgente e' {copia}.").format(copia=copia))
+            else:
+                righe.append(_("Il sorgente ha gia' la sua copia di sicurezza, uguale: {copia}.").format(copia=copia))
         return righe
 
     # Il resoconto e la guida.
