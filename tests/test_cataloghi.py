@@ -15,6 +15,7 @@ import re
 
 import polib
 import pytest
+from babel.messages.pofile import read_po
 
 RADICE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LINGUE = ("en", "es", "fr", "pt")
@@ -59,6 +60,19 @@ def test_le_traduzioni_tengono_la_forma(lingua):
     assert not rotte, "\n".join(rotte)
     # Tutto il catalogo, non un pezzo: alla 9.0.0 sono piu' di duemila voci.
     assert controllate > 2000
+
+
+@pytest.mark.parametrize("lingua", LINGUE)
+def test_babel_non_trova_errori(lingua):
+    """Il controllo che pybabel compile fa prima di scrivere il .mo. Una frase
+    con le graffe e un percento seguito da una lettera, come "% del", Babel la
+    prendeva anche per una frase col formato vecchio, %d, e confrontava
+    segnaposto che non esistono: il .mo usciva lo stesso, ma il resoconto
+    diceva errore (issue 75)."""
+    with open(os.path.join(RADICE, "locales", lingua, "LC_MESSAGES", "messages.po"), "rb") as file:
+        catalogo = read_po(file, locale=lingua)
+    errori = [f"{messaggio.id!r}: {'; '.join(str(errore) for errore in guai)}" for messaggio, guai in catalogo.check()]
+    assert not errori, "\n".join(errori)
 
 
 @pytest.mark.parametrize("lingua", LINGUE)

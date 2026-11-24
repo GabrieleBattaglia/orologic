@@ -235,9 +235,13 @@ def _statistiche_nuove(lines, pgn_game, analizzate, nomi):
         lines.append(_("  {nome}, le mosse più lunghe: {elenco}.").format(nome=nomi[colore], elenco=elenco))
         sugli_errori = sum(secondi for nodo, secondi in suoi.items() if giudizi.get(nodo) in ERRORI)
         if sugli_errori and totale:
+            # Il percento sta nel valore e non nella frase: "% del" e "% of"
+            # Babel li prendeva per i segnaposto %d e %o, e il controllo dei
+            # cataloghi falliva (issue 75).
+            percentuale = f"{sugli_errori / totale * 100:.0f}%"
             lines.append(
-                _("  {nome}: {tempo} sulle mosse giudicate inesattezza, errore o svarione, il {p:.0f}% del suo tempo.").format(
-                    nome=nomi[colore], tempo=tempo.parlato(sugli_errori), p=sugli_errori / totale * 100
+                _("  {nome}: {tempo} sulle mosse giudicate inesattezza, errore o svarione, il {percentuale} del suo tempo.").format(
+                    nome=nomi[colore], tempo=tempo.parlato(sugli_errori), percentuale=percentuale
                 )
             )
 
