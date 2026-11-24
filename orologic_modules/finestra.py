@@ -220,9 +220,12 @@ class Attesa:
     prompt di Easyfish, con strato.prompt_di_gioco: li' lo spazio apre la
     scacchiera interattiva. tasto e' vero quando il nucleo legge un tasto
     solo, con key, come l'esploratore di Easyfish: ogni tasto e' una
-    risposta intera."""
+    risposta intera. mosse e' vero solo per il prompt delle mosse vero e
+    proprio, quello delle partite che legge i tasti con kbhit e getwch: li'
+    il prompt riscritto dopo una mossa o un messaggio non si annuncia
+    (Gabriele, 24 novembre 2026)."""
 
-    def __init__(self, tipo, voci=(), prompt="", vuoto=None, sito=None, alla_radice=False, gioco=False, tasto=False):
+    def __init__(self, tipo, voci=(), prompt="", vuoto=None, sito=None, alla_radice=False, gioco=False, tasto=False, mosse=False):
         self.tipo = tipo
         self.voci = list(voci)
         self.prompt = prompt
@@ -231,6 +234,7 @@ class Attesa:
         self.alla_radice = alla_radice
         self.gioco = gioco
         self.tasto = tasto
+        self.mosse = mosse
 
 
 def _sito_della_chiamata():
@@ -258,6 +262,7 @@ class FacciaFinestra:
         self._attesa = None
         self._gioco = False
         self._tasto = False
+        self._mosse = False
         # Vero dentro strato.prompt_di_gioco: le domande di dgt e key valgono
         # come il prompt delle mosse.
         self._di_gioco = False
@@ -294,10 +299,17 @@ class FacciaFinestra:
 
     def _aspetta(self, attesa):
         """Mette in fila l'Attesa, se cambia cio' che il nucleo aspetta."""
-        if attesa.tipo in ("menu", "sino") or attesa.tipo != self._attesa or attesa.gioco != self._gioco or attesa.tasto != self._tasto:
+        if (
+            attesa.tipo in ("menu", "sino")
+            or attesa.tipo != self._attesa
+            or attesa.gioco != self._gioco
+            or attesa.tasto != self._tasto
+            or attesa.mosse != self._mosse
+        ):
             self._attesa = attesa.tipo
             self._gioco = attesa.gioco
             self._tasto = attesa.tasto
+            self._mosse = attesa.mosse
             self._metti(attesa)
 
     def di_gioco(self, valore):
@@ -309,11 +321,11 @@ class FacciaFinestra:
     def kbhit(self):
         self._controlla_chiusura()
         self._causa = None
-        self._aspetta(Attesa("area", gioco=True))
+        self._aspetta(Attesa("area", gioco=True, mosse=True))
         return not self._tasti.empty()
 
     def getwch(self):
-        self._aspetta(Attesa("area", gioco=True))
+        self._aspetta(Attesa("area", gioco=True, mosse=True))
         tasto = self._prendi()
         self._causa = "tasto" if tasto in ("\r", "\x1b") else "eco"
         self._quando = time.monotonic()
@@ -978,6 +990,10 @@ class Finestra(wx.Frame):
         da_dire = []
         dal_tasto = False
         ultima_causa = None
+        # Il nucleo era gia' al prompt delle mosse, e se ci resta, senza
+        # un'attesa nuova in mezzo, la riga in corso e' il prompt riscritto.
+        al_prompt_delle_mosse = self._al_prompt_delle_mosse()
+        attesa_cambiata = False
         for testo, causa in pezzi:
             if isinstance(testo, CambioDiForma):
                 # Il testo arrivato prima va nella forma di prima.
@@ -1016,6 +1032,7 @@ class Finestra(wx.Frame):
                 self._mostra_nella_forma(chiuse, messaggi)
                 chiuse, messaggi = [], []
                 self._cambia_attesa(testo)
+                attesa_cambiata = True
                 continue
             ultima_causa = causa
             if causa == "tasto":
@@ -1036,7 +1053,14 @@ class Finestra(wx.Frame):
             if causa in ("eco", "rinfresco"):
                 self.detta = self.terminale.visibile()
         visibile = self.terminale.visibile()
-        if visibile.strip():
+        # Il prompt delle mosse riscritto dopo una mossa o un messaggio: si
+        # scrive e va alla barra, come il rinfresco, ma non si annuncia; le
+        # mosse e i messaggi, righe chiuse, si dicono come sempre (Gabriele, 24
+        # novembre 2026: su Lichess, con gli annunci accesi, il prompt si
+        # risentiva intero a ogni mossa). Detta resta quella di prima, cosi'
+        # se arriva un'attesa nuova, come una domanda, la riga si dice.
+        riscritto = al_prompt_delle_mosse and not attesa_cambiata and self._al_prompt_delle_mosse()
+        if visibile.strip() and not riscritto:
             # Con la scacchiera aperta la riga del prompt non si dice: la
             # scacchiera dice gia' cio' che serve, e il prompt si rinfresca.
             # Nemmeno il rinfresco periodico del prompt.
@@ -1047,6 +1071,10 @@ class Finestra(wx.Frame):
             self.detta = visibile
         self._mostra_nella_forma(chiuse, messaggi)
         self._di(da_dire, dal_tasto)
+
+    def _al_prompt_delle_mosse(self):
+        """Vero se il nucleo aspetta il prompt delle mosse di una partita."""
+        return self.attesa.tipo == "area" and self.attesa.mosse
 
     def _mostra_nella_forma(self, chiuse, messaggi):
         """Le righe chiuse e la riga in corso, nella forma dell'area di adesso."""
