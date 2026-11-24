@@ -20,9 +20,10 @@ from GBUtils import crea_archivio_release
 
 def main():
     try:
-        # Il motore che Orologic scarica, con le sue cartelle di lavoro, resta
-        # fuori, come dall'installatore: Orologic lo scarica da se'.
-        crea_archivio_release("Orologic", cartella_dist="dist/orologic", escludi=["engine/", "engine.nuovo/", "engine.vecchio/"])
+        # Il motore e pgn-extract, che Orologic scarica, con le loro cartelle
+        # di lavoro, restano fuori, come dall'installatore: Orologic li
+        # scarica da se'.
+        crea_archivio_release("Orologic", cartella_dist="dist/orologic", escludi=["engine/", "engine.nuovo/", "engine.vecchio/", "pgn-extract/", "pgn-extract.nuovo/", "pgn-extract.vecchio/"])
     except (FileNotFoundError, OSError) as e:
         print(f"Archivio non creato: {e}")
         return 1

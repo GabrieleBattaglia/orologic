@@ -144,6 +144,12 @@ class ApriRicerca(ApriImpostazioni):
         self.uscita = None
 
 
+class ApriArchivi(ApriImpostazioni):
+    """Nella fila del testo, PGN gestione archivi del menu principale: la
+    finestra cerca pgn-extract e apre la sua; il nucleo aspetta che si
+    chiuda."""
+
+
 class ApriLettura(ApriImpostazioni):
     """Nella fila del testo, le righe da leggere in una finestra, col loro
     titolo: le analisi e gli aiuti di Easyfish, che nel cruscotto non ci
@@ -379,6 +385,11 @@ class FacciaFinestra:
         richiesta = ApriRicerca(ricerca)
         self._apri_e_aspetta(richiesta)
         return richiesta.uscita
+
+    def archivi_pgn(self):
+        """La voce PGN gestione archivi del menu principale: la finestra
+        apre la sua, con pgn-extract, e il nucleo aspetta che si chiuda."""
+        self._apri_e_aspetta(ApriArchivi())
 
     def da_leggere(self, titolo, righe, verbosa=None, inizio=None):
         """Le analisi e gli aiuti di Easyfish in una finestra da leggere; il
@@ -687,6 +698,7 @@ class Finestra(wx.Frame):
         self.dialogo_orologi = None
         self.dialogo_pulizia = None
         self.dialogo_ricerca = None
+        self.dialogo_archivi = None
         # La scacchiera interattiva: aperta, o da riaprire quando il nucleo
         # torna al prompt delle mosse dopo una domanda; e i caratteri scritti
         # nella riga del prompt, perche' lo spazio la apra solo a riga vuota.
@@ -981,6 +993,9 @@ class Finestra(wx.Frame):
                 continue
             if isinstance(testo, ApriRicerca):
                 wx.CallAfter(self._ricerca_dal_nucleo, testo)
+                continue
+            if isinstance(testo, ApriArchivi):
+                wx.CallAfter(self._archivi_dal_nucleo, testo)
                 continue
             if isinstance(testo, ApriLettura):
                 wx.CallAfter(self._lettura_dal_nucleo, testo)
@@ -1676,6 +1691,33 @@ class Finestra(wx.Frame):
         try:
             if self:
                 richiesta.uscita = self.ricerca_pgn(richiesta.ricerca)
+        finally:
+            richiesta.chiuse.set()
+
+    def archivi_pgn(self):
+        """PGN gestione archivi, dalla voce del menu principale, che il suo
+        tema lo suona gia': pgn-extract cercato, scaricato o indicato, poi la
+        sua finestra (issue 74)."""
+        if self.dialogo_archivi is not None:
+            return
+        from . import finestra_archivi
+
+        self.dialogo_archivi = True
+        try:
+            finestra_archivi.apri(self, self.chiedi_conferma, self.avvisa, self.annuncia, self.chiedi_valore, self.scegli, self.leggi_sopra, self.al_braille)
+        finally:
+            self.dialogo_archivi = None
+        self._rimetti_il_fuoco()
+
+    def leggi_sopra(self, genitore, titolo, righe):
+        """Una finestra da leggere sopra il genitore, come la guida e il
+        resoconto di pgn-extract; le prove la sostituiscono."""
+        dialoghi.da_leggere(genitore, titolo, righe)
+
+    def _archivi_dal_nucleo(self, richiesta):
+        try:
+            if self:
+                self.archivi_pgn()
         finally:
             richiesta.chiuse.set()
 

@@ -1,0 +1,364 @@
+# Orologic, prove di pgn-extract dentro Orologic.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
+
+"""pgn_extract.py, issue 74: l'elenco di pe -h unito alla tabella, la
+validazione dei valori, il comando nell'ordine di Orologic, il riassunto
+dell'uscita, la guida divisa in sezioni, lo scaricamento con la cartella
+che si sostituisce solo a lavoro riuscito, e la proposta di aggiornamento.
+Le prove con pe vero partono soltanto se l'eseguibile c'e' nella cartella
+pgn-extract del progetto, che non e' in git; la rete non si tocca mai."""
+
+import io
+import os
+import shutil
+
+import pytest
+from conftest import RADICE
+
+from orologic_modules import config, pgn_extract
+
+PE_VERO = os.path.join(RADICE, "pgn-extract", "pgn-extract.exe")
+con_pe = pytest.mark.skipif(not os.path.isfile(PE_VERO), reason="pgn-extract.exe non c'e' nella cartella del progetto")
+
+# Un elenco nella forma di pe -h, scritto per la prova.
+AIUTO = """pgn-extract v99-01 (prova): un elenco per le prove.
+Usage: pgn-extract [arguments] [file.pgn ...]
+-7 -- output only the seven tag roster.
+-bnum -- bounds on the number of moves.
+       lnum lower bound,
+       unum upper bound.
+-C -- don't include comments in the output.
+-h -- print the arguments.
+-ooutputfile -- write games to outputfile.
+-S -- simple soundex.
+-Tcriterion -- tag criteria.
+--minmoves N - only output games with at least N moves.
+--nocomments - see -C
+--nuovissimo X - an option the table does not know.
+--sola - a flag the table does not know.
+"""
+
+# Le righe di pe su un archivio con una mossa illegale, un risultato in
+# conflitto col matto e un doppione, come le scrive la v26-04. pe chiude
+# con uno spazio la riga di ogni partita: qui e' il segno |, che si toglie.
+USCITA = """Processing prova.pgn
+Bianco, Uno - Nero, Uno Prova Qui 2026.11.25 |
+No king move possible to e3.
+File prova.pgn: Line number: 19 character 22
+Failed to make move 2. Ke3 in the game:
+rnbqkbnr
+pppp.ppp
+........
+....p...
+....P...
+........
+PPPP.PPP
+RNBQKBNR
+
+Bianco, Due - Nero, Due Prova Qui 2026.11.25 |
+File prova.pgn: Line number: 19 character 22
+Warning: Result of 1-0 is inconsistent with checkmate by black in
+Bianco, Tre - Nero, Tre Prova Qui 2026.11.25 |
+2 games matched out of 4.
+""".replace(" |\n", " \n")
+
+ARCHIVIO = """[Event "Prova"]
+[Site "Qui"]
+[Date "2026.11.25"]
+[Round "1"]
+[White "Bianco, Uno"]
+[Black "Nero, Uno"]
+[Result "1-0"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 1-0
+
+[Event "Prova"]
+[Site "Qui"]
+[Date "2026.11.25"]
+[Round "2"]
+[White "Bianco, Due"]
+[Black "Nero, Due"]
+[Result "1-0"]
+
+1. e4 e5 2. Ke3 Nc6 1-0
+
+[Event "Prova"]
+[Site "Qui"]
+[Date "2026.11.25"]
+[Round "1"]
+[White "Bianco, Uno"]
+[Black "Nero, Uno"]
+[Result "1-0"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 1-0
+"""
+
+
+def _per_voce(elenco):
+    return {parametro.voce: parametro for parametro in elenco}
+
+
+def test_l_elenco_di_pe_si_legge_con_le_righe_rientrate():
+    voci = pgn_extract.voci_dell_aiuto(AIUTO)
+    opzioni = [opzione for opzione, _sintassi, _riga in voci]
+    assert opzioni == ["-7", "-b", "-C", "-h", "-o", "-S", "-T", "--minmoves", "--nocomments", "--nuovissimo", "--sola"]
+    sintassi = {opzione: (sintassi, riga) for opzione, sintassi, riga in voci}
+    assert sintassi["-b"] == ("num", "bounds on the number of moves. lnum lower bound, unum upper bound.")
+    assert sintassi["--minmoves"][0] == "N"
+    assert sintassi["--nocomments"][1] == "see -C"
+
+
+def test_i_parametri_uniscono_l_elenco_e_la_tabella():
+    elenco = pgn_extract.parametri(AIUTO)
+    per_voce = _per_voce(elenco)
+    # Prima Altro file sorgente, che si ripete e non e' un'opzione di pe.
+    assert elenco[0].opzione == pgn_extract.ALTRO_SORGENTE and elenco[0].ripetibile
+    # -C ha l'altro nome di pe, e --nocomments non e' una voce a parte.
+    assert per_voce["-C"].alias == ("--nocomments",)
+    assert "--nocomments" not in per_voce
+    assert per_voce["-C"].etichetta == "-C, --nocomments: don't include comments in the output."
+    # Orologic gestisce da se' -h e -o.
+    assert "-h" not in per_voce and "-o" not in per_voce
+    # Le varianti separate, coi loro prefissi.
+    assert per_voce["-bl"].prefisso == "-bl" and per_voce["-bl"].valore == "intero"
+    assert "-Tw" in per_voce and per_voce["-Tw"].ripetibile
+    # Gli sconosciuti: un valore se pe -h gli scrive la sintassi, separato
+    # per le lunghe; un interruttore altrimenti.
+    assert per_voce["--nuovissimo"].valore == "testo" and per_voce["--nuovissimo"].separato
+    assert not per_voce["--nuovissimo"].conosciuto
+    assert per_voce["--sola"].valore is None
+
+
+def test_la_validazione_dice_perche():
+    per_voce = _per_voce(pgn_extract.parametri(AIUTO))
+    minmoves = per_voce["--minmoves"]
+    assert pgn_extract.valida(minmoves, " 20 ") == ("20", None)
+    valore, motivo = pgn_extract.valida(minmoves, "venti")
+    assert valore is None and "--minmoves" in motivo
+    valore, motivo = pgn_extract.valida(minmoves, "")
+    assert valore is None and "vuole un valore" in motivo
+    regolato = pgn_extract.Parametro(voce="-x", opzione="-x", prefisso="-x", valore="testo", regola=r"[elu]?\d+", esempio="like l20")
+    assert pgn_extract.valida(regolato, "l20") == ("l20", None)
+    valore, motivo = pgn_extract.valida(regolato, "molte")
+    assert valore is None and motivo.endswith("like l20")
+    scelta = pgn_extract.Parametro(voce="-W", opzione="-W", prefisso="-W", valore="scelta", scelte=(("san", "SAN"), ("lalg", "long")))
+    assert pgn_extract.valida(scelta, "lalg") == ("lalg", None)
+    assert pgn_extract.valida(scelta, "uci")[0] is None
+    file = pgn_extract.Parametro(voce="-c", opzione="-c", prefisso="-c", valore="file")
+    assert pgn_extract.valida(file, os.path.join(RADICE, "nessun_file.pgn"))[0] is None
+
+
+def test_il_comando_nell_ordine_di_orologic(tmp_path):
+    per_voce = _per_voce(pgn_extract.parametri(AIUTO))
+    altro = pgn_extract.altro_sorgente()
+    scelti = [
+        pgn_extract.Scelto(per_voce["-Tw"], "Carlsen"),
+        pgn_extract.Scelto(altro, "secondo.pgn"),
+        pgn_extract.Scelto(per_voce["--minmoves"], "20"),
+        pgn_extract.Scelto(per_voce["-S"]),
+        pgn_extract.Scelto(per_voce["-C"]),
+    ]
+    comando = pgn_extract.argomenti("pe.exe", scelti, "primo.pgn", "uscita.pgn")
+    # -S davanti, i valori attaccati alle brevi e separati per le lunghe,
+    # -o, e i sorgenti in fondo.
+    assert comando == ["pe.exe", "-S", "-TwCarlsen", "--minmoves", "20", "-C", "-ouscita.pgn", "primo.pgn", "secondo.pgn"]
+    assert pgn_extract.comando_leggibile(comando).startswith("pgn-extract -S -TwCarlsen")
+    # Con -r non si scrive: niente -o.
+    solo = [pgn_extract.Scelto(pgn_extract.Parametro(voce="-r", opzione="-r", prefisso="-r"))]
+    assert pgn_extract.argomenti("pe.exe", solo, "primo.pgn", "uscita.pgn") == ["pe.exe", "-r", "primo.pgn"]
+    assert not pgn_extract.serve_la_destinazione(solo)
+
+
+def test_e_senza_file_usa_l_eco_di_orologic(monkeypatch):
+    monkeypatch.setattr(pgn_extract, "percorso_eco", lambda: r"C:\orologic\eco.pgn")
+    eco = pgn_extract.Parametro(voce="-e", opzione="-e", prefisso="-e", valore="file", facoltativo=True)
+    comando = pgn_extract.argomenti("pe.exe", [pgn_extract.Scelto(eco, "")], "primo.pgn", "uscita.pgn")
+    assert comando[1] == r"-eC:\orologic\eco.pgn"
+
+
+def test_il_riassunto_raggruppa_i_messaggi():
+    riassunto = pgn_extract.Riassunto()
+    for riga in USCITA.splitlines():
+        riassunto.osserva(riga)
+    assert riassunto.letti == ["prova.pgn"]
+    assert (riassunto.abbinate, riassunto.totale) == (2, 4)
+    # Tre tipi: la mossa del re, la mossa fallita e il risultato col matto.
+    assert riassunto.messaggi == 3
+    righe = riassunto.righe()
+    assert righe[0] == "Partite lette: 4; accettate dai criteri: 2."
+    testo = "\n".join(righe)
+    assert "No king move possible to <move>." in testo
+    # L'esempio dice la partita e dove sta nel file.
+    assert "Bianco, Due - Nero, Due Prova Qui 2026.11.25; File prova.pgn: Line number: 19 character 22" in testo
+    # Lo schema della scacchiera non e' un messaggio.
+    assert "rnbqkbnr" not in testo
+
+
+def test_lo_stesso_tipo_si_conta_insieme():
+    riassunto = pgn_extract.Riassunto()
+    for mossa in ("e3", "d4", "f5", "g6"):
+        riassunto.osserva(f"No king move possible to {mossa}.")
+    assert list(riassunto.tipi) == ["No king move possible to <move>."]
+    voce = riassunto.tipi["No king move possible to <move>."]
+    assert voce["volte"] == 4 and len(voce["esempi"]) == pgn_extract.ESEMPI_PER_TIPO
+
+
+GUIDA = """<html><body><h1>pgn-extract<br>Version 26-04 by D</h1>
+<h2 id="output">Output files (-o, --output, -a, --append)</h2>
+<p>The -o flag writes games
+to a file.</p><pre>pgn-extract -ofile.pgn
+games.pgn</pre>
+<h2 id="dup">Duplicate games</h2><p>Use --noduplicates to drop &amp; keep.</p>
+</body></html>"""
+
+
+def test_la_guida_in_sezioni():
+    sezioni = pgn_extract.sezioni_della_guida(GUIDA)
+    assert [sezione.ancora for sezione in sezioni] == ["output", "dup"]
+    assert sezioni[0].titolo == "Output files (-o, --output, -a, --append)"
+    # Il testo va a capo coi blocchi, il <pre> tiene le sue righe.
+    assert sezioni[0].righe == ["The -o flag writes games to a file.", "pgn-extract -ofile.pgn", "games.pgn"]
+    assert sezioni[1].righe == ["Use --noduplicates to drop & keep."]
+    assert pgn_extract.versione_della_guida(GUIDA) == "26-04"
+    # La sezione del parametro: l'ancora, poi il titolo, poi il testo.
+    a = pgn_extract.Parametro(voce="-a", opzione="-a", prefisso="-a")
+    assert pgn_extract.sezione_del_parametro(sezioni, a).ancora == "output"
+    nodup = pgn_extract.Parametro(voce="-D", opzione="-D", prefisso="-D", alias=("--noduplicates",))
+    assert pgn_extract.sezione_del_parametro(sezioni, nodup).ancora == "dup"
+    nessuno = pgn_extract.Parametro(voce="-Z", opzione="-Z", prefisso="-Z")
+    assert pgn_extract.sezione_del_parametro(sezioni, nessuno) is None
+    assert pgn_extract.guida_intera(sezioni)[0] == "Output files (-o, --output, -a, --append)"
+
+
+def test_la_tabella_copre_ogni_parametro_di_pe():
+    """Ogni voce di pe -h vero e' nella tabella, come voce o altro nome."""
+    from orologic_modules import parametri_pe
+
+    if not os.path.isfile(PE_VERO):
+        pytest.skip("pgn-extract.exe non c'e'")
+    noti = set()
+    for voce in parametri_pe.PARAMETRI:
+        noti.update((voce["opzione"], voce["voce"], *(voce.get("alias") or ())))
+    voci = pgn_extract.voci_dell_aiuto(pgn_extract.testo_dell_aiuto(PE_VERO))
+    mancanti = [opzione for opzione, _sintassi, _riga in voci if opzione not in noti]
+    assert not mancanti
+    assert all(parametro.conosciuto for parametro in pgn_extract.parametri(pgn_extract.testo_dell_aiuto(PE_VERO)))
+
+
+@con_pe
+def test_pe_vero_risponde_e_lavora(tmp_path):
+    assert pgn_extract.come_numeri(pgn_extract.versione(PE_VERO)) >= (26, 4)
+    sorgente = tmp_path / "prova.pgn"
+    sorgente.write_text(ARCHIVIO, encoding="utf-8")
+    elenco = _per_voce(pgn_extract.parametri(pgn_extract.testo_dell_aiuto(PE_VERO)))
+    scelti = [pgn_extract.Scelto(elenco["-D"])]
+    uscita = pgn_extract.uscita_provvisoria(str(tmp_path / "pulito.pgn"))
+    comando = pgn_extract.argomenti(PE_VERO, scelti, str(sorgente), uscita)
+    avanzamenti = []
+    esito = pgn_extract.lavora(comando, str(tmp_path), str(tmp_path / "resoconto.txt"), avanzamenti.append, lambda: False)
+    assert esito.errore is None and esito.codice == 0 and not esito.fermato
+    # Tre partite, una illegale e un doppione: ne resta una.
+    assert (esito.riassunto.abbinate, esito.riassunto.totale) == (1, 3)
+    # La mossa del re e la mossa fallita: le righe delle partite non sono messaggi.
+    assert esito.riassunto.messaggi == 2 and esito.riassunto.partite >= 2
+    assert os.path.isfile(uscita)
+    resoconto = (tmp_path / "resoconto.txt").read_text(encoding="utf-8")
+    assert "No king move possible" in resoconto and "Finito: codice 0" in resoconto
+
+
+@con_pe
+def test_la_destinazione_si_sostituisce_dopo_la_copia(tmp_path):
+    destinazione = tmp_path / "archivio.pgn"
+    destinazione.write_text("vecchio", encoding="utf-8")
+    provvisoria = tmp_path / "archivio.pgn.pgn-extract.tmp"
+    provvisoria.write_text("nuovo", encoding="utf-8")
+    copia = pgn_extract.sostituisci(str(provvisoria), str(destinazione))
+    assert destinazione.read_text(encoding="utf-8") == "nuovo"
+    assert os.path.dirname(copia) == config.percorso_salvataggio("pgn")
+    with open(copia, encoding="utf-8") as file:
+        assert file.read() == "vecchio"
+    os.remove(copia)
+    assert pgn_extract.stesso_file(str(destinazione), str(tmp_path / "." / "archivio.pgn"))
+
+
+class _Risposta(io.BytesIO):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_dettagli):
+        self.close()
+
+
+def _sito_finto(monkeypatch, contenuti, guasto=None):
+    """Il sito di pe sostituito: i file dai contenuti, o l'errore guasto."""
+    chiesti = []
+
+    def apri(indirizzo, _attesa):
+        chiesti.append(indirizzo)
+        nome = indirizzo.rsplit("/", 1)[-1]
+        if guasto and nome == guasto:
+            return None, "il sito non risponde"
+        return _Risposta(contenuti[nome]), None
+
+    monkeypatch.setattr(pgn_extract, "_apri", apri)
+    return chiesti
+
+
+@con_pe
+def test_lo_scaricamento_mette_la_cartella_nuova_solo_se_pe_risponde(monkeypatch):
+    with open(PE_VERO, "rb") as file:
+        eseguibile = file.read()
+    contenuti = {"pgn-extract.exe": eseguibile, "eco.pgn": b"[ECO \"A00\"]\n\n1. a3 *\n", "COPYING": b"GPL", "help.html": GUIDA.encode()}
+    cartella = pgn_extract.cartella()
+    shutil.rmtree(cartella, ignore_errors=True)
+    os.makedirs(cartella)
+    with open(os.path.join(cartella, "vecchio.txt"), "w", encoding="utf-8") as file:
+        file.write("prima")
+    try:
+        # Un file che non arriva: la cartella di prima resta com'era.
+        _sito_finto(monkeypatch, contenuti, guasto="COPYING")
+        versione, errore = pgn_extract.scarica(lambda _riga: None, lambda: False)
+        assert versione is None and errore == "il sito non risponde"
+        assert os.listdir(cartella) == ["vecchio.txt"]
+        assert not os.path.exists(cartella + ".nuovo")
+        # Tutto arrivato e pe risponde: la cartella nuova prende il posto.
+        chiesti = _sito_finto(monkeypatch, contenuti)
+        righe = []
+        versione, errore = pgn_extract.scarica(righe.append, lambda: False)
+        assert errore is None and pgn_extract.come_numeri(versione) >= (26, 4)
+        assert chiesti == [pgn_extract.SITO + nome for nome in pgn_extract.FILE_DEL_SITO]
+        assert sorted(os.listdir(cartella)) == sorted(pgn_extract.FILE_DEL_SITO)
+        assert pgn_extract.eseguibile() == os.path.join(cartella, "pgn-extract.exe")
+        assert pgn_extract.mancano_dei_file() == []
+        assert len(righe) == len(pgn_extract.FILE_DEL_SITO)
+        # Un pe che non risponde non prende il posto di quello buono.
+        contenuti["pgn-extract.exe"] = b"non sono un programma"
+        _sito_finto(monkeypatch, contenuti)
+        versione, errore = pgn_extract.scarica(lambda _riga: None, lambda: False)
+        assert versione is None and "non risponde" in errore
+        assert pgn_extract.versione(os.path.join(cartella, "pgn-extract.exe"))
+    finally:
+        shutil.rmtree(cartella, ignore_errors=True)
+
+
+def test_la_proposta_di_aggiornamento(monkeypatch, tmp_path):
+    monkeypatch.setattr(pgn_extract, "versione_sul_sito", lambda: ("26-07", None))
+    monkeypatch.setattr(pgn_extract, "versione", lambda _percorso: "26-04")
+    domanda, motivo = pgn_extract.aggiornamento(str(tmp_path / "pgn-extract.exe"))
+    assert motivo is None and "26-07" in domanda and "26-04" in domanda
+    monkeypatch.setattr(pgn_extract, "versione_sul_sito", lambda: ("26-04", None))
+    assert pgn_extract.aggiornamento(str(tmp_path / "pgn-extract.exe")) == (None, None)
+    # Nella cartella di Orologic, coi file del sito che mancano.
+    monkeypatch.setattr(pgn_extract, "mancano_dei_file", lambda: ["COPYING"])
+    domanda, motivo = pgn_extract.aggiornamento(pgn_extract.nella_cartella(pgn_extract.ESEGUIBILE))
+    assert "COPYING" in domanda
+    monkeypatch.setattr(pgn_extract, "versione_sul_sito", lambda: (None, "nessuna rete"))
+    assert pgn_extract.aggiornamento(None) == (None, "nessuna rete")
+
+
+def test_il_pe_indicato_a_mano_si_ricorda(tmp_path, impostazioni_rimesse):
+    finto = tmp_path / "pe.exe"
+    finto.write_bytes(b"")
+    assert pgn_extract.eseguibile() is None
+    pgn_extract.ricorda_il_percorso(str(finto))
+    assert pgn_extract.eseguibile() == str(finto)

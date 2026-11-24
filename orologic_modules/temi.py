@@ -170,6 +170,30 @@ TEMI_MENU = {
         kind=1,
         adsr=[2, 5, 90, 3],
     ),
+    # PGN gestione archivi: parente della ricerca, ma in onda triangolare e
+    # a scendere, come chi rimette in ordine gli scaffali.
+    "archivi": lambda: Acusticator(
+        [
+            "e6",
+            0.07,
+            0.5,
+            config.VOLUME,
+            "b5",
+            0.07,
+            0,
+            config.VOLUME,
+            "g5",
+            0.07,
+            -0.5,
+            config.VOLUME,
+            "e5",
+            0.14,
+            0,
+            config.VOLUME,
+        ],
+        kind=3,
+        adsr=[2, 5, 90, 3],
+    ),
     "nomi": lambda: Acusticator(
         [
             "c5",

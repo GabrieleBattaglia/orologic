@@ -92,6 +92,10 @@ class FacciaTerminale:
         """Il terminale ha la sua ricerca, coi tasti."""
         return None
 
+    def archivi_pgn(self):
+        """La gestione degli archivi con pgn-extract c'e' solo nella
+        finestra: il terminale riceve soltanto correzioni."""
+
     def interrompi_la_scelta_con(self, evento):
         """Il terminale non ha la plancia: menu legge i tasti da se'."""
         return None
@@ -228,6 +232,12 @@ def ricerca_pgn(ricerca):
     ricerca; il nucleo aspetta che si chiuda, e riceve la partita da
     passare a Easyfish o all'analisi, come (azione, indice), o None."""
     return _faccia.ricerca_pgn(ricerca)
+
+
+def archivi_pgn():
+    """Nella finestra, PGN gestione archivi con pgn-extract; il nucleo
+    aspetta che si chiuda. Nel terminale non c'e'."""
+    _faccia.archivi_pgn()
 
 
 def con_la_plancia():

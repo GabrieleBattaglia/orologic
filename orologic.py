@@ -252,6 +252,19 @@ def menu_impostazioni():
             ui.RegolaVolume()
 
 
+def _voci_del_menu_principale():
+    """Le voci del menu principale; nella finestra, dopo la ricerca PGN,
+    anche PGN gestione archivi, con pgn-extract (issue 74)."""
+    if not strato.con_la_plancia():
+        return config.MENU_CHOICES
+    voci = {}
+    for chiave, testo in config.MENU_CHOICES.items():
+        voci[chiave] = testo
+        if chiave == "ricerca":
+            voci["archivi"] = config.VOCE_ARCHIVI
+    return voci
+
+
 def _suona(voce):
     """Esegue il tema sonoro della voce di menu, se ne ha uno."""
     tema = TEMI_MENU.get(voce)
@@ -361,7 +374,7 @@ def Main():
         # e la copia in memoria sarebbe vecchia.
         db = storage.LoadDB()
         scelta = menu(
-            config.MENU_CHOICES,
+            _voci_del_menu_principale(),
             show=True,
             keyslist=True,
             p=_("\nScegli un'azione: "),
@@ -428,6 +441,10 @@ def Main():
         elif scelta == "ricerca":
             _suona("ricerca")
             pgn_search.run()
+
+        elif scelta == "archivi":
+            _suona("archivi")
+            strato.archivi_pgn()
 
         elif scelta == "impostazioni":
             _suona("impostazioni")

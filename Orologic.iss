@@ -9,6 +9,7 @@
 ; l'aggiornamento automatico sostituisce i file nella sua cartella. Chi ha gia' Orologic portatile
 ; installa sopra la sua cartella, scegliendola nella pagina della cartella: i dati restano.
 ; Stockfish non e' nel pacchetto: Orologic lo scarica da se', nella cartella engine.
+; Nemmeno pgn-extract: Orologic lo scarica dal sito di David J. Barnes, nella cartella pgn-extract.
 ; Alla disinstallazione una domanda, con No gia' scelto, chiede se cancellare anche i dati, il motore
 ; compreso. Parla le lingue di Orologic, scelte all'avvio.
 
@@ -65,11 +66,11 @@ english.Terminale=Orologic command line mode
 espanol.Terminale=Orologic modo línea de comandos
 francais.Terminale=Orologic mode ligne de commande
 portugues.Terminale=Orologic modo linha de comando
-italiano.CancelloIDati=Cancello anche i dati di Orologic? Impostazioni, orologi, carriera contro il motore, token di Lichess, partite, resoconti e il motore scaricato. Con No restano nella cartella, e reinstallando Orologic li ritrovi.
-english.CancelloIDati=Shall I also delete the Orologic data? Settings, clocks, career against the engine, Lichess token, games, reports and the downloaded engine. With No they stay in the folder, and you will find them again if you reinstall Orologic.
-espanol.CancelloIDati=¿Borro también los datos de Orologic? Ajustes, relojes, carrera contra el motor, token de Lichess, partidas, informes y el motor descargado. Con No se quedan en la carpeta, y al reinstalar Orologic los vuelves a encontrar.
-francais.CancelloIDati=Dois-je aussi supprimer les données d'Orologic ? Réglages, pendules, carrière contre le moteur, jeton Lichess, parties, comptes rendus et le moteur téléchargé. Avec Non, elles restent dans le dossier, et vous les retrouverez en réinstallant Orologic.
-portugues.CancelloIDati=Apago também os dados do Orologic? Definições, relógios, carreira contra o motor, token do Lichess, partidas, relatórios e o motor descarregado. Com Não ficam na pasta, e ao reinstalar o Orologic voltas a encontrá-los.
+italiano.CancelloIDati=Cancello anche i dati di Orologic? Impostazioni, orologi, carriera contro il motore, token di Lichess, partite, resoconti, il motore e pgn-extract scaricati. Con No restano nella cartella, e reinstallando Orologic li ritrovi.
+english.CancelloIDati=Shall I also delete the Orologic data? Settings, clocks, career against the engine, Lichess token, games, reports, and the downloaded engine and pgn-extract. With No they stay in the folder, and you will find them again if you reinstall Orologic.
+espanol.CancelloIDati=¿Borro también los datos de Orologic? Ajustes, relojes, carrera contra el motor, token de Lichess, partidas, informes, y el motor y pgn-extract descargados. Con No se quedan en la carpeta, y al reinstalar Orologic los vuelves a encontrar.
+francais.CancelloIDati=Dois-je aussi supprimer les données d'Orologic ? Réglages, pendules, carrière contre le moteur, jeton Lichess, parties, comptes rendus, et le moteur et pgn-extract téléchargés. Avec Non, elles restent dans le dossier, et vous les retrouverez en réinstallant Orologic.
+portugues.CancelloIDati=Apago também os dados do Orologic? Definições, relógios, carreira contra o motor, token do Lichess, partidas, relatórios, e o motor e o pgn-extract descarregados. Com Não ficam na pasta, e ao reinstalar o Orologic voltas a encontrá-los.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -86,7 +87,7 @@ Type: filesandordirs; Name: "{app}\_internal_vecchio"
 ; Il pacchetto a cartella di PyInstaller, senza i dati che una prova avesse lasciato in dist, come lo
 ; zip. Ogni motivo comincia con la barra rovesciata, che lo lega alla cartella dell'eseguibile, e ogni
 ; cartella e' scritta anche col suo contenuto, perche' createallsubdirs creerebbe quelle vuote.
-Source: "dist\orologic\*"; DestDir: "{app}"; Excludes: "\settings,\settings\*,\pgn,\pgn\*,\txt,\txt\*,\images,\images\*,\engine,\engine\*,\engine.nuovo,\engine.nuovo\*,\engine.vecchio,\engine.vecchio\*,\log,\log\*,\logs,\logs\*,\*.log,\*.log.1,\*.tmp,\*.bak"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\orologic\*"; DestDir: "{app}"; Excludes: "\settings,\settings\*,\pgn,\pgn\*,\txt,\txt\*,\images,\images\*,\engine,\engine\*,\engine.nuovo,\engine.nuovo\*,\engine.vecchio,\engine.vecchio\*,\pgn-extract,\pgn-extract\*,\pgn-extract.nuovo,\pgn-extract.nuovo\*,\pgn-extract.vecchio,\pgn-extract.vecchio\*,\log,\log\*,\logs,\logs\*,\*.log,\*.log.1,\*.tmp,\*.bak"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\Orologic"; Filename: "{app}\orologic.exe"
@@ -114,6 +115,9 @@ begin
   DelTree(Cartella + '\engine', True, True, True);
   DelTree(Cartella + '\engine.nuovo', True, True, True);
   DelTree(Cartella + '\engine.vecchio', True, True, True);
+  DelTree(Cartella + '\pgn-extract', True, True, True);
+  DelTree(Cartella + '\pgn-extract.nuovo', True, True, True);
+  DelTree(Cartella + '\pgn-extract.vecchio', True, True, True);
   DeleteFile(Cartella + '\auto_updater_error.log');
 end;
 

@@ -152,6 +152,8 @@ margin: 1em 0;
 </li>
 <li><a href="#cap-1-8-21">1.8.21. La finestra dei disegni</a>
 </li>
+<li><a href="#cap-1-8-22">1.8.22. PGN gestione archivi</a>
+</li>
 </ul>
 </li>
 </ul>
@@ -268,39 +270,41 @@ margin: 1em 0;
 </li>
 </ul>
 </li>
-<li><a href="#cap-2-9">2.9. Configurazione</a>
+<li><a href="#cap-2-9">2.9. PGN gestione archivi (archivi, solo nella finestra)</a>
+</li>
+<li><a href="#cap-2-10">2.10. Configurazione</a>
 <ul>
-<li><a href="#cap-2-9-1">2.9.1. Gestione Orologi (orologi)</a>
+<li><a href="#cap-2-10-1">2.10.1. Gestione Orologi (orologi)</a>
 </li>
-<li><a href="#cap-2-9-2">2.9.2. Il sottomenu Impostazioni (impostazioni)</a>
+<li><a href="#cap-2-10-2">2.10.2. Il sottomenu Impostazioni (impostazioni)</a>
 </li>
-<li><a href="#cap-2-9-3">2.9.3. Motore scacchistico (impostazioni, motore)</a>
+<li><a href="#cap-2-10-3">2.10.3. Motore scacchistico (impostazioni, motore)</a>
 <ul>
-<li><a href="#cap-2-9-3-1">2.9.3.1. Portabilità e Gestione Percorsi (Relativi vs Assoluti)</a>
+<li><a href="#cap-2-10-3-1">2.10.3.1. Portabilità e Gestione Percorsi (Relativi vs Assoluti)</a>
 </li>
-<li><a href="#cap-2-9-3-2">2.9.3.2. Spiegazione dei Parametri UCI</a>
+<li><a href="#cap-2-10-3-2">2.10.3.2. Spiegazione dei Parametri UCI</a>
 </li>
 </ul>
 </li>
-<li><a href="#cap-2-9-4">2.9.4. Nomi dei pezzi, delle colonne e delle mosse (impostazioni, nomi)</a>
+<li><a href="#cap-2-10-4">2.10.4. Nomi dei pezzi, delle colonne e delle mosse (impostazioni, nomi)</a>
 </li>
-<li><a href="#cap-2-9-5">2.9.5. Impostazioni dell'analisi (impostazioni, analisi)</a>
+<li><a href="#cap-2-10-5">2.10.5. Impostazioni dell'analisi (impostazioni, analisi)</a>
 </li>
-<li><a href="#cap-2-9-6">2.9.6. Salvataggio automatico e stile dei menu (impostazioni, salvataggio e stile)</a>
+<li><a href="#cap-2-10-6">2.10.6. Salvataggio automatico e stile dei menu (impostazioni, salvataggio e stile)</a>
 </li>
-<li><a href="#cap-2-9-7">2.9.7. Volume dei suoni (impostazioni, volume)</a>
+<li><a href="#cap-2-10-7">2.10.7. Volume dei suoni (impostazioni, volume)</a>
 </li>
-<li><a href="#cap-2-9-8">2.9.8. Prompt di gioco (impostazioni, prompt)</a>
+<li><a href="#cap-2-10-8">2.10.8. Prompt di gioco (impostazioni, prompt)</a>
 </li>
-<li><a href="#cap-2-9-9">2.9.9. Colori e dimensioni (solo nella finestra)</a>
+<li><a href="#cap-2-10-9">2.10.9. Colori e dimensioni (solo nella finestra)</a>
 </li>
 </ul>
 </li>
-<li><a href="#cap-2-10">2.10. Apri Manuale (manuale)</a>
+<li><a href="#cap-2-11">2.11. Apri Manuale (manuale)</a>
 </li>
-<li><a href="#cap-2-11">2.11. Novità (novita)</a>
+<li><a href="#cap-2-12">2.12. Novità (novita)</a>
 </li>
-<li><a href="#cap-2-12">2.12. Esci dall'Applicazione (.)</a>
+<li><a href="#cap-2-13">2.13. Esci dall'Applicazione (.)</a>
 </li>
 </ul>
 </li>
@@ -349,7 +353,7 @@ margin: 1em 0;
     <li><code>F5</code>: va alla plancia.</li>
     <li><code>F6</code>: va alla console.</li>
     <li><code>Tab</code> e <code>Maiuscolo+Tab</code>: passano dall'una all'altra.</li>
-    <li><code>Ctrl+virgola</code>: apre le impostazioni, sezione 2.9.2.</li>
+    <li><code>Ctrl+virgola</code>: apre le impostazioni, sezione 2.10.2.</li>
     <li><code>Alt+F4</code>: chiude Orologic, come Ctrl+C nel terminale.</li>
     <li><code>Ctrl+V</code>: incolla nella console, fino al primo a capo.</li>
 </ul>
@@ -358,7 +362,7 @@ margin: 1em 0;
 <h4 id="cap-1-3-3">1.3.3. Le partite: il cruscotto e gli annunci</h4>
 <p>Durante una partita, nell'arbitraggio, in Tempo, contro il motore e su Lichess, la console diventa un <strong>cruscotto</strong> che si riscrive da solo ogni secondo: dall'alto i giocatori e lo stato della partita, la scacchiera, gli orologi a parole, le ultime mosse a parole, con le due semimosse sulla stessa riga, il consumo dell'orologio di chi ha mosso e il tempo speso, poi gli ultimi messaggi e in fondo il prompt. Puoi fermarti su una riga, per esempio quella degli orologi: si aggiorna senza spostarti. A fine partita torna la console intera, con tutto quello che è stato scritto.</p>
 <p>In partita la plancia mostra i comandi della modalità, con le righe del loro aiuto: Invio su un comando lo scrive nel prompt e lo manda, come se lo avessi digitato. I comandi con un seguito sono rami con i valori possibili: la diagonale e la colonna hanno le otto lettere, la casa ha le colonne e le traverse, i pezzi le loro sigle, il livello del motore in Easyfish i suoi numeri. Quelli con un valore libero, come l'Elo o un messaggio in chat, scrivono l'inizio del comando e ti lasciano completarlo nella console. Dove la scacchiera interattiva si può aprire, la prima voce è <code>Spazio: per accedere alla scacchiera interattiva</code>, che la apre come lo spazio a riga vuota.</p>
-<p>Il testo nuovo che compare nella console viene annunciato alla sintesi e al braille, come lo leggeva NVDA nel terminale, ma senza ripeterti quello che scrivi. Le impostazioni degli annunci, sezione 2.9.2, dicono se annunciare, con quale uscita, se alla sintesi, al braille o a tutti e due, e se un annuncio nuovo interrompe quello in corso o si accoda: di partenza la risposta a un tasto interrompe e il resto si accoda.</p>
+<p>Il testo nuovo che compare nella console viene annunciato alla sintesi e al braille, come lo leggeva NVDA nel terminale, ma senza ripeterti quello che scrivi. Le impostazioni degli annunci, sezione 2.10.2, dicono se annunciare, con quale uscita, se alla sintesi, al braille o a tutti e due, e se un annuncio nuovo interrompe quello in corso o si accoda: di partenza la risposta a un tasto interrompe e il resto si accoda.</p>
 
 <h4 id="cap-1-3-4">1.3.4. La scacchiera interattiva</h4>
 <p>Solo nella finestra, nell'arbitraggio, nelle partite contro il motore e su Lichess: al prompt delle mosse, a riga vuota, lo <code>Spazio</code> apre la scacchiera interattiva, e <code>Esc</code> la chiude. È un testo di otto righe, una per traversa, come <code>1| R | - | q | - | N | K | + | b |1</code>: il numero ai due lati, le case fra barre verticali, i pezzi con le lettere inglesi, maiuscole i bianchi e minuscole i neri, il trattino le case chiare vuote e il più le scure, il pezzo sollevato fra parentesi quadre, come <code>[N]</code>. Quando giochi la guardi dal tuo colore; quando arbitri o osservi, dal Bianco. Il cursore di NVDA, e il display braille, stanno sul segno della casa scelta.</p>
@@ -504,6 +508,7 @@ margin: 1em 0;
     <li><code>images</code>: le immagini delle posizioni esportate in PDF.</li>
     <li><code>settings</code>: gli orologi che hai creato, le tue preferenze e, se ti colleghi a Lichess, il token di accesso. Questa è la cartella da portarti dietro se cambi computer.</li>
     <li><code>engine</code>: Stockfish, quando lo scarica Orologic.</li>
+    <li><code>pgn-extract</code>: pgn-extract, con eco.pgn, la licenza e la guida, quando lo scarica Orologic per PGN gestione archivi.</li>
 </ul>
 <p>Orologic ti avvisa se in <code>pgn</code>, <code>txt</code> o <code>images</code> ci sono file più vecchi di t, un anno se non l'hai cambiato, e ti lascia decidere se guardarli, cancellarli o tenerli: è la pulizia descritta nella sezione 1.4.</p>
 
@@ -514,7 +519,7 @@ margin: 1em 0;
     <li><strong>L'installatore</strong> parla italiano, inglese, spagnolo, francese e portoghese, e chiede di accettare la licenza. Installa per il tuo utente, senza bisogno dell'amministratore, nella cartella dei programmi del tuo utente, perché Orologic scrive i suoi dati accanto a sé. Mette nel menu Start due collegamenti, Orologic, che parte nella finestra, e Orologic modalità a linea di comando, che parte nel terminale con <code>--cli</code>; il collegamento sul desktop è facoltativo. Si toglie da App installate di Windows, e alla fine ti chiede se cancellare anche i tuoi dati, compreso il motore scaricato: di partenza risponde No, e i dati restano.</li>
     <li><strong>Se hai già Orologic scompattato</strong>, puoi installare sopra quella cartella: nella pagina della cartella scegli quella dove sta il tuo Orologic. L'installatore sostituisce il programma e lascia i tuoi dati, orologi, carriera, partite, token di Lichess e motore. Se invece installi nella cartella proposta, i dati restano nella vecchia cartella, e li puoi copiare a mano nella nuova: sono le cartelle della sezione 1.6.4.</li>
     <li><strong>Lo zip</strong> si scompatta dove vuoi, anche su una chiavetta, senza installare niente.</li>
-    <li><strong>Stockfish</strong> non è in nessuno dei due: Orologic lo scarica da sé dalle impostazioni del motore, sezione 2.9.3, e ti propone gli aggiornamenti.</li>
+    <li><strong>Stockfish</strong> non è in nessuno dei due: Orologic lo scarica da sé dalle impostazioni del motore, sezione 2.10.3, e ti propone gli aggiornamenti.</li>
 </ul>
 <p>Il programma non è firmato digitalmente: la prima volta Windows può mostrare l'avviso di SmartScreen. È normale: scegli Ulteriori informazioni, poi Esegui comunque.</p>
 <h3 id="cap-1-8">1.8. Tasti rapidi</h3>
@@ -523,7 +528,7 @@ margin: 1em 0;
 <p>Valgono nella finestra principale, non nelle finestre aperte sopra.</p>
 <ul>
     <li><code>Alt+F4</code>: chiude Orologic, come Ctrl+C nel terminale: il programma ha cinque secondi per chiudersi da solo.</li>
-    <li><code>Ctrl+virgola</code>: apre le impostazioni, sezione 2.9.2; se sono già aperte non fa niente.</li>
+    <li><code>Ctrl+virgola</code>: apre le impostazioni, sezione 2.10.2; se sono già aperte non fa niente.</li>
     <li><code>F5</code>: va alla plancia.</li>
     <li><code>F6</code>: va alla console.</li>
     <li><code>Tab e Maiuscolo+Tab</code>: passano dalla plancia alla console e dalla console alla plancia.</li>
@@ -767,6 +772,18 @@ margin: 1em 0;
     <li><code>Tab</code>: dall'elenco ai campi della forma, del colore e delle case, poi ai pulsanti.</li>
 </ul>
 
+<h4 id="cap-1-8-22">1.8.22. PGN gestione archivi</h4>
+<p>La voce PGN gestione archivi del menu principale, sezione 2.9.</p>
+<ul>
+    <li><code>Invio</code>: nei disponibili mette il parametro fra gli scelti; negli scelti chiede il suo valore.</li>
+    <li><code>Canc</code>: negli scelti toglie il parametro, che torna fra i disponibili.</li>
+    <li>Le lettere, nei disponibili: il parametro il cui nome, senza i trattini, comincia così; scritte di seguito si sommano.</li>
+    <li><code>F1</code>: nei due elenchi, la sezione della guida di pgn-extract che spiega il parametro.</li>
+    <li><code>Shift+F1</code>: da qualunque punto, la guida intera di pgn-extract.</li>
+    <li><code>Alt+s</code> Sorgente, <code>Alt+l</code> Seleziona il file, <code>Alt+a</code> Dagli appunti, <code>Alt+d</code> Disponibili, <code>Alt+e</code> Parametri scelti, <code>Alt+t</code> Destinazione, <code>Alt+n</code> Scegli la destinazione, <code>Alt+o</code> Comando, <code>Alt+u</code> Uscita, <code>Alt+p</code> Applica, <code>Alt+c</code> Apri il resoconto, <code>Alt+g</code> Guida di pgn-extract.</li>
+    <li><code>Esc</code>: Esci; durante il lavoro ferma pgn-extract, e la finestra si chiude appena si è fermato.</li>
+</ul>
+
 <h2 id="cap-2">2. Opzioni del Menu Principale</h2>
 <p>All'avvio di Orologic, vieni accolto da una schermata di benvenuto. Nella finestra le opzioni del menu principale sono nella plancia; nel terminale, digitando <code>?</code> e premendo Invio verranno mostrate. Ecco una descrizione di ciascuna di esse.</p>
 
@@ -813,7 +830,7 @@ margin: 1em 0;
         <tr><td><code>.1</code> / <code>.2</code> / <code>.3</code></td><td>Mostra il tempo del Bianco / del Nero / di entrambi.</td></tr>
         <tr><td><code>.4</code></td><td>Confronta i tempi e indica il vantaggio.</td></tr>
         <tr><td><code>.5</code></td><td>Dice di chi è il tratto, nominando il giocatore, oppure da quanto tempo gli orologi sono fermi se sei in pausa.</td></tr>
-        <tr><td><code>.6</code></td><td>Imposta ogni quanti secondi Orologic ripete da solo la situazione, da 0 a 120 (0 disattiva). Con l'aggiornamento acceso, i tempi compaiono anche nella riga dove scrivi, nel modo che decide il modello del prompt, sezione 2.9.8: con quello predefinito, i due orologi in testa. Ogni partita comincia con l'aggiornamento che dice il modello, acceso se ha un numero e spento se non ce l'ha; <code>.6</code> lo cambia per la partita in corso.</td></tr>
+        <tr><td><code>.6</code></td><td>Imposta ogni quanti secondi Orologic ripete da solo la situazione, da 0 a 120 (0 disattiva). Con l'aggiornamento acceso, i tempi compaiono anche nella riga dove scrivi, nel modo che decide il modello del prompt, sezione 2.10.8: con quello predefinito, i due orologi in testa. Ogni partita comincia con l'aggiornamento che dice il modello, acceso se ha un numero e spento se non ce l'ha; <code>.6</code> lo cambia per la partita in corso.</td></tr>
         <tr><td><code>.l</code></td><td>Mostra la lista delle mosse giocate.</td></tr>
         <tr><td><code>.m</code></td><td>Mostra il valore del materiale per ciascun giocatore.</td></tr>
         <tr><td><code>.p</code></td><td>Mette in pausa o riavvia gli orologi.</td></tr>
@@ -856,7 +873,7 @@ margin: 1em 0;
 <ul>
     <li><strong>Precisione (Game Accuracy):</strong> Un valore percentuale che riflette quanto le tue mosse si siano avvicinate alla perfezione suggerita dal motore (es. 95% = eccellente), calcolato come su Lichess: ogni mossa pesa di più dove la posizione è tesa. Le mosse di teoria saltate all'inizio non entrano nel conto.</li>
     <li><strong>Rating Elo Stimato:</strong> Basato sulle performance della singola partita analizzata, e per questo dato come intervallo, per esempio <code>Elo stimato fra 1500 e 2080</code>: la precisione dello stesso giocatore cambia di qualche punto da una partita all'altra.</li>
-    <li><strong>Errori e Imprecisioni:</strong> Un conteggio di quante sviste gravi, imprecisioni o mosse brillanti sono state giocate. Ogni mossa si giudica dalla posizione prima, con la stessa ricerca delle alternative, e come su Lichess da quanto cala la probabilità di vittoria, con le soglie della sezione 2.9.5: in una partita già decisa un pedone in meno non è uno svarione. Il matto lasciato andare è un'inesattezza se si resta sopra di dieci pedoni, un errore sopra sette, uno svarione altrimenti; un matto più lento anche di una mossa è un'inesattezza. La Mossa Geniale è la mossa unica che sacrifica materiale: lascia il pezzo dove l'avversario può prenderlo guadagnando; una ripresa o una mossa forzata, anche se unica, è una Mossa Buona.</li>
+    <li><strong>Errori e Imprecisioni:</strong> Un conteggio di quante sviste gravi, imprecisioni o mosse brillanti sono state giocate. Ogni mossa si giudica dalla posizione prima, con la stessa ricerca delle alternative, e come su Lichess da quanto cala la probabilità di vittoria, con le soglie della sezione 2.10.5: in una partita già decisa un pedone in meno non è uno svarione. Il matto lasciato andare è un'inesattezza se si resta sopra di dieci pedoni, un errore sopra sette, uno svarione altrimenti; un matto più lento anche di una mossa è un'inesattezza. La Mossa Geniale è la mossa unica che sacrifica materiale: lascia il pezzo dove l'avversario può prenderlo guadagnando; una ripresa o una mossa forzata, anche se unica, è una Mossa Buona.</li>
     <li><strong>Matti:</strong> il commento dice chi dà matto e in quante mosse dopo quella giocata, per esempio <code>[OAA: Mossa Buona. Il Bianco dà matto in 2]</code>, o <code>Scacco matto</code> per la mossa che lo dà. La linea di matto non si accorcia mai. Se la partita finisce lì, per esempio con l'abbandono, la linea va nel commento, <code>[OAA: Linea: ...]</code>, e non si aggiunge alla partita.</li>
     <li><strong>Varianti:</strong> dopo un'inesattezza, un errore o uno svarione ci sono le alternative migliori, con la valutazione dal lato del Bianco come nel resto di Orologic, <code>[OAA: Alt: +0.35]</code>, e la confutazione, la risposta migliore dell'avversario col suo seguito, <code>[OAA: Confutazione]</code>.</li>
     <li><strong>Statistiche:</strong> le mosse uguali alla prima scelta del motore e fra le sue prime tre; la precisione media e la perdita media in apertura, mediogioco e finale; i tre momenti decisivi, dove la probabilità di vittoria è cambiata di più; e, se il PGN ha gli orologi, l'uso del tempo: la media per mossa, le mosse più lunghe e il tempo speso sulle mosse sbagliate.</li>
@@ -984,7 +1001,7 @@ margin: 1em 0;
 
 <h3 id="cap-2-4">2.4. Gioca contro il motore (gioca)</h3>
 <p>Dalla versione 8.43.0 la partita contro Stockfish ha una voce sua nel menu principale, <code>gioca</code>. Fino alla 8.41.5 stava in Easyfish, con i comandi <code>.g</code>, <code>.ea</code> e <code>.gs</code>, che non ci sono più. Entrando scegli fra due strade, <code>carriera</code> e <code>libero</code>, e il punto ti riporta al menu principale. Serve un motore configurato: se manca, Orologic ti propone di configurarlo subito.</p>
-<p>Alla prima partita Orologic ti chiede come ti chiami, una volta sola: il nome va nelle partite salvate, contro quello del motore. Lo cambi dalle impostazioni, alla voce Il mio nome, sezione 2.9.2.</p>
+<p>Alla prima partita Orologic ti chiede come ti chiami, una volta sola: il nome va nelle partite salvate, contro quello del motore. Lo cambi dalle impostazioni, alla voce Il mio nome, sezione 2.10.2.</p>
 
 <h4 id="cap-2-4-1">2.4.1. Libero</h4>
 <p>La partita libera è quella che si faceva in Easyfish con <code>.g</code>: la forza del motore la scegli tu, con i comandi della sezione 2.4.3, e resta per le partite seguenti anche dopo aver chiuso Orologic. Prima di cominciare Orologic ti chiede se vuoi la variante standard o il Fischer Random, descritto nella sezione 2.1.1.1, poi la modalità di tempo e il colore: INVIO per il Bianco, ESC per il Nero. Le partite libere non entrano nelle statistiche della carriera: si salvano in PGN, e basta.</p>
@@ -1307,10 +1324,26 @@ margin: 1em 0;
 </ol>
 <p>Lo stesso giro serve anche per studiare te stesso: filtra con il tuo nome e guarda dove il tuo rendimento crolla. Spesso la variante da ripassare salta fuori da sola.</p>
 
-<h3 id="cap-2-9">2.9. Configurazione</h3>
+<h3 id="cap-2-9">2.9. PGN gestione archivi (archivi, solo nella finestra)</h3>
+<p>PGN gestione archivi porta dentro Orologic <a href="https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/">pgn-extract</a>, il programma di David J. Barnes che dal 1994 legge, controlla, filtra e riscrive gli archivi PGN, libero come Orologic, con la licenza GNU GPL 3. È velocissimo: controlla decine di migliaia di partite in un paio di secondi. La voce c'è soltanto nella finestra, dopo Ricerca PGN.</p>
+<p><strong>La prima volta</strong> Orologic ti chiede se scaricare pgn-extract dal sito del suo autore, insieme a eco.pgn, l'archivio delle aperture, alla licenza e alla guida: vanno nella cartella <code>pgn-extract</code>, accanto a Orologic. Se lo scaricamento non riesce, puoi indicare tu dov'è un pgn-extract.exe che hai già; senza, la funzione non è disponibile e si torna al menu principale. Quando apri la finestra, una volta per sessione, Orologic guarda sul sito se è uscita una versione nuova, o se accanto a pgn-extract manca qualcosa, e te lo propone. Un aggiornamento riscarica anche eco.pgn, che può essere più ricco del nostro, e da quel momento Orologic lo usa anche per classificare le aperture delle sue partite.</p>
+<p><strong>La finestra</strong> ha, nell'ordine del Tab:</p>
+<ul>
+    <li>Sorgente, l'archivio da leggere. All'apertura Orologic guarda negli appunti, come la ricerca PGN: il percorso di un file PGN, o un testo PGN, diventano il sorgente; altrimenti si apre la finestra di Windows per scegliere il file. Accanto ci sono Seleziona il file e Dagli appunti.</li>
+    <li>Disponibili, i parametri di pgn-extract, ognuno con la sua spiegazione in inglese, così come la dà pgn-extract. Invio sposta il parametro fra gli scelti; quelli che si possono ripetere, come i criteri <code>-T</code>, restano anche fra i disponibili. Scrivendo le lettere del nome, senza i trattini, arrivi al parametro: <code>min</code> porta a <code>--minmoves</code>, <code>C</code> a <code>-C</code>. La prima voce è Altro file sorgente, per leggere più archivi insieme e unirli.</li>
+    <li>Parametri scelti: Invio chiede il valore del parametro, se ne vuole uno, con un campo di testo, un elenco di scelte o la finestra di Windows per i file, e lo controlla; se non va, ti dice perché e te lo fa riscrivere. Il valore compare dopo il parametro. Canc rimette il parametro fra i disponibili.</li>
+    <li>Destinazione, il file da scrivere, con Scegli la destinazione: Orologic propone, nella cartella <code>pgn</code>, il nome del sorgente seguito da pgn-extract. Non può essere un file sorgente, perché pgn-extract lo leggerebbe e lo scriverebbe insieme. Se c'è già, prima di sostituirlo Orologic ne fa la copia di sicurezza nella cartella <code>pgn</code>, come la ricerca PGN; e pgn-extract scrive in un file accanto, che prende il posto della destinazione solo se il lavoro finisce bene: un lavoro fermato o fallito la lascia com'era.</li>
+    <li>Comando, il comando composto, come lo scriveresti nel terminale, e cosa farà: cosa legge, cosa scrive e cosa fa ogni parametro. L'ordine dei parametri lo decide Orologic, che mette davanti quelli che pgn-extract vuole prima degli altri.</li>
+    <li>Uscita: durante il lavoro una riga che dice quante partite pgn-extract ha già riportato; alla fine il riassunto, con le partite lette e quelle accettate dai criteri, e i messaggi di pgn-extract raggruppati per tipo, ognuno coi primi esempi, la partita e il punto del file. pgn-extract scrive una riga per ogni partita: per questo l'uscita completa non sta nella finestra ma nel resoconto, un file nella cartella <code>txt</code>.</li>
+    <li>Applica; Apri il resoconto, che mostra l'uscita completa del lavoro; Guida di pgn-extract, la sua guida intera; ed Esci, che durante il lavoro ferma pgn-extract.</li>
+</ul>
+<p><strong>La guida</strong>: <code>F1</code> su un parametro, nei due elenchi, apre in una finestra da leggere la sezione della guida di pgn-extract che lo spiega, in inglese; <code>Shift+F1</code>, da qualunque punto, apre la guida intera.</p>
+<p>Qualche esempio: <code>-r</code> controlla soltanto l'archivio, senza scrivere niente; <code>-D</code> toglie le partite doppie; <code>-e</code> classifica le aperture con eco.pgn; <code>-Tw</code> e <code>-Tb</code> scelgono le partite di un giocatore col Bianco o col Nero; <code>-C</code>, <code>-N</code> e <code>-V</code> tolgono commenti, NAG e varianti; <code>--fixresulttags</code> corregge i risultati che non tornano. I tasti sono nella sezione 1.8.22.</p>
+
+<h3 id="cap-2-10">2.10. Configurazione</h3>
 <p>Orologic è altamente personalizzabile.</p>
 
-<h4 id="cap-2-9-1">2.9.1. Gestione Orologi (orologi)</h4>
+<h4 id="cap-2-10-1">2.10.1. Gestione Orologi (orologi)</h4>
 <p><strong>Nella finestra</strong> la voce <code>orologi</code> del menu principale apre la finestra degli orologi, una sola per crearli, modificarli, vederli ed eliminarli. In cima c'è l'elenco degli orologi salvati, ognuno col nome e un sommario di tempi, tipologie, fasi e allarmi, e in fondo Crea nuovo: Invio su un orologio ti porta alla sua scheda, in fondo alla finestra, Invio su Crea nuovo apre i campi di un orologio nuovo, e Canc chiede se eliminare l'orologio scelto. Poi il pulsante Modifica, che apre i campi con i dati dell'orologio scelto.</p>
 <p>I campi compaiono sotto i pulsanti e spariscono con Salva o Annulla; Esc nei campi vale Annulla. Sono, in ordine: il nome; la nota, facoltativa; la casella del tempo uguale per i due colori; l'elenco delle fasi, con Nuova fase in fondo, che aggiunge una fase uguale a quella di prima, fino a quattro, mentre Canc toglie la fase scelta, ma non la prima; per la fase scelta le combo di ore, minuti e secondi e quelle dei valori della sua tipologia, come l'incremento, che senza la spunta del tempo uguale sono due gruppi, uno per il Bianco e uno per il Nero; le mosse della fase, 0 per tutte le restanti; l'elenco delle tipologie, ognuna con la sua spiegazione; l'elenco degli allarmi, con Nuovo allarme in fondo, che aggiunge un allarme a un minuto e ti porta ai minuti del suo tempo, nelle combo di ore, minuti e secondi, dove Invio lo conferma, fino a cinque allarmi, mentre Canc toglie l'allarme scelto; un allarme deve durare almeno un secondo, non può avere il tempo di un altro, e deve stare sotto il tempo totale dell'orologio, le fasi sommate coi tempi supplementari, almeno per uno dei due colori; e i pulsanti Salva e Annulla. Salva controlla il nome, che non deve essere già usato, i tempi delle fasi, e che ogni fase prima dell'ultima abbia le sue mosse. In fondo alla finestra la scheda dell'orologio scelto, la stessa che il terminale mostra con <code>vedi</code>, una riga per dato senza andare a capo, col tachimetro, che si legge e non si modifica. I suoni sono quelli del terminale per gli stessi eventi, e ce ne sono di nuovi per un orologio aperto da modificare, per una fase o un allarme tolti e per i campi chiusi senza salvare.</p>
 <p><strong>Le tipologie del controllo del tempo.</strong> Ogni fase ha la sua, scelta nell'elenco delle tipologie; gli orologi di prima della versione 9 hanno quella di sempre. Le regole sono quelle degli orologi DGT, delle regole FIDE e del go:</p>
@@ -1333,27 +1366,27 @@ margin: 1em 0;
 </ul>
 <p>Gli allarmi hanno cinque voci diverse, una per ciascuno, così quando ne senti uno sai subito qual è: il messaggio a schermo dice il numero e il suono lo conferma. Il lato da cui arriva il suono, sinistra o destra, dice di chi è l'orologio che sta scendendo.</p>
 
-<h4 id="cap-2-9-2">2.9.2. Il sottomenu Impostazioni (impostazioni)</h4>
+<h4 id="cap-2-10-2">2.10.2. Il sottomenu Impostazioni (impostazioni)</h4>
 <p><strong>Nella finestra</strong> tutte le impostazioni stanno in un luogo solo, che si apre con <code>Ctrl+virgola</code> da qualunque punto, o con la voce <code>impostazioni</code> del menu principale. È un elenco, una riga per voce, con il nome e il valore di adesso, per esempio <code>Volume dei suoni: 40%</code>. Invio su una riga apre la sua scelta: una lista, un campo per un numero o un testo, che ha per etichetta la domanda del terminale, oppure un secondo elenco. Esc chiude. Con <code>Maiuscolo+Tab</code> vai al filtro: restano solo le voci il cui nome contiene quello che scrivi, senza badare a maiuscole e accenti, e Invio nel filtro torna all'elenco.</p>
-<p>Le voci sono quelle del terminale, una per valore: il tempo e le linee dell'analisi e le tre soglie, il tuo nome, che nella finestra puoi anche togliere lasciando il campo vuoto, il motore, i nomi, il prompt, le righe che l'area principale conserva, 200 di partenza, oltre le quali le più vecchie se ne vanno, il salvataggio automatico, lo stile dei menu, che serve solo al terminale, i colori e le dimensioni dei caratteri, sezione 2.9.9, e il volume. Poi le cinque voci degli annunci, sezione 1.3.3, e la Lingua, che vale dal riavvio. In fondo tre voci comuni a tutti i programmi di Gabriele con la finestra: Offrimi un caffè, sezione 6, Entra al PUB e Chiedi aiuto al PUB, sezione 4. Prima di queste, la voce Pulizia apre la finestra della pulizia dei file, sezione 1.4.</p>
+<p>Le voci sono quelle del terminale, una per valore: il tempo e le linee dell'analisi e le tre soglie, il tuo nome, che nella finestra puoi anche togliere lasciando il campo vuoto, il motore, i nomi, il prompt, le righe che l'area principale conserva, 200 di partenza, oltre le quali le più vecchie se ne vanno, il salvataggio automatico, lo stile dei menu, che serve solo al terminale, i colori e le dimensioni dei caratteri, sezione 2.10.9, e il volume. Poi le cinque voci degli annunci, sezione 1.3.3, e la Lingua, che vale dal riavvio. In fondo tre voci comuni a tutti i programmi di Gabriele con la finestra: Offrimi un caffè, sezione 6, Entra al PUB e Chiedi aiuto al PUB, sezione 4. Prima di queste, la voce Pulizia apre la finestra della pulizia dei file, sezione 1.4.</p>
 <p><strong>Nel terminale</strong> le impostazioni sono un sottomenu, come sempre:</p>
 <p>La voce <code>impostazioni</code> del menu principale apre un sottomenu che raccoglie tutto quello che si configura una volta e si cambia di rado. Fino alla versione 8.20 il motore, i nomi e il volume stavano nel menu principale, e le altre impostazioni erano un'unica sequenza di domande da attraversare tutta per cambiarne una sola. Come per gli orologi, si resta nel sottomenu finché non si digita il punto, così si possono sistemare più cose di seguito. Le voci sono otto. Le due che sono interruttori dicono nell'etichetta com'è messa la cosa in quel momento, per esempio "Salvataggio automatico: non attivo": sceglierle basta a cambiare stato, senza domande in più, e al giro dopo il menu dice il valore nuovo. Anche il motore, il prompt e il volume si presentano con il loro stato, cioè il nome del motore in uso, il modello del prompt e il volume su cento.</p>
 <ul>
-    <li><strong>analisi:</strong> tempo, linee e soglie di giudizio dell'analisi, sezione 2.9.5.</li>
-    <li><strong>motore:</strong> ricerca, scaricamento e configurazione del motore scacchistico, sezione 2.9.3.</li>
-    <li><strong>nomi:</strong> i nomi dei pezzi, delle colonne e delle mosse, sezione 2.9.4.</li>
+    <li><strong>analisi:</strong> tempo, linee e soglie di giudizio dell'analisi, sezione 2.10.5.</li>
+    <li><strong>motore:</strong> ricerca, scaricamento e configurazione del motore scacchistico, sezione 2.10.3.</li>
+    <li><strong>nomi:</strong> i nomi dei pezzi, delle colonne e delle mosse, sezione 2.10.4.</li>
     <li><strong>giocatore:</strong> il tuo nome, quello che va nelle partite contro il motore salvate; l'etichetta dice quello scritto, e scegliendola lo cambi, mentre INVIO a vuoto lo lascia com'è. Se non l'hai mai scritto, te lo chiede la prima partita, sezione 2.4.</li>
-    <li><strong>prompt:</strong> il modello del prompt di gioco, sezione 2.9.8.</li>
-    <li><strong>salvataggio:</strong> accende o spegne il salvataggio automatico, sezione 2.9.6.</li>
-    <li><strong>stile:</strong> menu a parole o a numeri, sezione 2.9.6.</li>
-    <li><strong>volume:</strong> il volume dei suoni, sezione 2.9.7.</li>
+    <li><strong>prompt:</strong> il modello del prompt di gioco, sezione 2.10.8.</li>
+    <li><strong>salvataggio:</strong> accende o spegne il salvataggio automatico, sezione 2.10.6.</li>
+    <li><strong>stile:</strong> menu a parole o a numeri, sezione 2.10.6.</li>
+    <li><strong>volume:</strong> il volume dei suoni, sezione 2.10.7.</li>
 </ul>
 
-<h4 id="cap-2-9-3">2.9.3. Motore scacchistico (impostazioni, motore)</h4>
+<h4 id="cap-2-10-3">2.10.3. Motore scacchistico (impostazioni, motore)</h4>
 <p>Questo passaggio è fondamentale per abilitare le funzioni di analisi. Orologic ti guiderà nella configurazione iniziale, ma è importante capire come renderlo portatile e cosa significano i parametri tecnici.</p>
 <p>Nella finestra la voce Motore scacchistico apre un suo elenco: in cima le tre azioni del terminale, cercare un motore nel tuo pc, scaricare Stockfish e modificare manualmente la configurazione; sotto i sei valori, il percorso e l'eseguibile del motore, la hash, i core, il livello di skill e il move overhead, ognuno con il valore di adesso. Ogni cambio riavvia il motore, e scaricare Stockfish lavora mentre continui a usare la finestra: le sue frasi compaiono nella console. Le impostazioni si aprono con <code>Ctrl+virgola</code> anche durante una partita o un'analisi, ma allora il motore non si cambia, perché lo sta usando: le sue righe si leggono, e ogni cambio lo dice. Si cambia quando Orologic aspetta in un menu, o dalla voce impostazioni del menu principale. Dalla versione 9 il move overhead arriva davvero al motore, e prima di scaricare Stockfish il motore in uso si chiude, anche nel terminale.</p>
 
-<h5 id="cap-2-9-3-1">2.9.3.1. Portabilità e Gestione Percorsi (Relativi vs Assoluti)</h5>
+<h5 id="cap-2-10-3-1">2.10.3.1. Portabilità e Gestione Percorsi (Relativi vs Assoluti)</h5>
 <p>Orologic gestisce in modo intelligente il percorso del motore scacchistico per garantire la massima portabilità:</p>
 <ul>
     <li><strong>Percorso Relativo (Consigliato per chiavette USB e portabilità):</strong> Se il motore si trova nello stesso disco/drive di Orologic (ad esempio nella cartella <code>engine</code> all'interno del programma), Orologic salverà un percorso relativo. Questo ti permette di spostare l'intera cartella di Orologic o utilizzarla da una chiavetta USB su diversi computer senza dover riconfigurare il motore.</li>
@@ -1368,7 +1401,7 @@ margin: 1em 0;
 </ol>
 <p>Orologic rileverà automaticamente che il motore si trova nello stesso drive e confermerà il salvataggio in modalità relativa portabile.</p>
 
-<h5 id="cap-2-9-3-2">2.9.3.2. Spiegazione dei Parametri UCI</h5>
+<h5 id="cap-2-10-3-2">2.10.3.2. Spiegazione dei Parametri UCI</h5>
 <p>Durante la configurazione, ti verranno chiesti alcuni valori. Ecco una guida per impostarli correttamente:</p>
 <ul>
     <li><strong>Hash (Memoria):</strong> Indica quanta RAM dedicare al motore per memorizzare le posizioni analizzate. Valori comuni sono 128 o 256 MB. Più memoria permette analisi più veloci su tempi lunghi.</li>
@@ -1378,24 +1411,24 @@ margin: 1em 0;
 </ul>
 <p>Lo Skill Level scritto qui è quello con cui il motore parte. In partita lo si cambia con i comandi descritti nella sezione 2.4.3, "Scegliere la forza del motore", dove sono spiegati anche il limite in Elo, i livelli di Lichess, la profondità e le loro differenze. Due cose da tenere presenti: l'Elo di Stockfish non scende sotto i 1320 punti, e per un avversario più modesto restano lo Skill Level basso, i primi livelli di Lichess o una profondità ridotta; e quei punti sono di motori contro motori, non di giocatori. Un buon punto di partenza resta un avversario un po' più debole di te: perdere sempre non insegna niente, e vincere sempre nemmeno.</p>
 
-<h4 id="cap-2-9-4">2.9.4. Nomi dei pezzi, delle colonne e delle mosse (impostazioni, nomi)</h4>
+<h4 id="cap-2-10-4">2.10.4. Nomi dei pezzi, delle colonne e delle mosse (impostazioni, nomi)</h4>
 <p>Questa opzione ti permette di personalizzare il linguaggio descrittivo usato dal programma: puoi cambiare i nomi dei pezzi (es. da "cavallo" a "destriero"), i nomi delle colonne (es. da "Ancona" ad "Apple") e i verbi usati per descrivere le mosse.</p>
 <p>Serve più di quanto sembri, perché queste parole le senti a ogni singola mossa e il modo di dirle è personale. Un esempio concreto: la descrizione predefinita di <code>Nxe5</code> suona "il Cavallo mangia il Pedone in Empoli 5". Se sei abituato all'alfabeto telefonico internazionale invece che a quello italiano, cambi i nomi delle colonne e diventa "Echo 5". Se preferisci "cattura" a "mangia", cambi il verbo. Se giochi con qualcuno che chiama la Donna Regina, cambi il nome del pezzo.</p>
 <p>Nella finestra la voce dei nomi apre un elenco con tutte le voci del terminale, ognuna con il suo valore, e dopo i due nomi di ogni pezzo il suo genere: m, f oppure n. Invio cambia la voce; un campo lasciato vuoto tiene il nome di prima, come Invio nel terminale. Le modifiche valgono immediatamente, senza riavviare il programma: la prima mossa che descrivi dopo essere uscito da questo menu usa già le parole nuove. Vale anche per l'esplorazione della scacchiera e per i riepiloghi salvati nei file di testo. Se cambi idea, puoi scorrere le voci e rimettere quelle originali, oppure chiudere con il punto per uscire a metà lasciando immutato quello che non hai ancora toccato.</p>
 
-<h4 id="cap-2-9-5">2.9.5. Impostazioni dell'analisi (impostazioni, analisi)</h4>
+<h4 id="cap-2-10-5">2.10.5. Impostazioni dell'analisi (impostazioni, analisi)</h4>
 <p>Tre cose che valgono per ogni analisi con il motore. Il <strong>tempo di analisi</strong>, in secondi per posizione, da un decimo a trecento: più è alto, più l'analisi è profonda e lenta. Le <strong>linee</strong>, cioè quante varianti il motore propone per ogni posizione, da una a venti. Le <strong>soglie di giudizio</strong>, in punti percentuali di calo della probabilità di vittoria, come Lichess: di quanto deve calare la probabilità di vittoria di chi muove perché la mossa venga chiamata inesattezza, errore o svarione; si parte da 5, 10 e 15. I valori attuali sono proposti fra parentesi quadre, e Invio li conferma.</p>
 
-<h4 id="cap-2-9-6">2.9.6. Salvataggio automatico e stile dei menu (impostazioni, salvataggio e stile)</h4>
+<h4 id="cap-2-10-6">2.10.6. Salvataggio automatico e stile dei menu (impostazioni, salvataggio e stile)</h4>
 <ul>
     <li><strong>Salvataggio automatico:</strong> se è attivo, durante una partita arbitrata Orologic salva la situazione dopo ogni mossa, e al prossimo avvio ti chiede se riprenderla da dove era rimasta. Previene la perdita della partita se il programma o il computer si chiudono all'improvviso.</li>
     <li><strong>Stile dei menu:</strong> a parole, che è il modo predefinito e si sceglie scrivendo le prime lettere della voce, oppure a numeri.</li>
 </ul>
 
-<h4 id="cap-2-9-7">2.9.7. Volume dei suoni (impostazioni, volume)</h4>
+<h4 id="cap-2-10-7">2.10.7. Volume dei suoni (impostazioni, volume)</h4>
 <p>Imposta il volume degli effetti sonori da 0, muto, a 100. Orologic fa sentire una nota al volume vecchio e una al volume nuovo, così il confronto è immediato.</p>
 
-<h4 id="cap-2-9-8">2.9.8. Prompt di gioco (impostazioni, prompt)</h4>
+<h4 id="cap-2-10-8">2.10.8. Prompt di gioco (impostazioni, prompt)</h4>
 <p>Il prompt è la riga su cui scrivi le mosse durante una partita. Dalla versione 8.34.0 lo componi tu, con un modello che vale in tutte le modalità di gioco: la partita arbitrata, la modalità Tempo, la partita contro il motore in Easyfish, le partite su Lichess e quelle che osservi. Dalla versione 8.45.0 il modello sta in un file, <code>prompt.txt</code>, nella cartella <code>settings</code>, quella che resta quando Orologic si aggiorna. La voce <code>prompt</code> del sottomenu Impostazioni lo riscrive e lo apre nel Blocco note: in testa ci sono le spiegazioni e il catalogo di tutti i codici, su righe che cominciano con il segno del dollaro, che Orologic ignora; in fondo c'è la riga del modello in uso, l'ultima senza dollaro, che modifichi tu. Quando salvi e chiudi il Blocco note, Orologic rilegge il file, ti fa sentire un'anteprima con dati di esempio, ti dice se il prompt è dinamico o statico e ti chiede se va bene: INVIO applica il modello, ESC riapre il file, con il modello che hai appena scritto, per ritoccarlo. Se nel modello c'è un codice che Orologic non conosce, te lo dice: INVIO riapre il file per correggerlo, ESC tiene il modello di prima. Se il Blocco note non si trova, o non permette a Orologic di aspettarne la chiusura, il file si apre con l'editor predefinito, e Orologic aspetta che tu prema un tasto dopo aver salvato. Il modello che avevi prima della 8.45.0 passa nel file da solo, la prima volta.</p>
 <p>Nella finestra il prompt si compone in una finestra sua, al posto del Blocco note, senza scrivere i codici. In alto due elenchi, Disponibili e Prompt. Disponibili ha i simboli che il prompt non usa, ognuno con la sua descrizione, per esempio <code>%b tempo del Bianco</code>, comprese le due percentuali <code>%bp</code> e <code>%np</code>, e in fondo Testo libero; Prompt ha gli elementi del tuo modello, nell'ordine in cui compaiono. Sotto, la Spiegazione del simbolo scelto, con le regole che lo riguardano e, per i simboli con la forma estesa, verboso o breve: se gli annunci sono attivi, Orologic ne annuncia le regole e breve in coda alla voce che NVDA ha appena letto, senza interromperla, e verboso no, perché lo dice già la voce; il campo dell'aggiornamento in secondi, da 0, statico, a 120, che nel modello diventa il numero dopo il percento; e l'Anteprima, che riporta il prompt con i dati di prova e nient'altro, oppure quello che non va.</p>
 <p>Nei Disponibili Invio mette il simbolo in fondo al prompt, e il fuoco resta sulla voce vicina; su Testo libero ti chiede il testo, per esempio una barra o una parola, e la voce resta lì per altri testi. Lo Spazio, nei due elenchi, accende e spegne la forma estesa, a parole, sui simboli che ce l'hanno: accanto alla voce compare (verboso), e nel modello la v dopo la lettera; sugli altri suona la nota bassa dell'errore. Un simbolo con la forma estesa può stare nel prompt breve e verboso: messa una forma, fra i Disponibili resta l'altra, e lo Spazio lì non la cambia; messe tutte e due, il simbolo sparisce dai Disponibili. Nel Prompt Canc rimette il simbolo fra i Disponibili e il fuoco va all'elemento vicino, o ai Disponibili se il prompt resta vuoto; <code>Ctrl+freccia su</code> e <code>Ctrl+freccia giù</code> spostano l'elemento prima o dopo, cioè a sinistra o a destra nel prompt; Invio su un testo libero te lo fa riscrivere. Gli elementi si uniscono con uno spazio: un modello scritto a mano come <code>%i/%a %m</code> si apre con la barra come testo libero e, se lo cambi, si salva come <code>%i / %a %m</code>. OK salva e chiude, ma solo se il modello non ha errori; Annulla o Esc lasciano quello di prima. Un prompt vuoto torna al modello predefinito.</p>
@@ -1433,18 +1466,18 @@ margin: 1em 0;
 <p>Se dopo <code>%m</code> nel modello c'è altro, per esempio <code>%b %m %n</code>, il cursore non va in fondo alla riga ma subito dopo la mossa: scrivi la tua mossa lì, e il resto del prompt, qui il tempo del Nero, ti scorre a destra mentre scrivi. Se <code>%m</code> è l'ultimo codice, o manca, il cursore resta in fondo come sempre.</p>
 <p>La scacchiera di <code>%c</code> occupa più righe, quindi va messa prima di <code>%m</code>: si stampa sopra la riga dove scrivi, e con il prompt dinamico non si ristampa ogni secondo. Si ristampa solo quando la posizione cambia, per esempio quando l'avversario muove su Lichess, mentre ogni secondo si riscrive soltanto l'ultima riga, quella dei tempi e della mossa.</p>
 
-<h4 id="cap-2-9-9">2.9.9. Colori e dimensioni (solo nella finestra)</h4>
+<h4 id="cap-2-10-9">2.10.9. Colori e dimensioni (solo nella finestra)</h4>
 <p>La voce Colori e dimensioni delle impostazioni apre una finestra con due schede, che scegli con <code>Ctrl+Tab</code>. Nella scheda Colori ci sono tre cursori, Rosso, Verde e Blu, da 0 a 100 per cento; la combo Applica a, con Caratteri plancia, Caratteri area centrale, Sfondo plancia e Sfondo area; e la combo dei colori predefiniti, con in fondo i colori che hai salvato tu e la voce Salva colore. Nella scheda Dimensioni c'è la dimensione dei caratteri, da 8 a 72 punti, e la combo Applica a, con Plancia e Area centrale. Sotto le schede un'anteprima mostra la voce scelta in Applica a, con i cursori o la dimensione al posto del suo valore.</p>
 <p>Tutto si fa con Invio, e nelle combo le frecce scorrono le voci senza cambiare niente. Invio su un colore predefinito porta lì i tre cursori, con due note brevi che salgono. Invio su Salva colore chiede un nome e salva subito il colore dei cursori; un nome che c'è già prende il colore nuovo. Invio su Applica a mette il colore dei cursori, o la dimensione, nella voce scelta e lo usa subito in tutte le finestre, con il suono di un valore cambiato. Cambiare voce in Applica a non tocca i cursori: componi il colore una volta e lo metti dove vuoi. Altrove Invio vale OK, tranne sulla dimensione, che si mette in uso con Applica a. OK salva tutto e chiude; Annulla o Esc chiudono e rimettono quello che c'era.</p>
 <p>Le impostazioni valgono per tutte le finestre di Orologic: gli elenchi e gli alberi, come la plancia e l'elenco delle impostazioni, prendono caratteri e sfondo della plancia; i campi di testo, le etichette e lo sfondo delle finestre quelli dell'area centrale; i pulsanti e le linguette delle schede solo la dimensione, perché Windows li disegna con i suoi colori. Restano con i colori di Windows gli avvisi e la finestra della mail del PUB. Finché non cambi niente, le finestre hanno l'aspetto di sempre.</p>
 
-<h3 id="cap-2-10">2.10. Apri Manuale (manuale)</h3>
+<h3 id="cap-2-11">2.11. Apri Manuale (manuale)</h3>
 <p>Questo comando apre questa guida nel tuo browser web predefinito.</p>
 
-<h3 id="cap-2-11">2.11. Novità (novita)</h3>
+<h3 id="cap-2-12">2.12. Novità (novita)</h3>
 <p>Apre nel browser il registro delle modifiche, cioè l'elenco di tutto quello che è cambiato in ogni versione di Orologic, dalla più recente alla più vecchia. Ogni voce dice se è una funzione nuova o una correzione, in quale parte del programma interviene e, quando serve, perché è stata fatta. È il posto dove guardare dopo un aggiornamento, per sapere che cosa troverai di diverso.</p>
 
-<h3 id="cap-2-12">2.12. Esci dall'Applicazione (.)</h3>
+<h3 id="cap-2-13">2.13. Esci dall'Applicazione (.)</h3>
 <p>Digitando <code>.</code> e premendo Invio dal menu principale chiuderà Orologic.</p>
 
 <h2 id="cap-3">3. Piccolo Glossario</h2>
@@ -1481,6 +1514,7 @@ margin: 1em 0;
     <li>Marcos Schlosser per la versione portoghese e per aver proposto il salvataggio automatico;</li>
     <li>Claudio Garanzini per la fondamentale segnalazione del bug del PGN parziale in modalità osservatore di Orolichess;</li>
     <li>Romana Trapletti, per essere stata l'ispiratrice della funzione di condivisione della scacchiera;</li>
+    <li>David J. Barnes, autore di <a href="https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/">pgn-extract</a>, il programma che dal 1994 legge e sistema gli archivi PGN, per aver accolto con piacere il suo ingresso in Orologic: è lui il motore di PGN gestione archivi;</li>
 </ul>
 
 <h2 id="cap-6">6. Sostieni il Progetto</h2>
