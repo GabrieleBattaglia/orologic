@@ -6,8 +6,8 @@
 
 pgn-extract, pe per brevita', e' di David J. Barnes, GPL 3 come Orologic, e
 David ha dato il suo consenso il 23 novembre 2026. Non sta nel repository:
-lo scaricano le copie degli utenti dal suo sito, con eco.pgn, la licenza
-COPYING e la guida help.html, nella cartella pgn-extract accanto al
+lo scaricano le copie degli utenti dal suo sito, con la licenza COPYING e
+la guida help.html, nella cartella pgn-extract accanto al
 programma. In alternativa l'utente indica dov'e' il suo, e il percorso si
 salva nel database.
 
@@ -50,9 +50,11 @@ SITO = "https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/"
 ESEGUIBILE = "pgn-extract.exe"
 CARTELLA = "pgn-extract"
 GUIDA = "help.html"
-# I file che si scaricano insieme, e che un aggiornamento riscrive tutti:
-# eco.pgn puo' essere piu' ricco del nostro (Gabriele, 24 novembre 2026).
-FILE_DEL_SITO = (ESEGUIBILE, "eco.pgn", "COPYING", GUIDA)
+# I file che si scaricano insieme, e che un aggiornamento riscrive tutti.
+# eco.pgn no: dal 25 novembre 2026 ce n'e' una copia sola, quella di
+# Orologic, che pe riceve col suo percorso (Gabriele); un eco.pgn nuovo del
+# sito arriva con le release di Orologic.
+FILE_DEL_SITO = (ESEGUIBILE, "COPYING", GUIDA)
 # Il catalogo delle opzioni che David ha scritto per Orologic, arguments.json
 # (25 novembre 2026): nomi, valori, l'ancora nella guida e i conflitti. Non e'
 # ancora nella pagina del sito, ma sta a questo indirizzo; se manca, Orologic
@@ -1198,7 +1200,7 @@ def aggiornamento(percorso_di_pe):
     if errore:
         return None, errore
     if locale and come_numeri(remota) > come_numeri(locale):
-        return _("E' uscita la versione {nuova} di pgn-extract, tu hai la {vecchia}. La scarico dal sito di David J. Barnes, con la guida, eco.pgn e la licenza?").format(nuova=remota, vecchia=locale), None
+        return _("E' uscita la versione {nuova} di pgn-extract, tu hai la {vecchia}. La scarico dal sito di David J. Barnes, con la guida e la licenza?").format(nuova=remota, vecchia=locale), None
     if percorso_di_pe == nella_cartella(ESEGUIBILE) and mancano_dei_file():
-        return _("Accanto a pgn-extract mancano dei file: {file}. Riscarico pgn-extract {versione} dal sito, con la guida, eco.pgn e la licenza?").format(file=", ".join(mancano_dei_file()), versione=remota), None
+        return _("Accanto a pgn-extract mancano dei file: {file}. Riscarico pgn-extract {versione} dal sito, con la guida e la licenza?").format(file=", ".join(mancano_dei_file()), versione=remota), None
     return None, None

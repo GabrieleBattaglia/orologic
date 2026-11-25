@@ -576,20 +576,17 @@ _eco_database_cache = {}
 
 
 def percorso_eco(filename="eco.pgn"):
-    """eco.pgn di pgn-extract: quello scaricato con pe, nella cartella
-    pgn-extract accanto al programma, se c'e', perche' pe lo aggiorna e puo'
-    essere piu' ricco; altrimenti quello del pacchetto, in resources. E' lo
-    stesso file: eco.db era il suo nome in Orologic fino alla 9.0.0."""
-    scaricato = config.percorso_salvataggio(os.path.join("pgn-extract", filename))
-    if os.path.isfile(scaricato):
-        return scaricato
+    """eco.pgn di pgn-extract, nella copia sola di Orologic, in resources:
+    la usa anche pe, che la riceve col percorso (Gabriele, 25 novembre
+    2026; fino alla 9.2.0 pe scaricava la sua, uguale). eco.db era il suo
+    nome in Orologic fino alla 9.0.0."""
     return config.resource_path(os.path.join("resources", filename))
 
 
 def LoadEcoDatabaseWithFEN(filename="eco.pgn"):
     db_path = percorso_eco(filename)
-    # Con la data del file nella chiave, un eco.pgn aggiornato da pe si
-    # rilegge senza riavviare.
+    # Una volta per file e per data: un eco.pgn cambiato si rilegge senza
+    # riavviare.
     try:
         chiave = (db_path, os.path.getmtime(db_path))
     except OSError:
@@ -674,7 +671,7 @@ def LoadEcoDatabaseWithFEN(filename="eco.pgn"):
                 num_entries=num_entries
             )
         )
-    _eco_database_cache[db_path] = eco_entries
+    _eco_database_cache[chiave] = eco_entries
     return eco_entries
 
 

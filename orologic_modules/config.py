@@ -234,6 +234,9 @@ MENU_CHOICES = {
 # riceve soltanto correzioni (decisione
 # del 22 novembre 2026), e orologic.py la aggiunge quando c'e' la plancia.
 VOCE_ARCHIVI = _("PGN gestione archivi (pgn-extract)")
+# L'albero delle aperture di eco.pgn, anche lui solo nella finestra
+# (Gabriele, 25 novembre 2026): in ordine alfabetico va dopo analizza.
+VOCE_APERTURE = _("Albero aperture")
 
 # Le tre voci degli orologi stavano nel menu principale, sparse fra le
 # modalita' di gioco: raccolte qui si trovano subito e il menu

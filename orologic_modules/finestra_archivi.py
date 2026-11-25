@@ -199,7 +199,7 @@ def prepara_pe(genitore, chiedi_conferma, avvisa):
     percorso = pgn_extract.eseguibile()
     if percorso:
         return percorso
-    domanda = _("Per la gestione degli archivi Orologic usa pgn-extract, il programma libero di David J. Barnes, ma non c'e' ancora. Lo scarico dal suo sito, con la guida, eco.pgn e la licenza?")
+    domanda = _("Per la gestione degli archivi Orologic usa pgn-extract, il programma libero di David J. Barnes, ma non c'e' ancora. Lo scarico dal suo sito, con la guida e la licenza?")
     if chiedi_conferma(genitore, domanda):
         versione, errore = scarica_con_la_finestra(genitore)
         if versione:

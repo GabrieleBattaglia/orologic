@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 9.3.0 - mercoledì 25 novembre 2026)</h1>
+<h1>Guida Utente di Orologic (Versione 9.4.0 - mercoledì 25 novembre 2026)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -155,6 +155,8 @@ margin: 1em 0;
 <li><a href="#cap-1-8-21">1.8.21. La finestra dei disegni</a>
 </li>
 <li><a href="#cap-1-8-22">1.8.22. PGN gestione archivi</a>
+</li>
+<li><a href="#cap-1-8-23">1.8.23. Albero aperture</a>
 </li>
 </ul>
 </li>
@@ -307,6 +309,8 @@ margin: 1em 0;
 <li><a href="#cap-2-12">2.12. Novità (novita)</a>
 </li>
 <li><a href="#cap-2-13">2.13. Esci dall'Applicazione (.)</a>
+</li>
+<li><a href="#cap-2-14">2.14. Albero aperture (aperture, solo nella finestra)</a>
 </li>
 </ul>
 </li>
@@ -519,7 +523,7 @@ margin: 1em 0;
     <li><code>images</code>: le immagini delle posizioni esportate in PDF.</li>
     <li><code>settings</code>: gli orologi che hai creato, le tue preferenze e, se ti colleghi a Lichess, il token di accesso. Questa è la cartella da portarti dietro se cambi computer.</li>
     <li><code>engine</code>: Stockfish, quando lo scarica Orologic.</li>
-    <li><code>pgn-extract</code>: pgn-extract, con eco.pgn, la licenza e la guida, quando lo scarica Orologic per PGN gestione archivi.</li>
+    <li><code>pgn-extract</code>: pgn-extract, con la licenza, la guida e il catalogo delle opzioni, quando lo scarica Orologic per PGN gestione archivi. eco.pgn non c'è: pgn-extract usa quello di Orologic.</li>
 </ul>
 <p>Orologic ti avvisa se in <code>pgn</code>, <code>txt</code> o <code>images</code> ci sono file più vecchi di t, un anno se non l'hai cambiato, e ti lascia decidere se guardarli, cancellarli o tenerli: è la pulizia descritta nella sezione 1.4.</p>
 
@@ -793,6 +797,15 @@ margin: 1em 0;
     <li><code>Shift+F1</code>: da qualunque punto, la guida intera di pgn-extract.</li>
     <li><code>Alt+s</code> Sorgente, <code>Alt+l</code> Seleziona il file, <code>Alt+a</code> Dagli appunti, <code>Alt+d</code> Disponibili, <code>Alt+e</code> Parametri scelti, <code>Alt+t</code> Destinazione, <code>Alt+n</code> Scegli la destinazione, <code>Alt+o</code> Comando, <code>Alt+u</code> Uscita, <code>Alt+p</code> Applica, <code>Alt+c</code> Apri il resoconto, <code>Alt+g</code> Guida di pgn-extract.</li>
     <li><code>Esc</code>: Esci; durante il lavoro ferma pgn-extract, e la finestra si chiude appena si è fermato.</li>
+</ul>
+
+<h4 id="cap-1-8-23">1.8.23. Albero aperture</h4>
+<p>La voce Albero aperture del menu principale, sezione 2.14.</p>
+<ul>
+    <li><code>Invio</code>: su un ramo lo apre o lo chiude; su una foglia dice la linea.</li>
+    <li>Le frecce: destra apre il ramo, sinistra lo chiude o porta alla mossa sopra, su e giù passano fra le mosse, come in ogni albero di Windows.</li>
+    <li><code>Alt+m</code> Analisi manuale, <code>Alt+e</code> Passa a Easyfish.</li>
+    <li><code>Esc</code>: Chiudi.</li>
 </ul>
 
 <h2 id="cap-2">2. Opzioni del Menu Principale</h2>
@@ -1337,7 +1350,7 @@ margin: 1em 0;
 
 <h3 id="cap-2-9">2.9. PGN gestione archivi (archivi, solo nella finestra)</h3>
 <p>PGN gestione archivi porta dentro Orologic <a href="https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/">pgn-extract</a>, il programma di David J. Barnes che dal 1994 legge, controlla, filtra e riscrive gli archivi PGN, libero come Orologic, con la licenza GNU GPL 3. È velocissimo: controlla decine di migliaia di partite in un paio di secondi. La voce, <code>archivi</code>, c'è soltanto nella finestra; il menu è in ordine alfabetico, e la trovi dopo <code>arbitra</code>.</p>
-<p><strong>La prima volta</strong> Orologic ti chiede se scaricare pgn-extract dal sito del suo autore, insieme a eco.pgn, l'archivio delle aperture, alla licenza, alla guida e ad arguments.json, il catalogo delle opzioni che David ha scritto per Orologic: vanno nella cartella <code>pgn-extract</code>, accanto a Orologic. Se il catalogo manca accanto a un pgn-extract già scaricato, Orologic lo scarica da solo, piccolo com'è, e te lo scrive nell'uscita; senza catalogo tutto funziona come prima, ma Orologic non conosce i conflitti fra le opzioni. Se lo scaricamento non riesce, puoi indicare tu dov'è un pgn-extract.exe che hai già; senza, la funzione non è disponibile e si torna al menu principale. Quando apri la finestra, una volta per sessione, Orologic guarda sul sito se è uscita una versione nuova, o se accanto a pgn-extract manca qualcosa, e te lo propone. Un aggiornamento riscarica anche eco.pgn, che può essere più ricco del nostro, e da quel momento Orologic lo usa anche per classificare le aperture delle sue partite.</p>
+<p><strong>La prima volta</strong> Orologic ti chiede se scaricare pgn-extract dal sito del suo autore, insieme alla licenza, alla guida e ad arguments.json, il catalogo delle opzioni che David ha scritto per Orologic: vanno nella cartella <code>pgn-extract</code>, accanto a Orologic. Se il catalogo manca accanto a un pgn-extract già scaricato, Orologic lo scarica da solo, piccolo com'è, e te lo scrive nell'uscita; senza catalogo tutto funziona come prima, ma Orologic non conosce i conflitti fra le opzioni. Se lo scaricamento non riesce, puoi indicare tu dov'è un pgn-extract.exe che hai già; senza, la funzione non è disponibile e si torna al menu principale. Quando apri la finestra, una volta per sessione, Orologic guarda sul sito se è uscita una versione nuova, o se accanto a pgn-extract manca qualcosa, e te lo propone. eco.pgn, l'archivio delle aperture, è uno solo, quello di Orologic: pgn-extract lo usa per classificare le aperture, e un eco.pgn nuovo del sito arriva con le versioni di Orologic.</p>
 <p><strong>La finestra</strong> ha, nell'ordine del Tab:</p>
 <ul>
     <li>Sorgente, l'archivio da leggere. All'apertura Orologic guarda negli appunti, come la ricerca PGN: il percorso di un file PGN, o un testo PGN, diventano il sorgente; altrimenti si apre la finestra di Windows per scegliere il file. Accanto ci sono Seleziona il file e Dagli appunti.</li>
@@ -1491,6 +1504,12 @@ margin: 1em 0;
 
 <h3 id="cap-2-13">2.13. Esci dall'Applicazione (.)</h3>
 <p>Digitando <code>.</code> e premendo Invio dal menu principale chiuderà Orologic.</p>
+
+<h3 id="cap-2-14">2.14. Albero aperture (aperture, solo nella finestra)</h3>
+<p>L'albero aperture mette in un albero le linee di eco.pgn, il file delle aperture di pgn-extract che Orologic usa per dare il nome alle aperture delle partite: più di duemila linee, dalla prima mossa fino alle varianti più profonde. È la ricerca PGN in versione semplice, sezione 2.8, senza un archivio da caricare. La voce, <code>aperture</code>, c'è soltanto nella finestra; nel menu, in ordine alfabetico, la trovi dopo <code>analizza</code>.</p>
+<p>Ogni mossa dell'albero è una riga come <code>Pedone in empoli 4 (1. e4) = 57.3% | B00 King's pawn opening</code>: la mossa descritta, la mossa col suo numero, quante delle linee di eco.pgn passano di lì, in percentuale sul totale, e il nome dell'apertura, col codice ECO e, dove c'è, la variante. Il nome è quello della posizione, se una linea di eco.pgn ci finisce, anche arrivandoci con le mosse in un altro ordine, come classifica pgn-extract; altrimenti è quello della mossa sopra più vicina che ce l'ha. Le vittorie per colore non ci sono: eco.pgn non ha partite, solo linee. Le mosse con più linee vengono prima.</p>
+<p>La finestra ha, nell'ordine del Tab, l'albero; il campo Linea, con le mosse dalla prima fino a quella scelta e il nome dell'apertura, per esempio <code>1. e4 c5 2. Nf3 d6 | B50 Sicilian</code>; Analisi manuale, Passa a Easyfish e Chiudi. Invio su un ramo lo apre o lo chiude, su una foglia ti dice la linea.</p>
+<p><strong>Per allenarti</strong> con un'apertura scegli la sua mossa e premi Analisi manuale, che apre la linea nell'analisi col motore, sezione 2.3, o Passa a Easyfish, che la porta a Easyfish, sezione 2.5. I due pulsanti vogliono una linea di almeno due semimosse: con una sola suonano il no e te lo dicono. Quando torni, l'albero si riapre sulla stessa mossa. I tasti sono nella sezione 1.8.23.</p>
 
 <h2 id="cap-3">3. Piccolo Glossario</h2>
 <p>Le sigle e i termini tecnici che ricorrono in questa guida e dentro il programma. Non sono termini di scacchi, che diamo per conosciuti, ma nomi di formati, di tecnologie e di misure che è comodo avere spiegati una volta sola.</p>

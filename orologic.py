@@ -32,6 +32,7 @@ if __name__ == "__main__":
     avvio.prepara(sys.argv)
 
 from orologic_modules import (
+    aperture,
     board_utils,
     cleaner,
     clock,
@@ -254,8 +255,9 @@ def menu_impostazioni():
 
 def _voci_del_menu_principale():
     """Le voci del menu principale; nella finestra anche archivi, PGN
-    gestione archivi con pgn-extract (issue 74). L'ordine lo fa menu di
-    GBUtils, alfabetico per chiave: archivi viene dopo arbitra."""
+    gestione archivi con pgn-extract (issue 74), e aperture, l'albero delle
+    aperture di eco.pgn. L'ordine lo fa menu di GBUtils, alfabetico per
+    chiave: aperture viene dopo analizza, archivi dopo arbitra."""
     if not strato.con_la_plancia():
         return config.MENU_CHOICES
     voci = {}
@@ -263,6 +265,7 @@ def _voci_del_menu_principale():
         voci[chiave] = testo
         if chiave == "ricerca":
             voci["archivi"] = config.VOCE_ARCHIVI
+            voci["aperture"] = config.VOCE_APERTURE
     return voci
 
 
@@ -446,6 +449,10 @@ def Main():
         elif scelta == "archivi":
             _suona("archivi")
             strato.archivi_pgn()
+
+        elif scelta == "aperture":
+            _suona("aperture")
+            aperture.run()
 
         elif scelta == "impostazioni":
             _suona("impostazioni")

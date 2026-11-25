@@ -96,6 +96,10 @@ class FacciaTerminale:
         """La gestione degli archivi con pgn-extract c'e' solo nella
         finestra: il terminale riceve soltanto correzioni."""
 
+    def albero_aperture(self, stato):
+        """L'albero delle aperture c'e' solo nella finestra."""
+        return None
+
     def interrompi_la_scelta_con(self, evento):
         """Il terminale non ha la plancia: menu legge i tasti da se'."""
         return None
@@ -238,6 +242,14 @@ def archivi_pgn():
     """Nella finestra, PGN gestione archivi con pgn-extract; il nucleo
     aspetta che si chiuda. Nel terminale non c'e'."""
     _faccia.archivi_pgn()
+
+
+def albero_aperture(stato):
+    """Nella finestra, l'albero delle aperture di eco.pgn, con lo stato di
+    aperture.py; il nucleo aspetta che si chiuda, e riceve la linea da
+    passare all'analisi o a Easyfish, come (azione, partita), o None. Nel
+    terminale non c'e'."""
+    return _faccia.albero_aperture(stato)
 
 
 def con_la_plancia():

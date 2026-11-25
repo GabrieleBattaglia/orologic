@@ -156,6 +156,18 @@ class ApriArchivi(ApriImpostazioni):
     chiuda."""
 
 
+class ApriAperture(ApriImpostazioni):
+    """Nella fila del testo, l'albero delle aperture del menu principale: la
+    finestra apre il suo, con lo stato di aperture.py, e scrive in uscita la
+    linea scelta per l'analisi o per Easyfish; il nucleo aspetta che si
+    chiuda."""
+
+    def __init__(self, stato):
+        super().__init__()
+        self.stato = stato
+        self.uscita = None
+
+
 class ApriLettura(ApriImpostazioni):
     """Nella fila del testo, le righe da leggere in una finestra, col loro
     titolo: le analisi e gli aiuti di Easyfish, che nel cruscotto non ci
@@ -408,6 +420,13 @@ class FacciaFinestra:
         """La voce PGN gestione archivi del menu principale: la finestra
         apre la sua, con pgn-extract, e il nucleo aspetta che si chiuda."""
         self._apri_e_aspetta(ApriArchivi())
+
+    def albero_aperture(self, stato):
+        """La voce aperture del menu principale: la finestra apre l'albero
+        delle aperture, e il nucleo aspetta che si chiuda."""
+        richiesta = ApriAperture(stato)
+        self._apri_e_aspetta(richiesta)
+        return richiesta.uscita
 
     def da_leggere(self, titolo, righe, verbosa=None, inizio=None):
         """Le analisi e gli aiuti di Easyfish in una finestra da leggere; il
@@ -719,6 +738,7 @@ class Finestra(wx.Frame):
         self.dialogo_pulizia = None
         self.dialogo_ricerca = None
         self.dialogo_archivi = None
+        self.dialogo_aperture = None
         # La scacchiera interattiva: aperta, o da riaprire quando il nucleo
         # torna al prompt delle mosse dopo una domanda; e i caratteri scritti
         # nella riga del prompt, perche' lo spazio la apra solo a riga vuota.
@@ -988,6 +1008,9 @@ class Finestra(wx.Frame):
                 continue
             if isinstance(testo, ApriArchivi):
                 wx.CallAfter(self._archivi_dal_nucleo, testo)
+                continue
+            if isinstance(testo, ApriAperture):
+                wx.CallAfter(self._aperture_dal_nucleo, testo)
                 continue
             if isinstance(testo, ApriLettura):
                 wx.CallAfter(self._lettura_dal_nucleo, testo)
@@ -1730,6 +1753,31 @@ class Finestra(wx.Frame):
         try:
             if self:
                 self.archivi_pgn()
+        finally:
+            richiesta.chiuse.set()
+
+    def albero_aperture(self, stato):
+        """L'albero delle aperture, dalla voce del menu principale, che il
+        suo tema lo suona gia': restituisce la linea scelta per l'analisi o
+        per Easyfish, o None."""
+        if self.dialogo_aperture is not None:
+            return None
+        from . import finestra_aperture
+
+        with finestra_aperture.FinestraAperture(self, stato, self.annuncia) as dialogo:
+            self.dialogo_aperture = dialogo
+            try:
+                dialogo.ShowModal()
+            finally:
+                self.dialogo_aperture = None
+            uscita = dialogo.uscita
+        self._rimetti_il_fuoco()
+        return uscita
+
+    def _aperture_dal_nucleo(self, richiesta):
+        try:
+            if self:
+                richiesta.uscita = self.albero_aperture(richiesta.stato)
         finally:
             richiesta.chiuse.set()
 

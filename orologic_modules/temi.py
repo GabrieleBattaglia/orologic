@@ -194,6 +194,30 @@ TEMI_MENU = {
         kind=3,
         adsr=[2, 5, 90, 3],
     ),
+    # L'albero delle aperture: quinte che salgono, come rami che si aprono,
+    # in onda quadra, che nessun altro tema usa cosi'.
+    "aperture": lambda: Acusticator(
+        [
+            "g4",
+            0.07,
+            -0.6,
+            config.VOLUME,
+            "d5",
+            0.07,
+            -0.2,
+            config.VOLUME,
+            "a5",
+            0.07,
+            0.2,
+            config.VOLUME,
+            "e6",
+            0.14,
+            0.6,
+            config.VOLUME,
+        ],
+        kind=2,
+        adsr=[2, 5, 90, 3],
+    ),
     "nomi": lambda: Acusticator(
         [
             "c5",

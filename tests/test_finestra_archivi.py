@@ -361,12 +361,15 @@ def test_la_voce_del_menu_principale_solo_nella_finestra(monkeypatch):
 
     monkeypatch.setattr(strato, "con_la_plancia", lambda: True)
     # menu di GBUtils ordina per chiave: archivi viene dopo arbitra, al
-    # quarto posto col punto (collaudo di Gabriele del 24 novembre 2026).
+    # quarto posto col punto (collaudo di Gabriele del 24 novembre 2026);
+    # dal 25 novembre aperture, l'albero delle aperture, sta dopo analizza.
     ordinate = sorted(orologic._voci_del_menu_principale(), key=str.lower)
-    assert ordinate[:4] == [".", "analizza", "arbitra", "archivi"]
+    assert ordinate[:5] == [".", "analizza", "aperture", "arbitra", "archivi"]
     assert orologic._voci_del_menu_principale()["archivi"] == "PGN gestione archivi (pgn-extract)"
+    assert orologic._voci_del_menu_principale()["aperture"] == "Albero aperture"
     monkeypatch.setattr(strato, "con_la_plancia", lambda: False)
     assert "archivi" not in orologic._voci_del_menu_principale()
+    assert "aperture" not in orologic._voci_del_menu_principale()
 
 
 def test_la_destinazione_proposta_segue_il_sorgente_ma_non_quella_scritta(aperta, archivio, tmp_path):
