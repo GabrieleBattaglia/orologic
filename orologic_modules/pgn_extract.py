@@ -588,6 +588,72 @@ class Scelto:
         return voce
 
 
+# Le catene salvate: i parametri scelti, coi loro valori, sotto un nome,
+# fino a dieci, nel database di Orologic (Gabriele, 25 novembre 2026).
+
+CHIAVE_DELLE_CATENE = "pgn_extract_catene"
+MASSIMO_DELLE_CATENE = 10
+
+
+def _chiave_del_parametro(parametro):
+    """Come la catena ricorda un parametro: la voce, come -Tw; Altro file
+    sorgente col suo segnaposto, che non cambia con la lingua."""
+    return ALTRO_SORGENTE if parametro.opzione == ALTRO_SORGENTE else parametro.voce
+
+
+def catene_salvate():
+    """Le catene del database, ognuna {"nome", "parametri"}, coi parametri
+    come coppie [chiave, valore]; quelle rovinate si saltano."""
+    catene = []
+    for catena in storage.LoadDB().get(CHIAVE_DELLE_CATENE) or []:
+        if not isinstance(catena, dict) or not isinstance(catena.get("nome"), str) or not isinstance(catena.get("parametri"), list):
+            continue
+        parametri = [list(coppia) for coppia in catena["parametri"] if isinstance(coppia, (list, tuple)) and len(coppia) == 2 and isinstance(coppia[0], str)]
+        catene.append({"nome": catena["nome"], "parametri": parametri})
+    return catene[:MASSIMO_DELLE_CATENE]
+
+
+def scrivi_le_catene(catene):
+    storage.SetValue(CHIAVE_DELLE_CATENE, catene)
+
+
+def catena_da_salvare(nome, scelti):
+    return {"nome": nome, "parametri": [[_chiave_del_parametro(scelto.parametro), scelto.valore] for scelto in scelti]}
+
+
+def voce_della_catena(catena):
+    """La catena nell'elenco: il nome e i parametri coi valori."""
+    pezzi = []
+    for chiave, valore in catena["parametri"]:
+        if chiave == ALTRO_SORGENTE:
+            pezzi.append(f"{_('Altro file sorgente')}: {valore}" if valore else _("Altro file sorgente"))
+        else:
+            pezzi.append(f"{chiave} {valore}" if valore else chiave)
+    return _("{nome}: {parametri}").format(nome=catena["nome"], parametri=", ".join(pezzi)) if pezzi else catena["nome"]
+
+
+def scelti_dalla_catena(catena, parametri):
+    """(scelti, mancanti, da_riscrivere): i parametri della catena fra
+    quelli di questo pe, coi valori controllati di nuovo; le voci che pe non
+    ha piu'; quelle il cui valore non va piu' bene, per esempio un file
+    sparito, che restano senza valore."""
+    per_chiave = {_chiave_del_parametro(parametro): parametro for parametro in parametri}
+    scelti, mancanti, da_riscrivere = [], [], []
+    for chiave, valore in catena["parametri"]:
+        parametro = per_chiave.get(chiave)
+        if parametro is None:
+            mancanti.append(chiave)
+            continue
+        if not parametro.vuole_un_valore:
+            valore = None
+        elif valore is not None:
+            valore, motivo = valida(parametro, str(valore))
+            if motivo:
+                da_riscrivere.append(parametro.voce)
+        scelti.append(Scelto(parametro, valore))
+    return scelti, mancanti, da_riscrivere
+
+
 # Il comando.
 
 # I parametri che pe vuole prima di altri: -S deve precedere -t e -T.

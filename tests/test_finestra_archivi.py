@@ -191,6 +191,82 @@ def test_i_due_elenchi_e_i_valori(aperta, archivio):
     assert [scelto.etichetta for scelto in dialogo.scelti] == ["-Tw Carlsen", "--minmoves 20"]
 
 
+def test_le_catene_salvate(aperta, archivio, impostazioni_rimesse, tmp_path):
+    prova = aperta(appunti=archivio)
+    dialogo = prova.dialogo
+    assert dialogo.catene_salvate.GetCount() == 0
+    # Senza scelti non c'e' niente da salvare.
+    dialogo.salva_la_catena()
+    assert prova.suoni[-1] == "no" and prova.detti[-1] == "Non ci sono parametri scelti da salvare."
+    # Tre parametri, uno senza valore, salvati col nome.
+    prova.aggiungi("-C")
+    prova.aggiungi("-Tw")
+    prova.risposte_dei_valori = ["Carlsen"]
+    prova.nella_catena(1)
+    dialogo.imposta_il_valore()
+    prova.aggiungi("--minmoves")
+    prova.risposte_dei_valori = [20, "Pulizia"]
+    prova.nella_catena(2)
+    dialogo.imposta_il_valore()
+    dialogo.salva_la_catena()
+    assert prova.valori[-1][:2] == ("Salva la catena", "Il nome della catena: ")
+    assert prova.detti[-1] == "Salvata la catena Pulizia."
+    assert dialogo.catene_salvate.GetString(0) == "Pulizia: -C, -Tw Carlsen, --minmoves 20"
+    # Gli scelti tolti, Invio sulla catena li rimette, coi valori.
+    for _volta in range(3):
+        prova.nella_catena(0)
+        dialogo.rimuovi()
+    dialogo.catene_salvate.SetSelection(0)
+    dialogo.usa_la_catena()
+    assert [scelto.etichetta for scelto in dialogo.scelti] == ["-C", "-Tw Carlsen", "--minmoves 20"]
+    assert prova.detti[-1] == "Catena Pulizia: 3 parametri fra gli scelti."
+    # Lo stesso nome: si chiede, e solo col si' si sostituisce.
+    prova.nella_catena(0)
+    dialogo.rimuovi()
+    prova.risposte_dei_valori = ["pulizia"]
+    prova.risposta = False
+    dialogo.salva_la_catena()
+    assert prova.domande[-1] == "C'e' gia' una catena Pulizia: la sostituisco con quella di adesso?"
+    assert pgn_extract.catene_salvate()[0]["nome"] == "Pulizia"
+    prova.risposte_dei_valori = ["pulizia"]
+    prova.risposta = True
+    dialogo.salva_la_catena()
+    assert [catena["nome"] for catena in pgn_extract.catene_salvate()] == ["pulizia"]
+    assert dialogo.catene_salvate.GetString(0) == "pulizia: -Tw Carlsen, --minmoves 20"
+    # Fino a dieci; l'undicesima no.
+    for numero in range(2, 11):
+        prova.risposte_dei_valori = [f"Catena {numero}"]
+        dialogo.salva_la_catena()
+    assert dialogo.catene_salvate.GetCount() == 10
+    prova.risposte_dei_valori = ["Undicesima"]
+    dialogo.salva_la_catena()
+    assert prova.avvisi[-1] == "Le catene salvate sono gia' 10: per salvarne una nuova, cancellane una con Canc."
+    assert len(pgn_extract.catene_salvate()) == 10
+    # Canc la cancella dal disco.
+    dialogo.catene_salvate.SetSelection(0)
+    dialogo.cancella_la_catena()
+    assert prova.detti[-1] == "Cancellata la catena pulizia."
+    assert [catena["nome"] for catena in pgn_extract.catene_salvate()][:1] == ["Catena 2"]
+    assert dialogo.catene_salvate.GetCount() == 9
+
+
+def test_la_catena_con_quello_che_non_c_e_piu(aperta, archivio, impostazioni_rimesse, tmp_path):
+    sparito = str(tmp_path / "sparito.pgn")
+    pgn_extract.scrivi_le_catene([{"nome": "Vecchia", "parametri": [["-C", None], ["--antichissimo", None], [pgn_extract.ALTRO_SORGENTE, sparito]]}])
+    prova = aperta(appunti=archivio)
+    dialogo = prova.dialogo
+    assert dialogo.catene_salvate.GetString(0) == f"Vecchia: -C, --antichissimo, Altro file sorgente: {sparito}"
+    dialogo.catene_salvate.SetSelection(0)
+    dialogo.usa_la_catena()
+    assert [scelto.etichetta for scelto in dialogo.scelti] == ["-C", "Altro file sorgente (manca il file)"]
+    assert prova.detti[-3:] == [
+        "Catena Vecchia: 2 parametri fra gli scelti.",
+        "Questo pgn-extract non ha: --antichissimo.",
+        "Il valore non va piu' bene, e va riscritto: Altro file sorgente.",
+    ]
+    assert prova.suoni[-1] == "no"
+
+
 def test_il_valore_rifiutato_si_riscrive(aperta, archivio):
     prova = aperta(appunti=archivio)
     dialogo = prova.dialogo

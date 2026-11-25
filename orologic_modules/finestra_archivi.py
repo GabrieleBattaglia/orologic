@@ -21,6 +21,9 @@ I controlli, nell'ordine del Tab:
     comincia cosi', trattini esclusi; F1 apre la sua sezione della guida;
   Parametri scelti: Invio chiede il valore, col campo di testo, la scelta
     da un elenco o il selettore di file, e lo valida; Canc lo toglie; F1;
+  Catene salvate, fino a dieci, nel database: Invio mette i parametri della
+    catena, coi valori, al posto degli scelti; Canc la cancella dal disco
+    (Gabriele, 25 novembre 2026);
   Destinazione, il file da scrivere, con Scegli la destinazione: Orologic
     propone il sorgente col primo numero libero, a1 (1).pgn, nella sua
     cartella, e dopo un lavoro riuscito il numero dopo; non puo' essere un
@@ -29,9 +32,10 @@ I controlli, nell'ordine del Tab:
     cartella pgn, una per versione (Gabriele, 24 novembre 2026);
   Comando, il comando composto e cosa fara';
   Uscita, durante il lavoro una riga che si aggiorna, poi il riassunto;
-  Applica, Apri il resoconto, l'uscita completa di pe nella cartella txt,
-    Guida di pgn-extract, la guida intera, ed Esci, che durante il lavoro
-    ferma pe. Shift+F1 apre la guida intera da ogni controllo.
+  Applica, Salva la catena, che chiede il nome e salva gli scelti, anche
+    con Ctrl+S, Apri il resoconto, l'uscita completa di pe nella cartella
+    txt, Guida di pgn-extract, la guida intera, ed Esci, che durante il
+    lavoro ferma pe. Shift+F1 apre la guida intera da ogni controllo.
 L'ordine dei parametri nel comando lo decide Orologic (decisione del 24
 novembre 2026): -S davanti e i file sorgente in fondo.
 """
@@ -275,6 +279,7 @@ class FinestraArchivi(wx.Dialog):
         elenchi = wx.BoxSizer(wx.HORIZONTAL)
         self.disponibili = self._elenco(pannello, elenchi, _("&Disponibili"))
         self.catena = self._elenco(pannello, elenchi, _("Parametri sc&elti"))
+        self.catene_salvate = self._elenco(pannello, elenchi, _("Catene sal&vate"))
         sizer.Add(elenchi, 2, wx.EXPAND)
         etichetta = _("Des&tinazione")
         sizer.Add(wx.StaticText(pannello, label=etichetta), 0, wx.LEFT | wx.RIGHT, 5)
@@ -289,10 +294,12 @@ class FinestraArchivi(wx.Dialog):
         self.uscita = self._area(pannello, sizer, _("&Uscita"))
         riga = wx.BoxSizer(wx.HORIZONTAL)
         self.pulsante_applica = wx.Button(pannello, label=_("A&pplica"))
+        # Le lettere libere non ci sono nel suo nome: lo chiama Ctrl+S.
+        self.pulsante_salva = wx.Button(pannello, label=_("Salva la catena"))
         self.pulsante_resoconto = wx.Button(pannello, label=_("Apri il reso&conto"))
         self.pulsante_guida = wx.Button(pannello, label=_("&Guida di pgn-extract"))
         esci = wx.Button(pannello, wx.ID_CANCEL, _("Esci"))
-        for pulsante in (self.pulsante_applica, self.pulsante_resoconto, self.pulsante_guida):
+        for pulsante in (self.pulsante_applica, self.pulsante_salva, self.pulsante_resoconto, self.pulsante_guida):
             riga.Add(pulsante, 0, wx.RIGHT, 5)
         riga.Add(esci, 0)
         sizer.Add(riga, 0, wx.ALL, 5)
@@ -302,7 +309,7 @@ class FinestraArchivi(wx.Dialog):
             area.SetMinSize(wx.Size(-1, area.GetCharHeight() * righe))
         # Gli elenchi si misurano vuoti, come nella finestra del prompt,
         # perche' la voce piu' lunga non allarghi la finestra.
-        for lista in (self.disponibili, self.catena):
+        for lista in (self.disponibili, self.catena, self.catene_salvate):
             lista.SetMinSize(lista.GetEffectiveMinSize())
         adatta_finestra(self, pannello, (800, 600))
         self.Maximize()
@@ -313,6 +320,8 @@ class FinestraArchivi(wx.Dialog):
         self.pulsante_appunti.Bind(wx.EVT_BUTTON, lambda _evento: self.dagli_appunti())
         self.pulsante_destinazione.Bind(wx.EVT_BUTTON, lambda _evento: self.scegli_la_destinazione())
         self.pulsante_applica.Bind(wx.EVT_BUTTON, lambda _evento: self.applica())
+        self.pulsante_salva.Bind(wx.EVT_BUTTON, lambda _evento: self.salva_la_catena())
+        self.catene_salvate.Bind(wx.EVT_LISTBOX_DCLICK, lambda _evento: self.usa_la_catena())
         self.pulsante_resoconto.Bind(wx.EVT_BUTTON, lambda _evento: self.apri_il_resoconto())
         self.pulsante_guida.Bind(wx.EVT_BUTTON, lambda _evento: self.mostra_la_guida_intera())
         self.sorgente.Bind(wx.EVT_TEXT, self._sorgente_scritto)
@@ -321,6 +330,7 @@ class FinestraArchivi(wx.Dialog):
         self.disponibili.Bind(wx.EVT_LISTBOX_DCLICK, lambda _evento: self.aggiungi())
         self.catena.Bind(wx.EVT_LISTBOX_DCLICK, lambda _evento: self.imposta_il_valore())
         self._riempi(0, 0)
+        self._riempi_le_catene(0)
         self.aggiorna()
         self.sorgente.SetFocus()
         wx.CallAfter(self._all_ingresso)
@@ -569,6 +579,82 @@ class FinestraArchivi(wx.Dialog):
             self.disponibili.SetFocus()
         self._annuncia([_("Tolto: {voce}.").format(voce=tolto.parametro.voce)])
         self.aggiorna()
+
+    # Le catene salvate.
+
+    def _riempi_le_catene(self, selezione=None):
+        if selezione is None:
+            selezione = max(self.catene_salvate.GetSelection(), 0)
+        self.catene_salvate.Set([pgn_extract.voce_della_catena(catena) for catena in pgn_extract.catene_salvate()])
+        dialoghi._seleziona(self.catene_salvate, selezione)
+
+    def usa_la_catena(self):
+        """Invio sulle catene salvate: i suoi parametri, coi valori, prendono
+        il posto degli scelti. Quelli che questo pe non ha si lasciano, quelli
+        il cui valore non va piu' restano senza, e si dice."""
+        catene = pgn_extract.catene_salvate()
+        indice = self.catene_salvate.GetSelection()
+        if indice == wx.NOT_FOUND or indice >= len(catene):
+            suona("no")
+            return
+        catena = catene[indice]
+        self.scelti, mancanti, da_riscrivere = pgn_extract.scelti_dalla_catena(catena, self.parametri)
+        self._riempi(None, 0)
+        righe = [_("Catena {nome}: {n} parametri fra gli scelti.").format(nome=catena["nome"], n=len(self.scelti))]
+        if mancanti:
+            righe.append(_("Questo pgn-extract non ha: {voci}.").format(voci=", ".join(mancanti)))
+        if da_riscrivere:
+            righe.append(_("Il valore non va piu' bene, e va riscritto: {voci}.").format(voci=", ".join(da_riscrivere)))
+        if mancanti or da_riscrivere:
+            suona("no")
+        self._annuncia(righe)
+        self.aggiorna()
+
+    def salva_la_catena(self):
+        """Salva la catena: i parametri scelti, coi valori, sotto il nome che
+        si scrive; lo stesso nome la sostituisce, se si conferma. Oltre le
+        dieci catene no: prima se ne cancella una."""
+        if not self.scelti:
+            suona("no")
+            self._annuncia([_("Non ci sono parametri scelti da salvare.")])
+            return
+        with self._dialogo():
+            nome = self._chiedi_valore(self, wx.StripMenuCodes(_("Salva la catena")), _("Il nome della catena: "), "", "testo", 0, 60)
+        nome = (nome or "").strip()
+        if not nome:
+            return
+        catene = pgn_extract.catene_salvate()
+        nuova = pgn_extract.catena_da_salvare(nome, self.scelti)
+        uguale = next((indice for indice, catena in enumerate(catene) if catena["nome"].casefold() == nome.casefold()), None)
+        if uguale is not None:
+            with self._dialogo():
+                if not self._chiedi_conferma(self, _("C'e' gia' una catena {nome}: la sostituisco con quella di adesso?").format(nome=catene[uguale]["nome"])):
+                    return
+            catene[uguale] = nuova
+            posto = uguale
+        elif len(catene) >= pgn_extract.MASSIMO_DELLE_CATENE:
+            suona("no")
+            with self._dialogo():
+                self._avvisa(self, _("Le catene salvate sono gia' {n}: per salvarne una nuova, cancellane una con Canc.").format(n=pgn_extract.MASSIMO_DELLE_CATENE))
+            return
+        else:
+            catene.append(nuova)
+            posto = len(catene) - 1
+        pgn_extract.scrivi_le_catene(catene)
+        self._riempi_le_catene(posto)
+        self._annuncia([_("Salvata la catena {nome}.").format(nome=nome)])
+
+    def cancella_la_catena(self):
+        """Canc sulle catene salvate: la catena se ne va dal disco."""
+        catene = pgn_extract.catene_salvate()
+        indice = self.catene_salvate.GetSelection()
+        if indice == wx.NOT_FOUND or indice >= len(catene):
+            suona("no")
+            return
+        tolta = catene.pop(indice)
+        pgn_extract.scrivi_le_catene(catene)
+        self._riempi_le_catene(min(indice, max(len(catene) - 1, 0)))
+        self._annuncia([_("Cancellata la catena {nome}.").format(nome=tolta["nome"])])
 
     def imposta_il_valore(self):
         """Invio negli scelti: il valore, col selettore di file, la scelta da
@@ -886,7 +972,14 @@ class FinestraArchivi(wx.Dialog):
         if oggetto is self.catena and codice in (wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE) and not evento.HasAnyModifiers():
             self.rimuovi()
             return
-        if oggetto in (self.disponibili, self.catena) and dialoghi.premuto_invio(evento):
+        if oggetto is self.catene_salvate and codice in (wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE) and not evento.HasAnyModifiers():
+            self.cancella_la_catena()
+            return
+        # Ctrl+S, da ogni controllo: Salva la catena.
+        if codice in (ord("S"), ord("s")) and evento.GetModifiers() == wx.MOD_CONTROL:
+            self.salva_la_catena()
+            return
+        if oggetto in (self.disponibili, self.catena, self.catene_salvate) and dialoghi.premuto_invio(evento):
             adesso = time.monotonic()
             precedente, self.ultimo_invio = self.ultimo_invio, adesso
             # Un Invio tenuto giu', o rimandato da NVDA, non conta due volte.
@@ -894,6 +987,8 @@ class FinestraArchivi(wx.Dialog):
                 return
             if oggetto is self.disponibili:
                 self.aggiungi()
+            elif oggetto is self.catene_salvate:
+                self.usa_la_catena()
             else:
                 self.imposta_il_valore()
             return
