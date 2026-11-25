@@ -16,7 +16,7 @@ import chess.pgn
 import pyperclip
 from GBUtils import Acusticator, dgt, key, menu
 
-from . import board_utils, config, localizzazione, storage, tempo, ui, version
+from . import board_utils, config, localizzazione, storage, strato, tempo, ui, version
 from .config import _
 
 
@@ -613,13 +613,22 @@ def SmartInspection(analysis_lines, board):
         eval_str = "0.00"
     total_moves = len(pv_moves)
     current_index = 1
-    print(_("\nUtilizza questi comandi:"))
-    menu(config.SMART_COMMANDS, show_only=True, ordered=False)
+    if not strato.con_la_plancia():
+        print(_("\nUtilizza questi comandi:"))
+        menu(config.SMART_COMMANDS, show_only=True, ordered=False)
     print(_("\nIspezione Linea {n}").format(n=line_index + 1))
+    from . import cruscotto
+    from .easyfish import posizione
+
+    stato = posizione.Stato("analisi")
+    stato.righe_in_piu = [_("Ispezione della linea {n}.").format(n=line_index + 1)]
     while True:
         temp_board = board.copy()
         for move in pv_moves[: current_index - 1]:
             temp_board.push(move)
+        # Nella finestra: la posizione della linea e i comandi dell'ispezione.
+        stato.scacchiera_del_cruscotto = temp_board.copy()
+        strato.fornisci(lambda: cruscotto.dati_di(stato), config.SMART_COMMANDS)
         current_move = pv_moves[current_index - 1]
         move_verbose = board_utils.DescribeMove(current_move, temp_board)
         m_num = (
@@ -649,7 +658,8 @@ def SmartInspection(analysis_lines, board):
                 print(_("\nNon ci sono mosse precedenti."))
         elif cmd == "?":
             Acusticator(["d5", 0.08, 0, config.VOLUME], kind=1, adsr=[2, 5, 90, 5])
-            menu(config.SMART_COMMANDS, show_only=True, ordered=False)
+            with strato.da_leggere(_("Comandi dell'ispezione smart")):
+                menu(config.SMART_COMMANDS, show_only=True, ordered=False, pager=0 if strato.con_la_plancia() else 20)
         elif cmd == "r":
             temp_board = board.copy()
             try:
@@ -862,23 +872,25 @@ def _comandi_informativi(cmd, current_node):
         if ENGINE:
             print(_("\nAnalisi in corso..."))
             analysis = _analizza_con_cache(current_node.board(), multipv)
-            for i, info in enumerate(analysis or []):
-                pv = info.get("pv", [])
-                valutazione = info.get("score")
-                if valutazione is None:
-                    continue
-                score = valutazione.pov(current_node.board().turn)
-                san_moves = []
-                temp_board = current_node.board().copy()
-                for m in pv:
-                    san_moves.append(temp_board.san(m))
-                    temp_board.push(m)
-                san_pv = " ".join(san_moves)
-                print(_("Linea {i} ({s}): {pv}").format(i=i + 1, s=score, pv=san_pv))
+            with strato.da_leggere(_("Linee di analisi")):
+                for i, info in enumerate(analysis or []):
+                    pv = info.get("pv", [])
+                    valutazione = info.get("score")
+                    if valutazione is None:
+                        continue
+                    score = valutazione.pov(current_node.board().turn)
+                    san_moves = []
+                    temp_board = current_node.board().copy()
+                    for m in pv:
+                        san_moves.append(temp_board.san(m))
+                        temp_board.push(m)
+                    san_pv = " ".join(san_moves)
+                    print(_("Linea {i} ({s}): {pv}").format(i=i + 1, s=score, pv=san_pv))
             if ui.enter_escape(_("\nIspezione smart? (INVIO si', ESC no): ")):
                 SmartInspection(analysis, current_node.board())
     elif cmd == "u":
-        print("\n" + str(board_utils.CustomBoard(current_node.board().fen())))
+        with strato.da_leggere(_("Scacchiera")):
+            print("\n" + str(board_utils.CustomBoard(current_node.board().fen())))
         Acusticator(["d6", 0.03, 0, config.VOLUME], kind=1)
     elif cmd == "i":
         new_t = dgt(_("\nTempo analisi (s): "), kind="f", default=analysis_time)
@@ -887,8 +899,9 @@ def _comandi_informativi(cmd, current_node):
         new_m = dgt(_("\nLinee analisi: "), kind="i", default=multipv)
         SetMultipv(new_m)
     elif cmd == "?":
-        print(_("\nComandi disponibili:"))
-        menu(config.ANALYSIS_COMMANDS, show_only=True, ordered=False)
+        with strato.da_leggere(_("Comandi dell'analisi")):
+            print(_("\nComandi disponibili:"))
+            menu(config.ANALYSIS_COMMANDS, show_only=True, ordered=False, pager=0 if strato.con_la_plancia() else 20)
 
 
 def _comandi_valutazione(cmd, current_node):
@@ -957,22 +970,23 @@ def _comandi_valutazione(cmd, current_node):
                     ],
                     kind=1,
                 )
-                print(_("\nLinee migliori:"))
-                for i, info in enumerate(analysis, start=1):
-                    pv = info.get("pv", [])
-                    valutazione = info.get("score")
-                    if valutazione is None:
-                        continue
-                    score = valutazione.pov(current_node.board().turn)
-                    eval_str = (
-                        _("M{m}").format(m=abs(score.mate()))
-                        if score.is_mate()
-                        else f"{score.score() / 100:+.2f}"
-                        if score.score() is not None
-                        else _("N/A")
-                    )
-                    print(_("Linea {i} ({score}):").format(i=i, score=eval_str))
-                    print(board_utils.format_pv_descriptively(current_node.board(), pv))
+                with strato.da_leggere(_("Linee migliori")):
+                    print(_("\nLinee migliori:"))
+                    for i, info in enumerate(analysis, start=1):
+                        pv = info.get("pv", [])
+                        valutazione = info.get("score")
+                        if valutazione is None:
+                            continue
+                        score = valutazione.pov(current_node.board().turn)
+                        eval_str = (
+                            _("M{m}").format(m=abs(score.mate()))
+                            if score.is_mate()
+                            else f"{score.score() / 100:+.2f}"
+                            if score.score() is not None
+                            else _("N/A")
+                        )
+                        print(_("Linea {i} ({score}):").format(i=i, score=eval_str))
+                        print(board_utils.format_pv_descriptively(current_node.board(), pv))
 
                 if analysis[0].get("pv"):
                     bm_san = current_node.board().san(analysis[0]["pv"][0])
@@ -1021,6 +1035,20 @@ def AnalyzeGame(pgn_game, is_corrected=False):
     print(_("\nModalita' analisi.\nHeaders della partita:\n"))
     for k, v in pgn_game.headers.items():
         print(f"  {k}: {v}")
+    _analisi_manuale(pgn_game, is_corrected)
+
+
+@strato.in_partita
+def _analisi_manuale(pgn_game, is_corrected):
+    """Il ciclo dell'analisi manuale. Nella finestra e' una zona di partita,
+    come l'esploratore di Easyfish (9.4.1, 25 novembre 2026: era rimasta
+    fuori dalla versione 9): il cruscotto con la posizione, i comandi
+    nella plancia, e i testi lunghi in una finestra da leggere. Nel
+    terminale tutto come prima."""
+    from . import cruscotto
+    from .easyfish import posizione
+
+    stato = posizione.Stato("analisi")
     current_node = pgn_game
     extra_prompt = ""
     comment_auto_read = True
@@ -1077,6 +1105,9 @@ def AnalyzeGame(pgn_game, is_corrected=False):
         elif current_node.comment and not comment_auto_read:
             Acusticator(["c7", 0.024, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0])
 
+        # Nella finestra: la posizione nel cruscotto, i comandi nella plancia.
+        stato.aggiorna(pgn_game, current_node.board(), current_node)
+        strato.fornisci(lambda: cruscotto.dati_di(stato), config.ANALYSIS_COMMANDS)
         cmd = key(prompt).lower().strip()
         previous_node = current_node
         node_changed = False
@@ -1226,9 +1257,10 @@ def AnalyzeGame(pgn_game, is_corrected=False):
                 kind=1,
                 adsr=[2, 5, 90, 5],
             )
-            print(_("\nHeader della partita:"))
-            for k, v in pgn_game.headers.items():
-                print(f"  {k}: {v}")
+            with strato.da_leggere(_("Header della partita")):
+                print(_("\nHeader della partita:"))
+                for k, v in pgn_game.headers.items():
+                    print(f"  {k}: {v}")
         elif cmd == "k":  # Vai a mossa
             Acusticator(
                 [
