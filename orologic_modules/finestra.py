@@ -77,7 +77,17 @@ import wx
 from GBsintesi import AUTOMATICA, CON_IL_BRAILLE, Sintesi
 from GBUtils import Acusticator, sorgente_dei_tasti, sorgente_delle_scelte
 
-from . import annunci, aspetto, config, cruscotto, dialoghi, plancia, strato, version
+from . import (
+    annunci,
+    aspetto,
+    componente_nvda,
+    config,
+    cruscotto,
+    dialoghi,
+    plancia,
+    strato,
+    version,
+)
 from . import impostazioni as modulo_impostazioni
 from .config import _
 
@@ -112,6 +122,20 @@ COLONNE = 300
 # Il testo della voce della plancia che apre la scacchiera interattiva: non
 # si scrive nel prompt.
 APRI_LA_SCACCHIERA = "\x00scacchiera"
+
+
+def tratto_cambiato(vecchia, nuova):
+    """Il pezzo che cambia fra due versioni di una riga, senza l'inizio e la
+    fine che restano uguali: l'inizio e la fine del pezzo nella vecchia, e il
+    suo testo nuovo."""
+    limite = min(len(vecchia), len(nuova))
+    inizio = 0
+    while inizio < limite and vecchia[inizio] == nuova[inizio]:
+        inizio += 1
+    uguali_in_fondo = 0
+    while uguali_in_fondo < limite - inizio and vecchia[-1 - uguali_in_fondo] == nuova[-1 - uguali_in_fondo]:
+        uguali_in_fondo += 1
+    return inizio, len(vecchia) - uguali_in_fondo, nuova[inizio : len(nuova) - uguali_in_fondo]
 
 
 class ApriImpostazioni:
@@ -634,6 +658,8 @@ class Finestra(wx.Frame):
         self.area = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_RICH2 | wx.TE_NOHIDESEL | wx.TE_DONTWRAP)
         self.area.Bind(wx.EVT_WINDOW_DESTROY, self._area_distrutta)
         self.area.SetName(_("Console"))
+        # Il segno della console per il componente di NVDA per Orologic.
+        componente_nvda.segna(self.area, componente_nvda.CONSOLE)
         # Lo spazio orizzontale: la plancia a sinistra, l'area piu' larga.
         dimensionatore = wx.BoxSizer(wx.HORIZONTAL)
         dimensionatore.Add(self.plancia, 1, wx.EXPAND)
@@ -798,6 +824,7 @@ class Finestra(wx.Frame):
         # E il ripasso del braille si ferma: un timer acceso che scatta su
         # una finestra distrutta la fa cadere.
         self.ripasso_del_braille.Stop()
+        componente_nvda.togli_il_segno(self.area)
 
     def _sostituisci(self, inizio, fine, testo):
         """Il testo dell'area da inizio a fine prende il posto: col documento
@@ -841,9 +868,15 @@ class Finestra(wx.Frame):
         return self.area.GetLineText(riga)
 
     def _braille_dopo_il_cambio(self, prima):
-        """Dopo un cambio del testo: se la riga sotto il cursore non e' piu'
-        quella di prima, e il fuoco e' sull'area, la riga va alla barra, e
-        il ripasso la rimanda finche' non si preme un tasto."""
+        """Dopo un cambio del testo NVDA riceve valueChange: col componente
+        di NVDA per Orologic la barra rilegge da se' la riga, e il display
+        resta sulla pagina che si legge. Senza, se la riga sotto il cursore
+        non e' piu' quella di prima, e il fuoco e' sull'area, la riga va alla
+        barra, e il ripasso la rimanda finche' non si preme un tasto."""
+        componente_nvda.avvisa(self.area)
+        if componente_nvda.attivo(self.area):
+            self._braille_letto()
+            return
         if self._riga_sotto_il_cursore() == prima or wx.Window.FindFocus() is not self.area:
             return
         self.braille_indietro = True
@@ -855,7 +888,13 @@ class Finestra(wx.Frame):
         """La riga sotto il cursore alla barra, come messaggio, finche' NVDA
         non l'ha riletta da se' dopo un tasto; col fuoco altrove, o con la
         scacchiera aperta, il ripasso si ferma."""
-        if not self or not self.braille_indietro or wx.Window.FindFocus() is not self.area or self.dialogo_scacchiera is not None:
+        if (
+            not self
+            or not self.braille_indietro
+            or wx.Window.FindFocus() is not self.area
+            or self.dialogo_scacchiera is not None
+            or componente_nvda.attivo(self.area)
+        ):
             self._braille_letto()
             return
         riga = self._riga_sotto_il_cursore()
@@ -1179,11 +1218,19 @@ class Finestra(wx.Frame):
         prima = self._riga_sotto_il_cursore()
         if len(nuove) == len(self.mostrate) and all(a[0] == b[0] for a, b in zip(nuove, self.mostrate, strict=True)):
             # Stesse righe: si sostituiscono solo quelle cambiate, dal fondo,
-            # senza toccare il cursore dove il documento c'e'.
+            # senza toccare il cursore dove il documento c'e'. Di una riga si
+            # riscrive solo il pezzo che cambia: il cursore fuori dal pezzo
+            # non si muove, e NVDA non riporta il display sulla sua pagina.
             for indice in range(len(nuove) - 1, -1, -1):
-                if nuove[indice][1] != self.mostrate[indice][1]:
-                    inizio = self.area.XYToPosition(0, indice)
-                    self._sostituisci(inizio, inizio + self.area.GetLineLength(indice), nuove[indice][1])
+                vecchia, nuova = self.mostrate[indice][1], nuove[indice][1]
+                if nuova == vecchia:
+                    continue
+                inizio = self.area.XYToPosition(0, indice)
+                if self.area.GetLineText(indice) == vecchia:
+                    da, a, pezzo = tratto_cambiato(vecchia, nuova)
+                    self._sostituisci(inizio + da, inizio + a, pezzo)
+                else:
+                    self._sostituisci(inizio, inizio + self.area.GetLineLength(indice), nuova)
         else:
             self.area.ChangeValue("\n".join(testo for _sezione, testo in nuove))
         self.mostrate = nuove

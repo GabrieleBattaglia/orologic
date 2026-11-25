@@ -52,6 +52,11 @@ a = Analysis(
         ('resources/readme.htm', 'resources'),
         ('resources/changelog.htm', 'resources'),
         ('resources/eco.pgn', 'resources'),
+        # Il componente di NVDA per Orologic, dalla 9.1.0: la voce delle
+        # impostazioni ne fa il pacchetto e lo apre.
+        ('nvda_addon/manifest.ini', 'nvda_addon'),
+        ('nvda_addon/COPYING.txt', 'nvda_addon'),
+        ('nvda_addon/globalPlugins/orologic.py', 'nvda_addon/globalPlugins'),
         # La collezione dei suoni, da cui gli allarmi dell'orologio prendono
         # le loro voci per nome: da compilato Acusticator la cerca nella
         # radice del pacchetto, e senza gli allarmi resterebbero muti.

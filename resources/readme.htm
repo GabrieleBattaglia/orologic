@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 9.0.1 - martedì 24 novembre 2026)</h1>
+<h1>Guida Utente di Orologic (Versione 9.1.0 - mercoledì 25 novembre 2026)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -79,6 +79,8 @@ margin: 1em 0;
 <li><a href="#cap-1-3-4">1.3.4. La scacchiera interattiva</a>
 </li>
 <li><a href="#cap-1-3-5">1.3.5. Nel terminale, con --cli</a>
+</li>
+<li><a href="#cap-1-3-6">1.3.6. Il componente di NVDA per Orologic</a>
 </li>
 </ul>
 </li>
@@ -366,7 +368,7 @@ margin: 1em 0;
 
 <h4 id="cap-1-3-4">1.3.4. La scacchiera interattiva</h4>
 <p>Solo nella finestra, nell'arbitraggio, nelle partite contro il motore e su Lichess: al prompt delle mosse, a riga vuota, lo <code>Spazio</code> apre la scacchiera interattiva, e <code>Esc</code> la chiude. È un testo di otto righe, una per traversa, come <code>1| R | - | q | - | N | K | + | b |1</code>: il numero ai due lati, le case fra barre verticali, i pezzi con le lettere inglesi, maiuscole i bianchi e minuscole i neri, il trattino le case chiare vuote e il più le scure, il pezzo sollevato fra parentesi quadre, come <code>[N]</code>. Quando giochi la guardi dal tuo colore; quando arbitri o osservi, dal Bianco. Il cursore di NVDA, e il display braille, stanno sul segno della casa scelta.</p>
-<p>Gli annunci della scacchiera ci sono sempre, anche con gli annunci spenti, e vanno solo alla sintesi, perché il braille resta a NVDA: la casa e il suo pezzo, per esempio Empoli 4, Donna nera, o Empoli 4, vuota, detti subito dopo il tasto. Mentre la scacchiera è aperta, anche le risposte di Orologic, come la mossa dell'avversario, si sentono alla sintesi.</p>
+<p>Gli annunci della scacchiera ci sono sempre, anche con gli annunci spenti, e vanno solo alla sintesi, perché il braille resta a NVDA: la casa e il suo pezzo, per esempio Empoli 4, Donna nera, o Empoli 4, vuota, detti subito dopo il tasto. Col componente di NVDA per Orologic, sezione 1.3.6, NVDA dopo le frecce non dice più il simbolo della casa. Mentre la scacchiera è aperta, anche le risposte di Orologic, come la mossa dell'avversario, si sentono alla sintesi.</p>
 <ul>
     <li><strong>Muoversi:</strong> le frecce, una casa alla volta; al bordo si fermano con un suono. <code>Alt</code> con le frecce passa dall'altra parte, con un suono diverso per ogni lato. <code>Maiuscolo</code> con sinistra e destra sale lungo le diagonali, <code>Ctrl</code> con sinistra e destra scende.</li>
     <li><strong>Saltare:</strong> una lettera da a ad h seguita subito da un numero va a quella casa, per esempio <code>e4</code>; un numero da 1 a 8 da solo va a quella traversa, nella stessa colonna. <code>u</code> va alla casa d'arrivo dell'ultima mossa. <code>9</code> gira la scacchiera.</li>
@@ -401,6 +403,15 @@ margin: 1em 0;
     <li><strong>Correzione degli Errori:</strong> Se commetti un errore di digitazione in un campo e hai già premuto Invio, non tentare di tornare indietro con la freccia su per correggere; in modalità console questo comportamento non è previsto. Prosegui e correggi l'errore nel passaggio successivo o alla prossima occasione.</li>
     <li><strong>Manutenzione di NVDA:</strong> Dopo sessioni di utilizzo molto lunghe, potresti notare un rallentamento nella risposta dello screen reader. Un trucco efficace per "ravvivarlo" è riavviarlo rapidamente premendo <code>Insert+Q</code>, selezionando "Riavvia" e premendo Invio.</li>
 </ul>
+
+<h4 id="cap-1-3-6">1.3.6. Il componente di NVDA per Orologic</h4>
+<p>Dalla versione 9.1, con NVDA, Orologic ha un suo componente aggiuntivo. Si installa dalle impostazioni, con la voce <strong>Installa il componente per NVDA</strong>: Orologic apre il pacchetto, NVDA chiede se installarlo, e dopo il riavvio di NVDA il componente è al lavoro. Si toglie come ogni altro componente, dal menu di NVDA, Strumenti, Gestione componenti aggiuntivi. Se NVDA non è installato, Orologic ti avvisa che non è riuscito ad aprire il pacchetto.</p>
+<ul>
+    <li><strong>La scacchiera interattiva:</strong> dopo le frecce NVDA non dice più il simbolo della casa, che l'annuncio di Orologic copriva a metà: senti solo la casa e il suo pezzo, subito. Il cursore e il display braille restano sul segno della casa, come prima.</li>
+    <li><strong>La barra braille:</strong> il testo che Orologic cambia da solo, come gli orologi nel prompt, arriva al display senza messaggi braille. Il display resta sulla pagina che stai leggendo: in un prompt più lungo del display puoi tornare sulla prima pagina e guardare gli orologi che corrono, senza che il cursore ti riporti indietro.</li>
+</ul>
+<p>Senza il componente Orologic funziona come prima, e la riga che cambia va alla barra come messaggio. Orologic si accorge da solo se il componente c'è.</p>
+<p>Il componente agisce soltanto sulle due aree di Orologic, la console e la scacchiera, e da nessun'altra parte: non usa la rete, non scrive file, non lancia programmi e non prende tasti a NVDA. È software libero, sotto la GNU General Public License versione 2 o successive, la stessa di NVDA; i suoi sorgenti sono nella cartella <code>nvda_addon</code> di Orologic.</p>
 
 <h3 id="cap-1-4">1.4. Manutenzione e Pulizia dei Dati (Automatic Cleaner)</h3>
 <p>Col tempo, Orologic può accumulare molti file: le partite salvate in <code>pgn</code>, i resoconti in <code>txt</code>, le immagini e i PDF di Easyfish in <code>images</code>. Ad ogni avvio Orologic controlla le tre cartelle, e se trova file non modificati da più di un certo tempo, t, un anno se non l'hai cambiato, te lo dice.</p>
@@ -1369,7 +1380,7 @@ margin: 1em 0;
 
 <h4 id="cap-2-10-2">2.10.2. Il sottomenu Impostazioni (impostazioni)</h4>
 <p><strong>Nella finestra</strong> tutte le impostazioni stanno in un luogo solo, che si apre con <code>Ctrl+virgola</code> da qualunque punto, o con la voce <code>impostazioni</code> del menu principale. È un elenco, una riga per voce, con il nome e il valore di adesso, per esempio <code>Volume dei suoni: 40%</code>. Invio su una riga apre la sua scelta: una lista, un campo per un numero o un testo, che ha per etichetta la domanda del terminale, oppure un secondo elenco. Esc chiude. Con <code>Maiuscolo+Tab</code> vai al filtro: restano solo le voci il cui nome contiene quello che scrivi, senza badare a maiuscole e accenti, e Invio nel filtro torna all'elenco.</p>
-<p>Le voci sono quelle del terminale, una per valore: il tempo e le linee dell'analisi e le tre soglie, il tuo nome, che nella finestra puoi anche togliere lasciando il campo vuoto, il motore, i nomi, il prompt, le righe che l'area principale conserva, 200 di partenza, oltre le quali le più vecchie se ne vanno, il salvataggio automatico, lo stile dei menu, che serve solo al terminale, i colori e le dimensioni dei caratteri, sezione 2.10.9, e il volume. Poi le cinque voci degli annunci, sezione 1.3.3, e la Lingua, che vale dal riavvio. In fondo tre voci comuni a tutti i programmi di Gabriele con la finestra: Offrimi un caffè, sezione 6, Entra al PUB e Chiedi aiuto al PUB, sezione 4. Prima di queste, la voce Pulizia apre la finestra della pulizia dei file, sezione 1.4.</p>
+<p>Le voci sono quelle del terminale, una per valore: il tempo e le linee dell'analisi e le tre soglie, il tuo nome, che nella finestra puoi anche togliere lasciando il campo vuoto, il motore, i nomi, il prompt, le righe che l'area principale conserva, 200 di partenza, oltre le quali le più vecchie se ne vanno, il salvataggio automatico, lo stile dei menu, che serve solo al terminale, i colori e le dimensioni dei caratteri, sezione 2.10.9, e il volume. Poi le cinque voci degli annunci, sezione 1.3.3, e la Lingua, che vale dal riavvio. In fondo tre voci comuni a tutti i programmi di Gabriele con la finestra: Offrimi un caffè, sezione 6, Entra al PUB e Chiedi aiuto al PUB, sezione 4. Prima di queste, la voce Pulizia apre la finestra della pulizia dei file, sezione 1.4, e la voce Installa il componente per NVDA apre il pacchetto del componente, sezione 1.3.6.</p>
 <p><strong>Nel terminale</strong> le impostazioni sono un sottomenu, come sempre:</p>
 <p>La voce <code>impostazioni</code> del menu principale apre un sottomenu che raccoglie tutto quello che si configura una volta e si cambia di rado. Fino alla versione 8.20 il motore, i nomi e il volume stavano nel menu principale, e le altre impostazioni erano un'unica sequenza di domande da attraversare tutta per cambiarne una sola. Come per gli orologi, si resta nel sottomenu finché non si digita il punto, così si possono sistemare più cose di seguito. Le voci sono otto. Le due che sono interruttori dicono nell'etichetta com'è messa la cosa in quel momento, per esempio "Salvataggio automatico: non attivo": sceglierle basta a cambiare stato, senza domande in più, e al giro dopo il menu dice il valore nuovo. Anche il motore, il prompt e il volume si presentano con il loro stato, cioè il nome del motore in uso, il modello del prompt e il volume su cento.</p>
 <ul>

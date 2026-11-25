@@ -14,8 +14,9 @@ annuncia. La posizione arriva dal cruscotto, a ogni giro dell'orologio della
 finestra.
 
 Qui gli annunci sono sempre attivi e vanno solo alla sintesi, con la
-priorita' su NVDA, che tiene il braille: partono poco dopo il tasto,
-interrompendo quello che NVDA dice del cursore. Le domande del nucleo che non
+priorita' su NVDA, che tiene il braille: partono subito dopo il tasto,
+interrompendo quello che NVDA dice del cursore. Col componente di NVDA per
+Orologic, nella cartella nvda_addon, NVDA dopo le frecce non dice niente. Le domande del nucleo che non
 sono il prompt delle mosse, come quelle dei comandi del menu, chiudono la
 scacchiera; quando il nucleo torna al prompt delle mosse, la finestra
 principale la riapre.
@@ -29,7 +30,7 @@ import wx
 from GBUtils import Acusticator
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
-from . import aspetto, config, localizzazione, plancia, storage, ui
+from . import aspetto, componente_nvda, config, localizzazione, plancia, storage, ui
 from .config import _
 from .scacchiera import (
     DESTRA,
@@ -44,9 +45,6 @@ from .scacchiera import (
     nome_pezzo,
 )
 
-# I millisecondi fra il tasto e l'annuncio: NVDA dice prima quello che vede
-# sotto il cursore, e l'annuncio lo interrompe.
-RITARDO_DELL_ANNUNCIO = 100
 # Quanto un tasto che fa coppia aspetta il secondo: una lettera da a ad h il
 # numero della casa, l'1 e lo 0 l'altra cifra del risultato. Si sceglie nelle
 # impostazioni, in millisecondi (Gabriele, collaudo della scacchiera).
@@ -353,7 +351,6 @@ class FinestraScacchiera(wx.Dialog):
         board = dati.get("board") or chess.Board()
         self.scacchiera = Scacchiera(board, dal_nero=_e_nero(dati.get("mio")))
         self._vista = self._impronta(board)
-        self._annuncio = None
         self._lettera = None
         self._attesa_della_lettera = None
         self.attesa_dei_comandi = attesa_dei_comandi()
@@ -364,6 +361,10 @@ class FinestraScacchiera(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
         self.area = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_DONTWRAP)
         self.area.SetName(_("Scacchiera"))
+        # Il segno della scacchiera per il componente di NVDA per Orologic,
+        # che dopo le frecce non fa dire a NVDA il simbolo della casa.
+        componente_nvda.segna(self.area, componente_nvda.SCACCHIERA)
+        self.area.Bind(wx.EVT_WINDOW_DESTROY, self._area_distrutta)
         sizer.Add(self.area, 1, wx.EXPAND | wx.ALL, 5)
         pannello.SetSizer(sizer)
         aspetto.applica_alla_finestra(self)
@@ -423,9 +424,10 @@ class FinestraScacchiera(wx.Dialog):
         """Ferma l'orologio e le attese, prima che la finestra se ne vada."""
         self.orologio.Stop()
         self._chiudi_la_lettera()
-        if self._annuncio is not None:
-            self._annuncio.Stop()
-            self._annuncio = None
+
+    def _area_distrutta(self, evento):
+        evento.Skip()
+        componente_nvda.togli_il_segno(self.area)
 
     def Destroy(self):
         self._ferma()
@@ -436,22 +438,24 @@ class FinestraScacchiera(wx.Dialog):
         scelta; il testo si riscrive solo se cambia, perche' NVDA non lo
         rilegga a ogni passo."""
         testo = "\n".join(self.scacchiera.righe())
-        if self.area.GetValue() != testo:
+        cambiato = self.area.GetValue() != testo
+        if cambiato:
             self.area.ChangeValue(testo)
         riga, colonna = self.scacchiera.posto_del_cursore()
         self.area.SetInsertionPoint(self.area.XYToPosition(colonna, riga))
+        if cambiato:
+            componente_nvda.avvisa(self.area)
 
     # Gli annunci.
 
     def annuncia(self, testo):
-        """L'annuncio parte poco dopo il tasto e interrompe quello che NVDA
-        sta dicendo del cursore; uno nuovo prende il posto di quello in attesa."""
-        if self._annuncio is not None:
-            self._annuncio.Stop()
-        self._annuncio = wx.CallLater(RITARDO_DELL_ANNUNCIO, self._annuncia_ora, testo)
+        """L'annuncio parte subito dopo il tasto, senza ritardo (Gabriele, 25
+        novembre 2026: col componente di NVDA e' scattante, e anche senza le
+        sue prove davano lo zero come il meno peggio), e interrompe quello
+        che NVDA sta dicendo del cursore."""
+        wx.CallAfter(self._annuncia_ora, testo)
 
     def _annuncia_ora(self, testo):
-        self._annuncio = None
         if self:
             self.finestra.alla_sintesi(testo, interrompi=True)
 

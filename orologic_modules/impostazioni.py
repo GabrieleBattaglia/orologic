@@ -10,8 +10,9 @@ che Orologic aveva gia', quelli del sottomenu impostazioni e delle sue
 domande; i testi nuovi li ha approvati Gabriele il 21 novembre 2026. Invio
 su una riga apre la sua scelta: una lista, un campo per un numero o un
 testo, la finestra del prompt, o un secondo elenco, per il motore e per i
-nomi. Le ultime tre voci sono Offrimi un caffè, Entra al PUB e Chiedi aiuto
-al PUB.
+nomi. Prima delle ultime tre c'e' Installa il componente per NVDA, che apre
+il pacchetto del componente (dalla 9.1.0). Le ultime tre voci sono Offrimi
+un caffè, Entra al PUB e Chiedi aiuto al PUB.
 
 Qui si legge e si scrive il database con le funzioni di storage, come fa il
 terminale, e si mettono in uso i valori come fanno le funzioni del
@@ -39,6 +40,7 @@ from . import (
     annunci,
     aspetto,
     avvio,
+    componente_nvda,
     config,
     dialoghi,
     engine,
@@ -72,6 +74,7 @@ VOCI = (
     *annunci.VOCI,
     "lingua",
     "pulizia",
+    "componente_nvda",
     "caffe",
     "pub_entra",
     "pub_aiuto",
@@ -154,6 +157,8 @@ class Impostazioni:
             return _riga(_("Lingua"), self._lingua())
         if voce == "pulizia":
             return _("Pulizia")
+        if voce == "componente_nvda":
+            return _("Installa il componente per NVDA")
         return {"caffe": _("Offrimi un caffè"), "pub_entra": _("Entra al PUB"), "pub_aiuto": _("Chiedi aiuto al PUB")}[voce]
 
     def cambia(self, voce, dialogo):
@@ -173,6 +178,7 @@ class Impostazioni:
             "volume": self._volume,
             "lingua": self._scegli_la_lingua,
             "pulizia": self.finestra.pulizia,
+            "componente_nvda": self._installa_il_componente,
             "caffe": self._caffe,
             "pub_entra": self._entra_al_pub,
             "pub_aiuto": self._chiedi_aiuto_al_pub,
@@ -385,6 +391,19 @@ class Impostazioni:
             _bip()
         else:
             Acusticator(["c6", 0.04, 0, config.VOLUME, "g6", 0.06, 0, config.VOLUME], kind=1)
+
+    # Il componente di NVDA.
+
+    def _installa_il_componente(self, dialogo):
+        """Il pacchetto del componente di NVDA per Orologic, aperto: NVDA
+        chiede se installarlo, e dopo il riavvio di NVDA la scacchiera non
+        dice piu' il simbolo della casa e la barra segue il testo che
+        cambia."""
+        try:
+            componente_nvda.installa()
+        # Senza NVDA installato Windows non sa aprire il pacchetto.
+        except OSError as errore:
+            self.finestra.avvisa(dialogo, _("Non sono riuscito ad aprire il componente per NVDA: {errore}").format(errore=errore))
 
     # Il caffè e il PUB.
 
