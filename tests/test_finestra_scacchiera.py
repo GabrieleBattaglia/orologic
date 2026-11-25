@@ -169,6 +169,40 @@ def test_la_mossa_va_al_nucleo(finestra, aperta):
     assert dialogo.scacchiera.sollevato is None
 
 
+def test_le_quadre_e_le_tonde_senza_riscrivere_tutto(finestra, aperta, monkeypatch):
+    """Il pezzo sollevato e la mossa dell'avversario cambiano solo il pezzo
+    delle traverse, con Replace: niente ChangeValue, il cursore resta sulla
+    casa, e NVDA riceve valueChange (Gabriele, 25 novembre 2026: le quadre
+    arrivavano alla barra solo dopo un tasto)."""
+    from orologic_modules import componente_nvda
+
+    dialogo = aperta["apri"]()
+    riscritture = []
+    monkeypatch.setattr(dialogo.area, "ChangeValue", riscritture.append)
+    avvisate = []
+    monkeypatch.setattr(componente_nvda, "avvisa", avvisate.append)
+    _scrivi(dialogo, "g1")
+    posizione = dialogo.area.GetInsertionPoint()
+    _tasto(dialogo, wx.WXK_SPACE)
+    assert dialogo.area.GetValue().split("\n")[7] == "1| R | N | B | Q | K | B |[N]| R |1"
+    assert dialogo.area.GetInsertionPoint() == posizione
+    assert avvisate == [dialogo.area]
+    # Le due mosse arrivate dal nucleo: le tonde sull'ultima, del Nero, e il
+    # cavallo resta in mano.
+    aperta["dati"]["board"] = chess.Board()
+    aperta["dati"]["board"].push_san("e4")
+    aperta["dati"]["board"].push_san("e5")
+    assert pompa(lambda: "(p)" in dialogo.area.GetValue(), 2)
+    righe = dialogo.area.GetValue().split("\n")
+    assert righe[3] == "5| + | - | + | - |(p)| - | + | - |5"
+    assert righe[4] == "4| - | + | - | + | P | + | - | + |4"
+    assert righe[6] == "2| P | P | P | P | - | P | P | P |2"
+    assert righe[7] == "1| R | N | B | Q | K | B |[N]| R |1"
+    assert dialogo.area.GetInsertionPoint() == dialogo.area.XYToPosition(*reversed(dialogo.scacchiera.posto_del_cursore()))
+    assert riscritture == []
+    assert len(avvisate) == 2
+
+
 def test_la_mossa_illegale_si_spiega(finestra, aperta):
     dialogo = aperta["apri"]()
     _scrivi(dialogo, "e2")
@@ -339,7 +373,7 @@ def test_la_posizione_nuova_e_la_fine_della_partita(finestra, aperta):
     aperta["dati"]["board"] = chess.Board()
     aperta["dati"]["board"].push_san("e4")
     assert pompa(lambda: dialogo.scacchiera.board.piece_at(chess.E4) is not None, 2)
-    assert dialogo.area.GetValue().split("\n")[4] == "4| - | + | - | + | P | + | - | + |4"
+    assert dialogo.area.GetValue().split("\n")[4] == "4| - | + | - | + |(P)| + | - | + |4"
     finestra.fornitore = None
     assert pompa(lambda: dialogo.chiusa, 2)
     # Chiusa, non scrive piu' nel prompt.

@@ -4,6 +4,8 @@
 # libero, sotto la GNU General Public License versione 2 o successive: il
 # testo e' in COPYING.txt.
 # 25 novembre 2026: versione 1.0.0, dai prototipi collaudati da Gabriele.
+# 25 novembre 2026: 1.0.1, la scacchiera si rilegge dal cursore quando il
+# testo cambia, perche' le quadre del pezzo sollevato arrivino subito.
 
 """Il componente di NVDA per Orologic, il programma di scacchi per giocatori
 ciechi e ipovedenti.
@@ -43,9 +45,11 @@ import ctypes
 import os
 from ctypes import wintypes
 
+import api
 import braille
 import globalPluginHandler
 import globalVars
+import review
 from logHandler import log
 from NVDAObjects import NVDAObject
 from NVDAObjects.behaviors import EditableTextWithAutoSelectDetection
@@ -116,7 +120,21 @@ class AreaDiOrologic(NVDAObject):
 
 class ScacchieraDiOrologic(AreaDiOrologic):
 	"""La scacchiera interattiva: dopo una freccia tutto come sempre, ma
-	senza la voce, perche' la casa e il pezzo li annuncia Orologic."""
+	senza la voce, perche' la casa e il pezzo li annuncia Orologic. Quando
+	il testo cambia, come per le quadre del pezzo sollevato, il cursore di
+	esplorazione e la barra tornano sulla traversa del cursore, come dopo un
+	tasto: anche se Orologic ha riscritto tutto il testo, e la posizione di
+	prima non si legge piu'."""
+
+	def event_valueChange(self):
+		try:
+			fuoco = api.getFocusObject()
+			if fuoco == self:
+				braille.handler.handleCaretMove(fuoco)
+				review.handleCaretMove(fuoco)
+		except Exception:  # noqa: BLE001
+			log.debugWarning("Orologic: scacchiera non riletta dal cursore", exc_info=True)
+		super().event_valueChange()
 
 	def _caretScriptPostMovedHelper(self, speakUnit, *args, **kwargs):
 		# Senza unita' da leggere NVDA aggiorna il cursore di esplorazione e

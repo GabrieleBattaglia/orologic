@@ -63,7 +63,6 @@ da sola; frecce, pagine, Home e Fine passano all'area, per leggere liberi;
 ogni altro tasto riporta il cursore al suo posto nella riga in corso.
 """
 
-import ctypes
 import getpass
 import io
 import os
@@ -85,6 +84,7 @@ from . import (
     cruscotto,
     dialoghi,
     plancia,
+    richedit,
     strato,
     version,
 )
@@ -98,10 +98,6 @@ ECO_MASSIMO = 0.015
 # Le righe che l'area tiene, dalle impostazioni, coi loro limiti; oltre, le
 # piu' vecchie se ne vanno a gruppi, di un quarto delle tenute.
 CHIAVE_DELLE_RIGHE = "righe_dell_area"
-# Il documento del RichEdit dell'area, per cambiare il testo senza toccare
-# il cursore: il messaggio che lo chiede e l'interfaccia ITextDocument.
-EM_GETOLEINTERFACE = 0x0400 + 60
-IID_ITEXTDOCUMENT = "{8CC497C0-A1DF-11CE-8098-00AA0047BE5D}"
 # Ogni quanti millesimi la riga del cursore torna alla barra finche' non
 # si preme un tasto, e quanto aspetta dopo un annuncio mandato alla barra.
 RIPASSO_DEL_BRAILLE = 1000
@@ -122,20 +118,6 @@ COLONNE = 300
 # Il testo della voce della plancia che apre la scacchiera interattiva: non
 # si scrive nel prompt.
 APRI_LA_SCACCHIERA = "\x00scacchiera"
-
-
-def tratto_cambiato(vecchia, nuova):
-    """Il pezzo che cambia fra due versioni di una riga, senza l'inizio e la
-    fine che restano uguali: l'inizio e la fine del pezzo nella vecchia, e il
-    suo testo nuovo."""
-    limite = min(len(vecchia), len(nuova))
-    inizio = 0
-    while inizio < limite and vecchia[inizio] == nuova[inizio]:
-        inizio += 1
-    uguali_in_fondo = 0
-    while uguali_in_fondo < limite - inizio and vecchia[-1 - uguali_in_fondo] == nuova[-1 - uguali_in_fondo]:
-        uguali_in_fondo += 1
-    return inizio, len(vecchia) - uguali_in_fondo, nuova[inizio : len(nuova) - uguali_in_fondo]
 
 
 class ApriImpostazioni:
@@ -792,27 +774,7 @@ class Finestra(wx.Frame):
         senza toccare il cursore; None se non c'e', per esempio senza
         pywin32: allora si cambia con Replace."""
         if self.documento_dell_area is None:
-            self.documento_dell_area = False
-            try:
-                import pythoncom
-                import pywintypes
-                import win32com.client
-
-                puntatore = ctypes.c_void_p()
-                # Una copia propria di user32: i tipi degli argomenti cambiati
-                # su ctypes.windll.user32 varrebbero per tutto il processo.
-                manda = ctypes.WinDLL("user32").SendMessageW
-                manda.argtypes = (ctypes.c_void_p, ctypes.c_uint, ctypes.c_size_t, ctypes.POINTER(ctypes.c_void_p))
-                manda.restype = ctypes.c_ssize_t
-                manda(self.area.GetHandle(), EM_GETOLEINTERFACE, 0, ctypes.byref(puntatore))
-                if puntatore.value:
-                    sconosciuto = pythoncom.ObjectFromAddress(puntatore.value, pythoncom.IID_IUnknown)
-                    self.documento_dell_area = win32com.client.Dispatch(
-                        sconosciuto.QueryInterface(pywintypes.IID(IID_ITEXTDOCUMENT), pythoncom.IID_IDispatch)
-                    )
-            # Senza il documento si cambia il testo con Replace, come prima.
-            except Exception:  # noqa: BLE001, S110
-                pass
+            self.documento_dell_area = richedit.documento(self.area) or False
         return self.documento_dell_area or None
 
     def _area_distrutta(self, evento):
@@ -832,36 +794,11 @@ class Finestra(wx.Frame):
         altrove NVDA non riporta la barra sul cursore. Vero se il cursore non
         e' stato toccato; senza documento si usa Replace, e lo si tocca."""
         documento = self._documento()
-        if documento is not None:
-            try:
-                intervallo = documento.Range(inizio, fine)
-                intervallo.Text = testo.replace("\n", "\r")
-                self._con_lo_stile(intervallo)
-                return True
+        riuscito = richedit.sostituisci(documento, self.area, inizio, fine, testo)
+        if documento is not None and not riuscito:
             # Un documento che non risponde piu': da qui in poi Replace.
-            except Exception:  # noqa: BLE001
-                self.documento_dell_area = False
-        self.area.Replace(inizio, fine, testo)
-        return False
-
-    def _con_lo_stile(self, intervallo):
-        """Il testo scritto dal documento prende lo stile dell'area, i colori
-        e i caratteri di aspetto.py, come quello di Replace: il documento da
-        solo non lo applica."""
-        stile = self.area.GetDefaultStyle()
-        carattere = intervallo.Font
-        # I colori del documento sono COLORREF: rosso, verde e blu dal basso.
-        if stile.HasTextColour():
-            colore = stile.GetTextColour()
-            carattere.ForeColor = colore.Red() | colore.Green() << 8 | colore.Blue() << 16
-        if stile.HasBackgroundColour():
-            colore = stile.GetBackgroundColour()
-            carattere.BackColor = colore.Red() | colore.Green() << 8 | colore.Blue() << 16
-        if stile.HasFont() and stile.GetFont().IsOk():
-            font = stile.GetFont()
-            carattere.Size = font.GetPointSize()
-            if font.GetFaceName():
-                carattere.Name = font.GetFaceName()
+            self.documento_dell_area = False
+        return riuscito
 
     def _riga_sotto_il_cursore(self):
         _trovata, _colonna, riga = self.area.PositionToXY(self.area.GetInsertionPoint())
@@ -1227,7 +1164,7 @@ class Finestra(wx.Frame):
                     continue
                 inizio = self.area.XYToPosition(0, indice)
                 if self.area.GetLineText(indice) == vecchia:
-                    da, a, pezzo = tratto_cambiato(vecchia, nuova)
+                    da, a, pezzo = richedit.tratto_cambiato(vecchia, nuova)
                     self._sostituisci(inizio + da, inizio + a, pezzo)
                 else:
                     self._sostituisci(inizio, inizio + self.area.GetLineLength(indice), nuova)

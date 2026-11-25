@@ -10,7 +10,9 @@ gli annunci e i suoni.
 Il testo e' quello di Gabriele: per ogni traversa il numero, le otto case
 fra barre verticali, e di nuovo il numero, 1| R | - | q | - | N | K | + | b |1;
 i pezzi come in .s, maiuscole il Bianco e minuscole il Nero, trattino le
-case chiare vuote e piu' le scure; il pezzo sollevato fra parentesi quadre.
+case chiare vuote e piu' le scure; il pezzo sollevato fra parentesi quadre,
+e l'ultimo pezzo mosso, del giocatore o dell'avversario, fra tonde, come
+(n) (Gabriele, 25 novembre 2026).
 
 Gli spostamenti sono quelli di chi guarda: su verso il lato di la', destra
 e sinistra come si vede; il verso si sceglie all'apertura, dal proprio
@@ -85,21 +87,29 @@ class Scacchiera:
             return chess.square(7 - colonna, riga)
         return chess.square(colonna, 7 - riga)
 
-    def _cella(self, casa):
+    def _cella(self, casa, ultima=None):
+        """Il segno della casa: fra quadre il pezzo sollevato, fra tonde
+        l'ultimo pezzo mosso, sulla casa d'arrivo dell'ultima mossa;
+        sollevato, vincono le quadre."""
         pezzo = self.board.piece_at(casa)
         if pezzo is not None:
             segno = pezzo.symbol()
         else:
             # Come .s: trattino le case chiare, piu' le scure.
             segno = "+" if (chess.square_file(casa) + chess.square_rank(casa)) % 2 == 0 else "-"
-        return f"[{segno}]" if casa == self.sollevato else f" {segno} "
+        if casa == self.sollevato:
+            return f"[{segno}]"
+        if casa == ultima:
+            return f"({segno})"
+        return f" {segno} "
 
     def righe(self):
         """Le otto traverse come le vede chi guarda, dall'alto."""
+        ultima = self.casa_dell_ultima_mossa()
         righe = []
         for riga in range(8):
             traversa = chess.square_rank(self._dalla_vista(0, riga)) + 1
-            celle = [self._cella(self._dalla_vista(colonna, riga)) for colonna in range(8)]
+            celle = [self._cella(self._dalla_vista(colonna, riga), ultima) for colonna in range(8)]
             righe.append(f"{traversa}|" + "|".join(celle) + f"|{traversa}")
         return righe
 

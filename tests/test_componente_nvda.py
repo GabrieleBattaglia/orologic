@@ -25,7 +25,7 @@ from orologic_modules import (
     finestra_scacchiera,
     impostazioni,
 )
-from orologic_modules.finestra import tratto_cambiato
+from orologic_modules.richedit import tratto_cambiato
 
 pytestmark = pytest.mark.skipif(sys.platform != "win32", reason="le proprieta' di finestra sono di Windows")
 
@@ -88,7 +88,7 @@ def test_segni_presenza_e_processo_di_nvda(area):
 def test_il_pacchetto_del_componente(tmp_path):
     pacchetto = componente_nvda.crea_il_pacchetto(str(tmp_path))
     versione = componente_nvda.versione()
-    assert versione == "1.0.0"
+    assert versione == "1.0.1"
     assert os.path.basename(pacchetto) == f"orologic-{versione}.nvda-addon"
     with zipfile.ZipFile(pacchetto) as archivio:
         nomi = archivio.namelist()

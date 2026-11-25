@@ -30,7 +30,16 @@ import wx
 from GBUtils import Acusticator
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
-from . import aspetto, componente_nvda, config, localizzazione, plancia, storage, ui
+from . import (
+    aspetto,
+    componente_nvda,
+    config,
+    localizzazione,
+    plancia,
+    richedit,
+    storage,
+    ui,
+)
 from .config import _
 from .scacchiera import (
     DESTRA,
@@ -426,6 +435,7 @@ class FinestraScacchiera(wx.Dialog):
         self._chiudi_la_lettera()
 
     def _area_distrutta(self, evento):
+        """L'area si chiude: i segni per il componente di NVDA se ne vanno."""
         evento.Skip()
         componente_nvda.togli_il_segno(self.area)
 
@@ -436,13 +446,30 @@ class FinestraScacchiera(wx.Dialog):
     def disegna(self):
         """Le otto traverse nell'area, col cursore sul segno della casa
         scelta; il testo si riscrive solo se cambia, perche' NVDA non lo
-        rilegga a ogni passo."""
-        testo = "\n".join(self.scacchiera.righe())
-        cambiato = self.area.GetValue() != testo
+        rilegga a ogni passo. Di ogni traversa si riscrive solo il pezzo che
+        cambia, con Replace: la posizione di NVDA nel testo resta viva, e la
+        barra braille rilegge subito la traversa, per esempio con le quadre
+        del pezzo sollevato (Gabriele, 25 novembre 2026). Con ChangeValue
+        NVDA la ritrovava solo dopo un tasto; resta per la prima volta. Il
+        documento del RichEdit, come nella console, qui non serve: l'area e'
+        in sola lettura, e lui non ci scrive."""
+        righe = self.scacchiera.righe()
+        vecchie = self.area.GetValue().split("\n")
+        cambiato = vecchie != righe
         if cambiato:
-            self.area.ChangeValue(testo)
+            if len(vecchie) == len(righe):
+                # Dal fondo: le posizioni delle traverse sopra non cambiano.
+                for numero in range(len(righe) - 1, -1, -1):
+                    if vecchie[numero] != righe[numero]:
+                        inizio = self.area.XYToPosition(0, numero)
+                        da, a, pezzo = richedit.tratto_cambiato(vecchie[numero], righe[numero])
+                        self.area.Replace(inizio + da, inizio + a, pezzo)
+            else:
+                self.area.ChangeValue("\n".join(righe))
         riga, colonna = self.scacchiera.posto_del_cursore()
-        self.area.SetInsertionPoint(self.area.XYToPosition(colonna, riga))
+        posizione = self.area.XYToPosition(colonna, riga)
+        if self.area.GetInsertionPoint() != posizione:
+            self.area.SetInsertionPoint(posizione)
         if cambiato:
             componente_nvda.avvisa(self.area)
 

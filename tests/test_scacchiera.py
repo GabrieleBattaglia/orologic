@@ -11,6 +11,7 @@ import chess
 from orologic_modules import localizzazione
 from orologic_modules.scacchiera import (
     DESTRA,
+    GIU,
     GIU_DESTRA,
     SINISTRA,
     SU,
@@ -49,6 +50,27 @@ def test_il_cursore_nel_testo_e_il_pezzo_sollevato():
     s.sposta(SINISTRA)
     assert s.spazio() == "sollevato"
     assert s.righe()[7] == "1| R | N | B |[Q]| K | B | N | R |1"
+
+
+def test_l_ultimo_pezzo_mosso_fra_tonde():
+    board = chess.Board()
+    board.push_san("e4")
+    board.push_san("e5")
+    s = Scacchiera(board)
+    righe = s.righe()
+    # Solo l'ultimo mosso, dell'avversario o mio, sulla casa d'arrivo.
+    assert righe[3] == "5| + | - | + | - |(p)| - | + | - |5"
+    assert righe[4] == "4| - | + | - | + | P | + | - | + |4"
+    # Sollevato, vincono le quadre; sollevato un altro, tornano le tonde.
+    assert s.cursore == chess.E5
+    assert s.spazio() == "sollevato"
+    assert s.righe()[3] == "5| + | - | + | - |[p]| - | + | - |5"
+    s.sposta(GIU)
+    assert s.spazio() == "scambiato"
+    assert s.righe()[3] == "5| + | - | + | - |(p)| - | + | - |5"
+    assert s.righe()[4] == "4| - | + | - | + |[P]| + | - | + |4"
+    # Senza mosse niente tonde.
+    assert "(" not in "".join(Scacchiera(chess.Board()).righe())
 
 
 def test_bordi_passaggi_e_diagonali():
