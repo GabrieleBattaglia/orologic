@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-25 15:37+0100\n"
+"POT-Creation-Date: 2026-11-25 17:46+0100\n"
 "PO-Revision-Date: 2025-07-18 22:56+0200\n"
 "Last-Translator: Marcos Antonio Schllosser <escoladexadrez@gmail.com>\n"
 "Language-Team: pt <LL@li.org>\n"
@@ -634,7 +634,7 @@ msgstr "Datas para reescrever à mão: {n}."
 msgid "Elo non numerici, da sistemare a mano: {n} partite."
 msgstr "Elo não numéricos, para corrigir à mão: {n} partidas."
 
-#: orologic_modules/archivio_pgn.py:689 orologic_modules/pgn_extract.py:780
+#: orologic_modules/archivio_pgn.py:689 orologic_modules/pgn_extract.py:1005
 msgid "copia"
 msgstr "cópia"
 
@@ -1517,7 +1517,7 @@ msgstr "Tira tempo das pretas (pausado)"
 msgid "Scacchiera testuale"
 msgstr "Tabuleiro em texto"
 
-#: orologic_modules/config.py:198 orologic_modules/finestra_scacchiera.py:779
+#: orologic_modules/config.py:198 orologic_modules/finestra_scacchiera.py:806
 msgid "Commento mossa"
 msgstr "Comentar o lance"
 
@@ -1606,7 +1606,7 @@ msgstr "Pesquisa PGN"
 msgid "Impostazioni (motore, nomi, analisi, volume)"
 msgstr "Configurações (motor, nomes, análise, volume)"
 
-#: orologic_modules/config.py:229 orologic_modules/finestra_archivi.py:293
+#: orologic_modules/config.py:229 orologic_modules/finestra_archivi.py:294
 msgid "Esci"
 msgstr "Sair"
 
@@ -1860,11 +1860,11 @@ msgstr "Brancas: {bianco}. Pretas: {nero}."
 msgid "Mossa {n}."
 msgstr "Lance {n}."
 
-#: orologic_modules/cruscotto.py:198 orologic_modules/scacchiera.py:238
+#: orologic_modules/cruscotto.py:198 orologic_modules/scacchiera.py:248
 msgid "Tocca al Bianco."
 msgstr "É a vez das brancas."
 
-#: orologic_modules/cruscotto.py:198 orologic_modules/scacchiera.py:238
+#: orologic_modules/cruscotto.py:198 orologic_modules/scacchiera.py:248
 msgid "Tocca al Nero."
 msgstr "É a vez das pretas."
 
@@ -1943,8 +1943,8 @@ msgstr ""
 #: orologic_modules/finestra_pulizia.py:110
 #: orologic_modules/finestra_ricerca.py:235
 #: orologic_modules/finestra_ricerca.py:333
-#: orologic_modules/finestra_scacchiera.py:280
-#: orologic_modules/finestra_scacchiera.py:307
+#: orologic_modules/finestra_scacchiera.py:289
+#: orologic_modules/finestra_scacchiera.py:316
 msgid "Chiudi"
 msgstr "Fechar"
 
@@ -1964,7 +1964,7 @@ msgstr "Confirmar"
 
 #: orologic_modules/dialoghi.py:182 orologic_modules/dialoghi.py:244
 #: orologic_modules/dialoghi.py:427 orologic_modules/dialoghi.py:904
-#: orologic_modules/finestra_archivi.py:157
+#: orologic_modules/finestra_archivi.py:158
 #: orologic_modules/finestra_editor.py:108
 #: orologic_modules/lichess_app.py:2062 orologic_modules/lichess_app.py:2097
 #: orologic_modules/lichess_app.py:2237
@@ -2056,7 +2056,7 @@ msgstr "Fundo do painel"
 msgid "Sfondo area"
 msgstr "Fundo da área"
 
-#: orologic_modules/dialoghi.py:824 orologic_modules/finestra.py:657
+#: orologic_modules/dialoghi.py:824 orologic_modules/finestra.py:639
 msgid "Plancia"
 msgstr "Painel"
 
@@ -3109,16 +3109,16 @@ msgstr "Insira o Move Overhead em milissegundos (min: 0, max: 500): "
 msgid "Configurazione del motore salvata."
 msgstr "Configuração do motor salva."
 
-#: orologic_modules/finestra.py:652
+#: orologic_modules/finestra.py:634
 #, python-brace-format
 msgid "Orologic {versione}"
 msgstr "Orologic {versione}"
 
-#: orologic_modules/finestra.py:660
+#: orologic_modules/finestra.py:642
 msgid "Console"
 msgstr "Console"
 
-#: orologic_modules/finestra.py:1441
+#: orologic_modules/finestra.py:1378
 msgid "Spazio: per accedere alla scacchiera interattiva"
 msgstr "Espaço: para aceder ao tabuleiro interativo"
 
@@ -3149,22 +3149,22 @@ msgstr "Onde está o pgn-extract.exe?"
 msgid "Programmi (*.exe)|*.exe|Tutti i file (*.*)|*.*"
 msgstr "Programas (*.exe)|*.exe|Todos os arquivos (*.*)|*.*"
 
-#: orologic_modules/finestra_archivi.py:147
-#: orologic_modules/finestra_archivi.py:153
-#: orologic_modules/finestra_archivi.py:155
+#: orologic_modules/finestra_archivi.py:148
+#: orologic_modules/finestra_archivi.py:154
+#: orologic_modules/finestra_archivi.py:156
 msgid "Scaricamento di pgn-extract"
 msgstr "Download do pgn-extract"
 
-#: orologic_modules/finestra_archivi.py:154
+#: orologic_modules/finestra_archivi.py:155
 msgid "Collegamento al sito di pgn-extract..."
 msgstr "Conectando ao site do pgn-extract..."
 
-#: orologic_modules/finestra_archivi.py:192
-#: orologic_modules/pgn_extract.py:882
+#: orologic_modules/finestra_archivi.py:193
+#: orologic_modules/pgn_extract.py:1107
 msgid "Scaricamento fermato."
 msgstr "Download interrompido."
 
-#: orologic_modules/finestra_archivi.py:201
+#: orologic_modules/finestra_archivi.py:202
 msgid ""
 "Per la gestione degli archivi Orologic usa pgn-extract, il programma libero "
 "di David J. Barnes, ma non c'e' ancora. Lo scarico dal suo sito, con la "
@@ -3174,21 +3174,21 @@ msgstr ""
 "de David J. Barnes, mas ele ainda não está aqui. Baixo do site dele, com o "
 "guia, o eco.pgn e a licença?"
 
-#: orologic_modules/finestra_archivi.py:209
-#: orologic_modules/finestra_archivi.py:386
+#: orologic_modules/finestra_archivi.py:210
+#: orologic_modules/finestra_archivi.py:403
 #, python-brace-format
 msgid "Scaricamento non riuscito: {motivo}"
 msgstr "O download falhou: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:210
+#: orologic_modules/finestra_archivi.py:211
 msgid "Vuoi indicare tu dov'e' pgn-extract.exe sul tuo computer?"
 msgstr "Você quer indicar onde está o pgn-extract.exe no seu computador?"
 
-#: orologic_modules/finestra_archivi.py:216
+#: orologic_modules/finestra_archivi.py:217
 msgid "Il file scelto non risponde come pgn-extract."
 msgstr "O arquivo escolhido não responde como o pgn-extract."
 
-#: orologic_modules/finestra_archivi.py:217
+#: orologic_modules/finestra_archivi.py:218
 msgid ""
 "Senza pgn-extract la gestione degli archivi non e' disponibile. Torno al "
 "menu principale."
@@ -3196,121 +3196,130 @@ msgstr ""
 "Sem o pgn-extract o gerenciamento de arquivos não está disponível. Volto ao "
 "menu principal."
 
-#: orologic_modules/finestra_archivi.py:263
+#: orologic_modules/finestra_archivi.py:264
 msgid "&Sorgente"
 msgstr "&Origem"
 
-#: orologic_modules/finestra_archivi.py:268
+#: orologic_modules/finestra_archivi.py:269
 msgid "Se&leziona il file"
 msgstr "Se&lecionar o arquivo"
 
-#: orologic_modules/finestra_archivi.py:269
+#: orologic_modules/finestra_archivi.py:270
 #: orologic_modules/finestra_ricerca.py:373
 msgid "Dagli &appunti"
 msgstr "Da área de &transferência"
 
-#: orologic_modules/finestra_archivi.py:275
+#: orologic_modules/finestra_archivi.py:276
 msgid "&Disponibili"
 msgstr "&Disponíveis"
 
-#: orologic_modules/finestra_archivi.py:276
+#: orologic_modules/finestra_archivi.py:277
 msgid "Parametri sc&elti"
 msgstr "Parâmetros &escolhidos"
 
-#: orologic_modules/finestra_archivi.py:278
+#: orologic_modules/finestra_archivi.py:279
 msgid "Des&tinazione"
 msgstr "Desti&no"
 
-#: orologic_modules/finestra_archivi.py:283
+#: orologic_modules/finestra_archivi.py:284
 msgid "Scegli la desti&nazione"
 msgstr "Escol&her o destino"
 
-#: orologic_modules/finestra_archivi.py:287
+#: orologic_modules/finestra_archivi.py:288
 msgid "C&omando"
 msgstr "&Comando"
 
-#: orologic_modules/finestra_archivi.py:288
+#: orologic_modules/finestra_archivi.py:289
 msgid "&Uscita"
 msgstr "&Saída"
 
-#: orologic_modules/finestra_archivi.py:290
+#: orologic_modules/finestra_archivi.py:291
 msgid "A&pplica"
 msgstr "&Aplicar"
 
-#: orologic_modules/finestra_archivi.py:291
+#: orologic_modules/finestra_archivi.py:292
 msgid "Apri il reso&conto"
 msgstr "Abrir o &relatório"
 
-#: orologic_modules/finestra_archivi.py:292
+#: orologic_modules/finestra_archivi.py:293
 msgid "&Guida di pgn-extract"
 msgstr "&Guia do pgn-extract"
 
-#: orologic_modules/finestra_archivi.py:376
+#: orologic_modules/finestra_archivi.py:391
+#, python-brace-format
+msgid ""
+"Scaricato {nome}, il catalogo delle opzioni di pgn-extract: ora Orologic "
+"conosce anche i conflitti fra le opzioni."
+msgstr ""
+"Baixado {nome}, o catálogo das opções do pgn-extract: agora o Orologic "
+"também conhece os conflitos entre as opções."
+
+#: orologic_modules/finestra_archivi.py:393
 #, python-brace-format
 msgid "Aggiornamenti di pgn-extract non verificati: {motivo}"
 msgstr "Atualizações do pgn-extract não verificadas: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:396
+#: orologic_modules/finestra_archivi.py:407
 #, python-brace-format
 msgid "Scaricato pgn-extract {versione}."
 msgstr "Baixado o pgn-extract {versione}."
 
-#: orologic_modules/finestra_archivi.py:443
+#: orologic_modules/finestra_archivi.py:454
 #, python-brace-format
 msgid "Il PGN degli appunti, {n} partite"
 msgstr "O PGN da área de transferência, {n} partidas"
 
-#: orologic_modules/finestra_archivi.py:483
+#: orologic_modules/finestra_archivi.py:494
 msgid ""
 "Negli appunti non c'e' ne' il percorso di un file PGN ne' un testo PGN."
 msgstr ""
 "Na área de transferência não há nem o caminho de um arquivo PGN nem um texto"
 " PGN."
 
-#: orologic_modules/finestra_archivi.py:537
+#: orologic_modules/finestra_archivi.py:557
 #, python-brace-format
 msgid "Aggiunto: {voce}."
 msgstr "Adicionado: {voce}."
 
-#: orologic_modules/finestra_archivi.py:550
+#: orologic_modules/finestra_archivi.py:570
 #, python-brace-format
 msgid "Tolto: {voce}."
 msgstr "Removido: {voce}."
 
-#: orologic_modules/finestra_archivi.py:564
+#: orologic_modules/finestra_archivi.py:584
 #, python-brace-format
 msgid "{voce} non vuole un valore."
 msgstr "{voce} não leva valor."
 
-#: orologic_modules/finestra_archivi.py:592
+#: orologic_modules/finestra_archivi.py:612
 msgid "(senza valore)"
 msgstr "(sem valor)"
 
-#: orologic_modules/finestra_archivi.py:650
+#: orologic_modules/finestra_archivi.py:670
 msgid "Manca il file sorgente."
 msgstr "Falta o arquivo de origem."
 
-#: orologic_modules/finestra_archivi.py:652
+#: orologic_modules/finestra_archivi.py:672
 #, python-brace-format
 msgid "Il file sorgente {percorso} non c'e'."
 msgstr "O arquivo de origem {percorso} não existe."
 
-#: orologic_modules/finestra_archivi.py:655
+#: orologic_modules/finestra_archivi.py:675
 #, python-brace-format
 msgid "Manca il valore di {voce}."
 msgstr "Falta o valor de {voce}."
 
-#: orologic_modules/finestra_archivi.py:659
+#: orologic_modules/finestra_archivi.py:682
 msgid "Manca la destinazione."
 msgstr "Falta o destino."
 
-#: orologic_modules/finestra_archivi.py:661
-#: orologic_modules/pgn_extract.py:339
+#: orologic_modules/finestra_archivi.py:684
+#: orologic_modules/pgn_extract.py:552
 #, python-brace-format
 msgid "La cartella {cartella} non c'e'."
 msgstr "A pasta {cartella} não existe."
 
-#: orologic_modules/finestra_archivi.py:665
+#: orologic_modules/finestra_archivi.py:688
 msgid ""
 "La destinazione non puo' essere un file sorgente: pgn-extract lo leggerebbe "
 "e lo scriverebbe insieme, rovinandolo."
@@ -3318,101 +3327,101 @@ msgstr ""
 "O destino não pode ser um arquivo de origem: o pgn-extract o leria e o "
 "escreveria ao mesmo tempo, estragando-o."
 
-#: orologic_modules/finestra_archivi.py:669
+#: orologic_modules/finestra_archivi.py:692
 msgid "appunti.pgn"
 msgstr "area-de-transferencia.pgn"
 
-#: orologic_modules/finestra_archivi.py:675
+#: orologic_modules/finestra_archivi.py:698
 msgid "manca"
 msgstr "faltando"
 
-#: orologic_modules/finestra_archivi.py:712
+#: orologic_modules/finestra_archivi.py:735
 msgid "pgn-extract al lavoro..."
 msgstr "pgn-extract trabalhando..."
 
-#: orologic_modules/finestra_archivi.py:731
+#: orologic_modules/finestra_archivi.py:754
 #, python-brace-format
 msgid "pgn-extract al lavoro: {n} partite riportate."
 msgstr "pgn-extract trabalhando: {n} partidas relatadas."
 
-#: orologic_modules/finestra_archivi.py:750
+#: orologic_modules/finestra_archivi.py:773
 #, python-brace-format
 msgid "pgn-extract non e' partito: {motivo}"
 msgstr "O pgn-extract não iniciou: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:752
+#: orologic_modules/finestra_archivi.py:775
 msgid "Fermato: la destinazione non e' cambiata."
 msgstr "Interrompido: o destino não mudou."
 
-#: orologic_modules/finestra_archivi.py:755
+#: orologic_modules/finestra_archivi.py:778
 #, python-brace-format
 msgid "pgn-extract ha finito col codice {codice}."
 msgstr "O pgn-extract terminou com o código {codice}."
 
-#: orologic_modules/finestra_archivi.py:764
+#: orologic_modules/finestra_archivi.py:787
 #, python-brace-format
 msgid "Finito in {secondi:.1f} secondi."
 msgstr "Concluído em {secondi:.1f} segundos."
 
-#: orologic_modules/finestra_archivi.py:771
+#: orologic_modules/finestra_archivi.py:794
 #, python-brace-format
 msgid "Il resoconto completo e' in {percorso}."
 msgstr "O relatório completo está em {percorso}."
 
-#: orologic_modules/finestra_archivi.py:786
+#: orologic_modules/finestra_archivi.py:809
 msgid "La destinazione non e' cambiata."
 msgstr "O destino não mudou."
 
-#: orologic_modules/finestra_archivi.py:790
+#: orologic_modules/finestra_archivi.py:813
 #, python-brace-format
 msgid "La destinazione non si scrive: {motivo}"
 msgstr "O destino não pode ser gravado: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:791
+#: orologic_modules/finestra_archivi.py:814
 #, python-brace-format
 msgid "Scritto: {destinazione}."
 msgstr "Gravado: {destinazione}."
 
-#: orologic_modules/finestra_archivi.py:793
+#: orologic_modules/finestra_archivi.py:816
 #, python-brace-format
 msgid "La copia di sicurezza del file di prima e' {copia}."
 msgstr "A cópia de segurança do arquivo anterior é {copia}."
 
-#: orologic_modules/finestra_archivi.py:805
+#: orologic_modules/finestra_archivi.py:828
 #, python-brace-format
 msgid "La copia di sicurezza di {sorgente} non si fa: {motivo}"
 msgstr "A cópia de segurança de {sorgente} não pode ser feita: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:808
+#: orologic_modules/finestra_archivi.py:831
 #, python-brace-format
 msgid "La copia di sicurezza del sorgente e' {copia}."
 msgstr "A cópia de segurança da origem é {copia}."
 
-#: orologic_modules/finestra_archivi.py:810
+#: orologic_modules/finestra_archivi.py:833
 #, python-brace-format
 msgid "Il sorgente ha gia' la sua copia di sicurezza, uguale: {copia}."
 msgstr "A origem já tem sua cópia de segurança, idêntica: {copia}."
 
-#: orologic_modules/finestra_archivi.py:818
+#: orologic_modules/finestra_archivi.py:841
 msgid "Il resoconto c'e' dopo il primo lavoro."
 msgstr "O relatório fica disponível depois do primeiro trabalho."
 
-#: orologic_modules/finestra_archivi.py:826
+#: orologic_modules/finestra_archivi.py:849
 msgid "Resoconto di pgn-extract"
 msgstr "Relatório do pgn-extract"
 
-#: orologic_modules/finestra_archivi.py:837
-#: orologic_modules/finestra_archivi.py:848
+#: orologic_modules/finestra_archivi.py:860
+#: orologic_modules/finestra_archivi.py:871
 msgid "La guida di pgn-extract non c'e': si scarica insieme a pgn-extract."
 msgstr ""
 "O guia do pgn-extract não está aqui: ele é baixado junto com o pgn-extract."
 
-#: orologic_modules/finestra_archivi.py:841
+#: orologic_modules/finestra_archivi.py:864
 #, python-brace-format
 msgid "La guida non ha una sezione per {voce}."
 msgstr "O guia não tem uma seção para {voce}."
 
-#: orologic_modules/finestra_archivi.py:850
+#: orologic_modules/finestra_archivi.py:873
 msgid "Guida di pgn-extract"
 msgstr "Guia do pgn-extract"
 
@@ -3506,32 +3515,32 @@ msgid "Pulizia completata. Cancellati disegni in {n} mosse."
 msgstr "Limpeza concluída. Desenhos apagados em {n} lances."
 
 #: orologic_modules/finestra_editor.py:32
-#: orologic_modules/finestra_scacchiera.py:229
-#: orologic_modules/finestra_scacchiera.py:254
+#: orologic_modules/finestra_scacchiera.py:238
+#: orologic_modules/finestra_scacchiera.py:263
 msgid "Frecce: una casa nelle quattro direzioni; al bordo si fermano."
 msgstr "Setas: uma casa nas quatro direções; param na borda."
 
 #: orologic_modules/finestra_editor.py:33
-#: orologic_modules/finestra_scacchiera.py:230
-#: orologic_modules/finestra_scacchiera.py:255
+#: orologic_modules/finestra_scacchiera.py:239
+#: orologic_modules/finestra_scacchiera.py:264
 msgid "Alt con le frecce: oltre il bordo, dall'altra parte."
 msgstr "Alt com as setas: além da borda, para o outro lado."
 
 #: orologic_modules/finestra_editor.py:34
-#: orologic_modules/finestra_scacchiera.py:235
-#: orologic_modules/finestra_scacchiera.py:259
+#: orologic_modules/finestra_scacchiera.py:244
+#: orologic_modules/finestra_scacchiera.py:268
 msgid "Da a ad h, poi da 1 a 8: salta a quella casa."
 msgstr "De a a h, depois de 1 a 8: salta para essa casa."
 
 #: orologic_modules/finestra_editor.py:35
-#: orologic_modules/finestra_scacchiera.py:236
-#: orologic_modules/finestra_scacchiera.py:260
+#: orologic_modules/finestra_scacchiera.py:245
+#: orologic_modules/finestra_scacchiera.py:269
 msgid "Da 1 a 8: la traversa, nella colonna di adesso."
 msgstr "De 1 a 8: a fileira, na coluna atual."
 
 #: orologic_modules/finestra_editor.py:36
-#: orologic_modules/finestra_scacchiera.py:238
-#: orologic_modules/finestra_scacchiera.py:261
+#: orologic_modules/finestra_scacchiera.py:247
+#: orologic_modules/finestra_scacchiera.py:270
 msgid "9: gira la scacchiera."
 msgstr "9: vira o tabuleiro."
 
@@ -3642,7 +3651,7 @@ msgid "Li' c'e' un Re: spostalo prima."
 msgstr "Ali há um Rei: mova-o antes."
 
 #: orologic_modules/finestra_editor.py:312
-#: orologic_modules/finestra_scacchiera.py:708
+#: orologic_modules/finestra_scacchiera.py:735
 #, python-brace-format
 msgid "Posato: {pezzo}"
 msgstr "Pousada: {pezzo}"
@@ -4264,38 +4273,38 @@ msgstr "Nada para reparar."
 msgid "Riparazione in corso..."
 msgstr "Reparo em andamento..."
 
-#: orologic_modules/finestra_scacchiera.py:146
+#: orologic_modules/finestra_scacchiera.py:155
 msgid "Vince il Bianco, 1-0: assegno il risultato?"
 msgstr "Vencem as brancas, 1-0: atribuo o resultado?"
 
-#: orologic_modules/finestra_scacchiera.py:147
+#: orologic_modules/finestra_scacchiera.py:156
 msgid "Vince il Nero, 0-1: assegno il risultato?"
 msgstr "Vencem as pretas, 0-1: atribuo o resultado?"
 
-#: orologic_modules/finestra_scacchiera.py:148
+#: orologic_modules/finestra_scacchiera.py:157
 msgid "Patta, 1/2: assegno il risultato?"
 msgstr "Empate, 1/2: atribuo o resultado?"
 
-#: orologic_modules/finestra_scacchiera.py:149
+#: orologic_modules/finestra_scacchiera.py:158
 msgid "Risultato non specificato, *: lo assegno?"
 msgstr "Resultado não especificado, *: atribuo?"
 
-#: orologic_modules/finestra_scacchiera.py:163
+#: orologic_modules/finestra_scacchiera.py:172
 msgid "Assegna"
 msgstr "Atribuir"
 
-#: orologic_modules/finestra_scacchiera.py:164
+#: orologic_modules/finestra_scacchiera.py:173
 msgid "Continua la partita"
 msgstr "Continuar a partida"
 
-#: orologic_modules/finestra_scacchiera.py:211
+#: orologic_modules/finestra_scacchiera.py:220
 msgid ""
 "Invio: posa il pezzo sollevato, e la mossa entra nella partita o nella "
 "variante."
 msgstr ""
 "Enter: coloca a peça levantada, e o lance entra na partida ou na variante."
 
-#: orologic_modules/finestra_scacchiera.py:212
+#: orologic_modules/finestra_scacchiera.py:221
 msgid ""
 "Alt con a e d: la mossa precedente e la successiva; Alt con q ed e: la prima"
 " e l'ultima."
@@ -4303,39 +4312,39 @@ msgstr ""
 "Alt com a e d: o lance anterior e o seguinte; Alt com q e e: o primeiro e o "
 "último."
 
-#: orologic_modules/finestra_scacchiera.py:213
+#: orologic_modules/finestra_scacchiera.py:222
 msgid ""
 "Alt con w e x: la variante sopra e quella sotto; Alt con z: fuori dalla "
 "variante."
 msgstr ""
 "Alt com w e x: a variante de cima e a de baixo; Alt com z: fora da variante."
 
-#: orologic_modules/finestra_scacchiera.py:214
+#: orologic_modules/finestra_scacchiera.py:223
 msgid ""
 "Alt con s: l'analisi; Alt con r: i suoi secondi; Alt con t: le sue linee."
 msgstr ""
 "Alt com s: a análise; Alt com r: os seus segundos; Alt com t: as suas "
 "linhas."
 
-#: orologic_modules/finestra_scacchiera.py:215
+#: orologic_modules/finestra_scacchiera.py:224
 msgid "Alt con c: il commento della mossa; C: scrivere il commento."
 msgstr "Alt com c: o comentário do lance; C: escrever o comentário."
 
-#: orologic_modules/finestra_scacchiera.py:216
+#: orologic_modules/finestra_scacchiera.py:225
 msgid "Alt con u: taglia la mossa; Alt con b: la scacchiera a caratteri."
 msgstr "Alt com u: corta o lance; Alt com b: o tabuleiro em caracteres."
 
-#: orologic_modules/finestra_scacchiera.py:217
+#: orologic_modules/finestra_scacchiera.py:226
 msgid "Backspace: il menu dei comandi dell'esploratore."
 msgstr "Backspace: o menu de comandos do explorador."
 
-#: orologic_modules/finestra_scacchiera.py:218
-#: orologic_modules/finestra_scacchiera.py:226
-#: orologic_modules/finestra_scacchiera.py:247
+#: orologic_modules/finestra_scacchiera.py:227
+#: orologic_modules/finestra_scacchiera.py:235
+#: orologic_modules/finestra_scacchiera.py:256
 msgid "?: questo aiuto. Esc chiude la scacchiera."
 msgstr "?: esta ajuda. Esc fecha o tabuleiro."
 
-#: orologic_modules/finestra_scacchiera.py:223
+#: orologic_modules/finestra_scacchiera.py:232
 msgid ""
 "Invio: posa il pezzo sollevato, se la mossa vale, e la mossa entra nella "
 "partita."
@@ -4343,17 +4352,17 @@ msgstr ""
 "Enter: coloca a peça levantada, se o lance for válido, e o lance entra na "
 "partida."
 
-#: orologic_modules/finestra_scacchiera.py:224
-#: orologic_modules/finestra_scacchiera.py:245
+#: orologic_modules/finestra_scacchiera.py:233
+#: orologic_modules/finestra_scacchiera.py:254
 msgid "C: un commento alla mossa."
 msgstr "C: um comentário ao lance."
 
-#: orologic_modules/finestra_scacchiera.py:225
+#: orologic_modules/finestra_scacchiera.py:234
 msgid "Backspace: il menu dei comandi di Easyfish."
 msgstr "Backspace: o menu de comandos do Easyfish."
 
-#: orologic_modules/finestra_scacchiera.py:231
-#: orologic_modules/finestra_scacchiera.py:256
+#: orologic_modules/finestra_scacchiera.py:240
+#: orologic_modules/finestra_scacchiera.py:265
 msgid ""
 "Maiuscolo con sinistra e destra: le diagonali che salgono; Ctrl con sinistra"
 " e destra: quelle che scendono."
@@ -4361,24 +4370,24 @@ msgstr ""
 "Shift com esquerda e direita: as diagonais que sobem; Ctrl com esquerda e "
 "direita: as que descem."
 
-#: orologic_modules/finestra_scacchiera.py:232
-#: orologic_modules/finestra_scacchiera.py:257
+#: orologic_modules/finestra_scacchiera.py:241
+#: orologic_modules/finestra_scacchiera.py:266
 msgid ""
 "Spazio: solleva il pezzo; sulla sua casa lo posa, su un'altra piena prende "
 "quello."
 msgstr ""
 "Espaço: levanta a peça; na sua casa a pousa, em outra ocupada pega aquela."
 
-#: orologic_modules/finestra_scacchiera.py:233
+#: orologic_modules/finestra_scacchiera.py:242
 msgid "Invio: posa il pezzo sollevato, se la mossa vale."
 msgstr "Enter: pousa a peça levantada, se o lance for válido."
 
-#: orologic_modules/finestra_scacchiera.py:234
-#: orologic_modules/finestra_scacchiera.py:258
+#: orologic_modules/finestra_scacchiera.py:243
+#: orologic_modules/finestra_scacchiera.py:267
 msgid "Ctrl con spazio: il pezzo in mano."
 msgstr "Ctrl com espaço: a peça na mão."
 
-#: orologic_modules/finestra_scacchiera.py:237
+#: orologic_modules/finestra_scacchiera.py:246
 msgid ""
 "1 e 0, 0 e 1, 1 e 2, asterisco: dove si assegna il risultato, 1-0, 0-1, "
 "patta o non specificato, con la conferma."
@@ -4386,24 +4395,24 @@ msgstr ""
 "1 e 0, 0 e 1, 1 e 2, asterisco: onde se atribui o resultado, 1-0, 0-1, "
 "empate ou não especificado, com a confirmação."
 
-#: orologic_modules/finestra_scacchiera.py:239
-#: orologic_modules/finestra_scacchiera.py:262
+#: orologic_modules/finestra_scacchiera.py:248
+#: orologic_modules/finestra_scacchiera.py:271
 msgid "R N B Q K P, e in minuscolo: dove sono quei pezzi, bianchi e neri."
 msgstr ""
 "R N B Q K P, e em minúsculas: onde estão essas peças, brancas e pretas."
 
-#: orologic_modules/finestra_scacchiera.py:240
-#: orologic_modules/finestra_scacchiera.py:263
+#: orologic_modules/finestra_scacchiera.py:249
+#: orologic_modules/finestra_scacchiera.py:272
 msgid "W: tutti i pezzi bianchi; w: tutti i neri."
 msgstr "W: todas as peças brancas; w: todas as pretas."
 
-#: orologic_modules/finestra_scacchiera.py:241
-#: orologic_modules/finestra_scacchiera.py:264
+#: orologic_modules/finestra_scacchiera.py:250
+#: orologic_modules/finestra_scacchiera.py:273
 msgid "Tab: la casa, coi pezzi che la difendono e la attaccano."
 msgstr "Tab: a casa, com as peças que a defendem e a atacam."
 
-#: orologic_modules/finestra_scacchiera.py:242
-#: orologic_modules/finestra_scacchiera.py:265
+#: orologic_modules/finestra_scacchiera.py:251
+#: orologic_modules/finestra_scacchiera.py:274
 msgid ""
 "l: l'ultima mossa; L: le ultime due; u: alla casa d'arrivo dell'ultima "
 "mossa."
@@ -4411,58 +4420,58 @@ msgstr ""
 "l: o último lance; L: os dois últimos; u: para a casa de chegada do último "
 "lance."
 
-#: orologic_modules/finestra_scacchiera.py:243
-#: orologic_modules/finestra_scacchiera.py:266
+#: orologic_modules/finestra_scacchiera.py:252
+#: orologic_modules/finestra_scacchiera.py:275
 msgid "m: le mosse possibili del pezzo sollevato, o di quello sulla casa."
 msgstr "m: os lances possíveis da peça levantada, ou da que está na casa."
 
-#: orologic_modules/finestra_scacchiera.py:244
+#: orologic_modules/finestra_scacchiera.py:253
 msgid "Da F1 a F5: gli orologi, come da .1 a .5."
 msgstr "De F1 a F5: os relógios, como de .1 a .5."
 
-#: orologic_modules/finestra_scacchiera.py:246
+#: orologic_modules/finestra_scacchiera.py:255
 msgid ""
 "Backspace: la pausa e il menu dei comandi; nel menu, Backspace fa ripartire "
 "il tempo."
 msgstr ""
 "Backspace: a pausa e o menu de comandos; no menu, Backspace retoma o tempo."
 
-#: orologic_modules/finestra_scacchiera.py:274
-#: orologic_modules/finestra_scacchiera.py:278
+#: orologic_modules/finestra_scacchiera.py:283
+#: orologic_modules/finestra_scacchiera.py:287
 msgid "Aiuto della scacchiera"
 msgstr "Ajuda do tabuleiro"
 
-#: orologic_modules/finestra_scacchiera.py:296
-#: orologic_modules/finestra_scacchiera.py:303
+#: orologic_modules/finestra_scacchiera.py:305
+#: orologic_modules/finestra_scacchiera.py:312
 msgid "Comandi della partita"
 msgstr "Comandos da partida"
 
 #: orologic_modules/easyfish/easyfish_app.py:245
 #: orologic_modules/easyfish/interaction.py:444
-#: orologic_modules/finestra_scacchiera.py:348
-#: orologic_modules/finestra_scacchiera.py:363
+#: orologic_modules/finestra_scacchiera.py:357
+#: orologic_modules/finestra_scacchiera.py:372
 #: orologic_modules/lichess_app.py:966
 msgid "Scacchiera"
 msgstr "Tabuleiro"
 
-#: orologic_modules/finestra_scacchiera.py:509
+#: orologic_modules/finestra_scacchiera.py:536
 msgid "Qui la scacchiera e' solo da guardare."
 msgstr "Aqui o tabuleiro é só para olhar."
 
-#: orologic_modules/finestra_scacchiera.py:650
+#: orologic_modules/finestra_scacchiera.py:677
 msgid "Dal Nero"
 msgstr "Lado das pretas"
 
-#: orologic_modules/finestra_scacchiera.py:650
+#: orologic_modules/finestra_scacchiera.py:677
 msgid "Dal Bianco"
 msgstr "Lado das brancas"
 
-#: orologic_modules/finestra_scacchiera.py:711
+#: orologic_modules/finestra_scacchiera.py:738
 #, python-brace-format
 msgid "Sollevato: {pezzo}"
 msgstr "Levantada: {pezzo}"
 
-#: orologic_modules/finestra_scacchiera.py:731
+#: orologic_modules/finestra_scacchiera.py:758
 #: orologic_modules/lichess_app.py:744
 msgid "Promozione"
 msgstr "Promoção"
@@ -9396,82 +9405,101 @@ msgstr "Alarme {n}, {chi} caiu para {quanto}"
 msgid "Bandierina caduta: tempo scaduto per {chi}."
 msgstr "Bandeira caída: O tempo acabou para {chi}."
 
-#: orologic_modules/pgn_extract.py:263
+#: orologic_modules/pgn_extract.py:410
+#, python-brace-format
+msgid "{primo} e {secondo} non vanno insieme: pgn-extract si fermerebbe."
+msgstr "{primo} e {secondo} não combinam: o pgn-extract pararia."
+
+#: orologic_modules/pgn_extract.py:412
+#, python-brace-format
+msgid "{primo} e {secondo} non vanno insieme quando: {quando}"
+msgstr "{primo} e {secondo} não combinam quando: {quando}"
+
+#: orologic_modules/pgn_extract.py:413
+#, python-brace-format
+msgid ""
+"{primo} e {secondo} insieme: pgn-extract ne ignorerebbe uno, o spegnerebbe "
+"qualcosa."
+msgstr ""
+"{primo} e {secondo} juntos: o pgn-extract ignoraria um deles, ou desligaria "
+"algo."
+
+#: orologic_modules/pgn_extract.py:466
 msgid "Altro file sorgente"
 msgstr "Outro arquivo de origem"
 
-#: orologic_modules/pgn_extract.py:268
+#: orologic_modules/pgn_extract.py:471
 msgid "un archivio in piu' da leggere insieme al primo, per unirli."
 msgstr "mais um arquivo para ler junto com o primeiro, para juntá-los."
 
-#: orologic_modules/pgn_extract.py:316
+#: orologic_modules/pgn_extract.py:529
 #, python-brace-format
 msgid "{voce} vuole un valore."
 msgstr "{voce} precisa de um valor."
 
-#: orologic_modules/pgn_extract.py:321
+#: orologic_modules/pgn_extract.py:534
 #, python-brace-format
 msgid "{voce} vuole un numero intero."
 msgstr "{voce} precisa de um número inteiro."
 
-#: orologic_modules/pgn_extract.py:323
+#: orologic_modules/pgn_extract.py:536
 #, python-brace-format
 msgid "{voce} vuole un numero da {minimo} in su."
 msgstr "{voce} precisa de um número a partir de {minimo}."
 
-#: orologic_modules/pgn_extract.py:325
+#: orologic_modules/pgn_extract.py:538
 #, python-brace-format
 msgid "{voce} vuole un numero fino a {massimo}."
 msgstr "{voce} precisa de um número até {massimo}."
 
-#: orologic_modules/pgn_extract.py:330
+#: orologic_modules/pgn_extract.py:543
 #, python-brace-format
 msgid "{voce} vuole uno di questi valori: {valori}."
 msgstr "{voce} precisa de um destes valores: {valori}."
 
-#: orologic_modules/pgn_extract.py:334
+#: orologic_modules/pgn_extract.py:547
 #, python-brace-format
 msgid "Il file {percorso} non c'e'."
 msgstr "O arquivo {percorso} não existe."
 
-#: orologic_modules/pgn_extract.py:347
+#: orologic_modules/pgn_extract.py:560
 #, python-brace-format
 msgid "Il valore {valore} non va bene per {voce}."
 msgstr "O valor {valore} não serve para {voce}."
 
-#: orologic_modules/pgn_extract.py:368
+#: orologic_modules/pgn_extract.py:581
 msgid "manca il file"
 msgstr "falta o arquivo"
 
-#: orologic_modules/pgn_extract.py:370
+#: orologic_modules/pgn_extract.py:583
 msgid "manca il valore"
 msgstr "falta o valor"
 
-#: orologic_modules/pgn_extract.py:447 orologic_modules/pgn_extract.py:688
+#: orologic_modules/pgn_extract.py:660 orologic_modules/pgn_extract.py:913
 #, python-brace-format
 msgid "Comando: {comando}"
 msgstr "Comando: {comando}"
 
-#: orologic_modules/pgn_extract.py:448
+#: orologic_modules/pgn_extract.py:661
 #, python-brace-format
 msgid "Legge: {sorgente}."
 msgstr "Lê: {sorgente}."
 
-#: orologic_modules/pgn_extract.py:451
+#: orologic_modules/pgn_extract.py:664
 #, python-brace-format
 msgid "Legge anche: {sorgente}."
 msgstr "Lê também: {sorgente}."
 
-#: orologic_modules/pgn_extract.py:453
+#: orologic_modules/pgn_extract.py:666
 msgid "Controlla soltanto, senza scrivere partite."
 msgstr "Só verifica, sem gravar partidas."
 
-#: orologic_modules/pgn_extract.py:455
+#: orologic_modules/pgn_extract.py:668
 #, python-brace-format
 msgid "Scrive piu' file nella cartella {cartella}."
 msgstr "Grava vários arquivos na pasta {cartella}."
 
-#: orologic_modules/pgn_extract.py:457
+#: orologic_modules/pgn_extract.py:670
 #, python-brace-format
 msgid ""
 "Scrive: {destinazione}, che c'e' gia': prima la copia di sicurezza nella "
@@ -9480,108 +9508,108 @@ msgstr ""
 "Grava: {destinazione}, que já existe: primeiro a cópia de segurança na pasta"
 " pgn, depois o substitui."
 
-#: orologic_modules/pgn_extract.py:459
+#: orologic_modules/pgn_extract.py:672
 #, python-brace-format
 msgid "Scrive: {destinazione}, un file nuovo."
 msgstr "Grava: {destinazione}, um arquivo novo."
 
-#: orologic_modules/pgn_extract.py:635
+#: orologic_modules/pgn_extract.py:860
 #, python-brace-format
 msgid "Partite lette: {totale}; accettate dai criteri: {abbinate}."
 msgstr "Partidas lidas: {totale}; aceitas pelos critérios: {abbinate}."
 
-#: orologic_modules/pgn_extract.py:637
+#: orologic_modules/pgn_extract.py:862
 #, python-brace-format
 msgid "Partite riportate da pgn-extract: {n}."
 msgstr "Partidas relatadas pelo pgn-extract: {n}."
 
-#: orologic_modules/pgn_extract.py:639
+#: orologic_modules/pgn_extract.py:864
 msgid "Nessun messaggio di errore o di avviso."
 msgstr "Nenhuma mensagem de erro ou de aviso."
 
-#: orologic_modules/pgn_extract.py:641
+#: orologic_modules/pgn_extract.py:866
 #, python-brace-format
 msgid "Messaggi di pgn-extract: {n}, di {tipi} tipi."
 msgstr "Mensagens do pgn-extract: {n}, de {tipi} tipos."
 
-#: orologic_modules/pgn_extract.py:643
+#: orologic_modules/pgn_extract.py:868
 #, python-brace-format
 msgid "{volte} volte: {tipo}"
 msgstr "{volte} vezes: {tipo}"
 
-#: orologic_modules/pgn_extract.py:646
+#: orologic_modules/pgn_extract.py:871
 #, python-brace-format
 msgid "Esempio: {dettagli}"
 msgstr "Exemplo: {dettagli}"
 
-#: orologic_modules/pgn_extract.py:689
+#: orologic_modules/pgn_extract.py:914
 #, python-brace-format
 msgid "Iniziato: {quando}"
 msgstr "Iniciado: {quando}"
 
-#: orologic_modules/pgn_extract.py:730
+#: orologic_modules/pgn_extract.py:955
 #, python-brace-format
 msgid "Finito: codice {codice}, {secondi:.1f} secondi."
 msgstr "Concluído: código {codice}, {secondi:.1f} segundos."
 
-#: orologic_modules/pgn_extract.py:757
+#: orologic_modules/pgn_extract.py:982
 msgid "appunti"
 msgstr "area-de-transferencia"
 
-#: orologic_modules/pgn_extract.py:838
+#: orologic_modules/pgn_extract.py:1063
 #, python-brace-format
 msgid "Il sito di pgn-extract ha risposto con l'errore {codice}."
 msgstr "O site do pgn-extract respondeu com o erro {codice}."
 
-#: orologic_modules/pgn_extract.py:842 orologic_modules/rete.py:118
+#: orologic_modules/pgn_extract.py:1067 orologic_modules/rete.py:118
 #: orologic_modules/rete.py:170 orologic_modules/rete.py:186
 #, python-brace-format
 msgid "Nessuna risposta entro {n} secondi."
 msgstr "Nenhuma resposta em {n} segundos."
 
-#: orologic_modules/pgn_extract.py:844 orologic_modules/rete.py:125
+#: orologic_modules/pgn_extract.py:1069 orologic_modules/rete.py:125
 #: orologic_modules/rete.py:172
 #, python-brace-format
 msgid "Connessione non riuscita: {motivo}"
 msgstr "Falha na conexão: {motivo}"
 
-#: orologic_modules/pgn_extract.py:862 orologic_modules/rete.py:188
+#: orologic_modules/pgn_extract.py:1087 orologic_modules/rete.py:188
 #, python-brace-format
 msgid "Lettura interrotta: {motivo}"
 msgstr "Leitura interrompida: {motivo}"
 
-#: orologic_modules/pgn_extract.py:865
+#: orologic_modules/pgn_extract.py:1090
 msgid "Sul sito di pgn-extract non trovo la versione."
 msgstr "Não encontro a versão no site do pgn-extract."
 
-#: orologic_modules/pgn_extract.py:888
+#: orologic_modules/pgn_extract.py:1113
 #: orologic_modules/stockfish_installer.py:105
 #, python-brace-format
 msgid "Scaricamento interrotto: {motivo}"
 msgstr "Download interrompido: {motivo}"
 
-#: orologic_modules/pgn_extract.py:904
+#: orologic_modules/pgn_extract.py:1163
 #: orologic_modules/stockfish_installer.py:126
 #, python-brace-format
 msgid "Impossibile preparare la cartella di lavoro: {motivo}"
 msgstr "Não foi possível preparar a pasta de trabalho: {motivo}"
 
-#: orologic_modules/pgn_extract.py:906
+#: orologic_modules/pgn_extract.py:1166 orologic_modules/pgn_extract.py:1171
 #, python-brace-format
 msgid "Scarico {nome}, {numero} di {tutti}."
 msgstr "Baixando {nome}, {numero} de {tutti}."
 
-#: orologic_modules/pgn_extract.py:914
+#: orologic_modules/pgn_extract.py:1176
 msgid "Il pgn-extract scaricato non risponde: resta quello di prima."
 msgstr "O pgn-extract baixado não responde: fica o anterior."
 
-#: orologic_modules/pgn_extract.py:924
+#: orologic_modules/pgn_extract.py:1186
 #: orologic_modules/stockfish_installer.py:177
 #, python-brace-format
 msgid "Sostituzione non riuscita: {motivo}"
 msgstr "Falha na substituição: {motivo}"
 
-#: orologic_modules/pgn_extract.py:939
+#: orologic_modules/pgn_extract.py:1201
 #, python-brace-format
 msgid ""
 "E' uscita la versione {nuova} di pgn-extract, tu hai la {vecchia}. La "
@@ -9590,7 +9618,7 @@ msgstr ""
 "Saiu a versão {nuova} do pgn-extract, você tem a {vecchia}. Baixo do site de"
 " David J. Barnes, com o guia, o eco.pgn e a licença?"
 
-#: orologic_modules/pgn_extract.py:941
+#: orologic_modules/pgn_extract.py:1203
 #, python-brace-format
 msgid ""
 "Accanto a pgn-extract mancano dei file: {file}. Riscarico pgn-extract "
@@ -10207,61 +10235,61 @@ msgstr "O servidor respondeu sem dados."
 msgid "La risposta del server non e' comprensibile."
 msgstr "A resposta do servidor não é compreensível."
 
-#: orologic_modules/scacchiera.py:118
+#: orologic_modules/scacchiera.py:128
 #, python-brace-format
 msgid "{casa}, {pezzo}"
 msgstr "{casa}, {pezzo}"
 
 #: orologic_modules/easyfish/analysis_utils.py:83
-#: orologic_modules/scacchiera.py:118
+#: orologic_modules/scacchiera.py:128
 msgid "vuota"
 msgstr "vazia"
 
-#: orologic_modules/scacchiera.py:122
+#: orologic_modules/scacchiera.py:132
 msgid "Nessun pezzo in mano."
 msgstr "Nenhuma peça na mão."
 
-#: orologic_modules/scacchiera.py:123
+#: orologic_modules/scacchiera.py:133
 #, python-brace-format
 msgid "In mano: {pezzo}, da {casa}."
 msgstr "Na mão: {pezzo}, de {casa}."
 
-#: orologic_modules/scacchiera.py:128 orologic_modules/ui.py:952
+#: orologic_modules/scacchiera.py:138 orologic_modules/ui.py:952
 msgid "Nessuna mossa ancora giocata."
 msgstr "Nenhum lance jogado ainda."
 
-#: orologic_modules/scacchiera.py:143
+#: orologic_modules/scacchiera.py:153
 #, python-brace-format
 msgid "{casa}, vuota"
 msgstr "{casa}, vazia"
 
-#: orologic_modules/scacchiera.py:153
+#: orologic_modules/scacchiera.py:163
 #, python-brace-format
 msgid "{pezzo} in {casa} non ha mosse."
 msgstr "{pezzo} em {casa} não tem lances."
 
-#: orologic_modules/scacchiera.py:154
+#: orologic_modules/scacchiera.py:164
 #, python-brace-format
 msgid "{pezzo} in {casa}: {mosse}."
 msgstr "{pezzo} em {casa}: {mosse}."
 
-#: orologic_modules/scacchiera.py:234
+#: orologic_modules/scacchiera.py:244
 msgid "Il pezzo e' gia' su quella casa."
 msgstr "A peça já está nessa casa."
 
-#: orologic_modules/scacchiera.py:236
+#: orologic_modules/scacchiera.py:246
 msgid "Non c'e' un pezzo da muovere."
 msgstr "Não há peça para mover."
 
-#: orologic_modules/scacchiera.py:241
+#: orologic_modules/scacchiera.py:251
 msgid "Il re e' sotto scacco, e cosi' ci resta."
 msgstr "O rei está em xeque, e assim continua."
 
-#: orologic_modules/scacchiera.py:242
+#: orologic_modules/scacchiera.py:252
 msgid "La mossa lascerebbe il re sotto scacco."
 msgstr "O lance deixaria o rei em xeque."
 
-#: orologic_modules/scacchiera.py:243
+#: orologic_modules/scacchiera.py:253
 #, python-brace-format
 msgid "{pezzo} non puo' andare in {casa}."
 msgstr "{pezzo} não pode ir para {casa}."

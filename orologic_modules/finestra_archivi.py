@@ -129,8 +129,9 @@ def controlla_in_sottofondo(finestra):
     percorso = finestra.pe
 
     def nel_filo():
+        catalogo_arrivato = pgn_extract.aggiorna_il_catalogo(percorso)
         domanda, motivo = pgn_extract.aggiornamento(percorso)
-        wx.CallAfter(finestra.proposta_di_aggiornamento, domanda, motivo)
+        wx.CallAfter(finestra.proposta_di_aggiornamento, domanda, motivo, catalogo_arrivato)
 
     threading.Thread(target=nel_filo, name="pgn-extract, aggiornamenti", daemon=True).start()
 
@@ -343,9 +344,21 @@ class FinestraArchivi(wx.Dialog):
         return area
 
     def _carica_pe(self):
-        """I parametri da pe -h e le sezioni della guida."""
-        self.parametri = pgn_extract.parametri(pgn_extract.testo_dell_aiuto(self.pe) or "")
+        """I parametri da pe -h col catalogo di David, se c'e', e le sezioni
+        della guida."""
+        catalogo = pgn_extract.leggi_il_catalogo(pgn_extract.percorso_del_catalogo(self.pe))
+        self.parametri = pgn_extract.parametri(pgn_extract.testo_dell_aiuto(self.pe) or "", catalogo)
         self.sezioni = pgn_extract.leggi_la_guida(pgn_extract.percorso_della_guida(self.pe))
+
+    def _ricarica_i_parametri(self):
+        """I parametri di nuovo, dopo uno scaricamento: gli scelti restano,
+        se il pe nuovo li ha ancora."""
+        voci = [scelto.parametro.voce for scelto in self.scelti]
+        self._carica_pe()
+        per_voce = {parametro.voce: parametro for parametro in self.parametri}
+        self.scelti = [pgn_extract.Scelto(per_voce[voce], scelto.valore) for voce, scelto in zip(voci, self.scelti, strict=True) if voce in per_voce]
+        self._riempi()
+        self.aggiorna()
 
     # L'ingresso e gli aggiornamenti.
 
@@ -363,15 +376,19 @@ class FinestraArchivi(wx.Dialog):
             self.disponibili.SetFocus()
         controlla_in_sottofondo(self)
 
-    def proposta_di_aggiornamento(self, domanda, motivo):
+    def proposta_di_aggiornamento(self, domanda, motivo, catalogo_arrivato=False):
         """Dal filo degli aggiornamenti: la domanda, se c'e' da scaricare, o
-        il motivo, se il sito non ha risposto. Con una finestra di Windows
+        il motivo, se il sito non ha risposto; e, se e' arrivato da solo, il
+        catalogo delle opzioni, che vale subito. Con una finestra di Windows
         aperta sopra, aspetta che si chiuda."""
         if not self:
             return
         if self._occupata or self.in_corso():
-            wx.CallLater(500, self.proposta_di_aggiornamento, domanda, motivo)
+            wx.CallLater(500, self.proposta_di_aggiornamento, domanda, motivo, catalogo_arrivato)
             return
+        if catalogo_arrivato:
+            self._ricarica_i_parametri()
+            self._aggiungi_all_uscita(_("Scaricato {nome}, il catalogo delle opzioni di pgn-extract: ora Orologic conosce anche i conflitti fra le opzioni.").format(nome=pgn_extract.CATALOGO))
         if motivo:
             self._aggiungi_all_uscita(_("Aggiornamenti di pgn-extract non verificati: {motivo}").format(motivo=motivo))
             return
@@ -386,13 +403,7 @@ class FinestraArchivi(wx.Dialog):
             self._aggiungi_all_uscita(_("Scaricamento non riuscito: {motivo}").format(motivo=errore))
             return
         self.pe = pgn_extract.eseguibile() or self.pe
-        voci = [scelto.parametro.voce for scelto in self.scelti]
-        self._carica_pe()
-        # I parametri scelti restano, se il pe nuovo li ha ancora.
-        per_voce = {parametro.voce: parametro for parametro in self.parametri}
-        self.scelti = [pgn_extract.Scelto(per_voce[voce], scelto.valore) for voce, scelto in zip(voci, self.scelti, strict=True) if voce in per_voce]
-        self._riempi()
-        self.aggiorna()
+        self._ricarica_i_parametri()
         self._aggiungi_all_uscita(_("Scaricato pgn-extract {versione}.").format(versione=versione))
 
     def _aggiungi_all_uscita(self, riga):
@@ -534,7 +545,16 @@ class FinestraArchivi(wx.Dialog):
         scelto = pgn_extract.Scelto(voci[indice])
         self.scelti.append(scelto)
         self._riempi(indice, len(self.scelti) - 1)
-        self._annuncia([_("Aggiunto: {voce}.").format(voce=scelto.etichetta)])
+        # I conflitti del catalogo col parametro nuovo si dicono subito; i
+        # gravi senza condizioni fermano poi Applica.
+        contrari = [
+            pgn_extract.spiega_il_conflitto(primo, secondo, conflitto)
+            for primo, secondo, conflitto in pgn_extract.conflitti(self.scelti)
+            if scelto.parametro is primo or scelto.parametro is secondo
+        ]
+        if contrari:
+            suona("no")
+        self._annuncia([_("Aggiunto: {voce}.").format(voce=scelto.etichetta), *contrari])
         self.aggiorna()
 
     def rimuovi(self):
@@ -653,6 +673,9 @@ class FinestraArchivi(wx.Dialog):
         for scelto in self.scelti:
             if scelto.manca_il_valore or (scelto.parametro.opzione == pgn_extract.ALTRO_SORGENTE and not scelto.valore):
                 righe.append(_("Manca il valore di {voce}.").format(voce=scelto.parametro.voce))
+        for primo, secondo, conflitto in pgn_extract.conflitti(self.scelti):
+            if pgn_extract.blocca(conflitto):
+                righe.append(pgn_extract.spiega_il_conflitto(primo, secondo, conflitto))
         destinazione = self.percorso_della_destinazione()
         if pgn_extract.serve_la_destinazione(self.scelti):
             if not destinazione:

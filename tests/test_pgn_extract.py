@@ -9,6 +9,7 @@ Le prove con pe vero partono soltanto se l'eseguibile c'e' nella cartella
 pgn-extract del progetto, che non e' in git; la rete non si tocca mai."""
 
 import io
+import json
 import os
 import shutil
 
@@ -94,6 +95,55 @@ ARCHIVIO = """[Event "Prova"]
 """
 
 
+# Un catalogo nella forma di arguments.json di David, scritto per la prova.
+CATALOGO = {
+    "format": "pgn-extract-arguments",
+    "format_version": 1,
+    "program_version": "v99-01",
+    "options": [
+        {
+            "name": "-7",
+            "aliases": ["--seven"],
+            "value": None,
+            "repetition": "idempotent",
+            "description": "Seven tags.",
+            "help_id": "sette",
+            "conflicts_with": [
+                {"option": "-C", "severity": "error"},
+                {"option": "--minmoves", "severity": "warning", "when": "Only when the moon is full."},
+            ],
+        },
+        {
+            "name": "-C",
+            "aliases": ["--nocomments"],
+            "value": None,
+            "repetition": "idempotent",
+            "description": "No comments.",
+            "help_id": "dup",
+            "conflicts_with": [{"option": "-7", "severity": "error"}],
+        },
+        {
+            "name": "--minmoves",
+            "aliases": [],
+            "value": {"arity": "required", "kind": "unsigned-integer", "forms": {"--minmoves": ["separate"]}, "minimum": 1},
+            "repetition": "replace",
+            "description": "Minimum moves.",
+            "help_id": "output",
+            "conflicts_with": [{"option": "-7", "severity": "warning", "when": "Only when the moon is full."}],
+        },
+        {
+            "name": "--nuovissimo",
+            "aliases": [],
+            "value": {"arity": "required", "kind": "unsigned-integer", "forms": {"--nuovissimo": ["separate"]}, "minimum": 2, "maximum": 9, "syntax": "N"},
+            "repetition": "accumulate",
+            "description": "A new number.",
+            "help_id": "interna",
+        },
+        {"name": "--sola", "aliases": [], "value": None, "repetition": "idempotent", "description": "A flag."},
+    ],
+}
+
+
 def _per_voce(elenco):
     return {parametro.voce: parametro for parametro in elenco}
 
@@ -127,6 +177,60 @@ def test_i_parametri_uniscono_l_elenco_e_la_tabella():
     assert per_voce["--nuovissimo"].valore == "testo" and per_voce["--nuovissimo"].separato
     assert not per_voce["--nuovissimo"].conosciuto
     assert per_voce["--sola"].valore is None
+
+
+def test_il_catalogo_si_legge_solo_se_e_lui(tmp_path):
+    percorso = tmp_path / "arguments.json"
+    percorso.write_text(json.dumps(CATALOGO), encoding="utf-8")
+    catalogo = pgn_extract.leggi_il_catalogo(str(percorso))
+    assert catalogo.versione == "v99-01"
+    # I nomi lunghi senza badare alle maiuscole, i brevi si'.
+    assert catalogo.canonico("--NOCOMMENTS") == "-C"
+    assert catalogo.canonico("-c") is None
+    assert catalogo.trova("--seven")["name"] == "-7"
+    # Un file d'altro genere, rotto o assente non e' un catalogo.
+    percorso.write_text(json.dumps({**CATALOGO, "format": "altro"}), encoding="utf-8")
+    assert pgn_extract.leggi_il_catalogo(str(percorso)) is None
+    percorso.write_text("{ rotto", encoding="utf-8")
+    assert pgn_extract.leggi_il_catalogo(str(percorso)) is None
+    assert pgn_extract.leggi_il_catalogo(str(tmp_path / "manca.json")) is None
+    assert pgn_extract.leggi_il_catalogo(None) is None
+
+
+def test_il_catalogo_arricchisce_i_parametri():
+    catalogo = pgn_extract.catalogo_dai_dati(CATALOGO)
+    per_voce = _per_voce(pgn_extract.parametri(AIUTO, catalogo))
+    # I conflitti e il nome di David.
+    assert per_voce["-C"].canonico == "-C"
+    assert per_voce["-C"].conflitti == (pgn_extract.Conflitto("-7", True),)
+    # L'ancora del catalogo per prima, quella della tabella dopo.
+    assert per_voce["-7"].ancora == "sette" and per_voce["-7"].altre_ancore == ("-7",)
+    # Lo sconosciuto alla tabella col valore giusto, dal catalogo.
+    nuovo = per_voce["--nuovissimo"]
+    assert (nuovo.valore, nuovo.minimo, nuovo.massimo, nuovo.separato, nuovo.ripetibile, nuovo.esempio) == ("intero", 2, 9, True, True, "N")
+    assert nuovo.conosciuto and nuovo.canonico == "--nuovissimo"
+    assert pgn_extract.valida(nuovo, "1")[0] is None
+    assert per_voce["--sola"].valore is None
+    # Senza catalogo, tutto come prima.
+    senza = _per_voce(pgn_extract.parametri(AIUTO))
+    assert senza["-C"].conflitti == () and senza["-C"].canonico is None
+    assert senza["--nuovissimo"].valore == "testo"
+
+
+def test_i_conflitti_fra_gli_scelti():
+    per_voce = _per_voce(pgn_extract.parametri(AIUTO, pgn_extract.catalogo_dai_dati(CATALOGO)))
+    scelti = [pgn_extract.Scelto(per_voce[voce]) for voce in ("-7", "-C", "--minmoves", "--sola")]
+    trovati = pgn_extract.conflitti(scelti)
+    assert [(primo.voce, secondo.voce) for primo, secondo, _conflitto in trovati] == [("-7", "-C"), ("-7", "--minmoves")]
+    grave, lieve = (conflitto for _primo, _secondo, conflitto in trovati)
+    assert pgn_extract.blocca(grave) and not pgn_extract.blocca(lieve)
+    assert pgn_extract.spiega_il_conflitto(*trovati[0]) == "-7 e -C non vanno insieme: pgn-extract si fermerebbe."
+    assert pgn_extract.spiega_il_conflitto(*trovati[1]) == (
+        "-7 e --minmoves insieme: pgn-extract ne ignorerebbe uno, o spegnerebbe qualcosa. Only when the moon is full."
+    )
+    grave_con_condizione = pgn_extract.Conflitto("-C", True, "When it rains.")
+    assert not pgn_extract.blocca(grave_con_condizione)
+    assert pgn_extract.spiega_il_conflitto(per_voce["-7"], per_voce["-C"], grave_con_condizione) == "-7 e -C non vanno insieme quando: When it rains."
 
 
 def test_la_validazione_dice_perche():
@@ -228,6 +332,15 @@ def test_la_guida_in_sezioni():
     nessuno = pgn_extract.Parametro(voce="-Z", opzione="-Z", prefisso="-Z")
     assert pgn_extract.sezione_del_parametro(sezioni, nessuno) is None
     assert pgn_extract.guida_intera(sezioni)[0] == "Output files (-o, --output, -a, --append)"
+    # L'ancora del catalogo dentro una sezione, su un paragrafo: si legge la
+    # sezione che la contiene; un'ancora che la guida non ha lascia il posto
+    # alla seconda.
+    con_interne = pgn_extract.sezioni_della_guida(GUIDA.replace("<p>The -o flag", '<p id="interna">The -o flag'))
+    assert con_interne[0].interne == ("interna",)
+    interna = pgn_extract.Parametro(voce="-Y", opzione="-Y", prefisso="-Y", ancora="interna")
+    assert pgn_extract.sezione_del_parametro(con_interne, interna).ancora == "output"
+    seconda = pgn_extract.Parametro(voce="-Y", opzione="-Y", prefisso="-Y", ancora="nuova", altre_ancore=("dup",))
+    assert pgn_extract.sezione_del_parametro(sezioni, seconda).ancora == "dup"
 
 
 def test_la_tabella_copre_ogni_parametro_di_pe():
@@ -336,7 +449,13 @@ def _sito_finto(monkeypatch, contenuti, guasto=None):
 def test_lo_scaricamento_mette_la_cartella_nuova_solo_se_pe_risponde(monkeypatch):
     with open(PE_VERO, "rb") as file:
         eseguibile = file.read()
-    contenuti = {"pgn-extract.exe": eseguibile, "eco.pgn": b"[ECO \"A00\"]\n\n1. a3 *\n", "COPYING": b"GPL", "help.html": GUIDA.encode()}
+    contenuti = {
+        "pgn-extract.exe": eseguibile,
+        "eco.pgn": b"[ECO \"A00\"]\n\n1. a3 *\n",
+        "COPYING": b"GPL",
+        "help.html": GUIDA.encode(),
+        "arguments.json": json.dumps(CATALOGO).encode(),
+    }
     cartella = pgn_extract.cartella()
     shutil.rmtree(cartella, ignore_errors=True)
     os.makedirs(cartella)
@@ -354,17 +473,47 @@ def test_lo_scaricamento_mette_la_cartella_nuova_solo_se_pe_risponde(monkeypatch
         righe = []
         versione, errore = pgn_extract.scarica(righe.append, lambda: False)
         assert errore is None and pgn_extract.come_numeri(versione) >= (26, 4)
-        assert chiesti == [pgn_extract.SITO + nome for nome in pgn_extract.FILE_DEL_SITO]
-        assert sorted(os.listdir(cartella)) == sorted(pgn_extract.FILE_DEL_SITO)
+        assert chiesti == [pgn_extract.SITO + nome for nome in pgn_extract.FILE_DEL_SITO] + [pgn_extract.INDIRIZZO_DEL_CATALOGO]
+        assert sorted(os.listdir(cartella)) == sorted((*pgn_extract.FILE_DEL_SITO, pgn_extract.CATALOGO))
         assert pgn_extract.eseguibile() == os.path.join(cartella, "pgn-extract.exe")
         assert pgn_extract.mancano_dei_file() == []
-        assert len(righe) == len(pgn_extract.FILE_DEL_SITO)
+        assert len(righe) == len(pgn_extract.FILE_DEL_SITO) + 1
+        assert pgn_extract.leggi_il_catalogo(pgn_extract.percorso_del_catalogo()).versione == "v99-01"
+        # Il catalogo che non arriva non ferma niente: resta quello di prima.
+        _sito_finto(monkeypatch, contenuti, guasto="arguments.json")
+        versione, errore = pgn_extract.scarica(lambda _riga: None, lambda: False)
+        assert errore is None and versione
+        assert pgn_extract.leggi_il_catalogo(pgn_extract.percorso_del_catalogo()).versione == "v99-01"
         # Un pe che non risponde non prende il posto di quello buono.
         contenuti["pgn-extract.exe"] = b"non sono un programma"
         _sito_finto(monkeypatch, contenuti)
         versione, errore = pgn_extract.scarica(lambda _riga: None, lambda: False)
         assert versione is None and "non risponde" in errore
         assert pgn_extract.versione(os.path.join(cartella, "pgn-extract.exe"))
+    finally:
+        shutil.rmtree(cartella, ignore_errors=True)
+
+
+def test_il_catalogo_che_manca_arriva_da_solo(monkeypatch, tmp_path):
+    cartella = pgn_extract.cartella()
+    shutil.rmtree(cartella, ignore_errors=True)
+    os.makedirs(cartella)
+    nostro = pgn_extract.nella_cartella(pgn_extract.ESEGUIBILE)
+    with open(nostro, "wb") as file:
+        file.write(b"")
+    try:
+        # Non un catalogo: non si tiene.
+        _sito_finto(monkeypatch, {"arguments.json": b"<html>non trovato</html>"})
+        assert not pgn_extract.aggiorna_il_catalogo(nostro)
+        assert sorted(os.listdir(cartella)) == [pgn_extract.ESEGUIBILE]
+        chiesti = _sito_finto(monkeypatch, {"arguments.json": json.dumps(CATALOGO).encode()})
+        assert pgn_extract.aggiorna_il_catalogo(nostro)
+        assert chiesti == [pgn_extract.INDIRIZZO_DEL_CATALOGO]
+        assert pgn_extract.leggi_il_catalogo(pgn_extract.percorso_del_catalogo(nostro)).versione == "v99-01"
+        # C'e' gia': non si chiede piu'; e accanto a un pe scelto a mano no.
+        assert not pgn_extract.aggiorna_il_catalogo(nostro)
+        assert not pgn_extract.aggiorna_il_catalogo(str(tmp_path / "pe.exe"))
+        assert chiesti == [pgn_extract.INDIRIZZO_DEL_CATALOGO]
     finally:
         shutil.rmtree(cartella, ignore_errors=True)
 

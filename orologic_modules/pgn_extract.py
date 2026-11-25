@@ -15,6 +15,9 @@ Qui c'e' tutto quello che non e' finestra:
   i parametri, dall'elenco che pe stampa con -h, uniti alla tabella di
     parametri_pe.py, che dice che valore vuole ciascuno; un parametro che la
     tabella non conosce compare lo stesso, col valore senza controllo;
+  il catalogo arguments.json, che David ha scritto per Orologic (25
+    novembre 2026): i conflitti fra le opzioni, l'ancora di ognuna nella
+    guida, e il valore giusto per quelle che la tabella non conosce;
   la guida, help.html divisa nelle sue sezioni, per leggere solo quella del
     parametro;
   la validazione dei valori, con la motivazione;
@@ -24,9 +27,11 @@ Qui c'e' tutto quello che non e' finestra:
   lo scaricamento e l'aggiornamento dal sito.
 """
 
+import contextlib
 import dataclasses
 import filecmp
 import html
+import json
 import os
 import re
 import shutil
@@ -48,6 +53,13 @@ GUIDA = "help.html"
 # I file che si scaricano insieme, e che un aggiornamento riscrive tutti:
 # eco.pgn puo' essere piu' ricco del nostro (Gabriele, 24 novembre 2026).
 FILE_DEL_SITO = (ESEGUIBILE, "eco.pgn", "COPYING", GUIDA)
+# Il catalogo delle opzioni che David ha scritto per Orologic, arguments.json
+# (25 novembre 2026): nomi, valori, l'ancora nella guida e i conflitti. Non e'
+# ancora nella pagina del sito, ma sta a questo indirizzo; se manca, Orologic
+# fa come prima, con la sua tabella.
+CATALOGO = "arguments.json"
+INDIRIZZO_DEL_CATALOGO = "https://www.cs.kent.ac.uk/~djb/pgn-extract/" + CATALOGO
+FORMATO_DEL_CATALOGO = "pgn-extract-arguments"
 # La chiave del database col percorso indicato a mano.
 CHIAVE_DEL_PERCORSO = "pgn_extract_path"
 # Quanto si aspetta pe per --version e -h, e il sito.
@@ -150,7 +162,8 @@ def testo_dell_aiuto(percorso):
 @dataclasses.dataclass
 class Parametro:
     """Un parametro di pe, come lo vede la finestra. riga e' la spiegazione
-    di pe -h, in inglese; conosciuto e' vero se la tabella lo descrive."""
+    di pe -h, in inglese; conosciuto e' vero se la tabella, o il catalogo di
+    David, lo descrive."""
 
     voce: str
     opzione: str
@@ -168,6 +181,11 @@ class Parametro:
     massimo: object = None
     scelte: tuple = ()
     conosciuto: bool = True
+    # Dal catalogo di David: il nome con cui lui la chiama, i conflitti e le
+    # ancore della guida da provare dopo la prima.
+    canonico: object = None
+    conflitti: tuple = ()
+    altre_ancore: tuple = ()
 
     @property
     def etichetta(self):
@@ -209,6 +227,191 @@ def _rimando(spiegazione):
     """L'opzione a cui rimanda una riga come see -C, o None."""
     trovato = re.fullmatch(r"see (-{1,2}[^\s;,.]+)\.?", spiegazione.strip())
     return trovato.group(1) if trovato else None
+
+
+# Il catalogo.
+
+
+@dataclasses.dataclass(frozen=True)
+class Conflitto:
+    """Un'opzione che pe non vuole insieme a questa, col nome del catalogo:
+    grave se pe si ferma, altrimenti avvisa e ne ignora una; quando, in
+    inglese, la condizione, se il conflitto non vale sempre."""
+
+    opzione: str
+    grave: bool
+    quando: object = None
+
+
+def _chiave(nome):
+    """I nomi lunghi di pe non badano alle maiuscole, i brevi si'."""
+    return nome.casefold() if nome.startswith("--") else nome
+
+
+class Catalogo:
+    """arguments.json letto: le opzioni per nome, e i nomi, alias compresi."""
+
+    def __init__(self, dati):
+        self.versione = dati.get("program_version")
+        self.opzioni = {}
+        self._nomi = {}
+        for opzione in dati.get("options") or []:
+            nome = opzione.get("name")
+            if not isinstance(nome, str):
+                continue
+            self.opzioni[nome] = opzione
+            for altro in (nome, *(opzione.get("aliases") or ())):
+                if isinstance(altro, str):
+                    self._nomi.setdefault(_chiave(altro), nome)
+
+    def canonico(self, nome):
+        """Il nome del catalogo di un'opzione, o di un suo alias; o None."""
+        return self._nomi.get(_chiave(nome))
+
+    def trova(self, nome):
+        canonico = self.canonico(nome)
+        return self.opzioni.get(canonico) if canonico else None
+
+
+def percorso_del_catalogo(percorso_di_pe=None):
+    """arguments.json nella cartella di pe, o accanto al pe indicato a mano."""
+    nostro = nella_cartella(CATALOGO)
+    if os.path.isfile(nostro):
+        return nostro
+    if percorso_di_pe:
+        accanto = os.path.join(os.path.dirname(percorso_di_pe), CATALOGO)
+        if os.path.isfile(accanto):
+            return accanto
+    return None
+
+
+def catalogo_dai_dati(dati):
+    """Il catalogo, se i dati sono un arguments.json; altrimenti None."""
+    if not isinstance(dati, dict) or dati.get("format") != FORMATO_DEL_CATALOGO or not isinstance(dati.get("options"), list):
+        return None
+    return Catalogo(dati)
+
+
+def leggi_il_catalogo(percorso):
+    """Il catalogo del file, o None se manca o non si legge."""
+    if not percorso:
+        return None
+    try:
+        with open(percorso, encoding="utf-8") as file:
+            return catalogo_dai_dati(json.load(file))
+    except (OSError, ValueError):
+        return None
+
+
+def _conflitti_del_catalogo(opzione):
+    conflitti = []
+    for conflitto in opzione.get("conflicts_with") or []:
+        if isinstance(conflitto, dict) and isinstance(conflitto.get("option"), str):
+            conflitti.append(Conflitto(conflitto["option"], conflitto.get("severity") != "warning", conflitto.get("when") or None))
+    return tuple(conflitti)
+
+
+# I tipi di valore del catalogo che sono file da leggere; output-file e'
+# quello da scrivere, i numeri sono interi, le scelte una lista.
+_FILE_DA_LEGGERE = {
+    "argument-file",
+    "check-file-or-file-list",
+    "eco-file",
+    "input-file-list",
+    "material-file",
+    "player-ids-file",
+    "player-ratings-file",
+    "positional-variations-file",
+    "tag-criteria-file",
+    "tag-roster-file",
+    "textual-variations-file",
+}
+
+
+def _dal_catalogo(parametro, opzione):
+    """Il parametro arricchito dal catalogo: il nome di David, i conflitti,
+    l'ancora della guida per prima; e, dove la tabella tace, i limiti."""
+    parametro.canonico = opzione.get("name")
+    parametro.conflitti = _conflitti_del_catalogo(opzione)
+    help_id = opzione.get("help_id")
+    if isinstance(help_id, str) and help_id and help_id != parametro.ancora:
+        parametro.altre_ancore = tuple(ancora for ancora in (parametro.ancora,) if ancora)
+        parametro.ancora = help_id
+    valore = opzione.get("value") or {}
+    if parametro.minimo is None and isinstance(valore.get("minimum"), int):
+        parametro.minimo = valore["minimum"]
+    if parametro.massimo is None and isinstance(valore.get("maximum"), int):
+        parametro.massimo = valore["maximum"]
+    return parametro
+
+
+def _sconosciuto_dal_catalogo(opzione_di_pe, opzione, spiegazione):
+    """Un parametro che la tabella non conosce ma il catalogo si': il valore
+    col suo tipo, attaccato se la forma breve lo permette, i limiti, le
+    scelte e le ripetizioni come le scrive David."""
+    valore = opzione.get("value") or {}
+    tipo = valore.get("kind")
+    forme = (valore.get("forms") or {}).get(opzione_di_pe) or next(iter((valore.get("forms") or {}).values()), [])
+    if not valore:
+        genere = None
+    elif valore.get("choices"):
+        genere = "scelta"
+    elif tipo in ("integer", "unsigned-integer"):
+        genere = "intero"
+    elif tipo == "output-file":
+        genere = "file_nuovo"
+    elif tipo in _FILE_DA_LEGGERE:
+        genere = "file"
+    else:
+        genere = "testo"
+    minimo = valore.get("minimum")
+    if minimo is None and tipo == "unsigned-integer":
+        minimo = 0
+    parametro = Parametro(
+        voce=opzione_di_pe,
+        opzione=opzione_di_pe,
+        prefisso=opzione_di_pe,
+        valore=genere,
+        separato=bool(valore) and "attached" not in forme,
+        facoltativo=valore.get("arity") == "optional",
+        ripetibile=opzione.get("repetition") == "accumulate",
+        riga=spiegazione or opzione.get("description") or "",
+        esempio=valore.get("syntax") or valore.get("description"),
+        scelte=tuple((scelta, "") for scelta in valore.get("choices") or ()),
+    )
+    parametro.minimo = minimo
+    return _dal_catalogo(parametro, opzione)
+
+
+def conflitti(scelti):
+    """Le coppie di parametri scelti che pe non vuole insieme, secondo il
+    catalogo: [(primo, secondo, conflitto)], una volta per coppia."""
+    trovati = []
+    for indice, primo in enumerate(scelti):
+        for secondo in scelti[indice + 1 :]:
+            if secondo.parametro.canonico is None or secondo.parametro.canonico == primo.parametro.canonico:
+                continue
+            for conflitto in primo.parametro.conflitti:
+                if conflitto.opzione == secondo.parametro.canonico:
+                    trovati.append((primo.parametro, secondo.parametro, conflitto))
+                    break
+    return trovati
+
+
+def blocca(conflitto):
+    """Un conflitto grave e senza condizioni: con lui pe si ferma sempre."""
+    return conflitto.grave and not conflitto.quando
+
+
+def spiega_il_conflitto(primo, secondo, conflitto):
+    """Il conflitto a parole, per l'utente; la condizione di David resta in
+    inglese, come le righe di pe -h."""
+    if blocca(conflitto):
+        return _("{primo} e {secondo} non vanno insieme: pgn-extract si fermerebbe.").format(primo=primo.voce, secondo=secondo.voce)
+    if conflitto.grave:
+        return _("{primo} e {secondo} non vanno insieme quando: {quando}").format(primo=primo.voce, secondo=secondo.voce, quando=conflitto.quando)
+    testo = _("{primo} e {secondo} insieme: pgn-extract ne ignorerebbe uno, o spegnerebbe qualcosa.").format(primo=primo.voce, secondo=secondo.voce)
+    return f"{testo} {conflitto.quando}" if conflitto.quando else testo
 
 
 def _tabella():
@@ -269,12 +472,14 @@ def altro_sorgente():
     )
 
 
-def parametri(testo):
+def parametri(testo, catalogo=None):
     """I parametri da mostrare, dall'elenco di pe -h: prima Altro file
     sorgente, poi quelli della tabella nell'ordine di pe, con le varianti
     separate, come -Tw e -Tb, e senza quelli che Orologic gestisce da se';
     i rimandi, come --nocomments - see -C, sono gli altri nomi della voce;
-    per ultimi gli sconosciuti, con la loro riga."""
+    per ultimi gli sconosciuti, con la loro riga. Col catalogo di David ogni
+    parametro ha i suoi conflitti e l'ancora della guida, e lo sconosciuto
+    che il catalogo descrive vuole il valore giusto."""
     voci = voci_dell_aiuto(testo)
     righe = {opzione: spiegazione for opzione, _sintassi, spiegazione in voci}
     tabella = _tabella()
@@ -295,10 +500,18 @@ def parametri(testo):
         rimando = _rimando(spiegazione)
         if rimando is not None and rimando in righe:
             continue
-        elenco.append(_sconosciuto(opzione, sintassi, spiegazione))
-    # Gli alias della tabella che questo pe non conosce non si mostrano.
+        descritto = catalogo.trova(opzione) if catalogo is not None else None
+        if descritto is not None:
+            elenco.append(_sconosciuto_dal_catalogo(opzione, descritto, spiegazione))
+        else:
+            elenco.append(_sconosciuto(opzione, sintassi, spiegazione))
     for parametro in elenco:
+        # Gli alias della tabella che questo pe non conosce non si mostrano.
         parametro.alias = tuple(alias for alias in parametro.alias if alias in righe)
+        if catalogo is not None and parametro.canonico is None and parametro.opzione != ALTRO_SORGENTE:
+            descritto = catalogo.trova(parametro.opzione)
+            if descritto is not None:
+                _dal_catalogo(parametro, descritto)
     return elenco
 
 
@@ -505,10 +718,14 @@ class Sezione:
     ancora: str
     titolo: str
     righe: list
+    # Gli id dentro la sezione, su un elenco, un paragrafo o un titolo
+    # minore: anche li' David mette l'ancora di qualche opzione.
+    interne: tuple = ()
 
 
 def sezioni_della_guida(testo):
-    """help.html nelle sue sezioni <h2>, con l'id, il titolo e le righe."""
+    """help.html nelle sue sezioni <h2>, con l'id, il titolo, le righe e gli
+    id che stanno dentro."""
     sezioni = []
     pezzi = re.split(r"(<h2\b[^>]*>.*?</h2>)", testo or "", flags=re.I | re.S)
     for indice in range(1, len(pezzi), 2):
@@ -516,7 +733,8 @@ def sezioni_della_guida(testo):
         corpo = pezzi[indice + 1] if indice + 1 < len(pezzi) else ""
         ancora = re.search(r'\bid="([^"]+)"', intestazione)
         titolo = " ".join(_in_testo(intestazione))
-        sezioni.append(Sezione(ancora.group(1) if ancora else "", titolo, _in_testo(corpo)))
+        interne = tuple(re.findall(r'\bid="([^"]+)"', corpo))
+        sezioni.append(Sezione(ancora.group(1) if ancora else "", titolo, _in_testo(corpo), interne))
     return sezioni
 
 
@@ -536,12 +754,19 @@ def _nomina(testo, nome):
 
 
 def sezione_del_parametro(sezioni, parametro):
-    """La sezione che spiega il parametro: quella della sua ancora, poi la
-    prima col suo nome nel titolo, poi la prima che lo nomina; o None."""
+    """La sezione che spiega il parametro: quella della sua ancora, quella
+    del catalogo di David per prima, poi la prima col suo nome nel titolo,
+    poi la prima che lo nomina; o None."""
     nomi = (parametro.opzione, *parametro.alias)
-    if parametro.ancora:
+    for ancora in (parametro.ancora, *parametro.altre_ancore):
+        if not ancora:
+            continue
         for sezione in sezioni:
-            if sezione.ancora == parametro.ancora:
+            if sezione.ancora == ancora:
+                return sezione
+        # L'ancora dentro una sezione: si legge quella che la contiene.
+        for sezione in sezioni:
+            if ancora in sezione.interne:
                 return sezione
     for sezione in sezioni:
         if any(_nomina(sezione.titolo, nome) for nome in nomi):
@@ -889,6 +1114,40 @@ def _scarica_un_file(indirizzo, destinazione, fermato):
     return None
 
 
+def _metti_il_catalogo(lavorazione, destinazione, fermato):
+    """arguments.json nella cartella di lavoro: quello del sito, se arriva e
+    si legge; altrimenti quello di prima, se c'era. Senza, pazienza: Orologic
+    fa con la sua tabella. Vero se e' arrivato quello del sito."""
+    nuovo = os.path.join(lavorazione, CATALOGO)
+    if _scarica_un_file(INDIRIZZO_DEL_CATALOGO, nuovo, fermato) is None and leggi_il_catalogo(nuovo) is not None:
+        return True
+    with contextlib.suppress(OSError):
+        os.remove(nuovo)
+    vecchio = os.path.join(destinazione, CATALOGO)
+    if os.path.isfile(vecchio):
+        with contextlib.suppress(OSError):
+            shutil.copy2(vecchio, nuovo)
+    return False
+
+
+def aggiorna_il_catalogo(percorso_di_pe):
+    """Dal filo degli aggiornamenti: se accanto al pe di Orologic manca
+    arguments.json, venuto dopo gli altri file, si scarica da solo, piccolo
+    com'e', dal sito che l'utente ha gia' scelto. Vero se e' arrivato."""
+    if not percorso_di_pe or percorso_di_pe != nella_cartella(ESEGUIBILE) or os.path.isfile(nella_cartella(CATALOGO)):
+        return False
+    provvisorio = nella_cartella(CATALOGO + ".nuovo")
+    if _scarica_un_file(INDIRIZZO_DEL_CATALOGO, provvisorio, lambda: False) is None and leggi_il_catalogo(provvisorio) is not None:
+        try:
+            os.replace(provvisorio, nella_cartella(CATALOGO))
+            return True
+        except OSError:
+            pass
+    with contextlib.suppress(OSError):
+        os.remove(provvisorio)
+    return False
+
+
 def scarica(avanzamento, fermato):
     """Scarica dal sito i file di pe in una cartella di lavoro, prova che
     l'eseguibile risponda, e solo allora la mette al posto di quella di
@@ -902,12 +1161,15 @@ def scarica(avanzamento, fermato):
         os.makedirs(lavorazione)
     except OSError as errore:
         return None, _("Impossibile preparare la cartella di lavoro: {motivo}").format(motivo=errore)
+    tutti = len(FILE_DEL_SITO) + 1
     for numero, nome in enumerate(FILE_DEL_SITO, start=1):
-        avanzamento(_("Scarico {nome}, {numero} di {tutti}.").format(nome=nome, numero=numero, tutti=len(FILE_DEL_SITO)))
+        avanzamento(_("Scarico {nome}, {numero} di {tutti}.").format(nome=nome, numero=numero, tutti=tutti))
         errore = _scarica_un_file(SITO + nome, os.path.join(lavorazione, nome), fermato)
         if errore:
             shutil.rmtree(lavorazione, ignore_errors=True)
             return None, errore
+    avanzamento(_("Scarico {nome}, {numero} di {tutti}.").format(nome=CATALOGO, numero=tutti, tutti=tutti))
+    _metti_il_catalogo(lavorazione, destinazione, fermato)
     nuova = versione(os.path.join(lavorazione, ESEGUIBILE))
     if nuova is None:
         shutil.rmtree(lavorazione, ignore_errors=True)

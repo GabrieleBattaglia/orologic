@@ -5,6 +5,12 @@
 pgn-extract -h: la finestra della gestione degli archivi le mostra, lascia
 sceglierle, controlla i valori scritti e compone la riga di comando.
 
+Dalla 9.3.0 c'e' anche il catalogo di David, arguments.json, che pgn_extract.py
+legge accanto a pe: da' i conflitti e l'ancora della guida, e descrive le
+opzioni che questa tabella non conosce. La tabella resta, e vince dove dice
+di piu': le varianti come -Tw, le regole dei valori provate con
+l'eseguibile, gli esempi e le opzioni che Orologic gestisce da se'.
+
 Ogni voce e' un dizionario con questi campi.
 voce: il nome che l'utente vede, unico, e la chiave della voce.
 opzione: l'opzione base come la elenca -h, per trovarne la riga.

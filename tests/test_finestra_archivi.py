@@ -15,13 +15,13 @@ import os
 import pytest
 import wx
 from conftest import pompa
-from test_pgn_extract import AIUTO, ARCHIVIO, GUIDA, PE_VERO, con_pe
+from test_pgn_extract import AIUTO, ARCHIVIO, CATALOGO, GUIDA, PE_VERO, con_pe
 
 from orologic_modules import config, finestra_archivi, finestra_ricerca, pgn_extract
 
 
 class Prova:
-    def __init__(self, monkeypatch, appunti="", file=None, pe="pe.exe", aiuto=AIUTO):
+    def __init__(self, monkeypatch, appunti="", file=None, pe="pe.exe", aiuto=AIUTO, catalogo=None):
         self.suoni = []
         self.domande = []
         self.avvisi = []
@@ -50,6 +50,9 @@ class Prova:
         if aiuto is not None:
             monkeypatch.setattr(pgn_extract, "testo_dell_aiuto", lambda _pe: aiuto)
             monkeypatch.setattr(pgn_extract, "leggi_la_guida", lambda _percorso: pgn_extract.sezioni_della_guida(GUIDA))
+            # Il catalogo di David, solo quello della prova.
+            self.catalogo = catalogo
+            monkeypatch.setattr(pgn_extract, "leggi_il_catalogo", lambda _percorso: self.catalogo)
         self.dialogo = finestra_archivi.FinestraArchivi(
             None, pe, self._conferma, lambda _g, testo: self.avvisi.append(testo), self.detti.extend, self._valore, self._scegli, self._leggi
         )
@@ -267,6 +270,41 @@ def test_f1_la_sezione_e_la_guida_intera(aperta, archivio):
     assert righe[0] == "Output files (-o, --output, -a, --append)"
     dialogo.mostra_la_guida_intera()
     assert prova.letti[-1][0] == "Guida di pgn-extract"
+
+
+def test_i_conflitti_si_dicono_e_i_gravi_fermano_applica(aperta, archivio):
+    prova = aperta(appunti=archivio, catalogo=pgn_extract.catalogo_dai_dati(CATALOGO))
+    dialogo = prova.dialogo
+    prova.aggiungi("-7")
+    assert prova.detti[-1] == "Aggiunto: -7."
+    prova.aggiungi("-C")
+    assert prova.suoni[-1] == "no"
+    assert prova.detti[-2:] == ["Aggiunto: -C.", "-7 e -C non vanno insieme: pgn-extract si fermerebbe."]
+    assert "-7 e -C non vanno insieme: pgn-extract si fermerebbe." in dialogo.problemi()
+    # Il conflitto lieve si dice, ma non ferma.
+    prova.aggiungi("--minmoves")
+    assert prova.detti[-1].startswith("-7 e --minmoves insieme: pgn-extract ne ignorerebbe uno")
+    assert not any("--minmoves insieme" in riga for riga in dialogo.problemi())
+    # Tolto -C, Applica si puo'.
+    prova.nella_catena(1)
+    dialogo.rimuovi()
+    prova.risposte_dei_valori = [20]
+    prova.nella_catena(1)
+    dialogo.imposta_il_valore()
+    assert dialogo.problemi() == []
+
+
+def test_il_catalogo_arrivato_vale_subito(aperta, archivio):
+    prova = aperta(appunti=archivio)
+    dialogo = prova.dialogo
+    prova.aggiungi("-C")
+    assert dialogo.scelti[0].parametro.conflitti == ()
+    prova.catalogo = pgn_extract.catalogo_dai_dati(CATALOGO)
+    dialogo.proposta_di_aggiornamento(None, None, True)
+    assert dialogo.uscita.GetValue() == "Scaricato arguments.json, il catalogo delle opzioni di pgn-extract: ora Orologic conosce anche i conflitti fra le opzioni."
+    # Lo scelto resta, col catalogo.
+    assert [scelto.parametro.voce for scelto in dialogo.scelti] == ["-C"]
+    assert dialogo.scelti[0].parametro.conflitti == (pgn_extract.Conflitto("-7", True),)
 
 
 def test_la_proposta_di_aggiornamento(aperta, archivio, monkeypatch):
