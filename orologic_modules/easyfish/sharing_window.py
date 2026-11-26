@@ -93,10 +93,15 @@ class PygameBoardWindow:
         self.config_size = 600
         self.show_text_mode = False
         self.last_text = ""
+        # Le impostazioni grafiche, lette dal filo di chi apre la finestra
+        # e rilette solo dopo .ii: prima il filo di pygame leggeva il
+        # database dal disco a ogni ridisegno (R57).
+        self.impostazioni = None
 
     def start(self, board, node=None):
         self.board = board.copy()
         self.node = node
+        self.impostazioni = get_image_settings()
         self.running = True
         self.thread = threading.Thread(target=self._run)
         self.thread.daemon = True
@@ -124,6 +129,14 @@ class PygameBoardWindow:
     def trigger_update(self):
         self.update_event.set()
 
+    def nuove_impostazioni(self):
+        """Dopo .ii: le impostazioni grafiche si rileggono qui, dal filo di
+        chi chiama, e la scacchiera si ridisegna (R57)."""
+        impostazioni = get_image_settings()
+        with self.lock:
+            self.impostazioni = impostazioni
+        self.update_event.set()
+
     def is_active(self):
         return self.running and self.thread and self.thread.is_alive()
 
@@ -145,8 +158,17 @@ class PygameBoardWindow:
         self.update_event.set()
 
     def _run(self):
+        """Il ciclo di pygame, con pygame chiuso comunque finisca (R57)."""
         pygame.init()
-        settings = get_image_settings()
+        try:
+            self._ciclo()
+        finally:
+            self.running = False
+            pygame.quit()
+
+    def _ciclo(self):
+        with self.lock:
+            settings = self.impostazioni or {}
         self.config_size = settings.get("size", 600)
         self.width = self.config_size
         self.height = self.config_size
@@ -186,7 +208,8 @@ class PygameBoardWindow:
                         )
                     self.update_event.set()
             if self.update_event.is_set():
-                settings = get_image_settings()
+                with self.lock:
+                    settings = self.impostazioni or {}
                 new_config_size = settings.get("size", 600)
                 if new_config_size != self.config_size:
                     self.config_size = new_config_size
@@ -199,7 +222,6 @@ class PygameBoardWindow:
                 self._render(screen)
                 self.update_event.clear()
             clock.tick(30)
-        pygame.quit()
 
     def _render(self, screen):
         with self.lock:
@@ -212,6 +234,7 @@ class PygameBoardWindow:
             height = self.height
             show_text = self.show_text_mode
             text_val = self.last_text
+            impostazioni = self.impostazioni
         if mode == "white":
             orientation = chess.WHITE
         elif mode == "black":
@@ -227,6 +250,7 @@ class PygameBoardWindow:
                 node_to_render,
                 orientation=orientation,
                 override_size=size,
+                settings=impostazioni,
             )
             flattened_svg = flatten_svg(svg_data)
             f = io.BytesIO(flattened_svg.encode("utf-8"))

@@ -60,3 +60,25 @@ def test_la_scacchiera_mostra_ultima_mossa_e_scacco(impostazioni_rimesse):
     impostazioni = image_exporter.get_image_settings()
     chiara = image_exporter.rgb_from_percent(*impostazioni["square_light"])
     assert chiara in svg
+
+
+def test_la_condivisione_non_legge_il_database_dal_suo_filo(monkeypatch):
+    """R57: il filo di pygame leggeva il database a ogni ridisegno. Ora le
+    impostazioni arrivano dal filo di chi apre la finestra, e dopo .ii."""
+    from orologic_modules.easyfish import sharing_window
+
+    letture = []
+    monkeypatch.setattr(sharing_window, "get_image_settings", lambda: letture.append(1) or {"size": 321})
+    finestra = sharing_window.PygameBoardWindow("prova")
+    finestra.nuove_impostazioni()
+    assert finestra.impostazioni == {"size": 321} and finestra.update_event.is_set()
+    disegnate = []
+
+    def svg(board, node, orientation=None, override_size=None, settings=None):
+        disegnate.append(settings)
+        raise RuntimeError("basta cosi'")
+
+    monkeypatch.setattr(sharing_window, "generate_custom_svg", svg)
+    finestra.board = chess.Board()
+    finestra._render(None)
+    assert disegnate == [{"size": 321}] and letture == [1]

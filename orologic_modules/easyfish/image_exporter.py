@@ -229,8 +229,11 @@ def image_settings_menu():
     )
 
 
-def generate_custom_svg(board, node=None, orientation=None, override_size=None):
-    settings = get_image_settings()
+def generate_custom_svg(board, node=None, orientation=None, override_size=None, settings=None):
+    # La finestra di condivisione passa le sue impostazioni, per non
+    # leggere il database dal suo filo (R57).
+    if settings is None:
+        settings = get_image_settings()
     # Preleviamo tutti i colori
     sl = rgb_from_percent(*settings["square_light"])
     sd = rgb_from_percent(*settings["square_dark"])

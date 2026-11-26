@@ -254,7 +254,7 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
     elif cmd == ".ii":
         image_settings_menu()
         if sharing_window and sharing_window.is_active():
-            sharing_window.trigger_update()
+            sharing_window.nuove_impostazioni()
     elif cmd == ".gf":
         ui.copia_negli_appunti(board.fen(), _("Partita in FEN. Copiata negli appunti"))
     elif cmd == ".gb":
