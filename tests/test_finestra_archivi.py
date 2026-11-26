@@ -337,8 +337,12 @@ def test_i_file_che_pe_scrive_non_toccano_i_sorgenti(aperta, archivio, tmp_path,
     righe = dialogo.uscita.GetValue().split("\n")
     assert righe[0].startswith(f"La copia di sicurezza di {doppioni} e' ")
     copia = righe[0].split(" e' ", 1)[1].rstrip(".")
-    with open(copia, encoding="utf-8") as file:
-        assert file.read() == ARCHIVIO
+    try:
+        with open(copia, encoding="utf-8") as file:
+            assert file.read() == ARCHIVIO
+    finally:
+        # La cartella pgn delle prove resta com'era, per la pulizia.
+        os.remove(copia)
 
 
 def test_le_lettere_cercano_nei_disponibili(aperta, archivio):
