@@ -478,7 +478,9 @@ def export_board_pdf(board, node=None):
             line = []
             curr = node
             while curr.parent is not None:
-                line.insert(0, curr)
+                # Le mosse, non i nodi: variation_san cadeva dopo la prima
+                # mossa, e il PDF nasceva solo dalla posizione iniziale (R13).
+                line.insert(0, curr.move)
                 curr = curr.parent
             if line:
                 moves_text = curr.board().variation_san(line)

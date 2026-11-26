@@ -24,3 +24,25 @@ def test_le_impostazioni_grafiche_di_un_database_nuovo(impostazioni_rimesse):
     # Chi cambia la copia non cambia le predefinite.
     impostazioni["square_light"][0] = 0
     assert image_exporter.IMPOSTAZIONI_PREDEFINITE["square_light"][0] == 94
+
+
+def test_il_pdf_dopo_qualche_mossa(tmp_path, monkeypatch, capsys):
+    """R13: export_board_pdf passava a variation_san i nodi invece delle
+    mosse, e il PDF nasceva solo dalla posizione iniziale."""
+    import io
+
+    import chess.pgn
+
+    from orologic_modules import config
+
+    game = chess.pgn.read_game(io.StringIO("1. e4 e5 2. Nf3 Nc6 *"))
+    nodo = game.end()
+    monkeypatch.setattr(image_exporter, "Acusticator", lambda *a, **k: None)
+    risposte = iter(["prova", "un commento"])
+    monkeypatch.setattr(image_exporter, "dgt", lambda *a, **k: next(risposte))
+    monkeypatch.setattr(config, "percorso_salvataggio", lambda nome: str(tmp_path / nome))
+    image_exporter.export_board_pdf(nodo.board(), nodo)
+    uscita = capsys.readouterr().out
+    assert "Errore" not in uscita
+    pdf = list((tmp_path / "images").glob("prova_*.pdf"))
+    assert len(pdf) == 1 and pdf[0].stat().st_size > 1000
