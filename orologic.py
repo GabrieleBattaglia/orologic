@@ -521,6 +521,11 @@ def esegui(con_la_finestra=False):
         Main()
     except KeyboardInterrupt:
         print(_("\nInterruzione richiesta, chiudo Orologic."))
+    finally:
+        # Il motore si chiude qui, comunque si esca. atexit non bastava:
+        # l'interprete aspetta il filo di SimpleEngine, che non e' daemon,
+        # prima di eseguirlo, e il processo restava vivo con Stockfish (R8).
+        engine.CloseEngine()
     saluta(t_start)
     if not con_la_finestra:
         Donazione(lang=lingua_rilevata)

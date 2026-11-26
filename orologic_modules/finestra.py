@@ -2052,4 +2052,10 @@ def avvia(corpo):
     finestra.Show()
     finestra.avvia_il_nucleo(corpo)
     app.MainLoop()
+    # Il motore si chiude anche quando il nucleo e' rimasto fermo dove non
+    # legge tasti, come in rete: il filo di SimpleEngine, che non e' daemon,
+    # terrebbe vivo il processo senza finestra (R8).
+    from . import engine
+
+    engine.CloseEngine()
     ripristina()
