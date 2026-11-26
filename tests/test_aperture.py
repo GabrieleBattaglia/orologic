@@ -72,9 +72,9 @@ def test_l_albero_conta_le_linee_e_da_i_nomi(albero):
 
 def test_la_voce_la_linea_e_la_partita(albero):
     e4 = _nodo(albero, "e4")
-    assert aperture.voce_del_nodo(e4, albero.totale).endswith("(1. e4) = 60.0% | B00 King's pawn opening")
+    assert aperture.voce_del_nodo(e4, albero.totale).endswith("(1. e4) = 60.0%, B00 King's pawn opening")
     d6 = _nodo(albero, "e4", "c5", "Nf3", "d6")
-    assert aperture.voce_del_nodo(d6, albero.totale).endswith("(2... d6) = 20.0% | B50 Sicilian, Prova")
+    assert aperture.voce_del_nodo(d6, albero.totale).endswith("(2... d6) = 20.0%, B50 Sicilian, Prova")
     assert aperture.linea(d6) == "1. e4 c5 2. Nf3 d6"
     partita = aperture.partita(d6)
     assert partita.headers["ECO"] == "B50" and partita.headers["Opening"] == "Sicilian" and partita.headers["Variation"] == "Prova"
@@ -138,14 +138,14 @@ def test_la_finestra_l_albero_e_la_linea(aperta):
     prova = aperta()
     dialogo = prova.dialogo
     # La prima mossa scelta, con la sua linea.
-    assert _testo(dialogo).endswith("(1. e4) = 60.0% | B00 King's pawn opening")
-    assert dialogo.linea.GetValue() == "1. e4 | B00 King's pawn opening"
+    assert _testo(dialogo).endswith("(1. e4) = 60.0%, B00 King's pawn opening")
+    assert dialogo.linea.GetValue() == "1. e4, B00 King's pawn opening"
     # Invio apre il ramo, e lo richiude.
     voce, _nodo = dialogo.selezionata()
     dialogo.attiva()
     assert dialogo.albero.IsExpanded(voce)
     figlio, _cookie = dialogo.albero.GetFirstChild(voce)
-    assert dialogo.albero.GetItemText(figlio).endswith("(1... c5) = 40.0% | B20 Sicilian defence")
+    assert dialogo.albero.GetItemText(figlio).endswith("(1... c5) = 40.0%, B20 Sicilian defence")
     dialogo.attiva()
     assert not dialogo.albero.IsExpanded(voce)
     # Con una semimossa sola i pulsanti dicono di no.
@@ -158,18 +158,18 @@ def test_la_linea_va_all_analisi_e_la_finestra_si_riapre_li(aperta, albero):
     prova = aperta()
     dialogo = prova.dialogo
     dialogo._vai_alla_linea(_nodo(albero, "e4", "c5", "Nf3").percorso())
-    assert dialogo.linea.GetValue() == "1. e4 c5 2. Nf3 | A04 Reti, transposing to Sicilian"
+    assert dialogo.linea.GetValue() == "1. e4 c5 2. Nf3, A04 Reti, transposing to Sicilian"
     dialogo.vai("easyfish")
     azione, partita = dialogo.uscita
     assert azione == "easyfish" and partita.headers["ECO"] == "A04"
     assert len(list(partita.mainline_moves())) == 3
     # Riaperta con lo stato, allo stesso punto.
     di_nuovo = aperta(prova.stato.mosse)
-    assert _testo(di_nuovo.dialogo).endswith("(2. Nf3) = 20.0% | A04 Reti, transposing to Sicilian")
+    assert _testo(di_nuovo.dialogo).endswith("(2. Nf3) = 20.0%, A04 Reti, transposing to Sicilian")
     # Una foglia: Invio dice la linea.
     di_nuovo.dialogo._vai_alla_linea(_nodo(albero, "d4").percorso())
     di_nuovo.dialogo.attiva()
-    assert di_nuovo.detti[-1] == "1. d4 | A40 Queen's pawn"
+    assert di_nuovo.detti[-1] == "1. d4, A40 Queen's pawn"
 
 
 def test_run_passa_la_linea_all_analisi_e_a_easyfish(monkeypatch, albero):

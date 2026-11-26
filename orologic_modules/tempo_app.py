@@ -118,7 +118,7 @@ def _loop_tempo(game_state, clock_config):
                     "Premere INVIO per continuare senza orologio, oppure ESC per terminare."
                 )
             )
-            choice = key(">>> ")
+            choice = key(_("\rINVIO continua, ESC termina\r"))
             if choice in ("\x1b", "esc"):
                 game_state.game_over = True
                 break

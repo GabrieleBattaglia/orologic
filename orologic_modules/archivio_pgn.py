@@ -402,7 +402,7 @@ def scacchiera_del_percorso(percorso):
 
 
 def voce_della_radice(archivio, indici, filtri):
-    return _("{ramo} ({n} partite) | {statistiche}").format(ramo=_("(radice)"), n=len(indici), statistiche=archivio.statistiche(indici, filtri))
+    return _("{ramo} ({n} partite), {statistiche}").format(ramo=_("(radice)"), n=len(indici), statistiche=archivio.statistiche(indici, filtri))
 
 
 def voce_del_ramo(archivio, scacchiera, giocata, partite, varianti, totale, filtri):
@@ -426,9 +426,9 @@ def voce_del_ramo(archivio, scacchiera, giocata, partite, varianti, totale, filt
     pct = n / totale * 100 if totale else 0
     statistiche = archivio.statistiche(partite, filtri)
     if v:
-        return _("{descrizione} ({mossa}) ({n} partite, piu' {v} dalle varianti) = {pct:.1f}% | {statistiche}").format(
+        return _("{descrizione} ({mossa}) ({n} partite, piu' {v} dalle varianti) = {pct:.1f}%, {statistiche}").format(
             descrizione=descrizione, mossa=san, n=n, v=v, pct=pct, statistiche=statistiche)
-    return _("{descrizione} ({mossa}) ({n} partite) = {pct:.1f}% | {statistiche}").format(
+    return _("{descrizione} ({mossa}) ({n} partite) = {pct:.1f}%, {statistiche}").format(
         descrizione=descrizione, mossa=san, n=n, pct=pct, statistiche=statistiche)
 
 

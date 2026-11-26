@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-26 18:54+0100\n"
+"POT-Creation-Date: 2026-11-26 19:07+0100\n"
 "PO-Revision-Date: 2026-04-12 16:04+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fr <LL@li.org>\n"
@@ -534,8 +534,8 @@ msgstr "variante"
 
 #: orologic_modules/archivio_pgn.py:405
 #, python-brace-format
-msgid "{ramo} ({n} partite) | {statistiche}"
-msgstr "{ramo} ({n} parties) | {statistiche}"
+msgid "{ramo} ({n} partite), {statistiche}"
+msgstr "{ramo} ({n} parties), {statistiche}"
 
 #: orologic_modules/archivio_pgn.py:405 orologic_modules/pgn_search.py:886
 #: orologic_modules/pgn_search.py:1174
@@ -560,16 +560,16 @@ msgstr "{descrizione} ({mossa}) ({v} parties des variantes)"
 #: orologic_modules/archivio_pgn.py:429
 #, python-brace-format
 msgid ""
-"{descrizione} ({mossa}) ({n} partite, piu' {v} dalle varianti) = {pct:.1f}% "
-"| {statistiche}"
-msgstr ""
-"{descrizione} ({mossa}) ({n} parties, plus {v} des variantes) = {pct:.1f}% |"
+"{descrizione} ({mossa}) ({n} partite, piu' {v} dalle varianti) = {pct:.1f}%,"
 " {statistiche}"
+msgstr ""
+"{descrizione} ({mossa}) ({n} parties, plus {v} des variantes) = {pct:.1f}%, "
+"{statistiche}"
 
 #: orologic_modules/archivio_pgn.py:431
 #, python-brace-format
-msgid "{descrizione} ({mossa}) ({n} partite) = {pct:.1f}% | {statistiche}"
-msgstr "{descrizione} ({mossa}) ({n} parties) = {pct:.1f}% | {statistiche}"
+msgid "{descrizione} ({mossa}) ({n} partite) = {pct:.1f}%, {statistiche}"
+msgstr "{descrizione} ({mossa}) ({n} parties) = {pct:.1f}%, {statistiche}"
 
 #: orologic_modules/archivio_pgn.py:436
 #, python-brace-format
@@ -9592,8 +9592,8 @@ msgstr "Vos erreurs"
 
 #: orologic_modules/memoboard_app.py:1308
 #, python-brace-format
-msgid "> Domanda: {q} | La tua risposta: '{ua}', corretta: '{ca}'"
-msgstr "> Question : {q} | Votre réponse : '{ua}', correcte : '{ca}'"
+msgid "> Domanda: {q}. La tua risposta: '{ua}', corretta: '{ca}'"
+msgstr "> Question : {q}. Votre réponse : '{ua}', correcte : '{ca}'"
 
 #: orologic_modules/memoboard_app.py:1311
 #: orologic_modules/memoboard_app.py:1355
@@ -9643,8 +9643,8 @@ msgstr "Non"
 #: orologic_modules/memoboard_app.py:1352
 #: orologic_modules/memoboard_app.py:1396
 #, python-brace-format
-msgid "> Domanda: {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
-msgstr "> Question : {q} | Votre réponse : '{ua}', correcte : '{ca}'"
+msgid "> Domanda: {q}. La tua risposta: '{ua}', Corretta: '{ca}'"
+msgstr "> Question : {q}. Votre réponse : '{ua}', correcte : '{ca}'"
 
 #: orologic_modules/memoboard_app.py:1373
 msgid ""
@@ -9699,8 +9699,8 @@ msgstr "Vos erreurs dans le Challenge Mixte"
 #: orologic_modules/memoboard_app.py:1464
 #: orologic_modules/memoboard_app.py:1470
 #, python-brace-format
-msgid "> {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
-msgstr "> {q} | Votre réponse : '{ua}', correcte : '{ca}'"
+msgid "> {q}. La tua risposta: '{ua}', Corretta: '{ca}'"
+msgstr "> {q}. Votre réponse : '{ua}', correcte : '{ca}'"
 
 #: orologic_modules/memoboard_app.py:1515
 #, python-brace-format
@@ -10499,10 +10499,10 @@ msgstr "Numéro non valide."
 #, python-brace-format
 msgid ""
 "\n"
-"Ramo: {ramo} | {n} partite | {stats}"
+"Ramo: {ramo}, {n} partite, {stats}"
 msgstr ""
 "\n"
-"Branche : {ramo} | {n} parties | {stats}"
+"Branche : {ramo}, {n} parties, {stats}"
 
 #: orologic_modules/pgn_search.py:1196
 msgid ""
@@ -11067,7 +11067,7 @@ msgid "Aggiornamento completato."
 msgstr "Mise à jour terminée."
 
 #: orologic_modules/storage.py:283 orologic_modules/storage.py:364
-#: orologic_modules/storage.py:391 orologic_modules/storage.py:457
+#: orologic_modules/storage.py:391 orologic_modules/storage.py:461
 msgid "Le modifiche non si salvano finche' il database non torna leggibile."
 msgstr ""
 "Les modifications ne sont pas enregistrées tant que la base de données n'est"
@@ -11115,22 +11115,22 @@ msgstr ""
 "Je redémarre avec les paramètres par défaut, les horloges enregistrées n'ont"
 " pas été perdues dans la copie."
 
-#: orologic_modules/storage.py:456
+#: orologic_modules/storage.py:460
 #, python-brace-format
 msgid "Il database delle impostazioni non si lascia leggere: {errore}"
 msgstr "La base de données des réglages ne peut pas être lue : {errore}"
 
-#: orologic_modules/storage.py:464
+#: orologic_modules/storage.py:468
 msgid "non contiene le impostazioni"
 msgstr "elle ne contient pas les réglages"
 
-#: orologic_modules/storage.py:467
+#: orologic_modules/storage.py:471
 #, python-brace-format
 msgid "Ho ignorato {numero} orologi salvati perche' incompleti."
 msgstr ""
 "J'ai ignoré {numero} horloges enregistrées car elles étaient incomplètes."
 
-#: orologic_modules/storage.py:552
+#: orologic_modules/storage.py:556
 msgid ""
 "Modifica non salvata: il database delle impostazioni non si e' potuto "
 "leggere."
@@ -11138,7 +11138,7 @@ msgstr ""
 "Modification non enregistrée : la base de données des réglages n'a pas pu "
 "être lue."
 
-#: orologic_modules/storage.py:561 orologic_modules/storage.py:565
+#: orologic_modules/storage.py:565 orologic_modules/storage.py:569
 #, python-brace-format
 msgid "Errore nel salvataggio del database: {errore}"
 msgstr "Erreur lors de l'enregistrement de la base de données : {errore}"
@@ -11218,6 +11218,14 @@ msgstr ""
 msgid "Premere INVIO per continuare senza orologio, oppure ESC per terminare."
 msgstr ""
 "Appuyez sur ENTRÉE pour continuer sans horloge, ou sur ESC pour terminer."
+
+#: orologic_modules/tempo_app.py:121
+msgid ""
+"\r"
+"INVIO continua, ESC termina\r"
+msgstr ""
+"\r"
+"ENTRÉE continue, ESC termine\r"
 
 #: orologic_modules/tempo_app.py:130
 msgid "Partita continuata senza limiti di tempo. Usa '.' per terminare."
@@ -12771,8 +12779,8 @@ msgstr ""
 "Le navigateur de la partie est dans la fenêtre : dans le terminal utilise .e"
 
 #: orologic_modules/easyfish/easyfish_app.py:759
-msgid "Opzione non valida. Usa: .cso on | .cso off"
-msgstr "Option invalide. Utilisez : .cso on | .cso off"
+msgid "Opzione non valida. Usa: .cso on oppure .cso off"
+msgstr "Option invalide. Utilisez : .cso on ou .cso off"
 
 #: orologic_modules/easyfish/easyfish_app.py:763
 msgid "attivata"
@@ -15612,3 +15620,35 @@ msgstr "Aucune."
 #~ msgstr ""
 #~ "La partie en cours n'a pas été enregistrée : elle reste ouverte. Le PGN est "
 #~ "dans le presse-papiers."
+
+#~ msgid "{ramo} ({n} partite) | {statistiche}"
+#~ msgstr "{ramo} ({n} parties) | {statistiche}"
+
+#~ msgid ""
+#~ "{descrizione} ({mossa}) ({n} partite, piu' {v} dalle varianti) = {pct:.1f}% "
+#~ "| {statistiche}"
+#~ msgstr ""
+#~ "{descrizione} ({mossa}) ({n} parties, plus {v} des variantes) = {pct:.1f}% |"
+#~ " {statistiche}"
+
+#~ msgid "{descrizione} ({mossa}) ({n} partite) = {pct:.1f}% | {statistiche}"
+#~ msgstr "{descrizione} ({mossa}) ({n} parties) = {pct:.1f}% | {statistiche}"
+
+#~ msgid "> Domanda: {q} | La tua risposta: '{ua}', corretta: '{ca}'"
+#~ msgstr "> Question : {q} | Votre réponse : '{ua}', correcte : '{ca}'"
+
+#~ msgid "> Domanda: {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
+#~ msgstr "> Question : {q} | Votre réponse : '{ua}', correcte : '{ca}'"
+
+#~ msgid "> {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
+#~ msgstr "> {q} | Votre réponse : '{ua}', correcte : '{ca}'"
+
+#~ msgid ""
+#~ "\n"
+#~ "Ramo: {ramo} | {n} partite | {stats}"
+#~ msgstr ""
+#~ "\n"
+#~ "Branche : {ramo} | {n} parties | {stats}"
+
+#~ msgid "Opzione non valida. Usa: .cso on | .cso off"
+#~ msgstr "Option invalide. Utilisez : .cso on | .cso off"

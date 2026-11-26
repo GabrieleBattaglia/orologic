@@ -83,3 +83,33 @@ def test_il_catalogo_e_completo_e_compilato(lingua):
     traduzione = gettext.translation("messages", os.path.join(RADICE, "locales"), languages=[lingua])
     for voce in catalogo.translated_entries()[:: max(1, len(catalogo.translated_entries()) // 200)]:
         assert traduzione.gettext(voce.msgid) == voce.msgstr, voce.msgid
+
+
+def _stringhe_del_codice():
+    """Le stringhe di orologic.py e dei moduli, docstring escluse, coi loro
+    pezzi delle f-string: (file:riga, testo)."""
+    import ast
+    import pathlib
+
+    radice = pathlib.Path(RADICE)
+    for percorso in [radice / "orologic.py", *sorted((radice / "orologic_modules").rglob("*.py"))]:
+        albero = ast.parse(percorso.read_text(encoding="utf-8"))
+        docstring = set()
+        for nodo in ast.walk(albero):
+            if isinstance(nodo, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and nodo.body:
+                primo = nodo.body[0]
+                if isinstance(primo, ast.Expr) and isinstance(primo.value, ast.Constant):
+                    docstring.add(id(primo.value))
+        for nodo in ast.walk(albero):
+            if isinstance(nodo, ast.Constant) and isinstance(nodo.value, str) and id(nodo) not in docstring:
+                yield f"{percorso.relative_to(radice)}:{nodo.lineno}", nodo.value
+
+
+def test_le_frasi_del_codice_senza_barre_fra_i_campi():
+    """R142, scelta di Gabriele del 26 novembre 2026: la barra verticale fra
+    i campi diventa una virgola, un punto o una parola, e il prompt dei tre
+    segni di maggiore di Tempo dice che cosa fanno i tasti. Nessuna stringa
+    del codice ha piu' una barra fra due spazi, ne' i tre segni di
+    maggiore."""
+    trovate = [dove for dove, testo in _stringhe_del_codice() if " | " in testo or ">>>" in testo]
+    assert trovate == []

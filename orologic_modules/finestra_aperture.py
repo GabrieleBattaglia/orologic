@@ -134,7 +134,7 @@ class FinestraAperture(wx.Dialog):
         """La linea fino al nodo, col nome dell'apertura: 1. e4 c5 | B20 Sicilian defence."""
         voce = nodo.voce_piu_vicina()
         linea = aperture.linea(nodo)
-        return f"{linea} | {aperture.nome_della_voce(voce)}" if voce else linea
+        return f"{linea}, {aperture.nome_della_voce(voce)}" if voce else linea
 
     def _mostra_la_linea(self):
         # Mentre la finestra si chiude l'albero toglie le voci, e la scelta

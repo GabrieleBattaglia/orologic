@@ -756,7 +756,7 @@ def _esegui(partita=None):
                     elif val == "off":
                         show_output_on_board = False
                     else:
-                        print(_("Opzione non valida. Usa: .cso on | .cso off"))
+                        print(_("Opzione non valida. Usa: .cso on oppure .cso off"))
                         continue
                 else:
                     show_output_on_board = not show_output_on_board

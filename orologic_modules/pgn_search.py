@@ -1012,7 +1012,9 @@ def _albero_aperture(
         )
 
         # Prompt con \r all'inizio e alla fine, con padding per pulire residui
-        raw_prompt = f"{prompt_str} | {n_part} part. | {stats_str} | Azione: "
+        # Il breadcrumb finisce coi due punti: dopo, il numero delle partite
+        # senza virgola (R142).
+        raw_prompt = f"{prompt_str} {n_part} part., {stats_str}. Azione: "
         prompt = f"\r{raw_prompt.ljust(75)}\r"
 
         tasto = key(prompt)
@@ -1185,7 +1187,7 @@ def _stampa_ramo_corrente(
 
     stats_str = _formato_statistiche(info_list, indici, filtri_attivi, giocatore_comune)
     print(
-        _("\nRamo: {ramo} | {n} partite | {stats}").format(
+        _("\nRamo: {ramo}, {n} partite, {stats}").format(
             ramo=breadcrumb, n=len(indici), stats=stats_str
         )
     )
@@ -1212,7 +1214,7 @@ def _stampa_lista_rami(rami, board, info_list, filtri_attivi, giocatore_comune=N
             info_list, idx_list, filtri_attivi, giocatore_comune
         )
         print(
-            f"  {i + 1}. {desc_mossa} ({mossa}) ({n} partite) = {pct:.1f}% | {stats_str}"
+            f"  {i + 1}. {desc_mossa} ({mossa}) ({n} partite) = {pct:.1f}%, {stats_str}"
         )
 
 

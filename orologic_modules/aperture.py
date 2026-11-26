@@ -146,7 +146,7 @@ def voce_del_nodo(nodo, totale):
     pct = nodo.linee / totale * 100 if totale else 0
     riga = _("{descrizione} ({numero} {mossa}) = {pct:.1f}%").format(descrizione=descrizione, numero=_numero(board), mossa=san, pct=pct)
     voce = nodo.voce_piu_vicina()
-    return f"{riga} | {nome_della_voce(voce)}" if voce else riga
+    return f"{riga}, {nome_della_voce(voce)}" if voce else riga
 
 
 def linea(nodo):

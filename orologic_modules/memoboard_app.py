@@ -1305,7 +1305,7 @@ def main():
                     ca = err["correct_answer"]
                     print(
                         _(
-                            "> Domanda: {q} | La tua risposta: '{ua}', corretta: '{ca}'"
+                            "> Domanda: {q}. La tua risposta: '{ua}', corretta: '{ca}'"
                         ).format(q=q, ua=ua, ca=ca)
                     )
                 key(_("\nPremi un tasto per procedere alla classifica..."))
@@ -1349,7 +1349,7 @@ def main():
                     ca = _("Sì") if err["correct_answer"] == "y" else _("No")
                     print(
                         _(
-                            "> Domanda: {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
+                            "> Domanda: {q}. La tua risposta: '{ua}', Corretta: '{ca}'"
                         ).format(q=q, ua=ua, ca=ca)
                     )
                 key(_("\nPremi un tasto per procedere alla classifica..."))
@@ -1393,7 +1393,7 @@ def main():
                     ca = _("Sì") if err["correct_answer"] == "y" else _("No")
                     print(
                         _(
-                            "> Domanda: {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
+                            "> Domanda: {q}. La tua risposta: '{ua}', Corretta: '{ca}'"
                         ).format(q=q, ua=ua, ca=ca)
                     )
                 key(_("\nPremi un tasto per procedere alla classifica..."))
@@ -1461,13 +1461,13 @@ def main():
                         ca_fmt = _("Sì") if ca == "y" else _("No")
                         print(
                             _(
-                                "> {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
+                                "> {q}. La tua risposta: '{ua}', Corretta: '{ca}'"
                             ).format(q=q, ua=ua_fmt, ca=ca_fmt)
                         )
                     else:
                         print(
                             _(
-                                "> {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
+                                "> {q}. La tua risposta: '{ua}', Corretta: '{ca}'"
                             ).format(q=q, ua=ua, ca=ca)
                         )
 

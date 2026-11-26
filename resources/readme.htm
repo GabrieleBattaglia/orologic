@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 9.5.132 - giovedì 26 novembre 2026)</h1>
+<h1>Guida Utente di Orologic (Versione 9.5.133 - giovedì 26 novembre 2026)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -1324,10 +1324,10 @@ margin: 1em 0;
 <p>Mentre navighi, il prompt in fondo si aggiorna sulla stessa riga (tramite ritorno carrello <code>\r</code>) per mantenere focalizzata la riga braille. Il prompt mostra il "breadcrumb" delle mosse (il nonno tra parentesi quadre, il padre tra parentesi acute ed il figlio corrente con i due punti) seguito dal numero di partite e dalle statistiche:</p>
 <ul>
     <li><strong>Se analizzi un database globale (senza filtri giocatore):</strong> Mostra le statistiche assolute della scacchiera: <code>B:X% P:Y% N:Z%</code> (Vittorie del Bianco, Patte, Vittorie del Nero).
-        <br><em>Esempio:</em> <code>[1. e4] &lt;1... e5&gt; 2. Nf3: | 876 part. | B:52% P:30% N:18% | Azione:</code>
+        <br><em>Esempio:</em> <code>[1. e4] &lt;1... e5&gt; 2. Nf3: 876 part., B:52% P:30% N:18%. Azione:</code>
     </li>
     <li><strong>Se filtri per un giocatore (o se l'archivio contiene al 90% partite dello stesso giocatore):</strong> Orologic rileva automaticamente il giocatore e mostra il suo rendimento personale con i simboli scacchistici internazionali: <code>+X% =Y% -Z%</code> (Vittorie del giocatore <code>+</code>, Patte <code>=</code>, Sconfitte del giocatore <code>-</code>).
-        <br><em>Esempio:</em> <code>[1. e4] &lt;1... e5&gt; 2. Nf3: | 15 part. | +60% =13% -27% | Azione:</code>
+        <br><em>Esempio:</em> <code>[1. e4] &lt;1... e5&gt; 2. Nf3: 15 part., +60% =13% -27%. Azione:</code>
     </li>
 </ul>
 
@@ -1513,8 +1513,8 @@ margin: 1em 0;
 
 <h3 id="cap-2-14">2.14. Albero aperture (aperture, solo nella finestra)</h3>
 <p>L'albero aperture mette in un albero le linee di eco.pgn, il file delle aperture di pgn-extract che Orologic usa per dare il nome alle aperture delle partite: più di duemila linee, dalla prima mossa fino alle varianti più profonde. È la ricerca PGN in versione semplice, sezione 2.8, senza un archivio da caricare. La voce, <code>aperture</code>, c'è soltanto nella finestra; nel menu, in ordine alfabetico, la trovi dopo <code>analizza</code>.</p>
-<p>Ogni mossa dell'albero è una riga come <code>Pedone in empoli 4 (1. e4) = 57.3% | B00 King's pawn opening</code>: la mossa descritta, la mossa col suo numero, quante delle linee di eco.pgn passano di lì, in percentuale sul totale, e il nome dell'apertura, col codice ECO e, dove c'è, la variante. Il nome è quello della posizione, se una linea di eco.pgn ci finisce, anche arrivandoci con le mosse in un altro ordine, come classifica pgn-extract; altrimenti è quello della mossa sopra più vicina che ce l'ha. Le vittorie per colore non ci sono: eco.pgn non ha partite, solo linee. Le mosse con più linee vengono prima.</p>
-<p>La finestra ha, nell'ordine del Tab, l'albero; il campo Linea, con le mosse dalla prima fino a quella scelta e il nome dell'apertura, per esempio <code>1. e4 c5 2. Nf3 d6 | B50 Sicilian</code>; Analisi manuale, Passa a Easyfish e Chiudi. Invio su un ramo lo apre o lo chiude, su una foglia ti dice la linea.</p>
+<p>Ogni mossa dell'albero è una riga come <code>Pedone in empoli 4 (1. e4) = 57.3%, B00 King's pawn opening</code>: la mossa descritta, la mossa col suo numero, quante delle linee di eco.pgn passano di lì, in percentuale sul totale, e il nome dell'apertura, col codice ECO e, dove c'è, la variante. Il nome è quello della posizione, se una linea di eco.pgn ci finisce, anche arrivandoci con le mosse in un altro ordine, come classifica pgn-extract; altrimenti è quello della mossa sopra più vicina che ce l'ha. Le vittorie per colore non ci sono: eco.pgn non ha partite, solo linee. Le mosse con più linee vengono prima.</p>
+<p>La finestra ha, nell'ordine del Tab, l'albero; il campo Linea, con le mosse dalla prima fino a quella scelta e il nome dell'apertura, per esempio <code>1. e4 c5 2. Nf3 d6, B50 Sicilian</code>; Analisi manuale, Passa a Easyfish e Chiudi. Invio su un ramo lo apre o lo chiude, su una foglia ti dice la linea.</p>
 <p><strong>Per allenarti</strong> con un'apertura scegli la sua mossa e premi Analisi manuale, che apre la linea nell'analisi col motore, sezione 2.3, o Passa a Easyfish, che la porta a Easyfish, sezione 2.5. I due pulsanti vogliono una linea di almeno due semimosse: con una sola suonano il no e te lo dicono. Quando torni, l'albero si riapre sulla stessa mossa. I tasti sono nella sezione 1.8.23.</p>
 
 <h2 id="cap-3">3. Piccolo Glossario</h2>

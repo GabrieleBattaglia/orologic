@@ -257,15 +257,15 @@ def test_l_albero_un_ramo_alla_volta():
     rami, finite, _fv = a.figli([0, 1], [], 3)
     assert finite == [1]
     radice = archivio_pgn.voce_della_radice(a, tutte, {})
-    assert radice == "(radice) (4 partite) | +50% =25% -25%"
+    assert radice == "(radice) (4 partite), +50% =25% -25%"
     board = chess.Board()
     e4 = archivio_pgn.voce_del_ramo(a, board, chess.Move.from_uci("e2e4"), [0, 1, 3], [], 4, {})
-    assert e4.endswith(" (e4) (3 partite) = 75.0% | +67% =0% -33%")
+    assert e4.endswith(" (e4) (3 partite) = 75.0%, +67% =0% -33%")
     assert e4.startswith(board_utils.DescribeMove(chess.Move.from_uci("e2e4"), board))
     d4 = archivio_pgn.voce_del_ramo(a, board, chess.Move.from_uci("d2d4"), [2], [], 4, {})
     assert d4.endswith(" (d4): Rossi vs Neri, 1/2-1/2")
     # Col filtro del giocatore le statistiche sono le sue.
-    assert archivio_pgn.voce_della_radice(a, [0, 1, 3], {"player": "verdi"}) == "(radice) (3 partite) | +0% =0% -33%"
+    assert archivio_pgn.voce_della_radice(a, [0, 1, 3], {"player": "verdi"}) == "(radice) (3 partite), +0% =0% -33%"
     mosse = tuple(archivio_pgn.mossa(numero) for numero in a.schede[0].mosse)
     assert archivio_pgn.sequenza_del_percorso(mosse) == "1. e4 e5 2. Nf3 Nc6"
     assert archivio_pgn.sequenza_del_percorso(()) == "(radice)"
@@ -283,7 +283,7 @@ def test_le_varianti_contate_a_parte():
     board = archivio_pgn.scacchiera_del_percorso(percorso)
     bc4 = archivio_pgn.voce_del_ramo(a, board, chess.Move.from_uci("f1c4"), [1, 2], [(0, 0)], 3, {})
     # Statistiche e percentuale delle sole due partite giocate.
-    assert bc4.endswith(" (Bc4) (2 partite, piu' 1 dalle varianti) = 66.7% | B:0% P:50% N:50%")
+    assert bc4.endswith(" (Bc4) (2 partite, piu' 1 dalle varianti) = 66.7%, B:0% P:50% N:50%")
     assert a.voce_della_lista(board, 0, 2, 3, 0) == "Uno vs Due (3): 1-0, variante, 2. Bc4"
 
 
@@ -633,7 +633,7 @@ def test_si_apre_sul_file_e_lo_carica_nel_filo(prova, file_pgn):
     assert p.detti[0] == "Analisi del PGN in corso..."
     assert p.detti[-1] == "Caricate 4 partite valide."
     radice = d.albero.GetRootItem()
-    assert d.albero.GetItemText(radice) == "(radice) (4 partite) | +50% =25% -25%"
+    assert d.albero.GetItemText(radice) == "(radice) (4 partite), +50% =25% -25%"
     assert d.albero.IsExpanded(radice) and d.albero.GetSelection() == radice
     assert p.finiti_i_doppioni()
     testi = p.testi(radice)
