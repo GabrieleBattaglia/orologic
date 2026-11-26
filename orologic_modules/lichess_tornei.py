@@ -18,6 +18,7 @@ altrove.
 """
 
 import datetime
+import re
 import sys
 import time
 
@@ -233,9 +234,8 @@ def iscriviti(torneo, token):
         if not password:
             return False
         dati["password"] = password
-    squadre = (torneo.get("teamBattle") or {}).get("teams") or {}
-    if squadre:
-        voci = dict(squadre)
+    voci = squadre_del_torneo(torneo)
+    if voci:
         squadra = menu(
             voci,
             show=True,
@@ -305,6 +305,24 @@ def _aiuto_attesa():
     print(_("ESC: esci dall'attesa; a torneo iniziato ti mette in pausa"))
 
 
+def squadre_del_torneo(torneo):
+    """Le squadre di una battaglia a squadre come {id: nome}. Lichess le
+    manda come oggetto, come coppie, o, nell'elenco dei tornei, come soli id:
+    prima dict di una lista di stringhe sollevava (R81)."""
+    squadre = (torneo.get("teamBattle") or {}).get("teams") or {}
+    if isinstance(squadre, dict):
+        return {str(chiave): str(nome) for chiave, nome in squadre.items()}
+    voci = {}
+    for squadra in squadre if isinstance(squadre, list) else ():
+        if isinstance(squadra, (list, tuple)) and len(squadra) >= 2:
+            voci[str(squadra[0])] = str(squadra[1])
+        elif isinstance(squadra, dict) and squadra.get("id"):
+            voci[str(squadra["id"])] = str(squadra.get("name") or squadra["id"])
+        elif isinstance(squadra, str) and squadra:
+            voci[squadra] = squadra
+    return voci
+
+
 def _scrivi_riga(testo):
     ui.pulisci_riga()
     sys.stdout.write("\r" + testo + "\r")
@@ -360,6 +378,9 @@ def attesa(torneo, token, username, db):
     partenza = time.monotonic()
     rinnovato = time.time()
     rifiuto_detto = False
+    # La forma della riga dell'attesa senza le cifre, per riconoscere il
+    # solo scorrere dei secondi (R77).
+    ultima_forma = None
     iniziato = bool(torneo.get("isStarted"))
     # Le partite gia' aperte o lasciate non si riaprono da sole: Lichess le
     # rimanda a ogni riapertura del flusso. Le riprende il tasto g.
@@ -434,7 +455,17 @@ def attesa(torneo, token, username, db):
                             motivo=spiega_errore(errore)
                         )
                     )
-            _scrivi_riga(riga_attesa(vista))
+            # La riga si riscrive ogni secondo: nella finestra va alla barra
+            # braille ma non si annuncia, come il prompt della partita, se
+            # non quando cambia qualcosa oltre ai secondi (R77).
+            riga = riga_attesa(vista)
+            forma = re.sub(r"\d", "", riga)
+            if forma == ultima_forma:
+                with strato.rinfresco():
+                    _scrivi_riga(riga)
+            else:
+                ultima_forma = forma
+                _scrivi_riga(riga)
             fine = time.monotonic() + 1
             while time.monotonic() < fine:
                 if strato.kbhit():
