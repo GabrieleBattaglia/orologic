@@ -307,8 +307,13 @@ def _apri_condivisione(board, node, sharing_window):
             kind=1,
         )
         # pygame si carica solo per la scacchiera condivisa, non a ogni
-        # avvio di Orologic (R93).
-        from .sharing_window import PygameBoardWindow
+        # avvio di Orologic (R93); se manca, lo si dice, invece di far
+        # cadere il nucleo (R134).
+        try:
+            from .sharing_window import PygameBoardWindow
+        except ImportError as errore:
+            print(_("La scacchiera condivisa non si apre: manca la libreria pygame. {motivo}").format(motivo=errore))
+            return None
 
         sharing_window = PygameBoardWindow(config.VERSION)
         sharing_window.start(board, node)

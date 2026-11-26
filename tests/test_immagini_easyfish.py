@@ -100,3 +100,49 @@ def test_l_avvio_non_carica_reportlab_svglib_e_pygame():
     )
     uscita = subprocess.run([sys.executable, "-B", "-c", codice], capture_output=True, text=True, timeout=120, cwd=RADICE, check=False)
     assert uscita.stdout.strip().splitlines()[-1] == "[]", uscita.stderr[-2000:]
+
+
+def test_ii_non_chiede_piu_ombreggiatura_e_colore_dello_scacco(impostazioni_rimesse, monkeypatch, capsys):
+    """R56 e R134, scelta di Gabriele del 26 novembre 2026: .ii chiedeva
+    l'ombreggiatura dei pezzi, che nessuno disegnava, e il colore dello
+    scacco, che python-chess non riceve. Le due domande escono, con le loro
+    chiavi; lo scacco resta rosso."""
+    domande = []
+
+    def dgt(prompt="", default=None, **_opzioni):
+        domande.append(prompt)
+        return default
+
+    monkeypatch.setattr(image_exporter, "dgt", dgt)
+    monkeypatch.setattr(image_exporter, "Acusticator", lambda *_a, **_k: None)
+    storage.SetValue("image_settings", {"shadow": False, "check_color": [1, 2, 3]})
+    image_exporter.image_settings_menu()
+    assert not any("ombreggiatura" in domanda.lower() for domanda in domande)
+    assert "Colore Scacco Re" not in capsys.readouterr().out
+    salvate = storage.LoadDB()["image_settings"]
+    assert "shadow" not in salvate and "check_color" not in salvate
+    assert "shadow" not in image_exporter.IMPOSTAZIONI_PREDEFINITE and "check_color" not in image_exporter.IMPOSTAZIONI_PREDEFINITE
+
+
+def test_un_colore_guasto_nel_database_non_fa_cadere_le_immagini(impostazioni_rimesse):
+    """R134: i valori delle impostazioni grafiche non si controllavano, e un
+    colore guasto nel database faceva cadere .i e .ii. Un valore salvato vale
+    solo se ha la forma del predefinito."""
+    storage.SetValue("image_settings", {"square_light": "rosso", "square_dark": [1, 2], "size": "grande", "coord": [10, 20, 30]})
+    impostazioni = image_exporter.get_image_settings()
+    assert impostazioni["square_light"] == [94, 85, 71] and impostazioni["square_dark"] == [41, 30, 25]
+    assert impostazioni["size"] == 600 and impostazioni["coord"] == [10, 20, 30]
+    assert "<svg" in image_exporter.generate_custom_svg(chess.Board())
+
+
+def test_la_scacchiera_condivisa_senza_pygame_non_fa_cadere(monkeypatch, capsys):
+    """R134: l'import della finestra di condivisione stava fuori da ogni try,
+    e .cs senza pygame faceva cadere il nucleo."""
+    import sys
+
+    from orologic_modules.easyfish import easyfish_app
+
+    monkeypatch.setitem(sys.modules, "orologic_modules.easyfish.sharing_window", None)
+    monkeypatch.setattr(easyfish_app, "Acusticator", lambda *_a, **_k: None)
+    assert easyfish_app._apri_condivisione(chess.Board(), None, None) is None
+    assert "pygame" in capsys.readouterr().out

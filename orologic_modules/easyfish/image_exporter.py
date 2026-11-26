@@ -81,20 +81,33 @@ IMPOSTAZIONI_PREDEFINITE = {
         40,
         40,
     ],  # Ultima mossa su casa scura (rosso/mattone)
-    "check_color": [100, 0, 0],  # Colore scacco (rosso puro)
     "piece_stroke_width": 1.4,  # Spessore bordo bilanciato (float)
-    "shadow": True,  # Ombreggiatura attiva
     "size": 600,  # Dimensione standard in pixel
 }
+# Il colore dello scacco e l'ombreggiatura dei pezzi non ci sono piu':
+# python-chess non riceve il primo, e nessuno disegnava la seconda. Per
+# scelta di Gabriele del 26 novembre 2026 .ii non li chiede, lo scacco resta
+# rosso, e le loro chiavi salvate si lasciano cadere (R56, R134).
+
+
+def _valore_buono(predefinito, valore):
+    """Vero se il valore salvato ha la forma del predefinito: una terna di
+    percentuali per i colori, un numero per spessore e dimensione."""
+    if isinstance(predefinito, list):
+        return isinstance(valore, list) and len(valore) == len(predefinito) and all(isinstance(parte, (int, float)) and not isinstance(parte, bool) for parte in valore)
+    return isinstance(valore, (int, float)) and not isinstance(valore, bool)
 
 
 def get_image_settings():
     """Le impostazioni grafiche: quelle predefinite, coi valori del
-    database sopra."""
+    database sopra, ma solo quelli che ne hanno la forma: prima un colore
+    guasto nel database faceva cadere .i e .ii (R134)."""
     salvate = storage.LoadDB().get("image_settings")
     settings = {chiave: list(valore) if isinstance(valore, list) else valore for chiave, valore in IMPOSTAZIONI_PREDEFINITE.items()}
     if isinstance(salvate, dict):
-        settings.update(salvate)
+        for chiave, valore in salvate.items():
+            if chiave in settings and _valore_buono(IMPOSTAZIONI_PREDEFINITE[chiave], valore):
+                settings[chiave] = list(valore) if isinstance(valore, list) else valore
     return settings
 
 
@@ -175,10 +188,6 @@ def image_settings_menu():
         _("Evidenzia Ultima Mossa (Casa Scura)"),
         settings.get("last_move_dark", [80, 80, 0]),
     )
-    settings["check_color"] = ask_rgb(
-        _("Colore Scacco Re"), settings.get("check_color", [100, 0, 0])
-    )
-
     settings["piece_stroke_width"] = dgt(
         prompt=_("\nSpessore bordo pezzi (pixel) [{d}]: ").format(
             d=settings.get("piece_stroke_width", 1)
@@ -188,19 +197,6 @@ def image_settings_menu():
         fmax=5.0,
         default=settings.get("piece_stroke_width", 1.3),
     )
-
-    shadow_choice = (
-        dgt(
-            prompt=_("Attivare ombreggiatura pezzi? (S/N) [S]: "),
-            kind="s",
-            default=_("S"),
-        )
-        .strip()
-        .upper()
-    )
-    # La lettera del si' si traduce con il prompt: chi legge (Y/N) preme
-    # Y, e il confronto con la S italiana gli avrebbe risposto no.
-    settings["shadow"] = shadow_choice == _("S")
 
     settings["size"] = dgt(
         prompt=_("\nDimensione immagine in pixel [{d}]: ").format(d=settings["size"]),
@@ -257,13 +253,13 @@ def generate_custom_svg(board, node=None, orientation=None, override_size=None, 
     ob = rgb_from_percent(*settings["outer_border"])
     lml = rgb_from_percent(*settings["last_move_light"])
     lmd = rgb_from_percent(*settings["last_move_dark"])
-    chk = rgb_from_percent(*settings["check_color"])
     psw = settings.get("piece_stroke_width", 1)
 
     # I colori delle case vanno nei colori della scacchiera, non nel
     # riempimento: il riempimento copre ogni casa, e avrebbe coperto anche
-    # l'ultima mossa. All'ultima mossa e allo scacco, che .ii chiede, ora si
-    # passano i dati: prima non li riceveva nessuno (R56).
+    # l'ultima mossa. All'ultima mossa e allo scacco ora si passano i dati:
+    # prima non li riceveva nessuno (R56). Lo scacco ha il rosso di
+    # python-chess.
     if board.move_stack:
         ultima = board.peek()
     elif node is not None and getattr(node, "move", None) is not None:
@@ -300,7 +296,6 @@ def generate_custom_svg(board, node=None, orientation=None, override_size=None, 
             "outer border": ob,
             "square light lastmove": lml,
             "square dark lastmove": lmd,
-            "check": chk,
             "arrow green": "#15781B80",
             "arrow red": "#88202080",
             "arrow blue": "#00308880",
