@@ -1006,7 +1006,7 @@ def AnalizzaEStampaStatisticheTempo(game_state, color_filter=None):
 
         color_name = _("Bianco") if color == chess.WHITE else _("Nero")
         if color_filter is None:
-            print(f"Statistiche Tempo: {color_name}")
+            print(_("Statistiche del tempo: {colore}").format(colore=color_name))
 
         # 1. Classifica delle mosse in base al tempo usato
         sorted_moves = sorted(user_moves, key=lambda x: x[2], reverse=True)

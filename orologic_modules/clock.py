@@ -5,7 +5,7 @@ import datetime
 
 from GBUtils import Acusticator, dgt, enter_escape, key, menu
 
-from . import board_utils, config, controlli, storage, tempo
+from . import config, controlli, storage, tempo
 from .config import _
 from .orologio import blocco as blocco_dei_tempi
 
@@ -413,19 +413,10 @@ def SelectClock(db=None):
     choices = {}
     STILE_MENU_NUMERICO = db.get("menu_numerati", False)
     for c in db["clocks"]:
-        fasi = "".join(
-            [
-                " F{n}:{t}+{i}".format(
-                    n=j + 1,
-                    t=board_utils.SecondsToHMS(p["white_time"]),
-                    i=p["white_inc"],
-                )
-                for j, p in enumerate(c["phases"])
-            ]
-        )
-        choices[c["name"]] = "{ind}{fasi}".format(
-            ind="B=N" if c["same_time"] else "B/N", fasi=fasi
-        )
+        # A parole, come nell'elenco degli orologi: la forma di prima,
+        # B=N F1:00:05:00+0, alla sintesi non diceva quasi niente (R99).
+        fasi = ", ".join(controlli.sommario_fase(p, "white") for p in c["phases"])
+        choices[c["name"]] = fasi if c["same_time"] else _("{fasi}, tempi distinti per bianco e nero").format(fasi=fasi)
     choice = menu(choices, show=True, keyslist=True, numbered=STILE_MENU_NUMERICO)
     if choice:
         Acusticator(["f7", 0.013, 0, config.VOLUME])

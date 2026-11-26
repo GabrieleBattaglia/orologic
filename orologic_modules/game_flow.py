@@ -124,7 +124,7 @@ def prepara_la_ripresa(dati_partita):
     db = storage.LoadDB()
     autosave_is_on = db.get("autosave_enabled", False)
     eco_database = board_utils.LoadEcoDatabaseWithFEN("eco.pgn")
-    print("\n" + "Riepilogo Partita")
+    print("\n" + _("Riepilogo Partita"))
     print(
         _("Bianco: {player} - Tempo: {time}").format(
             player=game_state.white_player,

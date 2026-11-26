@@ -192,7 +192,7 @@ class PygameBoardWindow:
         # difficolta' si chiude la finestra, senza portarsi dietro il programma.
         except Exception:  # noqa: BLE001, S110
             pass
-        title = f"Orologic V{self.version} SCACCHIERA DIDATTICA"
+        title = _("Orologic V{v} SCACCHIERA DIDATTICA").format(v=self.version)
         pygame.display.set_caption(title)
         clock = pygame.time.Clock()
         self._render(screen)

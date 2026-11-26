@@ -506,7 +506,7 @@ def menu_amici(db):
         return
 
     while True:
-        print(_("          GESTIONE AMICI"))
+        print(_("          GESTIONE AMICI").strip())
 
         scelte_amici = {
             "vedi": _("Vedi persone che segui"),
@@ -834,7 +834,7 @@ def menu_puzzle(db):
     token = secrets.get("lichess_token")
 
     while True:
-        print(_("             PUZZLE LICHESS"))
+        print(_("             PUZZLE LICHESS").strip())
 
         scelte_puzzle = {
             "giorno": _("Puzzle del Giorno"),
@@ -1263,7 +1263,7 @@ def menu_guarda(db):
     token = secrets.get("lichess_token")
 
     while True:
-        print(_("          GUARDA PARTITA"))
+        print(_("          GUARDA PARTITA").strip())
         scelte = {
             "id": _("Inserisci ID o URL Partita"),
             "giocatore": _("Inserisci Nome Utente Lichess"),
@@ -2093,7 +2093,7 @@ def menu_gioca(db):
         return
 
     while True:
-        print(_("          GIOCA PARTITA"))
+        print(_("          GIOCA PARTITA").strip())
 
         scelte = {
             "cerca": _("Cerca avversario casuale (Seek)"),

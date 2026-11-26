@@ -181,3 +181,15 @@ def test_la_correzione_dell_arbitro_sposta_l_inizio_del_turno():
     prima = stato.controllo["white"]["inizio_turno"]
     controlli.corretto(stato, True, 30)
     assert stato.controllo["white"]["inizio_turno"] == prima + 30
+
+
+def test_select_clock_dice_gli_orologi_a_parole(monkeypatch):
+    """R99: SelectClock mostrava ancora la forma B=N F1:00:05:00+0."""
+    from orologic_modules import clock
+
+    mostrate = []
+    monkeypatch.setattr(clock, "menu", lambda scelte, **k: mostrate.append(dict(scelte)) or None)
+    db = {"clocks": [{"name": "Lampo", "same_time": True, "phases": [{"white_time": 300, "black_time": 300, "white_inc": 3, "black_inc": 3, "moves": 0}]}]}
+    clock.SelectClock(db)
+    voce = mostrate[0]["Lampo"]
+    assert "B=N" not in voce and "F1:" not in voce and "5 minuti" in voce

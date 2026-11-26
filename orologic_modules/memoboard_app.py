@@ -525,7 +525,7 @@ def report_and_update_scores(
         Acusticator(new_record_jingle, kind=1)
         print(
             _(
-                "\n🏆 COMPLIMENTI! Ti sei guadagnato un posto nella Top 10 della classifica! 🏆"
+                "\nCOMPLIMENTI! Ti sei guadagnato un posto nella Top 10 della classifica!"
             )
         )
         username = config.maiuscole_nomi(
@@ -561,7 +561,7 @@ def report_and_update_scores(
             if new_performance > old_perf:
                 print(
                     _(
-                        "\n🎉 Nuovo record personale per {username}! Precedente: {old_perf}, Attuale: {new_perf}."
+                        "\nNuovo record personale per {username}! Precedente: {old_perf}, Attuale: {new_perf}."
                     ).format(
                         username=username,
                         old_perf=_misura(exercise_name, old_perf),
@@ -1332,12 +1332,15 @@ def main():
         endtime = time.perf_counter() - start_memoboard_time
         header = (
             ""
-            f"Report Sessione MemoBoard (Orologic V{config.VERSION})\n"
-            f"Data e ora: {config.format_date_italian(session_start_dt)}\n\n"
+            + _("Report Sessione MemoBoard (Orologic V{v})").format(v=config.VERSION)
+            + "\n"
+            + _("Data e ora: {d}").format(d=config.format_date_italian(session_start_dt))
+            + "\n\n"
         )
         footer = (
             "\n\n"
-            f"Fine sessione MemoBoard. Tempo di esecuzione: {int(endtime / 60)} minuti e {int(endtime % 60)} secondi.\n"
+            + _("Fine sessione MemoBoard. Tempo di esecuzione: {m} minuti e {s} secondi.").format(m=int(endtime / 60), s=int(endtime % 60))
+            + "\n"
             ""
         )
         report_content = header + "\n\n".join(session_logs) + footer
