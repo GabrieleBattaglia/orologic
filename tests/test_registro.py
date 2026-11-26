@@ -128,3 +128,27 @@ def test_la_raccolta_di_da_leggere_e_del_solo_filo_del_nucleo(finestra, monkeypa
     assert pompa(lambda: letture)
     assert letture == [("Prova", ["Riga del nucleo."])]
     assert pompa(lambda: "Riga di un altro filo." in finestra.area.GetValue())
+
+
+def test_ctrl_backspace_toglie_la_parola_anche_al_nucleo(finestra):
+    """R86, dal collaudo di Gabriele: Ctrl e Backspace cancellava la parola
+    dallo schermo, ma al programma arrivava la mossa intera."""
+    import wx
+    from GBUtils import dgt
+
+    righe = []
+    finestra.avvia_il_nucleo(lambda: righe.append(dgt("Mossa: ", kind="s")))
+    assert pompa(lambda: "Mossa:" in finestra.area.GetValue())
+    for carattere in "Nf3 e4":
+        finestra._manda(carattere)
+    evento = wx.KeyEvent(wx.wxEVT_KEY_DOWN)
+    evento.SetKeyCode(wx.WXK_BACK)
+    evento.SetControlDown(True)
+    finestra._tasto_giu(evento)
+    assert "".join(finestra.scritti) == "Nf3 "
+    finestra._tasto_giu(evento)
+    assert finestra.scritti == []
+    for carattere in "e4\r":
+        finestra._manda(carattere)
+    assert pompa(lambda: righe)
+    assert righe[0].strip() == "e4"

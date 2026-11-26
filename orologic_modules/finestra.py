@@ -769,6 +769,9 @@ class Finestra(wx.Frame):
         self.dialogo_scacchiera = None
         self.scacchiera_da_riaprire = False
         self.digitati = 0
+        # I caratteri della riga che il nucleo sta leggendo, per Ctrl e
+        # Backspace, che toglie l'ultima parola (R86).
+        self.scritti = []
         self.nucleo = None
         self.chiudendo = False
         # Finito il nucleo la finestra si chiude; le prove la tengono aperta
@@ -918,11 +921,26 @@ class Finestra(wx.Frame):
         riga resta vuota."""
         if tasto in ("\r", "\x1b") or self.attesa.tasto:
             self.digitati = 0
+            self.scritti.clear()
         elif tasto == "\x08":
             self.digitati = max(0, self.digitati - 1)
+            if self.scritti:
+                self.scritti.pop()
         elif tasto.isprintable():
             self.digitati += 1
+            self.scritti.append(tasto)
         self.faccia.premi(tasto)
+
+    def _togli_la_parola(self):
+        """Ctrl e Backspace: l'ultima parola della riga, con gli spazi che la
+        seguono, se ne va anche dalla riga che il nucleo sta leggendo, un
+        Backspace per carattere. Prima la cancellava solo il controllo, e al
+        programma arrivava la mossa intera (R86, dal collaudo di Gabriele)."""
+        testo = "".join(self.scritti)
+        inizio = testo.rstrip().rfind(" ") + 1
+        quanti = len(testo) - inizio
+        for _volta in range(quanti):
+            self._manda("\x08")
 
     def _carattere(self, evento):
         codice = evento.GetUnicodeKey()
@@ -950,6 +968,11 @@ class Finestra(wx.Frame):
         ctrl, shift = evento.ControlDown(), evento.ShiftDown()
         if (ctrl and codice == ord("V")) or (shift and codice == wx.WXK_INSERT):
             self._incolla()
+            return
+        # Ctrl e Backspace: la parola se ne va dallo schermo e dalla riga del
+        # nucleo insieme; il controllo non la cancella da se' (R86).
+        if ctrl and codice == wx.WXK_BACK:
+            self._togli_la_parola()
             return
         # Tagliare, cancellare, annullare e ripetere cambierebbero l'area
         # alle spalle del nucleo.
@@ -1284,6 +1307,7 @@ class Finestra(wx.Frame):
         self.attesa = attesa
         # Una domanda nuova comincia con la riga vuota.
         self.digitati = 0
+        self.scritti.clear()
         self._scacchiera_e_domande(attesa)
         if attesa.tipo == "menu":
             self.albero.menu(attesa.sito, attesa.voci, attesa.prompt, attesa.vuoto, attesa.alla_radice)
