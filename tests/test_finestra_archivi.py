@@ -594,3 +594,31 @@ def test_annulla_chiude_subito_lo_scaricamento(app, monkeypatch):
         finestra_archivi._SCARICAMENTO["filo"].join(5)
         pompa(lambda: False, 0.1)
         dialogo.Destroy()
+
+
+@con_pe
+def test_le_copie_a_lavoro_finito_si_fanno_nel_filo_del_lavoro(aperta, archivio, monkeypatch):
+    """R65: copia di sicurezza, confronto e copia dei sorgenti avvenivano nel
+    filo della finestra, che con archivi grandi restava ferma a lavoro
+    finito."""
+    import threading
+
+    fili = []
+    vera = finestra_archivi.FinestraArchivi._copie_dei_sorgenti
+
+    def copie(sorgenti):
+        fili.append(threading.current_thread() is threading.main_thread())
+        return vera(sorgenti)
+
+    monkeypatch.setattr(finestra_archivi.FinestraArchivi, "_copie_dei_sorgenti", staticmethod(copie))
+    prova = aperta(appunti=archivio, pe=PE_VERO, aiuto=None)
+    dialogo = prova.dialogo
+    prova.aggiungi("-D")
+    dialogo.applica()
+    assert pompa(lambda: not dialogo.in_corso(), 20)
+    assert fili == [False]
+    assert dialogo.uscita.GetValue().startswith("Scritto: ")
+    copia = dialogo.uscita.GetValue().split("\n")[1].removeprefix("La copia di sicurezza del sorgente e' ").removesuffix(".")
+    os.remove(dialogo.resoconto)
+    if os.path.isfile(copia):
+        os.remove(copia)

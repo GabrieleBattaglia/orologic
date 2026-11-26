@@ -888,15 +888,25 @@ class FinestraArchivi(wx.Dialog):
         riga = _("pgn-extract al lavoro...")
         self.uscita.ChangeValue("\n".join([*copie_fatte, riga]))
         self._annuncia([*copie_fatte, riga])
+        serve = pgn_extract.serve_la_destinazione(self.scelti)
+        resoconto = self.resoconto
 
         def nel_filo():
             try:
-                esito = pgn_extract.lavora(comando, cartella, self.resoconto, lambda partite: wx.CallAfter(self._avanzamento, partite), fermato.is_set)
+                esito = pgn_extract.lavora(comando, cartella, resoconto, lambda partite: wx.CallAfter(self._avanzamento, partite), fermato.is_set)
             # pe e il disco possono fallire in modi imprevisti: il filo non
             # deve morire in silenzio con la finestra in attesa.
             except Exception as eccezione:  # noqa: BLE001
-                esito = pgn_extract.Esito(None, False, pgn_extract.Riassunto(), self.resoconto, str(eccezione))
-            wx.CallAfter(self._finito, esito, uscita, destinazione, provvisorio, sorgenti)
+                esito = pgn_extract.Esito(None, False, pgn_extract.Riassunto(), resoconto, str(eccezione))
+            # La copia di sicurezza, il confronto e le copie dei sorgenti si
+            # fanno qui, nel filo del lavoro: nel filo della finestra, con
+            # archivi grandi, la finestra restava ferma proprio a lavoro
+            # finito (R65).
+            try:
+                righe, riuscito = self._dopo_il_lavoro(esito, uscita, destinazione, provvisorio, sorgenti, serve)
+            except Exception as eccezione:  # noqa: BLE001
+                righe, riuscito = [str(eccezione)], False
+            wx.CallAfter(self._finito, esito, righe, riuscito and serve)
 
         self.filo = threading.Thread(target=nel_filo, name="pgn-extract", daemon=True)
         self.filo.start()
@@ -910,18 +920,17 @@ class FinestraArchivi(wx.Dialog):
         if self._al_braille is not None and self.FindFocus() is self.uscita:
             self._al_braille(riga)
 
-    def _finito(self, esito, uscita, destinazione, provvisorio, sorgenti=()):
-        if not self:
-            return
-        self._fermato = None
-        self.esito = esito
+    def _dopo_il_lavoro(self, esito, uscita, destinazione, provvisorio, sorgenti, serve):
+        """Nel filo del lavoro, senza toccare la finestra: la destinazione
+        al suo posto, le copie dei sorgenti, i file provvisori via, e le
+        righe del resoconto. Restituisce (righe, riuscito)."""
         if provvisorio:
             try:
                 os.remove(provvisorio)
             except OSError:
                 pass
         righe = []
-        problemi = bool(esito.errore or esito.riassunto.tipi or esito.codice)
+        riuscito = False
         if esito.errore:
             righe.append(_("pgn-extract non e' partito: {motivo}").format(motivo=esito.errore))
         elif esito.fermato:
@@ -933,10 +942,8 @@ class FinestraArchivi(wx.Dialog):
             if uscita:
                 scritte, riuscito = self._sostituisci(uscita, destinazione, riuscito)
                 righe.extend(scritte)
-            if riuscito and pgn_extract.serve_la_destinazione(self.scelti):
+            if riuscito and serve:
                 righe.extend(self._copie_dei_sorgenti(sorgenti))
-                # La prossima proposta: il numero dopo, per non sovrascrivere.
-                self._proponi_la_destinazione()
             righe.append(_("Finito in {secondi:.1f} secondi.").format(secondi=esito.secondi))
             righe.extend(esito.riassunto.righe())
         if uscita and os.path.exists(uscita):
@@ -945,6 +952,17 @@ class FinestraArchivi(wx.Dialog):
             except OSError:
                 pass
         righe.append(_("Il resoconto completo e' in {percorso}.").format(percorso=esito.resoconto))
+        return righe, riuscito
+
+    def _finito(self, esito, righe, da_riproporre=False):
+        if not self:
+            return
+        self._fermato = None
+        self.esito = esito
+        problemi = bool(esito.errore or esito.riassunto.tipi or esito.codice)
+        if da_riproporre:
+            # La prossima proposta: il numero dopo, per non sovrascrivere.
+            self._proponi_la_destinazione()
         self.uscita.ChangeValue("\n".join(righe))
         self.uscita.SetInsertionPoint(0)
         self.pulsante_applica.Enable()
