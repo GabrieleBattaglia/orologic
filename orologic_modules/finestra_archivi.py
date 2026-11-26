@@ -40,6 +40,7 @@ L'ordine dei parametri nel comando lo decide Orologic (decisione del 24
 novembre 2026): -S davanti e i file sorgente in fondo.
 """
 
+import contextlib
 import os
 import threading
 import time
@@ -793,13 +794,23 @@ class FinestraArchivi(wx.Dialog):
         destinazione = self.percorso_della_destinazione()
         # I file che i parametri scrivono, come -d e -n: pgn-extract li azzera
         # aprendoli, quindi non possono essere un sorgente ne' la destinazione
-        # (rilievo R6 della revisione 2).
+        # (rilievo R6 della revisione 2), ne' un file che un altro parametro
+        # legge, come quello di -c, ne' il file di un altro parametro che
+        # scrive (R117).
         sorgenti = [sorgente] + [scelto.valore for scelto in self.scelti if scelto.parametro.opzione == pgn_extract.ALTRO_SORGENTE]
-        for scelto in self.file_da_scrivere():
+        letti = [scelto for scelto in self.scelti if scelto.parametro.valore == "file" and scelto.valore]
+        scritti = self.file_da_scrivere()
+        for indice, scelto in enumerate(scritti):
+            letto = next((altro for altro in letti if pgn_extract.stesso_file(scelto.valore, altro.valore)), None)
+            doppio = next((altro for altro in scritti[:indice] if pgn_extract.stesso_file(scelto.valore, altro.valore)), None)
             if any(pgn_extract.stesso_file(scelto.valore, altro) for altro in sorgenti if altro):
                 righe.append(_("Il file di {voce} non puo' essere un file sorgente: pgn-extract lo azzererebbe.").format(voce=scelto.parametro.voce))
             elif destinazione and pgn_extract.stesso_file(scelto.valore, destinazione):
                 righe.append(_("Il file di {voce} non puo' essere la destinazione.").format(voce=scelto.parametro.voce))
+            elif letto is not None:
+                righe.append(_("Il file di {voce} e' anche quello di {altra}, che pgn-extract legge: lo azzererebbe.").format(voce=scelto.parametro.voce, altra=letto.parametro.voce))
+            elif doppio is not None:
+                righe.append(_("Il file di {voce} e' anche quello di {altra}: pgn-extract ne terrebbe una sola uscita.").format(voce=scelto.parametro.voce, altra=doppio.parametro.voce))
         if pgn_extract.serve_la_destinazione(self.scelti):
             if not destinazione:
                 righe.append(_("Manca la destinazione."))
@@ -869,18 +880,9 @@ class FinestraArchivi(wx.Dialog):
                 self._avvisa(self, _("pgn-extract non sa aprire {percorso}: il nome ha caratteri fuori dalla codepage di Windows. Rinomina il file, o la cartella, con lettere semplici.").format(percorso=errore.percorso))
             return
         # I file dei parametri che ci sono gia' hanno la copia di sicurezza
-        # prima del lavoro: pgn-extract li azzera appena parte (R6).
-        copie_fatte = []
-        for scelto in self.file_da_scrivere():
-            if os.path.isfile(scelto.valore) and os.path.getsize(scelto.valore):
-                try:
-                    copia = archivio_pgn.copia_di_sicurezza(scelto.valore)
-                except OSError as errore:
-                    suona("no")
-                    with self._dialogo():
-                        self._avvisa(self, _("La copia di sicurezza di {file} non si fa: {motivo}").format(file=scelto.valore, motivo=errore))
-                    return
-                copie_fatte.append(_("La copia di sicurezza di {file} e' {copia}.").format(file=scelto.valore, copia=copia))
+        # prima del lavoro, nel filo del lavoro: pgn-extract li azzera appena
+        # parte (R6, R117).
+        da_copiare = [scelto.valore for scelto in self.file_da_scrivere() if os.path.isfile(scelto.valore) and os.path.getsize(scelto.valore)]
         provvisorio = pgn_extract.file_degli_appunti(self.appunti) if self.appunti is not None else None
         sorgente = provvisorio or self.percorso_del_sorgente()
         if uscita:
@@ -899,15 +901,24 @@ class FinestraArchivi(wx.Dialog):
         fermato = self._fermato = threading.Event()
         self.pulsante_applica.Disable()
         riga = _("pgn-extract al lavoro...")
-        self.uscita.ChangeValue("\n".join([*copie_fatte, riga]))
-        self._annuncia([*copie_fatte, riga])
+        self.uscita.ChangeValue(riga)
+        self._annuncia([riga])
         serve = pgn_extract.serve_la_destinazione(self.scelti)
         resoconto = self.resoconto
 
         def nel_filo():
+            # Le righe delle copie restano in testa all'uscita e al
+            # resoconto: prima le copriva l'avanzamento (R117).
+            copie, mancata = self._copie_di_sicurezza(da_copiare)
+            if mancata:
+                if provvisorio:
+                    with contextlib.suppress(OSError):
+                        os.remove(provvisorio)
+                wx.CallAfter(self._finito, pgn_extract.Esito(None, False, pgn_extract.Riassunto(), resoconto, mancata), [*copie, mancata, _("pgn-extract non e' partito.")])
+                return
             try:
                 pgn_extract.prepara_i_provvisori(provvisori)
-                esito = pgn_extract.lavora(comando, cartella, resoconto, lambda partite: wx.CallAfter(self._avanzamento, partite), fermato.is_set)
+                esito = pgn_extract.lavora(comando, cartella, resoconto, lambda partite: wx.CallAfter(self._avanzamento, partite), fermato.is_set, copie)
             # pe e il disco possono fallire in modi imprevisti: il filo non
             # deve morire in silenzio con la finestra in attesa.
             except Exception as eccezione:  # noqa: BLE001
@@ -920,7 +931,7 @@ class FinestraArchivi(wx.Dialog):
                 righe, riuscito = self._dopo_il_lavoro(esito, uscita, destinazione, provvisorio, sorgenti, serve, provvisori)
             except Exception as eccezione:  # noqa: BLE001
                 righe, riuscito = [str(eccezione)], False
-            wx.CallAfter(self._finito, esito, righe, riuscito and serve)
+            wx.CallAfter(self._finito, esito, [*copie, *righe], riuscito and serve)
 
         self.filo = threading.Thread(target=nel_filo, name="pgn-extract", daemon=True)
         self.filo.start()
@@ -972,6 +983,19 @@ class FinestraArchivi(wx.Dialog):
         pgn_extract.metti_i_provvisori(provvisori, False)
         righe.append(_("Il resoconto completo e' in {percorso}.").format(percorso=esito.resoconto))
         return righe, riuscito
+
+    @staticmethod
+    def _copie_di_sicurezza(percorsi):
+        """(righe, mancata): le copie di sicurezza dei file, e la riga di
+        quella che non si e' potuta fare, che ferma il lavoro, o None."""
+        righe = []
+        for percorso in percorsi:
+            try:
+                copia = archivio_pgn.copia_di_sicurezza(percorso)
+            except OSError as errore:
+                return righe, _("La copia di sicurezza di {file} non si fa: {motivo}").format(file=percorso, motivo=errore)
+            righe.append(_("La copia di sicurezza di {file} e' {copia}.").format(file=percorso, copia=copia))
+        return righe, None
 
     def _finito(self, esito, righe, da_riproporre=False):
         if not self:

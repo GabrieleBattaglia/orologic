@@ -1135,22 +1135,26 @@ class Esito:
     secondi: float = 0.0
 
 
-def lavora(comando, cartella_di_lavoro, resoconto, avanzamento, fermato):
+def lavora(comando, cartella_di_lavoro, resoconto, avanzamento, fermato, prima=()):
     """pe col comando, nella cartella di lavoro: ogni riga va nel resoconto
     e al riassunto; avanzamento(partite) ogni mezzo secondo; fermato() vero
-    ferma pe. Restituisce l'Esito. Gira nel filo della finestra."""
+    ferma pe. prima sono le righe da scrivere in testa al resoconto, come
+    le copie di sicurezza fatte prima del lavoro (R117). Restituisce
+    l'Esito. Gira nel filo del lavoro."""
     riassunto = Riassunto()
     try:
         with open(resoconto, "w", encoding="utf-8") as file_del_resoconto:
-            return _lavora_nel_file(comando, cartella_di_lavoro, file_del_resoconto, riassunto, avanzamento, fermato, resoconto)
+            return _lavora_nel_file(comando, cartella_di_lavoro, file_del_resoconto, riassunto, avanzamento, fermato, resoconto, prima)
     except OSError as errore:
         return Esito(None, False, riassunto, resoconto, str(errore))
 
 
-def _lavora_nel_file(comando, cartella_di_lavoro, file_del_resoconto, riassunto, avanzamento, fermato, resoconto):
+def _lavora_nel_file(comando, cartella_di_lavoro, file_del_resoconto, riassunto, avanzamento, fermato, resoconto, prima=()):
     inizio = time.monotonic()
     file_del_resoconto.write(_("Comando: {comando}").format(comando=comando_leggibile(comando)) + "\n")
     file_del_resoconto.write(_("Iniziato: {quando}").format(quando=time.strftime("%Y-%m-%d %H:%M:%S")) + "\n")
+    for riga in prima:
+        file_del_resoconto.write(riga + "\n")
     try:
         processo = subprocess.Popen(
             comando,

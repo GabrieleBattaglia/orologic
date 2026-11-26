@@ -334,6 +334,9 @@ def test_i_file_che_pe_scrive_non_toccano_i_sorgenti(aperta, archivio, tmp_path,
     dialogo.imposta_il_valore()
     monkeypatch.setattr(pgn_extract, "lavora", lambda *_argomenti: pgn_extract.Esito(None, False, pgn_extract.Riassunto(), "", "finto"))
     dialogo.applica()
+    # La copia si fa nel filo del lavoro, e la sua riga resta in testa
+    # all'uscita finale (R117).
+    assert pompa(lambda: not dialogo.in_corso(), 20)
     righe = dialogo.uscita.GetValue().split("\n")
     assert righe[0].startswith(f"La copia di sicurezza di {doppioni} e' ")
     copia = righe[0].split(" e' ", 1)[1].rstrip(".")
@@ -655,3 +658,66 @@ def test_la_destinazione_fuori_dalla_codepage_si_scrive_davvero(aperta, archivio
     os.remove(dialogo.resoconto)
     # Nella cartella non resta niente di storpiato ne' di provvisorio.
     assert sorted(os.listdir(tmp_path)) == sorted([os.path.basename(archivio), destinazione.name, doppioni.name])
+
+
+def test_i_file_che_pe_scrive_non_sono_file_che_legge_o_che_scrive_un_altro(aperta, archivio, tmp_path):
+    """R117: i file che pgn-extract scrive non si confrontavano coi file che
+    legge per gli altri parametri, e -c e -d sullo stesso archivio lo
+    riscrivevano; -d e -n sullo stesso file non si rifiutavano, e restava
+    solo l'uscita di -d."""
+    righe_in_piu = "-cfile -- check file.\n-dfile -- write duplicate games to file.\n-nfile -- write the other games to file.\n"
+    prova = aperta(appunti=archivio, aiuto=AIUTO + righe_in_piu)
+    dialogo = prova.dialogo
+    controllo = tmp_path / "controllo.pgn"
+    controllo.write_text(ARCHIVIO, encoding="utf-8")
+    for voce, file in (("-c", controllo), ("-d", controllo)):
+        prova.aggiungi(voce)
+        prova.file_del_valore = str(file)
+        prova.nella_catena(len(dialogo.scelti) - 1)
+        dialogo.imposta_il_valore()
+    dialogo.applica()
+    assert prova.suoni[-1] == "no"
+    assert "Il file di -d e' anche quello di -c, che pgn-extract legge: lo azzererebbe." in prova.avvisi[-1]
+    # -d e -n sullo stesso file.
+    altro = tmp_path / "altre.pgn"
+    prova.nella_catena(0)
+    dialogo.rimuovi()
+    prova.aggiungi("-n")
+    prova.file_del_valore = str(controllo)
+    prova.nella_catena(len(dialogo.scelti) - 1)
+    dialogo.imposta_il_valore()
+    dialogo.applica()
+    assert "Il file di -n e' anche quello di -d: pgn-extract ne terrebbe una sola uscita." in prova.avvisi[-1]
+    prova.file_del_valore = str(altro)
+    dialogo.imposta_il_valore()
+    assert not any("anche quello di" in riga for riga in dialogo.problemi())
+
+
+@con_pe
+def test_la_copia_di_sicurezza_dei_file_dei_parametri_resta_nell_uscita(aperta, archivio, tmp_path):
+    """R117: la riga che dice dov'e' la copia di sicurezza fatta prima del
+    lavoro si copriva nell'Uscita e non entrava nel resoconto; e la copia si
+    faceva nel filo della finestra."""
+    prova = aperta(appunti=archivio, pe=PE_VERO, aiuto=None)
+    dialogo = prova.dialogo
+    doppioni = tmp_path / "doppioni.pgn"
+    doppioni.write_text("i doppioni di prima", encoding="utf-8")
+    prova.aggiungi("-d")
+    prova.file_del_valore = str(doppioni)
+    prova.nella_catena(0)
+    dialogo.imposta_il_valore()
+    dialogo.applica()
+    assert pompa(lambda: not dialogo.in_corso(), 20)
+    righe = dialogo.uscita.GetValue().split("\n")
+    assert righe[0].startswith(f"La copia di sicurezza di {doppioni} e' ")
+    copia = righe[0].split(" e' ", 1)[1].rstrip(".")
+    with open(dialogo.resoconto, encoding="utf-8") as file:
+        assert righe[0] in file.read()
+    with open(copia, encoding="utf-8") as file:
+        assert file.read() == "i doppioni di prima"
+    for riga in righe:
+        for prefisso in ("La copia di sicurezza del sorgente e' ", "La copia di sicurezza del file di prima e' "):
+            if riga.startswith(prefisso):
+                os.remove(riga.removeprefix(prefisso).removesuffix("."))
+    os.remove(copia)
+    os.remove(dialogo.resoconto)
