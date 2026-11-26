@@ -52,6 +52,18 @@ def copia_negli_appunti(testo, conferma):
     return True
 
 
+def leggi_dagli_appunti():
+    """Il testo degli appunti, o None se gli appunti non rispondono, e lo
+    dice: come la copia, la lettura non deve far cadere il programma
+    quando un altro programma li tiene occupati. Prima due letture di
+    Easyfish stavano fuori da ogni protezione (R53)."""
+    try:
+        return pyperclip.paste() or ""
+    except (pyperclip.PyperclipException, OSError) as e:
+        print(_("Impossibile accedere agli appunti: {error}").format(error=e))
+        return None
+
+
 def nota_del_nome(indice, totale, genere=False):
     """La nota che conferma una voce dei nomi: sale dalla prima all'ultima,
     da 130 a 2093 hertz, e va da sinistra a destra; un po' piu' alta per il

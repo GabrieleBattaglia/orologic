@@ -26,7 +26,6 @@ Rilievi medi, per area.
 Persistenza, avvio e rete.
 Partita, orologio e motore.
 Easyfish e Memoboard.
-R53. Medio, fragilità. orologic_modules/easyfish/easyfish_app.py riga 876; pgn_handler.py riga 36. Le due letture degli appunti stanno fuori da ogni try, mentre la copia è protetta. Correzione: una ui.leggi_dagli_appunti. Letto.
 R54. Medio, fragilità. orologic_modules/easyfish/easyfish_app.py righe 881-893. .fg controlla solo la sintassi del FEN: una posizione senza un Re passa, mentre l'editor usa is_valid. Correzione: rifiutare con errori_della_posizione. Letto.
 R55. Medio, logica. orologic_modules/easyfish/posizione.py righe 327-328; engine.py righe 509-518. Nelle linee di analisi il matto perde il segno: M3 sia per chi lo dà sia per chi lo subisce. Correzione: -M3 quando è subito. Letto.
 R56. Medio, logica. orologic_modules/easyfish/image_exporter.py righe 160-193 e 269-289. .ii chiede i colori dell'ultima mossa, dello scacco e l'ombreggiatura, ma alla scacchiera non si passano né ultima mossa né scacco, e l'ombra non la legge nessuno. Impatto: domande inutili, e chi non vede non può accorgersene. Letto.

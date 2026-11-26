@@ -33,8 +33,8 @@ def CopyPGNToClipboard(game):
 
 def PastePGNFromClipboard():
     """Incolla una partita dagli appunti in formato PGN."""
-    pgn_string = pyperclip.paste()
-    if not pgn_string.strip():
+    pgn_string = ui.leggi_dagli_appunti()
+    if not pgn_string or not pgn_string.strip():
         return None
     try:
         games, is_corrupted, is_corrected, err_msg, cleaned_text = (

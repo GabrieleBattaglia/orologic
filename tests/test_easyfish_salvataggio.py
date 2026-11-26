@@ -104,3 +104,35 @@ def test_save_game_to_file_dice_se_e_riuscita(monkeypatch):
     assert pgn_handler.SaveGameToFile(chess.pgn.Game()) is False
     monkeypatch.setattr(game_flow, "salva_pgn_partita", lambda testo, nome: "C:/x.pgn")
     assert pgn_handler.SaveGameToFile(chess.pgn.Game()) is True
+
+
+def test_gli_appunti_occupati_non_fanno_cadere(monkeypatch, capsys):
+    """R53: le letture degli appunti di Easyfish stavano fuori da ogni
+    protezione."""
+    import pyperclip
+
+    from orologic_modules import ui
+
+    def occupati():
+        raise pyperclip.PyperclipException("occupati")
+
+    monkeypatch.setattr(ui.pyperclip, "paste", occupati)
+    assert ui.leggi_dagli_appunti() is None
+    assert "Impossibile accedere agli appunti" in capsys.readouterr().out
+
+
+def test_fg_rifiuta_una_posizione_senza_re(finestra, monkeypatch):
+    """R54: .fg controllava solo la sintassi del FEN."""
+    from orologic_modules import ui
+
+    game = partita()
+    monkeypatch.setattr(orologic_engine, "ENGINE", object())
+    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda g: True)
+    monkeypatch.setattr(ui.pyperclip, "paste", lambda: "8/8/8/8/8/8/8/4k3 w - - 0 1")
+    finestra.avvia_il_nucleo(lambda: easyfish_app.run(partita=game))
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+    _premi(finestra, ".fg\r")
+    assert pompa(lambda: "Manca il Re bianco." in finestra.area.GetValue())
+    assert len(finestra.fornitore()["board"].move_stack) == 5
+    _premi(finestra, ".\r")
+    assert pompa(lambda: not finestra.nucleo.is_alive())

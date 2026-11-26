@@ -7,7 +7,6 @@ import re
 
 import chess
 import chess.engine
-import pyperclip
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
 from .. import config, cruscotto, strato, ui
@@ -28,7 +27,7 @@ from . import analysis_utils, posizione
 from .constants import MNMAIN
 from .drawing import drawing_menu, verbalize_drawings
 from .image_exporter import export_board_pdf, image_settings_menu
-from .interaction import BoardEditor, ExplorerMode
+from .interaction import BoardEditor, ExplorerMode, errori_della_posizione
 from .pgn_handler import (
     AddingPGNTAGS,
     CopyPGNToClipboard,
@@ -886,14 +885,25 @@ def _esegui(partita=None):
                     _nel_terminale(board)
 
             elif cmd == ".fg":
-                fen_from_clip = pyperclip.paste()
-                if not fen_from_clip:
+                fen_from_clip = ui.leggi_dagli_appunti()
+                if fen_from_clip is None:
+                    pass
+                elif not fen_from_clip.strip():
                     print(_("Spiacente, appunti vuoti. Copia prima un FEN valido."))
                 else:
+                    fen_from_clip = fen_from_clip.strip()
                     print(_("Incolla una nuova posizione FEN dagli appunti..."))
                     try:
                         tmp_board = board.copy()
                         tmp_board.set_fen(fen_from_clip)
+                        # La posizione deve essere legale, come nell'editor:
+                        # prima passava anche senza un Re (R54).
+                        errori = errori_della_posizione(tmp_board)
+                        if errori:
+                            print(_("La posizione del FEN non e' legale:"))
+                            for riga in errori:
+                                print(riga)
+                            continue
                         print(
                             _(
                                 "FEN valido. ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova da questa posizione."
