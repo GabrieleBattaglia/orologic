@@ -112,3 +112,23 @@ def test_la_configurazione_fallita_chiude_il_motore(motore_finto, monkeypatch):
     assert not engine.InitEngine()
     assert engine.ENGINE is None
     assert motore_finto[-1][1].chiuso
+
+
+# R55: il segno del matto.
+
+
+def test_il_matto_subito_ha_il_segno(monkeypatch):
+    from orologic_modules import board_utils
+    from orologic_modules.easyfish import posizione
+
+    scacchiera = chess.Board()
+    linea = [{"score": chess.engine.PovScore(chess.engine.Mate(-3), chess.WHITE), "pv": [chess.Move.from_uci("e2e4")]}]
+    assert "-M3" in posizione.righe_dell_analisi(scacchiera, linea)[0]
+    linea[0]["score"] = chess.engine.PovScore(chess.engine.Mate(2), chess.WHITE)
+    riga = posizione.righe_dell_analisi(scacchiera, linea)[0]
+    assert "M2" in riga and "-M2" not in riga
+    assert board_utils.testo_del_matto(-1) == "-M1"
+    # La linea migliore del motore dice chi subisce il matto.
+    monkeypatch.setattr(engine, "Acusticator", lambda *a, **k: None)
+    monkeypatch.setattr(engine, "_analizza_con_cache", lambda board, linee: [{"score": chess.engine.PovScore(chess.engine.Mate(-3), chess.WHITE), "pv": [chess.Move.from_uci("e2e4")]}])
+    assert engine.CalculateBest(scacchiera, as_san=True)[0].startswith("Matto subito in 3")

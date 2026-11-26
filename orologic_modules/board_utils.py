@@ -424,14 +424,18 @@ def accoda_commento(nodo, testo):
     nodo.comment = f"{(nodo.comment or '').strip()} {testo}".strip()
 
 
+def testo_del_matto(mosse):
+    """M3 per il matto dato in tre mosse, -M3 per quello subito (R55)."""
+    return ("-" if mosse < 0 else "") + _("M{m}").format(m=abs(mosse))
+
+
 def testo_valutazione(score):
     """La valutazione dal punto di vista del Bianco, nella forma dei commenti:
     +0.35, oppure M3 e -M3 quando il matto e' del Bianco o del Nero. Prima il
     matto usciva come +300.00, un numero che non dice niente."""
     bianco = score.white()
     if bianco.is_mate():
-        mosse = bianco.mate()
-        return ("-" if mosse < 0 else "") + _("M{m}").format(m=abs(mosse))
+        return testo_del_matto(bianco.mate())
     return f"{bianco.score() / 100:+.2f}"
 
 

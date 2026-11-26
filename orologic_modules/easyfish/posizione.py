@@ -19,6 +19,7 @@ import re
 import chess
 import chess.pgn
 
+from .. import board_utils
 from ..board_utils import CustomBoard, DescribeMove, NormalizeMove
 from ..config import _
 from .drawing import verbalize_drawings
@@ -325,7 +326,9 @@ def righe_dell_analisi(board, analisi):
         if not pv or info.get("score") is None:
             continue
         punteggio = info.get("score").pov(board.turn)
-        valutazione = f"M{abs(punteggio.mate())}" if punteggio.is_mate() else f"{punteggio.score(mate_score=10000) / 100:+.2f}"
+        # Il matto col suo segno: -M3 quando lo subisce chi ha il tratto.
+        # Prima M3 valeva per chi lo dava e per chi lo subiva (R55).
+        valutazione = board_utils.testo_del_matto(punteggio.mate()) if punteggio.is_mate() else f"{punteggio.score(mate_score=10000) / 100:+.2f}"
         wdl = info.get("wdl")
         probabilita = f"({wdl[0] / 10:.1f}/{wdl[1] / 10:.1f}/{wdl[2] / 10:.1f}) " if wdl else ""
         mosse = []

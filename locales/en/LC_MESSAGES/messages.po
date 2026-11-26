@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-26 07:55+0100\n"
+"POT-Creation-Date: 2026-11-26 07:56+0100\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -507,7 +507,7 @@ msgid "Lettura fermata: tengo le partite lette finora."
 msgstr "Reading stopped: keeping the games read so far."
 
 #: orologic_modules/archivio_pgn.py:312
-#: orologic_modules/easyfish/posizione.py:268
+#: orologic_modules/easyfish/posizione.py:269
 #, python-brace-format
 msgid "{bianco} vs {nero}, {risultato}"
 msgstr "{bianco} vs {nero}, {risultato}"
@@ -778,54 +778,54 @@ msgstr "Black error: {e}"
 msgid "Errore bianco: {e}"
 msgstr "White error: {e}"
 
-#: orologic_modules/board_utils.py:434 orologic_modules/engine.py:1046
+#: orologic_modules/board_utils.py:429 orologic_modules/engine.py:1046
 #: orologic_modules/engine.py:1059 orologic_modules/engine.py:2098
 #, python-brace-format
 msgid "M{m}"
 msgstr "M{m}"
 
-#: orologic_modules/board_utils.py:574
+#: orologic_modules/board_utils.py:578
 #, python-brace-format
 msgid "{giocatore} entra in fase {numero}, ha ora {tempo}"
 msgstr "{giocatore} enters phase {numero}, now has {tempo}"
 
-#: orologic_modules/board_utils.py:650
+#: orologic_modules/board_utils.py:654
 #, python-brace-format
 msgid "File {filename} non trovato."
 msgstr "File {filename} not found."
 
-#: orologic_modules/board_utils.py:657
+#: orologic_modules/board_utils.py:661
 #, python-brace-format
 msgid "Errore durante la lettura di {filename}: {error}"
 msgstr "Error while reading {filename}: {error}"
 
-#: orologic_modules/board_utils.py:721
+#: orologic_modules/board_utils.py:725
 #, python-brace-format
 msgid "Caricate {num_entries} linee di apertura ECO."
 msgstr "Loaded {num_entries} ECO opening lines."
 
-#: orologic_modules/board_utils.py:847
+#: orologic_modules/board_utils.py:851
 msgid "Il testo e' vuoto o non contiene dati."
 msgstr "The text is empty or contains no data."
 
-#: orologic_modules/board_utils.py:863
+#: orologic_modules/board_utils.py:867
 msgid "Impossibile trovare un PGN o una partita nel testo."
 msgstr "Could not find a PGN or game in the text."
 
-#: orologic_modules/board_utils.py:872
+#: orologic_modules/board_utils.py:876
 msgid "Il testo non contiene un PGN valido."
 msgstr "The text does not contain a valid PGN."
 
-#: orologic_modules/board_utils.py:879
+#: orologic_modules/board_utils.py:883
 #, python-brace-format
 msgid "Partita {idx}: "
 msgstr "Game {idx}: "
 
-#: orologic_modules/board_utils.py:884
+#: orologic_modules/board_utils.py:888
 msgid "Il PGN e' corrotto o contiene mosse non valide:\n"
 msgstr "The PGN is corrupted or contains invalid moves:\n"
 
-#: orologic_modules/board_utils.py:907
+#: orologic_modules/board_utils.py:911
 msgid ""
 "Il PGN presentava lievi imperfezioni di layout ed e' stato corretto e "
 "aggiornato automaticamente."
@@ -833,16 +833,16 @@ msgstr ""
 "The PGN had minor layout imperfections and was automatically corrected and "
 "updated."
 
-#: orologic_modules/board_utils.py:910
+#: orologic_modules/board_utils.py:914
 msgid "Il PGN e' perfettamente valido."
 msgstr "The PGN is perfectly valid."
 
-#: orologic_modules/board_utils.py:923
+#: orologic_modules/board_utils.py:927
 #, python-brace-format
 msgid "Errore imprevisto durante l'analisi del PGN: {error}"
 msgstr "Unexpected error parsing PGN: {error}"
 
-#: orologic_modules/board_utils.py:1003 orologic_modules/controlli.py:289
+#: orologic_modules/board_utils.py:1007 orologic_modules/controlli.py:289
 #: orologic_modules/cruscotto.py:69 orologic_modules/cruscotto.py:225
 #: orologic_modules/easyfish/constants.py:26
 #: orologic_modules/easyfish/easyfish_app.py:712
@@ -865,7 +865,7 @@ msgstr "Unexpected error parsing PGN: {error}"
 msgid "Bianco"
 msgstr "White"
 
-#: orologic_modules/board_utils.py:1003 orologic_modules/controlli.py:289
+#: orologic_modules/board_utils.py:1007 orologic_modules/controlli.py:289
 #: orologic_modules/cruscotto.py:70 orologic_modules/cruscotto.py:226
 #: orologic_modules/easyfish/constants.py:28
 #: orologic_modules/easyfish/easyfish_app.py:712
@@ -888,11 +888,11 @@ msgstr "White"
 msgid "Nero"
 msgstr "Black"
 
-#: orologic_modules/board_utils.py:1015
+#: orologic_modules/board_utils.py:1019
 msgid "Mosse dalla piu' lenta alla piu' rapida:"
 msgstr "Moves from slowest to fastest:"
 
-#: orologic_modules/board_utils.py:1022
+#: orologic_modules/board_utils.py:1026
 msgid ""
 "\n"
 "Suddivisione della partita in 4 fasi:"
@@ -900,11 +900,11 @@ msgstr ""
 "\n"
 "Division of the game into 4 phases:"
 
-#: orologic_modules/board_utils.py:1026
+#: orologic_modules/board_utils.py:1030
 msgid "nessuna mossa."
 msgstr "no move."
 
-#: orologic_modules/board_utils.py:1036
+#: orologic_modules/board_utils.py:1040
 #, no-python-format, python-brace-format
 msgid ""
 "Q{num} da mossa {start_num} a mossa {end_num}: {time_str}, pari al "
@@ -913,16 +913,16 @@ msgstr ""
 "Q{num} from move {start_num} to move {end_num}: {time_str}, equal to "
 "{perc:.1f}"
 
-#: orologic_modules/board_utils.py:1044
+#: orologic_modules/board_utils.py:1048
 msgid "del tempo;"
 msgstr "of time;"
 
-#: orologic_modules/board_utils.py:1051
+#: orologic_modules/board_utils.py:1055
 #, python-brace-format
 msgid "La mossa piu' lenta e' la {move}, {time};"
 msgstr "The slowest move is {move}, {time};"
 
-#: orologic_modules/board_utils.py:1057
+#: orologic_modules/board_utils.py:1061
 #, python-brace-format
 msgid "la piu' veloce e' la {move}, {time}."
 msgstr "the fastest is {move}, {time}."
@@ -2256,10 +2256,20 @@ msgstr "{num}."
 msgid "{num}... {desc}"
 msgstr "{num}... {desc}"
 
-#: orologic_modules/engine.py:578
+#: orologic_modules/engine.py:581
+#, python-brace-format
+msgid "Matto subito in {moves}, {first_move}"
+msgstr "Mated in {moves}, {first_move}"
+
+#: orologic_modules/engine.py:581
 #, python-brace-format
 msgid "Matto in {moves}, {first_move}"
 msgstr "Mate in {moves}, {first_move}"
+
+#: orologic_modules/engine.py:588
+#, python-brace-format
+msgid "Matto subito in {moves}:"
+msgstr "Mated in {moves}:"
 
 #: orologic_modules/engine.py:588
 #, python-brace-format
@@ -2407,7 +2417,7 @@ msgstr ""
 "Variation added."
 
 #: orologic_modules/easyfish/easyfish_app.py:363
-#: orologic_modules/easyfish/posizione.py:42 orologic_modules/engine.py:860
+#: orologic_modules/easyfish/posizione.py:43 orologic_modules/engine.py:860
 #, python-brace-format
 msgid "[BM: {bm}]"
 msgstr "[BM: {bm}]"
@@ -2429,7 +2439,7 @@ msgstr ""
 "Enter comment: "
 
 #: orologic_modules/easyfish/easyfish_app.py:362
-#: orologic_modules/easyfish/posizione.py:42 orologic_modules/engine.py:911
+#: orologic_modules/easyfish/posizione.py:43 orologic_modules/engine.py:911
 #, python-brace-format
 msgid "[Val: {ev}]"
 msgstr "[Val: {ev}]"
@@ -12243,7 +12253,7 @@ msgid "Errore analisi: {e}"
 msgstr "Analysis error: {e}"
 
 #: orologic_modules/easyfish/easyfish_app.py:364
-#: orologic_modules/easyfish/posizione.py:42
+#: orologic_modules/easyfish/posizione.py:43
 #, python-brace-format
 msgid "[Linea: {linea}]"
 msgstr "[Line: {linea}]"
@@ -13286,17 +13296,17 @@ msgstr "Updated tags."
 msgid "PGN copiato automaticamente negli appunti."
 msgstr "PGN automatically copied to clipboard."
 
-#: orologic_modules/easyfish/posizione.py:56
+#: orologic_modules/easyfish/posizione.py:57
 #, python-brace-format
 msgid "valutazione {v}"
 msgstr "evaluation {v}"
 
-#: orologic_modules/easyfish/posizione.py:66
+#: orologic_modules/easyfish/posizione.py:67
 #, python-brace-format
 msgid "Disegni: {elenco}"
 msgstr "Drawings: {elenco}"
 
-#: orologic_modules/easyfish/posizione.py:159
+#: orologic_modules/easyfish/posizione.py:160
 msgid ""
 "La mossa ha un seguito di 1 semimossa, che sparira' con lei. Confermi? "
 "(INVIO per si', ESC per no): "
@@ -13304,7 +13314,7 @@ msgstr ""
 "The move has a continuation of 1 half-move, which will be deleted with it. "
 "Confirm? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/easyfish/posizione.py:163
+#: orologic_modules/easyfish/posizione.py:164
 #, python-brace-format
 msgid ""
 "La mossa ha un seguito di {n} semimosse, che spariranno con lei. Confermi? "
@@ -13313,47 +13323,47 @@ msgstr ""
 "The move has a continuation of {n} half-moves, which will be deleted with "
 "it. Confirm? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/easyfish/posizione.py:220
+#: orologic_modules/easyfish/posizione.py:221
 msgid "Linea principale."
 msgstr "Main line."
 
-#: orologic_modules/easyfish/posizione.py:220
+#: orologic_modules/easyfish/posizione.py:221
 #, python-brace-format
 msgid "Variante, livello {n}."
 msgstr "Variation, level {n}."
 
-#: orologic_modules/easyfish/posizione.py:226
+#: orologic_modules/easyfish/posizione.py:227
 #, python-brace-format
 msgid "Seguito: {mossa}; varianti: {altre}."
 msgstr "Continuation: {mossa}; variations: {altre}."
 
-#: orologic_modules/easyfish/posizione.py:228
+#: orologic_modules/easyfish/posizione.py:229
 #, python-brace-format
 msgid "Seguito: {mossa}."
 msgstr "Continuation: {mossa}."
 
-#: orologic_modules/easyfish/posizione.py:230
+#: orologic_modules/easyfish/posizione.py:231
 #, python-brace-format
 msgid "Scelta: {n} di {tot}, {mossa}."
 msgstr "Chosen: {n} of {tot}, {mossa}."
 
-#: orologic_modules/easyfish/posizione.py:233
+#: orologic_modules/easyfish/posizione.py:234
 msgid "Fine della linea."
 msgstr "End of the line."
 
-#: orologic_modules/easyfish/posizione.py:236
-#: orologic_modules/easyfish/posizione.py:255
-#: orologic_modules/easyfish/posizione.py:272
+#: orologic_modules/easyfish/posizione.py:237
+#: orologic_modules/easyfish/posizione.py:256
+#: orologic_modules/easyfish/posizione.py:273
 #, python-brace-format
 msgid "Commento: {testo}"
 msgstr "Comment: {testo}"
 
-#: orologic_modules/easyfish/posizione.py:249
+#: orologic_modules/easyfish/posizione.py:250
 #, python-brace-format
 msgid "{numero} {mossa}, {descrizione}"
 msgstr "{numero} {mossa}, {descrizione}"
 
-#: orologic_modules/easyfish/posizione.py:263
+#: orologic_modules/easyfish/posizione.py:264
 #, python-brace-format
 msgid "Variante: {mossa}"
 msgstr "Variation: {mossa}"

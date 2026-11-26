@@ -568,25 +568,25 @@ def CalculateBest(board, bestmove=True, as_san=False):
                     move_number += 1
             score = analysis[0].get("score")
             mate_found = False
+            subito = False
             if score is not None and score.relative.is_mate():
                 mate_moves = abs(score.relative.mate())
                 mate_found = True
+                # Chi ha il tratto subisce il matto: lo si dice, invece
+                # dello stesso "Matto in" di chi lo da' (R55).
+                subito = score.relative.mate() < 0
             if bestmove:
                 if mate_found:
                     Acusticator(["a6", 0.008, 1, config.VOLUME])
-                    return [
-                        _("Matto in {moves}, {first_move}").format(
-                            moves=mate_moves, first_move=descriptive_moves[0]
-                        )
-                    ]
+                    frase = _("Matto subito in {moves}, {first_move}") if subito else _("Matto in {moves}, {first_move}")
+                    return [frase.format(moves=mate_moves, first_move=descriptive_moves[0])]
                 else:
                     Acusticator(["f6", 0.008, 1, config.VOLUME])
                     return [descriptive_moves[0]]
             else:
                 if mate_found:
-                    descriptive_moves.insert(
-                        0, _("Matto in {moves}:").format(moves=mate_moves)
-                    )
+                    frase = _("Matto subito in {moves}:") if subito else _("Matto in {moves}:")
+                    descriptive_moves.insert(0, frase.format(moves=mate_moves))
                 Acusticator(["d6", 0.008, 1, config.VOLUME])
                 return descriptive_moves
         elif bestmove:
