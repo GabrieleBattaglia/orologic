@@ -312,6 +312,35 @@ def test_la_destinazione_non_puo_essere_il_sorgente(aperta, archivio):
     assert not dialogo.in_corso()
 
 
+def test_i_file_che_pe_scrive_non_toccano_i_sorgenti(aperta, archivio, tmp_path, monkeypatch):
+    """Rilievo R6 della revisione 2: -d e -n scrivono un file che pgn-extract
+    azzera aprendolo. Non puo' essere un sorgente ne' la destinazione, e se
+    c'e' gia' ha la copia di sicurezza prima del lavoro."""
+    prova = aperta(appunti=archivio, aiuto=AIUTO + "-dfile -- write duplicate games to file.\n")
+    dialogo = prova.dialogo
+    prova.aggiungi("-d")
+    prova.file_del_valore = archivio
+    prova.nella_catena(0)
+    dialogo.imposta_il_valore()
+    assert dialogo.catena.GetString(0) == f"-d {archivio}"
+    dialogo.applica()
+    assert prova.suoni[-1] == "no"
+    assert "Il file di -d non puo' essere un file sorgente: pgn-extract lo azzererebbe." in prova.avvisi[-1]
+    assert not dialogo.in_corso()
+    # Un altro file che c'e' gia': la copia prima del lavoro, che qui e' finto.
+    doppioni = tmp_path / "doppioni.pgn"
+    doppioni.write_text(ARCHIVIO, encoding="utf-8")
+    prova.file_del_valore = str(doppioni)
+    dialogo.imposta_il_valore()
+    monkeypatch.setattr(pgn_extract, "lavora", lambda *_argomenti: pgn_extract.Esito(None, False, pgn_extract.Riassunto(), "", "finto"))
+    dialogo.applica()
+    righe = dialogo.uscita.GetValue().split("\n")
+    assert righe[0].startswith(f"La copia di sicurezza di {doppioni} e' ")
+    copia = righe[0].split(" e' ", 1)[1].rstrip(".")
+    with open(copia, encoding="utf-8") as file:
+        assert file.read() == ARCHIVIO
+
+
 def test_le_lettere_cercano_nei_disponibili(aperta, archivio):
     prova = aperta(appunti=archivio)
     dialogo = prova.dialogo

@@ -48,7 +48,7 @@ import wx
 from GBUtils import Acusticator
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
-from . import aspetto, config, dialoghi, finestra_ricerca, pgn_extract
+from . import archivio_pgn, aspetto, config, dialoghi, finestra_ricerca, pgn_extract
 from .config import _
 
 # Fra un tasto e l'altro della ricerca nei disponibili, in secondi.
@@ -106,8 +106,10 @@ def scegli_la_destinazione(genitore, iniziale):
 
 
 def scegli_un_file(genitore, titolo_della_finestra, nuovo, iniziale=None):
-    """Il file del valore di un parametro: da aprire, o da scrivere."""
-    stile = wx.FD_SAVE if nuovo else wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
+    """Il file del valore di un parametro: da aprire, o da scrivere; per
+    quello da scrivere Windows chiede se sostituirlo, perche' pgn-extract lo
+    azzera (rilievo R6 della revisione 2)."""
+    stile = wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT if nuovo else wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
     cartella = os.path.dirname(iniziale) if iniziale else config.percorso_salvataggio("pgn")
     with wx.FileDialog(genitore, titolo_della_finestra, defaultDir=cartella if os.path.isdir(cartella) else "", defaultFile=os.path.basename(iniziale or ""),
                        wildcard=_("Tutti i file (*.*)|*.*"), style=stile) as dialogo:
@@ -763,6 +765,15 @@ class FinestraArchivi(wx.Dialog):
             if pgn_extract.blocca(conflitto):
                 righe.append(pgn_extract.spiega_il_conflitto(primo, secondo, conflitto))
         destinazione = self.percorso_della_destinazione()
+        # I file che i parametri scrivono, come -d e -n: pgn-extract li azzera
+        # aprendoli, quindi non possono essere un sorgente ne' la destinazione
+        # (rilievo R6 della revisione 2).
+        sorgenti = [sorgente] + [scelto.valore for scelto in self.scelti if scelto.parametro.opzione == pgn_extract.ALTRO_SORGENTE]
+        for scelto in self.file_da_scrivere():
+            if any(pgn_extract.stesso_file(scelto.valore, altro) for altro in sorgenti if altro):
+                righe.append(_("Il file di {voce} non puo' essere un file sorgente: pgn-extract lo azzererebbe.").format(voce=scelto.parametro.voce))
+            elif destinazione and pgn_extract.stesso_file(scelto.valore, destinazione):
+                righe.append(_("Il file di {voce} non puo' essere la destinazione.").format(voce=scelto.parametro.voce))
         if pgn_extract.serve_la_destinazione(self.scelti):
             if not destinazione:
                 righe.append(_("Manca la destinazione."))
@@ -773,6 +784,10 @@ class FinestraArchivi(wx.Dialog):
                 if any(pgn_extract.stesso_file(destinazione, altro) for altro in sorgenti if altro):
                     righe.append(_("La destinazione non puo' essere un file sorgente: pgn-extract lo leggerebbe e lo scriverebbe insieme, rovinandolo."))
         return righe
+
+    def file_da_scrivere(self):
+        """Gli scelti il cui valore e' un file che pgn-extract scrive."""
+        return [scelto for scelto in self.scelti if scelto.parametro.valore == "file_nuovo" and scelto.valore]
 
     def comando_composto(self, sorgente=None, uscita=None):
         return pgn_extract.argomenti(self.pe, self.scelti, sorgente or self.percorso_del_sorgente() or _("appunti.pgn"), uscita or self.percorso_della_destinazione())
@@ -799,6 +814,19 @@ class FinestraArchivi(wx.Dialog):
             with self._dialogo():
                 self._avvisa(self, "\n".join(problemi))
             return
+        # I file dei parametri che ci sono gia' hanno la copia di sicurezza
+        # prima del lavoro: pgn-extract li azzera appena parte (R6).
+        copie_fatte = []
+        for scelto in self.file_da_scrivere():
+            if os.path.isfile(scelto.valore) and os.path.getsize(scelto.valore):
+                try:
+                    copia = archivio_pgn.copia_di_sicurezza(scelto.valore)
+                except OSError as errore:
+                    suona("no")
+                    with self._dialogo():
+                        self._avvisa(self, _("La copia di sicurezza di {file} non si fa: {motivo}").format(file=scelto.valore, motivo=errore))
+                    return
+                copie_fatte.append(_("La copia di sicurezza di {file} e' {copia}.").format(file=scelto.valore, copia=copia))
         provvisorio = pgn_extract.file_degli_appunti(self.appunti) if self.appunti is not None else None
         sorgente = provvisorio or self.percorso_del_sorgente()
         destinazione = self.percorso_della_destinazione()
@@ -819,8 +847,8 @@ class FinestraArchivi(wx.Dialog):
         fermato = self._fermato = threading.Event()
         self.pulsante_applica.Disable()
         riga = _("pgn-extract al lavoro...")
-        self.uscita.ChangeValue(riga)
-        self._annuncia([riga])
+        self.uscita.ChangeValue("\n".join([*copie_fatte, riga]))
+        self._annuncia([*copie_fatte, riga])
 
         def nel_filo():
             try:
