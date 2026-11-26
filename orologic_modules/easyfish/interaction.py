@@ -36,6 +36,34 @@ def errori_della_posizione(board):
     return [testo for bandiera, testo in voci if status & bandiera]
 
 
+def posizione_dal_fen(fen):
+    """(scacchiera, correzioni, errori) del FEN. Se a non andare sono solo i
+    campi accessori, si correggono e lo si dice: i diritti d'arrocco senza
+    re o torre al loro posto valgono per gli scacchi 960 se la posizione e'
+    di quelle, altrimenti si tolgono; la casa en passant impossibile si
+    toglie. Prima di R54 passava tutto, dopo .fg rifiutava anche questi FEN,
+    copiati da libri e siti, che python-chess gioca (R113). Un FEN che non
+    si legge solleva ValueError."""
+    from ..board_utils import CustomBoard
+
+    board = CustomBoard()
+    board.set_fen(fen)
+    correzioni = []
+    if board.status() & chess.STATUS_BAD_CASTLING_RIGHTS:
+        prova = board.copy()
+        prova.chess960 = True
+        if not prova.status() & chess.STATUS_BAD_CASTLING_RIGHTS:
+            board.chess960 = True
+            correzioni.append(_("I diritti d'arrocco del FEN sono quelli degli scacchi 960: la posizione si gioca come Chess960."))
+        else:
+            board.castling_rights = board.clean_castling_rights()
+            correzioni.append(_("Il FEN dava diritti d'arrocco senza il re o la torre al loro posto: li ho tolti."))
+    if board.status() & chess.STATUS_INVALID_EP_SQUARE:
+        board.ep_square = None
+        correzioni.append(_("Il FEN dava una casa en passant impossibile: l'ho tolta."))
+    return board, correzioni, errori_della_posizione(board)
+
+
 def BoardEditor(starting_fen=None, sharing_window=None):
     """Editor della scacchiera con gestione intelligente dei Re e menu a comandi.
     Se starting_fen è fornito, l'editor inizia da quella posizione.

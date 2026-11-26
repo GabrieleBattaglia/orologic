@@ -27,7 +27,7 @@ from . import analysis_utils, posizione
 from .constants import MNMAIN
 from .drawing import drawing_menu, verbalize_drawings
 from .image_exporter import export_board_pdf, image_settings_menu
-from .interaction import BoardEditor, ExplorerMode, errori_della_posizione
+from .interaction import BoardEditor, ExplorerMode, posizione_dal_fen
 from .pgn_handler import (
     AddingPGNTAGS,
     CopyPGNToClipboard,
@@ -817,16 +817,17 @@ def _esegui(partita=None):
                     fen_from_clip = fen_from_clip.strip()
                     print(_("Incolla una nuova posizione FEN dagli appunti..."))
                     try:
-                        tmp_board = board.copy()
-                        tmp_board.set_fen(fen_from_clip)
                         # La posizione deve essere legale, come nell'editor:
-                        # prima passava anche senza un Re (R54).
-                        errori = errori_della_posizione(tmp_board)
+                        # prima passava anche senza un Re (R54). I soli
+                        # campi accessori sbagliati si correggono (R113).
+                        tmp_board, correzioni, errori = posizione_dal_fen(fen_from_clip)
                         if errori:
                             print(_("La posizione del FEN non e' legale:"))
                             for riga in errori:
                                 print(riga)
                             continue
+                        for riga in correzioni:
+                            print(riga)
                         print(
                             _(
                                 "FEN valido. ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova da questa posizione."
@@ -835,8 +836,7 @@ def _esegui(partita=None):
                         if is_modified and not SaveGameToFile(game):
                             print(_("La partita corrente non si e' salvata: resta aperta. Il PGN e' negli appunti."))
                             continue
-                        board = CustomBoard()
-                        board.set_fen(fen_from_clip)
+                        board = tmp_board
                         game, node = InitNewPGN(board)
                         is_modified = False
                         _nel_terminale(board)

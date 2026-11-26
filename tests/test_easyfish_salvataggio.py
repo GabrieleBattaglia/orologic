@@ -322,3 +322,40 @@ def test_tolto_il_matto_il_risultato_torna_l_asterisco(finestra, monkeypatch):
     _premi(finestra, ".\r")
     assert pompa(lambda: not finestra.nucleo.is_alive())
     assert salvate == [game] and game.headers["Result"] == "*"
+
+
+def test_il_fen_coi_soli_campi_accessori_sbagliati_si_corregge():
+    """R113: dopo R54 .fg rifiutava anche i FEN che hanno sbagliati solo i
+    diritti d'arrocco o la casa en passant, rimasti da prima, e la partenza
+    degli scacchi 960, che python-chess gioca. I FEN copiati da libri e siti
+    si correggono, e lo si dice; il resto si rifiuta ancora."""
+    import chess
+
+    from orologic_modules.easyfish import interaction
+
+    board, correzioni, errori = interaction.posizione_dal_fen("4k3/8/8/8/8/8/8/4K3 w KQkq - 0 1")
+    assert errori == [] and board.castling_rights == chess.BB_EMPTY and len(correzioni) == 1
+    board, correzioni, errori = interaction.posizione_dal_fen("4k3/8/8/8/8/8/8/4K3 w - e3 0 1")
+    assert errori == [] and board.ep_square is None and len(correzioni) == 1
+    board, correzioni, errori = interaction.posizione_dal_fen("bbqnnrkr/pppppppp/8/8/8/8/PPPPPPPP/BBQNNRKR w HFhf - 0 1")
+    assert errori == [] and board.chess960 and board.castling_rights
+    assert len(correzioni) == 1
+    _board, correzioni, errori = interaction.posizione_dal_fen("8/8/8/8/8/8/8/4k3 w - - 0 1")
+    assert errori and not correzioni
+
+
+def test_fg_accetta_il_fen_con_l_arrocco_rimasto(finestra, monkeypatch):
+    """R113, nella finestra: la partita nuova parte dalla posizione corretta."""
+    from orologic_modules import ui
+
+    game = partita()
+    monkeypatch.setattr(orologic_engine, "ENGINE", object())
+    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda g: True)
+    monkeypatch.setattr(ui.pyperclip, "paste", lambda: "4k3/8/8/8/8/8/8/4K2R w KQkq - 0 1")
+    finestra.avvia_il_nucleo(lambda: easyfish_app.run(partita=game))
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+    _premi(finestra, ".fg\r")
+    assert pompa(lambda: finestra.fornitore()["board"].fen() == "4k3/8/8/8/8/8/8/4K2R w K - 0 1")
+    assert "non e' legale" not in finestra.area.GetValue()
+    _premi(finestra, ".\r")
+    assert pompa(lambda: not finestra.nucleo.is_alive())
