@@ -8,6 +8,7 @@ vero non parte."""
 
 import os
 
+import pytest
 from conftest import pompa
 
 from orologic_modules import engine, game_flow
@@ -322,3 +323,34 @@ def test_la_ripresa_fa_partire_l_orologio_solo_quando_si_gioca(monkeypatch):
     monkeypatch.setattr(game_flow, "_gioca_e_finalizza", lambda *_argomenti: None)
     game_flow.gioca_la_ripresa(*ripresa)
     assert avviati == [ripresa[0]]
+
+
+@pytest.mark.parametrize("appunti_liberi", [True, False])
+def test_il_pgn_negli_appunti_si_dice_solo_se_c_e(monkeypatch, capsys, appunti_liberi):
+    """R135: col disco che rifiutava il PGN si diceva che la partita restava
+    negli appunti anche quando nessuno ce l'aveva copiata."""
+    import builtins
+
+    import pyperclip
+
+    vera = builtins.open
+
+    def rifiutata(file, modo="r", *a, **k):
+        if "w" in modo and str(file).endswith("prova.pgn"):
+            raise PermissionError("disco pieno")
+        return vera(file, modo, *a, **k)
+
+    copiati = []
+
+    def copia(testo):
+        if not appunti_liberi:
+            raise pyperclip.PyperclipException("occupati")
+        copiati.append(testo)
+
+    monkeypatch.setattr(builtins, "open", rifiutata)
+    monkeypatch.setattr(game_flow.pyperclip, "copy", copia)
+    monkeypatch.setattr(game_flow, "Acusticator", lambda *_a, **_k: None)
+    assert game_flow.salva_pgn_partita("1. e4 *", "prova.pgn") is None
+    uscita = capsys.readouterr().out
+    assert ("resta negli appunti" in uscita) is appunti_liberi
+    assert copiati == (["1. e4 *"] if appunti_liberi else [])

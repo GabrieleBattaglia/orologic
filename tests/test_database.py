@@ -273,3 +273,25 @@ def test_i_nomi_salvati_interi_di_prima_si_sfoltiscono(database):
     # quando somigliano ai nomi di un'altra lingua.
     _scrivi(database, {"localization": {"pieces": {"rook": {"name": intero["pieces"]["rook"]["name"]}}}})
     assert localizzazione.carica()["pieces"]["rook"]["name"] == intero["pieces"]["rook"]["name"]
+
+
+def test_l_avviso_della_prima_lettura_non_dice_il_falso(database, monkeypatch):
+    """R135: l'avviso Le modifiche non si salvano, messo da parte alla prima
+    lettura, si diceva anche dopo che il database era tornato leggibile e il
+    salvataggio era riuscito."""
+    _scrivi(database, {"launch_count": 3})
+    vera = builtins.open
+    storage.avvisi_in_sospeso()
+
+    def bloccata(file, *a, **k):
+        if str(file) == str(database) and not a:
+            raise PermissionError("tenuto da un altro programma")
+        return vera(file, *a, **k)
+
+    monkeypatch.setattr(builtins, "open", bloccata)
+    assert isinstance(storage.LoadDB(silenziosa=True), storage.DatabaseNonLetto)
+    monkeypatch.setattr(builtins, "open", vera)
+    assert storage.UpdateDB(lambda d: d.update(launch_count=4))["launch_count"] == 4
+    avvisi = storage.avvisi_in_sospeso()
+    assert "Le modifiche non si salvano finche' il database non torna leggibile." not in avvisi
+    assert "Ora il database si legge di nuovo, e le modifiche si salvano." in avvisi

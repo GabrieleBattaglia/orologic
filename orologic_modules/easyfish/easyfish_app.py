@@ -183,6 +183,20 @@ def _comandi_informativi(cmd, board, node, game, sharing_window):
     return True
 
 
+_NUMERO_DEL_COMANDO = re.compile(r"\d+(?:[.,]\d+)?")
+
+
+def numero_del_comando(testo):
+    """Il primo numero del comando, coi decimali se ci sono: .a 2.5 sono due
+    secondi e mezzo. Prima erano tutte le cifre del comando messe insieme, e
+    .a 2.5 analizzava per venticinque secondi (R135). 0 se non c'e'."""
+    trovato = _NUMERO_DEL_COMANDO.search(testo)
+    if not trovato:
+        return 0
+    numero = float(trovato.group().replace(",", "."))
+    return int(numero) if numero.is_integer() else numero
+
+
 def _comandi_analisi(cmd_clean, board, engine, number_command, info, info_fen):
     """Analizza la posizione: .a per i secondi chiesti, .al per le linee
     chieste.
@@ -204,7 +218,7 @@ def _comandi_analisi(cmd_clean, board, engine, number_command, info, info_fen):
     # impostazioni rispondeva che ce n'era una sola (Gabriele, collaudo del
     # 23 novembre 2026: il numero di .al ha la precedenza).
     sec = number_command if cmd_clean == ".a" and number_command > 0 else orologic_engine.analysis_time
-    linee = number_command if cmd_clean == ".al" and number_command > 0 else orologic_engine.multipv
+    linee = int(number_command) if cmd_clean == ".al" and int(number_command) > 0 else orologic_engine.multipv
     print(_("Analisi posizione corrente per {s} secondi.").format(s=sec))
     analisi, righe = analysis_utils.analizza(board, engine, sec, linee)
     for riga in righe:
@@ -524,8 +538,7 @@ def _esegui(partita=None):
         if not key_command:
             continue
 
-        number_command_str = "".join([char for char in key_command if char.isdigit()])
-        number_command = int(number_command_str) if number_command_str else 0
+        number_command = numero_del_comando(key_command)
 
         if key_command.startswith("."):
             cmd = key_command.lower()
@@ -564,7 +577,7 @@ def _esegui(partita=None):
                     print(_("Salvataggio partita in corso..."))
                     # Se non si salva, si esce solo se lo si vuole (R52).
                     if not SaveGameToFile(game) and not enter_escape(
-                        _("La partita non si e' salvata, ma il PGN e' negli appunti. Esco lo stesso? (INVIO si', ESC no): ")
+                        _("La partita non si e' salvata. Esco lo stesso? (INVIO si', ESC no): ")
                     ):
                         continue
                 if sharing_window:
@@ -770,7 +783,7 @@ def _esegui(partita=None):
                         )
                     )
                     if is_modified and not SaveGameToFile(game):
-                        print(_("La partita corrente non si e' salvata: resta aperta. Il PGN e' negli appunti."))
+                        print(_("La partita corrente non si e' salvata: resta aperta."))
                         continue
                     game = loaded_game
                     board, node = _apri_partita(game)
@@ -804,7 +817,7 @@ def _esegui(partita=None):
                     if is_modified:
                         print(_("Salvataggio partita in corso..."))
                         if not SaveGameToFile(game):
-                            print(_("La partita corrente non si e' salvata: resta aperta. Il PGN e' negli appunti."))
+                            print(_("La partita corrente non si e' salvata: resta aperta."))
                             continue
                     game = scelta
                     board, node = _apri_partita(game)
@@ -839,7 +852,7 @@ def _esegui(partita=None):
                             )
                         )
                         if is_modified and not SaveGameToFile(game):
-                            print(_("La partita corrente non si e' salvata: resta aperta. Il PGN e' negli appunti."))
+                            print(_("La partita corrente non si e' salvata: resta aperta."))
                             continue
                         board = tmp_board
                         game, node = InitNewPGN(board)
@@ -851,7 +864,7 @@ def _esegui(partita=None):
             elif cmd == ".n":
                 print(_("Nuova partita. La corrente verrà salvata."))
                 if is_modified and not SaveGameToFile(game):
-                    print(_("La partita corrente non si e' salvata: resta aperta. Il PGN e' negli appunti."))
+                    print(_("La partita corrente non si e' salvata: resta aperta."))
                     continue
                 print(_("Nuova scacchiera pronta. Si parte!"))
                 board = CustomBoard()
@@ -874,7 +887,7 @@ def _esegui(partita=None):
                     )
                 if new_fen:
                     if is_modified and not SaveGameToFile(game):
-                        print(_("La partita corrente non si e' salvata: resta aperta. Il PGN e' negli appunti."))
+                        print(_("La partita corrente non si e' salvata: resta aperta."))
                         continue
                     board = CustomBoard()
                     board.set_fen(new_fen)

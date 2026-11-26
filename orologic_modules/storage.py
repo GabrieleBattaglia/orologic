@@ -272,11 +272,23 @@ def _di(testo):
 
 
 def avvisi_in_sospeso():
-    """Gli avvisi messi da parte dalle letture silenziose, una volta sola."""
+    """Gli avvisi messi da parte dalle letture silenziose, una volta sola.
+    Se intanto il database e' tornato leggibile, l'avviso che le modifiche
+    non si salvano non vale piu', e si dice che ora si salvano: prima si
+    diceva il falso, a salvataggio gia' riuscito (R135)."""
     with _LUCCHETTO:
         avvisi = list(_AVVISI_IN_SOSPESO)
         _AVVISI_IN_SOSPESO.clear()
+        riuscita = _ULTIMA_LETTURA["riuscita"]
+    non_si_salvano = _("Le modifiche non si salvano finche' il database non torna leggibile.")
+    if riuscita and non_si_salvano in avvisi:
+        avvisi = [avviso for avviso in avvisi if avviso != non_si_salvano]
+        avvisi.append(_("Ora il database si legge di nuovo, e le modifiche si salvano."))
     return avvisi
+
+
+# Com'e' andata l'ultima lettura del database (R135).
+_ULTIMA_LETTURA = {"riuscita": True}
 
 
 class DatabaseNonLetto(dict):
@@ -394,7 +406,9 @@ def LoadDB(silenziosa=False):
         prima = _SILENZIOSA["attiva"]
         _SILENZIOSA["attiva"] = silenziosa or prima
         try:
-            return _carica()
+            db = _carica()
+            _ULTIMA_LETTURA["riuscita"] = not isinstance(db, DatabaseNonLetto)
+            return db
         finally:
             _SILENZIOSA["attiva"] = prima
 

@@ -359,3 +359,11 @@ def test_fg_accetta_il_fen_con_l_arrocco_rimasto(finestra, monkeypatch):
     assert "non e' legale" not in finestra.area.GetValue()
     _premi(finestra, ".\r")
     assert pompa(lambda: not finestra.nucleo.is_alive())
+
+
+def test_il_numero_dei_comandi_di_easyfish():
+    """R135: il numero di un comando di Easyfish erano tutte le sue cifre
+    messe insieme, e .a 2.5 analizzava per venticinque secondi."""
+    numero = easyfish_app.numero_del_comando
+    assert numero(".a 2.5") == 2.5 and numero(".a 2,5") == 2.5
+    assert numero(".al3") == 3 and numero(".a") == 0 and numero(".k 12") == 12

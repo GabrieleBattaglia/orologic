@@ -329,5 +329,25 @@ def test_a_scaricamento_finito_il_motore_in_uso_non_si_riavvia(gestore, monkeypa
     monkeypatch.setattr(stockfish_installer, "DownloadAndInstallEngine", scarica)
     gestore.cambia_il_motore("scarica", None)
     gestore.lavoro.join(5)
+    # Il motore in uso non si riavvia; e lo scaricamento fallito non si
+    # dice pronto (R135).
     assert gestore.motore == ["chiuso", "scaricato"]
-    assert "il motore in uso resta acceso" in capsys.readouterr().out
+    assert "il motore in uso resta acceso" not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("riuscito", [False, True])
+def test_stockfish_e_pronto_solo_se_lo_scaricamento_e_riuscito(gestore, monkeypatch, capsys, riuscito):
+    """R135: dopo uno scaricamento fallito, col motore in uso, si diceva
+    comunque Stockfish e' pronto."""
+    from orologic_modules import stockfish_installer
+
+    def scarica():
+        gestore.motore.append("scaricato")
+        monkeypatch.setattr(gestore.finestra, "motore_in_uso", lambda: True)
+        return ("C:/motore", "stockfish.exe") if riuscito else (None, None)
+
+    monkeypatch.setattr(stockfish_installer, "DownloadAndInstallEngine", scarica)
+    monkeypatch.setattr(storage, "UpdateDB", lambda modifica: None)
+    gestore.cambia_il_motore("scarica", None)
+    gestore.lavoro.join(5)
+    assert ("il motore in uso resta acceso" in capsys.readouterr().out) is riuscito

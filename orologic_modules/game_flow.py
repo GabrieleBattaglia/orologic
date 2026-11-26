@@ -596,7 +596,13 @@ def salva_pgn_partita(pgn_str, nome_file):
             errore=ultimo_errore
         )
     )
-    print(_("La partita resta negli appunti, incollala subito da qualche parte."))
+    # Negli appunti davvero, e lo si dice solo se c'e' finita: prima lo si
+    # diceva anche quando nessuno l'aveva copiata (R135).
+    try:
+        pyperclip.copy(pgn_str)
+        print(_("La partita resta negli appunti, incollala subito da qualche parte."))
+    except (pyperclip.PyperclipException, OSError):
+        print(_("Non e' finita nemmeno negli appunti: gli appunti di Windows sono occupati."))
     Acusticator(
         ["e3", 0.4, 0, config.VOLUME, "a2", 0.6, 0, config.VOLUME],
         kind=3,

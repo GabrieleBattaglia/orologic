@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-26 18:33+0100\n"
+"POT-Creation-Date: 2026-11-26 18:36+0100\n"
 "PO-Revision-Date: 2025-07-18 22:56+0200\n"
 "Last-Translator: Marcos Antonio Schllosser <escoladexadrez@gmail.com>\n"
 "Language-Team: pt <LL@li.org>\n"
@@ -272,7 +272,7 @@ msgstr ""
 "\n"
 "Carregando a partida da área de transferência..."
 
-#: orologic.py:416 orologic_modules/game_flow.py:937
+#: orologic.py:416 orologic_modules/game_flow.py:943
 #: orologic_modules/gioca.py:89 orologic_modules/pgn_search.py:1400
 msgid ""
 "Il motore scacchistico non e' configurato. Vuoi configurarlo ora? (INVIO per"
@@ -281,12 +281,12 @@ msgstr ""
 "O motor de xadrez não está configurado. Quer configurá-lo agora? (ENTER para"
 " sim, ESC para não): "
 
-#: orologic.py:422 orologic_modules/game_flow.py:948
+#: orologic.py:422 orologic_modules/game_flow.py:954
 #: orologic_modules/pgn_search.py:1406
 msgid "Impossibile inizializzare il motore. Analisi annullata."
 msgstr "Não foi possível inicializar o motor. Análise cancelada."
 
-#: orologic.py:428 orologic_modules/game_flow.py:956
+#: orologic.py:428 orologic_modules/game_flow.py:962
 #: orologic_modules/pgn_search.py:1413
 msgid "Desideri l'analisi automatica? (INVIO per si', ESC per manuale): "
 msgstr "Você quer análise automática? (ENTER para sim, ESC para manual): "
@@ -823,7 +823,7 @@ msgstr "Empate pela regra dos 50 lances!"
 msgid "Patta per triplice ripetizione della posizione!"
 msgstr "Empate por repetição tripla de posição!"
 
-#: orologic_modules/board_utils.py:425 orologic_modules/game_flow.py:784
+#: orologic_modules/board_utils.py:425 orologic_modules/game_flow.py:790
 #: orologic_modules/localizzazione.py:83
 msgid "proposta di patta"
 msgstr "proposta de empate"
@@ -904,14 +904,14 @@ msgstr "Erro inesperado durante a análise do PGN: {error}"
 #: orologic_modules/board_utils.py:1091 orologic_modules/controlli.py:289
 #: orologic_modules/cruscotto.py:69 orologic_modules/cruscotto.py:225
 #: orologic_modules/easyfish/constants.py:26
-#: orologic_modules/easyfish/easyfish_app.py:645
-#: orologic_modules/easyfish/easyfish_app.py:962
+#: orologic_modules/easyfish/easyfish_app.py:658
+#: orologic_modules/easyfish/easyfish_app.py:975
 #: orologic_modules/easyfish/game_mode.py:42
 #: orologic_modules/easyfish/game_mode.py:571
 #: orologic_modules/easyfish/interaction.py:139
 #: orologic_modules/easyfish/interaction.py:539
 #: orologic_modules/engine.py:1759 orologic_modules/finestra_editor.py:84
-#: orologic_modules/game_flow.py:1005 orologic_modules/lichess_app.py:1662
+#: orologic_modules/game_flow.py:1011 orologic_modules/lichess_app.py:1662
 #: orologic_modules/lichess_app.py:2221 orologic_modules/lichess_app.py:2356
 #: orologic_modules/lichess_board.py:21 orologic_modules/lichess_board.py:708
 #: orologic_modules/lichess_board.py:1186
@@ -926,14 +926,14 @@ msgstr "Brancas"
 #: orologic_modules/board_utils.py:1091 orologic_modules/controlli.py:289
 #: orologic_modules/cruscotto.py:70 orologic_modules/cruscotto.py:226
 #: orologic_modules/easyfish/constants.py:28
-#: orologic_modules/easyfish/easyfish_app.py:645
-#: orologic_modules/easyfish/easyfish_app.py:962
+#: orologic_modules/easyfish/easyfish_app.py:658
+#: orologic_modules/easyfish/easyfish_app.py:975
 #: orologic_modules/easyfish/game_mode.py:43
 #: orologic_modules/easyfish/game_mode.py:571
 #: orologic_modules/easyfish/interaction.py:139
 #: orologic_modules/easyfish/interaction.py:539
 #: orologic_modules/engine.py:1760 orologic_modules/finestra_editor.py:84
-#: orologic_modules/game_flow.py:1006 orologic_modules/lichess_app.py:1662
+#: orologic_modules/game_flow.py:1012 orologic_modules/lichess_app.py:1662
 #: orologic_modules/lichess_app.py:2221 orologic_modules/lichess_app.py:2356
 #: orologic_modules/lichess_board.py:22 orologic_modules/lichess_board.py:709
 #: orologic_modules/lichess_board.py:1186
@@ -2298,7 +2298,7 @@ msgid "Motore {n} pronto."
 msgstr "Motor {n} pronto."
 
 #: orologic_modules/easyfish/game_mode.py:1090 orologic_modules/engine.py:416
-#: orologic_modules/impostazioni.py:723
+#: orologic_modules/impostazioni.py:727
 #, python-brace-format
 msgid "Errore motore: {e}"
 msgstr "Erro do motor: {e}"
@@ -2479,7 +2479,7 @@ msgstr ""
 "\n"
 "Variante adicionada."
 
-#: orologic_modules/easyfish/easyfish_app.py:257
+#: orologic_modules/easyfish/easyfish_app.py:271
 #: orologic_modules/easyfish/posizione.py:43 orologic_modules/engine.py:928
 #, python-brace-format
 msgid "[BM: {bm}]"
@@ -2501,7 +2501,7 @@ msgstr ""
 "\n"
 "Insira o comentário: "
 
-#: orologic_modules/easyfish/easyfish_app.py:256
+#: orologic_modules/easyfish/easyfish_app.py:270
 #: orologic_modules/easyfish/posizione.py:43 orologic_modules/engine.py:979
 #, python-brace-format
 msgid "[Val: {ev}]"
@@ -4055,31 +4055,31 @@ msgstr "Comentário"
 msgid "Commento della mossa"
 msgstr "Comentário do lance"
 
-#: orologic_modules/easyfish/easyfish_app.py:265
-#: orologic_modules/easyfish/easyfish_app.py:919
+#: orologic_modules/easyfish/easyfish_app.py:279
+#: orologic_modules/easyfish/easyfish_app.py:932
 #: orologic_modules/easyfish/interaction.py:559
 #: orologic_modules/finestra_navigatore.py:138
 msgid "Commento registrato."
 msgstr "Comentário gravado."
 
-#: orologic_modules/easyfish/easyfish_app.py:790
+#: orologic_modules/easyfish/easyfish_app.py:803
 #: orologic_modules/easyfish/interaction.py:497
 #: orologic_modules/finestra_navigatore.py:155
 msgid "Impossibile eliminare l'inizio della partita."
 msgstr "Não foi possível excluir o início da partida."
 
-#: orologic_modules/easyfish/easyfish_app.py:797
+#: orologic_modules/easyfish/easyfish_app.py:810
 #: orologic_modules/easyfish/interaction.py:488
 #: orologic_modules/finestra_navigatore.py:166
 msgid "Mossa/Variante eliminata. Tornati indietro."
 msgstr "Lance ou variante eliminado. De volta à posição anterior."
 
-#: orologic_modules/easyfish/easyfish_app.py:599
+#: orologic_modules/easyfish/easyfish_app.py:612
 #: orologic_modules/finestra_navigatore.py:174
 msgid "Questa linea è già la principale."
 msgstr "Essa linha já é a principal."
 
-#: orologic_modules/easyfish/easyfish_app.py:597
+#: orologic_modules/easyfish/easyfish_app.py:610
 #: orologic_modules/finestra_navigatore.py:181
 msgid "Variante promossa a linea principale!"
 msgstr "Variante promovida para linha principal!"
@@ -4089,7 +4089,7 @@ msgstr "Variante promovida para linha principal!"
 msgid "Analisi in corso..."
 msgstr "Análise em andamento..."
 
-#: orologic_modules/easyfish/easyfish_app.py:887
+#: orologic_modules/easyfish/easyfish_app.py:900
 #: orologic_modules/easyfish/game_mode.py:597
 #: orologic_modules/easyfish/interaction.py:505
 #: orologic_modules/finestra_navigatore.py:203
@@ -4946,7 +4946,7 @@ msgstr "Retorno à fase anterior, removido o tempo adicionado."
 msgid "Ultima mossa annullata: {mossa}"
 msgstr "Último lance desfeito: {mossa}"
 
-#: orologic_modules/game_flow.py:457 orologic_modules/game_flow.py:792
+#: orologic_modules/game_flow.py:457 orologic_modules/game_flow.py:798
 #, python-brace-format
 msgid "Mosse annullate: {mosse}"
 msgstr "Lances desfeitos: {mosse}"
@@ -4981,13 +4981,20 @@ msgstr "PGN salvo como {percorso}."
 msgid "Non sono riuscita a salvare il PGN su disco: {errore}"
 msgstr "Não consegui salvar o PGN no disco: {errore}"
 
-#: orologic_modules/game_flow.py:599
+#: orologic_modules/game_flow.py:603
 msgid "La partita resta negli appunti, incollala subito da qualche parte."
 msgstr ""
 "A partida permanece na área de transferência, cole-a em algum lugar "
 "imediatamente."
 
-#: orologic_modules/game_flow.py:624 orologic_modules/tempo_app.py:115
+#: orologic_modules/game_flow.py:605
+msgid ""
+"Non e' finita nemmeno negli appunti: gli appunti di Windows sono occupati."
+msgstr ""
+"Também não chegou à área de transferência: a área de transferência do "
+"Windows está ocupada."
+
+#: orologic_modules/game_flow.py:630 orologic_modules/tempo_app.py:115
 msgid ""
 "\n"
 "Tempo scaduto!"
@@ -4995,7 +5002,7 @@ msgstr ""
 "\n"
 "Acabou o tempo!"
 
-#: orologic_modules/game_flow.py:627
+#: orologic_modules/game_flow.py:633
 msgid ""
 "Premere INVIO per continuare la partita senza orologio, oppure ESC per "
 "terminare e assegnare la vittoria."
@@ -5003,24 +5010,24 @@ msgstr ""
 "Pressione ENTER para continuar a partida sem relógio ou ESC para encerrar e "
 "atribuir a vitória."
 
-#: orologic_modules/game_flow.py:631
+#: orologic_modules/game_flow.py:637
 msgid "Scegli, INVIO o ESC: "
 msgstr "Escolha ENTER ou ESC: "
 
 #: orologic_modules/easyfish/game_mode.py:809
-#: orologic_modules/game_flow.py:641
+#: orologic_modules/game_flow.py:647
 msgid "Patta: il tempo e' scaduto, ma l'avversario non puo' dare matto."
 msgstr "Empate: o tempo acabou, mas o adversário não pode dar mate."
 
-#: orologic_modules/game_flow.py:643
+#: orologic_modules/game_flow.py:649
 msgid "Vince il Nero per tempo."
 msgstr "As pretas vencem por tempo."
 
-#: orologic_modules/game_flow.py:645
+#: orologic_modules/game_flow.py:651
 msgid "Vince il Bianco per tempo."
 msgstr "As brancas vencem por tempo."
 
-#: orologic_modules/game_flow.py:653
+#: orologic_modules/game_flow.py:659
 msgid ""
 "Partita continuata senza limiti di tempo. Usa i comandi .1-0, .0-1, .1/2, .*"
 " per terminare."
@@ -5028,11 +5035,11 @@ msgstr ""
 "A partida continuou sem limites de tempo. Use os comandos .1-0, .0-1, .1/2, "
 ".* para finalizar."
 
-#: orologic_modules/game_flow.py:705 orologic_modules/tempo_app.py:236
+#: orologic_modules/game_flow.py:711 orologic_modules/tempo_app.py:236
 msgid "Comando non riconosciuto."
 msgstr "Comando não reconhecido."
 
-#: orologic_modules/game_flow.py:710
+#: orologic_modules/game_flow.py:716
 msgid ""
 "Non e' possibile inserire nuove mosse mentre il tempo e' in pausa. Riavvia "
 "il tempo con .p"
@@ -5040,16 +5047,16 @@ msgstr ""
 "Não é possível inserir novos lances enquanto o tempo estiver pausado. "
 "Reinicie o tempo com .p"
 
-#: orologic_modules/game_flow.py:781
+#: orologic_modules/game_flow.py:787
 msgid " proposta di patta"
 msgstr " proposta de empate"
 
-#: orologic_modules/game_flow.py:822
+#: orologic_modules/game_flow.py:828
 #, python-brace-format
 msgid "Apertura rilevata: {apertura}"
 msgstr "Abertura detectada: {apertura}"
 
-#: orologic_modules/game_flow.py:850
+#: orologic_modules/game_flow.py:856
 #, python-brace-format
 msgid ""
 "Mossa '{move}' non valida. Alternative:\n"
@@ -5059,11 +5066,11 @@ msgstr ""
 "{alternatives}"
 
 #: orologic_modules/easyfish/game_mode.py:1100
-#: orologic_modules/game_flow.py:862
+#: orologic_modules/game_flow.py:868
 msgid "Partita terminata."
 msgstr "Fim da partida."
 
-#: orologic_modules/game_flow.py:870 orologic_modules/gioca.py:182
+#: orologic_modules/game_flow.py:876 orologic_modules/gioca.py:182
 #: orologic_modules/lichess_board.py:1683
 msgid ""
 "Vuoi vedere come hai usato il tempo a tua disposizione? (INVIO per si', ESC "
@@ -5071,28 +5078,28 @@ msgid ""
 msgstr ""
 "Quer ver como você usou o tempo disponível? (ENTER para sim, ESC para não): "
 
-#: orologic_modules/game_flow.py:876 orologic_modules/gioca.py:189
+#: orologic_modules/game_flow.py:882 orologic_modules/gioca.py:189
 #: orologic_modules/lichess_board.py:1691
 msgid "Desideri salvare i tempi mossa nel PGN? (INVIO per si', ESC per no): "
 msgstr ""
 "Quer salvar os tempos dos lances no PGN? (ENTER para sim, ESC para não): "
 
 #: orologic_modules/easyfish/pgn_handler.py:32
-#: orologic_modules/game_flow.py:904 orologic_modules/gioca.py:211
+#: orologic_modules/game_flow.py:910 orologic_modules/gioca.py:211
 msgid "PGN copiato negli appunti."
 msgstr "PGN copiado para a área de transferência."
 
-#: orologic_modules/game_flow.py:907 orologic_modules/gioca.py:213
+#: orologic_modules/game_flow.py:913 orologic_modules/gioca.py:213
 #: orologic_modules/lichess_profiler.py:634
 #, python-brace-format
 msgid "Errore durante la copia del PGN negli appunti: {error}"
 msgstr "Erro ao copiar o PGN para a área de transferência: {error}"
 
-#: orologic_modules/game_flow.py:921
+#: orologic_modules/game_flow.py:927
 msgid "File di salvataggio automatico eliminato."
 msgstr "Arquivo de Salvamento automático excluído."
 
-#: orologic_modules/game_flow.py:925
+#: orologic_modules/game_flow.py:931
 #, python-brace-format
 msgid ""
 "\n"
@@ -5101,15 +5108,15 @@ msgstr ""
 "\n"
 "[Attenção: impossível eliminar o arquivo de salvamento automático: {error}]"
 
-#: orologic_modules/game_flow.py:930
+#: orologic_modules/game_flow.py:936
 msgid "Vuoi analizzare la partita? (INVIO per si', ESC per no): "
 msgstr "Quer analisar a partida? (ENTER para sim, ESC para não): "
 
-#: orologic_modules/game_flow.py:945
+#: orologic_modules/game_flow.py:951
 msgid "Motore non configurato. Ritorno al menu'."
 msgstr "Motor não configurado. Voltando ao menu."
 
-#: orologic_modules/game_flow.py:971
+#: orologic_modules/game_flow.py:977
 msgid ""
 "\n"
 "Avvio partita\n"
@@ -5117,7 +5124,7 @@ msgstr ""
 "\n"
 "Começando a partida\n"
 
-#: orologic_modules/game_flow.py:974
+#: orologic_modules/game_flow.py:980
 msgid ""
 "Vuoi giocare alla variante standard (scacchi standard)? (INVIO per si', ESC "
 "per Fischer Random): "
@@ -5125,44 +5132,44 @@ msgstr ""
 "Quer jogar a variante padrão (xadrez padrão)? (ENTER para sim, ESC para "
 "Fischer Random): "
 
-#: orologic_modules/game_flow.py:1010
+#: orologic_modules/game_flow.py:1016
 msgid "Sede sconosciuta"
 msgstr "Local desconhecido"
 
-#: orologic_modules/game_flow.py:1016
+#: orologic_modules/game_flow.py:1022
 msgid "Nome del bianco"
 msgstr "Nome das brancas"
 
-#: orologic_modules/game_flow.py:1017
+#: orologic_modules/game_flow.py:1023
 msgid "Nome del nero"
 msgstr "Nome das pretas"
 
-#: orologic_modules/game_flow.py:1018
+#: orologic_modules/game_flow.py:1024
 msgid "Elo del bianco"
 msgstr "Elo das brancas"
 
-#: orologic_modules/game_flow.py:1019
+#: orologic_modules/game_flow.py:1025
 msgid "Elo del nero"
 msgstr "Elo das pretas"
 
-#: orologic_modules/game_flow.py:1020
+#: orologic_modules/game_flow.py:1026
 msgid "Evento"
 msgstr "Evento"
 
-#: orologic_modules/game_flow.py:1021
+#: orologic_modules/game_flow.py:1027
 msgid "Sede"
 msgstr "Local"
 
-#: orologic_modules/game_flow.py:1022
+#: orologic_modules/game_flow.py:1028
 msgid "Round"
 msgstr "Rodada"
 
-#: orologic_modules/game_flow.py:1027
+#: orologic_modules/game_flow.py:1033
 #, python-brace-format
 msgid "{domanda} [{predefinito}]: "
 msgstr "{domanda} [{predefinito}]: "
 
-#: orologic_modules/game_flow.py:1078
+#: orologic_modules/game_flow.py:1084
 msgid "Premi un tasto qualsiasi per iniziare la partita quando sei pronto..."
 msgstr ""
 "Pressione qualquer tecla para iniciar a partida quando estiver pronto..."
@@ -5551,7 +5558,7 @@ msgstr ""
 "O motor está em uso: pode ser mudado a partir de um menu, quando a partida "
 "ou a análise tiverem terminado."
 
-#: orologic_modules/impostazioni.py:705
+#: orologic_modules/impostazioni.py:709
 msgid ""
 "Stockfish e' pronto: il motore in uso resta acceso, e quello nuovo parte la "
 "prossima volta che il motore si avvia."
@@ -10950,41 +10957,45 @@ msgstr "Falha na atualização, reinicio o motor anterior."
 msgid "Aggiornamento completato."
 msgstr "Atualização concluída."
 
-#: orologic_modules/storage.py:339
-#, python-brace-format
-msgid "Nemmeno l'ultima copia buona si lascia leggere: {errore}"
-msgstr "Nem a última cópia boa pode ser lida: {errore}"
-
-#: orologic_modules/storage.py:340 orologic_modules/storage.py:367
-#: orologic_modules/storage.py:411
+#: orologic_modules/storage.py:283 orologic_modules/storage.py:352
+#: orologic_modules/storage.py:379 orologic_modules/storage.py:425
 msgid "Le modifiche non si salvano finche' il database non torna leggibile."
 msgstr ""
 "As alterações não são guardadas até a base de dados voltar a ser legível."
 
-#: orologic_modules/storage.py:354
+#: orologic_modules/storage.py:286
+msgid "Ora il database si legge di nuovo, e le modifiche si salvano."
+msgstr "Agora o banco de dados é lido de novo, e as alterações são salvas."
+
+#: orologic_modules/storage.py:351
+#, python-brace-format
+msgid "Nemmeno l'ultima copia buona si lascia leggere: {errore}"
+msgstr "Nem a última cópia boa pode ser lida: {errore}"
+
+#: orologic_modules/storage.py:366
 msgid "Il database delle impostazioni manca."
 msgstr "O banco de dados das configurações está faltando."
 
-#: orologic_modules/storage.py:355 orologic_modules/storage.py:375
+#: orologic_modules/storage.py:367 orologic_modules/storage.py:387
 #, python-brace-format
 msgid "Riparto dall'ultima copia buona: {percorso}"
 msgstr "Recomeço a partir da última cópia boa: {percorso}"
 
-#: orologic_modules/storage.py:364
+#: orologic_modules/storage.py:376
 #, python-brace-format
 msgid "Il database delle impostazioni non e' leggibile: {errore}"
 msgstr "O banco de dados de configurações não é legível: {errore}"
 
-#: orologic_modules/storage.py:366
+#: orologic_modules/storage.py:378
 msgid "Attenzione: non sono riuscita a metterne da parte una copia."
 msgstr "Aviso: não consegui reservar uma cópia."
 
-#: orologic_modules/storage.py:369
+#: orologic_modules/storage.py:381
 #, python-brace-format
 msgid "Ne ho messo da parte una copia in {percorso}"
 msgstr "Salvei uma cópia em {percorso}"
 
-#: orologic_modules/storage.py:379
+#: orologic_modules/storage.py:391
 msgid ""
 "Riparto dalle impostazioni predefinite, gli orologi salvati non sono andati "
 "perduti nella copia."
@@ -10992,28 +11003,28 @@ msgstr ""
 "Reinicio a partir das configurações padrão, os relógios salvos não foram "
 "perdidos na cópia."
 
-#: orologic_modules/storage.py:410
+#: orologic_modules/storage.py:424
 #, python-brace-format
 msgid "Il database delle impostazioni non si lascia leggere: {errore}"
 msgstr "A base de dados das definições não se deixa ler: {errore}"
 
-#: orologic_modules/storage.py:418
+#: orologic_modules/storage.py:432
 msgid "non contiene le impostazioni"
 msgstr "não contém as definições"
 
-#: orologic_modules/storage.py:421
+#: orologic_modules/storage.py:435
 #, python-brace-format
 msgid "Ho ignorato {numero} orologi salvati perche' incompleti."
 msgstr "Ignorei {numero} relógios salvos porque estavam incompletos."
 
-#: orologic_modules/storage.py:466
+#: orologic_modules/storage.py:480
 msgid ""
 "Modifica non salvata: il database delle impostazioni non si e' potuto "
 "leggere."
 msgstr ""
 "Alteração não guardada: não foi possível ler a base de dados das definições."
 
-#: orologic_modules/storage.py:472
+#: orologic_modules/storage.py:486
 #, python-brace-format
 msgid "Errore nel salvataggio del database: {errore}"
 msgstr "Erro ao salvar banco de dados: {errore}"
@@ -12005,7 +12016,7 @@ msgid "Le linee:"
 msgstr "As linhas:"
 
 #: orologic_modules/easyfish/analysis_utils.py:104
-#: orologic_modules/easyfish/easyfish_app.py:252
+#: orologic_modules/easyfish/easyfish_app.py:266
 #: orologic_modules/easyfish/game_mode.py:934
 msgid "Nessuna linea trovata."
 msgstr "Nenhuma linha encontrada."
@@ -12485,29 +12496,29 @@ msgid ""
 "Orientamento scacchiera condivisa impostato: in base al turno (dinamico)."
 msgstr "Orientação do tabuleiro compartilhado definida: por turno (dinâmica)."
 
-#: orologic_modules/easyfish/easyfish_app.py:199
-#: orologic_modules/easyfish/easyfish_app.py:232
+#: orologic_modules/easyfish/easyfish_app.py:213
+#: orologic_modules/easyfish/easyfish_app.py:246
 msgid "Motore non caricato in Orologic."
 msgstr "Motor não carregado em Orologic."
 
-#: orologic_modules/easyfish/easyfish_app.py:208
-#: orologic_modules/easyfish/easyfish_app.py:236
+#: orologic_modules/easyfish/easyfish_app.py:222
+#: orologic_modules/easyfish/easyfish_app.py:250
 #, python-brace-format
 msgid "Analisi posizione corrente per {s} secondi."
 msgstr "Análise da posição atual durante {s} segundos."
 
-#: orologic_modules/easyfish/easyfish_app.py:246
+#: orologic_modules/easyfish/easyfish_app.py:260
 #, python-brace-format
 msgid "Errore analisi: {e}"
 msgstr "Erro de análise: {e}"
 
-#: orologic_modules/easyfish/easyfish_app.py:258
+#: orologic_modules/easyfish/easyfish_app.py:272
 #: orologic_modules/easyfish/posizione.py:43
 #, python-brace-format
 msgid "[Linea: {linea}]"
 msgstr "[Linha: {linea}]"
 
-#: orologic_modules/easyfish/easyfish_app.py:278
+#: orologic_modules/easyfish/easyfish_app.py:292
 msgid ""
 "\n"
 "Attivazione condivisione scacchiera (finestra grafica per didattica)..."
@@ -12515,15 +12526,15 @@ msgstr ""
 "\n"
 "Ativação do compartilhamento do tabuleiro (janela gráfica para ensino)..."
 
-#: orologic_modules/easyfish/easyfish_app.py:281
+#: orologic_modules/easyfish/easyfish_app.py:295
 msgid "ISTRUZIONI:"
 msgstr "INSTRUÇÕES:"
 
-#: orologic_modules/easyfish/easyfish_app.py:282
+#: orologic_modules/easyfish/easyfish_app.py:296
 msgid "- Puoi condividere la nuova finestra su Meet, Zoom o Teams."
 msgstr "- Você pode compartilhar a nova janela no Meet, Zoom ou Teams."
 
-#: orologic_modules/easyfish/easyfish_app.py:285
+#: orologic_modules/easyfish/easyfish_app.py:299
 msgid ""
 "- Per continuare ad inserire comandi, ricordati di riportare il focus "
 "(cliccare) su questa finestra di testo della console."
@@ -12531,14 +12542,14 @@ msgstr ""
 "- Para continuar digitando comandos, lembre-se de retornar o foco (clique) "
 "para esta janela de texto do console."
 
-#: orologic_modules/easyfish/easyfish_app.py:315
+#: orologic_modules/easyfish/easyfish_app.py:329
 #, python-brace-format
 msgid ""
 "La scacchiera condivisa non si apre: manca la libreria pygame. {motivo}"
 msgstr ""
 "O tabuleiro compartilhado não abre: falta a biblioteca pygame. {motivo}"
 
-#: orologic_modules/easyfish/easyfish_app.py:344
+#: orologic_modules/easyfish/easyfish_app.py:358
 msgid ""
 "\n"
 "Condivisione scacchiera disattivata."
@@ -12546,11 +12557,11 @@ msgstr ""
 "\n"
 "Compartilhamento do tabuleiro desativado."
 
-#: orologic_modules/easyfish/easyfish_app.py:421
+#: orologic_modules/easyfish/easyfish_app.py:435
 msgid "Orologic si chiude con la partita modificata: la salvo."
 msgstr "O Orologic fecha-se com a partida alterada: guardo-a."
 
-#: orologic_modules/easyfish/easyfish_app.py:437
+#: orologic_modules/easyfish/easyfish_app.py:451
 msgid ""
 "\n"
 "Benvenuto in Easyfish, la tua interfaccia testuale con il motore scacchistico.\n"
@@ -12560,7 +12571,7 @@ msgstr ""
 "Bem-vindo ao Easyfish, sua interface textual com o motor de xadrez.\n"
 "\tDivirta-se!"
 
-#: orologic_modules/easyfish/easyfish_app.py:450
+#: orologic_modules/easyfish/easyfish_app.py:464
 msgid ""
 "Il motore scacchistico non e' configurato, ma e' necessario per Easyfish. "
 "Vuoi configurarlo ora? (INVIO per si', ESC per no): "
@@ -12568,17 +12579,17 @@ msgstr ""
 "O motor de xadrez não está configurado, mas é necessário para o Easyfish. "
 "Quer configurá-lo agora? (ENTER para sim, ESC para não): "
 
-#: orologic_modules/easyfish/easyfish_app.py:455
+#: orologic_modules/easyfish/easyfish_app.py:469
 msgid "Inizializzazione Motore Orologic per Easyfish..."
 msgstr "Inicialização do motor Orologic para Easyfish..."
 
-#: orologic_modules/easyfish/easyfish_app.py:468
-#: orologic_modules/easyfish/easyfish_app.py:778
-#: orologic_modules/easyfish/easyfish_app.py:812
+#: orologic_modules/easyfish/easyfish_app.py:482
+#: orologic_modules/easyfish/easyfish_app.py:791
+#: orologic_modules/easyfish/easyfish_app.py:825
 msgid "Nuova partita caricata."
 msgstr "Nova partida carregada."
 
-#: orologic_modules/easyfish/easyfish_app.py:505
+#: orologic_modules/easyfish/easyfish_app.py:519
 msgid ""
 "\n"
 "Finestra di condivisione scacchiera chiusa."
@@ -12586,113 +12597,105 @@ msgstr ""
 "\n"
 "Janela de compartilhamento do tabuleiro fechada."
 
-#: orologic_modules/easyfish/easyfish_app.py:558
+#: orologic_modules/easyfish/easyfish_app.py:571
 msgid "Chiusa variante. Ritorno al nodo padre."
 msgstr "Variante fechada. Voltando ao nó pai."
 
-#: orologic_modules/easyfish/easyfish_app.py:564
-#: orologic_modules/easyfish/easyfish_app.py:805
+#: orologic_modules/easyfish/easyfish_app.py:577
+#: orologic_modules/easyfish/easyfish_app.py:818
 msgid "Salvataggio partita in corso..."
 msgstr "Salvando partida em andamento..."
 
-#: orologic_modules/easyfish/easyfish_app.py:567
-msgid ""
-"La partita non si e' salvata, ma il PGN e' negli appunti. Esco lo stesso? "
-"(INVIO si', ESC no): "
-msgstr ""
-"A partida não foi guardada, mas o PGN está na área de transferência. Saio na"
-" mesma? (ENTER sim, ESC não): "
+#: orologic_modules/easyfish/easyfish_app.py:580
+msgid "La partita non si e' salvata. Esco lo stesso? (INVIO si', ESC no): "
+msgstr "A partida não foi salva. Saio mesmo assim? (ENTER sim, ESC não): "
 
-#: orologic_modules/easyfish/easyfish_app.py:601
+#: orologic_modules/easyfish/easyfish_app.py:614
 msgid "Errore: nodo non trovato nelle varianti."
 msgstr "Erro: Nó não encontrado nas variantes."
 
-#: orologic_modules/easyfish/easyfish_app.py:605
+#: orologic_modules/easyfish/easyfish_app.py:618
 msgid "Non sei in una variante o non ci sono alternative da promuovere."
 msgstr "Você não está em uma variante ou não há alternativas para promover."
 
-#: orologic_modules/easyfish/easyfish_app.py:624
+#: orologic_modules/easyfish/easyfish_app.py:637
 #: orologic_modules/easyfish/interaction.py:219
 msgid "Numero mossa: "
 msgstr "Número do lance: "
 
-#: orologic_modules/easyfish/easyfish_app.py:632
+#: orologic_modules/easyfish/easyfish_app.py:645
 msgid "B per Bianco, N per Nero: "
 msgstr "B para brancas, N para pretas: "
 
-#: orologic_modules/easyfish/easyfish_app.py:647
+#: orologic_modules/easyfish/easyfish_app.py:660
 #, python-brace-format
 msgid "Salto alla mossa {n} ({c})..."
 msgstr "Saltando para o lance {n} ({c})..."
 
-#: orologic_modules/easyfish/easyfish_app.py:689
+#: orologic_modules/easyfish/easyfish_app.py:702
 #, python-brace-format
 msgid "Mossa {n} {c} non raggiunta (fine partita)."
 msgstr "Lance {n} {c} não alcançado (fim de partida)."
 
-#: orologic_modules/easyfish/easyfish_app.py:698
+#: orologic_modules/easyfish/easyfish_app.py:711
 msgid "Accesso alla modalità esplorazione..."
 msgstr "Entrando no modo de exploração..."
 
-#: orologic_modules/easyfish/easyfish_app.py:709
+#: orologic_modules/easyfish/easyfish_app.py:722
 msgid "Il navigatore della partita c'e' nella finestra: nel terminale usa .e"
 msgstr "O navegador da partida está na janela: no terminal usa .e"
 
-#: orologic_modules/easyfish/easyfish_app.py:746
+#: orologic_modules/easyfish/easyfish_app.py:759
 msgid "Opzione non valida. Usa: .cso on | .cso off"
 msgstr "Opção inválida. Use: .cso on | .cso off"
 
-#: orologic_modules/easyfish/easyfish_app.py:750
+#: orologic_modules/easyfish/easyfish_app.py:763
 msgid "attivata"
 msgstr "ativada"
 
-#: orologic_modules/easyfish/easyfish_app.py:750
+#: orologic_modules/easyfish/easyfish_app.py:763
 msgid "disattivata"
 msgstr "desativada"
 
-#: orologic_modules/easyfish/easyfish_app.py:753
+#: orologic_modules/easyfish/easyfish_app.py:766
 #, python-brace-format
 msgid "Visualizzazione dell'output di testo sotto la scacchiera {status}."
 msgstr "Exibição da saída de texto abaixo do tabuleiro {status}."
 
-#: orologic_modules/easyfish/easyfish_app.py:763
+#: orologic_modules/easyfish/easyfish_app.py:776
 msgid "Incolla una nuova posizione PGN dagli appunti..."
 msgstr "Cole uma nova posição PGN da área de transferência..."
 
-#: orologic_modules/easyfish/easyfish_app.py:769
+#: orologic_modules/easyfish/easyfish_app.py:782
 msgid "ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova."
 msgstr "ATENÇÃO: A partida atual será salva e uma nova será iniciada."
 
-#: orologic_modules/easyfish/easyfish_app.py:773
-#: orologic_modules/easyfish/easyfish_app.py:807
-#: orologic_modules/easyfish/easyfish_app.py:842
-#: orologic_modules/easyfish/easyfish_app.py:854
-#: orologic_modules/easyfish/easyfish_app.py:877
-msgid ""
-"La partita corrente non si e' salvata: resta aperta. Il PGN e' negli "
-"appunti."
-msgstr ""
-"A partida atual não foi guardada: fica aberta. O PGN está na área de "
-"transferência."
+#: orologic_modules/easyfish/easyfish_app.py:786
+#: orologic_modules/easyfish/easyfish_app.py:820
+#: orologic_modules/easyfish/easyfish_app.py:855
+#: orologic_modules/easyfish/easyfish_app.py:867
+#: orologic_modules/easyfish/easyfish_app.py:890
+msgid "La partita corrente non si e' salvata: resta aperta."
+msgstr "A partida atual não foi salva: continua aberta."
 
-#: orologic_modules/easyfish/easyfish_app.py:781
+#: orologic_modules/easyfish/easyfish_app.py:794
 msgid "PGN non valido o appunti vuoti."
 msgstr "PGN inválido ou área de transferência em branco."
 
-#: orologic_modules/easyfish/easyfish_app.py:820
+#: orologic_modules/easyfish/easyfish_app.py:833
 msgid "Spiacente, appunti vuoti. Copia prima un FEN valido."
 msgstr ""
 "Desculpe, área de transferência em branco. Copie primeiro um FEN válido."
 
-#: orologic_modules/easyfish/easyfish_app.py:823
+#: orologic_modules/easyfish/easyfish_app.py:836
 msgid "Incolla una nuova posizione FEN dagli appunti..."
 msgstr "Cole uma nova posição FEN da área de transferência..."
 
-#: orologic_modules/easyfish/easyfish_app.py:830
+#: orologic_modules/easyfish/easyfish_app.py:843
 msgid "La posizione del FEN non e' legale:"
 msgstr "A posição do FEN não é legal:"
 
-#: orologic_modules/easyfish/easyfish_app.py:838
+#: orologic_modules/easyfish/easyfish_app.py:851
 msgid ""
 "FEN valido. ATTENZIONE: La partita corrente verrà salvata e ne inizierà una "
 "nuova da questa posizione."
@@ -12700,19 +12703,19 @@ msgstr ""
 "FEN válido. ATENÇÃO: A partida atual será salva e uma nova será iniciada a "
 "partir desta posição."
 
-#: orologic_modules/easyfish/easyfish_app.py:849
+#: orologic_modules/easyfish/easyfish_app.py:862
 msgid "Stringa FEN non valida."
 msgstr "Sequência FEN inválida."
 
-#: orologic_modules/easyfish/easyfish_app.py:852
+#: orologic_modules/easyfish/easyfish_app.py:865
 msgid "Nuova partita. La corrente verrà salvata."
 msgstr "Nova partida. A atual será salva."
 
-#: orologic_modules/easyfish/easyfish_app.py:856
+#: orologic_modules/easyfish/easyfish_app.py:869
 msgid "Nuova scacchiera pronta. Si parte!"
 msgstr "Novo tabuleiro de xadrez pronto. Vamos!"
 
-#: orologic_modules/easyfish/easyfish_app.py:864
+#: orologic_modules/easyfish/easyfish_app.py:877
 msgid ""
 "Accesso all'editor. ATTENZIONE: Al termine dell'editing, la partita corrente"
 " verrà salvata e ne inizierà una nuova dalla posizione impostata."
@@ -12720,15 +12723,15 @@ msgstr ""
 "Acesso ao editor. ATENÇÃO: Ao final da edição, a partida atual será salva e "
 "uma nova será iniciada a partir da posição definida."
 
-#: orologic_modules/easyfish/easyfish_app.py:883
+#: orologic_modules/easyfish/easyfish_app.py:896
 msgid "Nuova partita avviata dalla posizione editata."
 msgstr "Nova partida iniciada a partir da posição editada."
 
-#: orologic_modules/easyfish/easyfish_app.py:902
+#: orologic_modules/easyfish/easyfish_app.py:915
 msgid "Lista delle mosse"
 msgstr "Lista de lances"
 
-#: orologic_modules/easyfish/easyfish_app.py:910
+#: orologic_modules/easyfish/easyfish_app.py:923
 #, python-brace-format
 msgid ""
 "Spiacente, {cmd} non è un comando valido.\n"
@@ -12737,24 +12740,24 @@ msgstr ""
 "Desculpe, {cmd} não é um comando válido.\n"
 "Digite '.?' para o menu."
 
-#: orologic_modules/easyfish/easyfish_app.py:943
+#: orologic_modules/easyfish/easyfish_app.py:956
 msgid "Mossa diversa trovata."
 msgstr "Lance diferente encontrado."
 
-#: orologic_modules/easyfish/easyfish_app.py:945
+#: orologic_modules/easyfish/easyfish_app.py:958
 msgid "Sovrascrivi linea (Invio) o Aggiungi Variante (Esc)? "
 msgstr "Substituir linha (Enter) ou adicionar variante (Esc)? "
 
-#: orologic_modules/easyfish/easyfish_app.py:953
+#: orologic_modules/easyfish/easyfish_app.py:966
 msgid "Linea sovrascritta."
 msgstr "Linha substituída."
 
-#: orologic_modules/easyfish/easyfish_app.py:957
+#: orologic_modules/easyfish/easyfish_app.py:970
 #: orologic_modules/easyfish/interaction.py:551
 msgid "Nuova variante creata."
 msgstr "Nova variante criada."
 
-#: orologic_modules/easyfish/easyfish_app.py:964
+#: orologic_modules/easyfish/easyfish_app.py:977
 #: orologic_modules/easyfish/interaction.py:540
 #, python-brace-format
 msgid "{k}: mossa illegale per il {c}."
@@ -16239,3 +16242,17 @@ msgstr "Ninguém."
 
 #~ msgid "Attivare ombreggiatura pezzi? (S/N) [S]: "
 #~ msgstr "Ativar sombreamento de peças? (S/N) [S]: "
+
+#~ msgid ""
+#~ "La partita non si e' salvata, ma il PGN e' negli appunti. Esco lo stesso? "
+#~ "(INVIO si', ESC no): "
+#~ msgstr ""
+#~ "A partida não foi guardada, mas o PGN está na área de transferência. Saio na"
+#~ " mesma? (ENTER sim, ESC não): "
+
+#~ msgid ""
+#~ "La partita corrente non si e' salvata: resta aperta. Il PGN e' negli "
+#~ "appunti."
+#~ msgstr ""
+#~ "A partida atual não foi guardada: fica aberta. O PGN está na área de "
+#~ "transferência."

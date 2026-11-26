@@ -691,7 +691,8 @@ class Impostazioni:
             # con dentro un eseguibile aperto.
             engine.CloseEngine()
             cartella, eseguibile = stockfish_installer.DownloadAndInstallEngine()
-            if cartella and eseguibile:
+            installato = bool(cartella and eseguibile)
+            if installato:
 
                 def modifica(db):
                     cfg = dict(db.get("engine_config", {}) or {})
@@ -702,7 +703,10 @@ class Impostazioni:
             # Se intanto il motore e' ripartito, per una partita o
             # un'analisi, non gli si chiude sotto (R32).
             if engine.ENGINE is not None or self.finestra.motore_in_uso():
-                print(_("Stockfish e' pronto: il motore in uso resta acceso, e quello nuovo parte la prossima volta che il motore si avvia."))
+                # Pronto solo se lo e': dopo uno scaricamento fallito lo
+                # si diceva lo stesso (R135).
+                if installato:
+                    print(_("Stockfish e' pronto: il motore in uso resta acceso, e quello nuovo parte la prossima volta che il motore si avvia."))
                 return
             self._riavvia_il_motore()
 
