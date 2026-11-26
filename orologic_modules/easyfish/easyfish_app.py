@@ -4,6 +4,7 @@
 import builtins
 import contextlib
 import re
+import weakref
 
 import chess
 import chess.engine
@@ -82,22 +83,37 @@ def GetDynamicPrompt(board, node):
         return f"{prefix}{n}. {last_san}: "
 
 
-def _segna_il_risultato(node, risultato):
-    """L'esito nell'intestazione Result solo alla fine della linea
-    principale: dentro una variante il PGN salvato e il nome del file
-    prendevano un risultato che la partita non ha (R14)."""
-    if node is not None and node.is_mainline() and not node.variations:
-        node.root().headers["Result"] = risultato
+# Le partite di cui Result l'ha scritto Orologic, dalla fine della linea
+# principale, col risultato: se quella fine non e' piu' conclusa, per
+# esempio dopo .u dal matto, l'asterisco torna (R112).
+_RISULTATI_SCRITTI = weakref.WeakKeyDictionary()
+
+
+def _segna_il_risultato(game):
+    """Result della partita dalla fine della linea principale: l'esito, se
+    e' una posizione conclusa; l'asterisco, se non lo e' piu' e l'esito
+    l'aveva scritto Orologic. Dentro una variante il PGN salvato e il nome
+    del file prendevano un risultato che la partita non ha (R14); dopo .vm o
+    .u restava quello di prima (R112)."""
+    fine = board_utils.fine_della_partita(game.end().board())
+    if fine is not None:
+        game.headers["Result"] = fine.risultato
+        _RISULTATI_SCRITTI[game] = fine.risultato
+    elif _RISULTATI_SCRITTI.get(game) == game.headers.get("Result"):
+        game.headers["Result"] = "*"
+        _RISULTATI_SCRITTI.pop(game, None)
 
 
 def CheckGameOver(board, node=None):
-    """Controlla se la partita e' finita e dice l'esito, con la regola di
-    board_utils.fine_della_partita: la triplice ripetizione e le cinquanta
-    mosse solo a fatto avvenuto (R9, R94)."""
+    """Controlla se la posizione chiude la partita e dice l'esito, con la
+    regola di board_utils.fine_della_partita: la triplice ripetizione e le
+    cinquanta mosse solo a fatto avvenuto (R9, R94). Con node, Result della
+    partita segue la fine della sua linea principale (R14, R112)."""
+    if node is not None:
+        _segna_il_risultato(node.root())
     fine = board_utils.fine_della_partita(board)
     if fine is None:
         return
-    _segna_il_risultato(node, fine.risultato)
     print(fine.frase())
     board_utils.suona_la_fine()
 
@@ -569,6 +585,10 @@ def _esegui(partita=None):
                                 vars_list[0],
                             )
                             is_modified = True
+                            # La posizione non cambia, ma la fine della
+                            # linea principale si': il controllo rigira
+                            # (R112).
+                            last_checked_state = None
                             print(_("Variante promossa a linea principale!"))
                         else:
                             print(_("Questa linea è già la principale."))

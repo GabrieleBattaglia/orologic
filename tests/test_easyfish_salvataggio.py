@@ -273,3 +273,52 @@ def test_un_errore_in_easyfish_salva_la_partita_modificata(finestra, monkeypatch
     assert pompa(lambda: not finestra.nucleo.is_alive())
     assert finestra.errori_mostrati and "guasto di prova" in finestra.errori_mostrati[0][0]
     assert salvate == [game]
+
+
+def _partita_dal_testo(testo):
+    import io
+
+    import chess.pgn
+
+    return chess.pgn.read_game(io.StringIO(testo))
+
+
+def test_la_variante_col_matto_promossa_scrive_il_risultato(finestra, monkeypatch):
+    """R112: dopo .vm, che promuove a linea principale una variante finita
+    col matto, Result restava quello di prima, perche' la posizione non
+    cambiava e il controllo della fine partita non rigirava."""
+    game = _partita_dal_testo('[Result "0-1"]\n\n1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. d3 (4. Qxf7#) 0-1\n')
+    matto = game.variations[0].variations[0].variations[0].variations[0].variations[0].variations[0].variations[1]
+    assert matto.san() == "Qxf7#"
+    monkeypatch.setattr(orologic_engine, "ENGINE", object())
+    salvate = []
+    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda g: salvate.append(g) or True)
+    monkeypatch.setattr(finestra_navigatore, "naviga", lambda _genitore, _partita, _nodo, *_altro: (matto, False))
+    finestra.avvia_il_nucleo(lambda: easyfish_app.run(partita=game))
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+    _premi(finestra, ".na\r")
+    assert pompa(lambda: finestra.fornitore is not None and finestra.fornitore()["board"].is_checkmate())
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+    _premi(finestra, ".vm\r")
+    assert pompa(lambda: game.headers["Result"] == "1-0")
+    _premi(finestra, ".\r")
+    assert pompa(lambda: not finestra.nucleo.is_alive())
+    assert salvate == [game] and game.headers["Result"] == "1-0"
+
+
+def test_tolto_il_matto_il_risultato_torna_l_asterisco(finestra, monkeypatch):
+    """R112: dopo .u dal matto alla fine della linea principale Result
+    restava quello del matto, scritto da Orologic: la partita salvata e il
+    nome del file avevano un esito che la partita non ha piu'."""
+    game = _partita_dal_testo("1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# *\n")
+    monkeypatch.setattr(orologic_engine, "ENGINE", object())
+    salvate = []
+    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda g: salvate.append(g) or True)
+    finestra.avvia_il_nucleo(lambda: easyfish_app.run(partita=game))
+    assert pompa(lambda: game.headers["Result"] == "1-0")
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+    _premi(finestra, ".u\r")
+    assert pompa(lambda: game.headers["Result"] == "*")
+    _premi(finestra, ".\r")
+    assert pompa(lambda: not finestra.nucleo.is_alive())
+    assert salvate == [game] and game.headers["Result"] == "*"
