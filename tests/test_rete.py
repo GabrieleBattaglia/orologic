@@ -403,3 +403,36 @@ def test_le_squadre_nella_forma_vera_di_lichess():
 
     torneo = {"teamBattle": {"teams": {"21community": ["21Community", "objects.coin"], "lichess-swiss": ["Lichess Swiss", None]}, "nbLeaders": 5}}
     assert lichess_tornei.squadre_del_torneo(torneo) == {"21community": "21Community", "lichess-swiss": "Lichess Swiss"}
+
+
+def test_le_credenziali_col_bom_si_leggono(tmp_path, monkeypatch):
+    """R106: un secrets.json salvato dal Blocco note con la marca BOM si
+    prendeva per guasto, e andava da parte col token dentro, in chiaro."""
+    import codecs
+    import json
+
+    from orologic_modules import lichess_app
+
+    file = tmp_path / "secrets.json"
+    file.write_bytes(codecs.BOM_UTF8 + json.dumps({"lichess_token": "finto"}).encode("utf-8"))
+    monkeypatch.setattr(lichess_app, "SECRETS_FILE", str(file))
+    assert lichess_app.load_secrets() == {"lichess_token": "finto"}
+    assert [p.name for p in tmp_path.iterdir()] == ["secrets.json"]
+
+
+@pytest.mark.parametrize("col_token", [True, False])
+def test_il_logout_toglie_anche_le_copie_messe_da_parte(tmp_path, monkeypatch, col_token):
+    """R106: al logout restavano le copie di secrets.json messe da parte,
+    col token di Lichess in chiaro."""
+    import json
+
+    from orologic_modules import lichess_app
+
+    file = tmp_path / "secrets.json"
+    file.write_text(json.dumps({"lichess_token": "finto", "lichess_username": "io"} if col_token else {}), encoding="utf-8")
+    (tmp_path / "secrets.json.danneggiato-20261126-120000").write_text('{"lichess_token": "vecchio"}', encoding="utf-8")
+    monkeypatch.setattr(lichess_app, "SECRETS_FILE", str(file))
+    monkeypatch.setattr(lichess_app, "enter_escape", lambda *_argomenti: True)
+    lichess_app.menu_logout({})
+    assert [p.name for p in tmp_path.iterdir()] == ["secrets.json"]
+    assert "lichess_token" not in json.loads(file.read_text(encoding="utf-8"))

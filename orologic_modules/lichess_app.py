@@ -2,6 +2,7 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
 import contextlib
+import glob
 import http.client
 import json
 import os
@@ -34,9 +35,25 @@ SECRETS_FILE = percorso_salvataggio(os.path.join("settings", "secrets.json"))
 
 
 def _leggi_i_segreti():
-    with open(SECRETS_FILE, encoding="utf-8") as f:
+    # utf-8-sig: un file salvato dal Blocco note con la marca BOM si
+    # prendeva per guasto, e andava da parte col token dentro (R106).
+    with open(SECRETS_FILE, encoding="utf-8-sig") as f:
         dati = json.load(f)
     return dati if isinstance(dati, dict) else {}
+
+
+def togli_le_copie_dei_segreti():
+    """Le copie di secrets.json messe da parte perche' guaste tengono il
+    token in chiaro: al logout se ne vanno anche loro (R106). Restituisce
+    quante ne ha tolte."""
+    tolte = 0
+    for copia in glob.glob(glob.escape(SECRETS_FILE) + ".danneggiato-*"):
+        try:
+            os.remove(copia)
+            tolte += 1
+        except OSError:
+            continue
+    return tolte
 
 
 def load_secrets():
@@ -176,12 +193,19 @@ def menu_logout(db):
                 del secrets["lichess_username"]
             save_secrets(secrets)
             print(_("Logout effettuato con successo. Token rimosso."))
+            _di_le_copie_tolte(togli_le_copie_dei_segreti())
             return True
         else:
             print(_("Logout annullato."))
     else:
         print(_("Non sei attualmente loggato (nessun token presente)."))
+        _di_le_copie_tolte(togli_le_copie_dei_segreti())
     return False
+
+
+def _di_le_copie_tolte(tolte):
+    if tolte:
+        print(_("Tolte anche le copie delle credenziali messe da parte: {n}.").format(n=tolte))
 
 
 def format_playtime(seconds):
