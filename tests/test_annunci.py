@@ -70,8 +70,9 @@ def test_la_finestra_annuncia_secondo_le_impostazioni(finestra):
     finestra.annunci = annunci.normalizza(
         {"uscita": "nvda", "destinazione": "entrambi", "tasti_interrompono": False, "testo_interrompe": True}
     )
-    assert _annuncia(finestra, "Tocca ancora a te.\n", "tasto") == [("Tocca ancora a te.", "nvda", "entrambi", False)]
-    assert _annuncia(finestra, "Il bianco ha mosso.\n", None) == [("Il bianco ha mosso.", "nvda", "entrambi", True)]
+    # Alla voce e, per la coda del braille, alla barra (R89).
+    assert _annuncia(finestra, "Tocca ancora a te.\n", "tasto") == [("Tocca ancora a te.", "nvda", "sintesi", False), ("Tocca ancora a te.", "nvda", "braille", False)]
+    assert _annuncia(finestra, "Il bianco ha mosso.\n", None) == [("Il bianco ha mosso.", "nvda", "sintesi", True), ("Il bianco ha mosso.", "nvda", "braille", False)]
     finestra.annunci = annunci.normalizza({"attivi": False})
     assert _annuncia(finestra, "Silenzio.\n", "tasto") == []
     assert "Silenzio." in finestra.area.GetValue()
@@ -152,3 +153,22 @@ def test_il_filtro_delle_impostazioni(app):
         assert dialogo.lista.GetStringSelection() == "Destinazione degli annunci: solo la sintesi"
     finally:
         dialogo.Destroy()
+
+
+def test_le_righe_di_un_annuncio_passano_tutte_dalla_barra(finestra, monkeypatch):
+    """R89, dal collaudo di Gabriele: con gli annunci al solo braille, di un
+    annuncio di piu' righe restava sulla barra l'ultima. Le righe passano
+    dalla coda, una dopo l'altra."""
+    from orologic_modules import finestra as modulo_finestra
+
+    monkeypatch.setattr(modulo_finestra, "MINIMO_DEL_BRAILLE", 0.05)
+    finestra.annunci = annunci.normalizza({"uscita": "nvda", "destinazione": "braille", "testo_interrompe": False})
+    prima = len(finestra.sintesi.chiamate)
+    finestra.faccia.scrivi("Prima riga.\nSeconda riga.\nTerza riga.\n", None)
+
+    def alla_barra():
+        return [testo for testo, _chiave, dove, _interrompi in finestra.sintesi.chiamate[prima:] if dove == "braille"]
+
+    assert pompa(lambda: len(alla_barra()) >= 3, 3)
+    assert alla_barra()[:3] == ["Prima riga.", "Seconda riga.", "Terza riga."]
+    assert not [chiamata for chiamata in finestra.sintesi.chiamate[prima:] if chiamata[2] == "sintesi"]

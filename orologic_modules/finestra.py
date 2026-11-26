@@ -74,7 +74,7 @@ import time
 import traceback
 
 import wx
-from GBsintesi import AUTOMATICA, CON_IL_BRAILLE, Sintesi
+from GBsintesi import AUTOMATICA, CON_IL_BRAILLE, Coda, Sintesi
 from GBUtils import Acusticator, sorgente_dei_tasti, sorgente_delle_scelte
 
 from . import (
@@ -104,6 +104,8 @@ CHIAVE_DELLE_RIGHE = "righe_dell_area"
 # si preme un tasto, e quanto aspetta dopo un annuncio mandato alla barra.
 RIPASSO_DEL_BRAILLE = 1000
 RIPASSO_DOPO_UN_ANNUNCIO = 5000
+# I secondi minimi di lettura di ogni riga di un annuncio alla barra (R89).
+MINIMO_DEL_BRAILLE = 2.0
 RIGHE_PREDEFINITE = 200
 RIGHE_MINIME = 20
 RIGHE_MASSIME = 10000
@@ -754,6 +756,11 @@ class Finestra(wx.Frame):
         self.detta = ""
         self.programmato = False
         self.sintesi = Sintesi()
+        # Le righe degli annunci alla barra, una dopo l'altra, col loro tempo
+        # di lettura: mandate una per una come messaggi, ognuna sostituiva la
+        # precedente, e di un annuncio di piu' righe restava l'ultima (R89,
+        # dal collaudo di Gabriele).
+        self.coda_del_braille = Coda(self._blocco_alla_barra, lambda secondi, funzione: wx.CallLater(max(1, int(secondi * 1000)), funzione))
         self.annunci = annunci.carica()
         # Le impostazioni: chi scrive le righe e le cambia, e l'elenco aperto.
         self.gestore = modulo_impostazioni.Impostazioni(self)
@@ -874,6 +881,10 @@ class Finestra(wx.Frame):
         """La riga sotto il cursore alla barra, come messaggio, finche' NVDA
         non l'ha riletta da se' dopo un tasto; col fuoco altrove, o con la
         scacchiera aperta, il ripasso si ferma."""
+        # Mentre la coda degli annunci mostra le sue righe, la riga del
+        # cursore aspetta il suo turno (R89).
+        if self and self.coda_del_braille.in_fila:
+            return
         if (
             not self
             or not self.braille_indietro
@@ -1270,8 +1281,26 @@ class Finestra(wx.Frame):
         collaudo della finestra del prompt)."""
         if not self.annunci["attivi"]:
             return
-        for riga in righe:
-            self.sintesi.dici(riga, self.annunci["uscita"], self.annunci["destinazione"], interrompi=False)
+        self._annuncia_le_righe(righe, False)
+
+    def _annuncia_le_righe(self, righe, interrompi):
+        """Le righe alla voce, se la destinazione la vuole, e alla barra per
+        la coda del braille, che le mostra una dopo l'altra (R89). interrompi
+        vale solo per la prima, e per la barra svuota la coda di prima."""
+        destinazione = self.annunci["destinazione"]
+        if destinazione in ("entrambi", "sintesi"):
+            for numero, riga in enumerate(righe):
+                self.sintesi.dici(riga, self.annunci["uscita"], "sintesi", interrompi=interrompi and numero == 0)
+        if destinazione in ("entrambi", "braille"):
+            if interrompi:
+                self.coda_del_braille.svuota()
+            for riga in righe:
+                self.coda_del_braille.aggiungi(riga, minimo=MINIMO_DEL_BRAILLE)
+
+    def _blocco_alla_barra(self, blocco):
+        """Un blocco della coda del braille, con l'uscita degli annunci."""
+        if self:
+            self.sintesi.dici(blocco, self.annunci["uscita"], "braille")
 
     def alla_sintesi(self, testo, interrompi=True):
         """Un annuncio della scacchiera interattiva: sempre, e solo alla
@@ -1291,8 +1320,7 @@ class Finestra(wx.Frame):
         if not self.annunci["attivi"]:
             return
         interrompi = annunci.interrompe(self.annunci, dal_tasto)
-        for numero, riga in enumerate(righe):
-            self.sintesi.dici(riga, self.annunci["uscita"], self.annunci["destinazione"], interrompi=interrompi and numero == 0)
+        self._annuncia_le_righe(righe, interrompi)
         if righe and self.annunci["destinazione"] != "sintesi" and self.braille_indietro:
             # L'annuncio e' sulla barra: la riga del cursore torna fra un po',
             # per non coprirlo subito.
