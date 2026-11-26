@@ -751,6 +751,8 @@ class Finestra(wx.Frame):
         # Finito il nucleo la finestra si chiude; le prove la tengono aperta
         # per leggerla.
         self.chiudi_alla_fine = True
+        # I dialoghi modali gia' chiusi da _distruggi_alla_fine (R87).
+        self._modali_chiusi = []
         self.area.Bind(wx.EVT_CHAR, self._carattere)
         self.area.Bind(wx.EVT_KEY_DOWN, self._tasto_giu)
         self.Bind(wx.EVT_CHAR_HOOK, self._tasto_della_finestra)
@@ -1964,7 +1966,17 @@ class Finestra(wx.Frame):
             if errore is not None:
                 self.mostra_l_errore(*errore)
             if self.chiudi_alla_fine and self:
-                self.Destroy()
+                self._distruggi_alla_fine()
+
+    def _distruggi_alla_fine(self):
+        """A nucleo finito la finestra se ne va, ma prima i dialoghi modali
+        aperti sopra di lei, come le impostazioni con Ctrl e virgola: prima
+        si distruggeva con il dialogo ancora aperto (R87)."""
+        if not self:
+            return
+        if dialoghi.chiudi_i_modali_sopra(self, self._modali_chiusi, self._distruggi_alla_fine):
+            return
+        self.Destroy()
 
     def mostra_l_errore(self, testo, file):
         """L'errore che ha fermato il nucleo, in una finestra da leggere, con

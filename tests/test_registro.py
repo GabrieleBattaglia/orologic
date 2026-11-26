@@ -70,3 +70,34 @@ def test_stderr_sul_registro_e_il_registro_che_riparte(monkeypatch):
     assert os.path.isfile(registro.percorso() + ".1")
     assert "una riga di stderr" not in _testo_del_registro()
     assert "dopo il limite" in _testo_del_registro()
+
+
+def test_a_nucleo_finito_si_chiude_prima_il_dialogo_aperto(finestra):
+    """R87: a nucleo finito la finestra si distruggeva anche con sopra un
+    dialogo aperto con Ctrl e virgola. Un ciclo modale vero, e un paracadute
+    su un filo a parte."""
+    import wx
+
+    esiti = []
+    paracadute = []
+
+    def salva():
+        for dialogo in wx.GetTopLevelWindows():
+            if isinstance(dialogo, wx.Dialog) and dialogo.IsModal():
+                paracadute.append(True)
+                dialogo.EndModal(wx.ID_ABORT)
+
+    def impostazioni():
+        dialogo = wx.Dialog(finestra, title="Impostazioni di prova")
+        wx.CallAfter(finestra._distruggi_alla_fine)
+        esiti.append(dialogo.ShowModal())
+        dialogo.Destroy()
+
+    soccorso = threading.Timer(3, lambda: wx.CallAfter(salva))
+    soccorso.start()
+    try:
+        wx.CallAfter(impostazioni)
+        assert pompa(lambda: esiti and not finestra, 6)
+    finally:
+        soccorso.cancel()
+    assert esiti == [wx.ID_CANCEL] and paracadute == []

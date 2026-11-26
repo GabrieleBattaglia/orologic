@@ -37,6 +37,46 @@ from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 from . import aspetto, modello_prompt
 from .config import _
 
+# I millisecondi fra un dialogo modale chiuso sopra una finestra e il
+# prossimo tentativo di chiuderla: con CallAfter il ciclo di wx girava negli
+# eventi di inattivita' senza mai uscire (R28, R87).
+ATTESA_DEI_MODALI = 30
+
+
+def discende(finestra, antenato):
+    """Vero se antenato e' fra i genitori di finestra."""
+    genitore = finestra.GetParent()
+    while genitore is not None:
+        if genitore is antenato:
+            return True
+        genitore = genitore.GetParent()
+    return False
+
+
+def modali_sopra(finestra):
+    """I dialoghi modali aperti sopra la finestra, discendenti suoi."""
+    return [
+        altra for altra in wx.GetTopLevelWindows()
+        if altra is not finestra and isinstance(altra, wx.Dialog) and altra.IsModal() and discende(altra, finestra)
+    ]
+
+
+def chiudi_i_modali_sopra(finestra, gia_chiusi, poi):
+    """Chiude il piu' interno dei dialoghi modali aperti sopra la finestra,
+    un ciclo alla volta e mai due volte lo stesso, e richiama poi() quando
+    il suo ciclo e' finito. Falso se sopra non c'e' niente, e si puo'
+    chiudere la finestra adesso. wx non chiude un ciclo modale che non e'
+    quello attivo (R28, R87)."""
+    sopra = modali_sopra(finestra)
+    if not sopra:
+        return False
+    for altra in sopra:
+        if altra not in gia_chiusi and not any(discende(terza, altra) for terza in sopra if terza is not altra):
+            gia_chiusi.append(altra)
+            altra.EndModal(wx.ID_CANCEL)
+    wx.CallLater(ATTESA_DEI_MODALI, poi)
+    return True
+
 INDIRIZZO_PAYPAL = "https://paypal.me/GabrieleBattaglia780"
 # Un Invio entro tanti secondi dall'apertura, o dall'Invio di prima, e' un
 # tasto tenuto giu', o rimandato da NVDA: non chiude. La misura di Ciechino.

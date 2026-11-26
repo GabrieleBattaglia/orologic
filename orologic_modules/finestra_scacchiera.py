@@ -34,6 +34,7 @@ from . import (
     aspetto,
     componente_nvda,
     config,
+    dialoghi,
     localizzazione,
     plancia,
     richedit,
@@ -66,9 +67,6 @@ ATTESA_MASSIMA = 3000
 RISULTATI = {"10": ".1-0", "01": ".0-1", "12": ".1/2", "*": ".*"}
 # Ogni quanto si rilegge la posizione dal cruscotto.
 GIRO_DELLA_POSIZIONE = 150
-# I millisecondi fra un dialogo chiuso sopra la scacchiera e il prossimo
-# tentativo di chiuderla (R28).
-ATTESA_DEI_FIGLI = 30
 # Il codice con cui la scacchiera si chiude per una domanda del nucleo: la
 # finestra principale la riaprira'.
 CHIUSA_PER_UNA_DOMANDA = wx.ID_HIGHEST + 71
@@ -187,16 +185,6 @@ class ConfermaDelRisultato(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, lambda _evento: self.EndModal(wx.ID_YES), self.assegna)
         self.Bind(wx.EVT_BUTTON, lambda _evento: self.EndModal(wx.ID_NO), continua)
         self.assegna.SetFocus()
-
-
-def _discende(finestra, antenato):
-    """Vero se antenato e' fra i genitori di finestra."""
-    genitore = finestra.GetParent()
-    while genitore is not None:
-        if genitore is antenato:
-            return True
-        genitore = genitore.GetParent()
-    return False
 
 
 def chiedi_il_risultato(genitore, domanda):
@@ -448,25 +436,14 @@ class FinestraScacchiera(wx.Dialog):
         # quando il ciclo del figlio e' finito (R28). Si riprova con un
         # CallLater: con CallAfter il ciclo di wx girava negli eventi di
         # inattivita' senza mai uscire.
-        figli = self._dialoghi_sopra()
-        if figli:
-            # Il piu' interno per primo, un ciclo alla volta, e mai due
-            # volte lo stesso.
-            for figlio in figli:
-                if figlio not in self._figli_chiusi and not any(_discende(altro, figlio) for altro in figli if altro is not figlio):
-                    self._figli_chiusi.append(figlio)
-                    figlio.EndModal(wx.ID_CANCEL)
-            wx.CallLater(ATTESA_DEI_FIGLI, self._chiudi_dopo_i_figli)
+        if dialoghi.chiudi_i_modali_sopra(self, self._figli_chiusi, self._chiudi_dopo_i_figli):
             return
         if self.IsModal():
             self.EndModal(wx.ID_CANCEL)
 
     def _dialoghi_sopra(self):
         """I dialoghi modali aperti sopra la scacchiera, discendenti suoi."""
-        return [
-            finestra for finestra in wx.GetTopLevelWindows()
-            if finestra is not self and isinstance(finestra, wx.Dialog) and finestra.IsModal() and _discende(finestra, self)
-        ]
+        return dialoghi.modali_sopra(self)
 
     def _chiudi_dopo_i_figli(self):
         if self:
