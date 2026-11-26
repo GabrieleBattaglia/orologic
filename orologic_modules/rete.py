@@ -1,6 +1,7 @@
 # Orologic, modulo rete: chiamate HTTP con timeout e messaggi parlanti.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
+import http.client
 import json
 import socket
 import ssl
@@ -24,9 +25,16 @@ TIMEOUT_STREAM = 30.0
 INTESTAZIONE_AGENTE = "Orologic"
 
 
+# I caratteri che restano com'erano nell'indirizzo: la sua struttura, e i
+# % delle parti gia' codificate.
+STRUTTURA_DELL_INDIRIZZO = ":/?&=%#@+,;~!$'()*[]"
+
+
 def prepara(url, token=None, metodo="GET", accetta=None):
-    """Costruisce la richiesta con le intestazioni d'uso."""
-    richiesta = urllib.request.Request(url, method=metodo)
+    """Costruisce la richiesta con le intestazioni d'uso. Spazi e lettere
+    accentate dei nomi scritti dall'utente si codificano: prima entravano
+    nell'indirizzo cosi' com'erano, e la richiesta cadeva (R34)."""
+    richiesta = urllib.request.Request(urllib.parse.quote(url, safe=STRUTTURA_DELL_INDIRIZZO), method=metodo)
     richiesta.add_header("User-Agent", INTESTAZIONE_AGENTE)
     if token:
         richiesta.add_header("Authorization", f"Bearer {token}")
@@ -85,9 +93,34 @@ def azzera_limite():
     _riprendere_dopo = 0.0
 
 
+def e_di_lichess(indirizzo, solo_https=True):
+    """Vero per un indirizzo di lichess.org o di un suo sottodominio, e con
+    solo_https soltanto in https: e' la regola per mandare il token. Prima
+    in pgn_search bastava la scritta lichess.org in un punto qualunque, e il
+    token arrivava anche a https://lichess.org.altro.example (R39)."""
+    parti = urllib.parse.urlsplit((indirizzo or "").strip())
+    host = (parti.hostname or "").lower()
+    if solo_https and parti.scheme.lower() != "https":
+        return False
+    return host == "lichess.org" or host.endswith(".lichess.org")
+
+
 def _messaggio_http(errore):
-    """Traduce un errore HTTP in una frase comprensibile."""
+    """Traduce un errore HTTP in una frase comprensibile. Le frasi e il
+    freno di Lichess valgono solo per Lichess: un limite di GitHub diventava
+    "il tuo token non ha i permessi", e frenava anche Lichess (R35)."""
     codice = errore.code
+    if not e_di_lichess(getattr(errore, "url", "") or "", solo_https=False):
+        if codice == 429:
+            return _("Il server sta limitando le richieste: riprova piu' tardi.")
+        return _("Il server ha risposto con l'errore {c}.").format(c=codice)
+    # Il 429 per primo: con un corpo, il ramo del dettaglio usciva prima, il
+    # freno non si registrava e Orologic continuava a chiedere (R35).
+    if codice == 429:
+        _segna_limite_raggiunto(errore)
+        return _(
+            "Lichess sta limitando le richieste. Aspetto {n} secondi prima di riprovare."
+        ).format(n=int(attesa_residua()) or int(ATTESA_PREDEFINITA))
     dettaglio = _dettaglio_lichess(errore)
     # Per i problemi di credenziali il consiglio pratico vale piu' della frase
     # del server, che dice soltanto che il token non esiste.
@@ -99,11 +132,6 @@ def _messaggio_http(errore):
         return _("Lichess ha rifiutato la richiesta: {motivo}").format(motivo=dettaglio)
     if codice == 404:
         return _("Non trovato: l'indirizzo richiesto non esiste su Lichess.")
-    if codice == 429:
-        _segna_limite_raggiunto(errore)
-        return _(
-            "Lichess sta limitando le richieste. Aspetto {n} secondi prima di riprovare."
-        ).format(n=int(attesa_residua()) or int(ATTESA_PREDEFINITA))
     if 500 <= codice < 600:
         return _(
             "Lichess ha un problema momentaneo (errore {c}). Riprova piu' tardi."
@@ -168,7 +196,9 @@ def apri(
         return None, _messaggio_urlerror(e, timeout)
     except TimeoutError:
         return None, _("Nessuna risposta entro {n} secondi.").format(n=int(timeout))
-    except OSError as e:
+    # Anche gli errori del protocollo e degli indirizzi non validi: prima
+    # facevano chiudere il programma, o morire i fili di servizio (R34).
+    except (OSError, http.client.HTTPException, ValueError) as e:
         return None, _("Connessione non riuscita: {motivo}").format(motivo=e)
 
 
@@ -184,7 +214,7 @@ def leggi(url, token=None, metodo="GET", dati=None, timeout=TIMEOUT, accetta=Non
             return risposta.read().decode("utf-8", errors="replace"), None
     except TimeoutError:
         return None, _("Nessuna risposta entro {n} secondi.").format(n=int(timeout))
-    except OSError as e:
+    except (OSError, http.client.HTTPException) as e:
         return None, _("Lettura interrotta: {motivo}").format(motivo=e)
 
 

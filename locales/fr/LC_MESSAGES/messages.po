@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-26 07:33+0100\n"
+"POT-Creation-Date: 2026-11-26 07:34+0100\n"
 "PO-Revision-Date: 2026-04-12 16:04+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fr <LL@li.org>\n"
@@ -8369,7 +8369,7 @@ msgstr "Vous êtes inscrit, à la place {r}."
 msgid "Podio: {nomi}."
 msgstr "Podium : {nomi}."
 
-#: orologic_modules/lichess_tornei.py:212 orologic_modules/rete.py:97
+#: orologic_modules/lichess_tornei.py:212 orologic_modules/rete.py:130
 msgid "Il tuo token non ha i permessi necessari per questa operazione."
 msgstr ""
 "Votre token ne dispose pas des autorisations nécessaires pour cette "
@@ -9859,19 +9859,19 @@ msgstr "presse-papiers"
 msgid "Il sito di pgn-extract ha risposto con l'errore {codice}."
 msgstr "Le site de pgn-extract a répondu avec l'erreur {codice}."
 
-#: orologic_modules/pgn_extract.py:1135 orologic_modules/rete.py:118
-#: orologic_modules/rete.py:170 orologic_modules/rete.py:186
+#: orologic_modules/pgn_extract.py:1135 orologic_modules/rete.py:146
+#: orologic_modules/rete.py:198 orologic_modules/rete.py:216
 #, python-brace-format
 msgid "Nessuna risposta entro {n} secondi."
 msgstr "Aucune réponse dans les {n} secondes."
 
-#: orologic_modules/pgn_extract.py:1137 orologic_modules/rete.py:125
-#: orologic_modules/rete.py:172
+#: orologic_modules/pgn_extract.py:1137 orologic_modules/rete.py:153
+#: orologic_modules/rete.py:202
 #, python-brace-format
 msgid "Connessione non riuscita: {motivo}"
 msgstr "Échec de la connexion : {motivo}"
 
-#: orologic_modules/pgn_extract.py:1155 orologic_modules/rete.py:188
+#: orologic_modules/pgn_extract.py:1155 orologic_modules/rete.py:218
 #, python-brace-format
 msgid "Lettura interrotta: {motivo}"
 msgstr "Lecture interrompue : {motivo}"
@@ -10482,56 +10482,65 @@ msgid "Poi spediscila tu: Orologic non spedisce niente da solo. {iscriviti}"
 msgstr ""
 "Puis envoyez-le vous-même : Orologic n'envoie rien tout seul. {iscriviti}"
 
-#: orologic_modules/rete.py:95
-msgid "Il token di accesso non e' piu' valido: rifai il login a Lichess."
-msgstr "Le jeton d'accès n'est plus valide : reconnectez-vous à Lichess."
+#: orologic_modules/rete.py:115
+msgid "Il server sta limitando le richieste: riprova piu' tardi."
+msgstr "Le serveur limite les requêtes : réessaie plus tard."
 
-#: orologic_modules/rete.py:99
+#: orologic_modules/rete.py:116
 #, python-brace-format
-msgid "Lichess ha rifiutato la richiesta: {motivo}"
-msgstr "Lichess a rejeté la demande : {motivo}"
+msgid "Il server ha risposto con l'errore {c}."
+msgstr "Le serveur a répondu avec l'erreur {c}."
 
-#: orologic_modules/rete.py:101
-msgid "Non trovato: l'indirizzo richiesto non esiste su Lichess."
-msgstr "Introuvable : L'adresse demandée n'existe pas sur Lichess."
-
-#: orologic_modules/rete.py:105
+#: orologic_modules/rete.py:122
 #, python-brace-format
 msgid ""
 "Lichess sta limitando le richieste. Aspetto {n} secondi prima di riprovare."
 msgstr ""
 "Lichess limite les demandes. J'attends {n} secondes avant de réessayer."
 
-#: orologic_modules/rete.py:109
+#: orologic_modules/rete.py:128
+msgid "Il token di accesso non e' piu' valido: rifai il login a Lichess."
+msgstr "Le jeton d'accès n'est plus valide : reconnectez-vous à Lichess."
+
+#: orologic_modules/rete.py:132
+#, python-brace-format
+msgid "Lichess ha rifiutato la richiesta: {motivo}"
+msgstr "Lichess a rejeté la demande : {motivo}"
+
+#: orologic_modules/rete.py:134
+msgid "Non trovato: l'indirizzo richiesto non esiste su Lichess."
+msgstr "Introuvable : L'adresse demandée n'existe pas sur Lichess."
+
+#: orologic_modules/rete.py:137
 #, python-brace-format
 msgid "Lichess ha un problema momentaneo (errore {c}). Riprova piu' tardi."
 msgstr ""
 "Lichess a un problème temporaire (erreur {c}). Veuillez réessayer plus tard."
 
-#: orologic_modules/rete.py:111 orologic_modules/rete.py:253
+#: orologic_modules/rete.py:139 orologic_modules/rete.py:283
 #, python-brace-format
 msgid "Lichess ha risposto con l'errore {c}."
 msgstr "Lichess a répondu avec l'erreur {c}."
 
-#: orologic_modules/rete.py:120
+#: orologic_modules/rete.py:148
 msgid "Server non raggiungibile: controlla la connessione a internet."
 msgstr "Serveur inaccessible : vérifiez votre connexion Internet."
 
-#: orologic_modules/rete.py:122
+#: orologic_modules/rete.py:150
 #, python-brace-format
 msgid "Il certificato del server non e' stato accettato: {motivo}"
 msgstr "Le certificat du serveur n'a pas été accepté : {motivo}"
 
-#: orologic_modules/rete.py:149
+#: orologic_modules/rete.py:177
 #, python-brace-format
 msgid "Lichess sta limitando le richieste: riprova fra {n} secondi."
 msgstr "Lichess limite les requêtes. Veuillez réessayer dans {n} secondes."
 
-#: orologic_modules/rete.py:204
+#: orologic_modules/rete.py:234
 msgid "Il server ha risposto senza dati."
 msgstr "Le serveur a répondu sans données."
 
-#: orologic_modules/rete.py:208
+#: orologic_modules/rete.py:238
 msgid "La risposta del server non e' comprensibile."
 msgstr "La réponse du serveur n'est pas compréhensible."
 
