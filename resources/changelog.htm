@@ -19,6 +19,10 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 9</h2>
 <h3>Versione 9.5</h3>
+<h4>9.5.105 (26 novembre 2026)</h4>
+<ul>
+  <li>* [Core] La copia di riserva del database protegge davvero: se il database manca, Orologic riparte dall'ultima copia buona e lo dice; se la copia in quel momento non si lascia leggere, non si scrive niente invece di coprirla; un database ripartito dalle impostazioni predefinite non scrive sopra la copia. Prima orologi, carriera e impostazioni potevano sparire dal database e dalla copia nello stesso avvio.</li>
+</ul>
 <h4>9.5.104 (26 novembre 2026)</h4>
 <ul>
   <li>* [OAA] La riga Semimossa dell'analisi automatica si pulisce prima di riscriversi: una riga più corta lasciava in fondo la coda della precedente, e si leggeva un tempo sbagliato.</li>

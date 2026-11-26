@@ -193,3 +193,58 @@ def test_select_clock_dice_gli_orologi_a_parole(monkeypatch):
     clock.SelectClock(db)
     voce = mostrate[0]["Lampo"]
     assert "B=N" not in voce and "F1:" not in voce and "5 minuti" in voce
+
+
+def _con_la_riserva(database, dati):
+    """Il database scritto e salvato una volta, cosi' c'e' anche la copia di
+    riserva."""
+    _scrivi(database, dati)
+    assert storage.SaveDB(storage.LoadDB())
+    assert os.path.isfile(storage.copia_di_riserva())
+
+
+def test_il_database_che_manca_riparte_dalla_riserva(database, capsys):
+    """R108: se orologic_db.json mancava e il .bak c'era, si partiva dai
+    predefiniti, e il primo salvataggio copriva anche la riserva."""
+    _con_la_riserva(database, {"launch_count": 77})
+    database.unlink()
+    db = storage.LoadDB()
+    assert db["launch_count"] == 77
+    assert "ultima copia buona" in capsys.readouterr().out
+    assert json.loads(database.read_text(encoding="utf-8"))["launch_count"] == 77
+
+
+def test_la_riserva_che_non_si_lascia_leggere_non_si_copre(database, monkeypatch):
+    """R108: col database guasto e la riserva che in quel momento non si
+    lasciava leggere, si ripartiva dai predefiniti e li si scriveva sopra la
+    riserva buona."""
+    _con_la_riserva(database, {"launch_count": 77})
+    database.write_text("{ guasto", encoding="utf-8")
+    vera = builtins.open
+    riserva = storage.copia_di_riserva()
+
+    def bloccata(file, *a, **k):
+        if str(file) == riserva and not a:
+            raise PermissionError("tenuta da un altro programma")
+        return vera(file, *a, **k)
+
+    monkeypatch.setattr(builtins, "open", bloccata)
+    db = storage.UpdateDB(lambda d: d.update(launch_count=1))
+    monkeypatch.setattr(builtins, "open", vera)
+    assert isinstance(db, storage.DatabaseNonLetto)
+    with open(riserva, encoding="utf-8") as file:
+        assert json.load(file)["launch_count"] == 77
+
+
+def test_il_database_dei_predefiniti_non_scrive_la_riserva(database):
+    """R108: un database nato dai predefiniti, perche' il vero e la riserva
+    erano guasti, non si scrive sopra la riserva."""
+    _con_la_riserva(database, {"launch_count": 77})
+    with open(storage.copia_di_riserva(), "w", encoding="utf-8") as file:
+        file.write("{ guasta anche lei")
+    database.write_text("{ guasto", encoding="utf-8")
+    db = storage.LoadDB()
+    assert isinstance(db, storage.DatabasePredefinito)
+    assert storage.SaveDB(db)
+    with open(storage.copia_di_riserva(), encoding="utf-8") as file:
+        assert file.read() == "{ guasta anche lei"

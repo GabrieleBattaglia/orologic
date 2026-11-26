@@ -283,6 +283,12 @@ class DatabaseNonLetto(dict):
     lo sostituivano (R7)."""
 
 
+class DatabasePredefinito(dict):
+    """I predefiniti al posto di un database che manca, o che e' guasto,
+    senza una copia buona da cui ripartire: SaveDB li scrive nel database ma
+    non nella copia di riserva, che puo' tenere ancora i dati veri (R108)."""
+
+
 def _predefiniti():
     # Una copia profonda: con dict(DEFAULT_DB) gli orologi aggiunti finivano
     # nella lista dei predefiniti stessi.
@@ -313,12 +319,39 @@ def _leggi(percorso):
 
 
 def _dalla_riserva():
-    """Il database dell'ultima copia buona, o None."""
+    """Il database dell'ultima copia buona; None se non c'e' o e' guasta.
+    Un errore di lettura risale: la copia c'e', e i predefiniti scritti al
+    suo posto la coprivano (R108)."""
     try:
         dati = _leggi(copia_di_riserva())
-    except (OSError, ValueError):
+    except (FileNotFoundError, ValueError):
         return None
     return dati if isinstance(dati, dict) else None
+
+
+def _riserva_illeggibile(errore):
+    """La copia di riserva c'e' ma non si lascia leggere: niente si scrive,
+    per non coprirla."""
+    _di(_("Nemmeno l'ultima copia buona si lascia leggere: {errore}").format(errore=errore))
+    _di(_("Le modifiche non si salvano finche' il database non torna leggibile."))
+    return DatabaseNonLetto(_predefiniti())
+
+
+def _dalla_riserva_se_manca():
+    """Il database che manca: dall'ultima copia buona, se c'e', dicendolo, e
+    rimesso al suo posto; altrimenti i predefiniti. Prima i predefiniti, e
+    il primo salvataggio copriva anche la riserva (R108)."""
+    try:
+        riserva = _dalla_riserva()
+    except OSError as e:
+        return _riserva_illeggibile(e)
+    if riserva is None:
+        return DatabasePredefinito(_predefiniti())
+    _di(_("Il database delle impostazioni manca."))
+    _di(_("Riparto dall'ultima copia buona: {percorso}").format(percorso=copia_di_riserva()))
+    db, _scartati, _completati = _normalizza(riserva)
+    SaveDB(db)
+    return db
 
 
 def _da_danneggiato(errore):
@@ -330,14 +363,17 @@ def _da_danneggiato(errore):
         _di(_("Le modifiche non si salvano finche' il database non torna leggibile."))
         return DatabaseNonLetto(_predefiniti())
     _di(_("Ne ho messo da parte una copia in {percorso}").format(percorso=copia))
-    riserva = _dalla_riserva()
+    try:
+        riserva = _dalla_riserva()
+    except OSError as e:
+        return _riserva_illeggibile(e)
     if riserva is not None:
         _di(_("Riparto dall'ultima copia buona: {percorso}").format(percorso=copia_di_riserva()))
         db, _scartati, _completati = _normalizza(riserva)
         SaveDB(db)
         return db
     _di(_("Riparto dalle impostazioni predefinite, gli orologi salvati non sono andati perduti nella copia."))
-    return _predefiniti()
+    return DatabasePredefinito(_predefiniti())
 
 
 def LoadDB(silenziosa=False):
@@ -361,11 +397,11 @@ def LoadDB(silenziosa=False):
 
 def _carica():
     if not os.path.exists(config.DB_FILE):
-        return _predefiniti()
+        return _dalla_riserva_se_manca()
     try:
         dati = _leggi(config.DB_FILE)
     except FileNotFoundError:
-        return _predefiniti()
+        return _dalla_riserva_se_manca()
     except OSError as e:
         _di(_("Il database delle impostazioni non si lascia leggere: {errore}").format(errore=e))
         _di(_("Le modifiche non si salvano finche' il database non torna leggibile."))
@@ -431,8 +467,10 @@ def SaveDB(db):
         except (OSError, TypeError, ValueError) as e:
             print(_("Errore nel salvataggio del database: {errore}").format(errore=e))
             return False
-        with contextlib.suppress(OSError, TypeError, ValueError):
-            scrivi_json(copia_di_riserva(), db)
+        # Un database nato dai predefiniti non copre la riserva (R108).
+        if not isinstance(db, DatabasePredefinito):
+            with contextlib.suppress(OSError, TypeError, ValueError):
+                scrivi_json(copia_di_riserva(), db)
         return True
 
 
