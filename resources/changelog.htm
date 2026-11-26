@@ -19,6 +19,10 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 9</h2>
 <h3>Versione 9.5</h3>
+<h4>9.5.96 (26 novembre 2026)</h4>
+<ul>
+  <li>* [PGN gestione archivi] Una destinazione col nome fuori dalla codepage di Windows, con lettere come Č, Ł o ő, riceve davvero le partite anche sui dischi senza nomi corti: pgn-extract scrive in un file provvisorio dal nome semplice, che poi prende il posto della destinazione. Prima la destinazione restava vuota, con la riga Scritto, e le partite finivano in un file dal nome storpiato. Lo stesso per i file di -d, -n e degli altri parametri che scrivono.</li>
+</ul>
 <h4>9.5.95 (26 novembre 2026)</h4>
 <ul>
   <li>* [Braille] Con gli annunci alla barra, le righe di un annuncio passano tutte, una dopo l'altra, col loro tempo di lettura: prima ognuna sostituiva la precedente, e del benvenuto restava solo l'ultima.</li>

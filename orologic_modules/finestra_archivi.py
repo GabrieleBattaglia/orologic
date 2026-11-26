@@ -816,8 +816,11 @@ class FinestraArchivi(wx.Dialog):
                     nomi = ", ".join(esistenti[:5]) + (_(" e altri {n}").format(n=len(esistenti) - 5) if len(esistenti) > 5 else "")
                     righe.append(_("Nella cartella {cartella} ci sono gia' {nomi}: pgn-extract li sovrascriverebbe, o vi aggiungerebbe le partite. Scegli una cartella vuota.").format(cartella=cartella, nomi=nomi))
         # I file che pgn-extract non saprebbe aprire, nemmeno col nome corto
-        # 8.3: i sorgenti, e le cartelle dei file che scrive (R62).
+        # 8.3: i sorgenti e i file che legge per i parametri, come l'eco di
+        # -e, e le cartelle dei file che scrive (R62); i file che scrive
+        # hanno un provvisorio dal nome nella codepage (R105).
         da_aprire = [percorso for percorso in sorgenti if percorso]
+        da_aprire += [scelto.valore for scelto in self.scelti if scelto.parametro.valore == "file" and scelto.valore]
         da_aprire += [os.path.dirname(percorso) for percorso in (destinazione, *(scelto.valore for scelto in self.file_da_scrivere())) if percorso]
         illeggibile = next((percorso for percorso in da_aprire if os.path.exists(percorso) and pgn_extract.per_pe(percorso) is None), None)
         if illeggibile:
@@ -853,6 +856,18 @@ class FinestraArchivi(wx.Dialog):
             with self._dialogo():
                 self._avvisa(self, "\n".join(problemi))
             return
+        destinazione = self.percorso_della_destinazione()
+        uscita = pgn_extract.uscita_provvisoria(destinazione) if pgn_extract.scrive_la_destinazione(self.scelti) else None
+        sorgente = self.percorso_del_sorgente() if self.appunti is None else None
+        try:
+            # Il sorgente degli appunti nasce dopo, in un file temporaneo
+            # dal nome semplice: qui basta un nome che pe sappia aprire.
+            pgn_extract.argomenti(self.pe, self.scelti, sorgente or "appunti.pgn", uscita, per_pgn_extract=True)
+        except pgn_extract.NomeFuoriCodepage as errore:
+            suona("no")
+            with self._dialogo():
+                self._avvisa(self, _("pgn-extract non sa aprire {percorso}: il nome ha caratteri fuori dalla codepage di Windows. Rinomina il file, o la cartella, con lettere semplici.").format(percorso=errore.percorso))
+            return
         # I file dei parametri che ci sono gia' hanno la copia di sicurezza
         # prima del lavoro: pgn-extract li azzera appena parte (R6).
         copie_fatte = []
@@ -868,16 +883,14 @@ class FinestraArchivi(wx.Dialog):
                 copie_fatte.append(_("La copia di sicurezza di {file} e' {copia}.").format(file=scelto.valore, copia=copia))
         provvisorio = pgn_extract.file_degli_appunti(self.appunti) if self.appunti is not None else None
         sorgente = provvisorio or self.percorso_del_sorgente()
-        destinazione = self.percorso_della_destinazione()
-        uscita = None
-        if pgn_extract.scrive_la_destinazione(self.scelti):
-            uscita = pgn_extract.uscita_provvisoria(destinazione)
+        if uscita:
             cartella = os.path.dirname(destinazione)
         elif pgn_extract.serve_la_destinazione(self.scelti):
             cartella = destinazione if os.path.isdir(destinazione) else os.path.dirname(destinazione)
         else:
             cartella = os.path.dirname(os.path.abspath(sorgente))
         comando = pgn_extract.argomenti(self.pe, self.scelti, sorgente, uscita, per_pgn_extract=True)
+        provvisori = pgn_extract.file_provvisori(self.scelti)
         # Gli archivi veri da copiare a lavoro riuscito: non il file
         # provvisorio degli appunti.
         sorgenti = [] if provvisorio else [sorgente]
@@ -893,6 +906,7 @@ class FinestraArchivi(wx.Dialog):
 
         def nel_filo():
             try:
+                pgn_extract.prepara_i_provvisori(provvisori)
                 esito = pgn_extract.lavora(comando, cartella, resoconto, lambda partite: wx.CallAfter(self._avanzamento, partite), fermato.is_set)
             # pe e il disco possono fallire in modi imprevisti: il filo non
             # deve morire in silenzio con la finestra in attesa.
@@ -903,7 +917,7 @@ class FinestraArchivi(wx.Dialog):
             # archivi grandi, la finestra restava ferma proprio a lavoro
             # finito (R65).
             try:
-                righe, riuscito = self._dopo_il_lavoro(esito, uscita, destinazione, provvisorio, sorgenti, serve)
+                righe, riuscito = self._dopo_il_lavoro(esito, uscita, destinazione, provvisorio, sorgenti, serve, provvisori)
             except Exception as eccezione:  # noqa: BLE001
                 righe, riuscito = [str(eccezione)], False
             wx.CallAfter(self._finito, esito, righe, riuscito and serve)
@@ -920,10 +934,11 @@ class FinestraArchivi(wx.Dialog):
         if self._al_braille is not None and self.FindFocus() is self.uscita:
             self._al_braille(riga)
 
-    def _dopo_il_lavoro(self, esito, uscita, destinazione, provvisorio, sorgenti, serve):
+    def _dopo_il_lavoro(self, esito, uscita, destinazione, provvisorio, sorgenti, serve, provvisori=()):
         """Nel filo del lavoro, senza toccare la finestra: la destinazione
-        al suo posto, le copie dei sorgenti, i file provvisori via, e le
-        righe del resoconto. Restituisce (righe, riuscito)."""
+        al suo posto, e i file dei parametri dai loro provvisori (R105), le
+        copie dei sorgenti, i file provvisori via, e le righe del
+        resoconto. Restituisce (righe, riuscito)."""
         if provvisorio:
             try:
                 os.remove(provvisorio)
@@ -942,6 +957,7 @@ class FinestraArchivi(wx.Dialog):
             if uscita:
                 scritte, riuscito = self._sostituisci(uscita, destinazione, riuscito)
                 righe.extend(scritte)
+            righe.extend(pgn_extract.metti_i_provvisori(provvisori, riuscito))
             if riuscito and serve:
                 righe.extend(self._copie_dei_sorgenti(sorgenti))
             righe.append(_("Finito in {secondi:.1f} secondi.").format(secondi=esito.secondi))
@@ -951,6 +967,9 @@ class FinestraArchivi(wx.Dialog):
                 os.remove(uscita)
             except OSError:
                 pass
+        # Fermato o non partito: i provvisori dei parametri via, e i file
+        # veri come prima.
+        pgn_extract.metti_i_provvisori(provvisori, False)
         righe.append(_("Il resoconto completo e' in {percorso}.").format(percorso=esito.resoconto))
         return righe, riuscito
 

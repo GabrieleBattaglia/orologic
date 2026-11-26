@@ -622,3 +622,36 @@ def test_le_copie_a_lavoro_finito_si_fanno_nel_filo_del_lavoro(aperta, archivio,
     os.remove(dialogo.resoconto)
     if os.path.isfile(copia):
         os.remove(copia)
+
+
+@con_pe
+def test_la_destinazione_fuori_dalla_codepage_si_scrive_davvero(aperta, archivio, tmp_path, monkeypatch):
+    """R105, col pgn-extract vero e il disco senza nomi corti finto: la
+    destinazione che c'era riceve le partite, e il file dei doppioni di -d
+    anche, invece di restare a zero byte con le partite in un file dal nome
+    storpiato."""
+    monkeypatch.setattr(pgn_extract, "_nome_corto", lambda percorso: percorso)
+    prova = aperta(appunti=archivio, pe=PE_VERO, aiuto=None)
+    dialogo = prova.dialogo
+    destinazione = tmp_path / "Čech Łódź.pgn"
+    destinazione.write_text("il file di prima", encoding="utf-8")
+    dialogo.destinazione.ChangeValue(str(destinazione))
+    doppioni = tmp_path / "doppi Ł.pgn"
+    prova.aggiungi("-d")
+    prova.file_del_valore = str(doppioni)
+    prova.nella_catena(0)
+    dialogo.imposta_il_valore()
+    dialogo.applica()
+    assert pompa(lambda: not dialogo.in_corso(), 20)
+    righe = dialogo.uscita.GetValue().split("\n")
+    assert righe[0] == f"Scritto: {destinazione}.", righe
+    testo = destinazione.read_text(encoding="utf-8")
+    assert testo.count("[Event ") == 1
+    assert doppioni.read_text(encoding="utf-8").count("[Event ") == 1
+    for riga in righe:
+        for prefisso in ("La copia di sicurezza del file di prima e' ", "La copia di sicurezza del sorgente e' "):
+            if riga.startswith(prefisso):
+                os.remove(riga.removeprefix(prefisso).removesuffix("."))
+    os.remove(dialogo.resoconto)
+    # Nella cartella non resta niente di storpiato ne' di provvisorio.
+    assert sorted(os.listdir(tmp_path)) == sorted([os.path.basename(archivio), destinazione.name, doppioni.name])

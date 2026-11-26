@@ -30,6 +30,7 @@ Qui c'e' tutto quello che non e' finestra:
 import contextlib
 import dataclasses
 import filecmp
+import hashlib
 import html
 import json
 import os
@@ -40,6 +41,7 @@ import sys
 import tempfile
 import threading
 import time
+import unicodedata
 import urllib.error
 import urllib.request
 
@@ -749,18 +751,27 @@ def _nome_corto(percorso):
     return spazio.value
 
 
-def per_pe(percorso, crea=False):
+class NomeFuoriCodepage(ValueError):
+    """Un file che pgn-extract non saprebbe aprire: il nome ha caratteri
+    fuori dalla codepage di Windows, e il disco non ne da' il nome corto
+    8.3 (R105)."""
+
+    def __init__(self, percorso):
+        super().__init__(percorso)
+        self.percorso = percorso
+
+
+def per_pe(percorso):
     """Il percorso come pgn-extract lo sa aprire: com'e', se passa nella
     codepage di Windows; altrimenti col nome corto 8.3 del file, o della
-    sua cartella. crea fa nascere vuoto il file che pe scrivera', per
-    averne il nome corto. None se non c'e' verso. Prima un sorgente come
-    Kasparov in cirillico non si apriva, e restava un file d'uscita dal
-    nome storpiato (R62)."""
+    sua cartella. None se non c'e' verso. Prima un sorgente come Kasparov in
+    cirillico non si apriva, e restava un file d'uscita dal nome storpiato
+    (R62). I file che pe scrive hanno sempre un nome nella codepage, quello
+    di un file provvisorio: per averne il nome corto si creava il file vuoto,
+    e sui dischi senza nomi corti, come il disco E: del progetto, restava
+    vuoto al posto della destinazione (R105)."""
     if not percorso or _nella_codepage(percorso):
         return percorso
-    if crea and not os.path.exists(percorso):
-        with contextlib.suppress(OSError):
-            open(percorso, "a", encoding="utf-8").close()
     if os.path.exists(percorso):
         corto = _nome_corto(percorso)
         return corto if corto and _nella_codepage(corto) else None
@@ -771,19 +782,81 @@ def per_pe(percorso, crea=False):
     return None
 
 
+# I parametri che aggiungono le partite in fondo al loro file invece di
+# riscriverlo: il loro file provvisorio parte da una copia del file vero.
+AGGIUNGONO = ("-a", "-L")
+
+
+@dataclasses.dataclass
+class Provvisorio:
+    """Il file di un parametro che pe scrive, come -d o -n, col nome fuori
+    dalla codepage: pe scrive nel provvisorio, che a lavoro riuscito prende
+    il posto del vero (R105)."""
+
+    provvisorio: str
+    vero: str
+    aggiunge: bool = False
+
+
+def file_provvisori(scelti):
+    """I Provvisorio dei file che pe scrive per i parametri, quando il loro
+    nome non passa nella codepage di Windows."""
+    provvisori = []
+    for scelto in scelti:
+        if scelto.parametro.valore != "file_nuovo" or not scelto.valore:
+            continue
+        if not _nella_codepage(os.path.basename(scelto.valore)):
+            provvisori.append(Provvisorio(uscita_provvisoria(scelto.valore), scelto.valore, scelto.parametro.opzione in AGGIUNGONO))
+    return provvisori
+
+
+def prepara_i_provvisori(provvisori):
+    """Prima del lavoro: i provvisori dei parametri che aggiungono partono
+    dal file vero, se c'e'."""
+    for provvisorio in provvisori:
+        if provvisorio.aggiunge and os.path.isfile(provvisorio.vero):
+            shutil.copyfile(provvisorio.vero, provvisorio.provvisorio)
+
+
+def metti_i_provvisori(provvisori, riuscito):
+    """Dopo il lavoro: a lavoro riuscito ogni provvisorio al posto del suo
+    file vero, altrimenti via, e il vero resta com'era. Le righe di cio' che
+    non e' andato."""
+    righe = []
+    for provvisorio in provvisori:
+        if not os.path.exists(provvisorio.provvisorio):
+            continue
+        try:
+            if riuscito:
+                os.replace(provvisorio.provvisorio, provvisorio.vero)
+            else:
+                os.remove(provvisorio.provvisorio)
+        except OSError as errore:
+            righe.append(_("Il file {file} non si scrive: {motivo}").format(file=provvisorio.vero, motivo=errore))
+    return righe
+
+
 def argomenti(percorso_di_pe, scelti, sorgente, uscita, per_pgn_extract=False):
     """La riga di comando: pe, i parametri nell'ordine di scelta con -S
     davanti, -o con il file d'uscita se scrive la destinazione, e i file
     sorgente in fondo, il primo e gli altri file sorgente. per_pgn_extract,
     per il comando da lanciare, mette i nomi dei file come pe li sa aprire
-    (R62); senza, per la riga da leggere, restano quelli veri."""
+    (R62), e i file provvisori al posto di quelli che pe scrive col nome
+    fuori dalla codepage; un file che pe non saprebbe aprire solleva
+    NomeFuoriCodepage, perche' il nome vero gli arriverebbe storpiato e pe
+    scriverebbe in un altro file (R105). Senza, per la riga da leggere,
+    restano i nomi veri."""
     if per_pgn_extract:
+        provvisori = {provvisorio.vero: provvisorio.provvisorio for provvisorio in file_provvisori(scelti)}
 
-        def nome(percorso, crea=False):
-            return per_pe(percorso, crea) or percorso
+        def nome(percorso):
+            adatto = per_pe(provvisori.get(percorso, percorso))
+            if adatto is None:
+                raise NomeFuoriCodepage(percorso)
+            return adatto
     else:
 
-        def nome(percorso, crea=False):
+        def nome(percorso):
             return percorso
 
     ordinati = sorted(scelti, key=lambda scelto: 0 if scelto.parametro.opzione in PRIMA else 1)
@@ -799,7 +872,7 @@ def argomenti(percorso_di_pe, scelti, sorgente, uscita, per_pgn_extract=False):
         if parametro.opzione == "-e" and not valore:
             valore = percorso_eco()
         if valore and parametro.valore in ("file", "file_nuovo"):
-            valore = nome(valore, crea=parametro.valore == "file_nuovo")
+            valore = nome(valore)
         if not parametro.vuole_un_valore or not valore:
             comando.append(parametro.prefisso)
         elif parametro.separato:
@@ -807,7 +880,7 @@ def argomenti(percorso_di_pe, scelti, sorgente, uscita, per_pgn_extract=False):
         else:
             comando.append(parametro.prefisso + valore)
     if uscita and scrive_la_destinazione(scelti):
-        comando.append("-o" + nome(uscita, crea=True))
+        comando.append("-o" + nome(uscita))
     comando.extend(sorgenti)
     return comando
 
@@ -1184,8 +1257,17 @@ def copia_del_sorgente(sorgente):
 def uscita_provvisoria(destinazione):
     """Il file dove pe scrive, accanto alla destinazione: prende il suo
     posto solo se pe finisce bene, cosi' un lavoro fermato o fallito non
-    tocca la destinazione."""
-    return destinazione + ".pgn-extract.tmp"
+    tocca la destinazione. Il nome passa sempre nella codepage di Windows:
+    una destinazione come Čech Łódź.pgn ha un provvisorio in lettere
+    semplici, con l'impronta del nome vero, perche' pe lo riceva com'e'
+    (R105)."""
+    cartella, nome = os.path.split(destinazione)
+    if not _nella_codepage(nome):
+        semplice = unicodedata.normalize("NFKD", nome).encode("ascii", "ignore").decode("ascii")
+        semplice = re.sub(r"[^A-Za-z0-9 ._()-]", "_", semplice).strip() or "orologic"
+        impronta = hashlib.sha256(nome.encode("utf-8")).hexdigest()[:8]
+        nome = f"{semplice} {impronta}"
+    return os.path.join(cartella, nome + ".pgn-extract.tmp")
 
 
 def sostituisci(provvisoria, destinazione):

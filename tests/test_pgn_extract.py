@@ -596,3 +596,42 @@ def test_i_nomi_fuori_dalla_codepage_arrivano_a_pe_col_nome_corto(tmp_path):
     assert all(parte.encode("mbcs") for parte in comando)
     subprocess.run(comando, cwd=str(tmp_path), capture_output=True, timeout=60, check=False)
     assert "1. e4 e5" in (cartella / "uscita è.pgn.pgn-extract.tmp").read_text(encoding="utf-8", errors="replace")
+
+
+def test_i_nomi_fuori_dalla_codepage_sui_dischi_senza_nomi_corti(tmp_path, monkeypatch):
+    """R105: sui dischi senza nomi corti 8.3, come il disco E: del progetto,
+    GetShortPathNameW restituisce il nome lungo. Una destinazione come Čech
+    Łódź.pgn veniva svuotata: per_pe creava il file vuoto per averne il nome
+    corto, non lo trovava, argomenti ripiegava sul nome vero, e pgn-extract
+    lo riceveva storpiato e scriveva in un altro file. Qui il disco senza
+    nomi corti si finge."""
+    monkeypatch.setattr(pgn_extract, "_nome_corto", lambda percorso: percorso)
+    sorgente = tmp_path / "sorgente.pgn"
+    sorgente.write_text(ARCHIVIO, encoding="utf-8")
+    destinazione = tmp_path / "Čech Łódź.pgn"
+    uscita = pgn_extract.uscita_provvisoria(str(destinazione))
+    assert os.path.dirname(uscita) == str(tmp_path)
+    assert pgn_extract._nella_codepage(uscita)
+    comando = pgn_extract.argomenti(PE_VERO, [], str(sorgente), uscita, per_pgn_extract=True)
+    assert all(pgn_extract._nella_codepage(parte) for parte in comando)
+    # Nessun file vuoto nato per cercarne il nome corto.
+    assert sorted(os.listdir(tmp_path)) == ["sorgente.pgn"]
+    # Due destinazioni diverse non hanno lo stesso file provvisorio.
+    assert pgn_extract.uscita_provvisoria(str(tmp_path / "Čech Łódz.pgn")) != uscita
+    # Un file che pe non saprebbe aprire non gli arriva mai col nome vero.
+    illeggibile = tmp_path / "Каспаров.pgn"
+    illeggibile.write_text(ARCHIVIO, encoding="utf-8")
+    with pytest.raises(pgn_extract.NomeFuoriCodepage) as errore:
+        pgn_extract.argomenti(PE_VERO, [], str(illeggibile), uscita, per_pgn_extract=True)
+    assert errore.value.percorso == str(illeggibile)
+    # I file dei parametri che pe scrive, col nome fuori dalla codepage,
+    # passano da un provvisorio in lettere semplici.
+    elenco = _per_voce(pgn_extract.parametri(AIUTO + "-dfile -- write duplicate games to file.\n"))
+    doppioni = tmp_path / "doppi Ł.pgn"
+    scelti = [pgn_extract.Scelto(elenco["-d"], str(doppioni))]
+    provvisori = pgn_extract.file_provvisori(scelti)
+    assert len(provvisori) == 1 and provvisori[0].vero == str(doppioni)
+    assert pgn_extract._nella_codepage(provvisori[0].provvisorio)
+    comando = pgn_extract.argomenti(PE_VERO, scelti, str(sorgente), uscita, per_pgn_extract=True)
+    assert "-d" + provvisori[0].provvisorio in comando or provvisori[0].provvisorio in comando
+    assert all(pgn_extract._nella_codepage(parte) for parte in comando)
