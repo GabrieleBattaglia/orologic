@@ -357,7 +357,9 @@ format_pv_descriptively = board_utils.format_pv_descriptively
 def read_diagonal(origine, base_column, direction_right):
     board = scacchiera_di(origine)
     base_column = base_column.lower()
-    if base_column not in "abcdefgh":
+    # Una colonna e' una lettera sola: la stringa vuota, con / o \ da soli,
+    # era "in" ogni stringa, e ord la faceva cadere (R10).
+    if len(base_column) != 1 or base_column not in "abcdefgh":
         print(_("Colonna base non valida."))
         return
     file_index = ord(base_column) - ord("a")
@@ -424,7 +426,7 @@ def read_rank(origine, rank_number):
 def read_file(origine, file_letter):
     board = scacchiera_di(origine)
     file_letter = file_letter.lower()
-    if file_letter not in "abcdefgh":
+    if len(file_letter) != 1 or file_letter not in "abcdefgh":
         print(_("Colonna non valida."))
         return
     report = []
