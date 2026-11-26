@@ -1110,3 +1110,25 @@ def test_se_il_salvataggio_all_uscita_fallisce_la_finestra_resta(prova, tmp_path
     d._chiudi()
     assert d.IsShown() and d.ricerca.archivio.modificato
     assert p.avvisi[-1].endswith("Le modifiche restano: puoi riprovare.")
+
+
+def test_i_rami_grandi_dei_problemi_vanno_a_blocchi(prova, tmp_path, monkeypatch):
+    """R66: una voce per partita senza limite; con un'intestazione mancante
+    in tutte nascevano decine di migliaia di voci. Ripara da un blocco
+    ripara ancora tutto il ramo."""
+    monkeypatch.setattr(archivio_pgn.config, "percorso_salvataggio", lambda nome: str(tmp_path / nome))
+    file = tmp_path / "senza_sede.pgn"
+    partita = '[Event "E"]\n[Date "2024.01.01"]\n[Round "{n}"]\n[White "A{n}"]\n[Black "B"]\n[Result "*"]\n\n1. e4 *\n\n'
+    file.write_text("".join(partita.format(n=n) for n in range(1200)), encoding="utf-8")
+    p = prova(archivio_pgn.Ricerca(), str(file))
+    d = p.dialogo
+    assert pompa(lambda: d.ricerca.archivio is not None and not d.in_corso(), 20)
+    assert p.finiti_i_doppioni()
+    ramo = p.voce("Con errori", "Intestazioni obbligatorie mancanti")
+    assert p.testi(ramo) == ["Partite da 1 a 500", "Partite da 501 a 1000", "Partite da 1001 a 1200"]
+    blocco = p.voce("Con errori", "Intestazioni obbligatorie mancanti", "Partite da 1001")
+    assert len(p.testi(blocco)) == 200
+    d.albero.SelectItem(next(iter(d.figli(blocco))))
+    d.ripara()
+    assert pompa(lambda: not d.in_corso() and p.avvisi, 20)
+    assert p.avvisi[-1].split("\n")[0] == "Intestazioni aggiunte: 1200 partite."

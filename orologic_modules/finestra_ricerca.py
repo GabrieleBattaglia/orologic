@@ -56,6 +56,9 @@ from .config import _
 # aspetta fra una cifra e l'altra dell'anno scritto.
 ANNI = ("year_from", "year_to")
 PAUSA_FRA_LE_CIFRE = 1.5
+# Oltre questo numero le partite di un gruppo o di un tipo di problema
+# stanno in blocchi di questa misura (R66).
+PARTITE_PER_BLOCCO = 500
 
 SUONI = {
     # Come il no della pulizia: un'azione che adesso non si puo' fare.
@@ -788,7 +791,9 @@ class FinestraRicerca(wx.Dialog):
             if senza_eco:
                 figlio = Nodo("senza_eco", "mosse", senza_eco, linee=archivio.linee_di(senza_eco))
                 self._aggiungi(voce, archivio_pgn.voce_del_gruppo(_("Senza codice ECO"), len(senza_eco)), figlio, True)
-        elif nodo.tipo == "gruppo":
+        elif nodo.tipo == "gruppo" and len(nodo.indici) > PARTITE_PER_BLOCCO:
+            self._aggiungi_i_blocchi(voce, nodo)
+        elif nodo.tipo == "gruppo" or (nodo.tipo == "blocco" and nodo.problema is None):
             for indice in nodo.indici:
                 self._aggiungi(voce, archivio.partita(indice), Nodo(("partita", indice), "foglia", [indice], partita=indice))
         elif nodo.tipo == "problemi":
@@ -796,10 +801,23 @@ class FinestraRicerca(wx.Dialog):
             for tipo, nome in archivio_pgn.tipi_dei_problemi():
                 if trovati.get(tipo):
                     self._aggiungi(voce, archivio_pgn.voce_del_gruppo(nome, len(trovati[tipo])), Nodo(tipo, "problema", trovati[tipo], problema=tipo), True)
-        elif nodo.tipo == "problema":
+        elif nodo.tipo == "problema" and len(nodo.indici) > PARTITE_PER_BLOCCO:
+            self._aggiungi_i_blocchi(voce, nodo)
+        elif nodo.tipo in ("problema", "blocco"):
             for indice in nodo.indici:
                 foglia = Nodo(("partita", indice), "foglia", [indice], partita=indice, problema=nodo.problema)
                 self._aggiungi(voce, archivio_pgn.voce_del_problema(archivio, indice, nodo.problema), foglia)
+
+    def _aggiungi_i_blocchi(self, voce, nodo):
+        """Un gruppo o un tipo di problema con troppe partite, a blocchi:
+        prima c'era una voce per partita senza limite, e con un'intestazione
+        mancante in tutte nascevano decine di migliaia di voci (R66). Il
+        blocco tiene il problema del ramo, ma non e' il ramo: Ripara, da li'
+        dentro, ripara ancora tutto il ramo."""
+        for inizio in range(0, len(nodo.indici), PARTITE_PER_BLOCCO):
+            indici = nodo.indici[inizio : inizio + PARTITE_PER_BLOCCO]
+            testo = _("Partite da {primo} a {ultimo}").format(primo=inizio + 1, ultimo=inizio + len(indici))
+            self._aggiungi(voce, testo, Nodo(("blocco", inizio), "blocco", indici, problema=nodo.problema), True)
 
     def _aggiungi_le_mosse(self, voce, percorso, indici, linee):
         """Le mosse dalla piu' giocata, poi le partite che finiscono li', e

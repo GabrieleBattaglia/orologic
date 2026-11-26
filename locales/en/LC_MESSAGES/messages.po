@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-26 08:10+0100\n"
+"POT-Creation-Date: 2026-11-26 08:13+0100\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -474,7 +474,7 @@ msgid "Errore nel download: {e}"
 msgstr "Download error: {e}"
 
 #: orologic_modules/archivio_pgn.py:169
-#: orologic_modules/finestra_ricerca.py:485 orologic_modules/pgn_search.py:108
+#: orologic_modules/finestra_ricerca.py:488 orologic_modules/pgn_search.py:108
 msgid "Gli appunti sono vuoti."
 msgstr "The clipboard is empty."
 
@@ -1616,8 +1616,8 @@ msgstr "News (changelog)"
 msgid "Orologi (crea, vedi, elimina)"
 msgstr "Clocks (create, view, delete)"
 
-#: orologic_modules/config.py:223 orologic_modules/finestra_ricerca.py:139
-#: orologic_modules/finestra_ricerca.py:311 orologic_modules/pgn_search.py:48
+#: orologic_modules/config.py:223 orologic_modules/finestra_ricerca.py:142
+#: orologic_modules/finestra_ricerca.py:314 orologic_modules/pgn_search.py:48
 msgid "Ricerca PGN"
 msgstr "PGN search"
 
@@ -1962,8 +1962,8 @@ msgstr ""
 #: orologic_modules/finestra_navigatore.py:76
 #: orologic_modules/finestra_orologi.py:198
 #: orologic_modules/finestra_pulizia.py:114
-#: orologic_modules/finestra_ricerca.py:240
-#: orologic_modules/finestra_ricerca.py:338
+#: orologic_modules/finestra_ricerca.py:243
+#: orologic_modules/finestra_ricerca.py:341
 #: orologic_modules/finestra_scacchiera.py:302
 #: orologic_modules/finestra_scacchiera.py:329
 msgid "Chiudi"
@@ -3253,12 +3253,12 @@ msgid "Linea"
 msgstr "Line"
 
 #: orologic_modules/finestra_aperture.py:61
-#: orologic_modules/finestra_ricerca.py:235
+#: orologic_modules/finestra_ricerca.py:238
 msgid "Analisi &manuale"
 msgstr "&Manual analysis"
 
 #: orologic_modules/finestra_aperture.py:62
-#: orologic_modules/finestra_ricerca.py:235
+#: orologic_modules/finestra_ricerca.py:238
 msgid "Passa a &Easyfish"
 msgstr "Send to &Easyfish"
 
@@ -3273,8 +3273,8 @@ msgstr "PGN archive management"
 
 #: orologic_modules/finestra_archivi.py:90
 #: orologic_modules/finestra_archivi.py:102
-#: orologic_modules/finestra_ricerca.py:139
-#: orologic_modules/finestra_ricerca.py:151
+#: orologic_modules/finestra_ricerca.py:142
+#: orologic_modules/finestra_ricerca.py:154
 msgid "Partite PGN (*.pgn)|*.pgn|Tutti i file (*.*)|*.*"
 msgstr "PGN games (*.pgn)|*.pgn|All files (*.*)|*.*"
 
@@ -3355,7 +3355,7 @@ msgid "Se&leziona il file"
 msgstr "Se&lect the file"
 
 #: orologic_modules/finestra_archivi.py:296
-#: orologic_modules/finestra_ricerca.py:378
+#: orologic_modules/finestra_ricerca.py:381
 msgid "Dagli &appunti"
 msgstr "From &clipboard"
 
@@ -3589,90 +3589,90 @@ msgstr "The backup copy of {file} is {copia}."
 msgid "pgn-extract al lavoro..."
 msgstr "pgn-extract at work..."
 
-#: orologic_modules/finestra_archivi.py:907
+#: orologic_modules/finestra_archivi.py:917
 #, python-brace-format
 msgid "pgn-extract al lavoro: {n} partite riportate."
 msgstr "pgn-extract at work: {n} games reported."
 
-#: orologic_modules/finestra_archivi.py:926
+#: orologic_modules/finestra_archivi.py:935
 #, python-brace-format
 msgid "pgn-extract non e' partito: {motivo}"
 msgstr "pgn-extract did not start: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:928
+#: orologic_modules/finestra_archivi.py:937
 msgid "Fermato: la destinazione non e' cambiata."
 msgstr "Stopped: the destination has not changed."
 
-#: orologic_modules/finestra_archivi.py:931
+#: orologic_modules/finestra_archivi.py:940
 #, python-brace-format
 msgid "pgn-extract ha finito col codice {codice}."
 msgstr "pgn-extract finished with code {codice}."
 
-#: orologic_modules/finestra_archivi.py:940
+#: orologic_modules/finestra_archivi.py:947
 #, python-brace-format
 msgid "Finito in {secondi:.1f} secondi."
 msgstr "Finished in {secondi:.1f} seconds."
 
-#: orologic_modules/finestra_archivi.py:947
+#: orologic_modules/finestra_archivi.py:954
 #, python-brace-format
 msgid "Il resoconto completo e' in {percorso}."
 msgstr "The full report is in {percorso}."
 
-#: orologic_modules/finestra_archivi.py:962
+#: orologic_modules/finestra_archivi.py:980
 msgid "La destinazione non e' cambiata."
 msgstr "The destination has not changed."
 
-#: orologic_modules/finestra_archivi.py:966
+#: orologic_modules/finestra_archivi.py:984
 #, python-brace-format
 msgid "La destinazione non si scrive: {motivo}"
 msgstr "The destination cannot be written: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:967
+#: orologic_modules/finestra_archivi.py:985
 #, python-brace-format
 msgid "Scritto: {destinazione}."
 msgstr "Written: {destinazione}."
 
-#: orologic_modules/finestra_archivi.py:969
+#: orologic_modules/finestra_archivi.py:987
 #, python-brace-format
 msgid "La copia di sicurezza del file di prima e' {copia}."
 msgstr "The backup copy of the previous file is {copia}."
 
-#: orologic_modules/finestra_archivi.py:981
+#: orologic_modules/finestra_archivi.py:999
 #, python-brace-format
 msgid "La copia di sicurezza di {sorgente} non si fa: {motivo}"
 msgstr "The backup copy of {sorgente} cannot be made: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:984
+#: orologic_modules/finestra_archivi.py:1002
 #, python-brace-format
 msgid "La copia di sicurezza del sorgente e' {copia}."
 msgstr "The backup copy of the source is {copia}."
 
-#: orologic_modules/finestra_archivi.py:986
+#: orologic_modules/finestra_archivi.py:1004
 #, python-brace-format
 msgid "Il sorgente ha gia' la sua copia di sicurezza, uguale: {copia}."
 msgstr "The source already has its backup copy, identical: {copia}."
 
-#: orologic_modules/finestra_archivi.py:994
+#: orologic_modules/finestra_archivi.py:1012
 msgid "Il resoconto c'e' dopo il primo lavoro."
 msgstr "The report is there after the first job."
 
-#: orologic_modules/finestra_archivi.py:1002
+#: orologic_modules/finestra_archivi.py:1020
 msgid "Resoconto di pgn-extract"
 msgstr "pgn-extract report"
 
-#: orologic_modules/finestra_archivi.py:1013
-#: orologic_modules/finestra_archivi.py:1024
+#: orologic_modules/finestra_archivi.py:1031
+#: orologic_modules/finestra_archivi.py:1042
 msgid "La guida di pgn-extract non c'e': si scarica insieme a pgn-extract."
 msgstr ""
 "The pgn-extract guide is not here: it is downloaded together with pgn-"
 "extract."
 
-#: orologic_modules/finestra_archivi.py:1017
+#: orologic_modules/finestra_archivi.py:1035
 #, python-brace-format
 msgid "La guida non ha una sezione per {voce}."
 msgstr "The guide has no section for {voce}."
 
-#: orologic_modules/finestra_archivi.py:1026
+#: orologic_modules/finestra_archivi.py:1044
 msgid "Guida di pgn-extract"
 msgstr "pgn-extract guide"
 
@@ -4232,99 +4232,99 @@ msgstr "Move the file older than {durata}, {peso}, to the Recycle Bin?"
 msgid "Mando nel cestino i {n} file piu' vecchi di {durata}, {peso}?"
 msgstr "Move the {n} files older than {durata}, {peso}, to the Recycle Bin?"
 
-#: orologic_modules/finestra_ricerca.py:78
+#: orologic_modules/finestra_ricerca.py:81
 msgid "Cerca testo"
 msgstr "Search text"
 
 #: orologic_modules/easyfish/pgn_handler.py:155
-#: orologic_modules/finestra_ricerca.py:79 orologic_modules/pgn_search.py:664
+#: orologic_modules/finestra_ricerca.py:82 orologic_modules/pgn_search.py:664
 msgid "Nome giocatore Bianco (vuoto=qualsiasi): "
 msgstr "White player name (blank=any): "
 
 #: orologic_modules/easyfish/pgn_handler.py:158
-#: orologic_modules/finestra_ricerca.py:80 orologic_modules/pgn_search.py:670
+#: orologic_modules/finestra_ricerca.py:83 orologic_modules/pgn_search.py:670
 msgid "Nome giocatore Nero (vuoto=qualsiasi): "
 msgstr "Black player name (blank=any): "
 
-#: orologic_modules/finestra_ricerca.py:81 orologic_modules/pgn_search.py:677
+#: orologic_modules/finestra_ricerca.py:84 orologic_modules/pgn_search.py:677
 msgid "Nome giocatore (cerca in bianco E nero, vuoto=qualsiasi): "
 msgstr "Player name (searches as both White and Black, blank=any): "
 
 #: orologic_modules/easyfish/pgn_handler.py:168
-#: orologic_modules/finestra_ricerca.py:82 orologic_modules/pgn_search.py:693
+#: orologic_modules/finestra_ricerca.py:85 orologic_modules/pgn_search.py:693
 msgid "Scegli risultato: "
 msgstr "Choose result: "
 
-#: orologic_modules/finestra_ricerca.py:83 orologic_modules/pgn_search.py:702
+#: orologic_modules/finestra_ricerca.py:86 orologic_modules/pgn_search.py:702
 msgid "ELO minimo (0=nessun limite): "
 msgstr "Minimum ELO (0=no limit): "
 
-#: orologic_modules/finestra_ricerca.py:84 orologic_modules/pgn_search.py:715
+#: orologic_modules/finestra_ricerca.py:87 orologic_modules/pgn_search.py:715
 msgid "ELO massimo (0=nessun limite): "
 msgstr "Maximum ELO (0=no limit): "
 
-#: orologic_modules/finestra_ricerca.py:85 orologic_modules/pgn_search.py:727
+#: orologic_modules/finestra_ricerca.py:88 orologic_modules/pgn_search.py:727
 msgid "Nome evento (vuoto=qualsiasi): "
 msgstr "Event Name (blank=any): "
 
-#: orologic_modules/finestra_ricerca.py:86
+#: orologic_modules/finestra_ricerca.py:89
 msgid "Anno dal"
 msgstr "Year from"
 
-#: orologic_modules/finestra_ricerca.py:87
+#: orologic_modules/finestra_ricerca.py:90
 msgid "Anno al"
 msgstr "Year to"
 
-#: orologic_modules/finestra_ricerca.py:88 orologic_modules/pgn_search.py:756
+#: orologic_modules/finestra_ricerca.py:91 orologic_modules/pgn_search.py:756
 msgid "Codice ECO (es. 'B', 'B90', vuoto=qualsiasi): "
 msgstr "ECO code (e.g. 'B', 'B90', blank=any): "
 
-#: orologic_modules/finestra_ricerca.py:89
+#: orologic_modules/finestra_ricerca.py:92
 msgid "Con almeno queste mosse (0=nessun limite): "
 msgstr "With at least these moves (0=no limit): "
 
-#: orologic_modules/finestra_ricerca.py:90
+#: orologic_modules/finestra_ricerca.py:93
 msgid "Con meno di queste mosse (0=nessun limite): "
 msgstr "With fewer than these moves (0=no limit): "
 
-#: orologic_modules/finestra_ricerca.py:91
+#: orologic_modules/finestra_ricerca.py:94
 msgid "Terminata con il matto"
 msgstr "Ended in checkmate"
 
-#: orologic_modules/finestra_ricerca.py:92
+#: orologic_modules/finestra_ricerca.py:95
 msgid "Con promozione"
 msgstr "With promotion"
 
 #: orologic_modules/easyfish/pgn_handler.py:165
-#: orologic_modules/finestra_ricerca.py:99 orologic_modules/pgn_search.py:690
+#: orologic_modules/finestra_ricerca.py:102 orologic_modules/pgn_search.py:690
 msgid "Qualsiasi risultato"
 msgstr "Any result"
 
 #: orologic_modules/easyfish/pgn_handler.py:162
-#: orologic_modules/finestra_ricerca.py:100 orologic_modules/pgn_search.py:687
+#: orologic_modules/finestra_ricerca.py:103 orologic_modules/pgn_search.py:687
 msgid "Vittoria Bianco (1-0)"
 msgstr "White Victory (1-0)"
 
 #: orologic_modules/easyfish/pgn_handler.py:163
-#: orologic_modules/finestra_ricerca.py:101 orologic_modules/pgn_search.py:688
+#: orologic_modules/finestra_ricerca.py:104 orologic_modules/pgn_search.py:688
 msgid "Vittoria Nero (0-1)"
 msgstr "Black victory (0-1)"
 
 #: orologic_modules/easyfish/pgn_handler.py:164
-#: orologic_modules/finestra_ricerca.py:102 orologic_modules/pgn_search.py:689
+#: orologic_modules/finestra_ricerca.py:105 orologic_modules/pgn_search.py:689
 msgid "Patta (1/2-1/2)"
 msgstr "Draw (1/2-1/2)"
 
-#: orologic_modules/finestra_ricerca.py:103
+#: orologic_modules/finestra_ricerca.py:106
 msgid "Non specificato (*)"
 msgstr "Unspecified (*)"
 
-#: orologic_modules/finestra_ricerca.py:151
-#: orologic_modules/finestra_ricerca.py:394
+#: orologic_modules/finestra_ricerca.py:154
+#: orologic_modules/finestra_ricerca.py:397
 msgid "&Salva il PGN"
 msgstr "&Save PGN"
 
-#: orologic_modules/finestra_ricerca.py:178
+#: orologic_modules/finestra_ricerca.py:181
 #, python-brace-format
 msgid ""
 "Hai modificato l'archivio. Salvo le modifiche nel file {percorso}? Se "
@@ -4333,7 +4333,7 @@ msgstr ""
 "You have changed the archive. Shall I save the changes in the file "
 "{percorso}? If you answer no, they are lost."
 
-#: orologic_modules/finestra_ricerca.py:182
+#: orologic_modules/finestra_ricerca.py:185
 msgid ""
 "Prima di salvare faccio una copia di sicurezza del file, nella cartella pgn "
 "di Orologic?"
@@ -4341,34 +4341,34 @@ msgstr ""
 "Before saving, shall I make a backup copy of the file, in the pgn folder of "
 "Orologic?"
 
-#: orologic_modules/finestra_ricerca.py:188
-#: orologic_modules/finestra_ricerca.py:967
+#: orologic_modules/finestra_ricerca.py:191
+#: orologic_modules/finestra_ricerca.py:985
 #: orologic_modules/pgn_search.py:1366
 #, python-brace-format
 msgid "Errore nel salvataggio: {e}"
 msgstr "Save error: {e}"
 
-#: orologic_modules/finestra_ricerca.py:188
+#: orologic_modules/finestra_ricerca.py:191
 msgid "Le modifiche restano: puoi riprovare."
 msgstr "The changes are kept: you can try again."
 
-#: orologic_modules/finestra_ricerca.py:220
-#: orologic_modules/finestra_ricerca.py:227
-#: orologic_modules/finestra_ricerca.py:229
+#: orologic_modules/finestra_ricerca.py:223
+#: orologic_modules/finestra_ricerca.py:230
+#: orologic_modules/finestra_ricerca.py:232
 #: orologic_modules/pgn_search.py:1377
 msgid "Partita selezionata"
 msgstr "Selected game"
 
-#: orologic_modules/finestra_ricerca.py:235
+#: orologic_modules/finestra_ricerca.py:238
 msgid "Analisi &automatica"
 msgstr "&Automatic analysis"
 
-#: orologic_modules/finestra_ricerca.py:268
+#: orologic_modules/finestra_ricerca.py:271
 #, python-brace-format
 msgid "La partita corretta non e' valida: {motivo}"
 msgstr "The corrected game is not valid: {motivo}"
 
-#: orologic_modules/finestra_ricerca.py:269
+#: orologic_modules/finestra_ricerca.py:272
 msgid ""
 "Torno alla partita per correggerla? Se rispondi no, le correzioni si "
 "perdono."
@@ -4376,102 +4376,107 @@ msgstr ""
 "Shall I go back to the game to correct it? If you answer no, the corrections"
 " are lost."
 
-#: orologic_modules/finestra_ricerca.py:273
+#: orologic_modules/finestra_ricerca.py:276
 msgid "La partita e' cambiata. La salvo nell'archivio?"
 msgstr "The game has changed. Shall I save it in the archive?"
 
-#: orologic_modules/finestra_ricerca.py:333
+#: orologic_modules/finestra_ricerca.py:336
 msgid "Partite"
 msgstr "Games"
 
-#: orologic_modules/finestra_ricerca.py:334 orologic_modules/pgn_search.py:604
+#: orologic_modules/finestra_ricerca.py:337 orologic_modules/pgn_search.py:604
 msgid "Filtri"
 msgstr "Filters"
 
-#: orologic_modules/finestra_ricerca.py:377
+#: orologic_modules/finestra_ricerca.py:380
 msgid "Apri &file"
 msgstr "Open &file"
 
-#: orologic_modules/finestra_ricerca.py:382
-#: orologic_modules/finestra_ricerca.py:384
+#: orologic_modules/finestra_ricerca.py:385
+#: orologic_modules/finestra_ricerca.py:387
 msgid "Archivio"
 msgstr "Archive"
 
-#: orologic_modules/finestra_ricerca.py:386
 #: orologic_modules/finestra_ricerca.py:389
-#: orologic_modules/finestra_ricerca.py:629
-#: orologic_modules/finestra_ricerca.py:743
+#: orologic_modules/finestra_ricerca.py:392
+#: orologic_modules/finestra_ricerca.py:632
+#: orologic_modules/finestra_ricerca.py:746
 msgid "Nessun archivio caricato."
 msgstr "No archive loaded."
 
-#: orologic_modules/finestra_ricerca.py:392
+#: orologic_modules/finestra_ricerca.py:395
 msgid "&Inizio"
 msgstr "S&tart"
 
-#: orologic_modules/finestra_ricerca.py:393
-#: orologic_modules/finestra_ricerca.py:940
+#: orologic_modules/finestra_ricerca.py:396
+#: orologic_modules/finestra_ricerca.py:958
 msgid "Partite del &ramo"
 msgstr "Branch &games"
 
-#: orologic_modules/finestra_ricerca.py:395
+#: orologic_modules/finestra_ricerca.py:398
 msgid "&Percorso"
 msgstr "&Path"
 
-#: orologic_modules/finestra_ricerca.py:396
+#: orologic_modules/finestra_ricerca.py:399
 msgid "C&lassifica"
 msgstr "C&lassify"
 
-#: orologic_modules/finestra_ricerca.py:397
+#: orologic_modules/finestra_ricerca.py:400
 msgid "Ripara gli &errori"
 msgstr "Repair &errors"
 
-#: orologic_modules/finestra_ricerca.py:435
+#: orologic_modules/finestra_ricerca.py:438
 msgid "Appli&ca i filtri"
 msgstr "&Apply filters"
 
-#: orologic_modules/finestra_ricerca.py:436
+#: orologic_modules/finestra_ricerca.py:439
 msgid "A&zzera i filtri"
 msgstr "&Reset filters"
 
-#: orologic_modules/finestra_ricerca.py:481 orologic_modules/pgn_search.py:104
+#: orologic_modules/finestra_ricerca.py:484 orologic_modules/pgn_search.py:104
 msgid "Impossibile accedere agli appunti."
 msgstr "Unable to access clipboard."
 
-#: orologic_modules/finestra_ricerca.py:524 orologic_modules/pgn_search.py:210
+#: orologic_modules/finestra_ricerca.py:527 orologic_modules/pgn_search.py:210
 msgid "Analisi del PGN in corso..."
 msgstr "PGN analysis in progress..."
 
-#: orologic_modules/finestra_ricerca.py:734 orologic_modules/pgn_search.py:656
+#: orologic_modules/finestra_ricerca.py:737 orologic_modules/pgn_search.py:656
 msgid "Tutti i filtri sono stati rimossi (azzerati)."
 msgstr "All filters have been removed (reset)."
 
 #: orologic_modules/easyfish/pgn_handler.py:181
-#: orologic_modules/finestra_ricerca.py:750 orologic_modules/pgn_search.py:606
+#: orologic_modules/finestra_ricerca.py:753 orologic_modules/pgn_search.py:606
 #, python-brace-format
 msgid "Partite corrispondenti: {n} di {tot} ({pct:.2f}%)"
 msgstr "Matching games: {n} of {tot} ({pct:.2f}%)"
 
-#: orologic_modules/finestra_ricerca.py:785
+#: orologic_modules/finestra_ricerca.py:788
 msgid "Senza mosse"
 msgstr "Without moves"
 
-#: orologic_modules/finestra_ricerca.py:785
+#: orologic_modules/finestra_ricerca.py:788
 msgid "Da una posizione di studio"
 msgstr "From a study position"
 
-#: orologic_modules/finestra_ricerca.py:790
+#: orologic_modules/finestra_ricerca.py:793
 msgid "Senza codice ECO"
 msgstr "Without ECO code"
 
-#: orologic_modules/finestra_ricerca.py:831
+#: orologic_modules/finestra_ricerca.py:819
+#, python-brace-format
+msgid "Partite da {primo} a {ultimo}"
+msgstr "Games {primo} to {ultimo}"
+
+#: orologic_modules/finestra_ricerca.py:849
 msgid "Non classificate"
 msgstr "Unclassified"
 
-#: orologic_modules/finestra_ricerca.py:904
+#: orologic_modules/finestra_ricerca.py:922
 msgid "Partita salvata nell'archivio."
 msgstr "Game saved in the archive."
 
-#: orologic_modules/finestra_ricerca.py:953
+#: orologic_modules/finestra_ricerca.py:971
 #: orologic_modules/pgn_search.py:1330
 msgid ""
 "\n"
@@ -4480,64 +4485,64 @@ msgstr ""
 "\n"
 "Warning: there are no active filters. The saved file would be a copy of the original archive."
 
-#: orologic_modules/finestra_ricerca.py:955
+#: orologic_modules/finestra_ricerca.py:973
 msgid "Salvo lo stesso?"
 msgstr "Save anyway?"
 
-#: orologic_modules/finestra_ricerca.py:969
+#: orologic_modules/finestra_ricerca.py:987
 #: orologic_modules/pgn_search.py:1362
 #, python-brace-format
 msgid "Salvate {n} partite in: {path}"
 msgstr "Saved {n} games in: {path}"
 
-#: orologic_modules/finestra_ricerca.py:990
+#: orologic_modules/finestra_ricerca.py:1008
 msgid "Nessuna partita da classificare."
 msgstr "No games to classify."
 
-#: orologic_modules/finestra_ricerca.py:996
+#: orologic_modules/finestra_ricerca.py:1014
 #, python-brace-format
 msgid "Classificazione: {pct}%"
 msgstr "Classification: {pct}%"
 
-#: orologic_modules/finestra_ricerca.py:997
+#: orologic_modules/finestra_ricerca.py:1015
 #, python-brace-format
 msgid "Classificate {n} partite su {m}."
 msgstr "Classified {n} games out of {m}."
 
-#: orologic_modules/finestra_ricerca.py:999
+#: orologic_modules/finestra_ricerca.py:1017
 msgid ""
 "Le altre restano senza codice ECO: le loro mosse non si trovano in eco.pgn."
 msgstr "The others stay without an ECO code: their moves are not in eco.pgn."
 
-#: orologic_modules/finestra_ricerca.py:1001
+#: orologic_modules/finestra_ricerca.py:1019
 msgid ""
 "Le partite senza mosse o da una posizione di studio non si classificano."
 msgstr "Games without moves or from a study position cannot be classified."
 
-#: orologic_modules/finestra_ricerca.py:1003
-#: orologic_modules/finestra_ricerca.py:1042
+#: orologic_modules/finestra_ricerca.py:1021
+#: orologic_modules/finestra_ricerca.py:1060
 #, python-brace-format
 msgid "Rilettura delle partite cambiate: {pct}%"
 msgstr "Rereading the changed games: {pct}%"
 
-#: orologic_modules/finestra_ricerca.py:1007
+#: orologic_modules/finestra_ricerca.py:1025
 msgid "Classificazione delle aperture in corso..."
 msgstr "Classifying the openings..."
 
-#: orologic_modules/finestra_ricerca.py:1024
+#: orologic_modules/finestra_ricerca.py:1042
 msgid "La ricerca dei doppioni non e' finita: riprova fra poco."
 msgstr "The duplicate search is not finished: try again shortly."
 
-#: orologic_modules/finestra_ricerca.py:1031
+#: orologic_modules/finestra_ricerca.py:1049
 #, python-brace-format
 msgid "Tolgo dall'archivio {n} partite doppie?"
 msgstr "Shall I remove {n} duplicate games from the archive?"
 
-#: orologic_modules/finestra_ricerca.py:1046
+#: orologic_modules/finestra_ricerca.py:1064
 msgid "Niente da riparare."
 msgstr "Nothing to repair."
 
-#: orologic_modules/finestra_ricerca.py:1048
+#: orologic_modules/finestra_ricerca.py:1066
 msgid "Riparazione in corso..."
 msgstr "Repairing..."
 
