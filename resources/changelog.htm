@@ -19,6 +19,10 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 9</h2>
 <h3>Versione 9.5</h3>
+<h4>9.5.115 (26 novembre 2026)</h4>
+<ul>
+  <li>* [Lichess] L'ascolto delle sfide in sottofondo non si riapre più ogni secondo quando Lichess chiude subito il flusso, come succede con due Orologic sullo stesso token: aspetta quindici secondi, e così non fa scattare il limite di Lichess, che fermava anche le mosse. Un token senza il permesso si dice una volta, come uno revocato, e l'avviso non torna a ogni giro del menu.</li>
+</ul>
 <h4>9.5.114 (26 novembre 2026)</h4>
 <ul>
   <li>* [Lichess] La riconnessione alla partita si arrende subito agli errori che riprovando non passano, come una partita che non c'è o un token senza permessi, invece di riprovare per dieci minuti; un flusso che si apre e si chiude subito non si riapre più all'infinito; un collegamento tagliato a metà è una caduta come le altre, e la partita non resta muta col prompt acceso.</li>

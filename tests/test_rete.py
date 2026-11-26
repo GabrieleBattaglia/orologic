@@ -179,7 +179,7 @@ def test_il_token_revocato_ferma_l_ascolto_e_si_dice(monkeypatch, capsys):
     from orologic_modules.config import _
 
     chiamate = []
-    revocato = _("Il token di accesso non e' piu' valido: rifai il login a Lichess.")
+    revocato = lichess_eventi.rete.ErroreDiRete(_("Il token di accesso non e' piu' valido: rifai il login a Lichess."), 401)
     monkeypatch.setattr(lichess_eventi.rete, "apri", lambda *a, **k: chiamate.append(1) or (None, revocato))
     monkeypatch.setattr(lichess_eventi, "ATTESA_DOPO_ERRORE", 0)
     filo = threading.Thread(target=lichess_eventi._ascolta, args=("token", "io", threading.Event()))
@@ -190,12 +190,15 @@ def test_il_token_revocato_ferma_l_ascolto_e_si_dice(monkeypatch, capsys):
 
 
 def test_dopo_una_chiusura_pulita_si_riparte_subito(monkeypatch):
+    """R80, con R122: dopo un flusso rimasto aperto, qui finto con una durata
+    minima di zero secondi."""
     import contextlib
     import threading
     import time
 
     from orologic_modules import lichess_eventi
 
+    monkeypatch.setattr(lichess_eventi, "FLUSSO_DURATO", 0)
     aperture = []
     ferma = threading.Event()
 
@@ -340,3 +343,52 @@ def test_il_file_dei_punteggi_che_non_si_lascia_leggere_non_e_guasto(tmp_path, m
     assert [p.name for p in tmp_path.iterdir()] == ["memoboard_scores.json"]
     assert memoboard_app.save_scores(punteggi) is False
     assert "Gabry" in file.read_text(encoding="utf-8")
+
+
+def test_un_flusso_degli_eventi_chiuso_subito_aspetta(monkeypatch):
+    """R122: dopo una chiusura pulita il flusso degli eventi si riapriva ogni
+    secondo: due Orologic sullo stesso token si chiudevano a vicenda una
+    volta al secondo, e il 429 che ne veniva fermava anche le mosse. Ora il
+    respiro breve vale solo per un flusso rimasto aperto."""
+    import contextlib
+    import threading
+    import time
+
+    from orologic_modules import lichess_eventi
+
+    aperture = []
+    ferma = threading.Event()
+
+    def apri(*a, **k):
+        aperture.append(time.monotonic())
+        if len(aperture) == 2:
+            ferma.set()
+        return contextlib.nullcontext(iter([])), None
+
+    monkeypatch.setattr(lichess_eventi.rete, "apri", apri)
+    monkeypatch.setattr(lichess_eventi, "ATTESA_DOPO_LA_CHIUSURA", 0.05)
+    monkeypatch.setattr(lichess_eventi, "ATTESA_DOPO_ERRORE", 0.6)
+    filo = threading.Thread(target=lichess_eventi._ascolta, args=("token", "io", ferma))
+    filo.start()
+    filo.join(5)
+    assert len(aperture) == 2 and aperture[1] - aperture[0] >= 0.5
+
+
+@pytest.mark.parametrize("codice", [401, 403])
+def test_il_token_respinto_si_dice_una_volta(monkeypatch, capsys, codice):
+    """R122: il 403 di un token senza il permesso si ritentava per sempre
+    senza dirlo, e l'avviso del token revocato tornava a ogni giro del menu,
+    perche' ogni giro faceva ripartire l'ascolto."""
+    from orologic_modules import lichess_eventi
+
+    chiamate = []
+    errore = lichess_eventi.rete.ErroreDiRete("respinto", codice)
+    monkeypatch.setattr(lichess_eventi.rete, "apri", lambda *a, **k: chiamate.append(1) or (None, errore))
+    monkeypatch.setattr(lichess_eventi, "ATTESA_DOPO_ERRORE", 0)
+    monkeypatch.setitem(lichess_eventi._stato, "respinto", None)
+    for _giro in range(3):
+        lichess_eventi.avvia("token", "io")
+        lichess_eventi._stato["thread"].join(3) if lichess_eventi._stato["thread"] else None
+    lichess_eventi.ferma()
+    assert chiamate == [1]
+    assert capsys.readouterr().out.count("non arrivano piu'") == 1
