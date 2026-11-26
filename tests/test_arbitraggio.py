@@ -82,3 +82,36 @@ def test_due_annullamenti_nella_stessa_partita(finestra, monkeypatch):
         _scrivi(finestra, passo)
     assert finestra.nucleo.is_alive()
     assert [mossa.uci() for mossa in finestra.fornitore()["board"].move_stack] == ["e2e4"]
+
+
+def test_la_scacchiera_della_partita_ripresa_ha_le_sue_mosse():
+    """Rilievo R4 della revisione 2: la partita ripresa dal salvataggio
+    automatico rigioca la linea del PGN, e .q trova la mossa da togliere."""
+    import io
+
+    import chess
+    import chess.pgn
+
+    giocata = chess.Board()
+    for san in ("e4", "e5", "Nf3"):
+        giocata.push_san(san)
+    pgn = chess.pgn.read_game(io.StringIO(str(chess.pgn.Game.from_board(giocata))))
+    ripresa = game_flow.scacchiera_ripresa(pgn, giocata.fen())
+    assert [mossa.uci() for mossa in ripresa.move_stack] == ["e2e4", "e7e5", "g1f3"]
+    ripresa.pop()
+    assert ripresa.fen() == chess.Board("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2").fen()
+    # Se la linea non arriva al FEN salvato, vale il FEN, come prima.
+    altra = game_flow.scacchiera_ripresa(pgn, chess.Board().fen())
+    assert altra.move_stack == [] and altra.fen() == chess.Board().fen()
+    assert game_flow.scacchiera_ripresa(None, giocata.fen()).fen() == giocata.fen()
+
+
+def test_il_q_senza_mosse_nella_pila_lo_dice(monkeypatch):
+    from orologic_modules import board_utils
+
+    monkeypatch.setattr(game_flow, "Acusticator", lambda *_a, **_o: None)
+    stato = board_utils.GameState({"phases": [{"white_time": 300, "black_time": 300, "white_inc": 0, "black_inc": 0, "moves": 40}]})
+    stato.move_history = ["e4"]
+    stato.paused = True
+    assert game_flow.annulla_ultima_mossa(stato) is False
+    assert stato.move_history == ["e4"]

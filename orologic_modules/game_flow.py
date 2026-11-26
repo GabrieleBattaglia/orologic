@@ -29,6 +29,25 @@ from .config import _
 # Volume ora gestito via config.VOLUME
 
 
+def scacchiera_ripresa(pgn_game, fen_salvato, chess960=False):
+    """La scacchiera della partita ripresa, rigiocando la linea principale
+    del PGN salvato: con le mosse nella pila, .q e le ripetizioni valgono
+    anche dopo la ripresa (rilievo R4 della revisione 2, 26 novembre 2026:
+    nata dal solo FEN, la pila era vuota e il .q sollevava IndexError). Il
+    FEN salvato fa da controllo: se la linea non ci arriva, si riparte dal
+    FEN, come prima."""
+    dal_fen = board_utils.CustomBoard(fen_salvato, chess960=chess960)
+    if pgn_game is None:
+        return dal_fen
+    try:
+        board = board_utils.CustomBoard(pgn_game.board().fen(), chess960=chess960)
+        for mossa in pgn_game.mainline_moves():
+            board.push(mossa)
+    except (ValueError, AssertionError):
+        return dal_fen
+    return board if board.fen() == dal_fen.fen() else dal_fen
+
+
 def RiprendiPartita(dati_partita):
     print(_("Ricostruzione dello stato della partita..."))
     game_state = board_utils.GameState(dati_partita["clock_config"])
@@ -85,6 +104,7 @@ def RiprendiPartita(dati_partita):
         )
         game_state.pgn_game = chess.pgn.Game.from_board(game_state.board)
         game_state.pgn_node = game_state.pgn_game.end()
+    game_state.board = scacchiera_ripresa(game_state.pgn_game, dati_partita["board_fen"], e_chess960)
     game_state.paused = True
     chess960_utils.verifica_motore_chess960(engine.ENGINE, e_chess960)
     # La partita ripresa non riceve di nuovo cio' che riceve all'avvio: il
@@ -293,6 +313,12 @@ def annulla_ultima_mossa(game_state):
     if not game_state.move_history:
         Acusticator(["b3", 0.2, 0, config.VOLUME], kind=2)
         print(_("Non c'e' nessuna mossa da annullare."))
+        return False
+    # Una partita ripresa senza la sua linea, con la scacchiera nata dal solo
+    # FEN, non ha mosse da togliere: lo si dice, invece di cadere.
+    if not game_state.board.move_stack:
+        Acusticator(["b3", 0.2, 0, config.VOLUME], kind=2)
+        print(_("Questa mossa non si puo' annullare: la partita ripresa non ha la sua linea di mosse."))
         return False
     Acusticator(
         [
