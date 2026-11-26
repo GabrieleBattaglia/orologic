@@ -441,6 +441,23 @@ def fetch_following(token):
     if errore:
         print(_("Elenco dei seguiti non recuperato. {motivo}").format(motivo=errore))
         return []
+    # L'elenco dei seguiti non porta il campo online, e tutti risultavano
+    # Offline: lo stato si chiede a parte, cento alla volta (R82).
+    for inizio in range(0, len(utenti), 100):
+        gruppo = [u for u in utenti[inizio : inizio + 100] if isinstance(u, dict) and u.get("id")]
+        if not gruppo:
+            continue
+        stati, errore = rete.leggi_json("https://lichess.org/api/users/status?withGameIds=true&ids=" + ",".join(u["id"] for u in gruppo), token=token)
+        if errore or not isinstance(stati, list):
+            continue
+        per_id = {s.get("id"): s for s in stati if isinstance(s, dict)}
+        for utente in gruppo:
+            stato = per_id.get(utente["id"]) or {}
+            utente["online"] = bool(stato.get("online"))
+            # La partita in corso nella forma del campo playing dei profili,
+            # l'indirizzo, che Guarda un amico sa aprire.
+            if stato.get("playingId") and not utente.get("playing"):
+                utente["playing"] = f"https://lichess.org/{stato['playingId']}"
     return utenti
 
 

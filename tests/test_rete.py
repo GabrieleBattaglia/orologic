@@ -211,3 +211,23 @@ def test_dopo_una_chiusura_pulita_si_riparte_subito(monkeypatch):
     filo.start()
     filo.join(5)
     assert len(aperture) == 2 and aperture[1] - aperture[0] < 2
+
+
+def test_gli_amici_hanno_lo_stato_online(monkeypatch):
+    """R82: l'elenco dei seguiti non porta il campo online, e tutti
+    risultavano sempre Offline."""
+    from orologic_modules import lichess_app
+
+    monkeypatch.setattr(lichess_app.rete, "leggi_righe_json", lambda *a, **k: ([{"id": "gabry", "username": "Gabry"}, {"id": "anna", "username": "Anna"}], None))
+    chiesti = []
+
+    def stato(indirizzo, **k):
+        chiesti.append(indirizzo)
+        return [{"id": "gabry", "online": True, "playingId": "AbCd1234"}, {"id": "anna"}], None
+
+    monkeypatch.setattr(lichess_app.rete, "leggi_json", stato)
+    amici = lichess_app.fetch_following("token")
+    assert chiesti[0].endswith("ids=gabry,anna")
+    assert amici[0]["online"] and amici[0]["playing"] == "https://lichess.org/AbCd1234"
+    assert not amici[1]["online"] and "playing" not in amici[1]
+    assert lichess_app.id_della_partita(amici[0]["playing"]) == "AbCd1234"
