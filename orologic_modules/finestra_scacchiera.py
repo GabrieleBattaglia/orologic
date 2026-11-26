@@ -22,7 +22,6 @@ scacchiera; quando il nucleo torna al prompt delle mosse, la finestra
 principale la riapre.
 """
 
-import contextlib
 import io
 
 import chess
@@ -39,6 +38,7 @@ from . import (
     plancia,
     richedit,
     storage,
+    strato,
     ui,
 )
 from .config import _
@@ -541,7 +541,8 @@ class FinestraScacchiera(wx.Dialog):
         """Il comando di esplorazione detto dalla scacchiera stessa: le
         parole di Orologic, raccolte e annunciate."""
         uscita = io.StringIO()
-        with contextlib.redirect_stdout(uscita):
+        # Per il solo filo della scacchiera, non per il nucleo (R84).
+        with strato.raccogli(uscita):
             ui.esplora_scacchiera(comando, self.scacchiera.board.copy())
         testo = " ".join(uscita.getvalue().split())
         if testo:

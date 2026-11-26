@@ -63,6 +63,7 @@ da sola; frecce, pagine, Home e Fine passano all'area, per leggere liberi;
 ogni altro tasto riporta il cursore al suo posto nella riga in corso.
 """
 
+import contextlib
 import getpass
 import io
 import os
@@ -509,6 +510,21 @@ class FacciaFinestra:
         """strato.rinfresco: le scritture di adesso sono un rinfresco."""
         self._rinfresco = acceso
 
+    @staticmethod
+    @contextlib.contextmanager
+    def raccogli(raccolte):
+        """strato.raccogli: quello che il filo di chi chiama scrive va in
+        raccolte, e solo il suo; gli altri fili scrivono come sempre. Prima
+        si scambiava sys.stdout per tutti (R84)."""
+        pila = getattr(_RACCOLTE, "pila", None)
+        if pila is None:
+            pila = _RACCOLTE.pila = []
+        pila.append(raccolte)
+        try:
+            yield
+        finally:
+            pila.pop()
+
     def scrivi(self, testo, causa=None):
         if self._rinfresco:
             causa = "rinfresco"
@@ -544,6 +560,10 @@ class FacciaFinestra:
         self._chiusura.set()
 
 
+# Le raccolte di strato.raccogli, per filo (R84).
+_RACCOLTE = threading.local()
+
+
 class UscitaFinestra(io.TextIOBase):
     """Lo stdout del nucleo: tutto quello che scrive va alla faccia."""
 
@@ -555,6 +575,9 @@ class UscitaFinestra(io.TextIOBase):
         return True
 
     def write(self, testo):
+        pila = getattr(_RACCOLTE, "pila", None)
+        if pila:
+            return pila[-1].write(testo)
         if testo:
             self._faccia.scrivi(testo)
         return len(testo)
@@ -2043,6 +2066,7 @@ def prepara():
         stdin=sys.stdin,
         getpass=getpass.getpass,
     )
+    _prepara_le_uscite_della_voce()
     sys.stdout = UscitaFinestra(faccia)
     sys.stdin = IngressoFinestra(faccia)
 
@@ -2052,6 +2076,20 @@ def prepara():
 
     getpass.getpass = password
     return finestra
+
+
+def _prepara_le_uscite_della_voce():
+    """Le librerie delle uscite della voce importate adesso, prima del
+    nucleo: GBsintesi le importa la prima volta con lo schermo zittito, e
+    lo zittiva mentre il nucleo scriveva, che perdeva le sue righe (R84).
+    Importate, GBsintesi non lo zittisce piu'."""
+    import importlib
+
+    from GBsintesi import USCITE
+
+    for nome in ("win32com.client.dynamic", *(f"accessible_output2.outputs.{modulo}" for modulo, _classe in USCITE.values())):
+        with contextlib.suppress(Exception):
+            importlib.import_module(nome)
 
 
 def ripristina():

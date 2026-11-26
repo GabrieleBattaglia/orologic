@@ -111,6 +111,10 @@ class FacciaTerminale:
     def rinfresco(self, acceso):
         """Nel terminale il rinfresco si scrive come il resto."""
 
+    def raccogli(self, raccolte):
+        """Nel terminale c'e' un filo solo che scrive: basta redirect_stdout."""
+        return contextlib.redirect_stdout(raccolte)
+
     def da_leggere(self, titolo, righe, verbosa=None, inizio=None):
         """Il terminale le ha gia' stampate."""
 
@@ -302,6 +306,12 @@ def prompt_di_gioco():
         _faccia.di_gioco(precedente)
 
 
+def raccogli(raccolte):
+    """Quello che il filo di chi chiama stampa va in raccolte, e solo il
+    suo (R84)."""
+    return _faccia.raccogli(raccolte)
+
+
 @contextlib.contextmanager
 def da_leggere(titolo):
     """Nella finestra, quello che si stampa qui dentro va in una finestra da
@@ -314,7 +324,10 @@ def da_leggere(titolo):
     raccolte = io.StringIO()
     precedente, _lettura = _lettura, {"verbosa": None, "inizio": None}
     try:
-        with contextlib.redirect_stdout(raccolte):
+        # Raccolto per il solo filo del nucleo: redirect_stdout scambiava
+        # sys.stdout, che e' di tutti i fili, e le righe degli altri si
+        # perdevano, o la finestra restava muta (R84).
+        with raccogli(raccolte):
             yield
         dettagli = _lettura
     finally:

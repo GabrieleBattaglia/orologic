@@ -101,3 +101,30 @@ def test_a_nucleo_finito_si_chiude_prima_il_dialogo_aperto(finestra):
     finally:
         soccorso.cancel()
     assert esiti == [wx.ID_CANCEL] and paracadute == []
+
+
+def test_la_raccolta_di_da_leggere_e_del_solo_filo_del_nucleo(finestra, monkeypatch):
+    """R84: da_leggere scambiava sys.stdout per tutti i fili: le righe degli
+    altri finivano nella finestra da leggere, o si perdevano."""
+    import sys
+
+    from orologic_modules import dialoghi, strato
+
+    letture = []
+    monkeypatch.setattr(dialoghi, "da_leggere", lambda _genitore, titolo, righe, *a, **k: letture.append((titolo, righe)))
+    dentro = threading.Event()
+    via = threading.Event()
+
+    def nucleo():
+        with strato.partita(), strato.da_leggere("Prova"):
+            print("Riga del nucleo.")
+            dentro.set()
+            via.wait(5)
+
+    finestra.avvia_il_nucleo(nucleo)
+    assert dentro.wait(5)
+    sys.stdout.write("Riga di un altro filo.\n")
+    via.set()
+    assert pompa(lambda: letture)
+    assert letture == [("Prova", ["Riga del nucleo."])]
+    assert pompa(lambda: "Riga di un altro filo." in finestra.area.GetValue())
