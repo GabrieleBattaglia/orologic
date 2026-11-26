@@ -70,6 +70,21 @@ def _diagonali():
 diagonals = _diagonali()
 
 
+def case_dell_alfiere():
+    """(prima casa, seconda casa, vero se sono sulla stessa diagonale), per
+    l'esercizio degli alfieri e la sfida mista. Prima la casa, a caso fra
+    tutte, poi la compagna: sorteggiando prima la diagonale, le quattro da
+    due case uscivano nel 15% delle domande e gonfiavano i punteggi (R59)."""
+    sq1 = random.choice(board)
+    yes = random.choice([True, False])
+    if yes:
+        compagne = [casa for linea in diagonals.values() if sq1 in linea for casa in linea if casa != sq1]
+        sq2 = random.choice(compagne)
+    else:
+        sq2 = Prox(sq1, "B", range_limit=7)
+    return sq1, sq2, yes
+
+
 def get_column_spelling(col_letter):
     """Ottiene la pronuncia fonetica delle colonne da Orologic (config.L10N)."""
     col_lower = col_letter.lower()
@@ -909,16 +924,7 @@ def ExBishops(ripetitions):
     errors_list = []
 
     while ripetitions > 0:
-        kd = random.choice(list(diagonals.keys()))
-        sq1 = random.choice(diagonals[kd])
-        yes = random.choice([True, False])
-        if not yes:
-            sq2 = Prox(sq1, "B", range_limit=7)
-        else:
-            while True:
-                sq2 = random.choice(diagonals[kd])
-                if sq1 != sq2:
-                    break
+        sq1, sq2, yes = case_dell_alfiere()
 
         question_str = _("Stessa diagonale: {sq1}-{sq2}").format(sq1=sq1, sq2=sq2)
         print(
@@ -1132,16 +1138,7 @@ def ExMixed(ripetitions):
                 )
 
         elif exercise_type == "bishops":
-            kd = random.choice(list(diagonals.keys()))
-            sq1 = random.choice(diagonals[kd])
-            yes = random.choice([True, False])
-            if not yes:
-                sq2 = Prox(sq1, "B", range_limit=7)
-            else:
-                while True:
-                    sq2 = random.choice(diagonals[kd])
-                    if sq1 != sq2:
-                        break
+            sq1, sq2, yes = case_dell_alfiere()
 
             question_str = _("Stessa diagonale: {sq1}-{sq2}").format(sq1=sq1, sq2=sq2)
             print(

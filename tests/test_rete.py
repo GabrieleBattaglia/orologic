@@ -151,3 +151,19 @@ def test_senza_copia_il_file_dei_punteggi_non_si_copre(tmp_path, monkeypatch):
     monkeypatch.setitem(memoboard_app._PUNTEGGI, "non_letti", False)
     memoboard_app.save_scores(memoboard_app.load_scores())
     assert file.read_text(encoding="utf-8") == "{ guasto"
+
+
+def test_l_alfiere_sorteggia_prima_la_casa():
+    """R59: le diagonali da due case uscivano nel 15% delle domande."""
+    import random
+
+    from orologic_modules import memoboard_app
+
+    random.seed(59)
+    corte = {"A7", "B8", "G1", "H2", "A2", "B1", "G8", "H7"}
+    domande = [memoboard_app.case_dell_alfiere() for _volta in range(4000)]
+    for sq1, sq2, sono in domande:
+        stessa = any(sq1 in linea and sq2 in linea for linea in memoboard_app.diagonals.values())
+        assert sq1 != sq2 and stessa == sono
+    gia_corte = sum(1 for sq1, sq2, sono in domande if sono and {sq1, sq2} <= corte)
+    assert gia_corte / 4000 < 0.03
