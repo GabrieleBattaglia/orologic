@@ -56,10 +56,9 @@ GBwx: _grazia_invio è privata, e Orologic ne ha cinque copie con la costante fi
 nel_cestino: accetta un file per volta e ricontrolla il cestino a ogni file; vedi R37.
 Scaricamento a blocchi con avanzamento, fermata e controllo della lunghezza: in GBUtils è privato, in Orologic è scritto quattro volte; vedi R94.
 Riepilogo.
-Critici 6, alti 22, medi 66, bassi 10: 104 rilievi. Provati con una prova eseguita 11: R1, R2, R4, R6, R7, R8 per il meccanismo, R9, R10, R13, R22 e R62. Da verificare 9: R26, R28, R75, R81, R86, R87 e R89 per intero; R77 e R84 per l'effetto. Tutti gli altri sono letti sul codice.
-Ordine di lavorazione proposto.
-Prima del rilascio, senza eccezioni: R1, che ferma ogni installazione nuova ed è già nella 9.0.0 pubblicata; poi R2, R3, R4, R5 e R6. Sono sei correzioni piccole, ognuna con la sua prova.
-Subito dopo, nello stesso giro se c'è tempo: R15, il registro degli errori, perché rende leggibile tutto ciò che resta; R8, il motore alla chiusura; R10 e R21, due tasti che fanno cadere il programma; R7 con R29 e R30, lo stesso file; R11 e R12, il lavoro perso alla chiusura; R13 e R22, due funzioni che oggi non funzionano mai.
-Chiedono una decisione di Gabriele prima di essere toccati: R9, quale regola per le patte richiedibili; R11, il testo della conferma alla chiusura; R20, quali varianti di Lichess tenere; R103.
-Il resto di Orolichess, da R16 a R23 e da R72 a R83, è un giro a sé, con le prove dei flussi di rete che oggi mancano.
-I medi e i bassi restanti si lavorano per area, uno alla volta, dopo il rilascio.
+Critici 6, alti 22, medi 66, bassi 10: 104 rilievi.
+Correzione del 26 novembre 2026, dalla 9.5.1 alla 9.5.93: 93 rilievi chiusi, ognuno con la sua prova automatica; R8 anche in un processo vero, con Stockfish acceso e la chiusura come Alt+F4, senza motori rimasti.
+Ne restano 11, tutti in attesa di Gabriele.
+Decisioni: R9, quale regola per le patte richiedibili; R11, il testo della conferma di Alt+F4 dentro una partita; R20, quali varianti di Lichess tenere; R56, l'ombreggiatura dei pezzi; R94, la fine partita in una funzione sola dopo R9, e lo scaricamento a blocchi in GBUtils; R100, i suoni uguali di due eventi; R102, il piano della GUI nella radice; R103, il nome del computer nel tag Site.
+Prove alla tastiera, con NVDA e la barra: R86, R88 e R89. Sono in collaudo.txt, con R77, R90, R72, R18 e R19, che sono corretti ma vogliono le tue orecchie, NVDA o la rete vera.
+Le quattro issue di GBUtils della sezione di sopra si aprono col tuo si'.
