@@ -19,7 +19,6 @@ Prove, eseguite tutte e lette per la copertura, non riviste riga per riga: 38 fi
 In tutto, prove escluse, 44852 righe.
 Rilievi critici.
 Rilievi alti.
-R20. Alto, fragilità. orologic_modules/lichess_app.py righe 1553-1562; lichess_board.py righe 951, 961 e 993. Il menu offre crazyhouse, antichess, atomic, horde, racing kings, three-check e king of the hill, e nulla filtra le sfide ricevute, ma la scacchiera è sempre quella standard: le mosse legali solo nella variante fanno sollevare ValueError a parse_uci. Impatto: il programma si chiude a partita in corso. Correzione: le classi di chess.variant dove ci sono, il rifiuto prima di creare o accettare per le altre. Letto.
 Rilievi medi, per area.
 Persistenza, avvio e rete.
 Partita, orologio e motore.

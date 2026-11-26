@@ -1421,9 +1421,12 @@ def accept_challenge(token, challenge_id):
     return riuscito
 
 
-def decline_challenge(token, challenge_id):
+def decline_challenge(token, challenge_id, motivo=None):
+    """Rifiuta una sfida ricevuta. motivo, se c'e', e' uno di quelli della
+    specifica, come variant o tooFast: Lichess lo dice allo sfidante nella
+    sua lingua (R125)."""
     riuscito, errore = rete.invia(
-        f"https://lichess.org/api/challenge/{challenge_id}/decline", token=token
+        f"https://lichess.org/api/challenge/{challenge_id}/decline", token=token, dati={"reason": motivo} if motivo else None
     )
     if not riuscito:
         print(_("Sfida non rifiutata. {motivo}").format(motivo=errore))
@@ -1533,6 +1536,24 @@ def voce_delle_sfide(ricevute, inviate):
     return _("Sfide: {elenco}").format(elenco=", ".join(parti))
 
 
+def perche_non_si_gioca(sfida):
+    """(frase, motivo per Lichess) se Orologic non sa giocare la sfida
+    ricevuta, o None: una variante diversa dallo standard e da Chess960
+    (R20), o una cadenza che la Board API non gioca, come il bullet (R75).
+    Prima le sfide ricevute si accettavano senza guardare, e la partita
+    partiva su una scacchiera che non la sapeva giocare (R125)."""
+    variante = sfida.get("variant") or {}
+    if not lichess_board.variante_giocabile(variante.get("key")):
+        nome = variante.get("name") or variante.get("key")
+        return _("Orologic su Lichess gioca solo gli scacchi standard e Chess960: la sfida in {variante} non si puo' accettare.").format(variante=nome), "variant"
+    controllo = sfida.get("timeControl") or {}
+    if controllo.get("type") == "clock":
+        motivo = motivo_della_cadenza(controllo.get("limit") or 0, controllo.get("increment") or 0, False)
+        if motivo:
+            return motivo, "tooFast"
+    return None
+
+
 def motivo_della_cadenza(limite, incremento, pubblica):
     """Perche' Lichess non gioca la cadenza con la Board API, o None se la
     gioca. Il tempo stimato, come lo conta Lichess, e' la base piu'
@@ -1579,29 +1600,16 @@ def get_game_params(for_seek=False, for_bot=False):
                 continue
         print(_("Formato non valido. Usa minuti+secondi, ad esempio 10+0 o 5+3."))
 
+    # Fuori dallo standard c'e' solo Chess960: le altre varianti si giocano
+    # con regole che la scacchiera di Orologic non conosce, e la partita
+    # cadeva alla prima mossa (R20, scelta di Gabriele del 26 novembre 2026).
     if enter_escape(
         _("\nVuoi giocare una partita Standard? (Invio = Si', Esc = No): ")
     ):
         variant = "standard"
     else:
-        variant_scelte = {
-            "chess960": _("Chess960"),
-            "crazyhouse": _("Crazyhouse"),
-            "antichess": _("Antichess"),
-            "atomic": _("Atomic"),
-            "horde": _("Horde"),
-            "kingOfTheHill": _("King of the Hill"),
-            "racingKings": _("Racing Kings"),
-            "threeCheck": _("Three-check"),
-        }
-        db = storage.LoadDB()
-        variant = menu(
-            variant_scelte,
-            show=True,
-            keyslist=True,
-            p=_("Scegli la variante: "),
-            numbered=db.get("menu_numerati", False),
-        )
+        variant = "chess960"
+        print(_("Variante: {variante}.").format(variante=_("Chess960")))
 
     rated = False
     if not for_bot:
@@ -2450,7 +2458,14 @@ def rispondi_alle_sfide(token, username):
         if ricevuta:
             risposta = key(_("\rINVIO accetta, r la rifiuta, ESC torna all'elenco\r"))
             print()
-            if risposta == "\r":
+            rifiuto = perche_non_si_gioca(sfida) if risposta == "\r" else None
+            if rifiuto:
+                frase, motivo = rifiuto
+                print(frase)
+                print(_("Rifiuto la sfida..."))
+                lichess_eventi.dimentica(c_id)
+                decline_challenge(token, c_id, motivo)
+            elif risposta == "\r":
                 print(_("Accetto la sfida..."))
                 lichess_eventi.dimentica(c_id)
                 if accept_challenge(token, c_id):

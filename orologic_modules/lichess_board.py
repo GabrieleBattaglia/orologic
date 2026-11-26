@@ -90,6 +90,26 @@ def mossa_dallo_stream(board, uci, fen=None):
     return candidate[0] if candidate else None
 
 
+# Le varianti di Lichess che la scacchiera di Orologic gioca: lo standard,
+# anche da una posizione data, e Chess960. Le altre hanno regole che la
+# scacchiera non conosce, e la partita cadeva alla prima mossa: per scelta
+# di Gabriele del 26 novembre 2026 Orologic non le gioca (R20).
+VARIANTI_GIOCABILI = ("standard", "chess960", "fromPosition")
+
+
+def variante_giocabile(chiave):
+    """Vero se Orologic sa giocare la variante di Lichess con quella chiave."""
+    return (chiave or "standard") in VARIANTI_GIOCABILI
+
+
+def _variante_non_giocabile(game_state, variante):
+    """La partita in una variante che la scacchiera non sa leggere: lo si
+    dice, e la partita si lascia al sito (R20)."""
+    game_state.variante_non_giocabile = True
+    nome = variante.get("name") or variante.get("key")
+    sys.stdout.write("\n" + _("Orologic su Lichess gioca solo gli scacchi standard e Chess960: questa partita in {variante} si segue sul sito.").format(variante=nome) + "\n")
+
+
 def save_lichess_game(game_state, result_str="*"):
     """Il PGN della partita: subito la ricostruzione locale, che non chiede
     la rete, poi il PGN ufficiale di Lichess al suo posto, nello stesso
@@ -258,7 +278,7 @@ def _spectate_worker(url, token, q, stop_event):
 
                     variant = d.get("variant", {}).get("key")
                     if variant:
-                        q.put({"tipo": "variante", "chiave": variant})
+                        q.put({"tipo": "variante", "chiave": variant, "nome": d.get("variant", {}).get("name")})
 
                     if "initialFen" in d:
                         q.put({"tipo": "inizio", "fen": d["initialFen"]})
@@ -473,6 +493,9 @@ def async_spectator_loop(q, game_state):
             elif tipo == "variante":
                 variant_name = msg["chiave"]
                 game_state.variant = variant_name
+                if not variante_giocabile(variant_name):
+                    _variante_non_giocabile(game_state, {"key": variant_name, "name": msg.get("nome")})
+                    return None
                 if variant_name == "chess960":
                     game_state.board.chess960 = True
             elif tipo == "inizio":
@@ -638,6 +661,8 @@ def spectate_game(game_id, token=None):
 
         if user_input is None:
             # Stream ended or error
+            if getattr(game_state, "variante_non_giocabile", False):
+                stop_event.set()
             break
 
         user_input = user_input.strip()
@@ -1096,6 +1121,9 @@ def async_play_loop(q, game_state):
 
                 variant = msg.get("variant", {}).get("key", "standard")
                 game_state.variant = variant
+                if not variante_giocabile(variant):
+                    _variante_non_giocabile(game_state, msg.get("variant", {}))
+                    return None
                 if variant == "chess960":
                     game_state.board.chess960 = True
 
@@ -1608,6 +1636,11 @@ def _gioca_partita(game_id, token, username, aperta=None):
         user_input = async_play_loop(q, game_state)
 
         if user_input is None:
+            # Una partita in una variante che la scacchiera non sa giocare:
+            # niente da salvare, e il flusso si chiude (R20).
+            if getattr(game_state, "variante_non_giocabile", False):
+                stop_event.set()
+                break
             ui.svuota_tastiera()
             if len(game_state.move_history) > 10:
                 from GBUtils import enter_escape
