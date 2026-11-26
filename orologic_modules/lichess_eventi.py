@@ -31,6 +31,8 @@ from .config import _
 URL = "https://lichess.org/api/stream/event"
 # Dopo una caduta della rete si riprova, ma senza martellare Lichess.
 ATTESA_DOPO_ERRORE = 15
+# Dopo che Lichess ha chiuso il flusso senza errori, solo un respiro (R80).
+ATTESA_DOPO_LA_CHIUSURA = 1
 
 _stato = {"thread": None, "ferma": None, "risposta": None, "token": None}
 _solo_suono = threading.Event()
@@ -144,9 +146,17 @@ def _ascolta(token, mio_nome, ferma):
             URL, token=token, timeout=rete.TIMEOUT_STREAM, accetta="application/x-ndjson"
         )
         if errore:
+            # Un token revocato non torna buono riprovando: lo si dice una
+            # volta, e l'ascolto si ferma. Prima si ritentava ogni quindici
+            # secondi per sempre, senza dirlo (R80).
+            if errore == _("Il token di accesso non e' piu' valido: rifai il login a Lichess."):
+                if not _solo_suono.is_set():
+                    _scrivi(_("Le sfide e gli abbinamenti di Lichess non arrivano piu': {motivo}").format(motivo=errore))
+                return
             ferma.wait(ATTESA_DOPO_ERRORE)
             continue
         _stato["risposta"] = risposta
+        chiuso_bene = False
         try:
             with risposta as flusso:
                 for riga in flusso:
@@ -165,12 +175,15 @@ def _ascolta(token, mio_nome, ferma):
                         _ritirata(evento.get("challenge") or {})
                     elif tipo == "gameStart":
                         _partita_iniziata(evento.get("game") or {})
+            chiuso_bene = True
         # Una connessione caduta, o chiusa da ferma, non deve far cadere
         # Orologic: l'ascolto riparte dopo una pausa, se non e' finito.
         except Exception:  # noqa: BLE001, S110
             pass
         _stato["risposta"] = None
-        ferma.wait(ATTESA_DOPO_ERRORE)
+        # Dopo una chiusura pulita si riparte subito: nei quindici secondi
+        # di prima un abbinamento di torneo non arrivava (R80).
+        ferma.wait(ATTESA_DOPO_LA_CHIUSURA if chiuso_bene else ATTESA_DOPO_ERRORE)
 
 
 def avvia(token, mio_nome):

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-26 08:17+0100\n"
+"POT-Creation-Date: 2026-11-26 08:19+0100\n"
 "PO-Revision-Date: 2026-04-12 16:04+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fr <LL@li.org>\n"
@@ -6614,8 +6614,8 @@ msgstr "Chaînes TV non récupérées. {motivo}"
 #: orologic_modules/lichess_board.py:1033
 #: orologic_modules/lichess_board.py:1038
 #: orologic_modules/lichess_board.py:1427
-#: orologic_modules/lichess_eventi.py:63
-#: orologic_modules/lichess_eventi.py:113
+#: orologic_modules/lichess_eventi.py:65
+#: orologic_modules/lichess_eventi.py:115
 #: orologic_modules/lichess_profiler.py:565
 #: orologic_modules/lichess_profiler.py:571
 #: orologic_modules/memoboard_app.py:137 orologic_modules/memoboard_app.py:523
@@ -7826,7 +7826,7 @@ msgstr "Premove défini : {m}. Il sera joué à votre tour."
 msgid "Mossa non valida. Digita .? per l'aiuto."
 msgstr "Coup invalide. Tapez .? pour l'aide."
 
-#: orologic_modules/lichess_eventi.py:72
+#: orologic_modules/lichess_eventi.py:74
 #, python-brace-format
 msgid ""
 "\n"
@@ -7835,24 +7835,24 @@ msgstr ""
 "\n"
 "Défi de {u} ({v}, {s}, {r})"
 
-#: orologic_modules/lichess_eventi.py:77
+#: orologic_modules/lichess_eventi.py:79
 msgid "Classificata"
 msgstr "Classé"
 
-#: orologic_modules/lichess_eventi.py:77
+#: orologic_modules/lichess_eventi.py:79
 msgid "Amichevole"
 msgstr "Amical"
 
-#: orologic_modules/lichess_eventi.py:81
+#: orologic_modules/lichess_eventi.py:83
 msgid "La trovi in Sfide, nel menu di Orolichess."
 msgstr "Vous le trouvez dans Défis, dans le menu d'Orolichess."
 
-#: orologic_modules/lichess_eventi.py:92
+#: orologic_modules/lichess_eventi.py:94
 #, python-brace-format
 msgid "La sfida di {u} non c'e' piu'."
 msgstr "Le défi de {u} n'existe plus."
 
-#: orologic_modules/lichess_eventi.py:116
+#: orologic_modules/lichess_eventi.py:118
 #, python-brace-format
 msgid ""
 "Una tua partita di torneo e' cominciata, contro {u}: la trovi in Riprendi "
@@ -7860,6 +7860,15 @@ msgid ""
 msgstr ""
 "Une de vos parties de tournoi a commencé, contre {u} : vous la trouverez "
 "dans Reprendre la partie en cours, dans le menu Jouer une partie."
+
+#: orologic_modules/lichess_eventi.py:152 orologic_modules/rete.py:128
+msgid "Il token di accesso non e' piu' valido: rifai il login a Lichess."
+msgstr "Le jeton d'accès n'est plus valide : reconnectez-vous à Lichess."
+
+#: orologic_modules/lichess_eventi.py:154
+#, python-brace-format
+msgid "Le sfide e gli abbinamenti di Lichess non arrivano piu': {motivo}"
+msgstr "Les défis et appariements de Lichess n'arrivent plus : {motivo}"
 
 #: orologic_modules/lichess_profiler.py:31
 msgid "RICERCA GIOCATORE"
@@ -10686,10 +10695,6 @@ msgid ""
 "Lichess sta limitando le richieste. Aspetto {n} secondi prima di riprovare."
 msgstr ""
 "Lichess limite les demandes. J'attends {n} secondes avant de réessayer."
-
-#: orologic_modules/rete.py:128
-msgid "Il token di accesso non e' piu' valido: rifai il login a Lichess."
-msgstr "Le jeton d'accès n'est plus valide : reconnectez-vous à Lichess."
 
 #: orologic_modules/rete.py:132
 #, python-brace-format

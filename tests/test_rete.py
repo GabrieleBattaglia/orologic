@@ -167,3 +167,47 @@ def test_l_alfiere_sorteggia_prima_la_casa():
         assert sq1 != sq2 and stessa == sono
     gia_corte = sum(1 for sq1, sq2, sono in domande if sono and {sq1, sq2} <= corte)
     assert gia_corte / 4000 < 0.03
+
+
+# R80: il flusso degli eventi di Lichess.
+
+
+def test_il_token_revocato_ferma_l_ascolto_e_si_dice(monkeypatch, capsys):
+    import threading
+
+    from orologic_modules import lichess_eventi
+    from orologic_modules.config import _
+
+    chiamate = []
+    revocato = _("Il token di accesso non e' piu' valido: rifai il login a Lichess.")
+    monkeypatch.setattr(lichess_eventi.rete, "apri", lambda *a, **k: chiamate.append(1) or (None, revocato))
+    monkeypatch.setattr(lichess_eventi, "ATTESA_DOPO_ERRORE", 0)
+    filo = threading.Thread(target=lichess_eventi._ascolta, args=("token", "io", threading.Event()))
+    filo.start()
+    filo.join(3)
+    assert not filo.is_alive() and chiamate == [1]
+    assert "non arrivano piu'" in capsys.readouterr().out
+
+
+def test_dopo_una_chiusura_pulita_si_riparte_subito(monkeypatch):
+    import contextlib
+    import threading
+    import time
+
+    from orologic_modules import lichess_eventi
+
+    aperture = []
+    ferma = threading.Event()
+
+    def apri(*a, **k):
+        aperture.append(time.monotonic())
+        if len(aperture) == 2:
+            ferma.set()
+        return contextlib.nullcontext(iter([])), None
+
+    monkeypatch.setattr(lichess_eventi.rete, "apri", apri)
+    monkeypatch.setattr(lichess_eventi, "ATTESA_DOPO_LA_CHIUSURA", 0.05)
+    filo = threading.Thread(target=lichess_eventi._ascolta, args=("token", "io", ferma))
+    filo.start()
+    filo.join(5)
+    assert len(aperture) == 2 and aperture[1] - aperture[0] < 2

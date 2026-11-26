@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-26 08:17+0100\n"
+"POT-Creation-Date: 2026-11-26 08:19+0100\n"
 "PO-Revision-Date: 2025-06-28 14:26+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: es <LL@li.org>\n"
@@ -6580,8 +6580,8 @@ msgstr "Canales de TV no recuperados. {motivo}"
 #: orologic_modules/lichess_board.py:1033
 #: orologic_modules/lichess_board.py:1038
 #: orologic_modules/lichess_board.py:1427
-#: orologic_modules/lichess_eventi.py:63
-#: orologic_modules/lichess_eventi.py:113
+#: orologic_modules/lichess_eventi.py:65
+#: orologic_modules/lichess_eventi.py:115
 #: orologic_modules/lichess_profiler.py:565
 #: orologic_modules/lichess_profiler.py:571
 #: orologic_modules/memoboard_app.py:137 orologic_modules/memoboard_app.py:523
@@ -7786,7 +7786,7 @@ msgstr "Premove establecido: {m}. Se jugará en tu turno."
 msgid "Mossa non valida. Digita .? per l'aiuto."
 msgstr "Jugada no válida. Escribe .? para la ayuda."
 
-#: orologic_modules/lichess_eventi.py:72
+#: orologic_modules/lichess_eventi.py:74
 #, python-brace-format
 msgid ""
 "\n"
@@ -7795,24 +7795,24 @@ msgstr ""
 "\n"
 "Desafío de {u} ({v}, {s}, {r})"
 
-#: orologic_modules/lichess_eventi.py:77
+#: orologic_modules/lichess_eventi.py:79
 msgid "Classificata"
 msgstr "Clasificado"
 
-#: orologic_modules/lichess_eventi.py:77
+#: orologic_modules/lichess_eventi.py:79
 msgid "Amichevole"
 msgstr "Amistoso"
 
-#: orologic_modules/lichess_eventi.py:81
+#: orologic_modules/lichess_eventi.py:83
 msgid "La trovi in Sfide, nel menu di Orolichess."
 msgstr "Lo encuentras en Desafíos, en el menú de Orolichess."
 
-#: orologic_modules/lichess_eventi.py:92
+#: orologic_modules/lichess_eventi.py:94
 #, python-brace-format
 msgid "La sfida di {u} non c'e' piu'."
 msgstr "El desafío de {u} ya no está."
 
-#: orologic_modules/lichess_eventi.py:116
+#: orologic_modules/lichess_eventi.py:118
 #, python-brace-format
 msgid ""
 "Una tua partita di torneo e' cominciata, contro {u}: la trovi in Riprendi "
@@ -7820,6 +7820,16 @@ msgid ""
 msgstr ""
 "Ha empezado una partida tuya de torneo, contra {u}: la encontrarás en "
 "Reanudar la partida actual, en el menú Jugar una partida."
+
+#: orologic_modules/lichess_eventi.py:152 orologic_modules/rete.py:128
+msgid "Il token di accesso non e' piu' valido: rifai il login a Lichess."
+msgstr ""
+"El token de acceso ya no es válido: inicia sesión en Lichess nuevamente."
+
+#: orologic_modules/lichess_eventi.py:154
+#, python-brace-format
+msgid "Le sfide e gli abbinamenti di Lichess non arrivano piu': {motivo}"
+msgstr "Los desafíos y emparejamientos de Lichess ya no llegan: {motivo}"
 
 #: orologic_modules/lichess_profiler.py:31
 msgid "RICERCA GIOCATORE"
@@ -10633,11 +10643,6 @@ msgid ""
 msgstr ""
 "Lichess está limitando las solicitudes. Espero {n} segundos antes de volver "
 "a intentarlo."
-
-#: orologic_modules/rete.py:128
-msgid "Il token di accesso non e' piu' valido: rifai il login a Lichess."
-msgstr ""
-"El token de acceso ya no es válido: inicia sesión en Lichess nuevamente."
 
 #: orologic_modules/rete.py:132
 #, python-brace-format
