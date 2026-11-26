@@ -27,7 +27,6 @@ Persistenza, avvio e rete.
 Partita, orologio e motore.
 Easyfish e Memoboard.
 R56. Medio, logica, da decidere con Gabriele. orologic_modules/easyfish/image_exporter.py righe 189-200. Ultima mossa e scacco sono corretti nella 9.5.49. Resta l'ombreggiatura dei pezzi: .ii la chiede, ma nessuno la disegna, e svglib, che fa il PDF, non legge i filtri SVG di un'ombra. Scelta di Gabriele: togliere la domanda, o disegnare l'ombra come una copia scura e spostata di ogni pezzo.
-R58. Medio, fragilità. orologic_modules/memoboard_app.py righe 170-180 e 1581. Se il file dei punteggi non si legge e non si riesce a metterlo da parte, l'uscita da Memoboard lo sovrascrive con le classifiche vuote; un solo record malformato fa mettere da parte tutto il file. Correzione: salvare solo se qualcosa è cambiato; scartare il record, non il file. Letto.
 R59. Medio, logica. orologic_modules/memoboard_app.py righe 897-906 e 1120-1129. Si sorteggia prima la diagonale e poi la casa: le quattro diagonali da due case escono nel 15% delle domande, e gonfiano i punteggi. Correzione: sorteggiare prima la casa. Letto.
 PGN, ricerca, archivi.
 R60. Medio, fragilità. orologic_modules/pgn_extract.py righe 663 e 735-736. Con -# pgn-extract scrive 1.pgn, 2.pgn e seguenti nella cartella della destinazione, sovrascrivendo quelli che ci sono; con -E accoda ad A.pgn, B00.pgn. Orologic dice solo "Scrive più file nella cartella". Correzione: una cartella nuova e vuota, o il rifiuto se quei nomi esistono. Letto.

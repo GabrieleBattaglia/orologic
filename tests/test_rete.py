@@ -122,3 +122,32 @@ def test_le_credenziali_guaste_vanno_da_parte(tmp_path, monkeypatch, capsys):
     assert "messe da parte" in capsys.readouterr().out
     assert any(p.name.startswith("secrets.json.danneggiato-") for p in tmp_path.iterdir())
     assert lichess_app.load_secrets() == {}
+
+
+# R58: i punteggi di Memoboard.
+
+
+def test_un_record_guasto_non_fa_perdere_le_classifiche(tmp_path, monkeypatch):
+    import json
+
+    from orologic_modules import memoboard_app
+
+    file = tmp_path / "memoboard_scores.json"
+    dati = {"colors": [{"username": "gabry", "net_per_minute": 12.5}, {"username": "rotto", "net_per_minute": "tanti"}], "knights": [], "bishops": [], "mixed": []}
+    file.write_text(json.dumps(dati), encoding="utf-8")
+    monkeypatch.setattr(memoboard_app, "SCORES_FILE", str(file))
+    punteggi = memoboard_app.load_scores()
+    assert [r["username"] for r in punteggi["colors"]] == ["Gabry"]
+    assert [p.name for p in tmp_path.iterdir()] == ["memoboard_scores.json"]
+
+
+def test_senza_copia_il_file_dei_punteggi_non_si_copre(tmp_path, monkeypatch):
+    from orologic_modules import memoboard_app, storage
+
+    file = tmp_path / "memoboard_scores.json"
+    file.write_text("{ guasto", encoding="utf-8")
+    monkeypatch.setattr(memoboard_app, "SCORES_FILE", str(file))
+    monkeypatch.setattr(storage, "metti_da_parte", lambda percorso: None)
+    monkeypatch.setitem(memoboard_app._PUNTEGGI, "non_letti", False)
+    memoboard_app.save_scores(memoboard_app.load_scores())
+    assert file.read_text(encoding="utf-8") == "{ guasto"

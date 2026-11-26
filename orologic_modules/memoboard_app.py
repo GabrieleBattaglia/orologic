@@ -116,15 +116,20 @@ def _deduplicate_scores(data):
         for rec in ex_list:
             if not isinstance(rec, dict):
                 continue
-            user = config.maiuscole_nomi(rec.get("username", _("Anonimo")))
-            rec["username"] = user
-            if metric_key == "net_per_minute" and "net_per_minute" not in rec:
-                # Le classifiche di prima si ricalcolano: ogni voce ha gia'
-                # giuste, domande e durata.
-                rec["net_per_minute"] = nette_al_minuto(rec.get("wins", 0), rec.get("repetitions", 0), rec.get("duration", 0))
-            val = rec.get(metric_key, 0)
+            # Un record malformato si scarta da solo: prima faceva mettere
+            # da parte tutto il file (R58).
+            try:
+                user = config.maiuscole_nomi(str(rec.get("username", _("Anonimo"))))
+                rec["username"] = user
+                if metric_key == "net_per_minute" and "net_per_minute" not in rec:
+                    # Le classifiche di prima si ricalcolano: ogni voce ha gia'
+                    # giuste, domande e durata.
+                    rec["net_per_minute"] = nette_al_minuto(rec.get("wins", 0), rec.get("repetitions", 0), rec.get("duration", 0))
+                val = float(rec.get(metric_key, 0))
+            except (TypeError, ValueError, AttributeError, ZeroDivisionError):
+                continue
 
-            if user not in best_by_user or val > best_by_user[user].get(metric_key, 0):
+            if user not in best_by_user or val > float(best_by_user[user].get(metric_key, 0)):
                 best_by_user[user] = rec
 
         sorted_users = sorted(
@@ -176,14 +181,24 @@ def load_scores():
             print(_("L'ho messo da parte come {copia}.").format(copia=copia))
             print(_("Le classifiche ripartono da zero."))
         else:
-            print(_("Attenzione: il prossimo salvataggio lo sovrascrivera'."))
+            # Senza la copia il file resta com'e': prima l'uscita da
+            # Memoboard lo copriva con le classifiche vuote (R58).
+            _PUNTEGGI["non_letti"] = True
+            print(_("Non sono riuscita a metterlo da parte: i punteggi di questa sessione non si salvano."))
         return default_structure
+
+
+# Il file dei punteggi che non si e' letto e non si e' potuto mettere da
+# parte non si sovrascrive (R58).
+_PUNTEGGI = {"non_letti": False}
 
 
 def save_scores(scores_data):
     """
     Salva il dizionario dei punteggi nel file JSON dopo la deduplicazione.
     """
+    if _PUNTEGGI["non_letti"]:
+        return
     try:
         cleaned_data = _deduplicate_scores(scores_data)
         storage.scrivi_json(SCORES_FILE, cleaned_data, indent=2)
@@ -1285,6 +1300,8 @@ def main():
     start_memoboard_time = time.perf_counter()
     session_start_dt = datetime.datetime.now()
     all_scores = load_scores()
+    # All'uscita si salva solo se qualcosa e' cambiato (R58).
+    punteggi_letti = json.dumps(all_scores, sort_keys=True, default=str)
     session_logs = []
     exercises_played = []
     current_session_filepath = None
@@ -1578,7 +1595,8 @@ def main():
                 esiti,
             )
 
-    save_scores(all_scores)
+    if json.dumps(all_scores, sort_keys=True, default=str) != punteggi_letti:
+        save_scores(all_scores)
     Acusticator(
         [
             "g4",
