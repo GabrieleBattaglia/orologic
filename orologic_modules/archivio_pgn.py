@@ -606,7 +606,11 @@ def ripara(archivio, indici, tipi):
         if "intestazioni" in problemi and "intestazioni" in tipi:
             for tag in problemi["intestazioni"]:
                 if tag == "Result":
-                    valori[tag] = atteso or archivio.info[indice]["Result"] or "*"
+                    # Senza intestazione vale il segno scritto in fondo alle
+                    # mosse: prima diventava "*", in contrasto con le mosse
+                    # (R70).
+                    in_fondo = SEGNO.search(archivio.testo_della_partita(indice).rstrip())
+                    valori[tag] = atteso or (in_fondo.group(1) if in_fondo else None) or archivio.info[indice]["Result"] or "*"
                 else:
                     valori[tag] = VALORI_IGNOTI.get(tag, "?")
             conti["intestazioni"] += 1

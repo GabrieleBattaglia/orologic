@@ -92,3 +92,25 @@ def test_la_rilettura_si_ferma(tmp_path):
     cambi = {n: archivio.testo_della_partita(n) for n in range(50)}
     nuovo, righe = archivio_pgn.applica_le_modifiche(archivio, cambi, fermato=lambda: True)
     assert nuovo is None and righe == ["Modifiche annullate: l'archivio resta com'era."]
+
+
+# R69: il giocatore principale; R70: il Result dal segno in fondo.
+
+
+def test_il_giocatore_principale_degli_archivi_piccoli():
+    from orologic_modules import pgn_search
+
+    trova = pgn_search._trova_giocatore_comune
+    assert trova([{"White": "Rossi", "Black": "Bianchi"}]) is None
+    assert trova([{"White": "?", "Black": "?"}] * 3) is None
+    partite = [{"White": "Gabry", "Black": f"N{n}"} for n in range(9)] + [{"White": "X", "Black": "Y"}]
+    assert trova(partite) == "Gabry"
+    assert trova([{"White": "Gabry", "Black": "A"}, {"White": "B", "Black": "Gabry"}]) == "Gabry"
+
+
+def test_ripara_prende_il_result_dal_segno_in_fondo(tmp_path):
+    testo = '[Event "E"]\n[Site "S"]\n[Date "2024.01.01"]\n[Round "1"]\n[White "A"]\n[Black "B"]\n\n1. e4 e5 1-0\n\n'
+    archivio = _archivio(tmp_path, testo)
+    assert "Result" in archivio.schede[0].problemi["intestazioni"]
+    cambi, _tolte, _conti = archivio_pgn.ripara(archivio, [0], {"intestazioni"})
+    assert '[Result "1-0"]' in cambi[0]
