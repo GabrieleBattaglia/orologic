@@ -199,16 +199,19 @@ def _loop_tempo(game_state, clock_config):
                 else:
                     # Rimuoviamo l'ultima mossa
                     last_move = game_state.move_history.pop()
-                    # Revertiamo il turno e il tempo
-                    # Via quello che la tipologia aveva dato alla nota.
-                    if game_state.active_color == "white":
-                        game_state.active_color = "black"
-                        game_state.black_moves = max(0, game_state.black_moves - 1)
-                        controlli.annulla(game_state, False)
-                    else:
-                        game_state.active_color = "white"
-                        game_state.white_moves = max(0, game_state.white_moves - 1)
-                        controlli.annulla(game_state, True)
+                    # Come nell'arbitraggio: il tratto torna, via quello che
+                    # la tipologia aveva dato, e il contatore delle mosse e
+                    # la fase tornano indietro, col tempo che il cambio di
+                    # fase aveva aggiunto. Prima la fase restava avanti
+                    # (R98).
+                    game_state.active_color = "white" if game_state.active_color == "black" else "black"
+                    torna_il_bianco = game_state.active_color == "white"
+                    controlli.annulla(game_state, torna_il_bianco, riparti=False)
+                    tempo_di_fase = game_state.annulla_mossa()
+                    if tempo_di_fase:
+                        orologio.aggiungi(game_state, torna_il_bianco, -tempo_di_fase)
+                        print(_("Rientro nella fase precedente, tolto il tempo aggiunto."))
+                    controlli.inizio_turno(game_state, torna_il_bianco)
 
                     Acusticator(
                         [

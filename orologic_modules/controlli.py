@@ -483,6 +483,15 @@ def a_turno_passato(stato, registro):
     return residuo
 
 
+def corretto(stato, bianco, secondi):
+    """L'arbitro ha corretto di secondi il tempo del colore: l'inizio del
+    suo turno si sposta dello stesso, cosi' il Bronstein e il tempo speso
+    della mossa non contano la correzione come tempo giocato (R98)."""
+    with _blocco():
+        controllo = _di(stato, bianco)
+        controllo["inizio_turno"] = controllo.get("inizio_turno", 0.0) + secondi
+
+
 def annulla(stato, bianco, riparti=True):
     """L'arbitro toglie l'ultima mossa del colore: via quello che la mossa
     gli aveva dato, lo stato del colore com'era, e, con riparti, il suo turno

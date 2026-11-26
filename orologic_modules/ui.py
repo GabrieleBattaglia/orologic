@@ -1128,7 +1128,14 @@ def comandi_orologio(comando, game_state):
             return True
         bianco = comando[1] == "b"
         segno = 1 if comando[2] == "+" else -1
+        prima = game_state.white_remaining if bianco else game_state.black_remaining
         nuovo = orologio.aggiungi(game_state, bianco, segno * secondi)
+        # L'inizio del turno si sposta della correzione: prima il Bronstein
+        # e il tempo speso della mossa la contavano come tempo giocato
+        # (R98).
+        from . import controlli
+
+        controlli.corretto(game_state, bianco, nuovo - prima)
         chi = _("Il bianco") if bianco else _("Il nero")
         if segno > 0:
             Acusticator(["c6", 0.12, 0, config.VOLUME], kind=1)

@@ -159,7 +159,9 @@ def fra_date(inizio, fine, con_secondi=False):
     """
     from dateutil.relativedelta import relativedelta
 
-    differenza = relativedelta(fine, inizio)
+    # Un momento nel futuro, come una data di rilascio scritta su un altro
+    # computer, conta zero: prima usciva "-3 ore fa" (R98).
+    differenza = relativedelta(max(fine, inizio), inizio)
     parti = []
     if differenza.years:
         parti.append(
