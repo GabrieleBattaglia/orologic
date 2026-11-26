@@ -188,6 +188,10 @@ def estrai_info(games):
                 "Date": date_str,
                 "Year": year,
                 "ECO": h.get("ECO", ""),
+                # Per la chiave dei doppioni: due studi con le stesse mosse e
+                # intestazioni generiche non sono la stessa partita (R24).
+                "Round": h.get("Round", "?"),
+                "FEN": h.get("FEN", ""),
             }
         )
     return info_list

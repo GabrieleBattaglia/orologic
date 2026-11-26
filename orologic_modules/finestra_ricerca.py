@@ -1014,6 +1014,14 @@ class FinestraRicerca(wx.Dialog):
             self._annuncia([_("La ricerca dei doppioni non e' finita: riprova fra poco.")])
             return
         indici = list(ramo.indici)
+        # Prima di togliere partite dall'archivio, il loro numero e una
+        # domanda (R24).
+        doppie = sum(1 for indice in indici if "doppioni" in (archivio.schede[indice].problemi or {}))
+        if "doppioni" in tipi and doppie:
+            if not self._chiedi_conferma(self, _("Tolgo dall'archivio {n} partite doppie?").format(n=doppie)):
+                tipi = tipi - {"doppioni"}
+                if not tipi:
+                    return
         self.ricerca.posizione = self.chiavi(voce)
 
         def lavoro(_avanzamento, _fermato):

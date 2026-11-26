@@ -899,6 +899,8 @@ def test_problemi_e_ripara_nella_finestra(prova, tmp_path, monkeypatch):
     d.ripara()
     assert pompa(lambda: not d.in_corso() and len(p.avvisi) == 2)
     assert p.avvisi[-1].split("\n")[:3] == ["Intestazioni aggiunte: 1 partite.", "Risultati corretti: 1.", "Doppioni tolti: 1."]
+    # Prima di togliere i doppioni, la domanda col numero (R24).
+    assert "Tolgo dall'archivio 1 partite doppie?" in p.domande
     assert p.finiti_i_doppioni()
     assert p.testi(p.voce("Con errori")) == ["Mosse illegali o illeggibili (1 partite)", "Elo non numerici (1 partite)"]
     assert not (tmp_path / "pgn").exists() and file.read_bytes() == PROBLEMI.encode("utf-8")

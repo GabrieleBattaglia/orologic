@@ -480,7 +480,13 @@ def cerca_i_doppioni(archivio, avanzamento=None, fermato=None):
                 avanzamento(indice * 100 // totale)
                 ultima = adesso
         info = archivio.info[indice]
-        chiave = (scheda.mosse.tobytes(), scheda.fuori, info["White"], info["Black"], info["Event"], info["Date"], info["Result"])
+        # La posizione di partenza e il turno nella chiave: due studi diversi
+        # con le stesse coordinate di mossa e intestazioni generiche erano
+        # dati per doppi, e Ripara gli errori li toglieva (R24).
+        chiave = (
+            scheda.mosse.tobytes(), scheda.fuori, info["White"], info["Black"], info["Event"], info["Date"], info["Result"],
+            info.get("Round", "?"), info.get("FEN", ""),
+        )
         primo = viste.setdefault(chiave, indice)
         if primo != indice:
             doppioni[indice] = primo
