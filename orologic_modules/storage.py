@@ -154,7 +154,8 @@ def _normalizza(db):
     secondi di corsa).
     """
     if not isinstance(db, dict):
-        return dict(DEFAULT_DB), 0, 0
+        # Una copia profonda, come _predefiniti (R97).
+        return copy.deepcopy(DEFAULT_DB), 0, 0
     for chiave in CHIAVI_OBSOLETE:
         db.pop(chiave, None)
     for chiave, ripiego in DEFAULT_DB.items():
@@ -173,7 +174,7 @@ def _normalizza(db):
     db["analysis_thresholds"] = soglie
     db["menu_numerati"] = bool(db.get("menu_numerati", False))
     db["autosave_enabled"] = bool(db.get("autosave_enabled", False))
-    db["volume"] = _numero(db.get("volume"), 1.0)
+    db["volume"] = min(1.0, max(0.0, _numero(db.get("volume"), 1.0)))
     db["launch_count"] = int(_numero(db.get("launch_count"), 0))
     db["default_analysis_time"] = _numero(db.get("default_analysis_time"), 1.0)
     db["default_multipv"] = int(_numero(db.get("default_multipv"), 3))

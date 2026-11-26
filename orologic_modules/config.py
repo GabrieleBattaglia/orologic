@@ -106,7 +106,10 @@ try:
     with open(DB_FILE, encoding="utf-8") as f:
         _db_data = json.load(f)
         VOLUME = _db_data.get("volume", 1.0)
-except (OSError, ValueError, AttributeError):
+    # Il volume fra zero e uno, e un numero: prima si leggeva senza limiti
+    # (R97).
+    VOLUME = min(1.0, max(0.0, float(VOLUME)))
+except (OSError, ValueError, AttributeError, TypeError):
     VOLUME = 1.0
 
 PIECE_VALUES = {
