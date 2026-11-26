@@ -84,6 +84,8 @@ class PygameBoardWindow:
         self.thread = None
         self.update_event = threading.Event()
         self.lock = threading.Lock()
+        # Vero dopo il primo errore di disegno, detto una volta.
+        self._errore_detto = False
         self.version = version
         self.orientation_mode = "turn"
         self.width = 600
@@ -258,6 +260,10 @@ class PygameBoardWindow:
                     y_start += line_spacing
             pygame.display.flip()
         # La finestra grafica gira in un thread suo: se pygame va in
-        # difficolta' si chiude la finestra, senza portarsi dietro il programma.
-        except Exception:  # noqa: BLE001, S110
-            pass
+        # difficolta' la finestra resta, senza portarsi dietro il programma;
+        # ma lo si dice, una volta sola, invece di lasciarla nera in silenzio
+        # (rilievo R2 della revisione 2).
+        except Exception as errore:  # noqa: BLE001
+            if not self._errore_detto:
+                self._errore_detto = True
+                print(_("La finestra di condivisione non riesce a disegnare la scacchiera: {errore}").format(errore=errore))

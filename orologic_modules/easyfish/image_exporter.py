@@ -53,38 +53,45 @@ def rgb_from_percent(r_perc, g_perc, b_perc):
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
+# Le impostazioni grafiche di partenza. Il database ha sempre la chiave
+# image_settings, vuota su un'installazione nuova: si uniscono le due, e
+# quello che manca viene da qui (rilievo R2 della revisione 2, 26 novembre
+# 2026: prima un database nuovo dava KeyError, e .i, .ii e .cs cadevano).
+IMPOSTAZIONI_PREDEFINITE = {
+    "square_light": [94, 85, 71],  # Case chiare (crema/beige)
+    "square_dark": [41, 30, 25],  # Case scure (marrone scuro)
+    "pieces_white": [96, 96, 94],  # Pezzi bianchi (bianco sporco)
+    "pieces_white_stroke": [0, 21, 14],  # Bordo pezzi bianchi (verde scuro)
+    "pieces_black": [3, 3, 3],  # Pezzi neri (grigio scurissimo/nero)
+    "pieces_black_stroke": [100, 85, 6],  # Bordo pezzi neri (giallino/avorio)
+    "margin": [12, 12, 20],  # Sfondo coordinate (blu notte)
+    "coord": [98, 98, 34],  # Testo coordinate (giallo)
+    "inner_border": [100, 100, 0],  # Bordo interno scacchiera (giallo acceso)
+    "outer_border": [0, 0, 6],  # Bordo esterno (blu molto scuro)
+    "last_move_light": [
+        50,
+        90,
+        15,
+    ],  # Ultima mossa su casa chiara (verde chiaro)
+    "last_move_dark": [
+        70,
+        40,
+        40,
+    ],  # Ultima mossa su casa scura (rosso/mattone)
+    "check_color": [100, 0, 0],  # Colore scacco (rosso puro)
+    "piece_stroke_width": 1.4,  # Spessore bordo bilanciato (float)
+    "shadow": True,  # Ombreggiatura attiva
+    "size": 600,  # Dimensione standard in pixel
+}
+
+
 def get_image_settings():
-    db = storage.LoadDB()
-    # Se le impostazioni non esistono nel DB, usiamo questi nuovi valori di default
-    settings = db.get(
-        "image_settings",
-        {
-            "square_light": [94, 85, 71],  # Case chiare (crema/beige)
-            "square_dark": [41, 30, 25],  # Case scure (marrone scuro)
-            "pieces_white": [96, 96, 94],  # Pezzi bianchi (bianco sporco)
-            "pieces_white_stroke": [0, 21, 14],  # Bordo pezzi bianchi (verde scuro)
-            "pieces_black": [3, 3, 3],  # Pezzi neri (grigio scurissimo/nero)
-            "pieces_black_stroke": [100, 85, 6],  # Bordo pezzi neri (giallino/avorio)
-            "margin": [12, 12, 20],  # Sfondo coordinate (blu notte)
-            "coord": [98, 98, 34],  # Testo coordinate (giallo)
-            "inner_border": [100, 100, 0],  # Bordo interno scacchiera (giallo acceso)
-            "outer_border": [0, 0, 6],  # Bordo esterno (blu molto scuro)
-            "last_move_light": [
-                50,
-                90,
-                15,
-            ],  # Ultima mossa su casa chiara (verde chiaro)
-            "last_move_dark": [
-                70,
-                40,
-                40,
-            ],  # Ultima mossa su casa scura (rosso/mattone)
-            "check_color": [100, 0, 0],  # Colore scacco (rosso puro)
-            "piece_stroke_width": 1.4,  # Spessore bordo bilanciato (float)
-            "shadow": True,  # Ombreggiatura attiva
-            "size": 600,  # Dimensione standard in pixel
-        },
-    )
+    """Le impostazioni grafiche: quelle predefinite, coi valori del
+    database sopra."""
+    salvate = storage.LoadDB().get("image_settings")
+    settings = {chiave: list(valore) if isinstance(valore, list) else valore for chiave, valore in IMPOSTAZIONI_PREDEFINITE.items()}
+    if isinstance(salvate, dict):
+        settings.update(salvate)
     return settings
 
 
