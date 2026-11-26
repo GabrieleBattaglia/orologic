@@ -350,3 +350,17 @@ def test_l_analisi_interrotta_non_si_dice_completata(monkeypatch, tmp_path):
     testo = uscita.getvalue()
     assert "Analisi interrotta dall'utente." in testo
     assert "Analisi automatica completata." not in testo
+
+
+def test_il_matto_subito_ha_il_segno_nelle_linee_migliori(monkeypatch, capsys):
+    """R133: nelle linee migliori e nella mossa migliore dell'analisi il
+    matto subito usciva senza segno, come quello dato (residuo di R55)."""
+    board = chess.Board("6k1/5ppp/8/8/8/8/5PPP/3r2K1 w - - 0 1")
+    partita = chess.pgn.Game.from_board(board)
+    linea = {"score": chess.engine.PovScore(chess.engine.Mate(-1), chess.WHITE), "pv": [chess.Move.from_uci("g1f1")]}
+    monkeypatch.setattr(engine, "ENGINE", object())
+    monkeypatch.setattr(engine, "Acusticator", lambda *_a, **_k: None)
+    monkeypatch.setattr(engine, "_analizza_con_cache", lambda *_a: [linea])
+    risposta = engine._comandi_valutazione("w", partita)
+    assert "Linea 1 (-M1):" in capsys.readouterr().out
+    assert "-M1" in risposta

@@ -732,8 +732,10 @@ def SmartInspection(analysis_lines, board):
         print(_("Linea vuota, termine ispezione."))
         return
     score = chosen_info.get("score")
+    # Il matto subito col segno, -M3, come nel resto di Orologic: prima
+    # usciva come quello dato (R55, R133).
     if score is not None and score.relative.is_mate():
-        eval_str = _("Mate in {moves}").format(moves=abs(score.relative.mate()))
+        eval_str = board_utils.testo_del_matto(score.relative.mate())
     elif score is not None:
         cp = score.white().score()
         eval_str = f"{cp / 100:.2f}"
@@ -803,7 +805,7 @@ def SmartInspection(analysis_lines, board):
                 new_eval_str = "N/A"
                 pov_score_si = score_object_si.pov(temp_board.turn)
                 if pov_score_si.is_mate():
-                    new_eval_str = _("M{moves}").format(moves=abs(pov_score_si.mate()))
+                    new_eval_str = board_utils.testo_del_matto(pov_score_si.mate())
                 else:
                     cp_si = score_object_si.white().score(mate_score=30000)
                     if cp_si is not None:
@@ -1109,7 +1111,7 @@ def _comandi_valutazione(cmd, current_node):
                             continue
                         score = valutazione.pov(current_node.board().turn)
                         eval_str = (
-                            _("M{m}").format(m=abs(score.mate()))
+                            board_utils.testo_del_matto(score.mate())
                             if score.is_mate()
                             else f"{score.score() / 100:+.2f}"
                             if score.score() is not None
@@ -1122,7 +1124,7 @@ def _comandi_valutazione(cmd, current_node):
                     bm_san = current_node.board().san(analysis[0]["pv"][0])
                     score = analysis[0].get("score").pov(current_node.board().turn)
                     eval_str = (
-                        _("M{m}").format(m=abs(score.mate()))
+                        board_utils.testo_del_matto(score.mate())
                         if score.is_mate()
                         else f"{score.score() / 100:+.2f}"
                         if score.score() is not None
@@ -2164,7 +2166,7 @@ def AnalisiAutomatica(pgn_game):
             return _("N/A")
         pov_score = score_obj.pov(pov_color)
         if pov_score.is_mate():
-            return _("M{m}").format(m=abs(pov_score.mate()))
+            return board_utils.testo_del_matto(pov_score.mate())
         else:
             # La valutazione e' sempre dal punto di vista del bianco, quindi la adattiamo
             cp = score_obj.white().score(mate_score=30000)
