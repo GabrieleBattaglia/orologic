@@ -512,7 +512,9 @@ class FinestraRicerca(wx.Dialog):
 
     def carica(self, tipo, sorgente):
         """Il caricamento nel filo; alla fine l'albero, o l'avviso di cosa
-        non e' andato."""
+        non e' andato. Prima, le modifiche dell'archivio aperto: con Apri
+        file o Dagli appunti sparivano in silenzio (R25)."""
+        salva_all_uscita(self, self.ricerca, self._chiedi_conferma, self._avvisa)
         self._lavora(_("Analisi del PGN in corso..."), lambda avanzamento, fermato: archivio_pgn.carica(tipo, sorgente, avanzamento, fermato), self._caricato)
 
     def _avanzamento(self, testo):
