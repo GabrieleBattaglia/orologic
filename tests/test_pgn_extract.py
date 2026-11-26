@@ -541,3 +541,22 @@ def test_il_pe_indicato_a_mano_si_ricorda(tmp_path, impostazioni_rimesse):
     assert pgn_extract.eseguibile() is None
     pgn_extract.ricorda_il_percorso(str(finto))
     assert pgn_extract.eseguibile() == str(finto)
+
+
+def test_un_catalogo_di_forma_diversa_non_blocca_niente(tmp_path):
+    """R68: un arguments.json di un formato diverso sollevava un errore
+    che nessuno prendeva, e la finestra non si apriva piu'."""
+    import json as json_
+
+    percorso = tmp_path / "arguments.json"
+    for dati in (
+        {"format": "pgn-extract-arguments", "format_version": 2, "options": []},
+        {"format": "pgn-extract-arguments", "format_version": 1, "options": ["-7", {"name": "-s", "value": ["strano"]}]},
+        {"format": "pgn-extract-arguments", "format_version": 1, "options": [{"name": "-s", "aliases": 5}]},
+    ):
+        percorso.write_text(json_.dumps(dati), encoding="utf-8")
+        assert pgn_extract.leggi_il_catalogo(str(percorso)) is None
+    # Il catalogo vero si legge ancora.
+    vero = os.path.join(RADICE, "pgn-extract", "arguments.json")
+    if os.path.isfile(vero):
+        assert pgn_extract.leggi_il_catalogo(vero) is not None

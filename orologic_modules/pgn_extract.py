@@ -62,6 +62,8 @@ FILE_DEL_SITO = (ESEGUIBILE, "COPYING", GUIDA)
 CATALOGO = "arguments.json"
 INDIRIZZO_DEL_CATALOGO = "https://www.cs.kent.ac.uk/~djb/pgn-extract/" + CATALOGO
 FORMATO_DEL_CATALOGO = "pgn-extract-arguments"
+# La versione del formato che Orologic sa leggere (R68).
+VERSIONE_DEL_FORMATO = 1
 # La chiave del database col percorso indicato a mano.
 CHIAVE_DEL_PERCORSO = "pgn_extract_path"
 # Quanto si aspetta pe per --version e -h, e il sito.
@@ -258,6 +260,8 @@ class Catalogo:
         self.opzioni = {}
         self._nomi = {}
         for opzione in dati.get("options") or []:
+            if not isinstance(opzione, dict):
+                continue
             nome = opzione.get("name")
             if not isinstance(nome, str):
                 continue
@@ -288,10 +292,24 @@ def percorso_del_catalogo(percorso_di_pe=None):
 
 
 def catalogo_dai_dati(dati):
-    """Il catalogo, se i dati sono un arguments.json; altrimenti None."""
+    """Il catalogo, se i dati sono un arguments.json di un formato che
+    Orologic sa leggere; altrimenti None, e Orologic fa con la sua tabella.
+    Prima la struttura interna si dava per buona: un formato diverso
+    sollevava un errore che nessuno prendeva, e PGN gestione archivi non si
+    apriva piu' finche' il file non si cancellava a mano (R68)."""
     if not isinstance(dati, dict) or dati.get("format") != FORMATO_DEL_CATALOGO or not isinstance(dati.get("options"), list):
         return None
-    return Catalogo(dati)
+    if dati.get("format_version", VERSIONE_DEL_FORMATO) != VERSIONE_DEL_FORMATO:
+        return None
+    try:
+        catalogo = Catalogo(dati)
+        # I parametri si costruiscono subito, cosi' un'opzione di forma
+        # strana si scopre qui e non all'apertura della finestra.
+        for opzione in catalogo.opzioni.values():
+            _sconosciuto_dal_catalogo(opzione["name"], opzione, "")
+    except (AttributeError, TypeError, ValueError, KeyError, StopIteration):
+        return None
+    return catalogo
 
 
 def leggi_il_catalogo(percorso):
