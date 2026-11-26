@@ -175,6 +175,10 @@ settings/orologic_db.json.backup
 settings/orologic_db.json.bak
 settings/*.tmp
 settings/secrets.json
+# Le copie di secrets.json messe da parte tengono il token in chiaro, e il
+# registro degli errori girato tiene i percorsi dell'utente (R106).
+settings/secrets.json*
+settings/errori.log*
 
 # Zip files
 *.zip
