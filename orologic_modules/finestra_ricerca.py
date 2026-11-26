@@ -168,23 +168,28 @@ def mostra_la_partita(genitore, testo, chiedi_conferma, avvisa):
 def salva_all_uscita(genitore, ricerca, chiedi_conferma, avvisa):
     """Uscendo dalla ricerca, o chiudendo Orologic, con un archivio da file
     modificato: si chiede se salvare nel file, poi se fare prima la copia di
-    sicurezza (Gabriele, collaudo del 23 novembre 2026)."""
+    sicurezza (Gabriele, collaudo del 23 novembre 2026). Vero se si puo'
+    andare avanti; falso se il salvataggio non e' riuscito: chi chiama
+    resta dov'e', e si puo' riprovare. Prima la finestra si chiudeva lo
+    stesso, e le modifiche se ne andavano (R61)."""
     archivio = ricerca.archivio
     if archivio is None or not archivio.modificato or archivio.percorso is None:
-        return
+        return True
     domanda = _("Hai modificato l'archivio. Salvo le modifiche nel file {percorso}? Se rispondi no, si perdono.")
     if not chiedi_conferma(genitore, pgn_search.pulita(domanda.format(percorso=archivio.percorso))):
         archivio.modificato = False
-        return
+        return True
     con_la_copia = chiedi_conferma(genitore, _("Prima di salvare faccio una copia di sicurezza del file, nella cartella pgn di Orologic?"))
     try:
         with wx.BusyCursor():
             righe = archivio_pgn.salva_nel_file(archivio, con_la_copia)
     except OSError as errore:
         suona("no")
-        avvisa(genitore, pgn_search.pulita(_("Errore nel salvataggio: {e}").format(e=errore)))
-        return
+        testo = _("Errore nel salvataggio: {e}").format(e=errore) + " " + _("Le modifiche restano: puoi riprovare.")
+        avvisa(genitore, pgn_search.pulita(testo))
+        return False
     avvisa(genitore, "\n".join(righe))
+    return True
 
 
 def finisci(dialogo, codice):
@@ -514,7 +519,8 @@ class FinestraRicerca(wx.Dialog):
         """Il caricamento nel filo; alla fine l'albero, o l'avviso di cosa
         non e' andato. Prima, le modifiche dell'archivio aperto: con Apri
         file o Dagli appunti sparivano in silenzio (R25)."""
-        salva_all_uscita(self, self.ricerca, self._chiedi_conferma, self._avvisa)
+        if not salva_all_uscita(self, self.ricerca, self._chiedi_conferma, self._avvisa):
+            return
         self._lavora(_("Analisi del PGN in corso..."), lambda avanzamento, fermato: archivio_pgn.carica(tipo, sorgente, avanzamento, fermato), self._caricato)
 
     def _avanzamento(self, testo):
@@ -1070,7 +1076,8 @@ class FinestraRicerca(wx.Dialog):
         uscita."""
         self.ferma()
         self._ferma_i_doppioni()
-        salva_all_uscita(self, self.ricerca, self._chiedi_conferma, self._avvisa)
+        if not salva_all_uscita(self, self.ricerca, self._chiedi_conferma, self._avvisa):
+            return
         finisci(self, wx.ID_CANCEL)
 
     def _tasto(self, evento):

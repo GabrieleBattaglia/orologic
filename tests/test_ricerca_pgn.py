@@ -1087,3 +1087,26 @@ def test_apri_file_chiede_delle_modifiche_dell_archivio_aperto(prova, tmp_path, 
     assert p.domande[-1] == f"Hai modificato l'archivio. Salvo le modifiche nel file {file}? Se rispondi no, si perdono."
     assert pompa(lambda: not d.in_corso() and not d.ricerca.archivio.modificato)
     assert file.read_bytes() == PROBLEMI.encode("utf-8")
+
+
+def test_se_il_salvataggio_all_uscita_fallisce_la_finestra_resta(prova, tmp_path, monkeypatch):
+    """R61: la finestra si chiudeva lo stesso, e le modifiche se ne
+    andavano."""
+    monkeypatch.setattr(archivio_pgn.config, "percorso_salvataggio", lambda nome: str(tmp_path / nome))
+    file = tmp_path / "problemi.pgn"
+    file.write_bytes(PROBLEMI.encode("utf-8"))
+    p = prova(archivio_pgn.Ricerca(), str(file))
+    d = p.dialogo
+    assert pompa(lambda: d.ricerca.archivio is not None and not d.in_corso())
+    assert p.finiti_i_doppioni()
+    d.albero.SelectItem(p.voce("Con errori", "Date malformate", "Primo"))
+    d.ripara()
+    assert pompa(lambda: not d.in_corso() and p.avvisi)
+
+    def guasto(_archivio, _con_la_copia):
+        raise OSError("disco pieno")
+
+    monkeypatch.setattr(archivio_pgn, "salva_nel_file", guasto)
+    d._chiudi()
+    assert d.IsShown() and d.ricerca.archivio.modificato
+    assert p.avvisi[-1].endswith("Le modifiche restano: puoi riprovare.")

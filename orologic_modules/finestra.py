@@ -1988,8 +1988,10 @@ class Finestra(wx.Frame):
         from . import archivio_pgn, finestra_ricerca
 
         ricerca = archivio_pgn.ricerca_aperta()
-        if ricerca is not None and self.dialogo_ricerca is None:
-            finestra_ricerca.salva_all_uscita(self, ricerca, self.chiedi_conferma, self.avvisa)
+        # Se il salvataggio non riesce Orologic resta aperto, e si puo'
+        # riprovare (R61).
+        if ricerca is not None and self.dialogo_ricerca is None and not finestra_ricerca.salva_all_uscita(self, ricerca, self.chiedi_conferma, self.avvisa):
+            return
         self.chiudendo = True
         self.faccia.chiudi()
         inizio = time.monotonic()
