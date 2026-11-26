@@ -2197,6 +2197,9 @@ def AnalisiAutomatica(pgn_game):
         san_str = san if ply % 2 != 0 else f"...{san}"
         elapsed_time = time.time() - start_time
         time_str = f"{int(elapsed_time // 60):02d}:{int(elapsed_time % 60):02d}"
+        # La riga di prima si pulisce: una riga piu' corta ne lasciava la
+        # coda in fondo, come tempo 00:1800:17 (R126).
+        ui.pulisci_riga()
         print(
             # Senza la barra verticale, e senza gli spazi di riempimento
             # (R90).

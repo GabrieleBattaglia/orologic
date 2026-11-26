@@ -314,3 +314,19 @@ def test_nella_finestra_l_analisi_si_legge_in_una_finestra_sua(monkeypatch, tmp_
     assert righe[0].startswith("Orologic Analisi Automatica [OAA]")
     assert "" in righe
     assert righe == next((tmp_path / "txt").glob("*.txt")).read_text(encoding="utf-8").rstrip("\n").split("\n")
+
+
+def test_la_riga_semimossa_si_pulisce_prima_di_riscriverla(monkeypatch, tmp_path):
+    """R126: dopo R90 la riga Semimossa si riscriveva col ritorno a capo,
+    senza pulire e senza il riempimento: una riga piu' corta lasciava in
+    fondo la coda della precedente, per esempio tempo 00:1800:17."""
+    import sys
+
+    uscita = io.StringIO()
+    monkeypatch.setattr(sys, "stdout", uscita)
+    monkeypatch.setattr(engine.ui, "pulisci_riga", lambda: uscita.write("<PULITA>"))
+    partita = chess.pgn.read_game(io.StringIO(PARTITA))
+    _analizza(monkeypatch, tmp_path, partita, MotoreFinto(partita, {}))
+    testo = uscita.getvalue()
+    assert testo.count("\rSemimossa ") >= 3
+    assert testo.count("\rSemimossa ") == testo.count("<PULITA>\rSemimossa ")
