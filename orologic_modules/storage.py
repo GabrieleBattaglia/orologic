@@ -227,6 +227,27 @@ _LUCCHETTO = threading.RLock()
 # o da un programma di sincronizzazione, si riprova prima di arrendersi (R7).
 TENTATIVI_DI_LETTURA = 10
 PAUSA_FRA_I_TENTATIVI = 0.1
+# Gli avvisi della lettura silenziosa, quella dell'importazione, che nella
+# finestra andrebbero nel vuoto: Main li dice dopo il benvenuto (R31).
+_SILENZIOSA = {"attiva": False}
+_AVVISI_IN_SOSPESO = []
+
+
+def _di(testo):
+    """Un avviso della lettura: a schermo, o da parte se la lettura e'
+    silenziosa."""
+    if _SILENZIOSA["attiva"]:
+        _AVVISI_IN_SOSPESO.append(testo)
+    else:
+        print(testo)
+
+
+def avvisi_in_sospeso():
+    """Gli avvisi messi da parte dalle letture silenziose, una volta sola."""
+    with _LUCCHETTO:
+        avvisi = list(_AVVISI_IN_SOSPESO)
+        _AVVISI_IN_SOSPESO.clear()
+    return avvisi
 
 
 class DatabaseNonLetto(dict):
@@ -278,33 +299,39 @@ def _dalla_riserva():
 def _da_danneggiato(errore):
     """Il database da usare al posto di uno danneggiato, che va da parte."""
     copia = _salva_copia_danneggiata()
-    print(_("Il database delle impostazioni non e' leggibile: {errore}").format(errore=errore))
+    _di(_("Il database delle impostazioni non e' leggibile: {errore}").format(errore=errore))
     if not copia:
-        print(_("Attenzione: non sono riuscita a metterne da parte una copia."))
-        print(_("Le modifiche non si salvano finche' il database non torna leggibile."))
+        _di(_("Attenzione: non sono riuscita a metterne da parte una copia."))
+        _di(_("Le modifiche non si salvano finche' il database non torna leggibile."))
         return DatabaseNonLetto(_predefiniti())
-    print(_("Ne ho messo da parte una copia in {percorso}").format(percorso=copia))
+    _di(_("Ne ho messo da parte una copia in {percorso}").format(percorso=copia))
     riserva = _dalla_riserva()
     if riserva is not None:
-        print(_("Riparto dall'ultima copia buona: {percorso}").format(percorso=copia_di_riserva()))
+        _di(_("Riparto dall'ultima copia buona: {percorso}").format(percorso=copia_di_riserva()))
         db, _scartati, _completati = _normalizza(riserva)
         SaveDB(db)
         return db
-    print(_("Riparto dalle impostazioni predefinite, gli orologi salvati non sono andati perduti nella copia."))
+    _di(_("Riparto dalle impostazioni predefinite, gli orologi salvati non sono andati perduti nella copia."))
     return _predefiniti()
 
 
-def LoadDB():
+def LoadDB(silenziosa=False):
     """Carica il database, completando le chiavi mancanti.
 
     Un database illeggibile non viene mai perso in silenzio: viene messo da
     parte con la data nel nome e l'utente ne viene avvisato a schermo; se
     c'e', si riparte dall'ultima copia buona. Un file che c'e' ma non si
     lascia leggere non e' danneggiato: si riprova, e se non si legge si
-    usano i predefiniti senza scriverli.
+    usano i predefiniti senza scriverli. silenziosa, per la lettura
+    dell'importazione, mette gli avvisi da parte per avvisi_in_sospeso.
     """
     with _LUCCHETTO:
-        return _carica()
+        prima = _SILENZIOSA["attiva"]
+        _SILENZIOSA["attiva"] = silenziosa or prima
+        try:
+            return _carica()
+        finally:
+            _SILENZIOSA["attiva"] = prima
 
 
 def _carica():
@@ -315,8 +342,8 @@ def _carica():
     except FileNotFoundError:
         return _predefiniti()
     except OSError as e:
-        print(_("Il database delle impostazioni non si lascia leggere: {errore}").format(errore=e))
-        print(_("Le modifiche non si salvano finche' il database non torna leggibile."))
+        _di(_("Il database delle impostazioni non si lascia leggere: {errore}").format(errore=e))
+        _di(_("Le modifiche non si salvano finche' il database non torna leggibile."))
         return DatabaseNonLetto(_predefiniti())
     except ValueError as e:
         return _da_danneggiato(e)
@@ -326,11 +353,7 @@ def _carica():
         return _da_danneggiato(_("non contiene le impostazioni"))
     db, scartati, completati = _normalizza(dati)
     if scartati:
-        print(
-            _("Ho ignorato {numero} orologi salvati perche' incompleti.").format(
-                numero=scartati
-            )
-        )
+        _di(_("Ho ignorato {numero} orologi salvati perche' incompleti.").format(numero=scartati))
     if completati:
         # Gli orologi nati prima del tachimetro hanno appena ricevuto data
         # di creazione e secondi di corsa: si salvano subito, una volta

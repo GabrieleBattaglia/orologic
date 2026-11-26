@@ -115,3 +115,19 @@ def test_i_salvataggi_di_piu_fili_non_si_perdono(database):
         filo.join()
     assert storage.LoadDB()["launch_count"] == 80
     assert not [p.name for p in database.parent.iterdir() if p.name.endswith(".tmp")]
+
+
+def test_la_lettura_silenziosa_mette_da_parte_gli_avvisi(database, capsys):
+    """R31: la prima lettura, all'importazione, avvisava nel vuoto della
+    finestra; ora gli avvisi aspettano Main, che li dice dopo il benvenuto."""
+    storage.avvisi_in_sospeso()
+    database.write_text("{ guasto", encoding="utf-8")
+    storage.LoadDB(silenziosa=True)
+    assert capsys.readouterr().out == ""
+    avvisi = storage.avvisi_in_sospeso()
+    assert avvisi[0].startswith("Il database delle impostazioni non e' leggibile")
+    assert storage.avvisi_in_sospeso() == []
+    # Le letture di dopo parlano di nuovo.
+    database.write_text("{ guasto", encoding="utf-8")
+    storage.LoadDB()
+    assert "non e' leggibile" in capsys.readouterr().out

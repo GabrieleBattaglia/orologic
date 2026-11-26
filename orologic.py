@@ -338,6 +338,10 @@ def Main():
     db = storage.UpdateDB(_incrementa_lanci)
 
     SchermataIniziale()
+    # Gli avvisi della prima lettura del database, fatta all'importazione:
+    # nella finestra andavano nel vuoto (R31).
+    for avviso in storage.avvisi_in_sospeso():
+        print(avviso)
 
     # Pulizia dei file vecchi, piu' vecchi del t scelto, 365 giorni se non
     # c'e': nella finestra si apre da sola la finestra della pulizia, nel

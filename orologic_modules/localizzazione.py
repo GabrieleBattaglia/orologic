@@ -101,10 +101,13 @@ def unisci(base, personalizzazioni):
     return base
 
 
-def carica():
-    """Dizionario completo: termini di partenza piu' personalizzazioni salvate."""
+def carica(silenziosa=False):
+    """Dizionario completo: termini di partenza piu' personalizzazioni salvate.
+    silenziosa all'importazione: gli avvisi della lettura del database li
+    dice Main dopo il benvenuto, perche' nella finestra andrebbero nel
+    vuoto (R31)."""
     dizionario = predefinito()
-    scelte_utente = storage.LoadDB().get("localization", {})
+    scelte_utente = storage.LoadDB(silenziosa=silenziosa).get("localization", {})
     if scelte_utente:
         unisci(dizionario, scelte_utente)
     return dizionario
@@ -114,7 +117,7 @@ def carica():
 # mai sostituito, cosi' chi lo ha gia' in mano continua a vedere i valori
 # aggiornati: prima la personalizzazione dei nomi ricaricava una copia sola e
 # le descrizioni delle mosse restavano indietro fino al riavvio.
-L10N = carica()
+L10N = carica(silenziosa=True)
 
 
 def ricarica():
