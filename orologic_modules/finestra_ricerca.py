@@ -1017,8 +1017,12 @@ class FinestraRicerca(wx.Dialog):
                 righe.append(_("Le altre restano senza codice ECO: le loro mosse non si trovano in eco.pgn."))
             if senza_mosse or studio:
                 righe.append(_("Le partite senza mosse o da una posizione di studio non si classificano."))
+            # La rilettura non si ferma: applica quello che la
+            # classificazione ha fatto, come dice il manuale. Prima riceveva
+            # lo stesso segnale, e Esc durante la classificazione annullava
+            # tutto (R116, scelta di Gabriele del 26 novembre 2026).
             nuovo, altre = archivio_pgn.applica_le_modifiche(
-                archivio, cambi, avanzamento=lambda pct: avanzamento(_("Rilettura delle partite cambiate: {pct}%").format(pct=pct)), fermato=fermato
+                archivio, cambi, avanzamento=lambda pct: avanzamento(_("Rilettura delle partite cambiate: {pct}%").format(pct=pct))
             )
             return nuovo, (righe if nuovo is not None else []) + altre
 

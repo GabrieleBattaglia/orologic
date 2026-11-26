@@ -1132,3 +1132,30 @@ def test_i_rami_grandi_dei_problemi_vanno_a_blocchi(prova, tmp_path, monkeypatch
     d.ripara()
     assert pompa(lambda: not d.in_corso() and p.avvisi, 20)
     assert p.avvisi[-1].split("\n")[0] == "Intestazioni aggiunte: 1200 partite."
+
+
+def test_esc_durante_classifica_tiene_quello_che_e_fatto(prova, tmp_path, monkeypatch):
+    """R116: Classifica passava lo stesso segnale di fermata alla
+    classificazione e alla rilettura delle partite cambiate, e Esc durante
+    la classificazione faceva annullare tutto. Il manuale dice che Esc tiene
+    quello che e' fatto, e Gabriele l'ha confermato il 26 novembre 2026."""
+    monkeypatch.setattr(archivio_pgn.config, "percorso_salvataggio", lambda nome: str(tmp_path / nome))
+    file = tmp_path / "aperture.pgn"
+    file.write_bytes(NON_CLASSIFICATE.encode("utf-8"))
+    p = prova(archivio_pgn.Ricerca(), str(file))
+    d = p.dialogo
+    assert pompa(lambda: d.ricerca.archivio is not None and not d.in_corso())
+    vera = archivio_pgn.classifica
+
+    def con_esc(*argomenti, **opzioni):
+        cambi = vera(*argomenti, **opzioni)
+        # Esc arriva mentre la classificazione finisce.
+        d._fermato.set()
+        return cambi
+
+    monkeypatch.setattr(archivio_pgn, "classifica", con_esc)
+    d.albero.SelectItem(p.voce("Non classificate"))
+    d.classifica()
+    assert pompa(lambda: not d.in_corso() and p.avvisi)
+    assert p.avvisi[-1].split("\n")[0] == "Classificate 1 partite su 1."
+    assert p.testi(p.voce("Non classificate")) == ["Senza mosse (1 partite)", "Da una posizione di studio (1 partite)"]
