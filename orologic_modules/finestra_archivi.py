@@ -474,7 +474,13 @@ class FinestraArchivi(wx.Dialog):
         self.aggiorna()
 
     def percorso_del_sorgente(self):
-        return None if self.appunti is not None else self.sorgente.GetValue().strip().strip('"')
+        """Assoluto, come la destinazione: scritto a mano in forma relativa
+        si controllava rispetto a una cartella, e pgn-extract lo cercava
+        rispetto a un'altra (R71)."""
+        if self.appunti is not None:
+            return None
+        testo = self.sorgente.GetValue().strip().strip('"')
+        return os.path.abspath(testo) if testo else ""
 
     def sorgente_descritto(self):
         return self._descrizione_degli_appunti() if self.appunti is not None else self.percorso_del_sorgente()

@@ -556,3 +556,13 @@ def test_il_lavoro_vero_con_la_copia_di_sicurezza(aperta, archivio, tmp_path):
     titolo, resoconto = prova.letti[-1]
     assert titolo == "Resoconto di pgn-extract" and resoconto[0].startswith("Comando: pgn-extract -D")
     os.remove(dialogo.resoconto)
+
+
+def test_il_sorgente_scritto_a_mano_diventa_assoluto(aperta):
+    """R71: un sorgente relativo si controllava rispetto a una cartella, e
+    pgn-extract lo cercava rispetto a un'altra."""
+    prova = aperta()
+    prova.dialogo.sorgente.SetValue("partite.pgn")
+    assert prova.dialogo.percorso_del_sorgente() == os.path.abspath("partite.pgn")
+    prova.dialogo.sorgente.SetValue("")
+    assert prova.dialogo.percorso_del_sorgente() == ""
