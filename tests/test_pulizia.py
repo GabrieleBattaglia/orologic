@@ -34,6 +34,10 @@ def cartelle():
         os.utime(completo, (data, data))
         return completo
 
+    # Le cartelle partono vuote: le prove di prima possono lasciarci file,
+    # come il PGN d'emergenza di una partita chiusa a meta' (R11).
+    for nome in cleaner.CARTELLE:
+        shutil.rmtree(config.percorso_salvataggio(nome), ignore_errors=True)
     yield crea
     for nome in cleaner.CARTELLE:
         shutil.rmtree(config.percorso_salvataggio(nome), ignore_errors=True)
