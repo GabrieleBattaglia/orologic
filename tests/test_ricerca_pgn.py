@@ -1206,3 +1206,81 @@ def test_la_decodifica_di_un_archivio_latin1_non_moltiplica_la_memoria(monkeypat
         tracemalloc.stop()
     assert len(cattive) == 90000 and testo.startswith('[Event "Müller Open"]')
     assert picco < 3 * len(dati), picco / len(dati)
+
+
+# R138: PGN e ricerca.
+
+
+def _archivio_dal_testo(tmp_path, testo):
+    file = tmp_path / "archivio.pgn"
+    file.write_text(testo, encoding="utf-8")
+    caricato, _righe = archivio_pgn.carica("file", str(file))
+    return caricato
+
+
+def test_il_risultato_non_si_prende_dalla_coda_di_un_commento(tmp_path):
+    """R138: Ripara prendeva il Result dalla coda di un commento col punto e
+    virgola, come se fosse il segno in fondo alle mosse (effetto di R70)."""
+    caricato = _archivio_dal_testo(tmp_path, '[Event "E"]\n[White "A"]\n[Black "B"]\n\n1. e4 e5 ; il Bianco vince 1-0\n\n')
+    cambi, _tolte, _conti = archivio_pgn.ripara(caricato, [0], {"intestazioni"})
+    assert '[Result "*"]' in cambi[0] and '[Result "1-0"]' not in cambi[0]
+
+
+def test_i_doppioni_non_si_fermano_a_una_mossa_illeggibile_e_tengono_l_annotata(tmp_path):
+    """R138: due partite uguali fino a una mossa illeggibile erano date per
+    doppie; e della stessa linea si toglieva la copia annotata."""
+    testa = '[Event "E"]\n[White "A"]\n[Black "B"]\n[Date "2026.01.01"]\n[Round "1"]\n[Result "*"]\n\n'
+    diverse = _archivio_dal_testo(tmp_path, testa + "1. e4 e5 2. Ke3 Nc6 *\n\n" + testa + "1. e4 e5 2. Ke3 d6 *\n\n")
+    assert archivio_pgn.cerca_i_doppioni(diverse) == {}
+    annotata = _archivio_dal_testo(tmp_path, testa + "1. e4 e5 2. Nf3 Nc6 *\n\n" + testa + "1. e4 { Bella } e5 2. Nf3 Nc6 *\n\n")
+    assert archivio_pgn.cerca_i_doppioni(annotata) == {0: 1}
+
+
+@pytest.mark.parametrize("variante", ["Classical", "Illegal", "Standard", "From Position"])
+def test_le_varianti_della_scacchiera_standard_restano_nell_albero(variante):
+    """R138: le varianti classical e illegal, che python-chess legge con la
+    scacchiera standard, uscivano dall'albero."""
+    from orologic_modules import lettura_pgn
+
+    partita = chess.pgn.read_game(io.StringIO(f'[Event "E"]\n[White "A"]\n[Black "B"]\n[Variant "{variante}"]\n\n1. e4 e5 *\n'))
+    assert lettura_pgn._partita_da_tenere(partita) == "buona"
+
+
+def test_le_partite_del_ramo_hanno_un_tetto(prova, monkeypatch):
+    """R138: Partite del ramo metteva una voce per partita senza limite,
+    residuo di R66."""
+    monkeypatch.setattr(finestra_ricerca, "MASSIMO_DEL_RAMO", 1)
+    ricerca = archivio_pgn.Ricerca()
+    ricerca.archivio = archivio()
+    p = prova(ricerca)
+    d = p.dialogo
+    d.albero.SelectItem(p.voce("(e4)", "(e5)"))
+    p.risposte_della_lista = [None]
+    d.partite_del_ramo()
+    assert p.scelte[0][0] == "Partite del ramo, le prime 1 di 2"
+    assert len(p.scelte[0][1]) == 1
+
+
+def test_rispondere_no_prima_di_caricare_tiene_il_segno_di_modificato():
+    """R138: rispondendo no, il segno di modificato si spegneva prima del
+    caricamento, che puo' fallire, e le modifiche restavano senza domanda."""
+    ricerca = archivio_pgn.Ricerca()
+    ricerca.archivio = archivio()
+    ricerca.archivio.percorso = "C:/archivio.pgn"
+    ricerca.archivio.modificato = True
+    assert finestra_ricerca.salva_all_uscita(None, ricerca, lambda *_a: False, lambda *_a: None, scarta=False)
+    assert ricerca.archivio.modificato
+    assert finestra_ricerca.salva_all_uscita(None, ricerca, lambda *_a: False, lambda *_a: None)
+    assert not ricerca.archivio.modificato
+
+
+def test_il_nome_col_carattere_vietato_non_fa_cadere_il_salvataggio(monkeypatch, capsys):
+    """R138: nel terminale os.makedirs stava fuori dal try, e un nome col
+    carattere sbagliato faceva cadere il salvataggio dei filtrati."""
+    salvati = []
+    monkeypatch.setattr(pgn_search, "dgt", lambda *_a, **_k: "cartella/che:non va")
+    monkeypatch.setattr(pgn_search, "enter_escape", lambda *_a, **_k: True)
+    monkeypatch.setattr(pgn_search, "scrivi_pgn", lambda percorso, _partite, _indici: salvati.append(percorso))
+    pgn_search._salva_pgn_filtrato([object()], [0], {})
+    assert len(salvati) == 1 and os.path.dirname(salvati[0]).endswith("pgn")
+    assert ":" not in os.path.basename(salvati[0])

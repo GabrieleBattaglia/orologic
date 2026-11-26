@@ -59,6 +59,9 @@ PAUSA_FRA_LE_CIFRE = 1.5
 # Oltre questo numero le partite di un gruppo o di un tipo di problema
 # stanno in blocchi di questa misura (R66).
 PARTITE_PER_BLOCCO = 500
+# Le partite che Partite del ramo mette al piu' nell'elenco: prima una voce
+# per partita senza limite, residuo di R66 (R138).
+MASSIMO_DEL_RAMO = 1000
 
 SUONI = {
     # Come il no della pulizia: un'azione che adesso non si puo' fare.
@@ -168,19 +171,23 @@ def mostra_la_partita(genitore, testo, chiedi_conferma, avvisa):
         return dialogo.azione, dialogo.nuovo
 
 
-def salva_all_uscita(genitore, ricerca, chiedi_conferma, avvisa):
+def salva_all_uscita(genitore, ricerca, chiedi_conferma, avvisa, scarta=True):
     """Uscendo dalla ricerca, o chiudendo Orologic, con un archivio da file
     modificato: si chiede se salvare nel file, poi se fare prima la copia di
     sicurezza (Gabriele, collaudo del 23 novembre 2026). Vero se si puo'
     andare avanti; falso se il salvataggio non e' riuscito: chi chiama
     resta dov'e', e si puo' riprovare. Prima la finestra si chiudeva lo
-    stesso, e le modifiche se ne andavano (R61)."""
+    stesso, e le modifiche se ne andavano (R61). scarta falso, prima di
+    caricare un altro archivio: col no il segno di modificato resta finche'
+    il caricamento non riesce, e se fallisce la domanda torna. Prima si
+    spegneva subito (R138)."""
     archivio = ricerca.archivio
     if archivio is None or not archivio.modificato or archivio.percorso is None:
         return True
     domanda = _("Hai modificato l'archivio. Salvo le modifiche nel file {percorso}? Se rispondi no, si perdono.")
     if not chiedi_conferma(genitore, pgn_search.pulita(domanda.format(percorso=archivio.percorso))):
-        archivio.modificato = False
+        if scarta:
+            archivio.modificato = False
         return True
     con_la_copia = chiedi_conferma(genitore, _("Prima di salvare faccio una copia di sicurezza del file, nella cartella pgn di Orologic?"))
     try:
@@ -522,7 +529,7 @@ class FinestraRicerca(wx.Dialog):
         """Il caricamento nel filo; alla fine l'albero, o l'avviso di cosa
         non e' andato. Prima, le modifiche dell'archivio aperto: con Apri
         file o Dagli appunti sparivano in silenzio (R25)."""
-        if not salva_all_uscita(self, self.ricerca, self._chiedi_conferma, self._avvisa):
+        if not salva_all_uscita(self, self.ricerca, self._chiedi_conferma, self._avvisa, scarta=False):
             return
         self._lavora(_("Analisi del PGN in corso..."), lambda avanzamento, fermato: archivio_pgn.carica(tipo, sorgente, avanzamento, fermato), self._caricato)
 
@@ -951,11 +958,16 @@ class FinestraRicerca(wx.Dialog):
         scacchiera = archivio_pgn.scacchiera_del_percorso(nodo.percorso)
         profondita = len(nodo.percorso)
         partite = [(indice, None) for indice in nodo.indici] + list(nodo.varianti)
+        titolo = wx.StripMenuCodes(_("Partite del &ramo"))
+        # Le prime, con un tetto, e il titolo che lo dice (R138).
+        if len(partite) > MASSIMO_DEL_RAMO:
+            titolo = _("{titolo}, le prime {n} di {totale}").format(titolo=titolo, n=MASSIMO_DEL_RAMO, totale=len(partite))
+            partite = partite[:MASSIMO_DEL_RAMO]
         with wx.BusyCursor():
             voci = [archivio.voce_della_lista(scacchiera, indice, profondita, numero, linea) for numero, (indice, linea) in enumerate(partite, 1)]
         scelta = 0
         while True:
-            scelta = scegli(self, wx.StripMenuCodes(_("Partite del &ramo")), voci, scelta)
+            scelta = scegli(self, titolo, voci, scelta)
             if scelta is None or self.mostra_partita(partite[scelta][0]):
                 return
 

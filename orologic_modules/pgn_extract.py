@@ -1423,6 +1423,12 @@ def scarica(avanzamento, fermato):
             return None, errore
     avanzamento(_("Scarico {nome}, {numero} di {tutti}.").format(nome=CATALOGO, numero=tutti, tutti=tutti))
     _metti_il_catalogo(lavorazione, destinazione, fermato)
+    # Annulla durante l'ultimo file, il catalogo, ferma anche
+    # l'installazione: prima la cartella nuova prendeva il posto della
+    # vecchia lo stesso (R138).
+    if fermato():
+        shutil.rmtree(lavorazione, ignore_errors=True)
+        return None, _("Scaricamento fermato.")
     nuova = versione(os.path.join(lavorazione, ESEGUIBILE))
     if nuova is None:
         shutil.rmtree(lavorazione, ignore_errors=True)

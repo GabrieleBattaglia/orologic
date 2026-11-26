@@ -200,7 +200,10 @@ def estrai_info(games):
 # I valori dell'intestazione Variant di una partita a scacchi normali; "from
 # position" e' quello di Lichess per le partite da una posizione, che la FEN
 # esclude se non e' quella di partenza.
-VARIANTI_STANDARD = ("", "standard", "chess", "normal", "from position")
+# Sono i nomi che python-chess legge con la scacchiera standard: prima
+# mancavano classical e illegal, e quelle partite uscivano dall'albero
+# (R138).
+VARIANTI_STANDARD = ("", *(nome.lower() for nome in chess.Board.aliases))
 
 
 def _partita_da_tenere(game):

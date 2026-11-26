@@ -59,6 +59,17 @@ from .lettura_pgn import (  # noqa: F401
 DATA_DA_RISCRIVERE = re.compile(r"^(\d{4})(?:[-/.](\d{1,2}|\?\?)(?:[-/.](\d{1,2}|\?\?))?)?$")
 INTESTAZIONE = re.compile(r'^\[\s*([A-Za-z0-9][A-Za-z0-9_+#=:-]*)\s+"((?:[^"\\]|\\.)*)"\s*\]\s*$')
 SEGNO = re.compile(r"(1-0|0-1|1/2-1/2|\*)(\s*)$")
+# I commenti delle mosse, fra graffe o dal punto e virgola alla fine della
+# riga: il segno del risultato si cerca fuori da loro (R138).
+COMMENTI = re.compile(r"\{[^}]*\}|;[^\n]*")
+
+
+def _mascherato(testo):
+    """Il testo coi commenti coperti da spazi, alle stesse posizioni: il
+    segno in fondo alle mosse si cerca qui, e non nella coda di un commento
+    col punto e virgola, da cui Ripara prendeva un risultato che le mosse
+    non hanno (R138)."""
+    return COMMENTI.sub(lambda trovato: " " * len(trovato.group()), testo)
 # Le intestazioni obbligatorie che mancano si aggiungono con questi valori.
 VALORI_IGNOTI = {"Date": "????.??.??", "Result": "*"}
 
@@ -519,6 +530,11 @@ def cerca_i_doppioni(archivio, avanzamento=None, fermato=None):
             if avanzamento is not None and adesso - ultima >= pgn_search.OGNI_QUANTO:
                 avanzamento(indice * 100 // totale)
                 ultima = adesso
+        # Una partita con una mossa illeggibile non si confronta: le sue
+        # mosse si fermano li', e due partite diverse da quel punto in poi
+        # erano date per doppie (R138).
+        if "mosse" in (scheda.problemi or {}):
+            continue
         info = archivio.info[indice]
         # La posizione di partenza e il turno nella chiave: due studi diversi
         # con le stesse coordinate di mossa e intestazioni generiche erano
@@ -527,8 +543,21 @@ def cerca_i_doppioni(archivio, avanzamento=None, fermato=None):
             scheda.mosse.tobytes(), scheda.fuori, info["White"], info["Black"], info["Event"], info["Date"], info["Result"],
             info.get("Round", "?"), info.get("FEN", ""),
         )
-        primo = viste.setdefault(chiave, indice)
-        if primo != indice:
+        primo = viste.get(chiave)
+        if primo is None:
+            viste[chiave] = indice
+            continue
+        # Delle copie della stessa partita resta quella col testo piu' lungo,
+        # cioe' la piu' annotata: prima si toglieva la seconda, anche quando
+        # era lei ad avere i commenti (R138).
+        tenuta = archivio.schede[primo]
+        if scheda.fine - scheda.inizio > tenuta.fine - tenuta.inizio:
+            for altra, prima in list(doppioni.items()):
+                if prima == primo:
+                    doppioni[altra] = indice
+            doppioni[primo] = indice
+            viste[chiave] = indice
+        else:
             doppioni[indice] = primo
     return doppioni
 
@@ -600,7 +629,7 @@ def metti_il_segno(testo, risultato):
     _prima, dopo = _testa(righe)
     if dopo >= len(righe):
         return corpo + "\n\n" + risultato + coda
-    trovato = SEGNO.search(corpo)
+    trovato = SEGNO.search(_mascherato(corpo))
     if trovato is not None and trovato.start() >= sum(len(riga) + 1 for riga in righe[:dopo]):
         return corpo[: trovato.start()] + risultato + coda
     return corpo + " " + risultato + coda
@@ -645,7 +674,7 @@ def ripara(archivio, indici, tipi):
                     # Senza intestazione vale il segno scritto in fondo alle
                     # mosse: prima diventava "*", in contrasto con le mosse
                     # (R70).
-                    in_fondo = SEGNO.search(archivio.testo_della_partita(indice).rstrip())
+                    in_fondo = SEGNO.search(_mascherato(archivio.testo_della_partita(indice)).rstrip())
                     valori[tag] = atteso or (in_fondo.group(1) if in_fondo else None) or archivio.info[indice]["Result"] or "*"
                 else:
                     valori[tag] = VALORI_IGNOTI.get(tag, "?")

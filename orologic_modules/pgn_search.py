@@ -1362,10 +1362,16 @@ def _salva_pgn_filtrato(games, indici, filtri_attivi):
     # Nella cartella pgn di Orologic, come gli altri PGN, e con la domanda
     # se il file c'e' gia': prima si scriveva nella cartella corrente, senza
     # chiedere (R104).
-    from .config import percorso_salvataggio
+    from .config import percorso_salvataggio, sanitize_filename
 
-    percorso = percorso_salvataggio(os.path.join("pgn", nome))
-    os.makedirs(os.path.dirname(percorso), exist_ok=True)
+    # Il nome senza i caratteri che Windows rifiuta, e la cartella nel try:
+    # un nome con la barra o i due punti faceva cadere il salvataggio (R138).
+    percorso = percorso_salvataggio(os.path.join("pgn", sanitize_filename(nome)))
+    try:
+        os.makedirs(os.path.dirname(percorso), exist_ok=True)
+    except OSError as e:
+        print(_("Errore nel salvataggio: {e}").format(e=e))
+        return
     if os.path.exists(percorso) and not enter_escape(
         _("Il file {percorso} c'e' gia'. Lo sostituisco? (INVIO si', ESC no): ").format(percorso=percorso)
     ):

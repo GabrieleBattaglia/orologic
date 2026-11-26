@@ -651,3 +651,28 @@ def test_dividere_per_eco_conosce_anche_noeco(tmp_path):
             self.parametro = type("P", (), {"opzione": opzione})()
 
     assert pgn_extract.file_che_sovrascriverebbe([Scelto("-E")], str(tmp_path)) == ["NoEco.pgn"]
+
+
+def test_annulla_durante_il_catalogo_ferma_l_installazione(monkeypatch, tmp_path):
+    """R138: Annulla durante l'ultimo file dello scaricamento, il catalogo,
+    non fermava l'installazione: la cartella nuova prendeva il posto della
+    vecchia."""
+    monkeypatch.setattr(pgn_extract, "cartella", lambda: str(tmp_path / "pgn-extract"))
+    (tmp_path / "pgn-extract").mkdir()
+    (tmp_path / "pgn-extract" / "pgn-extract.exe").write_text("di prima", encoding="utf-8")
+    fermata = {"si": False}
+
+    def scarica(indirizzo, destinazione, fermato):
+        with open(destinazione, "w", encoding="utf-8") as file:
+            file.write("nuovo")
+        if indirizzo == pgn_extract.INDIRIZZO_DEL_CATALOGO:
+            fermata["si"] = True
+            return "Scaricamento fermato."
+        return None
+
+    monkeypatch.setattr(pgn_extract, "_scarica_un_file", scarica)
+    monkeypatch.setattr(pgn_extract, "versione", lambda _percorso: "26-04")
+    versione, errore = pgn_extract.scarica(lambda _riga: None, lambda: fermata["si"])
+    assert versione is None and errore == "Scaricamento fermato."
+    assert (tmp_path / "pgn-extract" / "pgn-extract.exe").read_text(encoding="utf-8") == "di prima"
+    assert not (tmp_path / "pgn-extract.nuovo").exists()

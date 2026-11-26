@@ -929,6 +929,9 @@ class FinestraArchivi(wx.Dialog):
             # finito (R65).
             try:
                 righe, riuscito = self._dopo_il_lavoro(esito, uscita, destinazione, provvisorio, sorgenti, serve, provvisori)
+            # Anche qui il disco e i file dell'utente possono fallire in
+            # modi imprevisti: il motivo va nell'uscita, e la finestra non
+            # resta in attesa (R138).
             except Exception as eccezione:  # noqa: BLE001
                 righe, riuscito = [str(eccezione)], False
             wx.CallAfter(self._finito, esito, [*copie, *righe], riuscito and serve)
