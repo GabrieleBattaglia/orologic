@@ -197,6 +197,12 @@ def estrai_info(games):
     return info_list
 
 
+# I valori dell'intestazione Variant di una partita a scacchi normali; "from
+# position" e' quello di Lichess per le partite da una posizione, che la FEN
+# esclude se non e' quella di partenza.
+VARIANTI_STANDARD = ("", "standard", "chess", "normal", "from position")
+
+
 def _partita_da_tenere(game):
     """vuota, esclusa o buona: i record senza mosse ne' intestazioni vere si
     saltano, le partite che non partono dalla posizione standard si
@@ -210,26 +216,15 @@ def _partita_da_tenere(game):
     if not has_real_headers and not has_moves:
         return "vuota"
 
-    # Escludi varianti non standard (Setup/FEN personalizzato e Chess960)
-    is_setup = game.headers.get("SetUp") == "1"
-    is_chess960 = game.headers.get("Variant", "").lower() in (
-        "chess960",
-        "fischerandom",
-        "fischer random",
-    )
-
-    is_non_standard = False
-    if is_setup:
-        fen = game.headers.get("FEN", "").strip()
-        if fen:
-            normalized_fen = " ".join(fen.split()[:4]).lower()
-            standard_normalized = (
-                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -".lower()
-            )
-            if normalized_fen != standard_normalized:
-                is_non_standard = True
-
-    if is_chess960 or is_non_standard:
+    # Si escludono le partite che non partono dalla scacchiera standard: ogni
+    # variante, non solo Chess960, e ogni FEN diversa da quella di partenza,
+    # anche senza SetUp, perche' python-chess la usa lo stesso. Prima
+    # crazyhouse, atomic e simili, e le FEN senza SetUp, entravano
+    # nell'albero e ne inquinavano le statistiche (R26).
+    if game.headers.get("Variant", "").strip().lower() not in VARIANTI_STANDARD:
+        return "esclusa"
+    fen = game.headers.get("FEN", "").strip()
+    if fen and " ".join(fen.split()[:4]) != " ".join(chess.STARTING_FEN.split()[:4]):
         return "esclusa"
     return "buona"
 

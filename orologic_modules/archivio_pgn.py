@@ -317,6 +317,10 @@ class Archivio:
         parti = []
         for numero in mosse[profondita : profondita + quante]:
             giocata = mossa(numero)
+            # Una mossa che sulla scacchiera standard non si gioca chiude la
+            # continuazione invece di far cadere la voce (R26).
+            if not board.is_legal(giocata):
+                break
             san = board.san(giocata)
             if board.turn == chess.WHITE:
                 parti.append(f"{board.fullmove_number}. {san}")
@@ -358,7 +362,7 @@ def voce_del_ramo(archivio, scacchiera, giocata, partite, varianti, totale, filt
     """La voce di una mossa, con le statistiche del terminale delle sole
     partite giocate e quelle delle varianti contate a parte; con una partita
     sola e' la foglia, e dice la partita."""
-    san = scacchiera.san(giocata)
+    san = scacchiera.san(giocata) if scacchiera.is_legal(giocata) else giocata.uci()
     try:
         descrizione = board_utils.DescribeMove(giocata, scacchiera)
     # Gli archivi PGN arrivano da fuori e possono essere malformati
