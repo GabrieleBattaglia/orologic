@@ -495,14 +495,28 @@ def _leggi_in_parallelo(testo, cattive, tagli, processi, avanzamento, interrotta
     ultima = time.time()
     esecutore = concurrent.futures.ProcessPoolExecutor(max_workers=min(processi, len(tagli) - 1))
     try:
-        lavori = []
-        for inizio, fine in itertools.pairwise(tagli):
+        coppie = list(itertools.pairwise(tagli))
+        # I pezzi si sottomettono a finestra scorrevole, due per processo:
+        # tutti insieme, ognuno con la sua copia del testo, la lettura di un
+        # archivio da un giga teneva in memoria tre o quattro volte il file
+        # (R63).
+        finestra = max(2, 2 * processi)
+        lavori = {}
+
+        def sottometti(numero):
+            inizio, fine = coppie[numero]
             primo, ultimo = bisect.bisect_left(cattive, inizio), bisect.bisect_left(cattive, fine)
-            lavori.append(esecutore.submit(_leggi_un_pezzo, testo[inizio:fine], [posizione - inizio for posizione in cattive[primo:ultimo]]))
+            lavori[numero] = esecutore.submit(_leggi_un_pezzo, testo[inizio:fine], [posizione - inizio for posizione in cattive[primo:ultimo]])
+
+        for numero in range(min(finestra, len(coppie))):
+            sottometti(numero)
         # I pezzi si uniscono in ordine: l'archivio e' lo stesso della
         # lettura in fila. Fermata, o interrotta da un pezzo illeggibile, la
         # lettura tiene i pezzi arrivati, e il resto del testo com'e'.
-        for numero, lavoro in enumerate(lavori):
+        for numero in range(len(coppie)):
+            lavoro = lavori.pop(numero)
+            if numero + finestra < len(coppie):
+                sottometti(numero + finestra)
             while True:
                 if fermato is not None and fermato():
                     pezzi.append((tagli[numero], len(testo), None))

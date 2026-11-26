@@ -183,6 +183,9 @@ def carica(tipo, sorgente, avanzamento=None, fermato=None):
             return None, righe
     if dati is not None:
         testo, cattive, a_capo, bom = decodifica(dati)
+        # I byte non servono piu': prima restavano vivi accanto al testo per
+        # tutta la lettura (R63).
+        dati = None
     else:
         testo, cattive, a_capo, bom = testo.replace("\r\n", "\n") + "\n", [], "\n", False
     if not testo.strip():
