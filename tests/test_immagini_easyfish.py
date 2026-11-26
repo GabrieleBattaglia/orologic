@@ -46,3 +46,17 @@ def test_il_pdf_dopo_qualche_mossa(tmp_path, monkeypatch, capsys):
     assert "Errore" not in uscita
     pdf = list((tmp_path / "images").glob("prova_*.pdf"))
     assert len(pdf) == 1 and pdf[0].stat().st_size > 1000
+
+
+def test_la_scacchiera_mostra_ultima_mossa_e_scacco(impostazioni_rimesse):
+    """R56: .ii chiedeva i colori dell'ultima mossa e dello scacco, ma alla
+    scacchiera non si passavano."""
+    board = chess.Board()
+    for mossa in ("f2f3", "e7e5", "g2g4", "d8h4"):
+        board.push_uci(mossa)
+    svg = image_exporter.generate_custom_svg(board)
+    assert svg.count("lastmove") == 2
+    assert "check_gradient" in svg
+    impostazioni = image_exporter.get_image_settings()
+    chiara = image_exporter.rgb_from_percent(*impostazioni["square_light"])
+    assert chiara in svg

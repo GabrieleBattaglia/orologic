@@ -254,11 +254,17 @@ def generate_custom_svg(board, node=None, orientation=None, override_size=None):
     chk = rgb_from_percent(*settings["check_color"])
     psw = settings.get("piece_stroke_width", 1)
 
-    # Ricolorazione Nativa Case
-    square_fills = {}
-    for sq in chess.SQUARES:
-        color = sl if (chess.square_file(sq) + chess.square_rank(sq)) % 2 != 0 else sd
-        square_fills[sq] = color
+    # I colori delle case vanno nei colori della scacchiera, non nel
+    # riempimento: il riempimento copre ogni casa, e avrebbe coperto anche
+    # l'ultima mossa. All'ultima mossa e allo scacco, che .ii chiede, ora si
+    # passano i dati: prima non li riceveva nessuno (R56).
+    if board.move_stack:
+        ultima = board.peek()
+    elif node is not None and getattr(node, "move", None) is not None:
+        ultima = node.move
+    else:
+        ultima = None
+    scacco = board.king(board.turn) if board.is_check() else None
 
     svg_size = override_size if override_size is not None else settings["size"]
 
@@ -276,9 +282,12 @@ def generate_custom_svg(board, node=None, orientation=None, override_size=None):
     svg_data = chess.svg.board(
         board=board,
         size=svg_size,
-        fill=square_fills,
+        lastmove=ultima,
+        check=scacco,
         arrows=svg_arrows,
         colors={
+            "square light": sl,
+            "square dark": sd,
             "margin": mrg,
             "coord": crd,
             "inner border": ib,
