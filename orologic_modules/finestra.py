@@ -996,7 +996,7 @@ class Finestra(wx.Frame):
                 # Il testo arrivato prima va nella forma di prima.
                 self._mostra_nella_forma(chiuse, messaggi)
                 chiuse, messaggi = [], []
-                self._cambia_forma(testo.fornitore, testo.comandi)
+                self._senza_cadere(self._cambia_forma, testo.fornitore, testo.comandi)
                 continue
             if isinstance(testo, ApriOrologi):
                 wx.CallAfter(self._orologi_dal_nucleo, testo)
@@ -1031,7 +1031,7 @@ class Finestra(wx.Frame):
             if isinstance(testo, Attesa):
                 self._mostra_nella_forma(chiuse, messaggi)
                 chiuse, messaggi = [], []
-                self._cambia_attesa(testo)
+                self._senza_cadere(self._cambia_attesa, testo)
                 attesa_cambiata = True
                 continue
             ultima_causa = causa
@@ -1071,6 +1071,16 @@ class Finestra(wx.Frame):
             self.detta = visibile
         self._mostra_nella_forma(chiuse, messaggi)
         self._di(da_dire, dal_tasto)
+
+    def _senza_cadere(self, funzione, *argomenti):
+        """Un pezzo di _applica: se cade, l'errore va nel registro e il resto
+        del testo del nucleo si applica lo stesso. Prima un errore a meta'
+        lasciava plancia e area ferme, senza seguire piu' il nucleo (R28)."""
+        try:
+            funzione(*argomenti)
+        except Exception:  # noqa: BLE001
+            testo = traceback.format_exc()
+            registro.scrivi(f"Finestra, {funzione.__name__}:\n{testo}")
 
     def _al_prompt_delle_mosse(self):
         """Vero se il nucleo aspetta il prompt delle mosse di una partita."""

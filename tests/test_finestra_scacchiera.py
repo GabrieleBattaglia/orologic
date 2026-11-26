@@ -524,3 +524,45 @@ def test_la_conferma_del_risultato(finestra):
     assert viste["titolo"] == "Patta, 1/2: assegno il risultato?"
     assert (viste["esc"], viste["invio"]) == (wx.ID_NO, wx.ID_YES)
     assert viste["predefinito"]
+
+
+def test_la_chiusura_con_un_dialogo_aperto_sopra(finestra, aperta):
+    """R28: la partita finisce, o arriva una domanda del nucleo, mentre sulla
+    scacchiera e' aperto un suo dialogo modale, qui due uno sopra l'altro:
+    prima wx rifiutava di chiudere la scacchiera. Cicli modali veri, guidati
+    con CallAfter come fa il nucleo, e un paracadute su un filo a parte che
+    chiude tutto se la correzione non bastasse."""
+    esiti = []
+    paracadute = []
+    dialogo = aperta["apri"]()
+
+    def apri_figlio(genitore, nome, dopo):
+        figlio = wx.Dialog(genitore, title=nome)
+        wx.CallAfter(dopo, figlio)
+        esiti.append((nome, figlio.ShowModal()))
+        figlio.Destroy()
+
+    def salva():
+        sopra = dialogo._dialoghi_sopra() if dialogo else []
+        for figlio in sopra:
+            paracadute.append(figlio.GetTitle())
+            figlio.EndModal(wx.ID_ABORT)
+        if dialogo and dialogo.IsModal() and not sopra:
+            paracadute.append("scacchiera")
+            dialogo.EndModal(wx.ID_ABORT)
+        elif dialogo and dialogo.IsModal():
+            wx.CallAfter(salva)
+
+    def scacchiera_modale():
+        wx.CallAfter(apri_figlio, dialogo, "primo", lambda primo: apri_figlio(primo, "secondo", lambda _secondo: dialogo.chiudi()))
+        esiti.append(("scacchiera", dialogo.ShowModal()))
+
+    soccorso = threading.Timer(3, lambda: wx.CallAfter(salva))
+    soccorso.start()
+    try:
+        wx.CallAfter(scacchiera_modale)
+        assert pompa(lambda: len(esiti) == 3, 6)
+    finally:
+        soccorso.cancel()
+    assert esiti == [("secondo", wx.ID_CANCEL), ("primo", wx.ID_CANCEL), ("scacchiera", wx.ID_CANCEL)]
+    assert paracadute == []

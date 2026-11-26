@@ -66,6 +66,9 @@ ATTESA_MASSIMA = 3000
 RISULTATI = {"10": ".1-0", "01": ".0-1", "12": ".1/2", "*": ".*"}
 # Ogni quanto si rilegge la posizione dal cruscotto.
 GIRO_DELLA_POSIZIONE = 150
+# I millisecondi fra un dialogo chiuso sopra la scacchiera e il prossimo
+# tentativo di chiuderla (R28).
+ATTESA_DEI_FIGLI = 30
 # Il codice con cui la scacchiera si chiude per una domanda del nucleo: la
 # finestra principale la riaprira'.
 CHIUSA_PER_UNA_DOMANDA = wx.ID_HIGHEST + 71
@@ -184,6 +187,16 @@ class ConfermaDelRisultato(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, lambda _evento: self.EndModal(wx.ID_YES), self.assegna)
         self.Bind(wx.EVT_BUTTON, lambda _evento: self.EndModal(wx.ID_NO), continua)
         self.assegna.SetFocus()
+
+
+def _discende(finestra, antenato):
+    """Vero se antenato e' fra i genitori di finestra."""
+    genitore = finestra.GetParent()
+    while genitore is not None:
+        if genitore is antenato:
+            return True
+        genitore = genitore.GetParent()
+    return False
 
 
 def chiedi_il_risultato(genitore, domanda):
@@ -366,6 +379,8 @@ class FinestraScacchiera(wx.Dialog):
         # Vero quando si chiude: da li' non scrive piu' nel prompt, perche' il
         # nucleo puo' gia' fare un'altra domanda.
         self.chiusa = False
+        # I dialoghi sopra di lei gia' chiusi da chiudi (R28).
+        self._figli_chiusi = []
         pannello = pannello_scorrevole(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
         self.area = wx.TextCtrl(pannello, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_DONTWRAP)
@@ -426,8 +441,36 @@ class FinestraScacchiera(wx.Dialog):
         del nucleo."""
         self.chiusa = True
         self._ferma()
+        # Un suo dialogo modale aperto sopra, come l'aiuto, il menu dei
+        # comandi, il commento o la promozione, si chiude prima: wx non
+        # chiude un ciclo modale che non e' quello attivo, e la scacchiera
+        # restava aperta con plancia e area ferme. Lei si chiude dopo,
+        # quando il ciclo del figlio e' finito (R28). Si riprova con un
+        # CallLater: con CallAfter il ciclo di wx girava negli eventi di
+        # inattivita' senza mai uscire.
+        figli = self._dialoghi_sopra()
+        if figli:
+            # Il piu' interno per primo, un ciclo alla volta, e mai due
+            # volte lo stesso.
+            for figlio in figli:
+                if figlio not in self._figli_chiusi and not any(_discende(altro, figlio) for altro in figli if altro is not figlio):
+                    self._figli_chiusi.append(figlio)
+                    figlio.EndModal(wx.ID_CANCEL)
+            wx.CallLater(ATTESA_DEI_FIGLI, self._chiudi_dopo_i_figli)
+            return
         if self.IsModal():
             self.EndModal(wx.ID_CANCEL)
+
+    def _dialoghi_sopra(self):
+        """I dialoghi modali aperti sopra la scacchiera, discendenti suoi."""
+        return [
+            finestra for finestra in wx.GetTopLevelWindows()
+            if finestra is not self and isinstance(finestra, wx.Dialog) and finestra.IsModal() and _discende(finestra, self)
+        ]
+
+    def _chiudi_dopo_i_figli(self):
+        if self:
+            self.chiudi()
 
     def _ferma(self):
         """Ferma l'orologio e le attese, prima che la finestra se ne vada."""
