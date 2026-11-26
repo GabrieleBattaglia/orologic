@@ -143,3 +143,41 @@ def test_i_nomi_salvati_sono_solo_le_differenze():
     nomi["columns"]["a"] = "Alfa"
     assert localizzazione.differenze(nomi) == {"pieces": {"rook": {"name": "rocca"}}, "columns": {"a": "Alfa"}}
     assert localizzazione.differenze(localizzazione.predefinito()) == {}
+
+
+# R96, R97 e R98: i rilievi bassi.
+
+
+def test_il_prompt_salvato_in_ansi_si_legge(tmp_path):
+    from orologic_modules import modello_prompt
+
+    file = tmp_path / "prompt.txt"
+    file.write_bytes("$ commento\n{mossa} è qui\n".encode("cp1252"))
+    assert modello_prompt.leggi_file(str(file)) == "{mossa} è qui"
+
+
+def test_il_volume_e_i_predefiniti(database):
+    _scrivi(database, {"volume": 7})
+    assert storage.LoadDB()["volume"] == 1.0
+    db, _scartati, _completati = storage._normalizza([1, 2])
+    db["clocks"].append({"name": "x"})
+    assert storage.DEFAULT_DB["clocks"] == []
+
+
+def test_una_data_nel_futuro_non_e_negativa():
+    import datetime
+
+    from orologic_modules import tempo
+
+    adesso = datetime.datetime.now()
+    assert "-" not in tempo.fra_date(adesso + datetime.timedelta(hours=3), adesso)
+
+
+def test_la_correzione_dell_arbitro_sposta_l_inizio_del_turno():
+    from orologic_modules import board_utils, controlli
+
+    stato = board_utils.GameState({"phases": [{"white_time": 60, "black_time": 60, "white_inc": 0, "black_inc": 0, "moves": 0, "tipo": "bronstein", "white_ritardo": 5, "black_ritardo": 5}]})
+    controlli.inizio_partita(stato)
+    prima = stato.controllo["white"]["inizio_turno"]
+    controlli.corretto(stato, True, 30)
+    assert stato.controllo["white"]["inizio_turno"] == prima + 30

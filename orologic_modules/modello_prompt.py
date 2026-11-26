@@ -107,10 +107,17 @@ def leggi_file(percorso=None):
     dollaro e non e' vuota. None se il file non c'e' o non ha un modello."""
     percorso = percorso or percorso_file()
     try:
-        with open(percorso, encoding="utf-8-sig") as f:
-            righe = f.read().splitlines()
+        with open(percorso, "rb") as f:
+            dati = f.read()
     except OSError:
         return None
+    # Salvato in ANSI dal Blocco note, con una lettera accentata, non e'
+    # UTF-8: prima l'errore di decodifica faceva cadere il prompt di gioco
+    # (R96).
+    try:
+        righe = dati.decode("utf-8-sig").splitlines()
+    except UnicodeDecodeError:
+        righe = dati.decode("cp1252", errors="replace").splitlines()
     trovato = None
     for riga in righe:
         if riga.lstrip().startswith(COMMENTO) or not riga.strip():
