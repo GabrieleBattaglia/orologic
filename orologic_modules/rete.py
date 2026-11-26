@@ -105,6 +105,18 @@ def e_di_lichess(indirizzo, solo_https=True):
     return host == "lichess.org" or host.endswith(".lichess.org")
 
 
+class ErroreDiRete(str):
+    """Il messaggio di un errore di rete, gia' pronto per l'utente, che porta
+    anche il codice HTTP, se c'e': chi segue un flusso distingue cosi' gli
+    errori che passano riprovando da quelli che non passano (R120). Per
+    tutti gli altri resta il testo di sempre."""
+
+    def __new__(cls, messaggio, codice=None):
+        errore = super().__new__(cls, messaggio)
+        errore.codice = codice
+        return errore
+
+
 def _messaggio_http(errore):
     """Traduce un errore HTTP in una frase comprensibile. Le frasi e il
     freno di Lichess valgono solo per Lichess: un limite di GitHub diventava
@@ -191,7 +203,7 @@ def apri(
             richiesta, data=corpo, timeout=timeout, context=contesto_ssl()
         ), None
     except urllib.error.HTTPError as e:
-        return None, _messaggio_http(e)
+        return None, ErroreDiRete(_messaggio_http(e), e.code)
     except urllib.error.URLError as e:
         return None, _messaggio_urlerror(e, timeout)
     except TimeoutError:

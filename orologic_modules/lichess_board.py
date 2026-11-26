@@ -1,6 +1,7 @@
 # Orologic, Orolichess: partite giocate e osservate.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
+import http.client
 import json
 import queue
 import sys
@@ -874,6 +875,17 @@ def _corpo_del_prompt(game_state, mio, avversario, stati=(), inizio="", fine=" "
 PAUSA_INIZIALE = 1
 PAUSA_MASSIMA = 30
 TENTATIVI_DI_FILA = 25
+# I secondi di un collegamento che azzera il conto dei tentativi: un flusso
+# che mandava una riga e si chiudeva si riapriva ogni secondo senza fine
+# (R120).
+COLLEGAMENTO_DURATO = 30
+
+
+def _errore_permanente(errore):
+    """Vero per gli errori che riprovando non passano: i 4xx, tranne il
+    429 dei limiti, che passa aspettando (R120)."""
+    codice = getattr(errore, "codice", None)
+    return codice is not None and 400 <= codice < 500 and codice != 429
 
 
 def _partita_finita(msg):
@@ -890,42 +902,52 @@ def _partita_finita(msg):
 def _play_worker(url, token, q, stop_event, tentativi=TENTATIVI_DI_FILA):
     """Segue la partita e, se la connessione cade, prova a riprenderla
     finche' la partita e' in corso, con pause che crescono; il conto dei
-    tentativi riparte a ogni riga ricevuta.
+    tentativi riparte dopo un collegamento durato.
 
     Prima bastava un singhiozzo di rete per abbandonare la partita mentre su
     Lichess il tempo continuava a scorrere; poi i tentativi erano tre in
     tutta la partita, a due secondi l'uno dall'altro, e senza rete finivano
     in pochi secondi, con le domande di fine partita a partita in corso
-    (R19).
+    (R19). Gli errori che riprovando non passano, come il 404 di una partita
+    che non c'e', si dicono subito; un flusso tagliato a meta' blocco e'
+    una caduta come le altre; e l'eof arriva sempre, anche dopo un errore
+    che nessuno aspetta, perche' la partita non resti muta (R120).
     """
-    falliti = 0
-    finita = False
-    while not stop_event.is_set():
-        risposta, errore = rete.apri(url, token=token, timeout=rete.TIMEOUT_STREAM)
-        if not errore:
-            try:
-                with risposta as resp:
-                    for line in resp:
-                        if stop_event.is_set():
-                            break
-                        if line.strip():
-                            msg = json.loads(line.decode("utf-8"))
-                            falliti = 0
-                            finita = finita or _partita_finita(msg)
-                            q.put(msg)
-                errore = ""
-            except (OSError, ValueError) as e:
-                errore = str(e)
-        # A partita finita il flusso si chiude, e non si riprende.
-        if stop_event.is_set() or finita:
-            break
-        falliti += 1
-        if falliti >= tentativi:
-            q.put({"type": "error", "error": errore or _("Lichess ha chiuso il collegamento.")})
-            break
-        q.put({"type": "riconnessione", "tentativo": falliti, "motivo": errore})
-        stop_event.wait(min(PAUSA_MASSIMA, PAUSA_INIZIALE * 2 ** (falliti - 1)))
-    q.put({"type": "eof"})
+    try:
+        falliti = 0
+        finita = False
+        while not stop_event.is_set():
+            risposta, errore = rete.apri(url, token=token, timeout=rete.TIMEOUT_STREAM)
+            if _errore_permanente(errore):
+                q.put({"type": "error", "error": errore})
+                break
+            durato = False
+            if not errore:
+                inizio = time.monotonic()
+                try:
+                    with risposta as resp:
+                        for line in resp:
+                            if stop_event.is_set():
+                                break
+                            if line.strip():
+                                msg = json.loads(line.decode("utf-8"))
+                                finita = finita or _partita_finita(msg)
+                                q.put(msg)
+                    errore = ""
+                except (OSError, ValueError, http.client.HTTPException) as e:
+                    errore = str(e)
+                durato = time.monotonic() - inizio >= COLLEGAMENTO_DURATO
+            # A partita finita il flusso si chiude, e non si riprende.
+            if stop_event.is_set() or finita:
+                break
+            falliti = 1 if durato else falliti + 1
+            if falliti >= tentativi:
+                q.put({"type": "error", "error": errore or _("Lichess ha chiuso il collegamento.")})
+                break
+            q.put({"type": "riconnessione", "tentativo": falliti, "motivo": errore})
+            stop_event.wait(min(PAUSA_MASSIMA, PAUSA_INIZIALE * 2 ** (falliti - 1)))
+    finally:
+        q.put({"type": "eof"})
 
 
 def send_action(game_id, token, action, uci=None, chat_text=None, motivo=None):

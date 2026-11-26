@@ -2,6 +2,7 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
 import contextlib
+import http.client
 import json
 import os
 import queue
@@ -1944,7 +1945,9 @@ def seek_game(token, params_dict):
                     for _riga in risposta:
                         if stop_seek.is_set():
                             break
-            except OSError:
+            # Anche il flusso tagliato a meta' blocco, IncompleteRead: prima
+            # faceva morire il filo della ricerca in silenzio (R120).
+            except (OSError, http.client.HTTPException):
                 pass
             if not stop_seek.is_set():
                 time.sleep(1)

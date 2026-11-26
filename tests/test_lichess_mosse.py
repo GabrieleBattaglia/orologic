@@ -119,7 +119,10 @@ def _messaggi_del_filo(monkeypatch, risposte, tentativi=lichess_board.TENTATIVI_
     return messaggi
 
 
-def test_il_conto_dei_tentativi_riparte_a_ogni_riga(monkeypatch):
+def test_il_conto_dei_tentativi_riparte_dopo_un_collegamento_durato(monkeypatch):
+    """R19, con R120: il conto riparte dopo un collegamento durato, qui
+    finto con una durata minima di zero secondi."""
+    monkeypatch.setattr(lichess_board, "COLLEGAMENTO_DURATO", 0)
     in_corso = '{"type": "gameState", "moves": "e2e4", "status": "started"}\n'
     finita = '{"type": "gameState", "moves": "e2e4 e7e5", "status": "resign"}\n'
     risposte = [(None, "senza rete"), (None, "senza rete"), (_Flusso([in_corso]), None), (None, "senza rete"), (_Flusso([finita]), None)]
@@ -354,3 +357,60 @@ def test_alla_riconnessione_la_partita_finita_si_dice(monkeypatch):
     assert risposta is None
     assert "Partita terminata" in uscita
     assert stato.winner == "black"
+
+
+def test_gli_errori_permanenti_non_si_ritentano(monkeypatch):
+    """R120: 401, 403 e 404 si ritentavano 25 volte, dieci minuti di Riprovo
+    a collegarmi per una partita che non si sarebbe aperta mai. Il 429 resta
+    un errore che passa aspettando."""
+    for codice in (401, 403, 404):
+        errore = lichess_board.rete.ErroreDiRete("la partita non c'e'", codice)
+        messaggi = _messaggi_del_filo(monkeypatch, [(None, errore)] * 3)
+        assert [m["type"] for m in messaggi] == ["error", "eof"], codice
+    limite = lichess_board.rete.ErroreDiRete("troppe richieste", 429)
+    messaggi = _messaggi_del_filo(monkeypatch, [(None, limite)], tentativi=2)
+    assert [m["type"] for m in messaggi] == ["riconnessione", "error", "eof"]
+
+
+def test_un_flusso_che_si_chiude_subito_non_si_riapre_per_sempre(monkeypatch):
+    """R120: il conto dei tentativi si azzerava a ogni riga ricevuta, e un
+    flusso che mandava una riga e si chiudeva si riapriva ogni secondo senza
+    fine. Ora si azzera solo dopo un collegamento durato."""
+    in_corso = '{"type": "gameState", "moves": "e2e4", "status": "started"}\n'
+    messaggi = _messaggi_del_filo(monkeypatch, [(_Flusso([in_corso]), None)] * 10, tentativi=3)
+    assert [m["type"] for m in messaggi] == ["gameState", "riconnessione", "gameState", "riconnessione", "gameState", "error", "eof"]
+
+
+class _FlussoTagliato(_Flusso):
+    def __init__(self, righe, errore):
+        super().__init__(righe)
+        self.errore = errore
+
+    def __enter__(self):
+        def righe():
+            yield from self.righe
+            raise self.errore
+
+        return righe()
+
+
+def test_un_flusso_tagliato_a_meta_mette_sempre_eof(monkeypatch):
+    """R120: un flusso tagliato a meta' blocco solleva IncompleteRead, che
+    l'except non prendeva: il filo moriva senza eof, e la partita restava
+    muta col prompt vivo."""
+    import http.client
+    import queue
+    import threading
+
+    import pytest
+
+    in_corso = '{"type": "gameState", "moves": "e2e4", "status": "started"}\n'
+    tagliato = _FlussoTagliato([in_corso], http.client.IncompleteRead(b"", 10))
+    messaggi = _messaggi_del_filo(monkeypatch, [(tagliato, None)], tentativi=2)
+    assert [m["type"] for m in messaggi] == ["gameState", "riconnessione", "error", "eof"]
+    # Anche un errore che nessuno aspetta lascia l'eof nella coda.
+    monkeypatch.setattr(lichess_board.rete, "apri", lambda *_a, **_k: (_FlussoTagliato([], RuntimeError("imprevisto")), None))
+    coda = queue.Queue()
+    with pytest.raises(RuntimeError):
+        lichess_board._play_worker("url", "token", coda, threading.Event(), 2)
+    assert coda.get_nowait() == {"type": "eof"}
