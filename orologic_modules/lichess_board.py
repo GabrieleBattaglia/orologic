@@ -670,6 +670,9 @@ class GamePlayState:
         self.variant = "standard"
         self.move_times = []
         self.clocks_history = []
+        # Le mosse come le manda Lichess, in UCI: il confronto con l'elenco
+        # di gameState si fa su queste (R16, R17).
+        self.mosse_uci = []
         self.clock_increment = 0
         # Il torneo arena della partita, se c'e': serve al berserk.
         self.tournament_id = None
@@ -685,6 +688,36 @@ class GamePlayState:
             else:
                 b_time = max(0, b_time - elapsed)
         return w_time, b_time
+
+
+def ricostruisci_le_mosse(game_state, mosse_uci):
+    """Scacchiera e storia dall'elenco completo delle mosse di Lichess, dalla
+    posizione iniziale. Alla riconnessione Lichess rimanda gameFull con
+    tutte le mosse, che prima si accodavano alla storia senza svuotarla, e
+    da li' le mosse dell'avversario non si applicavano piu' (R16); dopo un
+    ritiro accettato gameState ha meno mosse, e la scacchiera locale teneva
+    quelle ritirate (R17). I tempi delle mosse gia' note restano."""
+    board = game_state.board
+    if game_state.initial_fen == chess.STARTING_FEN:
+        board.reset()
+    else:
+        board.set_fen(game_state.initial_fen)
+    game_state.move_history.clear()
+    for uci in mosse_uci:
+        move = board.parse_uci(uci)
+        game_state.move_history.append(board.san(move))
+        board.push(move)
+    game_state.mosse_uci = list(mosse_uci)
+    quante = len(mosse_uci)
+    game_state.move_times = (list(game_state.move_times) + [0.0] * quante)[:quante]
+    game_state.clocks_history = (list(game_state.clocks_history) + [0.0] * quante)[:quante]
+
+
+def prolunga(game_state, mosse_uci):
+    """Vero se l'elenco di Lichess comincia con le mosse gia' sulla
+    scacchiera locale: allora basta giocare quelle nuove."""
+    note = game_state.mosse_uci
+    return len(note) == len(game_state.move_history) and mosse_uci[: len(note)] == note
 
 
 def mie_mosse(game_state):
@@ -953,14 +986,9 @@ def async_play_loop(q, game_state):
 
                 state = msg.get("state", {})
                 moves = state.get("moves", "").strip()
-                if moves:
-                    num_existing_moves = len(moves.split(" "))
-                    game_state.move_times = [0.0] * num_existing_moves
-                    game_state.clocks_history = [0.0] * num_existing_moves
-                    for uci_move in moves.split(" "):
-                        move = game_state.board.parse_uci(uci_move)
-                        game_state.move_history.append(game_state.board.san(move))
-                        game_state.board.push(move)
+                # Anche alla riconnessione: la storia si ricostruisce, non
+                # si accoda (R16).
+                ricostruisci_le_mosse(game_state, moves.split(" ") if moves else [])
 
                 if "wtime" in state and state.get("wtime") is not None:
                     game_state.white_time = int(state.get("wtime")) / 1000.0
@@ -984,6 +1012,15 @@ def async_play_loop(q, game_state):
             elif msg.get("type") == "gameState":
                 moves = msg.get("moves", "").strip()
                 new_moves = moves.split(" ") if moves else []
+                # Un elenco che non prolunga quello locale, dopo un ritiro
+                # accettato, ricostruisce la partita (R17).
+                if not prolunga(game_state, new_moves):
+                    ritirate = len(new_moves) < len(game_state.move_history)
+                    ricostruisci_le_mosse(game_state, new_moves)
+                    if ritirate:
+                        ui.pulisci_riga()
+                        sys.stdout.write(_("Mosse ritirate: la scacchiera torna alla posizione di Lichess.") + "\n")
+                        refresh_line()
                 current_ply = len(game_state.move_history)
 
                 if len(new_moves) > current_ply:
@@ -1038,6 +1075,7 @@ def async_play_loop(q, game_state):
 
                         game_state.board.push(move)
                         game_state.move_history.append(san_move)
+                        game_state.mosse_uci.append(uci_move)
 
                         ui.pulisci_riga()
                         sys.stdout.write(
