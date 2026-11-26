@@ -149,6 +149,13 @@ def DownloadAndInstallEngine():
         os.remove(archivio)
     except OSError:
         pass
+    # L'elenco dei file dell'archivio, accanto al programma: al prossimo
+    # aggiornamento dice che cosa e' del programma e che cosa dell'utente
+    # (R109).
+    try:
+        scrivi_l_elenco(lavorazione)
+    except OSError:
+        pass
 
     eseguibile = None
     for radice, _cartelle, file_presenti in os.walk(lavorazione):
@@ -181,9 +188,13 @@ def DownloadAndInstallEngine():
         shutil.rmtree(lavorazione, ignore_errors=True)
         return None, None
 
-    # Gli altri motori, i pesi e i libri dell'utente restano: della cartella
-    # di prima se ne va solo lo Stockfish vecchio (R36).
-    riportati, rimasti = storage.riporta_i_file_dell_utente(vecchio, destinazione, _di_stockfish)
+    # Gli altri motori, i pesi e i libri dell'utente restano, anche nelle
+    # sottocartelle: della cartella di prima se ne va solo il programma
+    # vecchio, cioe' i file del suo archivio (R36, R109). Senza l'elenco,
+    # per un'installazione di prima, resta tutto quello che il programma
+    # nuovo non sostituisce.
+    di_prima = leggi_l_elenco(vecchio)
+    riportati, rimasti = storage.riporta_i_file_dell_utente(vecchio, destinazione, lambda relativo: relativo == ELENCO or (di_prima is not None and relativo in di_prima))
     if riportati:
         print(_("Nella cartella del motore restano anche: {nomi}.").format(nomi=", ".join(sorted(riportati))))
     if rimasti:
@@ -195,10 +206,26 @@ def DownloadAndInstallEngine():
     return cartella_finale, eseguibile[1]
 
 
-def _di_stockfish(nome):
-    """Vero per cio' che, nella cartella del motore, viene da un archivio di
-    Stockfish."""
-    return nome.lower().startswith("stockfish")
+# L'elenco dei file venuti dall'archivio di Stockfish, nella cartella del
+# motore, un percorso relativo per riga (R109).
+ELENCO = "orologic_file_di_stockfish.txt"
+
+
+def scrivi_l_elenco(cartella):
+    """L'elenco dei file della cartella appena estratta, accanto a loro."""
+    nomi = sorted(os.path.relpath(os.path.join(radice, nome), cartella) for radice, _cartelle, file_presenti in os.walk(cartella) for nome in file_presenti)
+    with open(os.path.join(cartella, ELENCO), "w", encoding="utf-8") as file:
+        file.write("".join(f"{nome}\n" for nome in nomi))
+
+
+def leggi_l_elenco(cartella):
+    """I file del programma secondo l'elenco della cartella, o None se
+    l'elenco non c'e', come in un'installazione di prima."""
+    try:
+        with open(os.path.join(cartella, ELENCO), encoding="utf-8") as file:
+            return {os.path.normpath(riga.strip()) for riga in file if riga.strip()}
+    except OSError:
+        return None
 
 
 def _versione(testo):

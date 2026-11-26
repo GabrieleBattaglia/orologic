@@ -217,25 +217,29 @@ def metti_da_parte(percorso):
 
 def riporta_i_file_dell_utente(vecchia, nuova, del_programma=None):
     """Dopo che la cartella nuova di un programma scaricato ha preso il posto
-    della vecchia, riporta nella nuova cio' che stava nella vecchia e nella
-    nuova non c'e', tranne quello che del_programma(nome) riconosce come
-    parte del programma di prima. Prima l'installazione cancellava la
-    cartella intera, e un altro motore, i suoi pesi o i libri messi li'
-    dall'utente sparivano senza cestino (R36). Restituisce (riportati,
-    rimasti): i nomi spostati e quelli che non si sono potuti spostare."""
+    della vecchia, riporta nella nuova i file che stavano nella vecchia e
+    nella nuova non ci sono, tranne quelli che del_programma(relativo)
+    riconosce come parte del programma di prima. Prima l'installazione
+    cancellava la cartella intera, e un altro motore, i suoi pesi o i libri
+    messi li' dall'utente sparivano senza cestino (R36). Si guarda anche
+    dentro le sottocartelle, file per file: un libro messo nella sottocartella
+    del programma spariva con la cartella vecchia (R109). Restituisce
+    (riportati, rimasti): i percorsi relativi spostati e quelli che non si
+    sono potuti spostare."""
     riportati, rimasti = [], []
-    try:
-        nomi = os.listdir(vecchia)
-    except OSError:
-        return riportati, rimasti
-    for nome in nomi:
-        if os.path.exists(os.path.join(nuova, nome)) or (del_programma is not None and del_programma(nome)):
-            continue
-        try:
-            os.replace(os.path.join(vecchia, nome), os.path.join(nuova, nome))
-            riportati.append(nome)
-        except OSError:
-            rimasti.append(nome)
+    for radice, _cartelle, nomi in os.walk(vecchia):
+        for nome in nomi:
+            sorgente = os.path.join(radice, nome)
+            relativo = os.path.relpath(sorgente, vecchia)
+            arrivo = os.path.join(nuova, relativo)
+            if os.path.exists(arrivo) or (del_programma is not None and del_programma(relativo)):
+                continue
+            try:
+                os.makedirs(os.path.dirname(arrivo), exist_ok=True)
+                os.replace(sorgente, arrivo)
+                riportati.append(relativo)
+            except OSError:
+                rimasti.append(relativo)
     return riportati, rimasti
 
 
