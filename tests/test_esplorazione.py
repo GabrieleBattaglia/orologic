@@ -167,3 +167,14 @@ def test_il_riepilogo_testuale_va_a_capo_dopo_l_apertura(tmp_path, monkeypatch):
     ui.save_text_summary(stato, ["e4", "e5"], {"eco": "C50", "opening": "Italian Game"})
     testo = next((tmp_path / "txt").iterdir()).read_text(encoding="utf-8")
     assert "Apertura: C50 - Italian Game\nLista Mosse:" in testo
+
+
+def test_nel_puzzle_ogni_matto_vale():
+    """R79: un matto diverso da quello della soluzione era un errore."""
+    from orologic_modules import lichess_app
+
+    # Il matto sulla traversa.
+    scacchiera = chess.Board("6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1")
+    assert lichess_app.da_matto(scacchiera, chess.Move.from_uci("a1a8"))
+    assert not lichess_app.da_matto(scacchiera, chess.Move.from_uci("a1a7"))
+    assert not lichess_app.da_matto(scacchiera, chess.Move.from_uci("h2h4"))

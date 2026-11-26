@@ -714,6 +714,17 @@ def fetch_puzzle(token=None, daily=False, difficulty=None, angle=None):
     return dati
 
 
+def da_matto(board, mossa):
+    """Vero se la mossa, legale, da' matto: nei puzzle vale come la mossa
+    della soluzione, come su Lichess. Prima un matto diverso era un errore,
+    e a Lichess partiva una sconfitta (R79)."""
+    if not board.is_legal(mossa):
+        return False
+    prova = board.copy(stack=False)
+    prova.push(mossa)
+    return prova.is_checkmate()
+
+
 def send_puzzle_result(token, puzzle_id, win):
     if not token or not puzzle_id:
         return
@@ -1070,12 +1081,17 @@ def risolvi_il_puzzle(token, puzzle_data):
                     )
                     continue
 
-            if move == mossa_corretta_move:
+            if move == mossa_corretta_move or da_matto(board, move):
                 Acusticator(["f5", 0.01, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 0])
                 desc_move = board_utils.DescribeMove(move, board)
                 print(_("Corretto! Hai giocato: {m}").format(m=desc_move))
                 board.push(move)
                 mossa_idx += 1
+                # Un matto chiude il puzzle anche prima della fine della
+                # soluzione (R79).
+                if board.is_checkmate():
+                    risolto = True
+                    break
 
                 if mossa_idx < len(soluzione):
                     avv_uci = soluzione[mossa_idx]
