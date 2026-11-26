@@ -122,3 +122,34 @@ def test_la_lingua_di_windows_viene_da_gbutils(monkeypatch):
     assert avvio.lingua_di_windows() is None
     monkeypatch.setattr(GBUtils, "lingua_di_sistema", lambda: None)
     assert avvio.lingua_di_windows() is None
+
+
+def test_il_primo_avvio_su_un_installazione_nuova(tmp_path):
+    """Regressione di R136, trovata dalla prova di R93: con la cartella
+    dell'applicazione vuota, come dopo l'installazione, Orologic cadeva
+    all'import dei suoi moduli, prima ancora di aprire la finestra. La
+    lingua e' quella che la finestra del primo avvio fa salvare a polipo;
+    poi gli import di orologic.py, in un processo a parte, con lo script
+    scritto su file e lanciato per nome."""
+    import subprocess
+    import sys
+
+    from conftest import RADICE
+
+    cartella = tmp_path / "applicazione"
+    cartella.mkdir()
+    script = tmp_path / "primo_avvio.py"
+    script.write_text(
+        "import sys\n"
+        f"sys.path.insert(0, {RADICE!r})\n"
+        "import percorsi\n"
+        f"percorsi.cartella_applicazione = lambda: {str(cartella)!r}\n"
+        "from orologic_modules import avvio\n"
+        "avvio.salva('it')\n"
+        "import orologic\n"
+        "print('avviato')\n",
+        encoding="utf-8",
+    )
+    uscita = subprocess.run([sys.executable, "-B", str(script)], capture_output=True, text=True, timeout=120, cwd=RADICE, check=False)
+    righe = uscita.stdout.strip().splitlines()
+    assert righe and righe[-1] == "avviato", (uscita.stdout[-1000:], uscita.stderr[-2000:])

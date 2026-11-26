@@ -439,10 +439,14 @@ def _quando_torna_leggibile(db):
     with contextlib.suppress(TypeError, ValueError):
         config.VOLUME = min(1.0, max(0.0, float(db.get("volume", config.VOLUME))))
     localizzazione = sys.modules.get(__package__ + ".localizzazione")
-    if localizzazione is not None and isinstance(db.get("localization"), dict):
+    # Mentre localizzazione si importa, L10N non c'e' ancora, e nascera'
+    # proprio da questa lettura: su un'installazione nuova la prima lettura
+    # viene da li', e toccarla faceva cadere Orologic al primo avvio.
+    nomi = getattr(localizzazione, "L10N", None)
+    if nomi is not None and isinstance(db.get("localization"), dict):
         nuovo = localizzazione.unisci(localizzazione.predefinito(), localizzazione.sfoltisci(db["localization"]))
-        localizzazione.L10N.clear()
-        localizzazione.L10N.update(nuovo)
+        nomi.clear()
+        nomi.update(nuovo)
 
 
 def _carica():

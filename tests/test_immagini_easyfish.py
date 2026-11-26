@@ -84,22 +84,33 @@ def test_la_condivisione_non_legge_il_database_dal_suo_filo(monkeypatch):
     assert disegnate == [{"size": 321}] and letture == [1]
 
 
-def test_l_avvio_non_carica_reportlab_svglib_e_pygame():
+def test_l_avvio_non_carica_reportlab_svglib_e_pygame(tmp_path):
     """R93: reportlab, svglib e pygame si caricavano a ogni avvio, e un loro
-    guasto nel pacchetto avrebbe impedito l'avvio di tutto Orologic."""
+    guasto nel pacchetto avrebbe impedito l'avvio di tutto Orologic. R141:
+    lo script si scrive su file e si lancia per nome, come vuole la regola
+    della macchina, invece di un python -c lungo; la cartella
+    dell'applicazione e' in tmp_path, mentre prima ogni corsa lasciava due
+    cartelle in TEMP."""
     import subprocess
     import sys
 
     from conftest import RADICE
 
-    codice = (
-        "import sys; sys.path.insert(0, r'" + RADICE + "'); "
-        "import percorsi, tempfile; percorsi.cartella_applicazione = lambda: tempfile.mkdtemp(); "
-        "from orologic_modules.easyfish import easyfish_app; "
-        "print(sorted(m for m in ('reportlab', 'svglib', 'pygame') if m in sys.modules))"
+    cartella = tmp_path / "applicazione"
+    cartella.mkdir()
+    script = tmp_path / "avvio_di_easyfish.py"
+    script.write_text(
+        "import sys\n"
+        f"sys.path.insert(0, {RADICE!r})\n"
+        "import percorsi\n"
+        f"percorsi.cartella_applicazione = lambda: {str(cartella)!r}\n"
+        "from orologic_modules.easyfish import easyfish_app\n"
+        "print(sorted(m for m in ('reportlab', 'svglib', 'pygame') if m in sys.modules))\n",
+        encoding="utf-8",
     )
-    uscita = subprocess.run([sys.executable, "-B", "-c", codice], capture_output=True, text=True, timeout=120, cwd=RADICE, check=False)
-    assert uscita.stdout.strip().splitlines()[-1] == "[]", uscita.stderr[-2000:]
+    uscita = subprocess.run([sys.executable, "-B", str(script)], capture_output=True, text=True, timeout=120, cwd=RADICE, check=False)
+    righe = uscita.stdout.strip().splitlines()
+    assert righe and righe[-1] == "[]", (uscita.stdout[-1000:], uscita.stderr[-2000:])
 
 
 def test_ii_non_chiede_piu_ombreggiatura_e_colore_dello_scacco(impostazioni_rimesse, monkeypatch, capsys):

@@ -379,3 +379,28 @@ def test_il_registro_tiene_la_voce_se_non_si_gira(tmp_path, monkeypatch):
     monkeypatch.setattr(registro.os, "replace", rifiuta)
     assert registro.scrivi("la voce che conta") == str(file)
     assert "la voce che conta" in file.read_text(encoding="utf-8")
+
+
+def test_il_database_letto_mentre_la_localizzazione_nasce(database, monkeypatch):
+    """Regressione di R136, trovata dalla prova di R93: su un'installazione
+    nuova il database non c'e' quando config legge il volume, e la prima
+    lettura arriva da dentro l'import di localizzazione, che non ha ancora
+    L10N. _quando_torna_leggibile la toccava, e Orologic cadeva al primo
+    avvio; ora la lascia stare, perche' L10N nasce proprio da quella
+    lettura."""
+    import sys
+    import types
+
+    from orologic_modules import localizzazione
+
+    # Il modulo a meta' import: le funzioni scritte prima di L10N ci sono,
+    # L10N no.
+    nascente = types.ModuleType(localizzazione.__name__)
+    for nome in ("unisci", "predefinito", "sfoltisci"):
+        setattr(nascente, nome, getattr(localizzazione, nome))
+    monkeypatch.setitem(sys.modules, localizzazione.__name__, nascente)
+    monkeypatch.setattr(config, "VOLUME_LETTO", False)
+    monkeypatch.setattr(config, "VOLUME", 1.0)
+    _scrivi(database, {"volume": 0.5, "localization": {}})
+    storage.LoadDB()
+    assert config.VOLUME == 0.5 and config.VOLUME_LETTO
