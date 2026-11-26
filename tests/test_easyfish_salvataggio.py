@@ -29,3 +29,43 @@ def test_chi_torna_all_inizio_e_esce_salva_la_partita(finestra, monkeypatch):
     _premi(finestra, ".\r")
     assert pompa(lambda: not finestra.nucleo.is_alive())
     assert salvate == [game]
+
+
+def test_il_matto_in_una_variante_non_cambia_il_risultato(monkeypatch):
+    """R14: una variante che da' matto col Bianco, in una partita finita
+    0-1, scriveva 1-0 nell'intestazione Result."""
+    import io
+
+    import chess.pgn
+
+    monkeypatch.setattr(easyfish_app, "Acusticator", lambda *a, **k: None)
+    game = chess.pgn.read_game(io.StringIO('[Result "0-1"]\n\n1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Nc3 Bc5 5. d3 0-1'))
+    # Dopo 3...Nf6 la linea principale gioca 4.Nc3; la variante il matto.
+    nf6 = game.variations[0].variations[0].variations[0].variations[0].variations[0].variations[0]
+    matto = nf6.add_variation(chess.Move.from_uci("h5f7"))
+    assert matto.board().is_checkmate() and not matto.is_mainline()
+    easyfish_app.CheckGameOver(matto.board(), matto)
+    assert game.headers["Result"] == "0-1"
+
+
+def test_il_matto_alla_fine_della_linea_principale_si_segna(monkeypatch):
+    import io
+
+    import chess.pgn
+
+    monkeypatch.setattr(easyfish_app, "Acusticator", lambda *a, **k: None)
+    game = chess.pgn.read_game(io.StringIO("1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# *"))
+    easyfish_app.CheckGameOver(game.end().board(), game.end())
+    assert game.headers["Result"] == "1-0"
+
+
+def test_la_tripla_ripetizione_non_scrive_il_risultato(monkeypatch):
+    import io
+
+    import chess.pgn
+
+    monkeypatch.setattr(easyfish_app, "Acusticator", lambda *a, **k: None)
+    game = chess.pgn.read_game(io.StringIO("1. Nf3 Nf6 2. Ng1 Ng8 3. Nf3 Nf6 4. Ng1 Ng8 *"))
+    assert game.end().board().can_claim_threefold_repetition()
+    easyfish_app.CheckGameOver(game.end().board(), game.end())
+    assert game.headers["Result"] == "*"

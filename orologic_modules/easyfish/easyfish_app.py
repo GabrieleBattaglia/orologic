@@ -85,13 +85,21 @@ def GetDynamicPrompt(board, node):
         return f"{prefix}{n}. {last_san}: "
 
 
+def _segna_il_risultato(node, risultato, automatico=True):
+    """L'esito nell'intestazione Result solo alla fine della linea
+    principale e solo per gli esiti automatici: dentro una variante, o per
+    una patta soltanto richiedibile, il PGN salvato e il nome del file
+    prendevano un risultato che la partita non ha (R14)."""
+    if automatico and node is not None and node.is_mainline() and not node.variations:
+        node.root().headers["Result"] = risultato
+
+
 def CheckGameOver(board, node=None):
     """Controlla se la partita è finita (matto, patta) e stampa l'esito."""
     if board.is_game_over(claim_draw=True):
         if board.is_checkmate():
             res = "1-0" if board.turn == chess.BLACK else "0-1"
-            if node and node.root():
-                node.root().headers["Result"] = res
+            _segna_il_risultato(node, res)
             print(_("Scacco matto!"))
             Acusticator(
                 [
@@ -116,8 +124,7 @@ def CheckGameOver(board, node=None):
                 adsr=[2, 8, 90, 0],
             )
         elif board.is_stalemate():
-            if node and node.root():
-                node.root().headers["Result"] = "1/2-1/2"
+            _segna_il_risultato(node, "1/2-1/2")
             print(_("Patta per stallo!"))
             Acusticator(
                 [
@@ -142,8 +149,7 @@ def CheckGameOver(board, node=None):
                 adsr=[2, 8, 90, 0],
             )
         elif board.is_insufficient_material():
-            if node and node.root():
-                node.root().headers["Result"] = "1/2-1/2"
+            _segna_il_risultato(node, "1/2-1/2")
             print(_("Patta per materiale insufficiente!"))
             Acusticator(
                 [
@@ -168,8 +174,7 @@ def CheckGameOver(board, node=None):
                 adsr=[2, 8, 90, 0],
             )
         elif board.is_seventyfive_moves() or board.can_claim_fifty_moves():
-            if node and node.root():
-                node.root().headers["Result"] = "1/2-1/2"
+            _segna_il_risultato(node, "1/2-1/2", automatico=board.is_seventyfive_moves())
             print(_("Patta per la regola delle 50/75 mosse!"))
             Acusticator(
                 [
@@ -194,8 +199,7 @@ def CheckGameOver(board, node=None):
                 adsr=[2, 8, 90, 0],
             )
         elif board.is_fivefold_repetition() or board.can_claim_threefold_repetition():
-            if node and node.root():
-                node.root().headers["Result"] = "1/2-1/2"
+            _segna_il_risultato(node, "1/2-1/2", automatico=board.is_fivefold_repetition())
             print(_("Patta per ripetizione della posizione!"))
             Acusticator(
                 [
