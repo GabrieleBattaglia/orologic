@@ -2129,13 +2129,8 @@ def AnalisiAutomatica(pgn_game):
     ) = parametri
     engine_metadata = _dati_motore(db)
 
-    print(
-        "\n"
-        + "=" * 40
-        + _("\nInizio analisi... (Premi ESC per interrompere)")
-        + "\n"
-        + "=" * 40
-    )
+    # Senza le righe di uguali attorno: niente separatori grafici (R90).
+    print(_("\nInizio analisi... (Premi ESC per interrompere)"))
     start_time = time.time()
 
     oaa_analysis_cache.clear()
@@ -2203,7 +2198,9 @@ def AnalisiAutomatica(pgn_game):
         elapsed_time = time.time() - start_time
         time_str = f"{int(elapsed_time // 60):02d}:{int(elapsed_time % 60):02d}"
         print(
-            _("\rPLY {ply}/{total} {san:<12} | Tempo: {t}").format(
+            # Senza la barra verticale, e senza gli spazi di riempimento
+            # (R90).
+            _("\rSemimossa {ply} di {total}: {san}, tempo {t}").format(
                 ply=ply, total=total_plys, san=san_str, t=time_str
             ),
             end="",
@@ -2356,7 +2353,7 @@ def AnalisiAutomatica(pgn_game):
             }
         )
 
-    print(f"\n\n{'=' * 40}\n" + _("Analisi automatica completata.") + f"\n{'=' * 40}")
+    print("\n" + _("Analisi automatica completata."))
     pgn_game.headers["Annotator"] = _("Orologic V{v} (Auto)").format(v=version.VERSION)
     duration = time.time() - start_time
 

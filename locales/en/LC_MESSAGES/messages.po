@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-26 08:25+0100\n"
+"POT-Creation-Date: 2026-11-26 08:26+0100\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -1998,7 +1998,7 @@ msgstr "Confirm"
 #: orologic_modules/finestra_editor.py:108
 #: orologic_modules/lichess_app.py:2164 orologic_modules/lichess_app.py:2199
 #: orologic_modules/lichess_app.py:2339
-#: orologic_modules/lichess_profiler.py:596
+#: orologic_modules/lichess_profiler.py:597
 msgid "Annulla"
 msgstr "Cancel"
 
@@ -2765,34 +2765,34 @@ msgstr "{p}(Variation {i}):"
 msgid "Linea principale:"
 msgstr "Main line:"
 
-#: orologic_modules/engine.py:1624 orologic_modules/engine.py:2150
+#: orologic_modules/engine.py:1624 orologic_modules/engine.py:2145
 #: orologic_modules/localizzazione.py:79
 msgid "Svarione"
 msgstr "Blunder"
 
-#: orologic_modules/engine.py:1625 orologic_modules/engine.py:2151
+#: orologic_modules/engine.py:1625 orologic_modules/engine.py:2146
 #: orologic_modules/localizzazione.py:80
 msgid "Errore"
 msgstr "Mistake"
 
-#: orologic_modules/engine.py:1626 orologic_modules/engine.py:2152
+#: orologic_modules/engine.py:1626 orologic_modules/engine.py:2147
 #: orologic_modules/localizzazione.py:81
 msgid "Inesattezza"
 msgstr "Inaccuracy"
 
-#: orologic_modules/engine.py:1627 orologic_modules/engine.py:2153
+#: orologic_modules/engine.py:1627 orologic_modules/engine.py:2148
 msgid "Mossa Buona"
 msgstr "Good move"
 
-#: orologic_modules/engine.py:1628 orologic_modules/engine.py:2154
+#: orologic_modules/engine.py:1628 orologic_modules/engine.py:2149
 msgid "Mossa Geniale"
 msgstr "Brilliant move"
 
-#: orologic_modules/engine.py:1629 orologic_modules/engine.py:2155
+#: orologic_modules/engine.py:1629 orologic_modules/engine.py:2150
 msgid "Mossa Normale"
 msgstr "Normal move"
 
-#: orologic_modules/engine.py:1630 orologic_modules/engine.py:2156
+#: orologic_modules/engine.py:1630 orologic_modules/engine.py:2151
 #: orologic_modules/localizzazione.py:85
 msgid "Teoria"
 msgstr "Theory"
@@ -3029,11 +3029,11 @@ msgstr ""
 "\n"
 "Engine not initialized. Unable to start automatic analysis."
 
-#: orologic_modules/engine.py:2107 orologic_modules/engine.py:2409
+#: orologic_modules/engine.py:2107 orologic_modules/engine.py:2406
 msgid "Analisi Automatica della Partita"
 msgstr "Automatic Game Analysis"
 
-#: orologic_modules/engine.py:2135
+#: orologic_modules/engine.py:2133
 msgid ""
 "\n"
 "Inizio analisi... (Premi ESC per interrompere)"
@@ -3041,7 +3041,7 @@ msgstr ""
 "\n"
 "Start analysis... (Press ESC to stop)"
 
-#: orologic_modules/engine.py:2178
+#: orologic_modules/engine.py:2173
 msgid ""
 "\n"
 "Analisi interrotta dall'utente."
@@ -3049,16 +3049,16 @@ msgstr ""
 "\n"
 "Analysis interrupted by user."
 
-#: orologic_modules/engine.py:2206
+#: orologic_modules/engine.py:2203
 #, python-brace-format
 msgid ""
 "\r"
-"PLY {ply}/{total} {san:<12} | Tempo: {t}"
+"Semimossa {ply} di {total}: {san}, tempo {t}"
 msgstr ""
 "\r"
-"PLY {ply}/{total} {san:<12} | Time: {t}"
+"Ply {ply} of {total}: {san}, time {t}"
 
-#: orologic_modules/engine.py:2218
+#: orologic_modules/engine.py:2215
 msgid ""
 "\n"
 "Analisi interrotta: il motore non risponde."
@@ -3066,79 +3066,79 @@ msgstr ""
 "\n"
 "Analysis stopped: the engine does not respond."
 
-#: orologic_modules/engine.py:2257
+#: orologic_modules/engine.py:2254
 #, python-brace-format
 msgid "[OAA: {cl}. {matto}]"
 msgstr "[OAA: {cl}. {matto}]"
 
-#: orologic_modules/engine.py:2268
+#: orologic_modules/engine.py:2265
 #, python-brace-format
 msgid "[OAA: Linea: {linea}]"
 msgstr "[OAA: Line: {linea}]"
 
-#: orologic_modules/engine.py:2275
+#: orologic_modules/engine.py:2272
 #, python-brace-format
 msgid "[OAA: Segue: {matto}]"
 msgstr "[OAA: Follows: {matto}]"
 
-#: orologic_modules/engine.py:2277
+#: orologic_modules/engine.py:2274
 #, python-brace-format
 msgid "[OAA: {cl}. Perdita: {cpl:+.2f}]"
 msgstr "[OAA: {cl}. Loss: {cpl:+.2f}]"
 
-#: orologic_modules/engine.py:2291
+#: orologic_modules/engine.py:2288
 #, python-brace-format
 msgid "[OAA: Confutazione: {linea}]"
 msgstr "[OAA: Refutation: {linea}]"
 
-#: orologic_modules/engine.py:2298
+#: orologic_modules/engine.py:2295
 msgid "[OAA: Confutazione]"
 msgstr "[OAA: Refutation]"
 
-#: orologic_modules/engine.py:2327
+#: orologic_modules/engine.py:2324
 #, python-brace-format
 msgid "[OAA: Alt: {matto}]"
 msgstr "[OAA: Alt: {matto}]"
 
-#: orologic_modules/engine.py:2334
+#: orologic_modules/engine.py:2331
 #, python-brace-format
 msgid "[OAA: Alt: {s}]"
 msgstr "[OAA: Alt: {s}]"
 
-#: orologic_modules/engine.py:2359
+#: orologic_modules/engine.py:2356
 msgid "Analisi automatica completata."
 msgstr "Automatic analysis completed."
 
-#: orologic_modules/engine.py:2360
+#: orologic_modules/engine.py:2357
 #, python-brace-format
 msgid "Orologic V{v} (Auto)"
 msgstr "Orologic V{v} (Auto)"
 
-#: orologic_modules/engine.py:2366
+#: orologic_modules/engine.py:2363
 #, python-brace-format
 msgid "{w}_vs_{b}_auto_{d}"
 msgstr "{w}_vs_{b}_auto_{d}"
 
-#: orologic_modules/engine.py:2380
+#: orologic_modules/engine.py:2377
 #, python-brace-format
 msgid "PGN analizzato salvato come: {path}"
 msgstr "Analyzed PGN saved as: {path}"
 
-#: orologic_modules/engine.py:2400
+#: orologic_modules/engine.py:2397
 #, python-brace-format
 msgid "Errore durante il salvataggio: {e}"
 msgstr "Error saving: {e}"
 
-#: orologic_modules/engine.py:2407
+#: orologic_modules/engine.py:2404
 msgid "Vuoi leggere l'analisi in una finestra? (INVIO per si', ESC per no): "
 msgstr ""
 "Do you want to read the analysis in a window? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/engine.py:2410
+#: orologic_modules/engine.py:2407
 msgid "Ritorno al menu principale."
 msgstr "Return to the main menu."
 
-#: orologic_modules/engine.py:2477
+#: orologic_modules/engine.py:2474
 msgid ""
 "\n"
 "Azioni per il motore scacchistico:"
@@ -3146,7 +3146,7 @@ msgstr ""
 "\n"
 "Actions for the chess engine:"
 
-#: orologic_modules/engine.py:2481
+#: orologic_modules/engine.py:2478
 msgid ""
 "Vuoi [c] cercare un motore nel tuo pc, [s] scaricare Stockfish, o [m] per "
 "modificare manualmente la configurazione? (c/s/m): "
@@ -3154,7 +3154,7 @@ msgstr ""
 "Do you want to [c] search for an engine on your PC, [s] download Stockfish, "
 "or [m] to manually change the configuration? (c/s/m): "
 
-#: orologic_modules/engine.py:2504
+#: orologic_modules/engine.py:2501
 msgid ""
 "\n"
 "Imposta configurazione del motore scacchistico\n"
@@ -3162,25 +3162,25 @@ msgstr ""
 "\n"
 "Set chess engine configuration\n"
 
-#: orologic_modules/engine.py:2508
+#: orologic_modules/engine.py:2505
 msgid "Configurazione attuale del motore:"
 msgstr "Current engine configuration:"
 
-#: orologic_modules/engine.py:2512
+#: orologic_modules/engine.py:2509
 msgid "Nessuna configurazione trovata."
 msgstr "No configuration found."
 
-#: orologic_modules/engine.py:2516 orologic_modules/impostazioni.py:621
+#: orologic_modules/engine.py:2513 orologic_modules/impostazioni.py:621
 #, python-brace-format
 msgid "Inserisci il percorso dove e' salvato il motore UCI [{default}]: "
 msgstr "Enter the path where the UCI engine is saved [{default}]: "
 
-#: orologic_modules/engine.py:2528 orologic_modules/impostazioni.py:628
+#: orologic_modules/engine.py:2525 orologic_modules/impostazioni.py:628
 #, python-brace-format
 msgid "Inserisci il nome dell'eseguibile del motore [{default}]: "
 msgstr "Enter the name of the engine executable [{default}]: "
 
-#: orologic_modules/engine.py:2546 orologic_modules/impostazioni.py:637
+#: orologic_modules/engine.py:2543 orologic_modules/impostazioni.py:637
 msgid ""
 "Il file specificato non esiste. Verifica il percorso e il nome "
 "dell'eseguibile."
@@ -3188,7 +3188,7 @@ msgstr ""
 "The specified file does not exist. Check the path and name of the "
 "executable."
 
-#: orologic_modules/engine.py:2564
+#: orologic_modules/engine.py:2561
 msgid ""
 "Info: il motore si trova sullo stesso drive, verra' salvato un percorso "
 "relativo per la portabilita'."
@@ -3196,7 +3196,7 @@ msgstr ""
 "Info: the engine is on the same drive, a relative path will be saved for "
 "portability."
 
-#: orologic_modules/engine.py:2575
+#: orologic_modules/engine.py:2572
 msgid ""
 "Info: il motore si trova su un drive diverso, verra' salvato un percorso "
 "assoluto (configurazione non portatile)."
@@ -3204,24 +3204,24 @@ msgstr ""
 "Info: the engine is on a different drive, an absolute path will be saved "
 "(non-portable configuration)."
 
-#: orologic_modules/engine.py:2580 orologic_modules/impostazioni.py:645
+#: orologic_modules/engine.py:2577 orologic_modules/impostazioni.py:645
 msgid "Inserisci la dimensione della hash table (min: 1, max: 4096 MB): "
 msgstr "Enter the size of the hash table (min: 1, max: 4096 MB): "
 
-#: orologic_modules/engine.py:2591 orologic_modules/impostazioni.py:647
+#: orologic_modules/engine.py:2588 orologic_modules/impostazioni.py:647
 #, python-brace-format
 msgid "Inserisci il numero di core da utilizzare (min: 1, max: {max_cores}): "
 msgstr "Enter the number of cores to use (min: 1, max: {max_cores}): "
 
-#: orologic_modules/engine.py:2601 orologic_modules/impostazioni.py:648
+#: orologic_modules/engine.py:2598 orologic_modules/impostazioni.py:648
 msgid "Inserisci il livello di skill (min: 0, max: 20): "
 msgstr "Enter the skill level (min: 0, max: 20): "
 
-#: orologic_modules/engine.py:2610 orologic_modules/impostazioni.py:649
+#: orologic_modules/engine.py:2607 orologic_modules/impostazioni.py:649
 msgid "Inserisci il move overhead in millisecondi (min: 0, max: 500): "
 msgstr "Enter the move overhead in milliseconds (min: 0, max: 500): "
 
-#: orologic_modules/engine.py:2627
+#: orologic_modules/engine.py:2624
 msgid "Configurazione del motore salvata."
 msgstr "Engine configuration saved."
 
@@ -5004,7 +5004,7 @@ msgid "PGN copiato negli appunti."
 msgstr "PGN copied to clipboard."
 
 #: orologic_modules/game_flow.py:1012 orologic_modules/gioca.py:185
-#: orologic_modules/lichess_profiler.py:633
+#: orologic_modules/lichess_profiler.py:634
 #, python-brace-format
 msgid "Errore durante la copia del PGN negli appunti: {error}"
 msgstr "Error copying PGN to clipboard: {error}"
@@ -5895,13 +5895,13 @@ msgid "Non e' stato possibile seguire {u}. {motivo}"
 msgstr "It was not possible to follow {u}. {motivo}"
 
 #: orologic_modules/lichess_app.py:484
-#: orologic_modules/lichess_profiler.py:291
+#: orologic_modules/lichess_profiler.py:292
 #, python-brace-format
 msgid "Non segui piu' {u}."
 msgstr "You no longer follow {u}."
 
 #: orologic_modules/lichess_app.py:486
-#: orologic_modules/lichess_profiler.py:285
+#: orologic_modules/lichess_profiler.py:286
 #, python-brace-format
 msgid "Operazione non riuscita. {motivo}"
 msgstr "Operation failed. {motivo}"
@@ -6543,8 +6543,8 @@ msgstr "TV channels not retrieved. {motivo}"
 #: orologic_modules/lichess_board.py:1456
 #: orologic_modules/lichess_eventi.py:65
 #: orologic_modules/lichess_eventi.py:115
-#: orologic_modules/lichess_profiler.py:565
-#: orologic_modules/lichess_profiler.py:571
+#: orologic_modules/lichess_profiler.py:566
+#: orologic_modules/lichess_profiler.py:572
 #: orologic_modules/memoboard_app.py:137 orologic_modules/memoboard_app.py:523
 #: orologic_modules/memoboard_app.py:535 orologic_modules/memoboard_app.py:735
 #: orologic_modules/memoboard_app.py:776
@@ -6999,7 +6999,7 @@ msgstr ""
 "Choose a friend to challenge: "
 
 #: orologic_modules/lichess_app.py:2177
-#: orologic_modules/lichess_profiler.py:691
+#: orologic_modules/lichess_profiler.py:692
 msgid ""
 "\n"
 "Impostazioni della sfida:"
@@ -7071,7 +7071,7 @@ msgid "Statistiche utente"
 msgstr "User statistics"
 
 #: orologic_modules/lichess_app.py:2287
-#: orologic_modules/lichess_profiler.py:663
+#: orologic_modules/lichess_profiler.py:664
 msgid "Storia Elo e Sonificazione"
 msgstr "Elo History and Sonification"
 
@@ -7163,7 +7163,7 @@ msgid "Non hai sfide in attesa."
 msgstr "You have no challenges waiting."
 
 #: orologic_modules/lichess_app.py:2491
-#: orologic_modules/lichess_profiler.py:672
+#: orologic_modules/lichess_profiler.py:673
 #: orologic_modules/lichess_stats.py:225 orologic_modules/lichess_stats.py:305
 msgid "Torna indietro"
 msgstr "Go back"
@@ -7956,52 +7956,52 @@ msgstr "Total playing time: {t_str}"
 msgid "Tempo di gioco totale: 0 minuti"
 msgstr "Total playing time: 0 minutes"
 
-#: orologic_modules/lichess_profiler.py:217
+#: orologic_modules/lichess_profiler.py:218
 msgid ""
 "\n"
-"-- Punteggi Elo --"
+"Punteggi Elo:"
 msgstr ""
 "\n"
-"-- Elo Scores --"
+"Elo ratings:"
 
-#: orologic_modules/lichess_profiler.py:231
+#: orologic_modules/lichess_profiler.py:232
 #, python-brace-format
 msgid "{perf_name}: {rating} ({games} partite)"
 msgstr "{perf_name}: {rating} ({games} games)"
 
-#: orologic_modules/lichess_profiler.py:246
+#: orologic_modules/lichess_profiler.py:247
 #, python-brace-format
 msgid "Profilo non caricato. {motivo}"
 msgstr "Profile not loaded. {motivo}"
 
-#: orologic_modules/lichess_profiler.py:254
+#: orologic_modules/lichess_profiler.py:255
 msgid "Devi essere loggato per inviare messaggi."
 msgstr "You must be logged in to post messages."
 
-#: orologic_modules/lichess_profiler.py:258
+#: orologic_modules/lichess_profiler.py:259
 #, python-brace-format
 msgid "Scrivi il messaggio per {u}, vuoto per annullare: "
 msgstr "Write message for {u}, blank to cancel: "
 
-#: orologic_modules/lichess_profiler.py:270
+#: orologic_modules/lichess_profiler.py:271
 msgid "Messaggio inviato con successo."
 msgstr "Message sent successfully."
 
-#: orologic_modules/lichess_profiler.py:272
+#: orologic_modules/lichess_profiler.py:273
 #, python-brace-format
 msgid "Messaggio non inviato. {motivo}"
 msgstr "Message not sent. {motivo}"
 
-#: orologic_modules/lichess_profiler.py:277
+#: orologic_modules/lichess_profiler.py:278
 msgid "Devi essere loggato per seguire i giocatori."
 msgstr "You must be logged in to follow players."
 
-#: orologic_modules/lichess_profiler.py:289
+#: orologic_modules/lichess_profiler.py:290
 #, python-brace-format
 msgid "Ora segui {u}."
 msgstr "You now follow {u}."
 
-#: orologic_modules/lichess_profiler.py:304
+#: orologic_modules/lichess_profiler.py:305
 #, python-brace-format
 msgid ""
 "\n"
@@ -8010,32 +8010,32 @@ msgstr ""
 "\n"
 "URL for reporting {u} copied to clipboard: {url}"
 
-#: orologic_modules/lichess_profiler.py:308
+#: orologic_modules/lichess_profiler.py:309
 msgid "Apertura della pagina di segnalazione nel browser in corso..."
 msgstr "Opening the reporting page in your browser..."
 
-#: orologic_modules/lichess_profiler.py:313
+#: orologic_modules/lichess_profiler.py:314
 #, python-brace-format
 msgid "Scarica e Filtra Partite di {u}"
 msgstr "Download and Filter {u} Games"
 
-#: orologic_modules/lichess_profiler.py:317
+#: orologic_modules/lichess_profiler.py:318
 msgid ""
 "Premi INVIO per scaricare l'intero database, oppure ESC per impostare filtri"
 " di ricerca: "
 msgstr ""
 "Press ENTER to download the entire database, or ESC to set search filters: "
 
-#: orologic_modules/lichess_profiler.py:333
+#: orologic_modules/lichess_profiler.py:334
 msgid "Vuoi partite giocate col (b)ianco, (n)ero o (e)ntrambi? (b/n/e): "
 msgstr ""
 "Do you want games played with (b) white, (n) black or (e) both? (b/n/e): "
 
-#: orologic_modules/lichess_profiler.py:342
+#: orologic_modules/lichess_profiler.py:343
 msgid "Risultato: (v)ittoria, (p)areggio, (s)confitta o (t)utte? (v/p/s/t): "
 msgstr "Result: (v) win, (p) draw, (s) loss or (t) all? (v/p/s/t): "
 
-#: orologic_modules/lichess_profiler.py:350
+#: orologic_modules/lichess_profiler.py:351
 msgid ""
 "Vuoi specificare un range di Elo per l'avversario? (INVIO per si', ESC per "
 "no): "
@@ -8043,27 +8043,27 @@ msgstr ""
 "Do you want to specify an Elo range for the opponent? (ENTER for yes, ESC "
 "for no): "
 
-#: orologic_modules/lichess_profiler.py:353
+#: orologic_modules/lichess_profiler.py:354
 msgid "Elo minimo: "
 msgstr "Minimum rating: "
 
-#: orologic_modules/lichess_profiler.py:354
+#: orologic_modules/lichess_profiler.py:355
 msgid "Elo massimo: "
 msgstr "Maximum Elo: "
 
-#: orologic_modules/lichess_profiler.py:359
+#: orologic_modules/lichess_profiler.py:360
 msgid "Vuoi specificare un codice ECO? (INVIO per si', ESC per no): "
 msgstr "Do you want to specify an ECO code? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/lichess_profiler.py:362
+#: orologic_modules/lichess_profiler.py:363
 msgid "Codice ECO, per esempio B10: "
 msgstr "ECO code, for example B10: "
 
-#: orologic_modules/lichess_profiler.py:370
+#: orologic_modules/lichess_profiler.py:371
 msgid "Quante partite scaricare al massimo? "
 msgstr "Maximum number of games to download? "
 
-#: orologic_modules/lichess_profiler.py:381
+#: orologic_modules/lichess_profiler.py:382
 msgid ""
 "Scaricamento dell'intero archivio in corso. Con molte partite puo' volerci "
 "parecchio: premi ESC per interrompere e tenere quelle gia' arrivate."
@@ -8072,7 +8072,7 @@ msgstr ""
 "long time: press ESC to interrupt and keep the ones that have already "
 "arrived."
 
-#: orologic_modules/lichess_profiler.py:387
+#: orologic_modules/lichess_profiler.py:388
 #, python-brace-format
 msgid ""
 "Scaricamento in corso, al massimo {n} partite. Premi ESC per interrompere e "
@@ -8081,48 +8081,48 @@ msgstr ""
 "Downloading, maximum {n} games. Press ESC to interrupt and keep those "
 "already arrived."
 
-#: orologic_modules/lichess_profiler.py:410
+#: orologic_modules/lichess_profiler.py:411
 #, python-brace-format
 msgid "Scaricamento non riuscito. {motivo}"
 msgstr "Download failed. {motivo}"
 
-#: orologic_modules/lichess_profiler.py:420
+#: orologic_modules/lichess_profiler.py:421
 #, python-brace-format
 msgid "Scaricamento interrotto. Elaboro le {n} partite gia' ricevute."
 msgstr "Download interrupted. Processing the {n} games already received."
 
-#: orologic_modules/lichess_profiler.py:493
-#: orologic_modules/lichess_profiler.py:507
+#: orologic_modules/lichess_profiler.py:494
+#: orologic_modules/lichess_profiler.py:508
 #, python-brace-format
 msgid "Analizzate: {analyzed}, {matched} trovate."
 msgstr "Analyzed: {analyzed}, {matched} found."
 
-#: orologic_modules/lichess_profiler.py:503
+#: orologic_modules/lichess_profiler.py:504
 #, python-brace-format
 msgid "Scaricamento interrotto dalla rete: {e}"
 msgstr "Download interrupted by network: {e}"
 
 #: orologic_modules/easyfish/pgn_handler.py:251
-#: orologic_modules/lichess_profiler.py:514
+#: orologic_modules/lichess_profiler.py:515
 msgid "Nessuna partita corrisponde ai criteri di ricerca."
 msgstr "No games match your search criteria."
 
-#: orologic_modules/lichess_profiler.py:532
+#: orologic_modules/lichess_profiler.py:533
 #, python-brace-format
 msgid "Salvata 1 partita nella cartella pgn, nel file {f}."
 msgstr "1 game saved in the pgn folder, in the file {f}."
 
-#: orologic_modules/lichess_profiler.py:534
+#: orologic_modules/lichess_profiler.py:535
 #, python-brace-format
 msgid "Salvate {n} partite nella cartella pgn, nel file {f}."
 msgstr "{n} games saved in the pgn folder, in the file {f}."
 
-#: orologic_modules/lichess_profiler.py:538
+#: orologic_modules/lichess_profiler.py:539
 #, python-brace-format
 msgid "Errore nel salvataggio del file: {e}"
 msgstr "Error saving file: {e}"
 
-#: orologic_modules/lichess_profiler.py:543
+#: orologic_modules/lichess_profiler.py:544
 msgid ""
 "\n"
 "Vuoi scegliere una partita da analizzare? (INVIO per si', ESC per no): "
@@ -8130,25 +8130,25 @@ msgstr ""
 "\n"
 "Do you want to choose a game to analyze? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/lichess_profiler.py:586
+#: orologic_modules/lichess_profiler.py:587
 #, python-brace-format
 msgid "{w} vs {b} ({res}) - ECO: {eco} - {date}"
 msgstr "{w} vs {b} ({res}) - ECO: {eco} - {date}"
 
-#: orologic_modules/lichess_profiler.py:592
+#: orologic_modules/lichess_profiler.py:593
 msgid "Pagina Precedente"
 msgstr "Previous page"
 
-#: orologic_modules/lichess_profiler.py:594
+#: orologic_modules/lichess_profiler.py:595
 msgid "Pagina Successiva"
 msgstr "Next page"
 
-#: orologic_modules/lichess_profiler.py:599
+#: orologic_modules/lichess_profiler.py:600
 #, python-brace-format
 msgid "Partite Trovate (Pagina {c}/{t})"
 msgstr "Games Found (Page {c}/{t})"
 
-#: orologic_modules/lichess_profiler.py:608
+#: orologic_modules/lichess_profiler.py:609
 msgid ""
 "\n"
 "Scegli una partita (numero) o naviga: "
@@ -8156,7 +8156,7 @@ msgstr ""
 "\n"
 "Choose a game (number) or browse: "
 
-#: orologic_modules/lichess_profiler.py:629
+#: orologic_modules/lichess_profiler.py:630
 msgid ""
 "\n"
 "Il PGN della partita e' stato copiato negli appunti!"
@@ -8164,43 +8164,43 @@ msgstr ""
 "\n"
 "The game's PGN has been copied to the clipboard!"
 
-#: orologic_modules/lichess_profiler.py:637
+#: orologic_modules/lichess_profiler.py:638
 msgid "Vuoi aprirla in Easyfish? (INVIO per si', ESC per no): "
 msgstr "Do you want to open it in Easyfish? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/lichess_profiler.py:658
+#: orologic_modules/lichess_profiler.py:659
 msgid "Leggi profilo dettagliato"
 msgstr "Read detailed profile"
 
-#: orologic_modules/lichess_profiler.py:659
+#: orologic_modules/lichess_profiler.py:660
 msgid "Invia un messaggio"
 msgstr "Send a message"
 
-#: orologic_modules/lichess_profiler.py:660
+#: orologic_modules/lichess_profiler.py:661
 msgid "Sfida a una partita"
 msgstr "Challenge to a game"
 
-#: orologic_modules/lichess_profiler.py:661
+#: orologic_modules/lichess_profiler.py:662
 msgid "Cerca e scarica partite"
 msgstr "Search and download games"
 
-#: orologic_modules/lichess_profiler.py:662
+#: orologic_modules/lichess_profiler.py:663
 msgid "Copia URL partite e vai a Ricerca PGN"
 msgstr "Copy game URLs and go to PGN Search"
 
-#: orologic_modules/lichess_profiler.py:664
+#: orologic_modules/lichess_profiler.py:665
 msgid "Segnala giocatore agli admin"
 msgstr "Report player to admins"
 
-#: orologic_modules/lichess_profiler.py:668
+#: orologic_modules/lichess_profiler.py:669
 msgid "Smetti di seguire"
 msgstr "Unfollow"
 
-#: orologic_modules/lichess_profiler.py:670
+#: orologic_modules/lichess_profiler.py:671
 msgid "Segui giocatore"
 msgstr "Follow player"
 
-#: orologic_modules/lichess_profiler.py:678
+#: orologic_modules/lichess_profiler.py:679
 #, python-brace-format
 msgid ""
 "\n"
@@ -8209,7 +8209,7 @@ msgstr ""
 "\n"
 "Actions for {u}: "
 
-#: orologic_modules/lichess_profiler.py:712
+#: orologic_modules/lichess_profiler.py:713
 #, python-brace-format
 msgid ""
 "\n"
@@ -8218,11 +8218,11 @@ msgstr ""
 "\n"
 "{u} PGN download URL copied to clipboard!"
 
-#: orologic_modules/lichess_profiler.py:716
+#: orologic_modules/lichess_profiler.py:717
 msgid "Passaggio a Ricerca PGN..."
 msgstr "Switching to PGN Search..."
 
-#: orologic_modules/lichess_profiler.py:732
+#: orologic_modules/lichess_profiler.py:733
 msgid "RICERCA GIOCATORE (PROFILATORE)"
 msgstr "PLAYER SEARCH (PROFILER)"
 
@@ -9316,7 +9316,7 @@ msgstr ""
 msgid "Colore di {sq}"
 msgstr "Color of {sq}"
 
-#: orologic_modules/memoboard_app.py:1350
+#: orologic_modules/memoboard_app.py:1349
 #, python-brace-format
 msgid ""
 "\n"
@@ -9325,12 +9325,12 @@ msgstr ""
 "\n"
 "[Report saved in: txt/{filename}]"
 
-#: orologic_modules/memoboard_app.py:1356
+#: orologic_modules/memoboard_app.py:1355
 #, python-brace-format
 msgid "Errore durante il salvataggio del report: {e}"
 msgstr "Error saving report: {e}"
 
-#: orologic_modules/memoboard_app.py:1360
+#: orologic_modules/memoboard_app.py:1359
 msgid ""
 "Benvenuto in MemoBoard.\n"
 "Il tuo assistente per giocare a scacchi senza scacchiera.\n"
@@ -9340,7 +9340,7 @@ msgstr ""
 "Your assistant to play chess without a board.\n"
 "This utility helps you visualize the board and become a better player."
 
-#: orologic_modules/memoboard_app.py:1381
+#: orologic_modules/memoboard_app.py:1380
 msgid ""
 "\n"
 "Pronto ad allenarti? Scegli un esercizio dal menu."
@@ -9348,11 +9348,11 @@ msgstr ""
 "\n"
 "Ready to train? Choose an exercise from the menu."
 
-#: orologic_modules/memoboard_app.py:1384
+#: orologic_modules/memoboard_app.py:1383
 msgid "Comando non trovato"
 msgstr "Command not found"
 
-#: orologic_modules/memoboard_app.py:1391
+#: orologic_modules/memoboard_app.py:1390
 msgid ""
 "Indovina il colore della casa.\n"
 "Rispondi premendo ESC per il nero e INVIO per il bianco."
@@ -9360,7 +9360,7 @@ msgstr ""
 "Guess the color of the square.\n"
 "Respond by pressing ESC for black and ENTER for white."
 
-#: orologic_modules/memoboard_app.py:1396
+#: orologic_modules/memoboard_app.py:1395
 msgid ""
 "\n"
 "Bello! E buona fortuna con i colori, quante domande vuoi fare? "
@@ -9368,33 +9368,33 @@ msgstr ""
 "\n"
 "Nice! And good luck with the colors, how many questions do you want? "
 
-#: orologic_modules/memoboard_app.py:1403
-#: orologic_modules/memoboard_app.py:1447
-#: orologic_modules/memoboard_app.py:1491
+#: orologic_modules/memoboard_app.py:1402
+#: orologic_modules/memoboard_app.py:1446
+#: orologic_modules/memoboard_app.py:1490
 msgid "Pronto?"
 msgstr "Ready?"
 
-#: orologic_modules/memoboard_app.py:1404
-#: orologic_modules/memoboard_app.py:1448
-#: orologic_modules/memoboard_app.py:1492
+#: orologic_modules/memoboard_app.py:1403
+#: orologic_modules/memoboard_app.py:1447
+#: orologic_modules/memoboard_app.py:1491
 msgid " Inizio"
 msgstr " Start"
 
-#: orologic_modules/memoboard_app.py:1407
-#: orologic_modules/memoboard_app.py:1451
-#: orologic_modules/memoboard_app.py:1495
+#: orologic_modules/memoboard_app.py:1406
+#: orologic_modules/memoboard_app.py:1450
+#: orologic_modules/memoboard_app.py:1494
 msgid "I tuoi errori"
 msgstr "Your mistakes"
 
-#: orologic_modules/memoboard_app.py:1414
+#: orologic_modules/memoboard_app.py:1413
 #, python-brace-format
 msgid "> Domanda: {q} | La tua risposta: '{ua}', corretta: '{ca}'"
 msgstr "> Question: {q} | Your answer: '{ua}', correct: '{ca}'"
 
-#: orologic_modules/memoboard_app.py:1417
-#: orologic_modules/memoboard_app.py:1461
-#: orologic_modules/memoboard_app.py:1505
-#: orologic_modules/memoboard_app.py:1580
+#: orologic_modules/memoboard_app.py:1416
+#: orologic_modules/memoboard_app.py:1460
+#: orologic_modules/memoboard_app.py:1504
+#: orologic_modules/memoboard_app.py:1579
 msgid ""
 "\n"
 "Premi un tasto per procedere alla classifica..."
@@ -9402,7 +9402,7 @@ msgstr ""
 "\n"
 "Press a key to proceed to the ranking..."
 
-#: orologic_modules/memoboard_app.py:1435
+#: orologic_modules/memoboard_app.py:1434
 msgid ""
 "Indovina se due case sono a un salto di cavallo.\n"
 "Rispondi premendo INVIO per sì e ESC per no."
@@ -9410,7 +9410,7 @@ msgstr ""
 "Guess if two squares are a knight's move apart.\n"
 "Respond by pressing ENTER for yes and ESC for no."
 
-#: orologic_modules/memoboard_app.py:1440
+#: orologic_modules/memoboard_app.py:1439
 msgid ""
 "\n"
 "Bene, divertiti con il salto del cavallo, quante domande vuoi fare? "
@@ -9418,31 +9418,31 @@ msgstr ""
 "\n"
 "Well, have fun with knight jumps, how many questions do you want? "
 
+#: orologic_modules/memoboard_app.py:1453
 #: orologic_modules/memoboard_app.py:1454
-#: orologic_modules/memoboard_app.py:1455
+#: orologic_modules/memoboard_app.py:1497
 #: orologic_modules/memoboard_app.py:1498
-#: orologic_modules/memoboard_app.py:1499
+#: orologic_modules/memoboard_app.py:1565
 #: orologic_modules/memoboard_app.py:1566
-#: orologic_modules/memoboard_app.py:1567
 msgid "Sì"
 msgstr "Yes"
 
+#: orologic_modules/memoboard_app.py:1453
 #: orologic_modules/memoboard_app.py:1454
-#: orologic_modules/memoboard_app.py:1455
+#: orologic_modules/memoboard_app.py:1497
 #: orologic_modules/memoboard_app.py:1498
-#: orologic_modules/memoboard_app.py:1499
+#: orologic_modules/memoboard_app.py:1565
 #: orologic_modules/memoboard_app.py:1566
-#: orologic_modules/memoboard_app.py:1567
 msgid "No"
 msgstr "No"
 
-#: orologic_modules/memoboard_app.py:1458
-#: orologic_modules/memoboard_app.py:1502
+#: orologic_modules/memoboard_app.py:1457
+#: orologic_modules/memoboard_app.py:1501
 #, python-brace-format
 msgid "> Domanda: {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
 msgstr "> Question: {q} | Your Answer: '{ua}', Correct: '{ca}'"
 
-#: orologic_modules/memoboard_app.py:1479
+#: orologic_modules/memoboard_app.py:1478
 msgid ""
 "Indovina se due case sono sulla stessa diagonale.\n"
 "Rispondi premendo INVIO per sì e ESC per no."
@@ -9450,7 +9450,7 @@ msgstr ""
 "Guess if two squares are on the same diagonal.\n"
 "Respond by pressing ENTER for yes and ESC for no."
 
-#: orologic_modules/memoboard_app.py:1484
+#: orologic_modules/memoboard_app.py:1483
 msgid ""
 "\n"
 "Bene, divertiti con l'esercizio dell'alfiere, quante domande vuoi fare? "
@@ -9458,7 +9458,7 @@ msgstr ""
 "\n"
 "Well, have fun with the bishop exercise, how many questions do you want? "
 
-#: orologic_modules/memoboard_app.py:1541
+#: orologic_modules/memoboard_app.py:1540
 msgid ""
 "\n"
 "Benvenuto alla Sfida Mista!"
@@ -9466,12 +9466,12 @@ msgstr ""
 "\n"
 "Welcome to the Mixed Challenge!"
 
-#: orologic_modules/memoboard_app.py:1544
+#: orologic_modules/memoboard_app.py:1543
 msgid ""
 "Saranno presentate 100 domande di tipo casuale (colori, cavalli, alfieri)."
 msgstr "100 random questions will be presented (colors, knights, bishops)."
 
-#: orologic_modules/memoboard_app.py:1549
+#: orologic_modules/memoboard_app.py:1548
 msgid ""
 "Questa è la prova definitiva delle tue abilità e della tua resistenza. Buona fortuna!\n"
 "Ricorda di rispondere con INVIO per sì/bianco e ESC per no/nero."
@@ -9479,25 +9479,25 @@ msgstr ""
 "This is the ultimate test of your skills and endurance. Good luck!\n"
 "Remember to respond with ENTER for yes/white and ESC for no/black."
 
-#: orologic_modules/memoboard_app.py:1553
+#: orologic_modules/memoboard_app.py:1552
 msgid "Sei pronto per iniziare? Via!"
 msgstr "Are you ready to get started? Go!"
 
-#: orologic_modules/memoboard_app.py:1557
+#: orologic_modules/memoboard_app.py:1556
 msgid "SFIDA MISTA COMPLETATA!"
 msgstr "MIXED CHALLENGE COMPLETED!"
 
-#: orologic_modules/memoboard_app.py:1559
+#: orologic_modules/memoboard_app.py:1558
 msgid "I tuoi errori nella Sfida Mista"
 msgstr "Your mistakes in the Mixed Challenge"
 
-#: orologic_modules/memoboard_app.py:1570
-#: orologic_modules/memoboard_app.py:1576
+#: orologic_modules/memoboard_app.py:1569
+#: orologic_modules/memoboard_app.py:1575
 #, python-brace-format
 msgid "> {q} | La tua risposta: '{ua}', Corretta: '{ca}'"
 msgstr "> {q} | Your Answer: '{ua}', Correct: '{ca}'"
 
-#: orologic_modules/memoboard_app.py:1621
+#: orologic_modules/memoboard_app.py:1620
 #, python-brace-format
 msgid ""
 "\n"
@@ -9508,7 +9508,7 @@ msgstr ""
 "MemoBoard finished. Execution time: {minuti} minutes and {secondi} seconds.\n"
 "\tReport saved in: txt/{filename}. Until we meet again!"
 
-#: orologic_modules/memoboard_app.py:1631
+#: orologic_modules/memoboard_app.py:1630
 #, python-brace-format
 msgid ""
 "\n"
@@ -16230,3 +16230,17 @@ msgstr "Nobody."
 
 #~ msgid "Attenzione: il prossimo salvataggio lo sovrascrivera'."
 #~ msgstr "Warning: the next save will overwrite it."
+
+#~ msgid ""
+#~ "\r"
+#~ "PLY {ply}/{total} {san:<12} | Tempo: {t}"
+#~ msgstr ""
+#~ "\r"
+#~ "PLY {ply}/{total} {san:<12} | Time: {t}"
+
+#~ msgid ""
+#~ "\n"
+#~ "-- Punteggi Elo --"
+#~ msgstr ""
+#~ "\n"
+#~ "-- Elo Scores --"

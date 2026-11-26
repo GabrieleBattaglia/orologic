@@ -1333,11 +1333,10 @@ def main():
         header = (
             ""
             f"Report Sessione MemoBoard (Orologic V{config.VERSION})\n"
-            f"Data e ora: {config.format_date_italian(session_start_dt)}\n"
-            "======================================================================\n\n"
+            f"Data e ora: {config.format_date_italian(session_start_dt)}\n\n"
         )
         footer = (
-            "\n\n======================================================================\n"
+            "\n\n"
             f"Fine sessione MemoBoard. Tempo di esecuzione: {int(endtime / 60)} minuti e {int(endtime % 60)} secondi.\n"
             ""
         )

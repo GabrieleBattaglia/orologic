@@ -214,7 +214,8 @@ def format_profile(profile):
     else:
         p.append(_("Tempo di gioco totale: 0 minuti"))
 
-    p.append(_("\n-- Punteggi Elo --"))
+    # Senza i trattini (R90).
+    p.append(_("\nPunteggi Elo:"))
     perfs = profile.get("perfs", {})
     for perf_name, perf_data in perfs.items():
         if perf_name in [

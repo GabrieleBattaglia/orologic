@@ -178,3 +178,24 @@ def test_nel_puzzle_ogni_matto_vale():
     assert lichess_app.da_matto(scacchiera, chess.Move.from_uci("a1a8"))
     assert not lichess_app.da_matto(scacchiera, chess.Move.from_uci("a1a7"))
     assert not lichess_app.da_matto(scacchiera, chess.Move.from_uci("h2h4"))
+
+
+def test_nessun_separatore_grafico_nel_programma():
+    """R90: righe di uguali e trattini attorno all'analisi automatica, nel
+    resoconto di Memoboard e nel profilatore; Gabriele usa NVDA e la barra
+    braille, e i separatori grafici non si scrivono."""
+    import os
+    import re
+
+    from conftest import RADICE
+
+    vietati = re.compile(r"""(["']=["']\s*\*)|(["']-["']\s*\*)|={5,}|-{5,}|\| Tempo|^-- """)
+    trovati = []
+    for cartella, _sotto, nomi in os.walk(os.path.join(RADICE, "orologic_modules")):
+        for nome in nomi:
+            if nome.endswith(".py"):
+                with open(os.path.join(cartella, nome), encoding="utf-8") as file:
+                    for numero, riga in enumerate(file, 1):
+                        if not riga.lstrip().startswith("#") and vietati.search(riga):
+                            trovati.append(f"{nome}:{numero}")
+    assert trovati == []
