@@ -85,3 +85,66 @@ def test_una_partita_in_una_variante_non_si_gioca_sulla_scacchiera_standard():
     # Da una posizione data le regole sono quelle standard.
     assert lichess_board.variante_giocabile("fromPosition")
     assert lichess_app.perche_non_si_gioca(_sfida("fromPosition")) is None
+
+
+PARAMETRI_DELLA_RICERCA = {"color": "random", "variant": "standard", "rated": False, "clock_limit": 600, "clock_increment": 0, "days": None, "rating_range": ""}
+
+
+def _ricerca_finta(monkeypatch, letture):
+    """La ricerca di un avversario con Lichess finto: letture e' l'elenco
+    delle risposte alle partite in corso, una per lettura; il flusso della
+    richiesta si chiude subito. Restituisce le richieste mandate."""
+    from orologic_modules import strato
+
+    class FlussoVuoto:
+        """Come la risposta vera: un contesto che si legge riga per riga."""
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_errore):
+            return False
+
+        def __iter__(self):
+            return iter([])
+
+    letture = list(letture)
+    lette = []
+
+    def leggi_json(indirizzo, **_opzioni):
+        lette.append(indirizzo)
+        return letture.pop(0) if len(letture) > 1 else letture[0]
+
+    richieste = []
+
+    def apri(indirizzo, **_opzioni):
+        richieste.append(indirizzo)
+        return FlussoVuoto(), None
+
+    monkeypatch.setattr(lichess_app.rete, "leggi_json", leggi_json)
+    monkeypatch.setattr(lichess_app.rete, "apri", apri)
+    monkeypatch.setattr(lichess_app, "Acusticator", lambda *_a, **_k: None)
+    monkeypatch.setattr(strato, "kbhit", lambda: False)
+    return richieste, lette
+
+
+def test_la_ricerca_non_parte_se_le_partite_in_corso_non_si_leggono(monkeypatch, capsys):
+    """R123: se la prima lettura delle partite in corso falliva, l'elenco
+    vuoto faceva prendere una partita vecchia per Avversario trovato."""
+    richieste, _lette = _ricerca_finta(monkeypatch, [(None, "senza rete")])
+    assert lichess_app.seek_game("token", PARAMETRI_DELLA_RICERCA) is None
+    assert richieste == []
+    assert "senza rete" in capsys.readouterr().out
+
+
+def test_la_partita_abbinata_si_vede_appena_il_flusso_si_chiude(monkeypatch):
+    """R123: dopo l'abbinamento la richiesta si ripubblicava prima che il
+    sondaggio vedesse la partita. Ora la partita si cerca appena il flusso
+    della richiesta si chiude; e le partite in corso si chiedono fino a
+    cinquanta, perche' con piu' di nove una vecchia passava per nuova."""
+    vecchie = {"nowPlaying": [{"gameId": f"vecchia{numero}"} for numero in range(12)]}
+    con_la_nuova = {"nowPlaying": [*vecchie["nowPlaying"], {"gameId": "nuova"}]}
+    richieste, lette = _ricerca_finta(monkeypatch, [(vecchie, None), (con_la_nuova, None)])
+    assert lichess_app.seek_game("token", PARAMETRI_DELLA_RICERCA) == "nuova"
+    assert len(richieste) == 1
+    assert all("nb=50" in indirizzo for indirizzo in lette)

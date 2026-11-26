@@ -1379,14 +1379,31 @@ def get_active_games(token, silenzioso=True, usa_cache=True):
         pronte = _da_cache(("partite", token))
         if pronte is not None:
             return pronte
-    dati, errore = rete.leggi_json(
-        "https://lichess.org/api/account/playing", token=token
-    )
+    partite, errore = leggi_le_partite_attive(token)
     if errore:
         if not silenzioso:
             print(_("Partite in corso non recuperate. {motivo}").format(motivo=errore))
         return []
-    return _in_cache(("partite", token), dati.get("nowPlaying", []))
+    return _in_cache(("partite", token), partite)
+
+
+# Le partite in corso che si chiedono a Lichess: senza il numero ne manda
+# nove, e con piu' partite in corso, per esempio per corrispondenza, la
+# ricerca di un avversario prendeva una partita vecchia per quella nuova
+# (R123).
+PARTITE_IN_CORSO = 50
+
+
+def leggi_le_partite_attive(token):
+    """(partite, errore) delle partite in corso, senza la cache: None e il
+    motivo se la lettura fallisce, cosi' l'errore non si confonde con
+    l'elenco vuoto (R123)."""
+    dati, errore = rete.leggi_json(
+        f"https://lichess.org/api/account/playing?nb={PARTITE_IN_CORSO}", token=token
+    )
+    if errore:
+        return None, errore
+    return (dati or {}).get("nowPlaying", []), None
 
 
 def get_challenges(token, silenzioso=True, usa_cache=True):
@@ -1950,12 +1967,33 @@ def seek_game(token, params_dict):
             except (OSError, http.client.HTTPException):
                 pass
             if not stop_seek.is_set():
+                # Il flusso si chiude quando Lichess abbina la partita: la si
+                # cerca subito, prima di ripubblicare la richiesta, che
+                # altrimenti poteva aprirne un'altra (R123).
+                nuova = partita_nuova()
+                if nuova:
+                    trovate.append(nuova)
+                    stop_seek.set()
+                    return
                 time.sleep(1)
 
     # Le partite gia' attive si leggono prima che la richiesta parta: dopo,
     # un abbinamento immediato finiva fra quelle di prima, e non si
-    # riconosceva mai (R74).
-    initial_games = {g["gameId"] for g in get_active_games(token, usa_cache=False)}
+    # riconosceva mai (R74). Se non si leggono, non si cerca: un elenco vuoto
+    # per errore faceva prendere una partita vecchia per quella nuova (R123).
+    attive, errore = leggi_le_partite_attive(token)
+    if attive is None:
+        print(_("Ricerca non partita: le partite in corso non si leggono. {motivo}").format(motivo=errore))
+        return None
+    initial_games = {g["gameId"] for g in attive}
+    trovate = []
+
+    def partita_nuova():
+        """La partita in corso che prima non c'era, o None; una lettura
+        fallita non trova niente."""
+        partite, _motivo = leggi_le_partite_attive(token)
+        return next((g["gameId"] for g in partite or () if g["gameId"] not in initial_games), None)
+
     t = threading.Thread(target=do_seek, daemon=True)
     t.start()
 
@@ -1996,19 +2034,22 @@ def seek_game(token, params_dict):
             last_print = now
 
         # 5 seconds poll
-        if now - last_poll > 5:
-            current_games = get_active_games(token, usa_cache=False)
-            for g in current_games:
-                if g["gameId"] not in initial_games:
-                    game_found = True
-                    game_id = g["gameId"]
-                    stop_seek.set()
-                    break
+        if not trovate and now - last_poll > 5:
+            nuova = partita_nuova()
+            if nuova:
+                trovate.append(nuova)
+                stop_seek.set()
             last_poll = now
 
-        if game_found:
+        if trovate:
             break
         time.sleep(0.1)
+
+    # La partita trovata dal filo della richiesta, appena il suo flusso si
+    # e' chiuso, o dal sondaggio.
+    if trovate:
+        game_found = True
+        game_id = trovate[0]
 
     if game_found:
         sys.stdout.write("\n")
