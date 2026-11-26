@@ -392,3 +392,14 @@ def test_il_token_respinto_si_dice_una_volta(monkeypatch, capsys, codice):
     lichess_eventi.ferma()
     assert chiamate == [1]
     assert capsys.readouterr().out.count("non arrivano piu'") == 1
+
+
+def test_le_squadre_nella_forma_vera_di_lichess():
+    """R124: la scheda vera di una battaglia a squadre manda le squadre come
+    oggetto da id a coppia di nome e simbolo, e la voce del menu diventava
+    "['21Community', 'objects.coin']". Qui la forma del JSON vero di un
+    torneo del 26 novembre 2026."""
+    from orologic_modules import lichess_tornei
+
+    torneo = {"teamBattle": {"teams": {"21community": ["21Community", "objects.coin"], "lichess-swiss": ["Lichess Swiss", None]}, "nbLeaders": 5}}
+    assert lichess_tornei.squadre_del_torneo(torneo) == {"21community": "21Community", "lichess-swiss": "Lichess Swiss"}

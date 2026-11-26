@@ -308,10 +308,12 @@ def _aiuto_attesa():
 def squadre_del_torneo(torneo):
     """Le squadre di una battaglia a squadre come {id: nome}. Lichess le
     manda come oggetto, come coppie, o, nell'elenco dei tornei, come soli id:
-    prima dict di una lista di stringhe sollevava (R81)."""
+    prima dict di una lista di stringhe sollevava (R81). Nella scheda vera
+    l'oggetto va dall'id alla coppia di nome e simbolo, come ["21Community",
+    "objects.coin"], e del valore conta il nome (R124)."""
     squadre = (torneo.get("teamBattle") or {}).get("teams") or {}
     if isinstance(squadre, dict):
-        return {str(chiave): str(nome) for chiave, nome in squadre.items()}
+        return {str(chiave): str(nome[0] if isinstance(nome, (list, tuple)) and nome else nome) for chiave, nome in squadre.items()}
     voci = {}
     for squadra in squadre if isinstance(squadre, list) else ():
         if isinstance(squadra, (list, tuple)) and len(squadra) >= 2:
