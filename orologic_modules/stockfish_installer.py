@@ -6,7 +6,7 @@ import re
 import shutil
 import zipfile
 
-from . import config, rete
+from . import config, rete, storage
 from .config import _
 
 API_RELEASE = (
@@ -181,10 +181,24 @@ def DownloadAndInstallEngine():
         shutil.rmtree(lavorazione, ignore_errors=True)
         return None, None
 
-    shutil.rmtree(vecchio, ignore_errors=True)
+    # Gli altri motori, i pesi e i libri dell'utente restano: della cartella
+    # di prima se ne va solo lo Stockfish vecchio (R36).
+    riportati, rimasti = storage.riporta_i_file_dell_utente(vecchio, destinazione, _di_stockfish)
+    if riportati:
+        print(_("Nella cartella del motore restano anche: {nomi}.").format(nomi=", ".join(sorted(riportati))))
+    if rimasti:
+        print(_("Non sono riuscita a riportare {nomi}: la cartella di prima resta in {cartella}.").format(nomi=", ".join(sorted(rimasti)), cartella=vecchio))
+    else:
+        shutil.rmtree(vecchio, ignore_errors=True)
     cartella_finale = os.path.normpath(os.path.join(destinazione, cartella_relativa))
     print(_("Installazione di Stockfish completata."))
     return cartella_finale, eseguibile[1]
+
+
+def _di_stockfish(nome):
+    """Vero per cio' che, nella cartella del motore, viene da un archivio di
+    Stockfish."""
+    return nome.lower().startswith("stockfish")
 
 
 def _versione(testo):

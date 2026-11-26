@@ -1252,7 +1252,11 @@ def scarica(avanzamento, fermato):
             os.replace(vecchia, destinazione)
         shutil.rmtree(lavorazione, ignore_errors=True)
         return None, _("Sostituzione non riuscita: {motivo}").format(motivo=errore)
-    shutil.rmtree(vecchia, ignore_errors=True)
+    # I file messi dall'utente nella cartella di pgn-extract restano: i file
+    # del sito sono tutti nella cartella nuova (R36).
+    _riportati, rimasti = storage.riporta_i_file_dell_utente(vecchia, destinazione)
+    if not rimasti:
+        shutil.rmtree(vecchia, ignore_errors=True)
     return nuova, None
 
 

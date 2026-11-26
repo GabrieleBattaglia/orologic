@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-26 07:35+0100\n"
+"POT-Creation-Date: 2026-11-26 07:37+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -9206,14 +9206,14 @@ msgstr ""
 msgid "Sostituzione non riuscita: {motivo}"
 msgstr ""
 
-#: orologic_modules/pgn_extract.py:1269
+#: orologic_modules/pgn_extract.py:1273
 #, python-brace-format
 msgid ""
 "E' uscita la versione {nuova} di pgn-extract, tu hai la {vecchia}. La "
 "scarico dal sito di David J. Barnes, con la guida e la licenza?"
 msgstr ""
 
-#: orologic_modules/pgn_extract.py:1271
+#: orologic_modules/pgn_extract.py:1275
 #, python-brace-format
 msgid ""
 "Accanto a pgn-extract mancano dei file: {file}. Riscarico pgn-extract "
@@ -9899,91 +9899,103 @@ msgstr ""
 msgid "Ripristinato il motore precedente."
 msgstr ""
 
-#: orologic_modules/stockfish_installer.py:186
+#: orologic_modules/stockfish_installer.py:188
+#, python-brace-format
+msgid "Nella cartella del motore restano anche: {nomi}."
+msgstr ""
+
+#: orologic_modules/stockfish_installer.py:190
+#, python-brace-format
+msgid ""
+"Non sono riuscita a riportare {nomi}: la cartella di prima resta in "
+"{cartella}."
+msgstr ""
+
+#: orologic_modules/stockfish_installer.py:194
 msgid "Installazione di Stockfish completata."
 msgstr ""
 
-#: orologic_modules/stockfish_installer.py:221
+#: orologic_modules/stockfish_installer.py:235
 #, python-brace-format
 msgid "Aggiornamenti del motore non verificati. {motivo}"
 msgstr ""
 
-#: orologic_modules/stockfish_installer.py:237
+#: orologic_modules/stockfish_installer.py:251
 #, python-brace-format
 msgid "E' uscito {nuova}, ma non riconosco il suo pacchetto per Windows."
 msgstr ""
 
-#: orologic_modules/stockfish_installer.py:243
+#: orologic_modules/stockfish_installer.py:257
 msgid "Aggiornamento del motore disponibile."
 msgstr ""
 
-#: orologic_modules/stockfish_installer.py:245
+#: orologic_modules/stockfish_installer.py:259
 #, python-brace-format
 msgid "Versione nuova: {new}. Installata: {curr}."
 msgstr ""
 
-#: orologic_modules/stockfish_installer.py:250
+#: orologic_modules/stockfish_installer.py:264
 msgid "Desideri aggiornare il motore ora? (INVIO per si', ESC per ignorare): "
 msgstr ""
 
-#: orologic_modules/stockfish_installer.py:257
+#: orologic_modules/stockfish_installer.py:271
 msgid "Aggiornamento non riuscito, riavvio il motore precedente."
 msgstr ""
 
-#: orologic_modules/stockfish_installer.py:275
+#: orologic_modules/stockfish_installer.py:289
 msgid "Aggiornamento completato."
 msgstr ""
 
-#: orologic_modules/storage.py:302
+#: orologic_modules/storage.py:326
 #, python-brace-format
 msgid "Il database delle impostazioni non e' leggibile: {errore}"
 msgstr ""
 
-#: orologic_modules/storage.py:304
+#: orologic_modules/storage.py:328
 msgid "Attenzione: non sono riuscita a metterne da parte una copia."
 msgstr ""
 
-#: orologic_modules/storage.py:305 orologic_modules/storage.py:346
+#: orologic_modules/storage.py:329 orologic_modules/storage.py:370
 msgid "Le modifiche non si salvano finche' il database non torna leggibile."
 msgstr ""
 
-#: orologic_modules/storage.py:307
+#: orologic_modules/storage.py:331
 #, python-brace-format
 msgid "Ne ho messo da parte una copia in {percorso}"
 msgstr ""
 
-#: orologic_modules/storage.py:310
+#: orologic_modules/storage.py:334
 #, python-brace-format
 msgid "Riparto dall'ultima copia buona: {percorso}"
 msgstr ""
 
-#: orologic_modules/storage.py:314
+#: orologic_modules/storage.py:338
 msgid ""
 "Riparto dalle impostazioni predefinite, gli orologi salvati non sono "
 "andati perduti nella copia."
 msgstr ""
 
-#: orologic_modules/storage.py:345
+#: orologic_modules/storage.py:369
 #, python-brace-format
 msgid "Il database delle impostazioni non si lascia leggere: {errore}"
 msgstr ""
 
-#: orologic_modules/storage.py:353
+#: orologic_modules/storage.py:377
 msgid "non contiene le impostazioni"
 msgstr ""
 
-#: orologic_modules/storage.py:356
+#: orologic_modules/storage.py:380
 #, python-brace-format
 msgid "Ho ignorato {numero} orologi salvati perche' incompleti."
 msgstr ""
 
-#: orologic_modules/storage.py:401
+#: orologic_modules/storage.py:425
 msgid ""
 "Modifica non salvata: il database delle impostazioni non si e' potuto "
 "leggere."
 msgstr ""
 
-#: orologic_modules/storage.py:407
+#: orologic_modules/storage.py:431
 #, python-brace-format
 msgid "Errore nel salvataggio del database: {errore}"
 msgstr ""

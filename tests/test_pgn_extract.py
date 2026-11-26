@@ -474,7 +474,9 @@ def test_lo_scaricamento_mette_la_cartella_nuova_solo_se_pe_risponde(monkeypatch
         versione, errore = pgn_extract.scarica(righe.append, lambda: False)
         assert errore is None and pgn_extract.come_numeri(versione) >= (26, 4)
         assert chiesti == [pgn_extract.SITO + nome for nome in pgn_extract.FILE_DEL_SITO] + [pgn_extract.INDIRIZZO_DEL_CATALOGO]
-        assert sorted(os.listdir(cartella)) == sorted((*pgn_extract.FILE_DEL_SITO, pgn_extract.CATALOGO))
+        # Il file messo dall'utente resta nella cartella nuova (R36).
+        assert sorted(os.listdir(cartella)) == sorted((*pgn_extract.FILE_DEL_SITO, pgn_extract.CATALOGO, "vecchio.txt"))
+        assert not os.path.exists(cartella + ".vecchio")
         assert pgn_extract.eseguibile() == os.path.join(cartella, "pgn-extract.exe")
         assert pgn_extract.mancano_dei_file() == []
         assert len(righe) == len(pgn_extract.FILE_DEL_SITO) + 1

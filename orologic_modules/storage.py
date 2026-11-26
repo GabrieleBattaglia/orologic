@@ -214,6 +214,30 @@ def metti_da_parte(percorso):
         return None
 
 
+def riporta_i_file_dell_utente(vecchia, nuova, del_programma=None):
+    """Dopo che la cartella nuova di un programma scaricato ha preso il posto
+    della vecchia, riporta nella nuova cio' che stava nella vecchia e nella
+    nuova non c'e', tranne quello che del_programma(nome) riconosce come
+    parte del programma di prima. Prima l'installazione cancellava la
+    cartella intera, e un altro motore, i suoi pesi o i libri messi li'
+    dall'utente sparivano senza cestino (R36). Restituisce (riportati,
+    rimasti): i nomi spostati e quelli che non si sono potuti spostare."""
+    riportati, rimasti = [], []
+    try:
+        nomi = os.listdir(vecchia)
+    except OSError:
+        return riportati, rimasti
+    for nome in nomi:
+        if os.path.exists(os.path.join(nuova, nome)) or (del_programma is not None and del_programma(nome)):
+            continue
+        try:
+            os.replace(os.path.join(vecchia, nome), os.path.join(nuova, nome))
+            riportati.append(nome)
+        except OSError:
+            rimasti.append(nome)
+    return riportati, rimasti
+
+
 def _salva_copia_danneggiata():
     """Mette da parte un database illeggibile invece di sovrascriverlo."""
     return metti_da_parte(config.DB_FILE)

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-26 07:35+0100\n"
+"POT-Creation-Date: 2026-11-26 07:37+0100\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -9832,7 +9832,7 @@ msgstr "The downloaded pgn-extract does not respond: the previous one stays."
 msgid "Sostituzione non riuscita: {motivo}"
 msgstr "Replacement failed: {motivo}"
 
-#: orologic_modules/pgn_extract.py:1269
+#: orologic_modules/pgn_extract.py:1273
 #, python-brace-format
 msgid ""
 "E' uscita la versione {nuova} di pgn-extract, tu hai la {vecchia}. La "
@@ -9841,7 +9841,7 @@ msgstr ""
 "Version {nuova} of pgn-extract is out, you have {vecchia}. Shall I download "
 "it from David J. Barnes's website, with the guide and the license?"
 
-#: orologic_modules/pgn_extract.py:1271
+#: orologic_modules/pgn_extract.py:1275
 #, python-brace-format
 msgid ""
 "Accanto a pgn-extract mancano dei file: {file}. Riscarico pgn-extract "
@@ -10587,66 +10587,79 @@ msgstr "There is no Stockfish executable in the archive."
 msgid "Ripristinato il motore precedente."
 msgstr "Restored the previous engine."
 
-#: orologic_modules/stockfish_installer.py:186
+#: orologic_modules/stockfish_installer.py:188
+#, python-brace-format
+msgid "Nella cartella del motore restano anche: {nomi}."
+msgstr "The engine folder also keeps: {nomi}."
+
+#: orologic_modules/stockfish_installer.py:190
+#, python-brace-format
+msgid ""
+"Non sono riuscita a riportare {nomi}: la cartella di prima resta in "
+"{cartella}."
+msgstr ""
+"I could not bring back {nomi}: the previous folder stays in {cartella}."
+
+#: orologic_modules/stockfish_installer.py:194
 msgid "Installazione di Stockfish completata."
 msgstr "Stockfish installation complete."
 
-#: orologic_modules/stockfish_installer.py:221
+#: orologic_modules/stockfish_installer.py:235
 #, python-brace-format
 msgid "Aggiornamenti del motore non verificati. {motivo}"
 msgstr "Engine updates not checked. {motivo}"
 
-#: orologic_modules/stockfish_installer.py:237
+#: orologic_modules/stockfish_installer.py:251
 #, python-brace-format
 msgid "E' uscito {nuova}, ma non riconosco il suo pacchetto per Windows."
 msgstr "{nuova} is out, but I don't recognize its Windows package."
 
-#: orologic_modules/stockfish_installer.py:243
+#: orologic_modules/stockfish_installer.py:257
 msgid "Aggiornamento del motore disponibile."
 msgstr "Engine upgrade available."
 
-#: orologic_modules/stockfish_installer.py:245
+#: orologic_modules/stockfish_installer.py:259
 #, python-brace-format
 msgid "Versione nuova: {new}. Installata: {curr}."
 msgstr "New version: {new}. Installed: {curr}."
 
-#: orologic_modules/stockfish_installer.py:250
+#: orologic_modules/stockfish_installer.py:264
 msgid "Desideri aggiornare il motore ora? (INVIO per si', ESC per ignorare): "
 msgstr ""
 "Do you want to upgrade your engine now? (ENTER for yes, ESC for ignore): "
 
-#: orologic_modules/stockfish_installer.py:257
+#: orologic_modules/stockfish_installer.py:271
 msgid "Aggiornamento non riuscito, riavvio il motore precedente."
 msgstr "Update failed, I restart the previous engine."
 
-#: orologic_modules/stockfish_installer.py:275
+#: orologic_modules/stockfish_installer.py:289
 msgid "Aggiornamento completato."
 msgstr "Update completed."
 
-#: orologic_modules/storage.py:302
+#: orologic_modules/storage.py:326
 #, python-brace-format
 msgid "Il database delle impostazioni non e' leggibile: {errore}"
 msgstr "Settings database is not readable: {errore}"
 
-#: orologic_modules/storage.py:304
+#: orologic_modules/storage.py:328
 msgid "Attenzione: non sono riuscita a metterne da parte una copia."
 msgstr "Warning: I wasn't able to put aside a copy."
 
-#: orologic_modules/storage.py:305 orologic_modules/storage.py:346
+#: orologic_modules/storage.py:329 orologic_modules/storage.py:370
 msgid "Le modifiche non si salvano finche' il database non torna leggibile."
 msgstr "Changes are not saved until the database can be read again."
 
-#: orologic_modules/storage.py:307
+#: orologic_modules/storage.py:331
 #, python-brace-format
 msgid "Ne ho messo da parte una copia in {percorso}"
 msgstr "I saved a copy in {percorso}"
 
-#: orologic_modules/storage.py:310
+#: orologic_modules/storage.py:334
 #, python-brace-format
 msgid "Riparto dall'ultima copia buona: {percorso}"
 msgstr "Starting again from the last good copy: {percorso}"
 
-#: orologic_modules/storage.py:314
+#: orologic_modules/storage.py:338
 msgid ""
 "Riparto dalle impostazioni predefinite, gli orologi salvati non sono andati "
 "perduti nella copia."
@@ -10654,27 +10667,27 @@ msgstr ""
 "I restart from the default settings, the saved clocks were not lost in the "
 "copy."
 
-#: orologic_modules/storage.py:345
+#: orologic_modules/storage.py:369
 #, python-brace-format
 msgid "Il database delle impostazioni non si lascia leggere: {errore}"
 msgstr "The settings database cannot be read: {errore}"
 
-#: orologic_modules/storage.py:353
+#: orologic_modules/storage.py:377
 msgid "non contiene le impostazioni"
 msgstr "it does not contain the settings"
 
-#: orologic_modules/storage.py:356
+#: orologic_modules/storage.py:380
 #, python-brace-format
 msgid "Ho ignorato {numero} orologi salvati perche' incompleti."
 msgstr "I ignored {numero} saved clocks because they were incomplete."
 
-#: orologic_modules/storage.py:401
+#: orologic_modules/storage.py:425
 msgid ""
 "Modifica non salvata: il database delle impostazioni non si e' potuto "
 "leggere."
 msgstr "Change not saved: the settings database could not be read."
 
-#: orologic_modules/storage.py:407
+#: orologic_modules/storage.py:431
 #, python-brace-format
 msgid "Errore nel salvataggio del database: {errore}"
 msgstr "Error saving database: {errore}"
