@@ -94,3 +94,31 @@ def test_la_ricerca_manda_il_token_solo_a_lichess(monkeypatch):
     pgn_search._apri_indirizzo("https://lichess.org.altro.example/partite.pgn")
     pgn_search._apri_indirizzo("https://lichess.org/api/games/user/x")
     assert [r.get_header("Authorization") for r in richieste] == [None, "Bearer segreto"]
+
+
+# R38: le credenziali di Lichess.
+
+
+def test_le_credenziali_si_scrivono_solo_se_cambiano(tmp_path, monkeypatch):
+    from orologic_modules import lichess_app, storage
+
+    monkeypatch.setattr(lichess_app, "SECRETS_FILE", str(tmp_path / "secrets.json"))
+    scritture = []
+    vera = storage.scrivi_json
+    monkeypatch.setattr(storage, "scrivi_json", lambda percorso, dati, **k: (scritture.append(dati), vera(percorso, dati, **k)))
+    lichess_app.save_secrets({"lichess_token": "t", "lichess_username": "u"})
+    lichess_app.save_secrets({"lichess_token": "t", "lichess_username": "u"})
+    assert len(scritture) == 1
+    assert lichess_app.load_secrets() == {"lichess_token": "t", "lichess_username": "u"}
+
+
+def test_le_credenziali_guaste_vanno_da_parte(tmp_path, monkeypatch, capsys):
+    from orologic_modules import lichess_app
+
+    file = tmp_path / "secrets.json"
+    file.write_text("{ guasto", encoding="utf-8")
+    monkeypatch.setattr(lichess_app, "SECRETS_FILE", str(file))
+    assert lichess_app.load_secrets() == {}
+    assert "messe da parte" in capsys.readouterr().out
+    assert any(p.name.startswith("secrets.json.danneggiato-") for p in tmp_path.iterdir())
+    assert lichess_app.load_secrets() == {}

@@ -32,23 +32,43 @@ from .config import _, percorso_salvataggio
 SECRETS_FILE = percorso_salvataggio(os.path.join("settings", "secrets.json"))
 
 
+def _leggi_i_segreti():
+    with open(SECRETS_FILE, encoding="utf-8") as f:
+        dati = json.load(f)
+    return dati if isinstance(dati, dict) else {}
+
+
 def load_secrets():
+    """Le credenziali di Lichess. Un file che manca da' un dizionario vuoto;
+    uno che non si lascia leggere si dice; uno guasto va da parte, invece di
+    sparire coperto dal primo salvataggio. Prima ogni errore si inghiottiva
+    (R38)."""
     try:
-        with open(SECRETS_FILE, encoding="utf-8") as f:
-            return json.load(f)
-    # Le risposte di Lichess possono cambiare forma: si rinuncia a
-    # questo dato e si prosegue.
-    except Exception:  # noqa: BLE001
+        return _leggi_i_segreti()
+    except FileNotFoundError:
+        return {}
+    except OSError as e:
+        print(_("Le credenziali di Lichess non si leggono: {e}").format(e=e))
+        return {}
+    except ValueError:
+        copia = storage.metti_da_parte(SECRETS_FILE)
+        if copia:
+            print(_("Le credenziali di Lichess erano guaste: le ho messe da parte in {p}. Rifai il login.").format(p=copia))
         return {}
 
 
 def save_secrets(secrets):
+    """Le credenziali in modo atomico, e solo se cambiano: prima si
+    riscrivevano a ogni ingresso in Orolichess, e un'interruzione durante la
+    scrittura faceva perdere il token (R38)."""
     try:
-        with open(SECRETS_FILE, "w", encoding="utf-8") as f:
-            json.dump(secrets, f, indent=4)
-    # Le risposte di Lichess possono cambiare forma: si rinuncia a
-    # questo dato e si prosegue.
-    except Exception as e:  # noqa: BLE001
+        if _leggi_i_segreti() == secrets:
+            return
+    except (OSError, ValueError):
+        pass
+    try:
+        storage.scrivi_json(SECRETS_FILE, secrets)
+    except (OSError, TypeError, ValueError) as e:
         print(_("Errore salvataggio segreti: {e}").format(e=e))
 
 
