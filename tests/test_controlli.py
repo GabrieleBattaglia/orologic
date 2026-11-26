@@ -215,3 +215,18 @@ def test_il_conta_in_su_nel_tag_clk_e_nel_riepilogo():
     assert righe[0].startswith("Tempo in piu' del Bianco: ")
     assert righe[1].startswith("Tempo rimasto al Nero: ")
     assert "\n" not in righe[1]
+
+
+@pytest.mark.parametrize(("codice", "valori"), [("byoyomi", {"periodo": 5, "periodi": 3}), ("canadese", {"minuti_periodo": 1, "mosse_periodo": 5}), ("contasu", {})])
+def test_chi_parte_da_zero_entra_nei_supplementari(codice, valori):
+    """R43: col tempo di base a zero e i supplementari, che la validazione
+    ammette, il Nero risultava scaduto al primo giro del Bianco."""
+    stato = _partita((0, codice, valori, 0))
+    assert not controlli.scaduto(stato, False)
+    _corre(stato, 1)
+    assert not controlli.scaduto(stato, True) and not controlli.scaduto(stato, False)
+    assert stato.controllo["white"]["oltre"] == codice
+    _mossa(stato)
+    _corre(stato, 1)
+    assert stato.controllo["black"]["oltre"] == codice
+    assert not controlli.scaduto(stato, False)

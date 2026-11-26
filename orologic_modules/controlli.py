@@ -403,7 +403,14 @@ def scaduto(stato, bianco):
     if _residuo(stato, bianco) > 0:
         return False
     controllo = getattr(stato, "controllo", None) or {}
-    return (controllo.get("white" if bianco else "black") or {}).get("oltre") != "contasu"
+    oltre = (controllo.get("white" if bianco else "black") or {}).get("oltre")
+    if oltre == "contasu":
+        return False
+    # Chi ha il tempo di base finito ma non e' ancora entrato nei tempi
+    # supplementari, come chi parte da zero, non e' scaduto: ci entra al
+    # primo giro del suo orologio. Prima, col tempo di base a zero e il
+    # byo-yomi, il Nero cadeva al primo giro del Bianco (R43).
+    return not (oltre is None and codice_di(_fase(stato, bianco)) in SUPPLEMENTARI)
 
 
 def a_mossa_fatta(stato, bianco):
