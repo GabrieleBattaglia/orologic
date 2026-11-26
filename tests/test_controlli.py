@@ -157,7 +157,8 @@ def test_gli_errori_delle_fasi():
 def test_il_tag_timecontrol():
     from orologic_modules import clock
 
-    assert clock.generate_time_control_string({"phases": [{"white_time": 5400, "white_inc": 30, "moves": 40}, {"white_time": 1800, "white_inc": 30, "moves": 0}]}) == "40/5400+30, 1800+30"
+    # I periodi coi due punti, come vuole lo standard PGN (R50).
+    assert clock.generate_time_control_string({"phases": [{"white_time": 5400, "white_inc": 30, "moves": 40}, {"white_time": 1800, "white_inc": 30, "moves": 0}]}) == "40/5400+30:1800+30"
     assert clock.generate_time_control_string({"phases": [{"white_time": 180, "moves": 0, "tipo": "clessidra"}]}) == "*180"
 
 

@@ -39,7 +39,9 @@ def generate_time_control_string(clock_config):
         if moves:
             tc = f"{moves}/{tc}"
         tc_list.append(tc)
-    return ", ".join(tc_list)
+    # Lo standard PGN separa i periodi coi due punti, 40/5400+30:1800+30:
+    # prima uscivano con virgola e spazio (R50).
+    return ":".join(tc_list)
 
 
 class ClockConfig:
