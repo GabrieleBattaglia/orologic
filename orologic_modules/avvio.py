@@ -77,15 +77,13 @@ def lingua_salvata():
 
 
 def lingua_di_windows():
-    """Il codice della lingua di Windows, come it o en, se Orologic la parla."""
-    testo = ctypes.create_unicode_buffer(85)
-    try:
-        if ctypes.WinDLL("kernel32").GetUserDefaultLocaleName(testo, len(testo)):
-            codice = testo.value.split("-")[0].lower()
-            return codice if codice in lingue() else None
-    except (OSError, AttributeError):
-        pass
-    return None
+    """Il codice della lingua di Windows, come it o en, se Orologic la parla.
+    Viene da lingua_di_sistema di GBUtils: qui ce n'era una seconda, che
+    leggeva i formati regionali invece della lingua dell'interfaccia (R40)."""
+    from GBUtils import lingua_di_sistema
+
+    codice = lingua_di_sistema()
+    return codice if codice in lingue() else None
 
 
 def salva(codice):

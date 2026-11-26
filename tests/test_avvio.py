@@ -108,3 +108,17 @@ def test_la_app_della_finestra_della_lingua_resta_viva(app, monkeypatch):
     assert avvio.scegli_nella_finestra(["en", "it"], 1) is None
     assert len(nate) == 1 and nate == avvio._APP
     pompa(lambda: False, 0.1)
+
+
+
+def test_la_lingua_di_windows_viene_da_gbutils(monkeypatch):
+    """R40: avvio leggeva i formati regionali con una sua funzione; ora usa
+    lingua_di_sistema di GBUtils, e tiene solo le lingue di Orologic."""
+    import GBUtils
+
+    monkeypatch.setattr(GBUtils, "lingua_di_sistema", lambda: "en")
+    assert avvio.lingua_di_windows() == "en"
+    monkeypatch.setattr(GBUtils, "lingua_di_sistema", lambda: "xx")
+    assert avvio.lingua_di_windows() is None
+    monkeypatch.setattr(GBUtils, "lingua_di_sistema", lambda: None)
+    assert avvio.lingua_di_windows() is None
