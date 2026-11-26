@@ -1170,6 +1170,10 @@ def save_text_summary(game_state, descriptive_moves, eco_entry):
     )
     if eco_entry and eco_entry.get("variation"):
         opening_text += " ({variation})\n".format(variation=eco_entry.get("variation"))
+    elif eco_entry:
+        # Senza variante mancava l'a capo, e la lista delle mosse si
+        # attaccava al nome dell'apertura (R51).
+        opening_text += "\n"
     header_text += opening_text
     move_list_text = _("Lista Mosse:\n")
     for num, i in enumerate(range(0, len(descriptive_moves), 2), 1):

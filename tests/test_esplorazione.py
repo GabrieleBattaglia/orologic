@@ -151,3 +151,19 @@ def test_le_descrizioni_vengono_dal_pgn_coi_segni():
     scacchiera = chess.Board()
     attesa = board_utils.DescribeMove(chess.Move.from_uci("e2e4"), scacchiera, annotation="!")
     assert descrizioni[0] == attesa
+
+
+def test_il_riepilogo_testuale_va_a_capo_dopo_l_apertura(tmp_path, monkeypatch):
+    """R51: con l'apertura e senza variante usciva "Italian GameLista Mosse:"."""
+    import types
+
+    import chess.pgn
+
+    from orologic_modules import config
+
+    monkeypatch.setattr(config, "percorso_salvataggio", lambda nome: str(tmp_path / nome))
+    partita = chess.pgn.read_game(io.StringIO('[White "A"]\n[Black "B"]\n\n1. e4 e5 *'))
+    stato = types.SimpleNamespace(pgn_game=partita, white_remaining=60, black_remaining=60)
+    ui.save_text_summary(stato, ["e4", "e5"], {"eco": "C50", "opening": "Italian Game"})
+    testo = next((tmp_path / "txt").iterdir()).read_text(encoding="utf-8")
+    assert "Apertura: C50 - Italian Game\nLista Mosse:" in testo
