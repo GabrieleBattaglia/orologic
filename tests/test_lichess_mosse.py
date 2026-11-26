@@ -300,3 +300,57 @@ def test_solo_cio_che_ha_la_forma_di_una_mossa_diventa_premossa():
         assert not forma(board_utils.NormalizeMove(testo)), testo
     # Le forme dell'arrocco e i pezzi in minuscolo passano da NormalizeMove.
     assert forma(board_utils.NormalizeMove("oo")) and forma(board_utils.NormalizeMove("nf3"))
+
+
+def _gioca_i_messaggi(monkeypatch, messaggi):
+    """Il ciclo vero della partita sui messaggi dati, senza tastiera ne'
+    suoni: (stato, uscita, risposta)."""
+    import io
+    import queue
+    import sys
+
+    from orologic_modules import strato
+
+    monkeypatch.setattr(lichess_board, "Acusticator", lambda *_a, **_k: None)
+    monkeypatch.setattr(lichess_board, "suono_dell_offerta", lambda: None)
+    monkeypatch.setattr(strato, "kbhit", lambda: False)
+    uscita = io.StringIO()
+    monkeypatch.setattr(sys, "stdout", uscita)
+    coda = queue.Queue()
+    for messaggio in [*messaggi, {"type": "eof"}]:
+        coda.put(messaggio)
+    stato = _stato()
+    risposta = lichess_board.async_play_loop(coda, stato)
+    return stato, uscita.getvalue(), risposta
+
+
+def _partita_intera(mosse, **stato):
+    return {
+        "type": "gameFull",
+        "id": "abcd1234",
+        "white": {"id": "prova", "name": "Prova", "rating": 1500},
+        "black": {"id": "rossi", "name": "Rossi", "rating": 1500},
+        "variant": {"key": "standard", "name": "Standard"},
+        "clock": {"initial": 600000, "increment": 0},
+        "initialFen": "startpos",
+        "state": {"type": "gameState", "moves": " ".join(mosse), "wtime": 600000, "btime": 600000, "status": "started", **stato},
+    }
+
+
+def test_alla_riconnessione_le_mosse_a_rete_giu_si_annunciano(monkeypatch):
+    """R119: alla riconnessione gameFull ricostruiva la partita in silenzio:
+    la mossa giocata dall'avversario a rete giu' non si annunciava, e
+    l'offerta di patta dentro lo stato non si leggeva."""
+    stato, uscita, _risposta = _gioca_i_messaggi(monkeypatch, [_partita_intera(MOSSE[:2]), _partita_intera(MOSSE[:3], bdraw=True)])
+    assert len(stato.move_history) == 3
+    assert uscita.count(" gioca: ") == 1
+    assert "patta" in uscita.lower()
+
+
+def test_alla_riconnessione_la_partita_finita_si_dice(monkeypatch):
+    """R119: se la partita era finita a rete giu', si sentiva solo
+    Connessione al server chiusa, e il PGN di ripiego portava l'asterisco."""
+    stato, uscita, risposta = _gioca_i_messaggi(monkeypatch, [_partita_intera(MOSSE[:2]), _partita_intera(MOSSE[:2], status="resign", winner="black")])
+    assert risposta is None
+    assert "Partita terminata" in uscita
+    assert stato.winner == "black"

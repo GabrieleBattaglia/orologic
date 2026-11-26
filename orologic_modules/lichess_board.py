@@ -1052,6 +1052,13 @@ def async_play_loop(q, game_state):
             last_refresh = time.time()
         try:
             msg = q.get_nowait()
+            # Alla riconnessione gameFull porta lo stato di adesso: passa dal
+            # ramo di gameState, che annuncia le mosse giocate a rete giu', le
+            # offerte, la premossa e la fine della partita. Prima la partita
+            # si ricostruiva in silenzio, e chi aveva il tratto non lo sapeva
+            # mentre il suo orologio correva (R119).
+            if msg.get("type") == "gameFull" and game_state.started:
+                msg = {**(msg.get("state") or {}), "type": "gameState"}
             if msg.get("type") == "eof":
                 sys.stdout.write("\n" + _("Connessione al server chiusa.") + "\n")
                 return None
