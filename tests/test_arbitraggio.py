@@ -6,6 +6,8 @@ orologio pronto: Invio a ogni domanda, poi cinque mosse. Il cruscotto deve
 arrivare da solo, con le mosse a parole, gli orologi e i messaggi. Il motore
 vero non parte."""
 
+import os
+
 from conftest import pompa
 
 from orologic_modules import engine, game_flow
@@ -167,3 +169,86 @@ def test_chiudere_orologic_a_partita_in_corso_salva_il_pgn(finestra, monkeypatch
     finestra.faccia.chiudi()
     assert pompa(lambda: not finestra.nucleo.is_alive(), 10)
     assert len(salvati) == 1 and "1. e4 e5" in salvati[0][0] and "interrotta" in salvati[0][1]
+
+
+def _pgn_nuovi(prima):
+    """I PGN nati nella cartella pgn delle prove dopo prima."""
+    from orologic_modules import config
+
+    cartella = config.percorso_salvataggio("pgn")
+    return [os.path.join(cartella, nome) for nome in sorted(set(os.listdir(cartella)) - prima)] if os.path.isdir(cartella) else []
+
+
+def _pgn_di_adesso():
+    from orologic_modules import config
+
+    cartella = config.percorso_salvataggio("pgn")
+    return set(os.listdir(cartella)) if os.path.isdir(cartella) else set()
+
+
+def test_un_errore_a_partita_in_corso_salva_il_pgn(finestra, monkeypatch):
+    """R107: il salvataggio d'emergenza scattava solo all'interruzione, e un
+    errore qualunque del nucleo a partita in corso non salvava niente. Qui il
+    salvataggio e' quello vero, nella cartella pgn delle prove."""
+
+    def guasto(_testo, _stato):
+        raise RuntimeError("guasto di prova")
+
+    monkeypatch.setattr(game_flow, "commenta_mossa", guasto)
+    prima = _pgn_di_adesso()
+    _arbitraggio_avviato(finestra, monkeypatch)
+    try:
+        for passo in ("e4", "e5", ".c Un commento."):
+            _scrivi(finestra, passo)
+        assert pompa(lambda: not finestra.nucleo.is_alive(), 10)
+        assert finestra.errori_mostrati and "guasto di prova" in finestra.errori_mostrati[0][0]
+        nuovi = _pgn_nuovi(prima)
+        assert len(nuovi) == 1 and "interrotta" in os.path.basename(nuovi[0])
+        with open(nuovi[0], encoding="utf-8") as file:
+            assert "1. e4 e5" in file.read()
+    finally:
+        for percorso in _pgn_nuovi(prima):
+            os.remove(percorso)
+
+
+def test_il_nucleo_fermo_alla_chiusura_salva_il_pgn(finestra, monkeypatch):
+    """R107: se il nucleo non legge tasti per piu' di cinque secondi, per
+    esempio in un'analisi lunga, la finestra usciva con os._exit e saltava
+    ogni salvataggio. Ora prima chiama i salvataggi d'emergenza delle
+    partite aperte."""
+    import threading
+
+    from orologic_modules import finestra as modulo_finestra
+
+    fermo = threading.Event()
+    dentro = threading.Event()
+
+    def lungo(_testo, _stato):
+        dentro.set()
+        fermo.wait(20)
+
+    monkeypatch.setattr(game_flow, "commenta_mossa", lungo)
+    monkeypatch.setattr(modulo_finestra, "ATTESA_DELLA_CHIUSURA", 0.3)
+    monkeypatch.setattr(engine, "CloseEngine", lambda: None)
+    uscite = []
+    monkeypatch.setattr(os, "_exit", uscite.append)
+    prima = _pgn_di_adesso()
+    _arbitraggio_avviato(finestra, monkeypatch)
+    try:
+        for passo in ("e4", "e5"):
+            _scrivi(finestra, passo)
+        for tasto in ".c Fermo qui.\r":
+            finestra.faccia.premi(tasto)
+        assert dentro.wait(10)
+        finestra.Close()
+        assert pompa(lambda: uscite, 10)
+        nuovi = _pgn_nuovi(prima)
+        assert len(nuovi) == 1 and "interrotta" in os.path.basename(nuovi[0])
+        with open(nuovi[0], encoding="utf-8") as file:
+            assert "1. e4 e5" in file.read()
+    finally:
+        fermo.set()
+        if finestra:
+            assert pompa(lambda: not finestra.nucleo.is_alive(), 10)
+        for percorso in _pgn_nuovi(prima):
+            os.remove(percorso)

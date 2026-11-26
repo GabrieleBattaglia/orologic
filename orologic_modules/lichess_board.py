@@ -91,6 +91,11 @@ def mossa_dallo_stream(board, uci, fen=None):
 
 
 def save_lichess_game(game_state, result_str="*"):
+    """Il PGN della partita: subito la ricostruzione locale, che non chiede
+    la rete, poi il PGN ufficiale di Lichess al suo posto, nello stesso
+    file, se arriva. Prima si scaricava per primo il PGN ufficiale, e
+    chiudendo Orologic durante lo scaricamento non si salvava niente
+    (R107)."""
     import io
 
     from .easyfish import pgn_handler
@@ -98,42 +103,45 @@ def save_lichess_game(game_state, result_str="*"):
     if getattr(game_state, "saved", False):
         return
     game_state.saved = True
-
-    pgn_text = ""
-    # Se abbiamo un game_id, proviamo a scaricare il PGN completo e ufficiale da Lichess
-    if hasattr(game_state, "game_id") and game_state.game_id:
-        # Lichess, se non gli si dice altro, scrive nei commenti tempi e
-        # valutazioni. Si chiede il PGN pulito, con tag, mosse e risultato,
-        # e i tempi soltanto se l'utente ha scelto di salvarli.
-        tempi = "true" if getattr(game_state, "save_clock_times", False) else "false"
-        url = (
-            f"https://lichess.org/game/export/{game_state.game_id}"
-            f"?clocks={tempi}&evals=false&literate=false"
+    percorso = salva_la_ricostruzione(game_state, result_str)
+    if not getattr(game_state, "game_id", None):
+        return
+    # Lichess, se non gli si dice altro, scrive nei commenti tempi e
+    # valutazioni. Si chiede il PGN pulito, con tag, mosse e risultato, e i
+    # tempi soltanto se l'utente ha scelto di salvarli.
+    tempi = "true" if getattr(game_state, "save_clock_times", False) else "false"
+    url = (
+        f"https://lichess.org/game/export/{game_state.game_id}"
+        f"?clocks={tempi}&evals=false&literate=false"
+    )
+    pgn_text, errore = rete.leggi(url, token=getattr(game_state, "token", None))
+    if errore:
+        # Resta la ricostruzione locale, ma l'utente sa perche'.
+        print(_("PGN ufficiale non scaricato. {motivo}").format(motivo=errore))
+        return
+    try:
+        game = chess.pgn.read_game(io.StringIO(pgn_text or ""))
+    # La partita online continua anche se un dato secondario non si legge:
+    # resta la ricostruzione locale.
+    except Exception:  # noqa: BLE001
+        game = None
+    if game is not None and pgn_handler.salva_la_partita(game, percorso):
+        print(
+            _(
+                "La partita e' stata scaricata da Lichess, salvata nella cartella PGN e copiata negli appunti."
+            )
         )
-        pgn_text, errore = rete.leggi(url, token=getattr(game_state, "token", None))
-        if errore:
-            # Si prosegue con la ricostruzione locale, ma l'utente sa perche'.
-            print(_("PGN ufficiale non scaricato. {motivo}").format(motivo=errore))
-            pgn_text = ""
 
-    if pgn_text:
-        try:
-            # Carichiamo il PGN scaricato in un oggetto Game per validarlo e salvarlo tramite pgn_handler
-            game = chess.pgn.read_game(io.StringIO(pgn_text))
-            if game:
-                pgn_handler.SaveGameToFile(game)
-                print(
-                    _(
-                        "La partita e' stata scaricata da Lichess, salvata nella cartella PGN e copiata negli appunti."
-                    )
-                )
-                return
-        # Come sopra: la partita online continua anche se un dato
-        # secondario non si legge.
-        except Exception:  # noqa: BLE001, S110
-            pass  # Procedi con la ricostruzione manuale se il parsing fallisce
 
-    # Ricostruzione manuale (Fallback)
+def salva_la_ricostruzione(game_state, result_str="*"):
+    """La partita ricostruita dalle mosse giocate, senza rete, nella
+    cartella PGN: il percorso, o None. Una volta sola: la chiamano la fine
+    della partita e il salvataggio d'emergenza (R107)."""
+    from .easyfish import pgn_handler
+
+    if hasattr(game_state, "ricostruzione_salvata"):
+        return game_state.ricostruzione_salvata
+    game_state.ricostruzione_salvata = None
     game = chess.pgn.Game()
 
     def clean_name(name_str):
@@ -192,14 +200,24 @@ def save_lichess_game(game_state, result_str="*"):
         )
 
     try:
-        pgn_handler.SaveGameToFile(game)
+        percorso = pgn_handler.salva_la_partita(game)
+    # La partita online continua anche se un dato secondario non si legge.
+    except Exception as e:  # noqa: BLE001
+        print(_("Errore nel salvataggio della partita PGN: {e}").format(e=e))
+        return None
+    game_state.ricostruzione_salvata = percorso
+    if percorso:
         print(
             _("La partita e' stata salvata nella cartella PGN (ricostruzione locale).")
         )
-    # Come sopra: la partita online continua anche se un dato
-    # secondario non si legge.
-    except Exception as e:  # noqa: BLE001
-        print(_("Errore nel salvataggio della partita PGN: {e}").format(e=e))
+    return percorso
+
+
+def _salvataggio_d_emergenza(game_state):
+    """La ricostruzione locale della partita interrotta, senza rete, se ha
+    piu' di dieci semimosse, come quella di fine partita (R107)."""
+    if game_state is not None and len(game_state.move_history) > 10:
+        salva_la_ricostruzione(game_state, getattr(game_state, "winner", "*"))
 
 
 def handle_exploration_command(user_input, game_state):
@@ -1555,11 +1573,14 @@ def play_game(game_id, token, username):
     in arrivo sono solo un suono, per non coprire le mosse."""
     from . import lichess_eventi
 
-    with lichess_eventi.solo_suono():
-        return _gioca_partita(game_id, token, username)
+    # Chiudendo Orologic, o su un errore, a partita in corso la ricostruzione
+    # locale si salva comunque (R107).
+    aperta = {}
+    with lichess_eventi.solo_suono(), strato.salvataggio_d_emergenza(lambda: _salvataggio_d_emergenza(aperta.get("stato"))):
+        return _gioca_partita(game_id, token, username, aperta)
 
 
-def _gioca_partita(game_id, token, username):
+def _gioca_partita(game_id, token, username, aperta=None):
     url_partita = f"https://lichess.org/api/board/game/stream/{game_id}"
 
     q = queue.Queue()
@@ -1580,6 +1601,8 @@ def _gioca_partita(game_id, token, username):
     board = board_utils.CustomBoard()
     game_state = GamePlayState(board, username)
     game_state.token = token
+    if aperta is not None:
+        aperta["stato"] = game_state
 
     while True:
         user_input = async_play_loop(q, game_state)

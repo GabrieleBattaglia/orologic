@@ -2090,15 +2090,22 @@ class Finestra(wx.Frame):
                 wx.CallLater(100, aspetta)
                 return
             if self.nucleo.is_alive():
-                # Il nucleo e' fermo dove non legge tasti, per esempio in
-                # rete: si chiude il motore e si esce comunque.
-                from . import engine
-
-                engine.CloseEngine()
-                os._exit(0)
+                self._esci_col_nucleo_fermo()
+                return
             self.Destroy()
 
         wx.CallLater(100, aspetta)
+
+    @staticmethod
+    def _esci_col_nucleo_fermo():
+        """Il nucleo e' fermo dove non legge tasti, per esempio in rete o in
+        un'analisi lunga: le partite aperte si salvano, il motore si chiude e
+        si esce comunque. Prima si usciva senza salvare (R107)."""
+        from . import engine
+
+        strato.salva_le_partite_aperte()
+        engine.CloseEngine()
+        os._exit(0)
 
 
 _SALVATI = {}

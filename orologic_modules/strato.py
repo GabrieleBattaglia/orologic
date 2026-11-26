@@ -139,6 +139,9 @@ SCELTA_INTERROTTA = object()
 _partite = 0
 # Dentro da_leggere, nella finestra: la forma verbosa e la riga del cursore.
 _lettura = None
+# I salvataggi d'emergenza delle partite aperte, dall'ultima aperta in fondo
+# (R107).
+_emergenze = []
 
 
 def imposta_faccia(faccia):
@@ -194,6 +197,49 @@ def partita():
 def dentro_una_partita():
     """Vero dentro la zona di una partita."""
     return _partite > 0
+
+
+@contextlib.contextmanager
+def salvataggio_d_emergenza(salva):
+    """La zona in cui salva() scrive la partita aperta se Orologic si chiude
+    o il nucleo cade: la chiama questa zona, su un'interruzione come Alt+F4
+    o su un errore qualunque, prima di rilanciarlo; e la chiama la finestra
+    prima di uscire, se il nucleo resta fermo dove non legge tasti, come in
+    un'analisi lunga o in rete. Prima il salvataggio scattava solo
+    all'interruzione, e un errore o un nucleo fermo perdevano la partita
+    (R107). salva() puo' arrivare piu' volte, anche dal filo della finestra:
+    scrive una volta sola."""
+    _emergenze.append(salva)
+    try:
+        yield
+    except (KeyboardInterrupt, Exception):
+        _salva_senza_cadere(salva)
+        raise
+    finally:
+        with contextlib.suppress(ValueError):
+            _emergenze.remove(salva)
+
+
+def salva_le_partite_aperte():
+    """I salvataggi d'emergenza di tutte le partite aperte, dall'ultima: la
+    finestra li chiama prima di uscire col nucleo fermo (R107)."""
+    for salva in reversed(list(_emergenze)):
+        _salva_senza_cadere(salva)
+
+
+def _salva_senza_cadere(salva):
+    """Un salvataggio d'emergenza che non fa cadere chi lo chiama: si e' gia'
+    dentro un errore, o all'uscita."""
+    try:
+        salva()
+    # Qualunque cosa vada storta qui non deve coprire l'errore di prima ne'
+    # fermare l'uscita: il motivo va nel registro degli errori.
+    except Exception:  # noqa: BLE001
+        import traceback
+
+        from . import registro
+
+        registro.scrivi("Salvataggio d'emergenza:\n" + traceback.format_exc())
 
 
 def in_partita(funzione):

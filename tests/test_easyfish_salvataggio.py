@@ -200,3 +200,71 @@ def test_chiudere_orologic_salva_la_partita_modificata(finestra, monkeypatch):
     finestra.faccia.chiudi()
     assert pompa(lambda: not finestra.nucleo.is_alive())
     assert salvate == [game]
+
+
+
+def test_il_commento_scritto_nell_esploratore_si_salva_alla_chiusura(finestra, monkeypatch):
+    """R107: la bandiera della partita modificata si rinfrescava solo in
+    testa al ciclo di Easyfish, e un commento scritto nell'esploratore, in
+    una partita fin li' non modificata, non si salvava chiudendo Orologic
+    dall'esploratore. Il salvataggio e' quello vero, con gli appunti finti."""
+    import os
+
+    from orologic_modules import config
+    from orologic_modules.easyfish import pgn_handler
+
+    game = partita()
+    monkeypatch.setattr(orologic_engine, "ENGINE", object())
+    copiati = []
+    monkeypatch.setattr(pgn_handler.pyperclip, "copy", copiati.append)
+    cartella = config.percorso_salvataggio("pgn")
+    prima = set(os.listdir(cartella)) if os.path.isdir(cartella) else set()
+
+    def contesto():
+        dati = finestra.fornitore() if finestra.fornitore is not None else None
+        return dati and dati["contesto"]
+
+    finestra.avvia_il_nucleo(lambda: easyfish_app.run(partita=game))
+    try:
+        assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+        _premi(finestra, ".e\r")
+        assert pompa(lambda: finestra.attesa.tasto and contesto() == "esploratore")
+        _premi(finestra, "_")
+        assert pompa(lambda: not finestra.attesa.tasto)
+        _premi(finestra, "Bella\r")
+        assert pompa(lambda: game.end().comment == "Bella")
+        assert pompa(lambda: finestra.attesa.tasto and contesto() == "esploratore")
+        finestra.faccia.chiudi()
+        assert pompa(lambda: not finestra.nucleo.is_alive())
+        nuovi = sorted(set(os.listdir(cartella)) - prima)
+        assert len(nuovi) == 1
+        with open(os.path.join(cartella, nuovi[0]), encoding="utf-8") as file:
+            assert "Bella" in file.read()
+        assert copiati and "Bella" in copiati[-1]
+    finally:
+        for nome in sorted(set(os.listdir(cartella)) - prima) if os.path.isdir(cartella) else ():
+            os.remove(os.path.join(cartella, nome))
+
+
+def test_un_errore_in_easyfish_salva_la_partita_modificata(finestra, monkeypatch):
+    """R107: in Easyfish il salvataggio d'emergenza scattava solo
+    all'interruzione; un errore del nucleo con la partita modificata la
+    perdeva."""
+    game = partita()
+    monkeypatch.setattr(orologic_engine, "ENGINE", object())
+    salvate = []
+    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda g: salvate.append(g) or True)
+
+    def guasto(*_argomenti, **_opzioni):
+        raise RuntimeError("guasto di prova")
+
+    monkeypatch.setattr(easyfish_app, "AddingPGNTAGS", guasto)
+    finestra.avvia_il_nucleo(lambda: easyfish_app.run(partita=game))
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+    _premi(finestra, "_Bella\r")
+    assert pompa(lambda: game.end().comment == "Bella")
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+    _premi(finestra, ".pt\r")
+    assert pompa(lambda: not finestra.nucleo.is_alive())
+    assert finestra.errori_mostrati and "guasto di prova" in finestra.errori_mostrati[0][0]
+    assert salvate == [game]

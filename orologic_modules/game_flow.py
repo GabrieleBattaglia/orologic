@@ -164,13 +164,11 @@ def _gioca_e_finalizza(game_state, eco_database, autosave_is_on):
     """Il ciclo della partita e la sua chiusura. Se Orologic si chiude a
     meta', per esempio con Alt+F4, il PGN si scrive comunque: prima si
     scriveva solo dopo le domande di fine partita, e chiudendo per sbaglio,
-    col salvataggio automatico spento, si perdeva tutto (R11)."""
-    try:
+    col salvataggio automatico spento, si perdeva tutto (R11). Anche su un
+    errore del nucleo, e col nucleo fermo alla chiusura (R107)."""
+    with strato.salvataggio_d_emergenza(lambda: _salvataggio_d_emergenza(game_state)):
         last_valid_eco_entry = _loop_principale_partita(game_state, eco_database, autosave_is_on)
         _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on)
-    except KeyboardInterrupt:
-        _salvataggio_d_emergenza(game_state)
-        raise
 
 
 def _salvataggio_d_emergenza(game_state):
@@ -178,14 +176,20 @@ def _salvataggio_d_emergenza(game_state):
     if not game_state.move_history or getattr(game_state, "pgn_salvato", False):
         return
     game_state.pgn_salvato = True
+    salva_la_partita_interrotta(game_state.pgn_game)
+
+
+def salva_la_partita_interrotta(pgn_game):
+    """Il PGN di una partita interrotta, con interrotta nel nome del file,
+    in arbitraggio e contro il motore (R11, R107): il percorso, o None."""
     print(_("Orologic si chiude a partita in corso: salvo il PGN."))
     base_filename = "{white}-{black}-{segno}-{timestamp}.pgn".format(
-        white=game_state.pgn_game.headers.get("White"),
-        black=game_state.pgn_game.headers.get("Black"),
+        white=pgn_game.headers.get("White"),
+        black=pgn_game.headers.get("Black"),
         segno=_("interrotta"),
         timestamp=datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
     )
-    salva_pgn_partita(board_utils.format_pgn_comments(str(game_state.pgn_game)), config.sanitize_filename(base_filename))
+    return salva_pgn_partita(board_utils.format_pgn_comments(str(pgn_game)), config.sanitize_filename(base_filename))
 
 
 def EseguiAutosave(game_state):

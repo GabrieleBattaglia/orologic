@@ -23,7 +23,7 @@ import chess.pgn
 import pyperclip
 from GBUtils import Acusticator, dgt, enter_escape, menu, sonify
 
-from . import board_utils, chess960_utils, config, engine, storage, ui, version
+from . import board_utils, chess960_utils, config, engine, storage, strato, ui, version
 from .config import _
 from .easyfish import game_mode, punteggio_motore, statistiche_motore
 
@@ -142,9 +142,28 @@ def _colori(partita, stato, nome, elo_utente=None, elo_motore=None):
         partita.headers["BlackElo"] = str(elo_motore if umano_bianco else elo_utente)
 
 
-def _dopo_la_partita(partita, stato):
+class _Emergenza:
+    """Il salvataggio d'emergenza della partita contro il motore: chiudendo
+    Orologic a partita in corso, o su un errore del nucleo, il PGN con
+    interrotta nel nome, come in arbitraggio. Prima si perdeva (R107)."""
+
+    def __init__(self, partita):
+        self.partita = partita
+        self.salvata = False
+
+    def __call__(self):
+        if self.salvata or not self.partita.variations:
+            return
+        self.salvata = True
+        from . import game_flow
+
+        game_flow.salva_la_partita_interrotta(self.partita)
+
+
+def _dopo_la_partita(partita, stato, emergenza=None):
     """Quello che fa l'arbitraggio a fine partita: i tempi, il PGN salvato e
-    negli appunti, l'analisi automatica o quella in Easyfish."""
+    negli appunti, l'analisi automatica o quella in Easyfish. emergenza, se
+    c'e', sa che il PGN e' salvato."""
     from . import game_flow
 
     mosse = len(stato.move_history)
@@ -177,6 +196,8 @@ def _dopo_la_partita(partita, stato):
             t=datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
         )
     )
+    if emergenza is not None:
+        emergenza.salvata = True
     game_flow.salva_pgn_partita(pgn, nome_file)
     try:
         pyperclip.copy(pgn)
@@ -235,11 +256,13 @@ def libero():
         chess960_utils.setup_pgn_headers_chess960(partita, scacchiera, fen)
         chess960_utils.verifica_motore_chess960(motore, True)
     _intestazioni(partita, nome, carriera=False)
-    _nodo, stato = game_mode.StartEngineGame(partita, motore, carriera=False)
-    if stato is None:
-        return
-    _colori(partita, stato, nome)
-    _dopo_la_partita(partita, stato)
+    emergenza = _Emergenza(partita)
+    with strato.salvataggio_d_emergenza(emergenza):
+        _nodo, stato = game_mode.StartEngineGame(partita, motore, carriera=False)
+        if stato is None:
+            return
+        _colori(partita, stato, nome)
+        _dopo_la_partita(partita, stato, emergenza)
 
 
 def _gioca_in_carriera():
@@ -253,13 +276,15 @@ def _gioca_in_carriera():
     elo_prima = dati["punteggio"] if dati else None
     partita = chess.pgn.Game()
     _intestazioni(partita, nome, carriera=True)
-    _nodo, stato = game_mode.StartEngineGame(partita, motore, carriera=True)
-    if stato is None:
-        return
-    elo_utente = elo_prima if elo_prima is not None else stato.elo_di_partenza
-    elo_motore = engine.forza["valore"] if stato.a_punteggio else None
-    _colori(partita, stato, nome, elo_utente, elo_motore)
-    _dopo_la_partita(partita, stato)
+    emergenza = _Emergenza(partita)
+    with strato.salvataggio_d_emergenza(emergenza):
+        _nodo, stato = game_mode.StartEngineGame(partita, motore, carriera=True)
+        if stato is None:
+            return
+        elo_utente = elo_prima if elo_prima is not None else stato.elo_di_partenza
+        elo_motore = engine.forza["valore"] if stato.a_punteggio else None
+        _colori(partita, stato, nome, elo_utente, elo_motore)
+        _dopo_la_partita(partita, stato, emergenza)
 
 
 def _limiti_del_motore():

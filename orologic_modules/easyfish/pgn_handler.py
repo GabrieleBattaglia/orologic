@@ -1,6 +1,7 @@
 # Orologic, Easyfish: lettura e scrittura dei PGN.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
+import contextlib
 import datetime
 import os
 import re
@@ -379,6 +380,15 @@ def SaveGameToFile(game):
     SaveGameToFile non diceva se era riuscita, e chi la chiamava buttava
     subito la partita (R52). Il PGN va prima negli appunti, cosi' resta
     anche quando il disco lo rifiuta."""
+    return salva_la_partita(game) is not None
+
+
+def salva_la_partita(game, percorso=None):
+    """Come SaveGameToFile, ma restituisce il percorso scritto, o None.
+    percorso, se c'e', e' il file da riscrivere invece di uno nuovo col nome
+    della partita: Orolichess ci mette il PGN ufficiale al posto della
+    ricostruzione locale salvata prima (R107); se non si riscrive, la
+    partita va in un file nuovo."""
     # Aggiorna data salvataggio solo se assente
     if "Date" not in game.headers or game.headers["Date"] == "????.??.??":
         game.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
@@ -406,4 +416,15 @@ def SaveGameToFile(game):
     # Rete di sicurezza: un errore qui non deve fermare il programma.
     except Exception:  # noqa: BLE001, S110
         pass
-    return salva_pgn_partita(pgn_str, sanitized_name) is not None
+    if percorso:
+        temporaneo = percorso + ".orologic"
+        try:
+            with open(temporaneo, "w", encoding="utf-8") as file:
+                file.write(pgn_str)
+            os.replace(temporaneo, percorso)
+            print(_("PGN salvato come {percorso}.").format(percorso=percorso))
+            return percorso
+        except OSError:
+            with contextlib.suppress(OSError):
+                os.remove(temporaneo)
+    return salva_pgn_partita(pgn_str, sanitized_name)

@@ -191,3 +191,97 @@ def test_gli_orologi_e_la_prima_mossa():
     lichess_board.ricostruisci_le_mosse(stato, ["e2e4", "e7e5"])
     bianco, nero = stato.get_clocks()
     assert bianco < 60 and nero == 60
+
+
+
+def _partita_di_dodici_semimosse():
+    stato = _stato()
+    stato.game_id = "abcd1234"
+    stato.white_player = "Bianco (1500)"
+    stato.black_player = "Nero (1500)"
+    for san in ("e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5"):
+        stato.move_history.append(san)
+    return stato
+
+
+def _pgn_nuovi(prima):
+    import os
+
+    from orologic_modules import config
+
+    cartella = config.percorso_salvataggio("pgn")
+    return [os.path.join(cartella, nome) for nome in sorted(set(os.listdir(cartella)) - prima)] if os.path.isdir(cartella) else []
+
+
+def _pgn_di_adesso():
+    import os
+
+    from orologic_modules import config
+
+    cartella = config.percorso_salvataggio("pgn")
+    return set(os.listdir(cartella)) if os.path.isdir(cartella) else set()
+
+
+def test_la_ricostruzione_locale_si_salva_prima_della_rete(monkeypatch):
+    """R107: il salvataggio di fine partita scaricava per primo il PGN
+    ufficiale, e chiudendo Orologic durante lo scaricamento non si salvava
+    niente. Ora la ricostruzione locale c'e' gia' quando si chiede la rete,
+    e il PGN ufficiale, se arriva, ne prende il posto nello stesso file."""
+    import os
+    import pathlib
+
+    from orologic_modules import rete
+    from orologic_modules.easyfish import pgn_handler
+
+    monkeypatch.setattr(pgn_handler.pyperclip, "copy", lambda _testo: None)
+    prima = _pgn_di_adesso()
+    stato = _partita_di_dodici_semimosse()
+    alla_rete = []
+
+    def leggi(_indirizzo, token=None):
+        alla_rete.append([pathlib.Path(percorso).read_text(encoding="utf-8") for percorso in _pgn_nuovi(prima)])
+        return '[Event "Rated blitz game"]\n[White "Bianco"]\n[Black "Nero"]\n[Result "1-0"]\n\n1. e4 e5 2. Nf3 Nc6 1-0\n', None
+
+    monkeypatch.setattr(rete, "leggi", leggi)
+    try:
+        lichess_board.save_lichess_game(stato, "white")
+        assert len(alla_rete) == 1 and len(alla_rete[0]) == 1
+        assert "6. Re1 b5" in alla_rete[0][0]
+        nuovi = _pgn_nuovi(prima)
+        assert len(nuovi) == 1
+        with open(nuovi[0], encoding="utf-8") as file:
+            assert '[Event "Rated blitz game"]' in file.read()
+    finally:
+        for percorso in _pgn_nuovi(prima):
+            os.remove(percorso)
+
+
+def test_un_errore_a_partita_in_corso_salva_la_ricostruzione(monkeypatch):
+    """R107: play_game registra il salvataggio d'emergenza; un errore del
+    nucleo a partita in corso salva la ricostruzione locale, senza rete."""
+    import os
+
+    import pytest
+
+    from orologic_modules import rete
+    from orologic_modules.easyfish import pgn_handler
+
+    monkeypatch.setattr(pgn_handler.pyperclip, "copy", lambda _testo: None)
+    monkeypatch.setattr(rete, "leggi", lambda *_argomenti, **_opzioni: pytest.fail("la rete non serve"))
+    prima = _pgn_di_adesso()
+
+    def gioca(_game_id, _token, _username, aperta=None):
+        aperta["stato"] = _partita_di_dodici_semimosse()
+        raise RuntimeError("guasto di prova")
+
+    monkeypatch.setattr(lichess_board, "_gioca_partita", gioca)
+    try:
+        with pytest.raises(RuntimeError):
+            lichess_board.play_game("abcd1234", "token", "prova")
+        nuovi = _pgn_nuovi(prima)
+        assert len(nuovi) == 1
+        with open(nuovi[0], encoding="utf-8") as file:
+            assert "6. Re1 b5" in file.read()
+    finally:
+        for percorso in _pgn_nuovi(prima):
+            os.remove(percorso)

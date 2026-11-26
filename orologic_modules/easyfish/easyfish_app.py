@@ -490,24 +490,43 @@ def run(partita=None):
     # Easyfish analizza con la forza della configurazione, anche dopo una
     # partita contro il motore indebolito.
     orologic_engine.forza_della_configurazione()
+    # Chiudendo Orologic a meta', per esempio con Alt+F4, o su un errore del
+    # nucleo, la partita modificata si salva comunque: prima si salvava solo
+    # col punto, e mosse, varianti e commenti si perdevano (R11, R107).
     with _stampa_deviata(), strato.partita():
         try:
-            _esegui(partita)
-        # Chiudendo Orologic a meta', per esempio con Alt+F4, la partita
-        # modificata si salva comunque: prima si salvava solo col punto, e
-        # mosse, varianti e commenti si perdevano (R11).
-        except KeyboardInterrupt:
-            if _APERTA["modificata"] and _APERTA["game"] is not None:
-                print(_("Orologic si chiude con la partita modificata: la salvo."))
-                SaveGameToFile(_APERTA["game"])
-            raise
+            with strato.salvataggio_d_emergenza(_salva_la_partita_aperta):
+                _esegui(partita)
         finally:
-            _APERTA.update(game=None, modificata=False)
+            _APERTA.update(game=None, modificata=False, testo=None)
 
 
-# La partita aperta in Easyfish e se e' modificata, rinfrescate a ogni giro
-# del ciclo, per il salvataggio d'emergenza di run (R11).
-_APERTA = {"game": None, "modificata": False}
+# La partita aperta in Easyfish, se e' modificata secondo la bandiera, e il
+# suo PGN di quando era appena aperta o salvata, rinfrescati in testa al
+# ciclo, per il salvataggio d'emergenza (R11). Conta il confronto col PGN:
+# la bandiera si rinfresca solo in testa al ciclo, e una modifica fatta
+# dentro un comando, come un commento scritto nell'esploratore, sfuggiva
+# chiudendo Orologic da li' (R107).
+_APERTA = {"game": None, "modificata": False, "testo": None}
+
+
+def _salva_la_partita_aperta():
+    """Il salvataggio d'emergenza: la partita aperta, se e' cambiata, una
+    volta sola."""
+    game = _APERTA["game"]
+    if game is None or (not _APERTA["modificata"] and str(game) == _APERTA["testo"]):
+        return
+    _APERTA["game"] = None
+    print(_("Orologic si chiude con la partita modificata: la salvo."))
+    SaveGameToFile(game)
+
+
+def _ricorda_la_partita_aperta(game, modificata):
+    """In testa al ciclo: la partita aperta e la bandiera, e il PGN di
+    confronto quando la partita e' nuova o appena salvata."""
+    if not modificata and (_APERTA["game"] is not game or _APERTA["modificata"]):
+        _APERTA["testo"] = str(game)
+    _APERTA.update(game=game, modificata=modificata)
 
 
 def _esegui(partita=None):
@@ -559,7 +578,7 @@ def _esegui(partita=None):
     stato = posizione.Stato("easyfish")
 
     while True:
-        _APERTA.update(game=game, modificata=is_modified)
+        _ricorda_la_partita_aperta(game, is_modified)
         if sharing_window and not sharing_window.is_active():
             Acusticator(
                 [
