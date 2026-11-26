@@ -295,3 +295,87 @@ def test_l_avviso_della_prima_lettura_non_dice_il_falso(database, monkeypatch):
     avvisi = storage.avvisi_in_sospeso()
     assert "Le modifiche non si salvano finche' il database non torna leggibile." not in avvisi
     assert "Ora il database si legge di nuovo, e le modifiche si salvano." in avvisi
+
+
+def test_la_scrittura_del_database_si_riprova_e_dice_com_e_andata(database, monkeypatch):
+    """R136: la scrittura del database non si riprovava, e UpdateDB buttava
+    l'esito, quindi chi chiamava diceva salvato quando non lo era."""
+    vera = storage.scrivi_json
+    tentativi = []
+
+    def a_singhiozzo(percorso, dati, **opzioni):
+        tentativi.append(percorso)
+        if len(tentativi) <= 2:
+            raise PermissionError("tenuto da un altro programma")
+        return vera(percorso, dati, **opzioni)
+
+    monkeypatch.setattr(storage, "scrivi_json", a_singhiozzo)
+    assert storage.SaveDB({"launch_count": 5})
+    assert storage.salvataggio_riuscito()
+    monkeypatch.setattr(storage, "scrivi_json", lambda *_a, **_k: (_ for _ in ()).throw(PermissionError("sempre")))
+    storage.SetValue("launch_count", 6)
+    assert not storage.salvataggio_riuscito()
+
+
+def test_dopo_una_lettura_fallita_la_successiva_non_dorme(database, monkeypatch):
+    """R136: i dieci tentativi di lettura dormivano col lucchetto preso, a
+    ogni lettura, finche' il file restava illeggibile."""
+    _scrivi(database, {"launch_count": 77})
+    vera = builtins.open
+    tentativi = []
+
+    def bloccata(file, *a, **k):
+        if str(file) == str(database) and not a:
+            tentativi.append(file)
+            raise PermissionError("tenuto da un altro programma")
+        return vera(file, *a, **k)
+
+    monkeypatch.setattr(builtins, "open", bloccata)
+    storage.LoadDB()
+    assert len(tentativi) == storage.TENTATIVI_DI_LETTURA
+    storage.LoadDB()
+    assert len(tentativi) == storage.TENTATIVI_DI_LETTURA + 1
+    monkeypatch.setattr(builtins, "open", vera)
+    assert storage.LoadDB()["launch_count"] == 77
+
+
+def test_i_provvisori_vecchi_della_scrittura_se_ne_vanno(database):
+    """R136: un'interruzione a meta' scrittura lasciava file .tmp che nessuno
+    toglieva."""
+    import time
+
+    vecchio = database.parent / "orologic_db.json.abc123.tmp"
+    nuovo = database.parent / "orologic_db.json.def456.tmp"
+    for provvisorio in (vecchio, nuovo):
+        provvisorio.write_text("{", encoding="utf-8")
+    passato = time.time() - 3600
+    os.utime(vecchio, (passato, passato))
+    storage.scrivi_json(str(database), {"launch_count": 1})
+    assert not vecchio.exists() and nuovo.exists()
+
+
+def test_il_volume_torna_quando_il_database_si_legge(database, monkeypatch):
+    """R136: col database illeggibile all'avvio il volume restava quello
+    predefinito per tutta la sessione."""
+    monkeypatch.setattr(config, "VOLUME_LETTO", False)
+    monkeypatch.setattr(config, "VOLUME", 1.0)
+    _scrivi(database, {"volume": 0.25})
+    storage.LoadDB()
+    assert config.VOLUME == 0.25 and config.VOLUME_LETTO
+
+
+def test_il_registro_tiene_la_voce_se_non_si_gira(tmp_path, monkeypatch):
+    """R136: se la rotazione del registro falliva, la voce si perdeva."""
+    from orologic_modules import registro
+
+    file = tmp_path / "errori.log"
+    file.write_text("x" * 50, encoding="utf-8")
+    monkeypatch.setattr(registro, "percorso", lambda: str(file))
+    monkeypatch.setattr(registro, "MASSIMO", 10)
+
+    def rifiuta(*_argomenti):
+        raise PermissionError("aperto da un altro programma")
+
+    monkeypatch.setattr(registro.os, "replace", rifiuta)
+    assert registro.scrivi("la voce che conta") == str(file)
+    assert "la voce che conta" in file.read_text(encoding="utf-8")

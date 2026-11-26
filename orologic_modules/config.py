@@ -109,8 +109,12 @@ try:
     # Il volume fra zero e uno, e un numero: prima si leggeva senza limiti
     # (R97).
     VOLUME = min(1.0, max(0.0, float(VOLUME)))
+    VOLUME_LETTO = True
 except (OSError, ValueError, AttributeError, TypeError):
     VOLUME = 1.0
+    # Il volume vero arriva con la prima lettura riuscita del database
+    # (R136).
+    VOLUME_LETTO = False
 
 PIECE_VALUES = {
     "R": 5,

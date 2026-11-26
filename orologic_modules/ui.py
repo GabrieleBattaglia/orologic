@@ -229,8 +229,11 @@ def EditLocalization():
     arpeggio_dei_nomi()
     # Solo le differenze dalla lingua del momento (R33).
     storage.SetValue("localization", localizzazione.differenze(l10n_config))
+    salvate = storage.salvataggio_riuscito()
     localizzazione.ricarica()
-    print(_("\nImpostazioni di lingua salvate con successo!"))
+    # Salvate solo se lo sono (R136).
+    if salvate:
+        print(_("\nImpostazioni di lingua salvate con successo!"))
 
 
 def scacchiera_di(origine):

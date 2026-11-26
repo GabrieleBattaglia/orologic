@@ -2702,7 +2702,9 @@ def EditEngineConfig(initial_path=None, initial_executable=None):
         "move_overhead": move_overhead,
     }
     storage.SetValue("engine_config", engine_config)
-    print(_("Configurazione del motore salvata."))
+    # Salvata solo se lo e' (R136).
+    if storage.salvataggio_riuscito():
+        print(_("Configurazione del motore salvata."))
     InitEngine()
     suono_del_motore_salvato()
     return

@@ -317,18 +317,30 @@ def copia_di_riserva():
     return config.DB_FILE + ".bak"
 
 
+# Le letture fallite di recente, per file: la lettura dopo non dorme, perche'
+# i tentativi dormivano col lucchetto preso a ogni lettura, finche' il file
+# restava illeggibile (R136).
+_LETTURE_FALLITE = {}
+FALLITA_DI_RECENTE = 10
+
+
 def _leggi(percorso):
-    """Il contenuto JSON del file. Un errore di lettura si riprova; un JSON
-    non valido solleva ValueError subito, e un file che manca subito
-    FileNotFoundError."""
-    for tentativo in range(TENTATIVI_DI_LETTURA):
+    """Il contenuto JSON del file. Un errore di lettura si riprova, ma una
+    volta sola se la lettura e' fallita da poco; un JSON non valido solleva
+    ValueError subito, e un file che manca subito FileNotFoundError."""
+    di_recente = time.monotonic() - _LETTURE_FALLITE.get(percorso, float("-inf")) < FALLITA_DI_RECENTE
+    tentativi = 1 if di_recente else TENTATIVI_DI_LETTURA
+    for tentativo in range(tentativi):
         try:
             with open(percorso, encoding="utf-8") as f:
-                return json.load(f)
+                dati = json.load(f)
+            _LETTURE_FALLITE.pop(percorso, None)
+            return dati
         except FileNotFoundError:
             raise
         except OSError:
-            if tentativo == TENTATIVI_DI_LETTURA - 1:
+            if tentativo == tentativi - 1:
+                _LETTURE_FALLITE[percorso] = time.monotonic()
                 raise
             time.sleep(PAUSA_FRA_I_TENTATIVI)
     return None
@@ -407,10 +419,30 @@ def LoadDB(silenziosa=False):
         _SILENZIOSA["attiva"] = silenziosa or prima
         try:
             db = _carica()
-            _ULTIMA_LETTURA["riuscita"] = not isinstance(db, DatabaseNonLetto)
+            riuscita = not isinstance(db, DatabaseNonLetto)
+            tornato = riuscita and (not _ULTIMA_LETTURA["riuscita"] or not getattr(config, "VOLUME_LETTO", True))
+            _ULTIMA_LETTURA["riuscita"] = riuscita
+            if tornato:
+                _quando_torna_leggibile(db)
             return db
         finally:
             _SILENZIOSA["attiva"] = prima
+
+
+def _quando_torna_leggibile(db):
+    """Il database prima illeggibile ora si legge: il volume e i nomi, presi
+    coi predefiniti all'avvio, prendono i valori veri. Prima restavano
+    quelli predefiniti per tutta la sessione (R136)."""
+    import sys
+
+    config.VOLUME_LETTO = True
+    with contextlib.suppress(TypeError, ValueError):
+        config.VOLUME = min(1.0, max(0.0, float(db.get("volume", config.VOLUME))))
+    localizzazione = sys.modules.get(__package__ + ".localizzazione")
+    if localizzazione is not None and isinstance(db.get("localization"), dict):
+        nuovo = localizzazione.unisci(localizzazione.predefinito(), localizzazione.sfoltisci(db["localization"]))
+        localizzazione.L10N.clear()
+        localizzazione.L10N.update(nuovo)
 
 
 def _carica():
@@ -452,6 +484,7 @@ def scrivi_json(percorso, dati, indent=4):
     cartella = os.path.dirname(percorso)
     if cartella:
         os.makedirs(cartella, exist_ok=True)
+    _togli_i_provvisori_vecchi(percorso)
     # Un temporaneo col suo nome a ogni scrittura: con un nome fisso due
     # fili che salvavano insieme si scambiavano il file (R29).
     descrittore, temporaneo = tempfile.mkstemp(prefix=os.path.basename(percorso) + ".", suffix=".tmp", dir=cartella or None)
@@ -469,26 +502,73 @@ def scrivi_json(percorso, dati, indent=4):
         raise
 
 
+# I file provvisori della scrittura piu' vecchi di tanto sono di una
+# scrittura interrotta, e se ne vanno (R136).
+PROVVISORIO_VECCHIO = 600
+# I tentativi di scrittura, come quelli di lettura: un file tenuto un
+# momento da un antivirus non fa perdere il salvataggio (R136).
+TENTATIVI_DI_SCRITTURA = 3
+# Com'e' andato l'ultimo SaveDB di ogni filo: chi dice salvato lo chiede
+# (R136).
+_ULTIMO_SALVATAGGIO = threading.local()
+
+
+def _togli_i_provvisori_vecchi(percorso):
+    """I provvisori di una scrittura interrotta dello stesso file, rimasti
+    nella cartella: un'interruzione li lasciava, e nessuno li toglieva."""
+    cartella = os.path.dirname(percorso) or "."
+    prefisso = os.path.basename(percorso) + "."
+    try:
+        nomi = os.listdir(cartella)
+    except OSError:
+        return
+    adesso = time.time()
+    for nome in nomi:
+        if not (nome.startswith(prefisso) and nome.endswith(".tmp")):
+            continue
+        provvisorio = os.path.join(cartella, nome)
+        with contextlib.suppress(OSError):
+            if adesso - os.path.getmtime(provvisorio) > PROVVISORIO_VECCHIO:
+                os.remove(provvisorio)
+
+
+def salvataggio_riuscito():
+    """Vero se l'ultimo salvataggio del database, in questo filo, e'
+    riuscito: prima UpdateDB e SetValue ne buttavano l'esito, e chi li
+    chiamava diceva salvato quando non lo era (R136)."""
+    return getattr(_ULTIMO_SALVATAGGIO, "riuscito", False)
+
+
 def SaveDB(db):
     """Salva il database in modo atomico.
 
-    Restituisce vero se il salvataggio e' andato a buon fine. Il database
-    salvato va anche nella copia di riserva (R30). I predefiniti dati al
-    posto di un database che non si e' letto non si scrivono (R7).
+    Restituisce vero se il salvataggio e' andato a buon fine, e lo ricorda
+    per salvataggio_riuscito. Il database salvato va anche nella copia di
+    riserva (R30). I predefiniti dati al posto di un database che non si e'
+    letto non si scrivono (R7). Un errore di scrittura si riprova (R136).
     """
+    _ULTIMO_SALVATAGGIO.riuscito = False
     if isinstance(db, DatabaseNonLetto):
         print(_("Modifica non salvata: il database delle impostazioni non si e' potuto leggere."))
         return False
     with _LUCCHETTO:
-        try:
-            scrivi_json(config.DB_FILE, db)
-        except (OSError, TypeError, ValueError) as e:
-            print(_("Errore nel salvataggio del database: {errore}").format(errore=e))
-            return False
+        for tentativo in range(TENTATIVI_DI_SCRITTURA):
+            try:
+                scrivi_json(config.DB_FILE, db)
+                break
+            except OSError as e:
+                if tentativo == TENTATIVI_DI_SCRITTURA - 1:
+                    print(_("Errore nel salvataggio del database: {errore}").format(errore=e))
+                    return False
+                time.sleep(PAUSA_FRA_I_TENTATIVI)
+            except (TypeError, ValueError) as e:
+                print(_("Errore nel salvataggio del database: {errore}").format(errore=e))
+                return False
         # Un database nato dai predefiniti non copre la riserva (R108).
         if not isinstance(db, DatabasePredefinito):
             with contextlib.suppress(OSError, TypeError, ValueError):
                 scrivi_json(copia_di_riserva(), db)
+        _ULTIMO_SALVATAGGIO.riuscito = True
         return True
 
 
@@ -508,7 +588,9 @@ def UpdateDB(modifica):
         risultato = modifica(db)
         if isinstance(risultato, dict):
             db = risultato
-        if not non_letto:
+        if non_letto:
+            _ULTIMO_SALVATAGGIO.riuscito = False
+        else:
             SaveDB(db)
         return db
 

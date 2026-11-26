@@ -32,11 +32,21 @@ def percorso():
     return percorsi.percorso_salvataggio(os.path.join("settings", NOME))
 
 
+# Un filo per volta scrive nel registro (R136).
+_LUCCHETTO = threading.Lock()
+
+
 def _apri_in_fondo():
     file = percorso()
     os.makedirs(os.path.dirname(file), exist_ok=True)
     if os.path.isfile(file) and os.path.getsize(file) > MASSIMO:
-        os.replace(file, file + ".1")
+        # Se il registro non si gira, per esempio perche' e' aperto in un
+        # altro programma, la voce va in fondo lo stesso: prima si perdeva
+        # (R136).
+        try:
+            os.replace(file, file + ".1")
+        except OSError:
+            pass
     return open(file, "a", encoding="utf-8")
 
 
@@ -46,7 +56,7 @@ def scrivi(testo):
     try:
         from . import version
 
-        with _apri_in_fondo() as registro:
+        with _LUCCHETTO, _apri_in_fondo() as registro:
             registro.write(f"{datetime.datetime.now():%Y-%m-%d %H:%M:%S} Orologic {version.VERSION}\n{testo.rstrip()}\n\n")
         return percorso()
     # Il registro non deve mai fermare il programma che registra.
@@ -59,7 +69,7 @@ class SulRegistro:
 
     def write(self, testo):
         try:
-            with _apri_in_fondo() as registro:
+            with _LUCCHETTO, _apri_in_fondo() as registro:
                 registro.write(testo)
         # Come scrivi: mai un errore per scrivere un errore.
         except Exception:  # noqa: BLE001, S110

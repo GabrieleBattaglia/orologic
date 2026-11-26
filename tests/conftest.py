@@ -249,6 +249,16 @@ def impostazioni_rimesse():
         modello_prompt._cache["modello"] = None
 
 
+@pytest.fixture(autouse=True)
+def _suoni_muti(monkeypatch):
+    """Il volume a zero in ogni prova: quando il database torna leggibile,
+    Orologic rilegge il volume dal database della prova, che puo' non
+    averlo, e i suoni dopo si sarebbero sentiti (R136)."""
+    from orologic_modules import config
+
+    monkeypatch.setattr(config, "VOLUME", 0.0)
+
+
 def righe_dell_area(vera):
     return vera.area.GetValue().split("\n")
 

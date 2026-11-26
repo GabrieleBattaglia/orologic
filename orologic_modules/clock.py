@@ -263,7 +263,9 @@ def CreateClock():
         db_aggiornato.setdefault("clocks", []).append(new_clock.to_dict())
 
     storage.UpdateDB(aggiungi)
-    print(_("Orologio creato e salvato."))
+    # Salvato solo se lo e' (R136).
+    if storage.salvataggio_riuscito():
+        print(_("Orologio creato e salvato."))
 
 
 def _durata_con_incremento(secondi, incremento):
