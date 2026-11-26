@@ -278,3 +278,65 @@ def test_gli_esercizi_a_due_risposte_col_ciclo_comune(monkeypatch, esercizio):
     # Invio dice si': gli errori sono le domande dove la risposta era no.
     for errore in errori:
         assert errore["user_answer"] in ("y", "Bianco") and errore["correct_answer"] in ("n", "Nero")
+
+
+def test_i_punteggi_dopo_un_file_che_non_si_leggeva(tmp_path, monkeypatch):
+    """R114: la bandiera dei punteggi non letti non tornava mai falsa: da li'
+    ogni salvataggio usciva in silenzio, e Memoboard diceva comunque che il
+    risultato era salvato. save_scores ora dice se ha scritto."""
+    from orologic_modules import memoboard_app, storage
+
+    file = tmp_path / "memoboard_scores.json"
+    file.write_text("{ guasto", encoding="utf-8")
+    monkeypatch.setattr(memoboard_app, "SCORES_FILE", str(file))
+    monkeypatch.setattr(storage, "metti_da_parte", lambda percorso: None)
+    monkeypatch.setitem(memoboard_app._PUNTEGGI, "non_letti", False)
+    assert memoboard_app.save_scores(memoboard_app.load_scores()) is False
+    # Il file torna buono: la lettura dopo azzera la bandiera.
+    file.write_text('{"colors": [], "knights": [], "bishops": [], "mixed": []}', encoding="utf-8")
+    punteggi = memoboard_app.load_scores()
+    punteggi["colors"].append({"username": "gabry", "net_per_minute": 3.0})
+    assert memoboard_app.save_scores(punteggi) is True
+    assert "Gabry" in file.read_text(encoding="utf-8")
+
+
+def test_una_misura_scritta_come_testo_non_fa_mettere_da_parte_il_file(tmp_path, monkeypatch):
+    """R114: una misura come "12.5" passava il controllo, poi l'ordinamento
+    falliva fra testo e numero, e l'intero file andava da parte come guasto."""
+    import json
+
+    from orologic_modules import memoboard_app
+
+    file = tmp_path / "memoboard_scores.json"
+    dati = {"colors": [{"username": "gabry", "net_per_minute": "12.5"}, {"username": "cris", "net_per_minute": 7.0}], "knights": [], "bishops": [], "mixed": []}
+    file.write_text(json.dumps(dati), encoding="utf-8")
+    monkeypatch.setattr(memoboard_app, "SCORES_FILE", str(file))
+    punteggi = memoboard_app.load_scores()
+    assert [r["username"] for r in punteggi["colors"]] == ["Gabry", "Cris"]
+    assert [p.name for p in tmp_path.iterdir()] == ["memoboard_scores.json"]
+
+
+def test_il_file_dei_punteggi_che_non_si_lascia_leggere_non_e_guasto(tmp_path, monkeypatch):
+    """R114: un file buono che in quel momento non si lasciava leggere, per
+    un antivirus o una sincronizzazione, andava da parte come guasto, come il
+    database di R7. Ora resta com'e', e la sessione non lo copre."""
+    import builtins
+
+    from orologic_modules import memoboard_app
+
+    file = tmp_path / "memoboard_scores.json"
+    file.write_text('{"colors": [{"username": "Gabry", "net_per_minute": 3.0}], "knights": [], "bishops": [], "mixed": []}', encoding="utf-8")
+    monkeypatch.setattr(memoboard_app, "SCORES_FILE", str(file))
+    vera = builtins.open
+
+    def bloccata(percorso, *argomenti, **opzioni):
+        if str(percorso) == str(file):
+            raise PermissionError("tenuto da un altro programma")
+        return vera(percorso, *argomenti, **opzioni)
+
+    monkeypatch.setattr(builtins, "open", bloccata)
+    punteggi = memoboard_app.load_scores()
+    monkeypatch.setattr(builtins, "open", vera)
+    assert [p.name for p in tmp_path.iterdir()] == ["memoboard_scores.json"]
+    assert memoboard_app.save_scores(punteggi) is False
+    assert "Gabry" in file.read_text(encoding="utf-8")

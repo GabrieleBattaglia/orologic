@@ -143,6 +143,10 @@ def _deduplicate_scores(data):
                 val = float(rec.get(metric_key, 0))
             except (TypeError, ValueError, AttributeError, ZeroDivisionError):
                 continue
+            # La misura scritta come testo, per esempio "12.5", diventa un
+            # numero: l'ordinamento falliva fra testo e numero, e il file
+            # intero andava da parte (R114).
+            rec[metric_key] = val
 
             if user not in best_by_user or val > float(best_by_user[user].get(metric_key, 0)):
                 best_by_user[user] = rec
@@ -160,12 +164,25 @@ def load_scores():
     Carica i punteggi dal file JSON ed elimina eventuali duplicati per utente.
     """
     default_structure = {"colors": [], "knights": [], "bishops": [], "mixed": []}
+    # Ogni lettura riparte da capo: la bandiera di una lettura fallita prima
+    # fermava i salvataggi per sempre (R114).
+    _PUNTEGGI["non_letti"] = False
     if not os.path.exists(SCORES_FILE):
         return default_structure
     try:
         with open(SCORES_FILE, encoding="utf-8") as f:
             data = json.load(f)
-
+    except ValueError as e:
+        return _punteggi_guasti(e, default_structure)
+    except OSError as e:
+        # Un file che c'e' ma non si lascia leggere non e' guasto: resta
+        # com'e', e la sessione non lo copre. Prima andava da parte come
+        # guasto, come il database di R7 (R114).
+        _PUNTEGGI["non_letti"] = True
+        print(_("Il file dei punteggi non si lascia leggere: {errore}").format(errore=e))
+        print(_("I punteggi di questa sessione non si salvano, e il file resta com'era."))
+        return default_structure
+    try:
         if not isinstance(data, dict):
             return default_structure
 
@@ -188,19 +205,24 @@ def load_scores():
         return _deduplicate_scores(default_structure)
     # Un esercizio che va storto non deve far perdere i punteggi.
     except Exception as e:  # noqa: BLE001
-        # Senza questo avviso le classifiche sparivano in silenzio: il
-        # primo salvataggio successivo le avrebbe cancellate per sempre.
-        copia = storage.metti_da_parte(SCORES_FILE)
-        print(_("Il file dei punteggi non e' leggibile: {errore}").format(errore=e))
-        if copia:
-            print(_("L'ho messo da parte come {copia}.").format(copia=copia))
-            print(_("Le classifiche ripartono da zero."))
-        else:
-            # Senza la copia il file resta com'e': prima l'uscita da
-            # Memoboard lo copriva con le classifiche vuote (R58).
-            _PUNTEGGI["non_letti"] = True
-            print(_("Non sono riuscita a metterlo da parte: i punteggi di questa sessione non si salvano."))
-        return default_structure
+        return _punteggi_guasti(e, default_structure)
+
+
+def _punteggi_guasti(errore, vuoti):
+    """Il file dei punteggi guasto va da parte, e le classifiche ripartono
+    da zero; senza la copia il file resta com'e', e la sessione non lo copre
+    (R58)."""
+    # Senza questo avviso le classifiche sparivano in silenzio: il primo
+    # salvataggio successivo le avrebbe cancellate per sempre.
+    copia = storage.metti_da_parte(SCORES_FILE)
+    print(_("Il file dei punteggi non e' leggibile: {errore}").format(errore=errore))
+    if copia:
+        print(_("L'ho messo da parte come {copia}.").format(copia=copia))
+        print(_("Le classifiche ripartono da zero."))
+    else:
+        _PUNTEGGI["non_letti"] = True
+        print(_("Non sono riuscita a metterlo da parte: i punteggi di questa sessione non si salvano."))
+    return vuoti
 
 
 # Il file dei punteggi che non si e' letto e non si e' potuto mettere da
@@ -211,15 +233,19 @@ _PUNTEGGI = {"non_letti": False}
 def save_scores(scores_data):
     """
     Salva il dizionario dei punteggi nel file JSON dopo la deduplicazione.
+    Restituisce vero se ha scritto: prima chi lo chiamava diceva salvato
+    anche quando non lo era (R114).
     """
     if _PUNTEGGI["non_letti"]:
-        return
+        return False
     try:
         cleaned_data = _deduplicate_scores(scores_data)
         storage.scrivi_json(SCORES_FILE, cleaned_data, indent=2)
     # Un esercizio che va storto non deve far perdere i punteggi.
     except Exception as e:  # noqa: BLE001
         print(_("Errore nel salvataggio dei punteggi: {e}").format(e=e))
+        return False
+    return True
 
 
 # --- FUNZIONI HELPER ---
@@ -595,8 +621,10 @@ def report_and_update_scores(
                 ex_list, key=lambda x: x.get(ranking_metric, 0), reverse=True
             )[:MAX_LEADERBOARD_ENTRIES]
             all_scores[exercise_name] = sorted_updated
-            save_scores(all_scores)
-            print(_("\nRisultato salvato in classifica con successo!"))
+            if save_scores(all_scores):
+                print(_("\nRisultato salvato in classifica con successo!"))
+            else:
+                print(_("\nIl risultato non si e' salvato in classifica."))
 
         if session_logs is not None:
             date_str = config.format_date_italian()
