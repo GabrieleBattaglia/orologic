@@ -1583,6 +1583,20 @@ def voce_delle_sfide(ricevute, inviate):
     return _("Sfide: {elenco}").format(elenco=", ".join(parti))
 
 
+def motivo_della_cadenza(limite, incremento, pubblica):
+    """Perche' Lichess non gioca la cadenza con la Board API, o None se la
+    gioca. Il tempo stimato, come lo conta Lichess, e' la base piu'
+    quaranta incrementi: sotto gli otto minuti e' blitz, sotto i tre bullet.
+    pubblica, per la ricerca di un avversario, vuole almeno il rapid; le
+    sfide dirette e contro il computer ammettono anche il blitz (R75)."""
+    stimato = limite + 40 * incremento
+    if pubblica and stimato < 480:
+        return _("Lichess, con le app come Orologic, nella ricerca di un avversario gioca solo rapid, classica e corrispondenza: almeno 8 minuti, contando la base piu' 40 incrementi.")
+    if stimato < 180:
+        return _("Lichess, con le app come Orologic, non gioca il bullet: almeno 3 minuti, contando la base piu' 40 incrementi.")
+    return None
+
+
 def get_game_params(for_seek=False, for_bot=False):
     limit = None
     inc = None
@@ -1604,7 +1618,15 @@ def get_game_params(for_seek=False, for_bot=False):
             if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
                 limit = int(parts[0]) * 60
                 inc = int(parts[1])
-                break
+                # La Board API gioca solo rapid, classica e corrispondenza; il
+                # blitz anche nelle sfide dirette e contro il computer (la
+                # specifica, Restrictions). Prima nessun controllo (R75).
+                motivo = motivo_della_cadenza(limit, inc, for_seek)
+                if motivo is None:
+                    break
+                print(motivo)
+                limit = inc = None
+                continue
         print(_("Formato non valido. Usa minuti+secondi, ad esempio 10+0 o 5+3."))
 
     if enter_escape(

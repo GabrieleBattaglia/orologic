@@ -245,3 +245,17 @@ def test_le_squadre_nelle_varie_forme():
     assert trova({"teamBattle": {"teams": ["a", "b"]}}) == {"a": "a", "b": "b"}
     assert trova({"teamBattle": {"teams": [{"id": "a", "name": "Alfa"}]}}) == {"a": "Alfa"}
     assert trova({}) == {}
+
+
+def test_le_cadenze_della_board_api():
+    """R75: le sfide non controllavano la cadenza, mentre la Board API
+    gioca solo rapid, classica e corrispondenza, e il blitz nelle sfide
+    dirette."""
+    from orologic_modules import lichess_app
+
+    motivo = lichess_app.motivo_della_cadenza
+    assert motivo(600, 0, True) is None
+    assert motivo(300, 3, True) is not None
+    assert motivo(300, 3, False) is None
+    assert motivo(60, 0, False) is not None and "bullet" in motivo(60, 0, False)
+    assert motivo(120, 2, False) is None
