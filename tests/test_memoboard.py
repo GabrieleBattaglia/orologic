@@ -197,3 +197,48 @@ def test_esc_nell_area_arriva_una_volta_sola(finestra):
     _carattere(finestra, wx.WXK_ESCAPE)
     assert pompa(lambda: len(esiti) == 2)
     assert esiti == ["\x1b", "niente"]
+
+
+def _senza_attese(monkeypatch, tasto="\r"):
+    """Gli esercizi senza pause, senza suoni e con un tasto solo, sempre
+    quello."""
+    monkeypatch.setattr(memoboard_app.strato, "svuota_tastiera", lambda: None)
+    monkeypatch.setattr(memoboard_app, "key", lambda: tasto)
+    monkeypatch.setattr(memoboard_app.time, "sleep", lambda _secondi: None)
+    monkeypatch.setattr(memoboard_app, "Acusticator", lambda *_a, **_k: None)
+
+
+def test_l_esercizio_misto_usa_il_ciclo_degli_altri(monkeypatch):
+    """R143: l'esercizio misto teneva tre copie del ciclo degli esercizi a
+    due risposte, e una sua copia delle mosse del cavallo. Ora passa dallo
+    stesso ciclo degli altri tre."""
+    giri = []
+    vero = memoboard_app._esercizio_a_due_risposte
+
+    def ciclo(ripetizioni, *altri):
+        giri.append(ripetizioni)
+        return vero(ripetizioni, *altri)
+
+    monkeypatch.setattr(memoboard_app, "_esercizio_a_due_risposte", ciclo)
+    _senza_attese(monkeypatch)
+    memoboard_app.ExMixed(4)
+    assert giri == [4]
+
+
+def test_l_esercizio_misto_e_i_suoi_errori(monkeypatch, capsys):
+    """R143, quello che non cambia: le domande dei tre esercizi a caso, e
+    negli errori Bianco e Nero per i colori, y e n per cavalli e alfieri.
+    Esc dice sempre no: gli errori sono le domande col si'."""
+    random.seed(143)
+    _senza_attese(monkeypatch, "\x1b")
+    _punti, _elenco, _durata, tempi, giuste, errori, esiti = memoboard_app.ExMixed(40)
+    uscita = capsys.readouterr().out
+    assert len(tempi) == len(esiti) == 40 and giuste == esiti.count(True)
+    assert all(domanda in uscita for domanda in ("Colore per", "Cavallo:", "Alfiere:"))
+    assert len(errori) == esiti.count(False) > 0
+    for errore in errori:
+        if errore["question"].startswith("Colore di"):
+            assert (errore["user_answer"], errore["correct_answer"]) == ("Nero", "Bianco")
+        else:
+            assert (errore["user_answer"], errore["correct_answer"]) == ("n", "y")
+    assert {errore["question"].split()[0] for errore in errori} == {"Colore", "Mossa", "Stessa"}
