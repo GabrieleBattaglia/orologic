@@ -797,42 +797,63 @@ def _corpo_del_prompt(game_state, mio, avversario, stati=(), inizio="", fine=" "
     return modello_prompt.prompt_per_input(dati, inizio=inizio, fine=fine)
 
 
-def _play_worker(url, token, q, stop_event, tentativi=3):
-    """Segue la partita e, se la connessione cade, prova a riprenderla.
+# Le pause fra un tentativo e l'altro di riprendere il flusso della partita
+# crescono, raddoppiando, fino alla massima; i tentativi falliti di fila
+# prima di arrendersi, una decina di minuti senza rete (R19).
+PAUSA_INIZIALE = 1
+PAUSA_MASSIMA = 30
+TENTATIVI_DI_FILA = 25
+
+
+def _partita_finita(msg):
+    """Vero se il messaggio del flusso dice che la partita e' finita."""
+    if msg.get("type") == "gameFull":
+        stato = (msg.get("state") or {}).get("status")
+    elif msg.get("type") == "gameState":
+        stato = msg.get("status")
+    else:
+        return False
+    return stato not in (None, "created", "started")
+
+
+def _play_worker(url, token, q, stop_event, tentativi=TENTATIVI_DI_FILA):
+    """Segue la partita e, se la connessione cade, prova a riprenderla
+    finche' la partita e' in corso, con pause che crescono; il conto dei
+    tentativi riparte a ogni riga ricevuta.
 
     Prima bastava un singhiozzo di rete per abbandonare la partita mentre su
-    Lichess il tempo continuava a scorrere.
+    Lichess il tempo continuava a scorrere; poi i tentativi erano tre in
+    tutta la partita, a due secondi l'uno dall'altro, e senza rete finivano
+    in pochi secondi, con le domande di fine partita a partita in corso
+    (R19).
     """
-    for tentativo in range(1, tentativi + 1):
-        if stop_event.is_set():
-            break
+    falliti = 0
+    finita = False
+    while not stop_event.is_set():
         risposta, errore = rete.apri(url, token=token, timeout=rete.TIMEOUT_STREAM)
-        if errore:
-            if tentativo >= tentativi:
-                q.put({"type": "error", "error": errore})
-                break
-            q.put({"type": "riconnessione", "tentativo": tentativo, "motivo": errore})
-            time.sleep(2)
-            continue
-        try:
-            with risposta as resp:
-                for line in resp:
-                    if stop_event.is_set():
-                        break
-                    if line.strip():
-                        q.put(json.loads(line.decode("utf-8")))
-            # Lo stream si e' chiuso senza errori: se la partita non e' finita
-            # ritentiamo, altrimenti il ciclo esterno chiudera' comunque.
-            if stop_event.is_set() or tentativo >= tentativi:
-                break
-            q.put({"type": "riconnessione", "tentativo": tentativo, "motivo": ""})
-            time.sleep(1)
-        except (OSError, ValueError) as e:
-            if tentativo >= tentativi:
-                q.put({"type": "error", "error": str(e)})
-                break
-            q.put({"type": "riconnessione", "tentativo": tentativo, "motivo": str(e)})
-            time.sleep(2)
+        if not errore:
+            try:
+                with risposta as resp:
+                    for line in resp:
+                        if stop_event.is_set():
+                            break
+                        if line.strip():
+                            msg = json.loads(line.decode("utf-8"))
+                            falliti = 0
+                            finita = finita or _partita_finita(msg)
+                            q.put(msg)
+                errore = ""
+            except (OSError, ValueError) as e:
+                errore = str(e)
+        # A partita finita il flusso si chiude, e non si riprende.
+        if stop_event.is_set() or finita:
+            break
+        falliti += 1
+        if falliti >= tentativi:
+            q.put({"type": "error", "error": errore or _("Lichess ha chiuso il collegamento.")})
+            break
+        q.put({"type": "riconnessione", "tentativo": falliti, "motivo": errore})
+        stop_event.wait(min(PAUSA_MASSIMA, PAUSA_INIZIALE * 2 ** (falliti - 1)))
     q.put({"type": "eof"})
 
 
