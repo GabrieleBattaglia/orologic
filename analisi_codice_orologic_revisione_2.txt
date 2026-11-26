@@ -30,7 +30,7 @@ R56. Medio, logica, da decidere con Gabriele. orologic_modules/easyfish/image_ex
 PGN, ricerca, archivi.
 Orolichess.
 Finestra.
-R88. Medio, DRY. orologic_modules/dialoghi.py righe 43, 638, 786 e 965; finestra_archivi.py riga 986; finestra_orologi.py riga 674. La grazia dell'Invio è una costante fissa di 0,65 secondi, ricopiata in cinque punti, mentre GBwx la calcola dalle impostazioni di Windows ma la tiene privata; il menu della partita, la promozione e la plancia non ne hanno nessuna. Letto; dove serva davvero è da verificare con NVDA.
+R88. Medio, DRY, da decidere con Gabriele. La grazia dell'Invio: nel collaudo del 26 novembre 2026 l'Invio tenuto nella plancia non sceglie da solo, quindi il difetto non si vede. Resta che GBwx calcola la grazia dalle impostazioni di Windows ma la tiene privata, _grazia_invio, e Orologic usa la sua costante fissa: da proporre come issue di GBUtils, col si' di Gabriele.
 Regole generali, pacchetto e prove.
 Rilievi bassi.
 R94. Medio, DRY, da decidere con Gabriele. I tre esercizi di Memoboard a due risposte hanno un ciclo solo dalla 9.5.92. Restano: il riconoscimento della fine partita in quattro copie divergenti, game_flow.py, easyfish_app.py e due in game_mode.py, da unire in board_utils dopo la scelta della regola delle patte di R9; e lo scaricamento a blocchi scritto quattro volte, stockfish_installer.py, pgn_extract.py, archivio_pgn.py e pgn_search.py, che in GBUtils e' privato: da proporre come issue di GBUtils, col si' di Gabriele.
@@ -55,8 +55,6 @@ nel_cestino: accetta un file per volta e ricontrolla il cestino a ogni file; ved
 Scaricamento a blocchi con avanzamento, fermata e controllo della lunghezza: in GBUtils è privato, in Orologic è scritto quattro volte; vedi R94.
 Riepilogo.
 Critici 6, alti 22, medi 66, bassi 10: 104 rilievi.
-Correzione del 26 novembre 2026, dalla 9.5.1 alla 9.5.93: 93 rilievi chiusi, ognuno con la sua prova automatica; R8 anche in un processo vero, con Stockfish acceso e la chiusura come Alt+F4, senza motori rimasti.
-Ne restano 11, tutti in attesa di Gabriele.
-Decisioni: R9, quale regola per le patte richiedibili; R11, il testo della conferma di Alt+F4 dentro una partita; R20, quali varianti di Lichess tenere; R56, l'ombreggiatura dei pezzi; R94, la fine partita in una funzione sola dopo R9, e lo scaricamento a blocchi in GBUtils; R100, i suoni uguali di due eventi; R102, il piano della GUI nella radice; R103, il nome del computer nel tag Site.
-Prove alla tastiera, con NVDA e la barra: R86, R88 e R89. Sono in collaudo.txt, con R77, R90, R72, R18 e R19, che sono corretti ma vogliono le tue orecchie, NVDA o la rete vera.
-Le quattro issue di GBUtils della sezione di sopra si aprono col tuo si'.
+Correzione del 26 novembre 2026, dalla 9.5.1 alla 9.5.95: 95 rilievi chiusi, ognuno con la sua prova automatica; R8 anche in un processo vero, con Stockfish acceso e la chiusura come Alt+F4, senza motori rimasti. R86 e R89 li ha trovati il collaudo di Gabriele, e sono corretti nella 9.5.94 e nella 9.5.95.
+Ne restano 9, tutti decisioni di Gabriele: R9, quale regola per le patte richiedibili; R11, il testo della conferma di Alt+F4 dentro una partita; R20, quali varianti di Lichess tenere; R56, l'ombreggiatura dei pezzi; R88, la grazia dell'Invio di GBwx; R94, la fine partita in una funzione sola dopo R9, e lo scaricamento a blocchi in GBUtils; R100, i suoni uguali di due eventi; R102, il piano della GUI nella radice; R103, il nome del computer nel tag Site.
+Le quattro issue di GBUtils della sezione di sopra si aprono col si' di Gabriele.

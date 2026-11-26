@@ -199,3 +199,25 @@ def test_nessun_separatore_grafico_nel_programma():
                         if not riga.lstrip().startswith("#") and vietati.search(riga):
                             trovati.append(f"{nome}:{numero}")
     assert trovati == []
+
+
+@pytest.mark.parametrize(
+    ("mosse", "attese", "codice"),
+    [
+        ("1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 *", 9, "C53"),
+        ("1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 *", 10, "B90"),
+        ("1. Nf3 d5 2. g3 Nf6 3. Bg2 c6 4. O-O Bg4 5. d3 Nbd7 *", 8, "A07"),
+        # Dopo 1.e3 nessuna posizione e' in eco.pgn, nemmeno per trasposizione.
+        ("1. e3 Nf6 2. Nc3 d5 3. d4 e6 4. Nf3 c5 5. Ne5 Nc6 *", 1, "A00"),
+    ],
+)
+def test_le_semimosse_di_teoria_dell_analisi_automatica(mosse, attese, codice):
+    """Dal collaudo di Gabriele, 26 novembre 2026: l'analisi automatica salta
+    le mosse di teoria fino all'ultima posizione di eco.pgn."""
+    import chess.pgn
+
+    from orologic_modules import board_utils
+
+    eco = board_utils.LoadEcoDatabaseWithFEN("eco.pgn")
+    voce, semimosse = board_utils.rileva_apertura(list(chess.pgn.read_game(io.StringIO(mosse)).mainline_moves()), eco)
+    assert (semimosse, voce["eco"]) == (attese, codice)
