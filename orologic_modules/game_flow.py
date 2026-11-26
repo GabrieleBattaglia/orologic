@@ -798,7 +798,10 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
             elif cmd in _COMANDI_RISULTATO:
                 assegna_risultato(cmd, game_state)
             elif cmd.startswith(".c"):
-                commenta_mossa(cmd, game_state)
+                # Il testo com'e' stato scritto: cmd e' in minuscolo e senza
+                # i punti finali, e "Rossi propone patta." entrava nel PGN
+                # come "rossi propone patta" (R48).
+                commenta_mossa(u, game_state)
             else:
                 Acusticator(
                     ["e3", 1, 0, config.VOLUME, "a2", 1, 0, config.VOLUME],

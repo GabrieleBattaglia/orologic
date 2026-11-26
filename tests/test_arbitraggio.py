@@ -142,3 +142,14 @@ def test_la_ripresa_mette_da_parte_il_file_rotto_e_non_cancella_quello_buono(tmp
     with pytest.raises(RuntimeError):
         orologic.riprendi_dal_salvataggio(str(buono))
     assert buono.exists()
+
+
+
+def test_il_commento_resta_come_l_ha_scritto_l_arbitro(finestra, monkeypatch):
+    """R48: il commento .c arrivava in minuscolo e senza i punti finali."""
+    commenti = []
+    monkeypatch.setattr(game_flow, "commenta_mossa", lambda testo, _stato: commenti.append(testo))
+    _arbitraggio_avviato(finestra, monkeypatch)
+    for passo in ("e4", ".p", ".c Rossi propone patta.", ".p"):
+        _scrivi(finestra, passo)
+    assert commenti == [".c Rossi propone patta."]
