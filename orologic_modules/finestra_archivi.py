@@ -167,10 +167,21 @@ class FinestraScaricamento(wx.Dialog):
         self.stato.SetMinSize(wx.Size(-1, self.stato.GetCharHeight() * 4))
         adatta_finestra(self, pannello, (480, 240))
         self.Maximize()
-        self.Bind(wx.EVT_BUTTON, lambda _evento: self._fermato.set(), id=wx.ID_CANCEL)
-        self.Bind(wx.EVT_CLOSE, lambda _evento: self._fermato.set())
+        self.Bind(wx.EVT_BUTTON, lambda _evento: self._annulla(), id=wx.ID_CANCEL)
+        self.Bind(wx.EVT_CLOSE, lambda _evento: self._annulla())
         self.stato.SetFocus()
-        threading.Thread(target=self._nel_filo, name="pgn-extract, scaricamento", daemon=True).start()
+        filo = threading.Thread(target=self._nel_filo, name="pgn-extract, scaricamento", daemon=True)
+        _SCARICAMENTO["filo"] = filo
+        filo.start()
+
+    def _annulla(self):
+        """Annulla, o la chiusura: la finestra se ne va subito, e la pulizia
+        la fa il filo, quando la rete gli risponde. Prima si accendeva solo
+        il segnale, e con la rete ferma si aspettava fino a due minuti, in
+        silenzio (R67)."""
+        self._fermato.set()
+        self.errore = _("Scaricamento fermato.")
+        finestra_ricerca.finisci(self, wx.ID_CANCEL)
 
     def _nel_filo(self):
         try:
@@ -192,8 +203,17 @@ class FinestraScaricamento(wx.Dialog):
         finestra_ricerca.finisci(self, wx.ID_OK if versione else wx.ID_CANCEL)
 
 
+# Il filo dell'ultimo scaricamento: annullato, puo' restare vivo per un po'
+# ad aspettare la rete, e uno nuovo non deve lavorare nella stessa cartella
+# (R67).
+_SCARICAMENTO = {"filo": None}
+
+
 def scarica_con_la_finestra(genitore):
     """(versione, errore) dello scaricamento; le prove lo sostituiscono."""
+    filo = _SCARICAMENTO["filo"]
+    if filo is not None and filo.is_alive():
+        return None, _("Lo scaricamento di prima si sta ancora fermando: riprova fra poco.")
     with FinestraScaricamento(genitore) as dialogo:
         dialogo.ShowModal()
         return dialogo.versione, dialogo.errore or _("Scaricamento fermato.")

@@ -566,3 +566,31 @@ def test_il_sorgente_scritto_a_mano_diventa_assoluto(aperta):
     assert prova.dialogo.percorso_del_sorgente() == os.path.abspath("partite.pgn")
     prova.dialogo.sorgente.SetValue("")
     assert prova.dialogo.percorso_del_sorgente() == ""
+
+
+def test_annulla_chiude_subito_lo_scaricamento(app, monkeypatch):
+    """R67: Annulla accendeva solo il segnale, e con la rete ferma si
+    aspettava fino a due minuti, in silenzio."""
+    import threading
+
+    rete_ferma = threading.Event()
+
+    def scarica(_avanzamento, fermato):
+        # La rete non risponde finche' non la si sblocca.
+        rete_ferma.wait(5)
+        return None, "fermato" if fermato() else None
+
+    monkeypatch.setattr(finestra_archivi.pgn_extract, "scarica", scarica)
+    dialogo = finestra_archivi.FinestraScaricamento(None)
+    try:
+        dialogo.Show()
+        dialogo._annulla()
+        assert not dialogo.IsShown() and dialogo.errore == "Scaricamento fermato."
+        # Il filo e' ancora li' ad aspettare la rete: un altro scaricamento aspetta.
+        versione, errore = finestra_archivi.scarica_con_la_finestra(None)
+        assert versione is None and errore.startswith("Lo scaricamento di prima si sta ancora fermando")
+    finally:
+        rete_ferma.set()
+        finestra_archivi._SCARICAMENTO["filo"].join(5)
+        pompa(lambda: False, 0.1)
+        dialogo.Destroy()

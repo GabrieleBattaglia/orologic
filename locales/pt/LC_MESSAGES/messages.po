@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-26 08:09+0100\n"
+"POT-Creation-Date: 2026-11-26 08:10+0100\n"
 "PO-Revision-Date: 2025-07-18 22:56+0200\n"
 "Last-Translator: Marcos Antonio Schllosser <escoladexadrez@gmail.com>\n"
 "Language-Team: pt <LL@li.org>\n"
@@ -1630,7 +1630,7 @@ msgstr "Pesquisa PGN"
 msgid "Impostazioni (motore, nomi, analisi, volume)"
 msgstr "Configurações (motor, nomes, análise, volume)"
 
-#: orologic_modules/config.py:229 orologic_modules/finestra_archivi.py:303
+#: orologic_modules/config.py:229 orologic_modules/finestra_archivi.py:323
 msgid "Esci"
 msgstr "Sair"
 
@@ -3310,12 +3310,18 @@ msgstr "Download do pgn-extract"
 msgid "Collegamento al sito di pgn-extract..."
 msgstr "Conectando ao site do pgn-extract..."
 
-#: orologic_modules/finestra_archivi.py:199
+#: orologic_modules/finestra_archivi.py:183
+#: orologic_modules/finestra_archivi.py:219
 #: orologic_modules/pgn_extract.py:1271
 msgid "Scaricamento fermato."
 msgstr "Download interrompido."
 
-#: orologic_modules/finestra_archivi.py:208
+#: orologic_modules/finestra_archivi.py:216
+msgid "Lo scaricamento di prima si sta ancora fermando: riprova fra poco."
+msgstr ""
+"A transferência anterior ainda está a parar: tenta novamente daqui a pouco."
+
+#: orologic_modules/finestra_archivi.py:228
 msgid ""
 "Per la gestione degli archivi Orologic usa pgn-extract, il programma libero "
 "di David J. Barnes, ma non c'e' ancora. Lo scarico dal suo sito, con la "
@@ -3325,21 +3331,21 @@ msgstr ""
 "de David J. Barnes, mas ele ainda não está aqui. Baixo do site dele, com o "
 "guia e a licença?"
 
-#: orologic_modules/finestra_archivi.py:216
-#: orologic_modules/finestra_archivi.py:415
+#: orologic_modules/finestra_archivi.py:236
+#: orologic_modules/finestra_archivi.py:435
 #, python-brace-format
 msgid "Scaricamento non riuscito: {motivo}"
 msgstr "O download falhou: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:217
+#: orologic_modules/finestra_archivi.py:237
 msgid "Vuoi indicare tu dov'e' pgn-extract.exe sul tuo computer?"
 msgstr "Você quer indicar onde está o pgn-extract.exe no seu computador?"
 
-#: orologic_modules/finestra_archivi.py:223
+#: orologic_modules/finestra_archivi.py:243
 msgid "Il file scelto non risponde come pgn-extract."
 msgstr "O arquivo escolhido não responde como o pgn-extract."
 
-#: orologic_modules/finestra_archivi.py:224
+#: orologic_modules/finestra_archivi.py:244
 msgid ""
 "Senza pgn-extract la gestione degli archivi non e' disponibile. Torno al "
 "menu principale."
@@ -3347,65 +3353,65 @@ msgstr ""
 "Sem o pgn-extract o gerenciamento de arquivos não está disponível. Volto ao "
 "menu principal."
 
-#: orologic_modules/finestra_archivi.py:270
+#: orologic_modules/finestra_archivi.py:290
 msgid "&Sorgente"
 msgstr "&Origem"
 
-#: orologic_modules/finestra_archivi.py:275
+#: orologic_modules/finestra_archivi.py:295
 msgid "Se&leziona il file"
 msgstr "Se&lecionar o arquivo"
 
-#: orologic_modules/finestra_archivi.py:276
+#: orologic_modules/finestra_archivi.py:296
 #: orologic_modules/finestra_ricerca.py:378
 msgid "Dagli &appunti"
 msgstr "Da área de &transferência"
 
-#: orologic_modules/finestra_archivi.py:282
+#: orologic_modules/finestra_archivi.py:302
 msgid "&Disponibili"
 msgstr "&Disponíveis"
 
-#: orologic_modules/finestra_archivi.py:283
+#: orologic_modules/finestra_archivi.py:303
 msgid "Parametri sc&elti"
 msgstr "Parâmetros &escolhidos"
 
-#: orologic_modules/finestra_archivi.py:284
+#: orologic_modules/finestra_archivi.py:304
 msgid "Catene sal&vate"
 msgstr "Cadeias sal&vas"
 
-#: orologic_modules/finestra_archivi.py:286
+#: orologic_modules/finestra_archivi.py:306
 msgid "Des&tinazione"
 msgstr "Desti&no"
 
-#: orologic_modules/finestra_archivi.py:291
+#: orologic_modules/finestra_archivi.py:311
 msgid "Scegli la desti&nazione"
 msgstr "Escol&her o destino"
 
-#: orologic_modules/finestra_archivi.py:295
+#: orologic_modules/finestra_archivi.py:315
 msgid "C&omando"
 msgstr "&Comando"
 
-#: orologic_modules/finestra_archivi.py:296
+#: orologic_modules/finestra_archivi.py:316
 msgid "&Uscita"
 msgstr "&Saída"
 
-#: orologic_modules/finestra_archivi.py:298
+#: orologic_modules/finestra_archivi.py:318
 msgid "A&pplica"
 msgstr "&Aplicar"
 
-#: orologic_modules/finestra_archivi.py:300
-#: orologic_modules/finestra_archivi.py:630
+#: orologic_modules/finestra_archivi.py:320
+#: orologic_modules/finestra_archivi.py:650
 msgid "Salva la catena"
 msgstr "Salvar a cadeia"
 
-#: orologic_modules/finestra_archivi.py:301
+#: orologic_modules/finestra_archivi.py:321
 msgid "Apri il reso&conto"
 msgstr "Abrir o &relatório"
 
-#: orologic_modules/finestra_archivi.py:302
+#: orologic_modules/finestra_archivi.py:322
 msgid "&Guida di pgn-extract"
 msgstr "&Guia do pgn-extract"
 
-#: orologic_modules/finestra_archivi.py:403
+#: orologic_modules/finestra_archivi.py:423
 #, python-brace-format
 msgid ""
 "Scaricato {nome}, il catalogo delle opzioni di pgn-extract: ora Orologic "
@@ -3414,107 +3420,107 @@ msgstr ""
 "Baixado {nome}, o catálogo das opções do pgn-extract: agora o Orologic "
 "também conhece os conflitos entre as opções."
 
-#: orologic_modules/finestra_archivi.py:405
+#: orologic_modules/finestra_archivi.py:425
 #, python-brace-format
 msgid "Aggiornamenti di pgn-extract non verificati: {motivo}"
 msgstr "Atualizações do pgn-extract não verificadas: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:419
+#: orologic_modules/finestra_archivi.py:439
 #, python-brace-format
 msgid "Scaricato pgn-extract {versione}."
 msgstr "Baixado o pgn-extract {versione}."
 
-#: orologic_modules/finestra_archivi.py:466
+#: orologic_modules/finestra_archivi.py:486
 #, python-brace-format
 msgid "Il PGN degli appunti, {n} partite"
 msgstr "O PGN da área de transferência, {n} partidas"
 
-#: orologic_modules/finestra_archivi.py:512
+#: orologic_modules/finestra_archivi.py:532
 msgid ""
 "Negli appunti non c'e' ne' il percorso di un file PGN ne' un testo PGN."
 msgstr ""
 "Na área de transferência não há nem o caminho de um arquivo PGN nem um texto"
 " PGN."
 
-#: orologic_modules/finestra_archivi.py:575
+#: orologic_modules/finestra_archivi.py:595
 #, python-brace-format
 msgid "Aggiunto: {voce}."
 msgstr "Adicionado: {voce}."
 
-#: orologic_modules/finestra_archivi.py:588
+#: orologic_modules/finestra_archivi.py:608
 #, python-brace-format
 msgid "Tolto: {voce}."
 msgstr "Removido: {voce}."
 
-#: orologic_modules/finestra_archivi.py:611
+#: orologic_modules/finestra_archivi.py:631
 #, python-brace-format
 msgid "Catena {nome}: {n} parametri fra gli scelti."
 msgstr "Cadeia {nome}: {n} parâmetros entre os escolhidos."
 
-#: orologic_modules/finestra_archivi.py:613
+#: orologic_modules/finestra_archivi.py:633
 #, python-brace-format
 msgid "Questo pgn-extract non ha: {voci}."
 msgstr "Este pgn-extract não tem: {voci}."
 
-#: orologic_modules/finestra_archivi.py:615
+#: orologic_modules/finestra_archivi.py:635
 #, python-brace-format
 msgid "Il valore non va piu' bene, e va riscritto: {voci}."
 msgstr "O valor não serve mais e precisa ser reescrito: {voci}."
 
-#: orologic_modules/finestra_archivi.py:627
+#: orologic_modules/finestra_archivi.py:647
 msgid "Non ci sono parametri scelti da salvare."
 msgstr "Não há parâmetros escolhidos para salvar."
 
-#: orologic_modules/finestra_archivi.py:630
+#: orologic_modules/finestra_archivi.py:650
 msgid "Il nome della catena: "
 msgstr "O nome da cadeia: "
 
-#: orologic_modules/finestra_archivi.py:639
+#: orologic_modules/finestra_archivi.py:659
 #, python-brace-format
 msgid "C'e' gia' una catena {nome}: la sostituisco con quella di adesso?"
 msgstr "Já existe uma cadeia {nome}: substituo pela atual?"
 
-#: orologic_modules/finestra_archivi.py:646
+#: orologic_modules/finestra_archivi.py:666
 #, python-brace-format
 msgid ""
 "Le catene salvate sono gia' {n}: per salvarne una nuova, cancellane una con "
 "Canc."
 msgstr "Já há {n} cadeias salvas: para salvar uma nova, apague uma com Del."
 
-#: orologic_modules/finestra_archivi.py:653
+#: orologic_modules/finestra_archivi.py:673
 #, python-brace-format
 msgid "Salvata la catena {nome}."
 msgstr "Cadeia {nome} salva."
 
-#: orologic_modules/finestra_archivi.py:665
+#: orologic_modules/finestra_archivi.py:685
 #, python-brace-format
 msgid "Cancellata la catena {nome}."
 msgstr "Cadeia {nome} apagada."
 
-#: orologic_modules/finestra_archivi.py:678
+#: orologic_modules/finestra_archivi.py:698
 #, python-brace-format
 msgid "{voce} non vuole un valore."
 msgstr "{voce} não leva valor."
 
-#: orologic_modules/finestra_archivi.py:706
+#: orologic_modules/finestra_archivi.py:726
 msgid "(senza valore)"
 msgstr "(sem valor)"
 
-#: orologic_modules/finestra_archivi.py:764
+#: orologic_modules/finestra_archivi.py:784
 msgid "Manca il file sorgente."
 msgstr "Falta o arquivo de origem."
 
-#: orologic_modules/finestra_archivi.py:766
+#: orologic_modules/finestra_archivi.py:786
 #, python-brace-format
 msgid "Il file sorgente {percorso} non c'e'."
 msgstr "O arquivo de origem {percorso} não existe."
 
-#: orologic_modules/finestra_archivi.py:769
+#: orologic_modules/finestra_archivi.py:789
 #, python-brace-format
 msgid "Manca il valore di {voce}."
 msgstr "Falta o valor de {voce}."
 
-#: orologic_modules/finestra_archivi.py:780
+#: orologic_modules/finestra_archivi.py:800
 #, python-brace-format
 msgid ""
 "Il file di {voce} non puo' essere un file sorgente: pgn-extract lo "
@@ -3523,22 +3529,22 @@ msgstr ""
 "O arquivo de {voce} não pode ser um arquivo de origem: o pgn-extract o "
 "esvaziaria."
 
-#: orologic_modules/finestra_archivi.py:782
+#: orologic_modules/finestra_archivi.py:802
 #, python-brace-format
 msgid "Il file di {voce} non puo' essere la destinazione."
 msgstr "O arquivo de {voce} não pode ser o destino."
 
-#: orologic_modules/finestra_archivi.py:785
+#: orologic_modules/finestra_archivi.py:805
 msgid "Manca la destinazione."
 msgstr "Falta o destino."
 
-#: orologic_modules/finestra_archivi.py:787
+#: orologic_modules/finestra_archivi.py:807
 #: orologic_modules/pgn_extract.py:572
 #, python-brace-format
 msgid "La cartella {cartella} non c'e'."
 msgstr "A pasta {cartella} não existe."
 
-#: orologic_modules/finestra_archivi.py:791
+#: orologic_modules/finestra_archivi.py:811
 msgid ""
 "La destinazione non puo' essere un file sorgente: pgn-extract lo leggerebbe "
 "e lo scriverebbe insieme, rovinandolo."
@@ -3546,12 +3552,12 @@ msgstr ""
 "O destino não pode ser um arquivo de origem: o pgn-extract o leria e o "
 "escreveria ao mesmo tempo, estragando-o."
 
-#: orologic_modules/finestra_archivi.py:796
+#: orologic_modules/finestra_archivi.py:816
 #, python-brace-format
 msgid " e altri {n}"
 msgstr " e mais {n}"
 
-#: orologic_modules/finestra_archivi.py:797
+#: orologic_modules/finestra_archivi.py:817
 #, python-brace-format
 msgid ""
 "Nella cartella {cartella} ci sono gia' {nomi}: pgn-extract li "
@@ -3560,7 +3566,7 @@ msgstr ""
 "Na pasta {cartella} já estão {nomi}: o pgn-extract iria sobrescrevê-los, ou "
 "acrescentar-lhes as partidas. Escolhe uma pasta vazia."
 
-#: orologic_modules/finestra_archivi.py:804
+#: orologic_modules/finestra_archivi.py:824
 #, python-brace-format
 msgid ""
 "pgn-extract non sa aprire {percorso}: il nome ha caratteri fuori dalla "
@@ -3570,111 +3576,111 @@ msgstr ""
 "página de códigos do Windows. Muda o nome do ficheiro, ou da pasta, com "
 "letras simples."
 
-#: orologic_modules/finestra_archivi.py:812
+#: orologic_modules/finestra_archivi.py:832
 msgid "appunti.pgn"
 msgstr "area-de-transferencia.pgn"
 
-#: orologic_modules/finestra_archivi.py:818
+#: orologic_modules/finestra_archivi.py:838
 msgid "manca"
 msgstr "faltando"
 
-#: orologic_modules/finestra_archivi.py:846
+#: orologic_modules/finestra_archivi.py:866
 #, python-brace-format
 msgid "La copia di sicurezza di {file} non si fa: {motivo}"
 msgstr "A cópia de segurança de {file} não pode ser feita: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:848
+#: orologic_modules/finestra_archivi.py:868
 #, python-brace-format
 msgid "La copia di sicurezza di {file} e' {copia}."
 msgstr "A cópia de segurança de {file} é {copia}."
 
-#: orologic_modules/finestra_archivi.py:868
+#: orologic_modules/finestra_archivi.py:888
 msgid "pgn-extract al lavoro..."
 msgstr "pgn-extract trabalhando..."
 
-#: orologic_modules/finestra_archivi.py:887
+#: orologic_modules/finestra_archivi.py:907
 #, python-brace-format
 msgid "pgn-extract al lavoro: {n} partite riportate."
 msgstr "pgn-extract trabalhando: {n} partidas relatadas."
 
-#: orologic_modules/finestra_archivi.py:906
+#: orologic_modules/finestra_archivi.py:926
 #, python-brace-format
 msgid "pgn-extract non e' partito: {motivo}"
 msgstr "O pgn-extract não iniciou: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:908
+#: orologic_modules/finestra_archivi.py:928
 msgid "Fermato: la destinazione non e' cambiata."
 msgstr "Interrompido: o destino não mudou."
 
-#: orologic_modules/finestra_archivi.py:911
+#: orologic_modules/finestra_archivi.py:931
 #, python-brace-format
 msgid "pgn-extract ha finito col codice {codice}."
 msgstr "O pgn-extract terminou com o código {codice}."
 
-#: orologic_modules/finestra_archivi.py:920
+#: orologic_modules/finestra_archivi.py:940
 #, python-brace-format
 msgid "Finito in {secondi:.1f} secondi."
 msgstr "Concluído em {secondi:.1f} segundos."
 
-#: orologic_modules/finestra_archivi.py:927
+#: orologic_modules/finestra_archivi.py:947
 #, python-brace-format
 msgid "Il resoconto completo e' in {percorso}."
 msgstr "O relatório completo está em {percorso}."
 
-#: orologic_modules/finestra_archivi.py:942
+#: orologic_modules/finestra_archivi.py:962
 msgid "La destinazione non e' cambiata."
 msgstr "O destino não mudou."
 
-#: orologic_modules/finestra_archivi.py:946
+#: orologic_modules/finestra_archivi.py:966
 #, python-brace-format
 msgid "La destinazione non si scrive: {motivo}"
 msgstr "O destino não pode ser gravado: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:947
+#: orologic_modules/finestra_archivi.py:967
 #, python-brace-format
 msgid "Scritto: {destinazione}."
 msgstr "Gravado: {destinazione}."
 
-#: orologic_modules/finestra_archivi.py:949
+#: orologic_modules/finestra_archivi.py:969
 #, python-brace-format
 msgid "La copia di sicurezza del file di prima e' {copia}."
 msgstr "A cópia de segurança do arquivo anterior é {copia}."
 
-#: orologic_modules/finestra_archivi.py:961
+#: orologic_modules/finestra_archivi.py:981
 #, python-brace-format
 msgid "La copia di sicurezza di {sorgente} non si fa: {motivo}"
 msgstr "A cópia de segurança de {sorgente} não pode ser feita: {motivo}"
 
-#: orologic_modules/finestra_archivi.py:964
+#: orologic_modules/finestra_archivi.py:984
 #, python-brace-format
 msgid "La copia di sicurezza del sorgente e' {copia}."
 msgstr "A cópia de segurança da origem é {copia}."
 
-#: orologic_modules/finestra_archivi.py:966
+#: orologic_modules/finestra_archivi.py:986
 #, python-brace-format
 msgid "Il sorgente ha gia' la sua copia di sicurezza, uguale: {copia}."
 msgstr "A origem já tem sua cópia de segurança, idêntica: {copia}."
 
-#: orologic_modules/finestra_archivi.py:974
+#: orologic_modules/finestra_archivi.py:994
 msgid "Il resoconto c'e' dopo il primo lavoro."
 msgstr "O relatório fica disponível depois do primeiro trabalho."
 
-#: orologic_modules/finestra_archivi.py:982
+#: orologic_modules/finestra_archivi.py:1002
 msgid "Resoconto di pgn-extract"
 msgstr "Relatório do pgn-extract"
 
-#: orologic_modules/finestra_archivi.py:993
-#: orologic_modules/finestra_archivi.py:1004
+#: orologic_modules/finestra_archivi.py:1013
+#: orologic_modules/finestra_archivi.py:1024
 msgid "La guida di pgn-extract non c'e': si scarica insieme a pgn-extract."
 msgstr ""
 "O guia do pgn-extract não está aqui: ele é baixado junto com o pgn-extract."
 
-#: orologic_modules/finestra_archivi.py:997
+#: orologic_modules/finestra_archivi.py:1017
 #, python-brace-format
 msgid "La guida non ha una sezione per {voce}."
 msgstr "O guia não tem uma seção para {voce}."
 
-#: orologic_modules/finestra_archivi.py:1006
+#: orologic_modules/finestra_archivi.py:1026
 msgid "Guida di pgn-extract"
 msgstr "Guia do pgn-extract"
 
