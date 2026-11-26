@@ -10,6 +10,7 @@ visualizzare statistiche, applicare filtri interattivi e navigare
 un albero delle aperture con statistiche W/D/L per ogni ramo.
 """
 
+import math
 import os
 import sys
 import time
@@ -559,21 +560,24 @@ def _trova_giocatore_comune(info_list):
     for info in info_list:
         w = info.get("White")
         b = info.get("Black")
-        if w:
+        # Il nome ignoto non e' un giocatore (R69).
+        if w and w.strip() not in ("?", "-"):
             wl = w.lower()
             counts[wl] += 1
             orig_names[wl] = w
-        if b:
+        if b and b.strip() not in ("?", "-"):
             bl = b.lower()
             counts[bl] += 1
             orig_names[bl] = b
 
     n_total = len(info_list)
-    threshold = int(n_total * 0.9)  # Almeno il 90% delle partite
-    for p_lower, count in counts.items():
-        if count >= threshold:
-            return orig_names[p_lower]
-    return None
+    # Almeno il 90% delle partite, arrotondato per eccesso: per difetto,
+    # con una partita sola la soglia era zero (R69).
+    threshold = max(1, math.ceil(n_total * 0.9))
+    # E se due giocatori arrivano alla soglia, come in un archivio di una
+    # partita sola, non c'e' un giocatore principale.
+    candidati = [p_lower for p_lower, count in counts.items() if count >= threshold]
+    return orig_names[candidati[0]] if len(candidati) == 1 else None
 
 
 # Filtri
