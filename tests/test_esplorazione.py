@@ -80,3 +80,26 @@ def test_la_richiesta_per_corrispondenza_si_manda_una_volta(monkeypatch, capsys)
     assert lichess_app.seek_game("token", parametri) is None
     assert len(inviate) == 1 and inviate[0][1]["days"] == 3
     assert "corrispondenza pubblicata" in capsys.readouterr().out
+
+
+# R44: la bandierina caduta e l'articolo 6.9.
+
+
+@pytest.mark.parametrize(
+    ("fen", "bianco_scaduto", "atteso"),
+    [
+        # Al Nero resta il Re solo: non puo' dare matto, e' patta.
+        ("4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", True, "1/2-1/2"),
+        # Il Nero ha una Donna: vince lui.
+        ("4k3/8/8/8/8/8/3qP3/4K3 w - - 0 1", True, "0-1"),
+        # Al Bianco restano Re e Cavallo contro il Re solo: patta.
+        ("4k3/8/8/8/8/8/8/4KN2 b - - 0 1", False, "1/2-1/2"),
+        # Col pedone nero il matto di Cavallo e' possibile, e vince il Bianco.
+        ("4k3/8/8/8/8/8/4p3/4KN2 b - - 0 1", False, "1-0"),
+        ("4k3/8/8/8/8/8/4p3/R3K3 b - - 0 1", False, "1-0"),
+    ],
+)
+def test_il_risultato_per_tempo(fen, bianco_scaduto, atteso):
+    from orologic_modules import board_utils
+
+    assert board_utils.risultato_per_tempo(chess.Board(fen), bianco_scaduto) == atteso

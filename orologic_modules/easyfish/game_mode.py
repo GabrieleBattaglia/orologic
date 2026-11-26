@@ -16,6 +16,7 @@ from ..board_utils import (
     DescribeMove,
     NormalizeMove,
     mosse_fino_al_nodo,
+    risultato_per_tempo,
 )
 from ..config import _
 from . import analysis_utils, punteggio_motore, statistiche_motore
@@ -1127,7 +1128,11 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None, carriera=Fa
                     "bianco_scaduto",
                     game_state.active_color == chess.WHITE,
                 )
-                res = "0-1" if bianco_scaduto else "1-0"
+                # Con la patta dell'articolo 6.9, se chi vincerebbe non puo'
+                # dare matto (R44).
+                res = risultato_per_tempo(board, bianco_scaduto)
+                if res == "1/2-1/2":
+                    print(_("Patta: il tempo e' scaduto, ma l'avversario non puo' dare matto."))
                 if current_node.root():
                     current_node.root().headers["Result"] = res
                 break

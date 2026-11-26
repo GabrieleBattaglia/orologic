@@ -37,6 +37,19 @@ def stampa_elenco(voci, intestazione=None, larghezza=LARGHEZZA_BRAILLE):
         print(riga)
 
 
+def risultato_per_tempo(board, bianco_scaduto):
+    """Il risultato della bandierina caduta, per l'articolo 6.9 del
+    Regolamento FIDE: perde chi ha finito il tempo, ma la partita e' patta
+    se l'avversario non puo' dare matto con nessuna serie di mosse legali,
+    qui come su Lichess col materiale insufficiente del colore che
+    vincerebbe. Prima la patta mancava, in arbitraggio e contro il motore
+    (R44)."""
+    vincitore = chess.BLACK if bianco_scaduto else chess.WHITE
+    if board.has_insufficient_material(vincitore):
+        return "1/2-1/2"
+    return "0-1" if bianco_scaduto else "1-0"
+
+
 def CalculateMaterial(board):
     w, b = 0, 0
     for sq in chess.SQUARES:

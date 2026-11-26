@@ -737,12 +737,17 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
             choice = key(_("Scegli, INVIO o ESC: "))
             if choice in ("\x1b", "esc"):  # ESC
                 game_state.game_over = True
-                # Assegna risultato
-                if game_state.white_remaining <= 0:
-                    game_state.pgn_game.headers["Result"] = "0-1"
+                # Perde chi ha esaurito il tempo come lo ha visto l'orologio,
+                # non chi ha il residuo a zero, e con la patta dell'articolo
+                # 6.9 se l'altro non puo' dare matto (R44).
+                bianco_scaduto = getattr(game_state, "bianco_scaduto", game_state.white_remaining <= 0)
+                risultato = board_utils.risultato_per_tempo(game_state.board, bianco_scaduto)
+                game_state.pgn_game.headers["Result"] = risultato
+                if risultato == "1/2-1/2":
+                    print(_("Patta: il tempo e' scaduto, ma l'avversario non puo' dare matto."))
+                elif risultato == "0-1":
                     print(_("Vince il Nero per tempo."))
                 else:
-                    game_state.pgn_game.headers["Result"] = "1-0"
                     print(_("Vince il Bianco per tempo."))
                 break  # Esce dal loop
             else:
