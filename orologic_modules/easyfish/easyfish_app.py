@@ -518,7 +518,9 @@ def _esegui(partita=None):
         print(_("Inizializzazione Motore Orologic per Easyfish..."))
         orologic_engine.InitEngine()
 
-    engine = orologic_engine.ENGINE
+    # Il motore vivo, non quello di quando Easyfish e' partito: se muore,
+    # riparte (R41).
+    engine = orologic_engine.MOTORE
 
     # New Game
     board = CustomBoard()

@@ -430,6 +430,49 @@ def CloseEngine():
         ENGINE = None
 
 
+def interroga(board, limit, **opzioni):
+    """ENGINE.analyse, con una ripresa: se il motore e' morto lo si riavvia
+    una volta, e lo si dice. Prima nessun punto distingueva il motore morto
+    da "nessuna analisi": ENGINE restava non nullo e non ripartiva mai,
+    l'analisi automatica arrivava a "completata" con dati vuoti, e
+    nell'analisi manuale e e w facevano cadere il programma (R41). Se non
+    riparte, ENGINE resta None e l'errore sale."""
+    global ENGINE
+    if ENGINE is None:
+        raise chess.engine.EngineTerminatedError(_("Il motore non c'e'."))
+    try:
+        return ENGINE.analyse(board, limit, **opzioni)
+    except chess.engine.EngineTerminatedError:
+        print(_("Il motore si e' fermato: lo riavvio."))
+        CloseEngine()
+        ENGINE = None
+        if not InitEngine() or ENGINE is None:
+            ENGINE = None
+            print(_("Il motore non riparte: niente analisi."))
+            raise
+        return ENGINE.analyse(board, limit, **opzioni)
+
+
+class _MotoreVivo:
+    """Il motore di Orologic per chi lo tiene a lungo, come Easyfish: ogni
+    uso va al motore del momento, e analyse passa da interroga, che lo
+    riavvia se e' morto. Prima Easyfish teneva il motore di quando era
+    partito, anche morto (R41)."""
+
+    def __bool__(self):
+        return ENGINE is not None
+
+    @staticmethod
+    def analyse(board, limit, **opzioni):
+        return interroga(board, limit, **opzioni)
+
+    def __getattr__(self, nome):
+        return getattr(ENGINE, nome)
+
+
+MOTORE = _MotoreVivo()
+
+
 # Il conteggio del materiale sta in board_utils: era ricopiato qui e in
 # Easyfish, con tre tabelle di valori da tenere allineate.
 CalculateMaterial = board_utils.CalculateMaterial
@@ -448,9 +491,11 @@ def _analizza_con_cache(board, linee):
         return None
     chiave = (board.fen(), linee)
     if chiave not in cache_analysis:
-        cache_analysis[chiave] = ENGINE.analyse(
-            board, chess.engine.Limit(time=analysis_time), multipv=linee
-        )
+        try:
+            cache_analysis[chiave] = interroga(board, chess.engine.Limit(time=analysis_time), multipv=linee)
+        # Il motore morto e non ripartito l'ha gia' detto interroga.
+        except chess.engine.EngineError:
+            return None
     return cache_analysis[chiave]
 
 
@@ -886,7 +931,9 @@ def _comandi_informativi(cmd, current_node):
                         temp_board.push(m)
                     san_pv = " ".join(san_moves)
                     print(_("Linea {i} ({s}): {pv}").format(i=i + 1, s=score, pv=san_pv))
-            if ui.enter_escape(_("\nIspezione smart? (INVIO si', ESC no): ")):
+            if not analysis:
+                print(_("\nNessuna linea di analisi."))
+            elif ui.enter_escape(_("\nIspezione smart? (INVIO si', ESC no): ")):
                 SmartInspection(analysis, current_node.board())
     elif cmd == "u":
         with strato.da_leggere(_("Scacchiera")):
@@ -1409,7 +1456,7 @@ def analyze_position_deep(board, limit, multipv_count=3):
     if cache_key in oaa_analysis_cache:
         return oaa_analysis_cache[cache_key]
     try:
-        info = ENGINE.analyse(board, limit, multipv=multipv_count)
+        info = interroga(board, limit, multipv=multipv_count)
         results = []
         for i, analysis in enumerate(info):
             score = analysis.get("score")
@@ -1911,7 +1958,7 @@ def _analizza_la_mossa(board, mossa, limit):
     if chiave in oaa_analysis_cache:
         return oaa_analysis_cache[chiave]
     try:
-        info = ENGINE.analyse(board, limit, root_moves=[mossa])
+        info = interroga(board, limit, root_moves=[mossa])
     # L'interrogazione del motore puo' fallire in molti modi: senza
     # analisi la mossa si salta.
     except Exception:  # noqa: BLE001
@@ -2148,6 +2195,11 @@ def AnalisiAutomatica(pgn_game):
         multipv_needed = max(3, num_varianti)
         analysis_before = analyze_position_deep(parent_board, limit, multipv_needed)
         if not analysis_before:
+            # Il motore morto e non ripartito ferma l'analisi, invece di
+            # saltare tutte le mosse fino a "completata" (R41).
+            if ENGINE is None:
+                print(_("\nAnalisi interrotta: il motore non risponde."))
+                break
             continue
         best_alternative = analysis_before[0]
         giocata = next((info for info in analysis_before if info["move"] == node.move), None)
