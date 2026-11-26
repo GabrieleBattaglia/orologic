@@ -18,7 +18,6 @@ Qui c'e' tutto quello che non e' finestra; la finestra e'
 finestra_aperture.py.
 """
 
-import contextlib
 import dataclasses
 import io
 
@@ -124,7 +123,7 @@ def costruisci(eco_db):
 def carica():
     """L'albero di eco.pgn di Orologic, senza la riga che LoadEcoDatabase
     stampa nell'area principale."""
-    with contextlib.redirect_stdout(io.StringIO()):
+    with strato.raccogli(io.StringIO()):
         return costruisci(board_utils.LoadEcoDatabaseWithFEN("eco.pgn"))
 
 

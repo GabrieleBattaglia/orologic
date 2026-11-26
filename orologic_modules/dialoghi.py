@@ -70,10 +70,14 @@ def chiudi_i_modali_sopra(finestra, gia_chiusi, poi):
     sopra = modali_sopra(finestra)
     if not sopra:
         return False
-    for altra in sopra:
-        if altra not in gia_chiusi and not any(discende(terza, altra) for terza in sopra if terza is not altra):
-            gia_chiusi.append(altra)
-            altra.EndModal(wx.ID_CANCEL)
+    candidati = [altra for altra in sopra if altra not in gia_chiusi and not any(discende(terza, altra) for terza in sopra if terza is not altra)]
+    # Uno per giro, il piu' recente, che ha il ciclo modale attivo: con due
+    # dialoghi fratelli si chiudeva per primo quello esterno, che wx non
+    # chiude, e il giro non finiva (R140).
+    if candidati:
+        ultimo = candidati[-1]
+        gia_chiusi.append(ultimo)
+        ultimo.EndModal(wx.ID_CANCEL)
     wx.CallLater(ATTESA_DEI_MODALI, poi)
     return True
 

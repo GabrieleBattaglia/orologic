@@ -1091,7 +1091,7 @@ class Finestra(wx.Frame):
         for testo, causa in pezzi:
             if isinstance(testo, CambioDiForma):
                 # Il testo arrivato prima va nella forma di prima.
-                self._mostra_nella_forma(chiuse, messaggi)
+                self._senza_cadere(self._mostra_nella_forma, chiuse, messaggi)
                 chiuse, messaggi = [], []
                 self._senza_cadere(self._cambia_forma, testo.fornitore, testo.comandi)
                 continue
@@ -1126,7 +1126,7 @@ class Finestra(wx.Frame):
                 wx.CallAfter(self._impostazioni_dal_nucleo, testo)
                 continue
             if isinstance(testo, Attesa):
-                self._mostra_nella_forma(chiuse, messaggi)
+                self._senza_cadere(self._mostra_nella_forma, chiuse, messaggi)
                 chiuse, messaggi = [], []
                 self._senza_cadere(self._cambia_attesa, testo)
                 attesa_cambiata = True
@@ -1137,7 +1137,14 @@ class Finestra(wx.Frame):
             # Il rinfresco periodico del prompt si scrive, ma non si dice e
             # non e' un messaggio.
             rinfresco = causa == "rinfresco"
-            for riga in self.terminale.applica(testo):
+            # Anche il testo: un suo errore lasciava indietro i pezzi dopo,
+            # come l'attesa del nucleo (R140).
+            try:
+                righe_del_testo = self.terminale.applica(testo)
+            except Exception:  # noqa: BLE001
+                registro.scrivi("Finestra, terminale.applica:\n" + traceback.format_exc())
+                righe_del_testo = []
+            for riga in righe_del_testo:
                 chiuse.append(riga)
                 if not rinfresco and riga.strip() and riga.rstrip() != self.detta.rstrip():
                     messaggi.append(riga)
@@ -1166,13 +1173,14 @@ class Finestra(wx.Frame):
                 if nuovo:
                     da_dire.append(nuovo)
             self.detta = visibile
-        self._mostra_nella_forma(chiuse, messaggi)
-        self._di(da_dire, dal_tasto)
+        self._senza_cadere(self._mostra_nella_forma, chiuse, messaggi)
+        self._senza_cadere(self._di, da_dire, dal_tasto)
 
     def _senza_cadere(self, funzione, *argomenti):
         """Un pezzo di _applica: se cade, l'errore va nel registro e il resto
         del testo del nucleo si applica lo stesso. Prima un errore a meta'
-        lasciava plancia e area ferme, senza seguire piu' il nucleo (R28)."""
+        lasciava plancia e area ferme, senza seguire piu' il nucleo (R28);
+        ora ogni pezzo, non solo due (R140)."""
         try:
             funzione(*argomenti)
         except Exception:  # noqa: BLE001
@@ -2116,7 +2124,15 @@ class Finestra(wx.Frame):
         if file:
             righe.append(_("Il testo resta nel registro degli errori: {file}").format(file=file))
         righe += testo.rstrip().splitlines()
-        dialoghi.da_leggere(self, _("Errore di Orologic"), righe)
+        # Mentre l'errore si legge la chiusura aspetta: dopo Alt+F4 la
+        # finestra dell'errore si distruggeva un decimo di secondo dopo
+        # essere nata (R140).
+        self.errore_da_leggere = True
+        try:
+            dialoghi.da_leggere(self, _("Errore di Orologic"), righe)
+        finally:
+            if self:
+                self.errore_da_leggere = False
 
     def _chiudi(self, evento):
         """Alt+F4: il nucleo riceve l'interruzione, come Ctrl+C nel
@@ -2141,6 +2157,9 @@ class Finestra(wx.Frame):
 
         def aspetta():
             if not self:
+                return
+            if getattr(self, "errore_da_leggere", False):
+                wx.CallLater(100, aspetta)
                 return
             if self.nucleo.is_alive() and time.monotonic() - inizio < ATTESA_DELLA_CHIUSURA:
                 wx.CallLater(100, aspetta)

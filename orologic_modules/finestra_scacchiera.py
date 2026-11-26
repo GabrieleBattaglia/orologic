@@ -441,10 +441,6 @@ class FinestraScacchiera(wx.Dialog):
         if self.IsModal():
             self.EndModal(wx.ID_CANCEL)
 
-    def _dialoghi_sopra(self):
-        """I dialoghi modali aperti sopra la scacchiera, discendenti suoi."""
-        return dialoghi.modali_sopra(self)
-
     def _chiudi_dopo_i_figli(self):
         if self:
             self.chiudi()

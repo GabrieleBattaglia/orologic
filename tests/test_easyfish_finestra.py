@@ -285,7 +285,7 @@ def test_l_editor_della_scacchiera(finestra, monkeypatch):
 
 def test_il_navigatore_della_partita(finestra, monkeypatch):
     game = partita()
-    monkeypatch.setattr(finestra_navigatore, "analizza", lambda _board: (["1. +0.30 e5"], None, None))
+    monkeypatch.setattr(finestra_navigatore, "analizza", lambda _board, ferma=None: (["1. +0.30 e5"], None, None))
     letture = []
     monkeypatch.setattr(finestra_navigatore.dialoghi, "da_leggere", lambda _genitore, titolo, righe, *_resto: letture.append((titolo, righe)))
     detti = []

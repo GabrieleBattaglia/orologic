@@ -19,6 +19,7 @@ all'uscita come sempre.
 
 import threading
 
+import chess.engine
 import wx
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
@@ -28,12 +29,47 @@ from .config import _
 from .easyfish import analysis_utils, posizione
 
 
-def analizza(board):
+class analisi_fermabile:
+    """Il motore di Orologic per il navigatore, con l'analisi che si ferma
+    quando ferma e' acceso: chiuso il navigatore, l'analisi continuava sul
+    motore fino a 1800 secondi (R140). Il resto viene dal motore vivo."""
+
+    def __init__(self, ferma):
+        self.ferma = ferma
+
+    def __bool__(self):
+        return orologic_engine.ENGINE is not None
+
+    def __getattr__(self, nome):
+        return getattr(orologic_engine.MOTORE, nome)
+
+    def analyse(self, board, limit, multipv=1):
+        motore = orologic_engine.ENGINE
+        if motore is None:
+            raise chess.engine.EngineTerminatedError(_("Il motore non c'e'."))
+        with motore.analysis(board, limit, multipv=multipv) as corsa:
+            finita = threading.Event()
+
+            def aspetta():
+                corsa.wait()
+                finita.set()
+
+            threading.Thread(target=aspetta, name="analisi del navigatore", daemon=True).start()
+            while not finita.wait(0.1):
+                if self.ferma.is_set():
+                    corsa.stop()
+                    break
+            finita.wait(5)
+            return list(corsa.multipv)
+
+
+def analizza(board, ferma=None):
     """L'analisi della posizione col motore di Orologic: (righe, forma
-    verbosa o None, riga della prima linea o None); le prove la
-    sostituiscono."""
+    verbosa o None, riga della prima linea o None); con ferma, si ferma
+    quando ferma si accende (R140). Le prove la sostituiscono."""
     # Il motore vivo, che riparte se e' morto (R41).
-    analisi, righe = analysis_utils.analizza(board, orologic_engine.MOTORE, orologic_engine.analysis_time, orologic_engine.multipv)
+    motore = orologic_engine.MOTORE if ferma is None else analisi_fermabile(ferma)
+    analisi, righe = analysis_utils.analizza(board, motore, orologic_engine.analysis_time, orologic_engine.multipv)
     if not analisi:
         return righe, None, None
     return (righe, *analysis_utils.dettagli_della_lettura(board, analisi, righe))
@@ -54,6 +90,8 @@ class Navigatore(wx.Dialog):
         self._chiedi_valore = chiedi_valore
         self._annuncia = annuncia
         self.filo = None
+        # Si accende alla chiusura, e l'analisi in corso si ferma (R140).
+        self.ferma_l_analisi = threading.Event()
         pannello = pannello_scorrevole(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(wx.StaticText(pannello, label=_("Mosse e varianti")), 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
@@ -189,7 +227,7 @@ class Navigatore(wx.Dialog):
         self._annuncia([_("Analisi in corso...")])
 
         def nel_filo():
-            wx.CallAfter(self._analizzata, analizza(board))
+            wx.CallAfter(self._analizzata, analizza(board, ferma=self.ferma_l_analisi))
 
         self.filo = threading.Thread(target=nel_filo, name="navigatore", daemon=True)
         self.filo.start()
@@ -224,5 +262,8 @@ def naviga(genitore, game, nodo, chiedi_conferma, chiedi_valore, annuncia):
     # chiusura, fino a mezz'ora con l'analisi lunga. Il filo finisce da
     # solo, e il suo risultato si scarta (R85).
     with Navigatore(genitore, game, nodo, chiedi_conferma, chiedi_valore, annuncia) as dialogo:
-        dialogo.ShowModal()
+        try:
+            dialogo.ShowModal()
+        finally:
+            dialogo.ferma_l_analisi.set()
         return dialogo.scelto, dialogo.modificata

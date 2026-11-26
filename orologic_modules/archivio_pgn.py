@@ -725,8 +725,12 @@ def righe_della_riparazione(conti):
 
 
 def carica_le_aperture():
-    """eco.pgn, senza le righe che stampa nell'area principale."""
-    with contextlib.redirect_stdout(io.StringIO()):
+    """eco.pgn, senza le righe che stampa nell'area principale: raccolte
+    per il solo filo di chi chiama, perche' redirect_stdout scambiava lo
+    schermo di tutti i fili, col meccanismo di R84 (R140)."""
+    from . import strato
+
+    with strato.raccogli(io.StringIO()):
         return board_utils.LoadEcoDatabaseWithFEN("eco.pgn")
 
 

@@ -14,7 +14,14 @@ import pytest
 import wx
 from conftest import pompa
 
-from orologic_modules import board_utils, config, finestra_scacchiera, game_flow, strato
+from orologic_modules import (
+    board_utils,
+    config,
+    dialoghi,
+    finestra_scacchiera,
+    game_flow,
+    strato,
+)
 from orologic_modules.finestra import Attesa
 from orologic_modules.scacchiera import nome_casa
 
@@ -543,7 +550,7 @@ def test_la_chiusura_con_un_dialogo_aperto_sopra(finestra, aperta):
         figlio.Destroy()
 
     def salva():
-        sopra = dialogo._dialoghi_sopra() if dialogo else []
+        sopra = dialoghi.modali_sopra(dialogo) if dialogo else []
         for figlio in sopra:
             paracadute.append(figlio.GetTitle())
             figlio.EndModal(wx.ID_ABORT)

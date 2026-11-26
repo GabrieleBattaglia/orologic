@@ -152,7 +152,7 @@ def test_chiudere_il_navigatore_non_aspetta_l_analisi(finestra, monkeypatch):
     sblocca = threading.Event()
     fili = []
 
-    def analizza_lenta(_board):
+    def analizza_lenta(_board, ferma=None):
         fili.append(threading.current_thread())
         sblocca.wait(10)
         return (["1. +0.30 e5"], None, None)

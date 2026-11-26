@@ -213,3 +213,147 @@ def test_orologic_parte_e_si_chiude_nella_finestra(finestra, monkeypatch):
     assert pompa(lambda: not finestra.nucleo.is_alive(), 10)
     # Finito il nucleo, la finestra si chiude da sola.
     assert pompa(lambda: not finestra, 2)
+
+
+# R140: la finestra.
+
+
+def test_l_errore_dopo_alt_f4_resta_da_leggere(finestra, monkeypatch):
+    """R140: dopo Alt+F4, se il nucleo moriva con un'eccezione, la finestra
+    dell'errore veniva distrutta cento millesimi dopo essere nata."""
+    import os
+    import types
+
+    from orologic_modules import dialoghi, strato
+    from orologic_modules import finestra as modulo_finestra
+
+    monkeypatch.setattr(os, "_exit", lambda _codice: None)
+    monkeypatch.setattr(finestra, "mostra_l_errore", types.MethodType(modulo_finestra.Finestra.mostra_l_errore, finestra))
+    durante = []
+
+    def da_leggere(genitore, titolo, righe, *_altro):
+        # Come un ciclo modale: gli eventi girano, e la chiusura con loro.
+        pompa(lambda: False, 0.6)
+        durante.append(bool(genitore))
+
+    monkeypatch.setattr(dialoghi, "da_leggere", da_leggere)
+
+    def corpo():
+        try:
+            strato.getwch()
+        except KeyboardInterrupt:
+            raise RuntimeError("guasto alla chiusura") from None
+
+    finestra.avvia_il_nucleo(corpo)
+    assert pompa(lambda: finestra.attesa.tipo is not None or finestra.nucleo.is_alive(), 2)
+    finestra.Close()
+    assert pompa(lambda: durante, 10)
+    assert durante == [True]
+
+
+def test_un_pezzo_di_applica_che_cade_non_ferma_gli_altri(finestra, monkeypatch):
+    """R140: _senza_cadere proteggeva solo due pezzi di _applica, e un errore
+    negli altri lasciava indietro quello che veniva dopo, come l'attesa del
+    nucleo."""
+    from orologic_modules import finestra as modulo_finestra
+
+    cadute = []
+
+    def mostra(*_argomenti):
+        cadute.append(1)
+        raise RuntimeError("guasto di prova")
+
+    monkeypatch.setattr(finestra, "_mostra_nella_forma", mostra)
+    attesa = modulo_finestra.Attesa("sino", prompt="Va bene?")
+    monkeypatch.setattr(finestra.faccia, "prendi_il_testo", lambda: [("una riga\n", None), (attesa, None)])
+    finestra._applica()
+    assert cadute and finestra.attesa is attesa
+
+
+def test_due_dialoghi_fratelli_si_chiudono_dal_piu_recente(monkeypatch):
+    """R140: con due dialoghi modali fratelli la chiusura andava prima a
+    quello esterno, che wx non chiude se il suo ciclo non e' quello attivo,
+    e il giro non finiva."""
+    from orologic_modules import dialoghi
+
+    chiusi = []
+
+    class Dialogo:
+        def __init__(self, nome):
+            self.nome = nome
+
+        def EndModal(self, _codice):
+            chiusi.append(self.nome)
+
+    primo, secondo = Dialogo("primo"), Dialogo("secondo")
+    monkeypatch.setattr(dialoghi, "modali_sopra", lambda _finestra: [primo, secondo])
+    monkeypatch.setattr(dialoghi, "discende", lambda _finestra, _antenato: False)
+    monkeypatch.setattr(dialoghi.wx, "CallLater", lambda *_argomenti: None)
+    gia_chiusi = []
+    assert dialoghi.chiudi_i_modali_sopra(object(), gia_chiusi, lambda: None)
+    assert chiusi == ["secondo"]
+    assert dialoghi.chiudi_i_modali_sopra(object(), gia_chiusi, lambda: None)
+    assert chiusi == ["secondo", "primo"]
+
+
+def test_eco_si_carica_senza_scambiare_lo_schermo_di_tutti(finestra, monkeypatch):
+    """R140: due redirect_stdout erano rimasti sul percorso della finestra,
+    col meccanismo di R84: scambiavano sys.stdout di tutti i fili. Nella
+    finestra la raccolta e' del solo filo che chiama."""
+    import contextlib
+
+    from orologic_modules import aperture, archivio_pgn
+
+    def vietato(*_argomenti):
+        raise AssertionError("redirect_stdout scambia lo schermo di tutti i fili")
+
+    monkeypatch.setattr(contextlib, "redirect_stdout", vietato)
+    assert aperture.carica() is not None
+    assert archivio_pgn.carica_le_aperture() is not None
+
+
+def test_l_analisi_del_navigatore_si_ferma_alla_chiusura(monkeypatch):
+    """R140: chiuso il navigatore, l'analisi continuava sul motore fino a
+    1800 secondi."""
+    import threading
+    import time
+
+    import chess.engine
+
+    from orologic_modules import engine as orologic_engine
+    from orologic_modules import finestra_navigatore
+
+    fermate = []
+
+    class Corsa:
+        def __init__(self):
+            self.finita = threading.Event()
+            self.multipv = []
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_errore):
+            self.stop()
+            return False
+
+        def wait(self):
+            self.finita.wait(30)
+
+        def stop(self):
+            fermate.append(1)
+            self.finita.set()
+
+    class Motore:
+        def __init__(self):
+            self.id = {"name": "Finto"}
+
+        def analysis(self, *_argomenti, **_opzioni):
+            return Corsa()
+
+    monkeypatch.setattr(orologic_engine, "ENGINE", Motore())
+    ferma = threading.Event()
+    threading.Timer(0.3, ferma.set).start()
+    inizio = time.monotonic()
+    finestra_navigatore.analisi_fermabile(ferma).analyse(chess.Board(), chess.engine.Limit(time=1800), multipv=1)
+    assert time.monotonic() - inizio < 5 and fermate
