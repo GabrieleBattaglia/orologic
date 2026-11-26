@@ -10,39 +10,42 @@ from xml.sax.saxutils import escape
 import chess
 import chess.svg
 from GBUtils import Acusticator, dgt
-from reportlab.graphics import renderPDF
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import cm
-from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Spacer
-from svglib.svglib import svg2rlg
 
 from .. import config, storage
 from ..config import _
 from .drawing import get_drawings_from_node
 
 
-class DrawingFlowable(Flowable):
-    def __init__(self, drawing, width, height, scale=1.0):
-        Flowable.__init__(self)
-        self.drawing = drawing
-        self.orig_width = width
-        self.orig_height = height
-        self.scale = scale
-        self.width = width * scale
-        self.height = height * scale
+def _drawing_flowable():
+    """La classe del disegno nel PDF. reportlab e svglib si caricano solo
+    per il PDF: prima si caricavano a ogni avvio di Orologic, e un loro
+    guasto nel pacchetto ne avrebbe impedito l'avvio (R93)."""
+    from reportlab.graphics import renderPDF
+    from reportlab.platypus import Flowable
 
-    def draw(self):
-        available_width = self._frame.width if hasattr(self, "_frame") else self.width
-        offset = (
-            (available_width - self.width) / 2 if available_width > self.width else 0
-        )
+    class DrawingFlowable(Flowable):
+        def __init__(self, drawing, width, height, scale=1.0):
+            Flowable.__init__(self)
+            self.drawing = drawing
+            self.orig_width = width
+            self.orig_height = height
+            self.scale = scale
+            self.width = width * scale
+            self.height = height * scale
 
-        self.canv.saveState()
-        self.canv.translate(offset, 0)
-        self.canv.scale(self.scale, self.scale)
-        renderPDF.draw(self.drawing, self.canv, 0, 0)
-        self.canv.restoreState()
+        def draw(self):
+            available_width = self._frame.width if hasattr(self, "_frame") else self.width
+            offset = (
+                (available_width - self.width) / 2 if available_width > self.width else 0
+            )
+
+            self.canv.saveState()
+            self.canv.translate(offset, 0)
+            self.canv.scale(self.scale, self.scale)
+            renderPDF.draw(self.drawing, self.canv, 0, 0)
+            self.canv.restoreState()
+
+    return DrawingFlowable
 
 
 def rgb_from_percent(r_perc, g_perc, b_perc):
@@ -465,6 +468,13 @@ def export_board_pdf(board, node=None):
     svg_size = settings["size"]
 
     try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib.units import cm
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+        from svglib.svglib import svg2rlg
+
+        DrawingFlowable = _drawing_flowable()
         drawing = svg2rlg(io.BytesIO(svg_data.encode("utf-8")))
         doc = SimpleDocTemplate(
             full_path,

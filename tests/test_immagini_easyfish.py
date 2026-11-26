@@ -82,3 +82,21 @@ def test_la_condivisione_non_legge_il_database_dal_suo_filo(monkeypatch):
     finestra.board = chess.Board()
     finestra._render(None)
     assert disegnate == [{"size": 321}] and letture == [1]
+
+
+def test_l_avvio_non_carica_reportlab_svglib_e_pygame():
+    """R93: reportlab, svglib e pygame si caricavano a ogni avvio, e un loro
+    guasto nel pacchetto avrebbe impedito l'avvio di tutto Orologic."""
+    import subprocess
+    import sys
+
+    from conftest import RADICE
+
+    codice = (
+        "import sys; sys.path.insert(0, r'" + RADICE + "'); "
+        "import percorsi, tempfile; percorsi.cartella_applicazione = lambda: tempfile.mkdtemp(); "
+        "from orologic_modules.easyfish import easyfish_app; "
+        "print(sorted(m for m in ('reportlab', 'svglib', 'pygame') if m in sys.modules))"
+    )
+    uscita = subprocess.run([sys.executable, "-B", "-c", codice], capture_output=True, text=True, timeout=120, cwd=RADICE, check=False)
+    assert uscita.stdout.strip().splitlines()[-1] == "[]", uscita.stderr[-2000:]
