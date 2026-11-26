@@ -607,7 +607,10 @@ def _esegui(partita=None):
 
         if key_command.startswith("."):
             cmd = key_command.lower()
-            cmd_clean = "".join([char for char in cmd if not char.isdigit()])
+            # Il comando e' la prima parola senza le cifre: ".cso on", ".a 5"
+            # e ".k 12" tenevano lo spazio e la parola, e non arrivavano al
+            # loro ramo (R95).
+            cmd_clean = "".join([char for char in cmd.split()[0] if not char.isdigit()])
 
             if cmd == ".":  # ESCI o RISALI
                 # Logica di risalita variante
@@ -682,7 +685,8 @@ def _esegui(partita=None):
                 is_black = False
 
                 # Parsing regex
-                match = re.search(r"^\.k(\d+)([+-]?)$", key_command.lower())
+                # Anche con lo spazio, .k 12 (R95).
+                match = re.search(r"^\.k\s*(\d+)\s*([+-]?)$", key_command.lower())
                 if match:
                     target_move = int(match.group(1))
                     is_black = match.group(2) == "-"

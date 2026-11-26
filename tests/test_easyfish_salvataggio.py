@@ -166,3 +166,20 @@ def test_chiudere_il_navigatore_non_aspetta_l_analisi(finestra, monkeypatch):
     sblocca.set()
     assert pompa(lambda: fili and not fili[0].is_alive())
     pompa(lambda: False, 0.1)
+
+
+def test_i_comandi_con_lo_spazio_arrivano_al_loro_ramo(finestra, monkeypatch):
+    """R95: ".cso on", ".a 5" e ".k 12" tenevano lo spazio e la parola nel
+    comando ripulito, e non arrivavano al loro ramo."""
+    game = partita()
+    monkeypatch.setattr(orologic_engine, "ENGINE", object())
+    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda g: True)
+    monkeypatch.setattr(easyfish_app, "show_output_on_board", False)
+    finestra.avvia_il_nucleo(lambda: easyfish_app.run(partita=game))
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+    _premi(finestra, ".cso on\r")
+    assert pompa(lambda: easyfish_app.show_output_on_board is True)
+    _premi(finestra, ".k 2\r")
+    assert pompa(lambda: len(finestra.fornitore()["board"].move_stack) == 2)
+    _premi(finestra, ".\r")
+    assert pompa(lambda: not finestra.nucleo.is_alive())
