@@ -3,7 +3,8 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5.5, modalita' auto).
 
 """Niente rete vera: gli indirizzi si controllano nella richiesta preparata,
-e gli errori si fingono sostituendo urlopen."""
+e gli errori si fingono sostituendo rete.apri_richiesta, l'unico punto da cui
+Orologic apre un indirizzo."""
 
 import email.message
 import http.client
@@ -40,7 +41,7 @@ def test_gli_errori_del_protocollo_non_fanno_cadere(monkeypatch, errore):
     def guasto(*a, **k):
         raise errore
 
-    monkeypatch.setattr(rete.urllib.request, "urlopen", guasto)
+    monkeypatch.setattr(rete, "apri_richiesta", guasto)
     risposta, messaggio = rete.apri("https://lichess.org/api/x")
     assert risposta is None and messaggio.startswith("Connessione non riuscita")
 
@@ -56,7 +57,7 @@ def test_una_lettura_interrotta_a_meta(monkeypatch):
         def read(self):
             raise http.client.IncompleteRead(b"mezzo")
 
-    monkeypatch.setattr(rete.urllib.request, "urlopen", lambda *a, **k: Risposta())
+    monkeypatch.setattr(rete, "apri_richiesta", lambda *a, **k: Risposta())
     testo, messaggio = rete.leggi("https://lichess.org/api/x")
     assert testo is None and messaggio.startswith("Lettura interrotta")
 
@@ -90,7 +91,7 @@ def test_la_ricerca_manda_il_token_solo_a_lichess(monkeypatch):
 
     richieste = []
     monkeypatch.setattr(lichess_app, "load_secrets", lambda: {"lichess_token": "segreto"})
-    monkeypatch.setattr(pgn_search.urllib.request, "urlopen", lambda richiesta, **k: richieste.append(richiesta))
+    monkeypatch.setattr(rete, "apri_richiesta", lambda richiesta, **k: richieste.append(richiesta))
     pgn_search._apri_indirizzo("https://lichess.org.altro.example/partite.pgn")
     pgn_search._apri_indirizzo("https://lichess.org/api/games/user/x")
     assert [r.get_header("Authorization") for r in richieste] == [None, "Bearer segreto"]
@@ -436,3 +437,53 @@ def test_il_logout_toglie_anche_le_copie_messe_da_parte(tmp_path, monkeypatch, c
     lichess_app.menu_logout({})
     assert [p.name for p in tmp_path.iterdir()] == ["secrets.json"]
     assert "lichess_token" not in json.loads(file.read_text(encoding="utf-8"))
+
+
+def test_il_freno_di_lichess_non_ferma_gli_altri_server(monkeypatch):
+    """R137: il freno del 429 di Lichess fermava per un minuto anche le
+    richieste a GitHub, con la frase di Lichess."""
+    errore = urllib.error.HTTPError("https://lichess.org/api/x", 429, "Too Many Requests", email.message.Message(), io.BytesIO(b""))
+    rete._messaggio_http(errore)
+    assert rete.attesa_residua() > 0
+    aperte = []
+    monkeypatch.setattr(rete, "apri_richiesta", lambda richiesta, dati=None, timeout=None: aperte.append(richiesta.full_url) or "risposta")
+    try:
+        assert rete.apri("https://api.github.com/repos/x") == ("risposta", None)
+        risposta, messaggio = rete.apri("https://lichess.org/api/x")
+        assert risposta is None and "Lichess" in messaggio
+        assert aperte == ["https://api.github.com/repos/x"]
+    finally:
+        rete.azzera_limite()
+
+
+def test_un_indirizzo_che_non_si_prepara_non_fa_cadere():
+    """R137: prepara stava fuori dal try, e un indirizzo senza schema
+    sollevava ValueError."""
+    risposta, messaggio = rete.apri("indirizzo senza schema")
+    assert risposta is None and messaggio.startswith("Connessione non riuscita")
+
+
+def test_i_rinvii_non_portano_il_token_fuori_da_lichess():
+    """R137, sicurezza: il token si decideva sull'indirizzo di partenza, ma
+    urllib seguiva i rinvii portandosi l'intestazione Authorization anche
+    verso un host che non e' Lichess."""
+    gestore = rete._RinviiSenzaToken()
+    finto = "segreto"
+    richiesta = rete.prepara("https://lichess.org/api/games/user/x", token=finto)
+    altrove = gestore.redirect_request(richiesta, None, 302, "Found", email.message.Message(), "https://altro.example/partite.pgn")
+    assert altrove.get_header("Authorization") is None
+    a_lichess = gestore.redirect_request(richiesta, None, 302, "Found", email.message.Message(), "https://lichess.org/api/games/user/y")
+    assert a_lichess.get_header("Authorization") == "Bearer segreto"
+
+
+def test_il_sito_di_pgn_extract_non_fa_cadere_su_un_errore_del_protocollo(monkeypatch):
+    """R137: la seconda copia dell'apertura, quella del sito di pgn-extract,
+    prendeva solo la famiglia OSError."""
+    from orologic_modules import pgn_extract
+
+    def tagliata(*_argomenti, **_opzioni):
+        raise http.client.IncompleteRead(b"")
+
+    monkeypatch.setattr(rete, "apri_richiesta", tagliata)
+    risposta, messaggio = pgn_extract._apri("https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/", 5)
+    assert risposta is None and messaggio

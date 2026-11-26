@@ -105,6 +105,27 @@ def e_di_lichess(indirizzo, solo_https=True):
     return host == "lichess.org" or host.endswith(".lichess.org")
 
 
+class _RinviiSenzaToken(urllib.request.HTTPRedirectHandler):
+    """I rinvii seguiti da urllib si portavano l'intestazione Authorization
+    anche verso un host che non e' Lichess: il token si decideva solo
+    sull'indirizzo di partenza. Qui un rinvio fuori da Lichess, in https, la
+    lascia indietro (R137)."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        nuova = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if nuova is not None and not e_di_lichess(newurl):
+            nuova.remove_header("Authorization")
+        return nuova
+
+
+def apri_richiesta(richiesta, dati=None, timeout=TIMEOUT):
+    """L'unico punto da cui Orologic apre un indirizzo: col contesto dei
+    certificati di GBUtils, e coi rinvii che non portano il token fuori da
+    Lichess (R137). Le prove lo sostituiscono, e la rete non si tocca."""
+    opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=contesto_ssl()), _RinviiSenzaToken())
+    return opener.open(richiesta, data=dati, timeout=timeout)
+
+
 class ErroreDiRete(str):
     """Il messaggio di un errore di rete, gia' pronto per l'utente, che porta
     anche il codice HTTP, se c'e': chi segue un flusso distingue cosi' gli
@@ -182,26 +203,28 @@ def apri(
     I dati si passano come dizionario da codificare in forma classica, oppure
     con dati_json quando il servizio pretende un corpo JSON.
     """
-    fermi = attesa_residua()
+    # Il freno del 429 e' di Lichess: prima fermava per un minuto anche le
+    # richieste a GitHub, con la frase di Lichess (R137).
+    fermi = attesa_residua() if e_di_lichess(url, solo_https=False) else 0
     if fermi > 0:
         # Lichess ha chiesto di rallentare: non si insiste, si aspetta.
         return None, _(
             "Lichess sta limitando le richieste: riprova fra {n} secondi."
         ).format(n=int(fermi) + 1)
-    richiesta = prepara(url, token=token, metodo=metodo, accetta=accetta)
-    if dati_json is not None:
-        corpo = json.dumps(dati_json).encode("utf-8")
-        richiesta.add_header("Content-Type", "application/json")
-    else:
-        corpo = urllib.parse.urlencode(dati).encode("utf-8") if dati else None
     try:
+        # Anche la preparazione: un indirizzo che non si prepara sollevava
+        # fuori da ogni try (R137).
+        richiesta = prepara(url, token=token, metodo=metodo, accetta=accetta)
+        if dati_json is not None:
+            corpo = json.dumps(dati_json).encode("utf-8")
+            richiesta.add_header("Content-Type", "application/json")
+        else:
+            corpo = urllib.parse.urlencode(dati).encode("utf-8") if dati else None
         # Il contesto di GBUtils verifica con l'archivio di sistema e con
         # certifi insieme: con il solo archivio, su un PC dove Windows non
         # aveva ancora scaricato la radice di GitHub, il controllo del motore
         # falliva con un errore di certificato.
-        return urllib.request.urlopen(
-            richiesta, data=corpo, timeout=timeout, context=contesto_ssl()
-        ), None
+        return apri_richiesta(richiesta, corpo, timeout), None
     except urllib.error.HTTPError as e:
         return None, ErroreDiRete(_messaggio_http(e), e.code)
     except urllib.error.URLError as e:

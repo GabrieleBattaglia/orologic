@@ -32,6 +32,7 @@ import dataclasses
 import filecmp
 import hashlib
 import html
+import http.client
 import json
 import os
 import re
@@ -1307,17 +1308,17 @@ def _apri(indirizzo, attesa):
     """(risposta, errore) dal sito di pe. I messaggi di rete.apri parlano di
     Lichess, e il suo freno per le troppe richieste e' di Lichess: qui si
     apre da se', col contesto dei certificati di GBUtils."""
-    from GBUtils import contesto_ssl
-
     try:
-        return urllib.request.urlopen(rete.prepara(indirizzo), timeout=attesa, context=contesto_ssl()), None
+        return rete.apri_richiesta(rete.prepara(indirizzo), timeout=attesa), None
     except urllib.error.HTTPError as errore:
         return None, _("Il sito di pgn-extract ha risposto con l'errore {codice}.").format(codice=errore.code)
     except urllib.error.URLError as errore:
         return None, rete._messaggio_urlerror(errore, attesa)
     except TimeoutError:
         return None, _("Nessuna risposta entro {n} secondi.").format(n=int(attesa))
-    except OSError as errore:
+    # Anche gli errori del protocollo e gli indirizzi che non si preparano,
+    # come in rete.apri: prima solo la famiglia OSError (R137).
+    except (OSError, http.client.HTTPException, ValueError) as errore:
         return None, _("Connessione non riuscita: {motivo}").format(motivo=errore)
 
 

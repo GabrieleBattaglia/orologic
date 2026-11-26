@@ -21,7 +21,7 @@ from collections import defaultdict
 import chess
 import chess.pgn
 import pyperclip
-from GBUtils import contesto_ssl, dgt, enter_escape, key, menu
+from GBUtils import dgt, enter_escape, key, menu
 
 from orologic_modules import board_utils, engine, strato
 from orologic_modules.config import _
@@ -267,7 +267,8 @@ def _apri_indirizzo(indirizzo):
     # contiene la scritta (R39).
     if token and rete.e_di_lichess(indirizzo):
         req.add_header("Authorization", f"Bearer {token}")
-    return urllib.request.urlopen(req, timeout=30, context=contesto_ssl())
+    # Da rete, coi rinvii che non portano il token fuori da Lichess (R137).
+    return rete.apri_richiesta(req, timeout=30)
 
 
 def leggi_le_partite(pgn_text, avanzamento=None, interrotta=None, fermato=None):

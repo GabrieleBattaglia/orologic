@@ -19,6 +19,10 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 9</h2>
 <h3>Versione 9.5</h3>
+<h4>9.5.128 (26 novembre 2026)</h4>
+<ul>
+  <li>* [Rete] Il freno di Lichess per le troppe richieste ferma solo Lichess, non più GitHub o il sito di pgn-extract; un indirizzo che non si prepara non fa più cadere; e il token di Lichess non segue più un rinvio verso un altro sito.</li>
+</ul>
 <h4>9.5.127 (26 novembre 2026)</h4>
 <ul>
   <li>* [Core] Il database regge meglio: la scrittura si riprova se il file è tenuto un momento da un altro programma, e Orologic dice salvato solo quando lo è; con il database illeggibile le letture non fermano più la finestra a ogni accesso; i file provvisori di una scrittura interrotta se ne vanno; quando il database torna leggibile il volume e i nomi dei pezzi prendono i valori veri. Il registro degli errori tiene la voce anche quando non si riesce a girarlo, e due fili non ci scrivono insieme.</li>
