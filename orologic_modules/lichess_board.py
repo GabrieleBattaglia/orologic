@@ -1773,8 +1773,15 @@ def _gioca_partita(game_id, token, username, aperta=None):
             # sulla posizione di allora. Convalidata su quella di adesso, come
             # se fosse dell'avversario, quasi ogni premossa vera riceveva
             # "Mossa non valida" (R73).
+            # Solo cio' che ha la forma di una mossa: prima anche un comando
+            # sbagliato diventava premossa, senza il suono d'errore (R121).
             if game_state.board.turn != game_state.my_color:
-                game_state.premove = board_utils.NormalizeMove(user_input)
+                premossa = board_utils.NormalizeMove(user_input)
+                if not board_utils.ha_la_forma_di_una_mossa(premossa):
+                    Acusticator([600.0, 0.6, 0, config.VOLUME], adsr=[5, 0, 35, 90])
+                    print(_("Mossa non valida. Digita .? per l'aiuto."))
+                    continue
+                game_state.premove = premossa
                 print(_("Premove impostata: {m}. Verra' giocata al tuo turno.").format(m=game_state.premove))
                 continue
 
@@ -1790,19 +1797,10 @@ def _gioca_partita(game_id, token, username, aperta=None):
                     is_valid = False
 
             if is_valid:
-                if game_state.board.turn == game_state.my_color:
-                    uci = move.uci()
-                    invia_e_riferisci(
-                        q, game_id, token, "move", uci,
-                        fallita=_("La mossa {m} non e' arrivata a Lichess.").format(m=raw_input),
-                    )
-                else:
-                    game_state.premove = raw_input
-                    print(
-                        _(
-                            "Premove impostata: {m}. Verra' giocata al tuo turno."
-                        ).format(m=raw_input)
-                    )
+                invia_e_riferisci(
+                    q, game_id, token, "move", move.uci(),
+                    fallita=_("La mossa {m} non e' arrivata a Lichess.").format(m=raw_input),
+                )
             else:
                 Acusticator([600.0, 0.6, 0, config.VOLUME], adsr=[5, 0, 35, 90])
                 print(_("Mossa non valida. Digita .? per l'aiuto."))

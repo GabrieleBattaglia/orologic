@@ -149,6 +149,19 @@ def NormalizeMove(m):
     return m
 
 
+# La forma di una mossa, in SAN o in UCI, dopo NormalizeMove (R121).
+_FORMA_SAN = re.compile(r"^(?:[NBRQK][a-h]?[1-8]?x?[a-h][1-8]|[a-h](?:x[a-h])?[1-8](?:=?[NBRQ])?|O-O(?:-O)?)[+#]?[!?]{0,2}$")
+_FORMA_UCI = re.compile(r"^[a-h][1-8][a-h][1-8][nbrq]?$")
+
+
+def ha_la_forma_di_una_mossa(testo):
+    """Vero se il testo, gia' passato da NormalizeMove, ha la forma di una
+    mossa in SAN o in UCI. Serve alle premosse, che non si possono
+    controllare sulla posizione di adesso: prima a tratto altrui qualunque
+    testo diventava premossa, anche un comando sbagliato (R121)."""
+    return bool(_FORMA_SAN.match(testo) or _FORMA_UCI.match(testo))
+
+
 def _disambiguazione(board, move, tipo_pezzo):
     """La parte di notazione che distingue due pezzi uguali sulla stessa casa.
 

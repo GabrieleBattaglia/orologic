@@ -285,3 +285,18 @@ def test_un_errore_a_partita_in_corso_salva_la_ricostruzione(monkeypatch):
     finally:
         for percorso in _pgn_nuovi(prima):
             os.remove(percorso)
+
+
+def test_solo_cio_che_ha_la_forma_di_una_mossa_diventa_premossa():
+    """R121: a tratto altrui qualunque testo non riconosciuto diventava
+    premossa, e un comando sbagliato come drwa riceveva "Premove impostata"
+    senza il suono d'errore."""
+    from orologic_modules import board_utils
+
+    forma = board_utils.ha_la_forma_di_una_mossa
+    for mossa in ("e4", "exd5", "e8=Q", "e8Q", "Nf3", "Nbd2", "N1f3", "Qh4xe1", "O-O", "O-O-O", "Bb5+", "Qxf7#", "e2e4", "e7e8q", "Nf3!?"):
+        assert forma(board_utils.NormalizeMove(mossa)), mossa
+    for testo in ("drwa", "takebak", "abort", "e9", "Nz3", "ciao", "", "e4 e5"):
+        assert not forma(board_utils.NormalizeMove(testo)), testo
+    # Le forme dell'arrocco e i pezzi in minuscolo passano da NormalizeMove.
+    assert forma(board_utils.NormalizeMove("oo")) and forma(board_utils.NormalizeMove("nf3"))
