@@ -999,9 +999,8 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
     )
     sanitized_name = config.sanitize_filename(base_filename)
     salva_pgn_partita(pgn_str, sanitized_name)
-    ui.save_text_summary(
-        game_state, game_state.descriptive_move_history, last_valid_eco_entry
-    )
+    # Dal PGN, che ha anche le mosse di prima di una ripresa (R46).
+    ui.save_text_summary(game_state, board_utils.descrizioni_della_partita(game_state.pgn_game), last_valid_eco_entry)
     try:
         pyperclip.copy(pgn_str)
         print(_("PGN copiato negli appunti."))

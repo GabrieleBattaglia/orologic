@@ -137,3 +137,17 @@ def test_il_riepilogo_di_una_partita_fischer_random():
     assert len(righe) == 1 and "Errore" not in righe[0]
     # Senza pila che torni, la posizione standard, come prima.
     assert board_utils.scacchiera_iniziale(chess.Board(), ["e4"]) is None
+
+
+def test_le_descrizioni_vengono_dal_pgn_coi_segni():
+    """R46: il riepilogo di fine partita dal PGN, anche dopo una ripresa."""
+    import chess.pgn
+
+    from orologic_modules import board_utils
+
+    partita = chess.pgn.read_game(io.StringIO("1. e4! e5 2. Nf3?! Nc6 *"))
+    descrizioni = board_utils.descrizioni_della_partita(partita)
+    assert len(descrizioni) == 4
+    scacchiera = chess.Board()
+    attesa = board_utils.DescribeMove(chess.Move.from_uci("e2e4"), scacchiera, annotation="!")
+    assert descrizioni[0] == attesa

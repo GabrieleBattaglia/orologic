@@ -328,6 +328,23 @@ def GenerateMoveSummary(game_state):
     return riepilogo_mosse(game_state.move_history, scacchiera_iniziale(game_state.board, game_state.move_history))
 
 
+def descrizioni_della_partita(partita):
+    """Le mosse della linea principale del PGN descritte a parole, coi loro
+    segni: per il riepilogo di fine partita. Prima si usava l'elenco tenuto
+    durante il gioco, che non viaggia nel salvataggio automatico, e il
+    riepilogo di una partita ripresa elencava solo le mosse dopo la
+    ripresa, numerate da 1 (R46)."""
+    scacchiera = partita.board()
+    descrizioni = []
+    for nodo in partita.mainline():
+        segno = next((config.NAG_REVERSE_MAP[nag] for nag in sorted(nodo.nags) if nag in config.NAG_REVERSE_MAP), None)
+        if segno is None and _("proposta di patta") in (nodo.comment or ""):
+            segno = "="
+        descrizioni.append(DescribeMove(nodo.move, scacchiera, annotation=segno))
+        scacchiera.push(nodo.move)
+    return descrizioni
+
+
 def scacchiera_iniziale(scacchiera, mosse):
     """La posizione da cui partono le mosse dell'elenco: quella in fondo
     alla pila della scacchiera, se la pila e' quella delle mosse; altrimenti
