@@ -1264,7 +1264,12 @@ def async_play_loop(q, game_state):
                 # Evaluate premove
                 if game_state.board.turn == game_state.my_color and game_state.premove:
                     try:
-                        move = game_state.board.parse_san(game_state.premove)
+                        # Come la mossa scritta al proprio turno: in SAN, o
+                        # in coordinate (R73).
+                        try:
+                            move = game_state.board.parse_san(game_state.premove)
+                        except ValueError:
+                            move = game_state.board.parse_uci(game_state.premove)
                         uci = move.uci()
                         ui.pulisci_riga()
                         sys.stdout.write(
@@ -1626,6 +1631,15 @@ def _gioca_partita(game_id, token, username):
         else:
             if not game_state.started:
                 print(_("La partita non e' ancora iniziata!"))
+                continue
+
+            # A tratto altrui e' una premossa: si controlla al proprio turno,
+            # sulla posizione di allora. Convalidata su quella di adesso, come
+            # se fosse dell'avversario, quasi ogni premossa vera riceveva
+            # "Mossa non valida" (R73).
+            if game_state.board.turn != game_state.my_color:
+                game_state.premove = board_utils.NormalizeMove(user_input)
+                print(_("Premove impostata: {m}. Verra' giocata al tuo turno.").format(m=game_state.premove))
                 continue
 
             try:
