@@ -116,8 +116,13 @@ def _carica_archivio():
     if tipo == "file":
         print(_("Rilevato percorso file: {path}").format(path=clipboard))
         try:
-            with open(clipboard, encoding="utf-8", errors="replace") as f:
-                pgn_text = f.read()
+            # Le righe che non sono UTF-8 si leggono in cp1252, come fa la
+            # finestra: prima gli archivi Latin-1 diventavano illeggibili
+            # (R104).
+            from .archivio_pgn import decodifica
+
+            with open(clipboard, "rb") as f:
+                pgn_text = decodifica(f.read())[0]
         # Gli archivi PGN arrivano da fuori e possono essere malformati
         # in modi imprevedibili.
         except Exception as e:  # noqa: BLE001
@@ -1353,8 +1358,17 @@ def _salva_pgn_filtrato(games, indici, filtri_attivi):
     if not nome.lower().endswith(".pgn"):
         nome += ".pgn"
 
-    # Salva nella cartella pgn del progetto o nella cwd
-    percorso = os.path.join(os.getcwd(), nome)
+    # Nella cartella pgn di Orologic, come gli altri PGN, e con la domanda
+    # se il file c'e' gia': prima si scriveva nella cartella corrente, senza
+    # chiedere (R104).
+    from .config import percorso_salvataggio
+
+    percorso = percorso_salvataggio(os.path.join("pgn", nome))
+    os.makedirs(os.path.dirname(percorso), exist_ok=True)
+    if os.path.exists(percorso) and not enter_escape(
+        _("Il file {percorso} c'e' gia'. Lo sostituisco? (INVIO si', ESC no): ").format(percorso=percorso)
+    ):
+        return
 
     try:
         scrivi_pgn(percorso, games, indici)

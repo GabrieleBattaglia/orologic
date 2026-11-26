@@ -138,3 +138,29 @@ def test_un_errore_di_rete_a_meta_tiene_le_partite_arrivate(monkeypatch):
     dati = archivio_pgn._scarica("https://lichess.org/x.pgn", righe)
     assert dati.startswith(b'[Event "A"]')
     assert righe[-1].startswith("Scaricamento interrotto dalla rete")
+
+
+# R104: il terminale della ricerca PGN.
+
+
+def test_il_terminale_legge_un_archivio_latin1_e_non_sovrascrive(tmp_path, monkeypatch):
+    import chess.pgn
+
+    from orologic_modules import config, pgn_search
+
+    file = tmp_path / "latino.pgn"
+    file.write_bytes('[Event "Città"]\n[White "Müller"]\n[Black "B"]\n[Result "*"]\n\n1. e4 *\n\n'.encode("latin-1"))
+    monkeypatch.setattr(pgn_search.pyperclip, "paste", lambda: str(file))
+    partite = pgn_search._carica_archivio()
+    assert partite and partite[0].headers["White"] == "Müller"
+    # Il salvataggio va nella cartella pgn di Orologic, e chiede prima di
+    # sostituire un file che c'e'.
+    monkeypatch.setattr(config, "percorso_salvataggio", lambda nome: str(tmp_path / nome))
+    monkeypatch.setattr(pgn_search, "dgt", lambda *a, **k: "filtrato")
+    domande = []
+    monkeypatch.setattr(pgn_search, "enter_escape", lambda testo: domande.append(testo) or False)
+    (tmp_path / "pgn").mkdir()
+    (tmp_path / "pgn" / "filtrato.pgn").write_text("vecchio", encoding="utf-8")
+    pgn_search._salva_pgn_filtrato([chess.pgn.Game()], [0], {"White": "Müller"})
+    assert (tmp_path / "pgn" / "filtrato.pgn").read_text(encoding="utf-8") == "vecchio"
+    assert domande and "c'e' gia'" in domande[-1]
