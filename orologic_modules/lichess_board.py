@@ -252,6 +252,10 @@ def _spectate_worker(url, token, q, stop_event):
         q.put({"tipo": "errore", "motivo": errore})
         q.put({"tipo": "fine"})
         return
+    # La partenza e' quella della prima riga: il flusso chiude col riepilogo
+    # della partita, col FEN finale e nessuna mossa, che era preso per la
+    # partenza, e il PGN di ripiego usciva con quel FEN e zero mosse (R139).
+    partenza_data = False
     try:
         with risposta as resp:
             for line in resp:
@@ -281,9 +285,11 @@ def _spectate_worker(url, token, q, stop_event):
                     if variant:
                         q.put({"tipo": "variante", "chiave": variant, "nome": d.get("variant", {}).get("name")})
 
-                    if "initialFen" in d:
+                    if not partenza_data and "initialFen" in d:
+                        partenza_data = True
                         q.put({"tipo": "inizio", "fen": d["initialFen"]})
-                    elif "fen" in d and "lm" not in d:
+                    elif not partenza_data and "fen" in d and "lm" not in d:
+                        partenza_data = True
                         q.put({"tipo": "inizio", "fen": d["fen"]})
 
                     if "clock" in d and isinstance(d["clock"], dict):
@@ -352,6 +358,7 @@ def _righe_del_gioco(game_state):
         _("notakeback : Rifiuta il ritiro chiesto dall'avversario"),
         _("claim : Reclama vittoria per abbandono avversario"),
         _("claimdraw : Reclama la patta per abbandono avversario"),
+        _("abort : Annulla la partita, finche' le prime mosse lo permettono"),
     ]
     if getattr(game_state, "tournament_id", None):
         righe.append(_(".berserk : Dimezza il tuo tempo per un punto in piu', torneo arena"))
@@ -1775,10 +1782,17 @@ def _gioca_partita(game_id, token, username, aperta=None):
                 )
             else:
                 print(_("Tentativo di reclamare la vittoria (claim victory)..."))
-                if send_action(game_id, token, "claim-victory"):
-                    print(_("Vittoria reclamata con successo!"))
-                else:
-                    print(_("Impossibile reclamare la vittoria in questo momento."))
+                # Col motivo del rifiuto, come gli altri invii (R139).
+                invia_e_riferisci(
+                    q, game_id, token, "claim-victory",
+                    riuscita=_("Vittoria reclamata con successo!"), fallita=_("Impossibile reclamare la vittoria in questo momento."),
+                )
+            continue
+        elif cmd == "abort":
+            # L'annullamento della Board API, finche' Lichess lo permette,
+            # nelle prime mosse: prima mancava (R139).
+            if enter_escape(_("Vuoi annullare la partita? Lichess lo permette solo nelle prime mosse (Invio = Si', Esc = No): ")):
+                invia_e_riferisci(q, game_id, token, "abort", riuscita=_("Richiesta di annullamento inviata."), fallita=_("L'annullamento non e' arrivato a Lichess."))
             continue
 
         if handle_exploration_command(user_input, game_state):

@@ -323,7 +323,7 @@ def menu_statistiche(db):
             break
 
         if scelta == "puzzle":
-            print(_("     STATISTICHE: PUZZLE"))
+            print(_("     STATISTICHE: PUZZLE").strip())
             puzzle_perf = perfs.get("puzzle", {})
             print(_("Elo Attuale: {r}").format(r=puzzle_perf.get("rating", "N/A")))
             print(_("Puzzle giocati: {g}").format(g=puzzle_perf.get("games", 0)))
@@ -351,7 +351,7 @@ def menu_statistiche(db):
         stat = perf_data["stat"]
         perf = perf_data.get("perf", {})
 
-        print(_("     STATISTICHE: {m}").format(m=scelta.upper()))
+        print(_("     STATISTICHE: {m}").format(m=scelta.upper()).strip())
 
         glicko = perf.get("glicko", {})
         print(

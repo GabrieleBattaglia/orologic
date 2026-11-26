@@ -487,3 +487,21 @@ def test_il_sito_di_pgn_extract_non_fa_cadere_su_un_errore_del_protocollo(monkey
     monkeypatch.setattr(rete, "apri_richiesta", tagliata)
     risposta, messaggio = pgn_extract._apri("https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/", 5)
     assert risposta is None and messaggio
+
+
+def test_l_attesa_del_torneo_parla_quando_cambiano_posto_punti_o_stato():
+    """R139, scelta di Gabriele del 26 novembre 2026: nell'attesa del torneo
+    la voce tace sui secondi e dice la riga quando cambiano il posto in
+    classifica, i punti o lo stato. Prima il confronto toglieva tutte le
+    cifre, e taceva anche sul posto."""
+    from orologic_modules import lichess_tornei
+
+    def vista(secondi, posto, punti=None, iniziato=True):
+        giocatori = [{"name": "Prova", "rank": posto, "score": punti}] if punti is not None else []
+        return {"isStarted": iniziato, "secondsToFinish": secondi, "me": {"rank": posto}, "standing": {"players": giocatori}}
+
+    stato = lichess_tornei.stato_dell_attesa
+    assert stato(vista(300, 12), "prova") == stato(vista(299, 12), "prova")
+    assert stato(vista(300, 12), "prova") != stato(vista(300, 11), "prova")
+    assert stato(vista(300, 12, 4), "prova") != stato(vista(300, 12, 6), "prova")
+    assert stato(vista(300, 12, iniziato=False), "prova") != stato(vista(300, 12), "prova")

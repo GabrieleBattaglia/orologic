@@ -414,3 +414,35 @@ def test_un_flusso_tagliato_a_meta_mette_sempre_eof(monkeypatch):
     with pytest.raises(RuntimeError):
         lichess_board._play_worker("url", "token", coda, threading.Event(), 2)
     assert coda.get_nowait() == {"type": "eof"}
+
+
+def test_il_riepilogo_finale_dell_osservazione_non_e_una_partenza(monkeypatch):
+    """R139: il flusso dell'osservazione chiude con il riepilogo della
+    partita, che ha il FEN finale e nessuna mossa: era preso per la
+    posizione di partenza, e il PGN di ripiego usciva con quel FEN e zero
+    mosse."""
+    import json
+    import queue
+    import threading
+
+    righe = [
+        {"id": "abcd1234", "variant": {"key": "standard"}, "players": {"white": {"user": {"name": "A"}}, "black": {"user": {"name": "B"}}}, "fen": chess.STARTING_FEN, "status": {"name": "started"}},
+        {"fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1", "lm": "e2e4", "wc": 300, "bc": 300},
+        {"id": "abcd1234", "variant": {"key": "standard"}, "fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1", "status": {"name": "resign"}, "winner": "white"},
+    ]
+    monkeypatch.setattr(lichess_board.rete, "apri", lambda *_a, **_k: (_Flusso([json.dumps(riga) + "\n" for riga in righe]), None))
+    coda = queue.Queue()
+    lichess_board._spectate_worker("url", None, coda, threading.Event())
+    messaggi = []
+    while not coda.empty():
+        messaggi.append(coda.get())
+    assert [m["tipo"] for m in messaggi].count("inizio") == 1
+    assert next(m for m in messaggi if m["tipo"] == "inizio")["fen"] == chess.STARTING_FEN
+
+
+def test_il_reclamo_della_vittoria_dice_il_motivo_e_c_e_l_annullamento(monkeypatch):
+    """R139: claim non diceva perche' Lichess lo rifiutava; e mancava il
+    comando per annullare la partita nelle prime mosse, che la Board API
+    ha."""
+    righe = lichess_board._righe_del_gioco(_stato())
+    assert any(riga.startswith("abort : ") for riga in righe)

@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 9.5.129 - giovedì 26 novembre 2026)</h1>
+<h1>Guida Utente di Orologic (Versione 9.5.130 - giovedì 26 novembre 2026)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -944,7 +944,8 @@ margin: 1em 0;
     <li><code>_[testo]</code>: Invia un messaggio in chat all'avversario (es. <code>_Buona partita</code>).</li>
     <li><code>draw</code> / <code>resign</code> / <code>takeback</code>: Proponi patta, abbandona o chiedi di annullare l'ultima mossa. Sono parole inglesi da scrivere così come sono, perché è il linguaggio con cui Orologic parla a Lichess: restano invariate anche se stai usando il programma in italiano. L'abbandono chiede conferma, la patta e il takeback vengono girati all'avversario, che è libero di rifiutarli.</li>
     <li><code>.berserk</code>: Nelle partite dei tornei arena, dimezza il tuo tempo in cambio di un punto in più se vinci. Si dichiara prima della tua prima mossa, e solo nei tornei che lo permettono: se Lichess rifiuta, Orologic ti dice perché. Se è l'avversario ad andare in berserk, una riga te lo dice. Vale anche scritto senza punto, <code>berserk</code>, come gli altri comandi di Lichess.</li>
-    <li><code>claim</code>: Reclama la vittoria quando l'avversario si è scollegato. Non funziona subito: Lichess concede all'avversario un tempo per rientrare, e finché non è scaduto Orologic ti dice quanti secondi mancano. Quando il momento arriva, il prompt te lo segnala e ti basta scrivere <code>claim</code> per chiudere la partita a tuo favore. Al suo posto, <code>claimdraw</code> reclama la patta.</li>
+    <li><code>claim</code>: Reclama la vittoria quando l'avversario si è scollegato. Non funziona subito: Lichess concede all'avversario un tempo per rientrare, e finché non è scaduto Orologic ti dice quanti secondi mancano. Quando il momento arriva, il prompt te lo segnala e ti basta scrivere <code>claim</code> per chiudere la partita a tuo favore. Al suo posto, <code>claimdraw</code> reclama la patta. Se Lichess rifiuta il reclamo, Orologic ti dice perché.</li>
+    <li><code>abort</code>: Annulla la partita, dopo la conferma. Lichess lo permette solo nelle prime mosse, prima che la partita conti davvero; dopo, ti dice che non si può.</li>
     <li><code>nodraw</code> / <code>notakeback</code>: Rifiuta la patta offerta dall'avversario, o il ritiro della mossa che ti chiede. Quando l'avversario offre patta o chiede il ritiro, Orologic te lo dice con un suono suo; per accettare scrivi <code>draw</code> o <code>takeback</code>.</li>
     <li><strong>Premoves:</strong> Se inserisci una mossa valida mentre tocca all'avversario, questa verrà memorizzata come "premove" e giocata istantaneamente appena il turno passerà a te. È utilissima nei lampo: in una riconquista obbligata, o quando devi solo riprendere un pezzo, la premove ti fa risparmiare l'intero tempo di reazione. Se l'avversario gioca qualcosa che rende illegale la tua premove, Orologic te lo dice e la annulla, lasciandoti giocare normalmente.</li>
 </ul>

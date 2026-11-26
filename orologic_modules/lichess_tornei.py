@@ -18,7 +18,6 @@ altrove.
 """
 
 import datetime
-import re
 import sys
 import time
 
@@ -296,6 +295,20 @@ def riga_attesa(torneo):
     return _("In attesa, fine fra {t}").format(t=fine)
 
 
+def stato_dell_attesa(torneo, username=None):
+    """Quello per cui la voce dice la riga dell'attesa: lo stato del torneo,
+    il posto in classifica e i punti, che si leggono nella classifica di
+    Lichess quando ci sei. I secondi no. Scelta di Gabriele del 26 novembre
+    2026: prima il confronto toglieva tutte le cifre, e la voce taceva anche
+    sul posto (R77, R139)."""
+    io = torneo.get("me") or {}
+    punti = None
+    for giocatore in (torneo.get("standing") or {}).get("players") or ():
+        if username and str(giocatore.get("name", "")).lower() == username.lower():
+            punti = giocatore.get("score")
+    return (bool(torneo.get("isFinished")), bool(torneo.get("isStarted")), io.get("rank"), punti, bool(io.get("withdraw")))
+
+
 def _aiuto_attesa():
     print(_("Attesa del torneo. Lichess ti abbina da solo, e la partita si apre qui."))
     print(_("c: classifica dei primi cinquanta"))
@@ -459,9 +472,9 @@ def attesa(torneo, token, username, db):
                     )
             # La riga si riscrive ogni secondo: nella finestra va alla barra
             # braille ma non si annuncia, come il prompt della partita, se
-            # non quando cambia qualcosa oltre ai secondi (R77).
+            # non quando cambiano stato, posto o punti (R77, R139).
             riga = riga_attesa(vista)
-            forma = re.sub(r"\d", "", riga)
+            forma = stato_dell_attesa(vista, username)
             if forma == ultima_forma:
                 with strato.rinfresco():
                     _scrivi_riga(riga)
