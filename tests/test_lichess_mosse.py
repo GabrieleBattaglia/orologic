@@ -171,3 +171,23 @@ def test_i_secondi_al_reclamo_scendono():
     assert 19 <= lichess_board.secondi_al_reclamo(stato) <= 20
     stato.claim_win_in_seconds = None
     assert lichess_board.secondi_al_reclamo(stato) == 0
+
+
+def test_gli_orologi_e_la_prima_mossa():
+    """R76: l'orologio locale scendeva dal primo istante, e il tempo per la
+    prima mossa non si diceva."""
+    import time
+
+    stato = _stato()
+    stato.my_color = chess.BLACK
+    stato.started = True
+    stato.white_time = stato.black_time = 60
+    stato.last_clock_sync = time.time() - 5
+    assert stato.get_clocks() == (60, 60)
+    lichess_board.ricostruisci_le_mosse(stato, ["e2e4"])
+    avviso = lichess_board.avviso_della_prima_mossa(stato, {"expiration": {"idleMillis": 5000, "millisToMove": 30000}})
+    assert avviso == "Hai 25 secondi per la prima mossa: dopo, Lichess annulla la partita."
+    assert lichess_board.avviso_della_prima_mossa(stato, {"expiration": {"idleMillis": 6000, "millisToMove": 30000}}) is None
+    lichess_board.ricostruisci_le_mosse(stato, ["e2e4", "e7e5"])
+    bianco, nero = stato.get_clocks()
+    assert bianco < 60 and nero == 60

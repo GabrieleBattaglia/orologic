@@ -692,13 +692,30 @@ class GamePlayState:
     def get_clocks(self):
         w_time = self.white_time
         b_time = self.black_time
-        if self.started:
+        # Come su Lichess, gli orologi corrono dopo la prima mossa di tutti e
+        # due: prima l'orologio locale scendeva dal primo istante (R76).
+        if self.started and len(self.move_history) >= 2:
             elapsed = time.time() - self.last_clock_sync
             if self.board.turn == chess.WHITE:
                 w_time = max(0, w_time - elapsed)
             else:
                 b_time = max(0, b_time - elapsed)
         return w_time, b_time
+
+
+def avviso_della_prima_mossa(game_state, stato):
+    """Il tempo per la prima mossa, da dire una volta, se tocca a chi usa
+    Orologic e Lichess lo manda nel campo expiration; altrimenti None.
+    Prima non si diceva, e la partita poteva essere annullata senza che
+    l'utente lo sapesse (R76)."""
+    scadenza = (stato or {}).get("expiration") or {}
+    if not scadenza or game_state.board.turn != game_state.my_color or len(game_state.move_history) >= 2:
+        return None
+    if getattr(game_state, "prima_mossa_detta", False):
+        return None
+    game_state.prima_mossa_detta = True
+    secondi = max(0, int((scadenza.get("millisToMove", 0) - scadenza.get("idleMillis", 0)) / 1000))
+    return _("Hai {s} secondi per la prima mossa: dopo, Lichess annulla la partita.").format(s=secondi)
 
 
 def ricostruisci_le_mosse(game_state, mosse_uci):
@@ -1095,6 +1112,9 @@ def async_play_loop(q, game_state):
                 )
                 sys.stdout.write(_("Tu sei il {c}!\n").format(c=col_str))
                 game_state.started = True
+                avviso = avviso_della_prima_mossa(game_state, state)
+                if avviso:
+                    sys.stdout.write(avviso + "\n")
                 refresh_line()
 
             elif msg.get("type") == "gameState":
@@ -1222,6 +1242,12 @@ def async_play_loop(q, game_state):
                                 adsr=[0, 0, 100, 0],
                             )  # Extra beep for my turn
 
+                # A mosse applicate, quando il tratto e' quello giusto (R76).
+                avviso = avviso_della_prima_mossa(game_state, msg)
+                if avviso:
+                    ui.pulisci_riga()
+                    sys.stdout.write(avviso + "\n")
+                    refresh_line()
                 if "wtime" in msg and msg.get("wtime") is not None:
                     game_state.white_time = int(msg.get("wtime")) / 1000.0
                 if "btime" in msg and msg.get("btime") is not None:
