@@ -6,16 +6,29 @@
 # Can be requested at: gabriele.battaglia@gmail.com
 # Or found at: https://github.com/GabrieleBattaglia/GBUtils.git
 
-python-chess>=1.9.0
+# Il pacchetto degli scacchi si chiama chess: python-chess e' il nome
+# vecchio. La finestra e' wxPython (rilievo R91 della revisione 2).
+chess>=1.9.0
+wxPython>=4.2
 python-dateutil
 pyperclip
 requests
 numpy
 reportlab
-pygame
+# pygame-ce, la versione della comunita', e' quella installata e provata:
+# si importa come pygame.
+pygame-ce
 svglib
 # Il documento del RichEdit dell'area, per il braille del testo che cambia.
 pywin32
+# Quelli che arrivano da GBUtils: la voce e il braille, i suoni, i
+# certificati.
+accessible-output2
+sounddevice
+scipy
+certifi
+# Il cestino della pulizia fuori da Windows; su Windows lo fa la Shell.
+send2trash; sys_platform != "win32"
 
 # Solo per gli strumenti di sviluppo in strumenti/, non servono a chi
 # usa il programma: si installano con pip install -r requirements-dev.txt
