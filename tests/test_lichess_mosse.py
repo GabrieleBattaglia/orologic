@@ -54,3 +54,37 @@ def test_la_posizione_di_partenza_da_fen():
     lichess_board.ricostruisci_le_mosse(stato, ["e2e4"])
     assert stato.board.piece_at(chess.E4) == chess.Piece(chess.PAWN, chess.WHITE)
     assert stato.move_history == ["e4"]
+
+
+# R18: l'esito degli invii.
+
+
+def _esito(monkeypatch, riuscito, errore=None, **argomenti):
+    import queue
+
+    monkeypatch.setattr(lichess_board.rete, "invia", lambda *a, **k: (riuscito, errore))
+    coda = queue.Queue()
+    lichess_board.invia_e_riferisci(coda, "abcd1234", "token", "move", "e2e4", **argomenti)
+    return coda.get(timeout=5) if (not riuscito or argomenti.get("riuscita")) else coda
+
+
+def test_la_mossa_che_non_arriva_si_dice(monkeypatch):
+    messaggio = _esito(monkeypatch, False, "Lichess ha risposto con l'errore 400.", fallita="La mossa e4 non e' arrivata a Lichess.")
+    assert messaggio == {
+        "type": "esito_invio",
+        "testo": "La mossa e4 non e' arrivata a Lichess. Lichess ha risposto con l'errore 400.",
+        "riuscito": False,
+    }
+
+
+def test_la_conferma_arriva_dopo_l_invio(monkeypatch):
+    messaggio = _esito(monkeypatch, True, riuscita="Offerta di patta inviata.", fallita="no")
+    assert messaggio["riuscito"] and messaggio["testo"] == "Offerta di patta inviata."
+
+
+def test_la_mossa_riuscita_non_dice_niente(monkeypatch):
+    import time
+
+    coda = _esito(monkeypatch, True, fallita="no")
+    time.sleep(0.2)
+    assert coda.empty()

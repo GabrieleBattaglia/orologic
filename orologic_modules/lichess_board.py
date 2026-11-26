@@ -853,6 +853,29 @@ def send_action(game_id, token, action, uci=None, chat_text=None, motivo=None):
     return riuscito
 
 
+def suono_dell_invio_fallito():
+    """Tre note che scendono, un tritono: l'invio a Lichess non e' riuscito."""
+    Acusticator(["b4", 0.07, 0, config.VOLUME, "f4", 0.07, 0, config.VOLUME, "b3", 0.25, 0, config.VOLUME], kind=2, adsr=[2, 10, 70, 20])
+
+
+def invia_e_riferisci(q, game_id, token, azione, uci=None, testo=None, riuscita=None, fallita=""):
+    """Manda l'azione a Lichess in un filo suo e ne mette l'esito nella coda
+    dei messaggi della partita: la conferma, riuscita, solo a invio fatto,
+    e il fallimento, con il motivo di Lichess, sempre. Prima l'esito si
+    ignorava, e le conferme arrivavano prima dell'invio: chi credeva di
+    aver mosso aspettava, col suo orologio che correva (R18)."""
+
+    def filo():
+        motivo = []
+        if send_action(game_id, token, azione, uci, testo, motivo=motivo):
+            if riuscita:
+                q.put({"type": "esito_invio", "testo": riuscita, "riuscito": True})
+            return
+        q.put({"type": "esito_invio", "testo": " ".join([fallita, *[m for m in motivo if m]]).strip(), "riuscito": False})
+
+    threading.Thread(target=filo, daemon=True, name="invio a Lichess").start()
+
+
 def async_play_loop(q, game_state):
     strato.fornisci(lambda: cruscotto.dati_di(game_state), _comandi_delle_righe(_righe_del_gioco(game_state)))
     buf = []
@@ -913,6 +936,12 @@ def async_play_loop(q, game_state):
             if msg.get("type") == "eof":
                 sys.stdout.write("\n" + _("Connessione al server chiusa.") + "\n")
                 return None
+            elif msg.get("type") == "esito_invio":
+                ui.pulisci_riga()
+                sys.stdout.write(msg["testo"] + "\n")
+                if not msg["riuscito"]:
+                    suono_dell_invio_fallito()
+                refresh_line()
             elif msg.get("type") == "riconnessione":
                 motivo = msg.get("motivo") or _("connessione interrotta")
                 sys.stdout.write(
@@ -1212,11 +1241,10 @@ def async_play_loop(q, game_state):
                         sys.stdout.write(
                             _("Eseguo premove: {m}...\n").format(m=game_state.premove)
                         )
-                        threading.Thread(
-                            target=send_action,
-                            args=(game_state.game_id, game_state.token, "move", uci),
-                            daemon=True,
-                        ).start()
+                        invia_e_riferisci(
+                            q, game_state.game_id, game_state.token, "move", uci,
+                            fallita=_("La mossa {m} non e' arrivata a Lichess.").format(m=game_state.premove),
+                        )
                     # Come sopra: la partita online continua anche se un dato
                     # secondario non si legge.
                     except Exception:  # noqa: BLE001
@@ -1510,12 +1538,10 @@ def _gioca_partita(game_id, token, username):
         if user_input.startswith("_"):
             chat_text = user_input[1:].strip()
             if chat_text:
-                threading.Thread(
-                    target=send_action,
-                    args=(game_id, token, "chat", None, chat_text),
-                    daemon=True,
-                ).start()
-                print(_("Messaggio inviato."))
+                invia_e_riferisci(
+                    q, game_id, token, "chat", testo=chat_text,
+                    riuscita=_("Messaggio inviato."), fallita=_("Il messaggio non e' arrivato a Lichess."),
+                )
             continue
 
         cmd = user_input.lower()
@@ -1523,18 +1549,23 @@ def _gioca_partita(game_id, token, username):
             if enter_escape(
                 _("Sei sicuro di voler abbandonare (resign)? (Invio = Si', Esc = No): ")
             ):
-                send_action(game_id, token, "resign")
+                invia_e_riferisci(q, game_id, token, "resign", fallita=_("L'abbandono non e' arrivato a Lichess."))
             continue
         elif cmd == "draw":
-            print(_("Offerta di patta inviata."))
-            send_action(game_id, token, "draw/yes")
+            invia_e_riferisci(
+                q, game_id, token, "draw/yes",
+                riuscita=_("Offerta di patta inviata."), fallita=_("L'offerta di patta non e' arrivata a Lichess."),
+            )
             continue
         elif cmd in (".berserk", "berserk"):
             berserk(game_id, token, game_state)
             continue
         elif cmd == "takeback":
-            print(_("Richiesta di annullamento mossa inviata."))
-            send_action(game_id, token, "takeback/yes")
+            invia_e_riferisci(
+                q, game_id, token, "takeback/yes",
+                riuscita=_("Richiesta di annullamento mossa inviata."),
+                fallita=_("La richiesta di annullamento non e' arrivata a Lichess."),
+            )
             continue
         elif cmd == "claim":
             if game_state.claim_win_in_seconds and game_state.claim_win_in_seconds > 0:
@@ -1582,11 +1613,10 @@ def _gioca_partita(game_id, token, username):
             if is_valid:
                 if game_state.board.turn == game_state.my_color:
                     uci = move.uci()
-                    threading.Thread(
-                        target=send_action,
-                        args=(game_id, token, "move", uci),
-                        daemon=True,
-                    ).start()
+                    invia_e_riferisci(
+                        q, game_id, token, "move", uci,
+                        fallita=_("La mossa {m} non e' arrivata a Lichess.").format(m=raw_input),
+                    )
                 else:
                     game_state.premove = raw_input
                     print(
