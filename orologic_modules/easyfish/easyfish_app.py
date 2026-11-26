@@ -16,7 +16,6 @@ from .. import engine as orologic_engine
 from ..board_utils import (
     CustomBoard,
     DescribeMove,
-    GameState,
     accoda_commento,
     format_pv_descriptively,
     mosse_fino_al_nodo,
@@ -533,20 +532,6 @@ def _esegui(partita=None):
         print(_("Nuova partita caricata."))
         _nel_terminale(board)
 
-    # DRY: GameState
-    fake_clock = {
-        "phases": [
-            {
-                "white_time": 0,
-                "black_time": 0,
-                "white_inc": 0,
-                "black_inc": 0,
-                "moves": 0,
-            }
-        ]
-    }
-    game_state = GameState(fake_clock)
-    game_state.board = board
 
     # State
     info = {}
@@ -765,7 +750,6 @@ def _esegui(partita=None):
                         )
                     )
 
-                game_state.board = board
                 _nel_terminale(board)
 
             elif cmd == ".e":
@@ -776,7 +760,6 @@ def _esegui(partita=None):
                 )
                 node = final_node
                 board = posizione.scacchiera_del_nodo(game, node)
-                game_state.board = board
                 if mod_in_exp:
                     is_modified = True
 
@@ -792,7 +775,6 @@ def _esegui(partita=None):
                 # Dopo un taglio la mossa di prima puo' non esserci piu'.
                 node = posizione.ancora_nella_partita(node)
                 board = posizione.scacchiera_del_nodo(game, node)
-                game_state.board = board
 
             elif cmd == ".d":
                 # Nella finestra, la finestra dei disegni; nel terminale il menu.
@@ -851,7 +833,6 @@ def _esegui(partita=None):
                         continue
                     game = loaded_game
                     board, node = _apri_partita(game)
-                    game_state.board = board
                     is_modified = is_corrected
                     print(_("Nuova partita caricata."))
                     _nel_terminale(board)
@@ -886,7 +867,6 @@ def _esegui(partita=None):
                             continue
                     game = scelta
                     board, node = _apri_partita(game)
-                    game_state.board = board
                     is_modified = False
                     print(_("Nuova partita caricata."))
                     _nel_terminale(board)
@@ -922,7 +902,6 @@ def _esegui(partita=None):
                         board = CustomBoard()
                         board.set_fen(fen_from_clip)
                         game, node = InitNewPGN(board)
-                        game_state.board = board
                         is_modified = False
                         _nel_terminale(board)
                     except ValueError:
@@ -936,7 +915,6 @@ def _esegui(partita=None):
                 print(_("Nuova scacchiera pronta. Si parte!"))
                 board = CustomBoard()
                 game, node = InitNewPGN(board)
-                game_state.board = board
                 is_modified = False
 
             elif cmd == ".be":
@@ -960,7 +938,6 @@ def _esegui(partita=None):
                     board = CustomBoard()
                     board.set_fen(new_fen)
                     game, node = InitNewPGN(board)
-                    game_state.board = board
                     is_modified = False
                     print(_("Nuova partita avviata dalla posizione editata."))
                     _nel_terminale(board)
@@ -1003,7 +980,7 @@ def _esegui(partita=None):
         else:
             from ..lichess_board import handle_exploration_command
 
-            if handle_exploration_command(key_command, game_state):
+            if handle_exploration_command(key_command, board):
                 continue
             move = posizione.leggi_la_mossa(board, key_command)
 

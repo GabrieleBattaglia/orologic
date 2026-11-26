@@ -9,58 +9,6 @@ from ..config import _
 from .posizione import righe_dell_analisi
 
 
-def GetPrincipalVariationSan(board, pv):
-    """Restituisce una lista di mosse SAN a partire da una variante principale (PV)."""
-    temp_board = board.copy()
-    san_moves = []
-    for move in pv:
-        try:
-            san_moves.append(temp_board.san(move))
-            temp_board.push(move)
-        # Il motore e' un processo separato che puo' non rispondere:
-        # senza analisi si prosegue.
-        except Exception:  # noqa: BLE001
-            break
-    return san_moves
-
-
-def FormatAnalysisInfo(board, info):
-    """Formatta un singolo dizionario di info analisi in una stringa leggibile."""
-    pv = info.get("pv", [])
-    if not pv:
-        return None
-
-    score_val = info.get("score").pov(board.turn)
-    if score_val.is_mate():
-        eval_str = f"M{abs(score_val.mate())}"
-    else:
-        eval_str = f"{score_val.score(mate_score=10000) / 100:+.2f}"
-
-    wdl = info.get("wdl")
-    wdl_str = ""
-    if wdl:
-        wdl_pov = wdl.pov(board.turn) if hasattr(wdl, "pov") else wdl
-        try:
-            # supporta sia wdl object che list
-            w = wdl_pov.wins / 10 if hasattr(wdl_pov, "wins") else wdl_pov[0] / 10
-            d = wdl_pov.draws / 10 if hasattr(wdl_pov, "draws") else wdl_pov[1] / 10
-            loss = (
-                wdl_pov.losses / 10 if hasattr(wdl_pov, "losses") else wdl_pov[2] / 10
-            )
-            wdl_str = f" WDL:{w:.0f}%-{d:.0f}%-{loss:.0f}%"
-        # Il motore e' un processo separato che puo' non rispondere:
-        # senza analisi si prosegue.
-        except Exception:  # noqa: BLE001, S110
-            pass
-
-    line_san = " ".join(GetPrincipalVariationSan(board, pv))
-    time_spent = info.get("time", 0.0)
-    depth = info.get("depth", 0)
-    seldepth = info.get("seldepth", 0)
-
-    return f"{time_spent:.0f}S Prof:{depth}/{seldepth} CP: {eval_str}{wdl_str}\nBL: {line_san}"
-
-
 def opzioni_del_motore(engine):
     """Le opzioni del motore col valore in uso, una riga ciascuna: quelle
     scelte da Orologic, o quelle di partenza del motore. I pulsanti, come
@@ -211,36 +159,3 @@ def forma_verbosa(board, analisi):
         righe.extend(riga for riga in board_utils.format_pv_descriptively(board, legali).split("\n") if riga)
     return righe
 
-
-def RunAnalysis(board, engine, time_limit, multipv_count):
-    """
-    Esegue un'analisi della posizione corrente.
-    Restituisce una lista di stringhe formattate.
-    """
-    if not engine:
-        return [_("Motore non disponibile.")]
-
-    results = []
-    try:
-        limit = chess.engine.Limit(time=time_limit)
-        info_list = engine.analyse(board, limit, multipv=multipv_count)
-
-        if isinstance(info_list, dict) or not isinstance(info_list, list):
-            info_list = [info_list]
-
-        for i, info in enumerate(info_list):
-            formatted = FormatAnalysisInfo(board, info)
-            if formatted:
-                if len(info_list) > 1:
-                    lines = formatted.split("\n")
-                    lines[0] = f"{i + 1}. " + lines[0]
-                    results.append("\n".join(lines))
-                else:
-                    results.append(formatted)
-
-    # Il motore e' un processo separato che puo' non rispondere:
-    # senza analisi si prosegue.
-    except Exception as e:  # noqa: BLE001
-        results.append(_("Analisi fallita: {e}").format(e=e))
-
-    return results

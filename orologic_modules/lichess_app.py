@@ -183,14 +183,6 @@ def menu_logout(db):
     return False
 
 
-def format_timestamp(ts):
-    import datetime
-
-    if not ts:
-        return _("Sconosciuto")
-    return config.format_date_italian(datetime.datetime.fromtimestamp(ts / 1000))
-
-
 def format_playtime(seconds):
     if not seconds:
         return _("0 secondi")
@@ -459,43 +451,6 @@ def fetch_following(token):
             if stato.get("playingId") and not utente.get("playing"):
                 utente["playing"] = f"https://lichess.org/{stato['playingId']}"
     return utenti
-
-
-def follow_user(token, username):
-    riuscito, errore = rete.invia(
-        f"https://lichess.org/api/rel/follow/{username}", token=token
-    )
-    if riuscito:
-        print(_("Ora segui {u}!").format(u=username))
-        return True
-    print(
-        _("Non e' stato possibile seguire {u}. {motivo}").format(
-            u=username, motivo=errore
-        )
-    )
-    return False
-
-
-def unfollow_user(token, username):
-    riuscito, errore = rete.invia(
-        f"https://lichess.org/api/rel/unfollow/{username}", token=token
-    )
-    if riuscito:
-        print(_("Non segui piu' {u}.").format(u=username))
-        return True
-    print(_("Operazione non riuscita. {motivo}").format(motivo=errore))
-    return False
-
-
-def send_message(token, username, text):
-    riuscito, errore = rete.invia(
-        f"https://lichess.org/inbox/{username}", token=token, dati={"text": text}
-    )
-    if riuscito:
-        print(_("Messaggio inviato a {u} con successo!").format(u=username))
-        return True
-    print(_("Messaggio non inviato a {u}. {motivo}").format(u=username, motivo=errore))
-    return False
 
 
 def menu_amici(db):
@@ -1455,11 +1410,6 @@ def get_challenges(token, silenzioso=True, usa_cache=True):
     return _in_cache(
         ("sfide", token), (dati.get("in") or [], dati.get("out") or [])
     )
-
-
-def get_incoming_challenges(token, silenzioso=True, usa_cache=True):
-    """Le sole sfide in arrivo."""
-    return (get_challenges(token, silenzioso=silenzioso, usa_cache=usa_cache) or ([], []))[0]
 
 
 def accept_challenge(token, challenge_id):

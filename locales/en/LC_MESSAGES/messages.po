@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-26 08:41+0100\n"
+"POT-Creation-Date: 2026-11-26 08:43+0100\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -255,8 +255,8 @@ msgstr ""
 "A pending refereed game has been detected. Do you want to resume it? (ENTER "
 "for yes, ESC for no): "
 
-#: orologic.py:398 orologic_modules/lichess_app.py:521
-#: orologic_modules/lichess_app.py:2317
+#: orologic.py:398 orologic_modules/lichess_app.py:476
+#: orologic_modules/lichess_app.py:2267
 msgid ""
 "\n"
 "Scegli un'azione: "
@@ -292,7 +292,7 @@ msgid "Desideri l'analisi automatica? (INVIO per si', ESC per manuale): "
 msgstr "Do you want automatic analysis? (ENTER for yes, ESC for manual): "
 
 #: orologic.py:511 orologic_modules/easyfish/drawing.py:87
-#: orologic_modules/lichess_app.py:2142
+#: orologic_modules/lichess_app.py:2092
 msgid "sconosciuto"
 msgstr "unknown"
 
@@ -344,12 +344,12 @@ msgid "Il testo che arriva da sé"
 msgstr "Text that arrives on its own"
 
 #: orologic_modules/annunci.py:92
-#: orologic_modules/easyfish/analysis_utils.py:80 orologic_modules/pub.py:53
+#: orologic_modules/easyfish/analysis_utils.py:28 orologic_modules/pub.py:53
 msgid "sì"
 msgstr "yes"
 
 #: orologic_modules/annunci.py:92
-#: orologic_modules/easyfish/analysis_utils.py:80 orologic_modules/pub.py:53
+#: orologic_modules/easyfish/analysis_utils.py:28 orologic_modules/pub.py:53
 msgid "no"
 msgstr "no"
 
@@ -854,15 +854,15 @@ msgstr "Unexpected error parsing PGN: {error}"
 #: orologic_modules/board_utils.py:1007 orologic_modules/controlli.py:289
 #: orologic_modules/cruscotto.py:69 orologic_modules/cruscotto.py:225
 #: orologic_modules/easyfish/constants.py:26
-#: orologic_modules/easyfish/easyfish_app.py:719
-#: orologic_modules/easyfish/easyfish_app.py:1044
+#: orologic_modules/easyfish/easyfish_app.py:704
+#: orologic_modules/easyfish/easyfish_app.py:1021
 #: orologic_modules/easyfish/game_mode.py:42
 #: orologic_modules/easyfish/game_mode.py:564
 #: orologic_modules/easyfish/interaction.py:111
 #: orologic_modules/easyfish/interaction.py:511
 #: orologic_modules/engine.py:1688 orologic_modules/finestra_editor.py:84
-#: orologic_modules/game_flow.py:1110 orologic_modules/lichess_app.py:1662
-#: orologic_modules/lichess_app.py:2195 orologic_modules/lichess_app.py:2330
+#: orologic_modules/game_flow.py:1110 orologic_modules/lichess_app.py:1612
+#: orologic_modules/lichess_app.py:2145 orologic_modules/lichess_app.py:2280
 #: orologic_modules/lichess_board.py:20 orologic_modules/lichess_board.py:664
 #: orologic_modules/lichess_board.py:1111
 #: orologic_modules/memoboard_app.py:1069
@@ -877,15 +877,15 @@ msgstr "White"
 #: orologic_modules/board_utils.py:1007 orologic_modules/controlli.py:289
 #: orologic_modules/cruscotto.py:70 orologic_modules/cruscotto.py:226
 #: orologic_modules/easyfish/constants.py:28
-#: orologic_modules/easyfish/easyfish_app.py:719
-#: orologic_modules/easyfish/easyfish_app.py:1044
+#: orologic_modules/easyfish/easyfish_app.py:704
+#: orologic_modules/easyfish/easyfish_app.py:1021
 #: orologic_modules/easyfish/game_mode.py:43
 #: orologic_modules/easyfish/game_mode.py:564
 #: orologic_modules/easyfish/interaction.py:111
 #: orologic_modules/easyfish/interaction.py:511
 #: orologic_modules/engine.py:1689 orologic_modules/finestra_editor.py:84
-#: orologic_modules/game_flow.py:1111 orologic_modules/lichess_app.py:1662
-#: orologic_modules/lichess_app.py:2195 orologic_modules/lichess_app.py:2330
+#: orologic_modules/game_flow.py:1111 orologic_modules/lichess_app.py:1612
+#: orologic_modules/lichess_app.py:2145 orologic_modules/lichess_app.py:2280
 #: orologic_modules/lichess_board.py:21 orologic_modules/lichess_board.py:665
 #: orologic_modules/lichess_board.py:1111
 #: orologic_modules/memoboard_app.py:1069
@@ -1024,7 +1024,7 @@ msgid " e "
 msgstr " and "
 
 #: orologic_modules/cleaner.py:47 orologic_modules/finestra_pulizia.py:58
-#: orologic_modules/lichess_app.py:202 orologic_modules/tempo.py:182
+#: orologic_modules/lichess_app.py:194 orologic_modules/tempo.py:182
 #, python-brace-format
 msgid "{n} giorni"
 msgstr "{n} days"
@@ -1559,11 +1559,11 @@ msgstr "Textual chessboard"
 msgid "Commento mossa"
 msgstr "Comment the move"
 
-#: orologic_modules/config.py:202 orologic_modules/lichess_app.py:656
+#: orologic_modules/config.py:202 orologic_modules/lichess_app.py:611
 msgid "Riepilogo dei pezzi Bianchi"
 msgstr "Summary of White pieces"
 
-#: orologic_modules/config.py:203 orologic_modules/lichess_app.py:657
+#: orologic_modules/config.py:203 orologic_modules/lichess_app.py:612
 msgid "Riepilogo dei pezzi Neri"
 msgstr "Summary of the Black pieces"
 
@@ -1579,7 +1579,7 @@ msgstr "Explore diagonal top-left"
 msgid "Esplora colonna, traversa o casa"
 msgstr "Explore column, rank or square"
 
-#: orologic_modules/config.py:207 orologic_modules/lichess_app.py:663
+#: orologic_modules/config.py:207 orologic_modules/lichess_app.py:618
 msgid "Posizioni di un pezzo specifico"
 msgstr "Locations of a specific piece"
 
@@ -2006,8 +2006,8 @@ msgstr "Confirm"
 #: orologic_modules/dialoghi.py:467 orologic_modules/dialoghi.py:944
 #: orologic_modules/finestra_archivi.py:164
 #: orologic_modules/finestra_editor.py:108
-#: orologic_modules/lichess_app.py:2164 orologic_modules/lichess_app.py:2199
-#: orologic_modules/lichess_app.py:2339
+#: orologic_modules/lichess_app.py:2114 orologic_modules/lichess_app.py:2149
+#: orologic_modules/lichess_app.py:2289
 #: orologic_modules/lichess_profiler.py:597
 msgid "Annulla"
 msgstr "Cancel"
@@ -2435,7 +2435,7 @@ msgstr ""
 "\n"
 "Variation added."
 
-#: orologic_modules/easyfish/easyfish_app.py:362
+#: orologic_modules/easyfish/easyfish_app.py:361
 #: orologic_modules/easyfish/posizione.py:43 orologic_modules/engine.py:860
 #, python-brace-format
 msgid "[BM: {bm}]"
@@ -2457,7 +2457,7 @@ msgstr ""
 "\n"
 "Enter comment: "
 
-#: orologic_modules/easyfish/easyfish_app.py:361
+#: orologic_modules/easyfish/easyfish_app.py:360
 #: orologic_modules/easyfish/posizione.py:43 orologic_modules/engine.py:911
 #, python-brace-format
 msgid "[Val: {ev}]"
@@ -2520,11 +2520,11 @@ msgstr ""
 "\n"
 "Smart inspection? (ENTER yes, ESC no): "
 
-#: orologic_modules/easyfish/easyfish_app.py:247
+#: orologic_modules/easyfish/easyfish_app.py:246
 #: orologic_modules/easyfish/interaction.py:444 orologic_modules/engine.py:956
 #: orologic_modules/finestra_scacchiera.py:358
 #: orologic_modules/finestra_scacchiera.py:375
-#: orologic_modules/lichess_app.py:1016
+#: orologic_modules/lichess_app.py:971
 msgid "Scacchiera"
 msgstr "Board"
 
@@ -2838,8 +2838,7 @@ msgstr "  Configuration: Hash={h}MB, Threads={t}, Level={s}"
 
 #: orologic_modules/engine.py:1662 orologic_modules/engine.py:1886
 #: orologic_modules/engine.py:1887 orologic_modules/lichess_app.py:144
-#: orologic_modules/lichess_app.py:190 orologic_modules/lichess_app.py:248
-#: orologic_modules/lichess_app.py:546
+#: orologic_modules/lichess_app.py:240 orologic_modules/lichess_app.py:501
 msgid "Sconosciuto"
 msgstr "Unknown"
 
@@ -3969,31 +3968,31 @@ msgstr "Comment"
 msgid "Commento della mossa"
 msgstr "Comment on the move"
 
-#: orologic_modules/easyfish/easyfish_app.py:370
-#: orologic_modules/easyfish/easyfish_app.py:1001
+#: orologic_modules/easyfish/easyfish_app.py:369
+#: orologic_modules/easyfish/easyfish_app.py:978
 #: orologic_modules/easyfish/interaction.py:531
 #: orologic_modules/finestra_navigatore.py:138
 msgid "Commento registrato."
 msgstr "Comment recorded."
 
-#: orologic_modules/easyfish/easyfish_app.py:868
+#: orologic_modules/easyfish/easyfish_app.py:849
 #: orologic_modules/easyfish/interaction.py:469
 #: orologic_modules/finestra_navigatore.py:155
 msgid "Impossibile eliminare l'inizio della partita."
 msgstr "Unable to delete the start of the game."
 
-#: orologic_modules/easyfish/easyfish_app.py:875
+#: orologic_modules/easyfish/easyfish_app.py:856
 #: orologic_modules/easyfish/interaction.py:460
 #: orologic_modules/finestra_navigatore.py:166
 msgid "Mossa/Variante eliminata. Tornati indietro."
 msgstr "Move or variation deleted. Back to the previous position."
 
-#: orologic_modules/easyfish/easyfish_app.py:673
+#: orologic_modules/easyfish/easyfish_app.py:658
 #: orologic_modules/finestra_navigatore.py:174
 msgid "Questa linea è già la principale."
 msgstr "This line is already the main one."
 
-#: orologic_modules/easyfish/easyfish_app.py:671
+#: orologic_modules/easyfish/easyfish_app.py:656
 #: orologic_modules/finestra_navigatore.py:181
 msgid "Variante promossa a linea principale!"
 msgstr "Variation promoted to main line!"
@@ -4003,7 +4002,7 @@ msgstr "Variation promoted to main line!"
 msgid "Analisi in corso..."
 msgstr "Analysis in progress..."
 
-#: orologic_modules/easyfish/easyfish_app.py:969
+#: orologic_modules/easyfish/easyfish_app.py:946
 #: orologic_modules/easyfish/game_mode.py:590
 #: orologic_modules/easyfish/interaction.py:477
 #: orologic_modules/finestra_navigatore.py:203
@@ -4146,7 +4145,7 @@ msgstr "Enter the name of the clock."
 msgid "La fase {n} ha 0 mosse: la fase dopo non comincerebbe mai."
 msgstr "Phase {n} has 0 moves: the next phase would never start."
 
-#: orologic_modules/finestra_pulizia.py:58 orologic_modules/lichess_app.py:202
+#: orologic_modules/finestra_pulizia.py:58 orologic_modules/lichess_app.py:194
 #: orologic_modules/lichess_profiler.py:202 orologic_modules/tempo.py:180
 msgid "1 giorno"
 msgstr "1 day"
@@ -4760,7 +4759,7 @@ msgid "Sollevato: {pezzo}"
 msgstr "Lifted: {pezzo}"
 
 #: orologic_modules/finestra_scacchiera.py:779
-#: orologic_modules/lichess_app.py:794
+#: orologic_modules/lichess_app.py:749
 msgid "Promozione"
 msgstr "Promotion"
 
@@ -4860,14 +4859,14 @@ msgstr "No move to comment on."
 msgid "Scacco matto! Vince {winner}."
 msgstr "Checkmate! {winner} wins."
 
-#: orologic_modules/easyfish/easyfish_app.py:126
+#: orologic_modules/easyfish/easyfish_app.py:125
 #: orologic_modules/easyfish/game_mode.py:670
 #: orologic_modules/easyfish/game_mode.py:816
 #: orologic_modules/game_flow.py:509
 msgid "Patta per stallo!"
 msgstr "Draw by stalemate!"
 
-#: orologic_modules/easyfish/easyfish_app.py:151
+#: orologic_modules/easyfish/easyfish_app.py:150
 #: orologic_modules/easyfish/game_mode.py:696
 #: orologic_modules/easyfish/game_mode.py:844
 #: orologic_modules/game_flow.py:536
@@ -5600,39 +5599,39 @@ msgstr "Logout cancelled."
 msgid "Non sei attualmente loggato (nessun token presente)."
 msgstr "You are not currently logged in (no token present)."
 
-#: orologic_modules/lichess_app.py:196 orologic_modules/tempo.py:33
+#: orologic_modules/lichess_app.py:188 orologic_modules/tempo.py:33
 msgid "0 secondi"
 msgstr "0 seconds"
 
-#: orologic_modules/lichess_app.py:204 orologic_modules/tempo.py:38
+#: orologic_modules/lichess_app.py:196 orologic_modules/tempo.py:38
 #: orologic_modules/tempo.py:188
 #, python-brace-format
 msgid "{n} ore"
 msgstr "{n} hours"
 
-#: orologic_modules/lichess_app.py:204
+#: orologic_modules/lichess_app.py:196
 #: orologic_modules/lichess_profiler.py:205 orologic_modules/tempo.py:38
 #: orologic_modules/tempo.py:186
 msgid "1 ora"
 msgstr "1 hour"
 
-#: orologic_modules/lichess_app.py:207 orologic_modules/tempo.py:40
+#: orologic_modules/lichess_app.py:199 orologic_modules/tempo.py:40
 #: orologic_modules/tempo.py:194
 #, python-brace-format
 msgid "{n} minuti"
 msgstr "{n} minutes"
 
-#: orologic_modules/lichess_app.py:207
+#: orologic_modules/lichess_app.py:199
 #: orologic_modules/lichess_profiler.py:208 orologic_modules/tempo.py:40
 #: orologic_modules/tempo.py:192
 msgid "1 minuto"
 msgstr "1 minute"
 
-#: orologic_modules/lichess_app.py:209
+#: orologic_modules/lichess_app.py:201
 msgid "< 1 minuto"
 msgstr "< 1 minute"
 
-#: orologic_modules/lichess_app.py:216
+#: orologic_modules/lichess_app.py:208
 msgid ""
 "\n"
 "Devi prima effettuare il login per vedere il tuo profilo."
@@ -5640,7 +5639,7 @@ msgstr ""
 "\n"
 "You must first log in to view your profile."
 
-#: orologic_modules/lichess_app.py:219
+#: orologic_modules/lichess_app.py:211
 msgid ""
 "\n"
 "Recupero dati del profilo in corso..."
@@ -5648,12 +5647,12 @@ msgstr ""
 "\n"
 "Retrieving profile data..."
 
-#: orologic_modules/lichess_app.py:224
+#: orologic_modules/lichess_app.py:216
 msgid ""
 "Impossibile recuperare il profilo. Controlla la tua connessione o il token."
 msgstr "Unable to retrieve profile. Check your connection or token."
 
-#: orologic_modules/lichess_app.py:231
+#: orologic_modules/lichess_app.py:223
 msgid ""
 "\n"
 "Premi Invio per tornare al menu Lichess..."
@@ -5661,12 +5660,12 @@ msgstr ""
 "\n"
 "Press Enter to return to the Lichess menu..."
 
-#: orologic_modules/lichess_app.py:240
+#: orologic_modules/lichess_app.py:232
 #, python-brace-format
 msgid "Statistiche non recuperate. {motivo}"
 msgstr "Statistics not retrieved. {motivo}"
 
-#: orologic_modules/lichess_app.py:268
+#: orologic_modules/lichess_app.py:260
 msgid ""
 "\n"
 "Devi prima effettuare il login per vedere le statistiche."
@@ -5674,7 +5673,7 @@ msgstr ""
 "\n"
 "You must first log in to see the statistics."
 
-#: orologic_modules/lichess_app.py:271
+#: orologic_modules/lichess_app.py:263
 msgid ""
 "\n"
 "Recupero dati utente in corso..."
@@ -5682,20 +5681,20 @@ msgstr ""
 "\n"
 "Retrieving user data..."
 
-#: orologic_modules/lichess_app.py:274
+#: orologic_modules/lichess_app.py:266
 msgid "Impossibile recuperare il profilo. Controlla la tua connessione."
 msgstr "Unable to retrieve profile. Check your connection."
 
-#: orologic_modules/lichess_app.py:279
+#: orologic_modules/lichess_app.py:271
 msgid "Nessuna statistica disponibile."
 msgstr "No statistics available."
 
-#: orologic_modules/lichess_app.py:285
+#: orologic_modules/lichess_app.py:277
 #, python-brace-format
 msgid "Partite: {g}"
 msgstr "Games: {g}"
 
-#: orologic_modules/lichess_app.py:288
+#: orologic_modules/lichess_app.py:280
 msgid ""
 "\n"
 "Non hai ancora giocato nessuna partita."
@@ -5703,13 +5702,13 @@ msgstr ""
 "\n"
 "You haven't played any games yet."
 
-#: orologic_modules/lichess_app.py:294 orologic_modules/lichess_app.py:514
-#: orologic_modules/lichess_app.py:842 orologic_modules/lichess_app.py:1272
-#: orologic_modules/lichess_app.py:2104
+#: orologic_modules/lichess_app.py:286 orologic_modules/lichess_app.py:469
+#: orologic_modules/lichess_app.py:797 orologic_modules/lichess_app.py:1227
+#: orologic_modules/lichess_app.py:2054
 msgid "Torna al menu Lichess"
 msgstr "Return to the Lichess menu"
 
-#: orologic_modules/lichess_app.py:300
+#: orologic_modules/lichess_app.py:292
 msgid ""
 "\n"
 "Scegli una modalita' per le statistiche: "
@@ -5717,30 +5716,30 @@ msgstr ""
 "\n"
 "Choose a statistics mode: "
 
-#: orologic_modules/lichess_app.py:309
+#: orologic_modules/lichess_app.py:301
 msgid "     STATISTICHE: PUZZLE"
 msgstr "     STATISTICS: PUZZLE"
 
-#: orologic_modules/lichess_app.py:311
+#: orologic_modules/lichess_app.py:303
 #, python-brace-format
 msgid "Elo Attuale: {r}"
 msgstr "Current Elo: {r}"
 
-#: orologic_modules/lichess_app.py:312
+#: orologic_modules/lichess_app.py:304
 #, python-brace-format
 msgid "Puzzle giocati: {g}"
 msgstr "Puzzles played: {g}"
 
-#: orologic_modules/lichess_app.py:314
+#: orologic_modules/lichess_app.py:306
 msgid "Stato: Provvisorio"
 msgstr "Status: Provisional"
 
-#: orologic_modules/lichess_app.py:315
+#: orologic_modules/lichess_app.py:307
 #, python-brace-format
 msgid "Progressione (recente): {p}"
 msgstr "Progression (recent): {p}"
 
-#: orologic_modules/lichess_app.py:318
+#: orologic_modules/lichess_app.py:310
 msgid ""
 "\n"
 "Nota: Le statistiche avanzate (es. Win/Loss/Streak) per i puzzle non sono esposte dall'API di base di Lichess."
@@ -5748,9 +5747,9 @@ msgstr ""
 "\n"
 "Note: Advanced statistics (e.g. Win/Loss/Streak) for puzzles are not exposed by the core Lichess API."
 
-#: orologic_modules/lichess_app.py:321 orologic_modules/lichess_app.py:434
-#: orologic_modules/lichess_app.py:534 orologic_modules/lichess_app.py:1314
-#: orologic_modules/lichess_app.py:2373 orologic_modules/lichess_board.py:1549
+#: orologic_modules/lichess_app.py:313 orologic_modules/lichess_app.py:426
+#: orologic_modules/lichess_app.py:489 orologic_modules/lichess_app.py:1269
+#: orologic_modules/lichess_app.py:2323 orologic_modules/lichess_board.py:1549
 #: orologic_modules/lichess_stats.py:187 orologic_modules/lichess_stats.py:197
 #: orologic_modules/lichess_stats.py:207 orologic_modules/lichess_stats.py:222
 #: orologic_modules/lichess_stats.py:444
@@ -5761,7 +5760,7 @@ msgstr ""
 "\n"
 "Press Enter to continue..."
 
-#: orologic_modules/lichess_app.py:325
+#: orologic_modules/lichess_app.py:317
 #, python-brace-format
 msgid ""
 "\n"
@@ -5770,31 +5769,31 @@ msgstr ""
 "\n"
 "Retrieving detailed statistics for {m}..."
 
-#: orologic_modules/lichess_app.py:331
+#: orologic_modules/lichess_app.py:323
 msgid "Impossibile recuperare le statistiche per questa modalita'."
 msgstr "Unable to retrieve statistics for this mode."
 
-#: orologic_modules/lichess_app.py:337
+#: orologic_modules/lichess_app.py:329
 #, python-brace-format
 msgid "     STATISTICHE: {m}"
 msgstr "     STATISTICS: {m}"
 
-#: orologic_modules/lichess_app.py:341
+#: orologic_modules/lichess_app.py:333
 #, python-brace-format
 msgid "Elo Attuale: {r} (Deviazione: {d})"
 msgstr "Current Elo: {r} (Deviation: {d})"
 
-#: orologic_modules/lichess_app.py:346
+#: orologic_modules/lichess_app.py:338
 #, python-brace-format
 msgid "Progressione (ultime 12 partite): {p}"
 msgstr "Progression (last 12 games): {p}"
 
-#: orologic_modules/lichess_app.py:353
+#: orologic_modules/lichess_app.py:345
 #, python-brace-format
 msgid "Percentile: {p}%, la quota di giocatori che hai superato."
 msgstr "Percentile: {p}%, the share of players you are ahead of."
 
-#: orologic_modules/lichess_app.py:366
+#: orologic_modules/lichess_app.py:358
 #, python-brace-format
 msgid ""
 "\n"
@@ -5803,22 +5802,22 @@ msgstr ""
 "\n"
 "[Results over {t} games ({r} rated)]"
 
-#: orologic_modules/lichess_app.py:374
+#: orologic_modules/lichess_app.py:366
 #, python-brace-format
 msgid "Vittorie: {w} ({p:.2f}%)"
 msgstr "Wins: {w} ({p:.2f}%)"
 
-#: orologic_modules/lichess_app.py:375
+#: orologic_modules/lichess_app.py:367
 #, python-brace-format
 msgid "Sconfitte: {l} ({p:.2f}%)"
 msgstr "Losses: {l} ({p:.2f}%)"
 
-#: orologic_modules/lichess_app.py:376
+#: orologic_modules/lichess_app.py:368
 #, python-brace-format
 msgid "Patte: {d} ({p:.2f}%)"
 msgstr "Draws: {d} ({p:.2f}%)"
 
-#: orologic_modules/lichess_app.py:379
+#: orologic_modules/lichess_app.py:371
 #, python-brace-format
 msgid ""
 "Vittorie: {w}\n"
@@ -5829,22 +5828,22 @@ msgstr ""
 "Losses: {l}\n"
 "Draws: {d}"
 
-#: orologic_modules/lichess_app.py:388
+#: orologic_modules/lichess_app.py:380
 #, python-brace-format
 msgid "Volte in cui sei andato Berserk: {b} ({p:.2f}%)"
 msgstr "Times you went Berserk: {b} ({p:.2f}%)"
 
-#: orologic_modules/lichess_app.py:395
+#: orologic_modules/lichess_app.py:387
 #, python-brace-format
 msgid "Elo medio avversari: {avg}"
 msgstr "Average opponents Elo: {avg}"
 
-#: orologic_modules/lichess_app.py:399
+#: orologic_modules/lichess_app.py:391
 #, python-brace-format
 msgid "Disconnessioni: {d}"
 msgstr "Disconnections: {d}"
 
-#: orologic_modules/lichess_app.py:404
+#: orologic_modules/lichess_app.py:396
 msgid ""
 "\n"
 "[Record Elo]"
@@ -5852,17 +5851,17 @@ msgstr ""
 "\n"
 "[Elo Record]"
 
-#: orologic_modules/lichess_app.py:407
+#: orologic_modules/lichess_app.py:399
 #, python-brace-format
 msgid "Piu' alto: {r} (il {d})"
 msgstr "Highest: {r} (on {d})"
 
-#: orologic_modules/lichess_app.py:413
+#: orologic_modules/lichess_app.py:405
 #, python-brace-format
 msgid "Piu' basso: {r} (il {d})"
 msgstr "Lowest: {r} (on {d})"
 
-#: orologic_modules/lichess_app.py:422
+#: orologic_modules/lichess_app.py:414
 msgid ""
 "\n"
 "[Serie]"
@@ -5870,17 +5869,17 @@ msgstr ""
 "\n"
 "[Streaks]"
 
-#: orologic_modules/lichess_app.py:423
+#: orologic_modules/lichess_app.py:415
 #, python-brace-format
 msgid "Vittorie consecutive piu' lunga: {w}"
 msgstr "Longest consecutive victories: {w}"
 
-#: orologic_modules/lichess_app.py:424
+#: orologic_modules/lichess_app.py:416
 #, python-brace-format
 msgid "Sconfitte consecutive piu' lunga: {l}"
 msgstr "Longest consecutive defeats: {l}"
 
-#: orologic_modules/lichess_app.py:429
+#: orologic_modules/lichess_app.py:421
 #, python-brace-format
 msgid ""
 "\n"
@@ -5889,44 +5888,12 @@ msgstr ""
 "\n"
 "Time spent in this mode: {t}"
 
-#: orologic_modules/lichess_app.py:442
+#: orologic_modules/lichess_app.py:434
 #, python-brace-format
 msgid "Elenco dei seguiti non recuperato. {motivo}"
 msgstr "Follow list not retrieved. {motivo}"
 
-#: orologic_modules/lichess_app.py:469
-#, python-brace-format
-msgid "Ora segui {u}!"
-msgstr "You now follow {u}!"
-
-#: orologic_modules/lichess_app.py:472
-#, python-brace-format
-msgid "Non e' stato possibile seguire {u}. {motivo}"
-msgstr "It was not possible to follow {u}. {motivo}"
-
-#: orologic_modules/lichess_app.py:484
-#: orologic_modules/lichess_profiler.py:292
-#, python-brace-format
-msgid "Non segui piu' {u}."
-msgstr "You no longer follow {u}."
-
-#: orologic_modules/lichess_app.py:486
-#: orologic_modules/lichess_profiler.py:286
-#, python-brace-format
-msgid "Operazione non riuscita. {motivo}"
-msgstr "Operation failed. {motivo}"
-
-#: orologic_modules/lichess_app.py:495
-#, python-brace-format
-msgid "Messaggio inviato a {u} con successo!"
-msgstr "Message sent to {u} successfully!"
-
-#: orologic_modules/lichess_app.py:497
-#, python-brace-format
-msgid "Messaggio non inviato a {u}. {motivo}"
-msgstr "Message not sent to {u}. {motivo}"
-
-#: orologic_modules/lichess_app.py:505
+#: orologic_modules/lichess_app.py:460
 msgid ""
 "\n"
 "Devi prima effettuare il login per gestire gli amici."
@@ -5934,19 +5901,19 @@ msgstr ""
 "\n"
 "You must first log in to manage friends."
 
-#: orologic_modules/lichess_app.py:509
+#: orologic_modules/lichess_app.py:464
 msgid "          GESTIONE AMICI"
 msgstr "          FRIENDS MANAGEMENT"
 
-#: orologic_modules/lichess_app.py:512
+#: orologic_modules/lichess_app.py:467
 msgid "Vedi persone che segui"
 msgstr "See people you follow"
 
-#: orologic_modules/lichess_app.py:513
+#: orologic_modules/lichess_app.py:468
 msgid "Cerca e segui nuovo giocatore"
 msgstr "Search and follow new player"
 
-#: orologic_modules/lichess_app.py:528
+#: orologic_modules/lichess_app.py:483
 msgid ""
 "\n"
 "Recupero lista dei giocatori seguiti..."
@@ -5954,28 +5921,28 @@ msgstr ""
 "\n"
 "Retrieving list of followed players..."
 
-#: orologic_modules/lichess_app.py:532 orologic_modules/lichess_app.py:1312
+#: orologic_modules/lichess_app.py:487 orologic_modules/lichess_app.py:1267
 msgid "Non stai seguendo nessuno o e' impossibile recuperare la lista."
 msgstr ""
 "You are not following anyone or it is impossible to retrieve the list."
 
-#: orologic_modules/lichess_app.py:549 orologic_modules/lichess_app.py:1332
-#: orologic_modules/lichess_app.py:2162
+#: orologic_modules/lichess_app.py:504 orologic_modules/lichess_app.py:1287
+#: orologic_modules/lichess_app.py:2112
 msgid "ONLINE"
 msgstr "ONLINE"
 
-#: orologic_modules/lichess_app.py:549 orologic_modules/lichess_app.py:1334
-#: orologic_modules/lichess_app.py:2162
+#: orologic_modules/lichess_app.py:504 orologic_modules/lichess_app.py:1289
+#: orologic_modules/lichess_app.py:2112
 msgid "Offline"
 msgstr "Offline"
 
 #: orologic_modules/easyfish/constants.py:64
-#: orologic_modules/lichess_app.py:551 orologic_modules/lichess_app.py:1336
-#: orologic_modules/lichess_app.py:1373
+#: orologic_modules/lichess_app.py:506 orologic_modules/lichess_app.py:1291
+#: orologic_modules/lichess_app.py:1328
 msgid "Indietro"
 msgstr "Back"
 
-#: orologic_modules/lichess_app.py:557
+#: orologic_modules/lichess_app.py:512
 msgid ""
 "\n"
 "Scegli un amico per visualizzare le azioni: "
@@ -5983,329 +5950,329 @@ msgstr ""
 "\n"
 "Choose a friend to view actions: "
 
-#: orologic_modules/easyfish/easyfish_app.py:263
-#: orologic_modules/lichess_app.py:570
+#: orologic_modules/easyfish/easyfish_app.py:262
+#: orologic_modules/lichess_app.py:525
 msgid "Tocca al Bianco muovere."
 msgstr "It's White's turn to move."
 
-#: orologic_modules/easyfish/easyfish_app.py:265
-#: orologic_modules/lichess_app.py:572
+#: orologic_modules/easyfish/easyfish_app.py:264
+#: orologic_modules/lichess_app.py:527
 msgid "Tocca al Nero muovere."
 msgstr "It's Black's turn to move."
 
-#: orologic_modules/lichess_app.py:577
+#: orologic_modules/lichess_app.py:532
 msgid "Corto Bianco"
 msgstr "White kingside"
 
-#: orologic_modules/lichess_app.py:579
+#: orologic_modules/lichess_app.py:534
 msgid "Lungo Bianco"
 msgstr "White queenside"
 
-#: orologic_modules/lichess_app.py:581
+#: orologic_modules/lichess_app.py:536
 msgid "Corto Nero"
 msgstr "Black kingside"
 
-#: orologic_modules/lichess_app.py:583
+#: orologic_modules/lichess_app.py:538
 msgid "Lungo Nero"
 msgstr "Black queenside"
 
-#: orologic_modules/lichess_app.py:585
+#: orologic_modules/lichess_app.py:540
 #, python-brace-format
 msgid "Diritti di arrocco: {c}"
 msgstr "Castling Rights: {c}"
 
-#: orologic_modules/lichess_app.py:587
+#: orologic_modules/lichess_app.py:542
 msgid "Nessun diritto di arrocco."
 msgstr "No castling rights."
 
-#: orologic_modules/lichess_app.py:593
+#: orologic_modules/lichess_app.py:548
 #, python-brace-format
 msgid "Presa en passant possibile in {sq}."
 msgstr "En passant capture possible on {sq}."
 
-#: orologic_modules/lichess_app.py:596
+#: orologic_modules/lichess_app.py:551
 #, python-brace-format
 msgid "Ultima mossa giocata: {m}"
 msgstr "Last move played: {m}"
 
-#: orologic_modules/lichess_app.py:644 orologic_modules/lichess_app.py:1016
+#: orologic_modules/lichess_app.py:599 orologic_modules/lichess_app.py:971
 msgid "Comandi di esplorazione disponibili:"
 msgstr "Available exploration commands:"
 
-#: orologic_modules/lichess_app.py:658
+#: orologic_modules/lichess_app.py:613
 msgid "Esplora colonna"
 msgstr "Explore column"
 
-#: orologic_modules/lichess_app.py:659
+#: orologic_modules/lichess_app.py:614
 msgid "Esplora traversa"
 msgstr "Explore rank"
 
-#: orologic_modules/lichess_app.py:660
+#: orologic_modules/lichess_app.py:615
 msgid "Dettagli su una casa (es. -e4)"
 msgstr "Details about a square (e.g. -e4)"
 
-#: orologic_modules/lichess_app.py:661
+#: orologic_modules/lichess_app.py:616
 msgid "Diagonale ascendente destra"
 msgstr "Right ascending diagonal"
 
-#: orologic_modules/lichess_app.py:662
+#: orologic_modules/lichess_app.py:617
 msgid "Diagonale ascendente sinistra"
 msgstr "Left ascending diagonal"
 
-#: orologic_modules/lichess_app.py:664
+#: orologic_modules/lichess_app.py:619
 msgid "Mostra la scacchiera grafica"
 msgstr "Shows the graphic board"
 
-#: orologic_modules/lichess_app.py:665
+#: orologic_modules/lichess_app.py:620
 msgid "Arrenditi o esci dal puzzle"
 msgstr "Give up or exit the puzzle"
 
-#: orologic_modules/lichess_app.py:668 orologic_modules/lichess_app.py:1048
+#: orologic_modules/lichess_app.py:623 orologic_modules/lichess_app.py:1003
 msgid "Soluzione del Puzzle"
 msgstr "Solution of the Puzzle"
 
-#: orologic_modules/lichess_app.py:688 orologic_modules/lichess_app.py:967
-#: orologic_modules/lichess_app.py:968
+#: orologic_modules/lichess_app.py:643 orologic_modules/lichess_app.py:922
+#: orologic_modules/lichess_app.py:923
 #, python-brace-format
 msgid "Puzzle {id}"
 msgstr "Puzzle {id}"
 
-#: orologic_modules/lichess_app.py:689 orologic_modules/lichess_app.py:969
+#: orologic_modules/lichess_app.py:644 orologic_modules/lichess_app.py:924
 #, python-brace-format
 msgid "Difficolta' (Rating Lichess): {r}"
 msgstr "Difficulty (Lichess Rating): {r}"
 
-#: orologic_modules/lichess_app.py:690 orologic_modules/lichess_app.py:970
+#: orologic_modules/lichess_app.py:645 orologic_modules/lichess_app.py:925
 #, python-brace-format
 msgid "Tema: {t}"
 msgstr "Theme: {t}"
 
-#: orologic_modules/lichess_app.py:691
+#: orologic_modules/lichess_app.py:646
 #, python-brace-format
 msgid "Mosse trovate: {n} di {tot}."
 msgstr "Moves found: {n} of {tot}."
 
-#: orologic_modules/lichess_app.py:712
+#: orologic_modules/lichess_app.py:667
 #, python-brace-format
 msgid "Puzzle non recuperato. {motivo}"
 msgstr "Puzzle not retrieved. {motivo}"
 
-#: orologic_modules/lichess_app.py:740
+#: orologic_modules/lichess_app.py:695
 #, python-brace-format
 msgid "Esito del puzzle non inviato a Lichess. {motivo}"
 msgstr "Puzzle result not sent to Lichess. {motivo}"
 
-#: orologic_modules/lichess_app.py:759
+#: orologic_modules/lichess_app.py:714
 msgid "Pedone avanzato"
 msgstr "Advanced pawn"
 
-#: orologic_modules/lichess_app.py:760
+#: orologic_modules/lichess_app.py:715
 msgid "Vantaggio"
 msgstr "Advantage"
 
-#: orologic_modules/lichess_app.py:761
+#: orologic_modules/lichess_app.py:716
 msgid "Attrazione"
 msgstr "Attraction"
 
-#: orologic_modules/lichess_app.py:762
+#: orologic_modules/lichess_app.py:717
 msgid "Matto del corridoio"
 msgstr "Back-rank mate"
 
-#: orologic_modules/lichess_app.py:763
+#: orologic_modules/lichess_app.py:718
 msgid "Finale di Alfieri"
 msgstr "Bishop endgame"
 
-#: orologic_modules/lichess_app.py:764
+#: orologic_modules/lichess_app.py:719
 msgid "Arrocco"
 msgstr "Castling"
 
-#: orologic_modules/lichess_app.py:765
+#: orologic_modules/lichess_app.py:720
 msgid "Cattura del difensore"
 msgstr "Capturing the defender"
 
-#: orologic_modules/lichess_app.py:766
+#: orologic_modules/lichess_app.py:721
 msgid "Sgombero"
 msgstr "Clearance"
 
-#: orologic_modules/lichess_app.py:767
+#: orologic_modules/lichess_app.py:722
 msgid "Schiacciante"
 msgstr "Crushing"
 
-#: orologic_modules/lichess_app.py:768
+#: orologic_modules/lichess_app.py:723
 msgid "Deviazione"
 msgstr "Deflection"
 
-#: orologic_modules/lichess_app.py:769
+#: orologic_modules/lichess_app.py:724
 msgid "Attacco di scoperta"
 msgstr "Discovered attack"
 
-#: orologic_modules/lichess_app.py:770
+#: orologic_modules/lichess_app.py:725
 msgid "Scacco doppio"
 msgstr "Double check"
 
-#: orologic_modules/lichess_app.py:771
+#: orologic_modules/lichess_app.py:726
 msgid "Finale"
 msgstr "Endgame"
 
-#: orologic_modules/lichess_app.py:772
+#: orologic_modules/lichess_app.py:727
 msgid "Presa in Passant"
 msgstr "En passant"
 
-#: orologic_modules/lichess_app.py:773
+#: orologic_modules/lichess_app.py:728
 msgid "Parita'"
 msgstr "Equality"
 
-#: orologic_modules/lichess_app.py:774
+#: orologic_modules/lichess_app.py:729
 msgid "Re esposto"
 msgstr "Exposed king"
 
-#: orologic_modules/lichess_app.py:775
+#: orologic_modules/lichess_app.py:730
 msgid "Forchetta/Attacco doppio"
 msgstr "Fork/Double attack"
 
-#: orologic_modules/lichess_app.py:776
+#: orologic_modules/lichess_app.py:731
 msgid "Pezzo in presa"
 msgstr "Hanging piece"
 
-#: orologic_modules/lichess_app.py:777
+#: orologic_modules/lichess_app.py:732
 msgid "Interferenza"
 msgstr "Interference"
 
-#: orologic_modules/lichess_app.py:778
+#: orologic_modules/lichess_app.py:733
 msgid "Mossa intermedia (Zwischenzug)"
 msgstr "Intermediate move (Zwischenzug)"
 
-#: orologic_modules/lichess_app.py:779
+#: orologic_modules/lichess_app.py:734
 msgid "Attacco sull'ala di Re"
 msgstr "Kingside attack"
 
-#: orologic_modules/lichess_app.py:780
+#: orologic_modules/lichess_app.py:735
 msgid "Finale di Cavalli"
 msgstr "Knight endgame"
 
-#: orologic_modules/lichess_app.py:781
+#: orologic_modules/lichess_app.py:736
 msgid "Lungo (3 mosse)"
 msgstr "Long (3 moves)"
 
-#: orologic_modules/lichess_app.py:782
+#: orologic_modules/lichess_app.py:737
 msgid "Partite di Maestri"
 msgstr "Master games"
 
-#: orologic_modules/lichess_app.py:783 orologic_modules/lichess_board.py:488
+#: orologic_modules/lichess_app.py:738 orologic_modules/lichess_board.py:488
 #: orologic_modules/lichess_board.py:1273
 msgid "Scacco matto"
 msgstr "Checkmate"
 
-#: orologic_modules/lichess_app.py:784
+#: orologic_modules/lichess_app.py:739
 msgid "Matto in 1"
 msgstr "Mate in 1"
 
-#: orologic_modules/lichess_app.py:785
+#: orologic_modules/lichess_app.py:740
 msgid "Matto in 2"
 msgstr "Mate in 2"
 
-#: orologic_modules/lichess_app.py:786
+#: orologic_modules/lichess_app.py:741
 msgid "Matto in 3"
 msgstr "Mate in 3"
 
-#: orologic_modules/lichess_app.py:787
+#: orologic_modules/lichess_app.py:742
 msgid "Matto in 4"
 msgstr "Mate in 4"
 
-#: orologic_modules/lichess_app.py:788
+#: orologic_modules/lichess_app.py:743
 msgid "Matto in 5+"
 msgstr "Mate in 5+"
 
-#: orologic_modules/lichess_app.py:789
+#: orologic_modules/lichess_app.py:744
 msgid "Medio gioco"
 msgstr "Middlegame"
 
-#: orologic_modules/lichess_app.py:790
+#: orologic_modules/lichess_app.py:745
 msgid "Una mossa"
 msgstr "One move"
 
-#: orologic_modules/lichess_app.py:791
+#: orologic_modules/lichess_app.py:746
 msgid "Apertura"
 msgstr "Opening"
 
-#: orologic_modules/lichess_app.py:792
+#: orologic_modules/lichess_app.py:747
 msgid "Finale di Pedoni"
 msgstr "Pawn endgame"
 
-#: orologic_modules/lichess_app.py:793
+#: orologic_modules/lichess_app.py:748
 msgid "Inchiodatura"
 msgstr "Pin"
 
-#: orologic_modules/lichess_app.py:795
+#: orologic_modules/lichess_app.py:750
 msgid "Finale di Donne"
 msgstr "Queen endgame"
 
-#: orologic_modules/lichess_app.py:796
+#: orologic_modules/lichess_app.py:751
 msgid "Finale Donna e Torre"
 msgstr "Queen and rook endgame"
 
-#: orologic_modules/lichess_app.py:797
+#: orologic_modules/lichess_app.py:752
 msgid "Attacco sull'ala di Donna"
 msgstr "Queenside attack"
 
-#: orologic_modules/lichess_app.py:798
+#: orologic_modules/lichess_app.py:753
 msgid "Mossa silenziosa"
 msgstr "Quiet move"
 
-#: orologic_modules/lichess_app.py:799
+#: orologic_modules/lichess_app.py:754
 msgid "Finale di Torri"
 msgstr "Rook endgame"
 
-#: orologic_modules/lichess_app.py:800
+#: orologic_modules/lichess_app.py:755
 msgid "Sacrificio"
 msgstr "Sacrifice"
 
-#: orologic_modules/lichess_app.py:801
+#: orologic_modules/lichess_app.py:756
 msgid "Corto (2 mosse)"
 msgstr "Short (2 moves)"
 
-#: orologic_modules/lichess_app.py:802
+#: orologic_modules/lichess_app.py:757
 msgid "Infilata"
 msgstr "Skewer"
 
-#: orologic_modules/lichess_app.py:803
+#: orologic_modules/lichess_app.py:758
 msgid "Matto affogato"
 msgstr "Smothered mate"
 
-#: orologic_modules/lichess_app.py:804
+#: orologic_modules/lichess_app.py:759
 msgid "Pezzo intrappolato"
 msgstr "Trapped piece"
 
-#: orologic_modules/lichess_app.py:805
+#: orologic_modules/lichess_app.py:760
 msgid "Sottopromozione"
 msgstr "Underpromotion"
 
-#: orologic_modules/lichess_app.py:806
+#: orologic_modules/lichess_app.py:761
 msgid "Molto lungo (4+ mosse)"
 msgstr "Very long (4+ moves)"
 
-#: orologic_modules/lichess_app.py:807
+#: orologic_modules/lichess_app.py:762
 msgid "Zugzwang"
 msgstr "Zugzwang"
 
-#: orologic_modules/lichess_app.py:808
+#: orologic_modules/lichess_app.py:763
 msgid "Casuale (Nessun filtro)"
 msgstr "Random (No filter)"
 
-#: orologic_modules/lichess_app.py:837
+#: orologic_modules/lichess_app.py:792
 msgid "             PUZZLE LICHESS"
 msgstr "             LICHESS PUZZLE"
 
-#: orologic_modules/lichess_app.py:840
+#: orologic_modules/lichess_app.py:795
 msgid "Puzzle del Giorno"
 msgstr "Puzzle of the Day"
 
-#: orologic_modules/lichess_app.py:841
+#: orologic_modules/lichess_app.py:796
 msgid "Risolvi un nuovo puzzle"
 msgstr "Solve a new puzzle"
 
-#: orologic_modules/lichess_app.py:849 orologic_modules/lichess_app.py:1279
-#: orologic_modules/lichess_app.py:2111 orologic_modules/lichess_stats.py:312
+#: orologic_modules/lichess_app.py:804 orologic_modules/lichess_app.py:1234
+#: orologic_modules/lichess_app.py:2061 orologic_modules/lichess_stats.py:312
 msgid ""
 "\n"
 "Scegli un'opzione: "
@@ -6313,7 +6280,7 @@ msgstr ""
 "\n"
 "Choose an option: "
 
-#: orologic_modules/lichess_app.py:868
+#: orologic_modules/lichess_app.py:823
 #, python-brace-format
 msgid ""
 "\n"
@@ -6322,19 +6289,19 @@ msgstr ""
 "\n"
 "Your estimated puzzle score is: {elo}"
 
-#: orologic_modules/lichess_app.py:874
+#: orologic_modules/lichess_app.py:829
 msgid ""
 "A quale Elo vuoi esercitarti? (es. 1800, oppure invio per mantenere il tuo):"
 " "
 msgstr ""
 "What Elo do you want to practice at? (e.g. 1800, or Enter to keep yours): "
 
-#: orologic_modules/lichess_app.py:882
+#: orologic_modules/lichess_app.py:837
 #, python-brace-format
 msgid "Lichess adattera' la ricerca alla difficolta': {d}"
 msgstr "Lichess will adapt the search to the difficulty: {d}"
 
-#: orologic_modules/lichess_app.py:888
+#: orologic_modules/lichess_app.py:843
 msgid ""
 "\n"
 "Scegli la categoria di puzzle:"
@@ -6342,11 +6309,11 @@ msgstr ""
 "\n"
 "Choose puzzle category:"
 
-#: orologic_modules/lichess_app.py:893
+#: orologic_modules/lichess_app.py:848
 msgid "Seleziona il tema: "
 msgstr "Select the theme: "
 
-#: orologic_modules/lichess_app.py:899
+#: orologic_modules/lichess_app.py:854
 msgid ""
 "\n"
 "Recupero puzzle in corso..."
@@ -6354,16 +6321,16 @@ msgstr ""
 "\n"
 "Retrieving puzzle..."
 
-#: orologic_modules/lichess_app.py:905
+#: orologic_modules/lichess_app.py:860
 msgid "Impossibile caricare il puzzle."
 msgstr "Unable to load puzzle."
 
-#: orologic_modules/lichess_app.py:947
+#: orologic_modules/lichess_app.py:902
 #, python-brace-format
 msgid "Errore nel parsing del PGN: {e}"
 msgstr "PGN parsing error: {e}"
 
-#: orologic_modules/lichess_app.py:994
+#: orologic_modules/lichess_app.py:949
 msgid ""
 "\n"
 "Suggerimento: digita . per uscire, .? per l'aiuto sulle esplorazioni"
@@ -6371,46 +6338,46 @@ msgstr ""
 "\n"
 "Tip: Type . to go out, .? for help with explorations"
 
-#: orologic_modules/lichess_app.py:1027
+#: orologic_modules/lichess_app.py:982
 msgid "Vuoi vedere la soluzione del puzzle? (Invio = Si', Esc = No): "
 msgstr ""
 "Do you want to see the solution to the puzzle? (Enter = Yes, Esc = No): "
 
-#: orologic_modules/lichess_app.py:1032
+#: orologic_modules/lichess_app.py:987
 msgid "Puzzle interrotto."
 msgstr "Puzzle interrupted."
 
-#: orologic_modules/lichess_app.py:1041 orologic_modules/lichess_app.py:1063
-#: orologic_modules/lichess_app.py:1162
+#: orologic_modules/lichess_app.py:996 orologic_modules/lichess_app.py:1018
+#: orologic_modules/lichess_app.py:1117
 #, python-brace-format
 msgid "Tempo impiegato: {t}"
 msgstr "Time taken: {t}"
 
-#: orologic_modules/lichess_app.py:1054
+#: orologic_modules/lichess_app.py:1009
 #, python-brace-format
 msgid "Il tuo tratto: {m}"
 msgstr "Your move: {m}"
 
-#: orologic_modules/lichess_app.py:1056 orologic_modules/lichess_app.py:1100
+#: orologic_modules/lichess_app.py:1011 orologic_modules/lichess_app.py:1055
 #, python-brace-format
 msgid "L'avversario risponde con: {m}"
 msgstr "The opponent responds with: {m}"
 
-#: orologic_modules/lichess_app.py:1079
+#: orologic_modules/lichess_app.py:1034
 msgid ""
 "Mossa non valida. Digita . per uscire, .? per l'aiuto sulle esplorazioni"
 msgstr "Invalid move. Type . to go out, .? for help with explorations"
 
-#: orologic_modules/lichess_app.py:1087
+#: orologic_modules/lichess_app.py:1042
 #, python-brace-format
 msgid "Corretto! Hai giocato: {m}"
 msgstr "Correct! You played: {m}"
 
-#: orologic_modules/lichess_app.py:1128
+#: orologic_modules/lichess_app.py:1083
 msgid "Mossa errata, riprova."
 msgstr "Wrong move, try again."
 
-#: orologic_modules/lichess_app.py:1156
+#: orologic_modules/lichess_app.py:1111
 msgid ""
 "\n"
 "Congratulazioni! Hai risolto il puzzle!"
@@ -6418,28 +6385,28 @@ msgstr ""
 "\n"
 "Congratulations! You solved the puzzle!"
 
-#: orologic_modules/lichess_app.py:1163
+#: orologic_modules/lichess_app.py:1118
 msgid "Premi Invio per continuare..."
 msgstr "Press Enter to continue..."
 
-#: orologic_modules/lichess_app.py:1172
+#: orologic_modules/lichess_app.py:1127
 #, python-brace-format
 msgid "Profilo di {u} non recuperato. {motivo}"
 msgstr "Profile of {u} not retrieved. {motivo}"
 
-#: orologic_modules/lichess_app.py:1191
+#: orologic_modules/lichess_app.py:1146
 msgid "Controllo se l'utente e' in gioco..."
 msgstr "Checking if the user is in the game..."
 
-#: orologic_modules/lichess_app.py:1200
+#: orologic_modules/lichess_app.py:1155
 msgid "L'utente non ha partite in corso in questo momento."
 msgstr "The user has no games in progress at this time."
 
-#: orologic_modules/lichess_app.py:1203
+#: orologic_modules/lichess_app.py:1158
 msgid "Desideri attendere l'inizio di una partita? (Invio = Si', Esc = No): "
 msgstr "Want to wait for a game to start? (Enter = Yes, Esc = No): "
 
-#: orologic_modules/lichess_app.py:1212
+#: orologic_modules/lichess_app.py:1167
 #, python-brace-format
 msgid ""
 "\n"
@@ -6448,7 +6415,7 @@ msgstr ""
 "\n"
 "Waiting for {u} to start playing... (Press ESC or type . to cancel)"
 
-#: orologic_modules/lichess_app.py:1223
+#: orologic_modules/lichess_app.py:1178
 #, python-brace-format
 msgid ""
 "\r"
@@ -6457,7 +6424,7 @@ msgstr ""
 "\r"
 "Waiting... Time remaining: {m:02d}:{s:02d}"
 
-#: orologic_modules/lichess_app.py:1239
+#: orologic_modules/lichess_app.py:1194
 msgid ""
 "\n"
 "Attesa annullata."
@@ -6465,11 +6432,11 @@ msgstr ""
 "\n"
 "Wait cancelled."
 
-#: orologic_modules/lichess_app.py:1247
+#: orologic_modules/lichess_app.py:1202
 msgid "Partita iniziata! Connessione in corso..."
 msgstr "Game started! Connecting..."
 
-#: orologic_modules/lichess_app.py:1253
+#: orologic_modules/lichess_app.py:1208
 msgid ""
 "\n"
 "Tempo massimo di attesa (30 minuti) superato. Ritorno al menu."
@@ -6477,31 +6444,31 @@ msgstr ""
 "\n"
 "Maximum waiting time (30 minutes) exceeded. Return to the menu."
 
-#: orologic_modules/lichess_app.py:1257
+#: orologic_modules/lichess_app.py:1212
 msgid "Utente non trovato o errore di connessione."
 msgstr "User not found or connection error."
 
-#: orologic_modules/lichess_app.py:1266
+#: orologic_modules/lichess_app.py:1221
 msgid "          GUARDA PARTITA"
 msgstr "          WATCH GAME"
 
-#: orologic_modules/lichess_app.py:1268
+#: orologic_modules/lichess_app.py:1223
 msgid "Inserisci ID o URL Partita"
 msgstr "Enter Game ID or URL"
 
-#: orologic_modules/lichess_app.py:1269
+#: orologic_modules/lichess_app.py:1224
 msgid "Inserisci Nome Utente Lichess"
 msgstr "Enter Lichess Username"
 
-#: orologic_modules/lichess_app.py:1270
+#: orologic_modules/lichess_app.py:1225
 msgid "Scegli un Amico"
 msgstr "Choose a Friend"
 
-#: orologic_modules/lichess_app.py:1271
+#: orologic_modules/lichess_app.py:1226
 msgid "Lichess TV (Migliori in corso)"
 msgstr "Lichess TV (Best in progress)"
 
-#: orologic_modules/lichess_app.py:1287
+#: orologic_modules/lichess_app.py:1242
 msgid ""
 "\n"
 "ID o URL della partita: "
@@ -6509,7 +6476,7 @@ msgstr ""
 "\n"
 "Game ID or URL: "
 
-#: orologic_modules/lichess_app.py:1299
+#: orologic_modules/lichess_app.py:1254
 msgid ""
 "\n"
 "Nome Utente: "
@@ -6517,19 +6484,19 @@ msgstr ""
 "\n"
 "Username: "
 
-#: orologic_modules/lichess_app.py:1306
+#: orologic_modules/lichess_app.py:1261
 msgid "Devi aver fatto il login per vedere gli amici."
 msgstr "You must be logged in to see friends."
 
-#: orologic_modules/lichess_app.py:1308
+#: orologic_modules/lichess_app.py:1263
 msgid "Recupero lista degli amici in corso..."
 msgstr "Retrieving friends list..."
 
-#: orologic_modules/lichess_app.py:1330
+#: orologic_modules/lichess_app.py:1285
 msgid "IN GIOCO"
 msgstr "IN GAME"
 
-#: orologic_modules/lichess_app.py:1342
+#: orologic_modules/lichess_app.py:1297
 msgid ""
 "\n"
 "Scegli un amico da guardare: "
@@ -6537,17 +6504,17 @@ msgstr ""
 "\n"
 "Choose a friend to watch: "
 
-#: orologic_modules/lichess_app.py:1360
+#: orologic_modules/lichess_app.py:1315
 msgid "Recupero canali TV in corso..."
 msgstr "Retrieving TV channels..."
 
-#: orologic_modules/lichess_app.py:1363
+#: orologic_modules/lichess_app.py:1318
 #, python-brace-format
 msgid "Canali TV non recuperati. {motivo}"
 msgstr "TV channels not retrieved. {motivo}"
 
-#: orologic_modules/lichess_app.py:1368 orologic_modules/lichess_app.py:1535
-#: orologic_modules/lichess_app.py:2194 orologic_modules/lichess_app.py:2329
+#: orologic_modules/lichess_app.py:1323 orologic_modules/lichess_app.py:1485
+#: orologic_modules/lichess_app.py:2144 orologic_modules/lichess_app.py:2279
 #: orologic_modules/lichess_board.py:1053
 #: orologic_modules/lichess_board.py:1058
 #: orologic_modules/lichess_board.py:1456
@@ -6561,12 +6528,12 @@ msgstr "TV channels not retrieved. {motivo}"
 msgid "Anonimo"
 msgstr "Anonymous"
 
-#: orologic_modules/lichess_app.py:1370
+#: orologic_modules/lichess_app.py:1325
 #, python-brace-format
 msgid "{channel} ({user} - Elo: {rating})"
 msgstr "{channel} ({user} - Elo: {rating})"
 
-#: orologic_modules/lichess_app.py:1379
+#: orologic_modules/lichess_app.py:1334
 msgid ""
 "\n"
 "Scegli canale: "
@@ -6574,131 +6541,131 @@ msgstr ""
 "\n"
 "Choose channel: "
 
-#: orologic_modules/lichess_app.py:1386
+#: orologic_modules/lichess_app.py:1341
 msgid "Lichess non ha indicato quale partita: riprova."
 msgstr "Lichess did not indicate which game: try again."
 
-#: orologic_modules/lichess_app.py:1431
+#: orologic_modules/lichess_app.py:1386
 #, python-brace-format
 msgid "Partite in corso non recuperate. {motivo}"
 msgstr "Games in progress not retrieved. {motivo}"
 
-#: orologic_modules/lichess_app.py:1450
+#: orologic_modules/lichess_app.py:1405
 #, python-brace-format
 msgid "Sfide in attesa non recuperate. {motivo}"
 msgstr "Pending challenges not retrieved. {motivo}"
 
-#: orologic_modules/lichess_app.py:1470
+#: orologic_modules/lichess_app.py:1420
 #, python-brace-format
 msgid "Sfida non accettata. {motivo}"
 msgstr "Challenge not accepted. {motivo}"
 
-#: orologic_modules/lichess_app.py:1479
+#: orologic_modules/lichess_app.py:1429
 #, python-brace-format
 msgid "Sfida non rifiutata. {motivo}"
 msgstr "Challenge not rejected. {motivo}"
 
-#: orologic_modules/lichess_app.py:1489
+#: orologic_modules/lichess_app.py:1439
 #, python-brace-format
 msgid "Sfida non annullata. {motivo}"
 msgstr "Challenge not cancelled. {motivo}"
 
-#: orologic_modules/lichess_app.py:1495
+#: orologic_modules/lichess_app.py:1445
 msgid "ultrabullet"
 msgstr "ultrabullet"
 
-#: orologic_modules/lichess_app.py:1496
+#: orologic_modules/lichess_app.py:1446
 msgid "bullet"
 msgstr "bullet"
 
-#: orologic_modules/lichess_app.py:1497
+#: orologic_modules/lichess_app.py:1447
 msgid "blitz"
 msgstr "blitz"
 
-#: orologic_modules/lichess_app.py:1498
+#: orologic_modules/lichess_app.py:1448
 msgid "rapida"
 msgstr "rapid"
 
-#: orologic_modules/lichess_app.py:1499
+#: orologic_modules/lichess_app.py:1449
 msgid "classica"
 msgstr "classical"
 
-#: orologic_modules/lichess_app.py:1500
+#: orologic_modules/lichess_app.py:1450
 msgid "corrispondenza"
 msgstr "correspondence"
 
-#: orologic_modules/lichess_app.py:1521
+#: orologic_modules/lichess_app.py:1471
 #, python-brace-format
 msgid "corrispondenza, {n} giorni per mossa"
 msgstr "correspondence, {n} days per move"
 
-#: orologic_modules/lichess_app.py:1526
+#: orologic_modules/lichess_app.py:1476
 msgid "senza limite di tempo"
 msgstr "no time limit"
 
-#: orologic_modules/lichess_app.py:1527
+#: orologic_modules/lichess_app.py:1477
 msgid "classificata"
 msgstr "rated"
 
-#: orologic_modules/lichess_app.py:1527 orologic_modules/lichess_tornei.py:103
+#: orologic_modules/lichess_app.py:1477 orologic_modules/lichess_tornei.py:103
 msgid "amichevole"
 msgstr "casual"
 
-#: orologic_modules/lichess_app.py:1536
+#: orologic_modules/lichess_app.py:1486
 msgid "chiunque"
 msgstr "anyone"
 
-#: orologic_modules/lichess_app.py:1544
+#: orologic_modules/lichess_app.py:1494
 #, python-brace-format
 msgid "ricevuta da {u}, {d}"
 msgstr "received from {u}, {d}"
 
-#: orologic_modules/lichess_app.py:1545
+#: orologic_modules/lichess_app.py:1495
 #, python-brace-format
 msgid "inviata a {u}, {d}"
 msgstr "sent to {u}, {d}"
 
-#: orologic_modules/lichess_app.py:1555
+#: orologic_modules/lichess_app.py:1505
 #, python-brace-format
 msgid "{a} e {b}"
 msgstr "{a} and {b}"
 
-#: orologic_modules/lichess_app.py:1572
+#: orologic_modules/lichess_app.py:1522
 #, python-brace-format
 msgid "1 ricevuta da {u}"
 msgstr "1 received from {u}"
 
-#: orologic_modules/lichess_app.py:1574
+#: orologic_modules/lichess_app.py:1524
 #, python-brace-format
 msgid "{n} ricevute da {u}"
 msgstr "{n} received from {u}"
 
-#: orologic_modules/lichess_app.py:1576
+#: orologic_modules/lichess_app.py:1526
 #, python-brace-format
 msgid "{n} ricevute"
 msgstr "{n} received"
 
-#: orologic_modules/lichess_app.py:1578
+#: orologic_modules/lichess_app.py:1528
 #, python-brace-format
 msgid "1 inviata a {u}"
 msgstr "1 sent to {u}"
 
-#: orologic_modules/lichess_app.py:1580
+#: orologic_modules/lichess_app.py:1530
 #, python-brace-format
 msgid "{n} inviate a {u}"
 msgstr "{n} sent to {u}"
 
-#: orologic_modules/lichess_app.py:1582
+#: orologic_modules/lichess_app.py:1532
 #, python-brace-format
 msgid "{n} inviate"
 msgstr "{n} sent"
 
-#: orologic_modules/lichess_app.py:1583
+#: orologic_modules/lichess_app.py:1533
 #, python-brace-format
 msgid "Sfide: {elenco}"
 msgstr "Challenges: {elenco}"
 
-#: orologic_modules/lichess_app.py:1594
+#: orologic_modules/lichess_app.py:1544
 msgid ""
 "Lichess, con le app come Orologic, nella ricerca di un avversario gioca solo"
 " rapid, classica e corrispondenza: almeno 8 minuti, contando la base piu' 40"
@@ -6708,7 +6675,7 @@ msgstr ""
 "correspondence when seeking an opponent: at least 8 minutes, counting the "
 "base plus 40 increments."
 
-#: orologic_modules/lichess_app.py:1596
+#: orologic_modules/lichess_app.py:1546
 msgid ""
 "Lichess, con le app come Orologic, non gioca il bullet: almeno 3 minuti, "
 "contando la base piu' 40 incrementi."
@@ -6716,22 +6683,22 @@ msgstr ""
 "With apps like Orologic, Lichess does not play bullet: at least 3 minutes, "
 "counting the base plus 40 increments."
 
-#: orologic_modules/lichess_app.py:1607
+#: orologic_modules/lichess_app.py:1557
 msgid ""
 "Tempo di gioco (minuti+incremento, es. 5+3, oppure invio per "
 "Corrispondenza): "
 msgstr ""
 "Playing time (minutes+increment, e.g. 5+3, or Enter for Correspondence): "
 
-#: orologic_modules/lichess_app.py:1612
+#: orologic_modules/lichess_app.py:1562
 msgid "Giorni per mossa (es. 1, 2, 3... o invio per 1): "
 msgstr "Days per move (e.g. 1, 2, 3... or enter for 1): "
 
-#: orologic_modules/lichess_app.py:1630
+#: orologic_modules/lichess_app.py:1580
 msgid "Formato non valido. Usa minuti+secondi, ad esempio 10+0 o 5+3."
 msgstr "Invalid format. Use minutes+seconds, for example 10+0 or 5+3."
 
-#: orologic_modules/lichess_app.py:1633
+#: orologic_modules/lichess_app.py:1583
 msgid ""
 "\n"
 "Vuoi giocare una partita Standard? (Invio = Si', Esc = No): "
@@ -6739,43 +6706,43 @@ msgstr ""
 "\n"
 "Want to play a Standard game? (Enter = Yes, Esc = No): "
 
-#: orologic_modules/lichess_app.py:1638
+#: orologic_modules/lichess_app.py:1588
 msgid "Chess960"
 msgstr "Chess960"
 
-#: orologic_modules/lichess_app.py:1639
+#: orologic_modules/lichess_app.py:1589
 msgid "Crazyhouse"
 msgstr "Crazyhouse"
 
-#: orologic_modules/lichess_app.py:1640
+#: orologic_modules/lichess_app.py:1590
 msgid "Antichess"
 msgstr "Antichess"
 
-#: orologic_modules/lichess_app.py:1641
+#: orologic_modules/lichess_app.py:1591
 msgid "Atomic"
 msgstr "Atomic"
 
-#: orologic_modules/lichess_app.py:1642
+#: orologic_modules/lichess_app.py:1592
 msgid "Horde"
 msgstr "Horde"
 
-#: orologic_modules/lichess_app.py:1643
+#: orologic_modules/lichess_app.py:1593
 msgid "King of the Hill"
 msgstr "King of the Hill"
 
-#: orologic_modules/lichess_app.py:1644
+#: orologic_modules/lichess_app.py:1594
 msgid "Racing Kings"
 msgstr "Racing Kings"
 
-#: orologic_modules/lichess_app.py:1645
+#: orologic_modules/lichess_app.py:1595
 msgid "Three-check"
 msgstr "Three-check"
 
-#: orologic_modules/lichess_app.py:1652
+#: orologic_modules/lichess_app.py:1602
 msgid "Scegli la variante: "
 msgstr "Choose the variant: "
 
-#: orologic_modules/lichess_app.py:1659
+#: orologic_modules/lichess_app.py:1609
 msgid ""
 "\n"
 "Partita classificata (Rated)? (Invio = Si', Esc = No): "
@@ -6783,15 +6750,15 @@ msgstr ""
 "\n"
 "Rated game? (Enter = Yes, Esc = No): "
 
-#: orologic_modules/lichess_app.py:1662
+#: orologic_modules/lichess_app.py:1612
 msgid "Casuale"
 msgstr "Random"
 
-#: orologic_modules/lichess_app.py:1663
+#: orologic_modules/lichess_app.py:1613
 msgid "Scegli il colore: "
 msgstr "Choose color: "
 
-#: orologic_modules/lichess_app.py:1672
+#: orologic_modules/lichess_app.py:1622
 msgid ""
 "\n"
 "Range Elo avversario (es. 1500-1800). Lascia vuoto per qualsiasi avversario."
@@ -6799,26 +6766,26 @@ msgstr ""
 "\n"
 "Opponent Elo range (e.g. 1500-1800). Leave blank for any opponent."
 
-#: orologic_modules/lichess_app.py:1675
+#: orologic_modules/lichess_app.py:1625
 msgid "Range Elo: "
 msgstr "Elo Range: "
 
-#: orologic_modules/lichess_app.py:1705
+#: orologic_modules/lichess_app.py:1655
 #, python-brace-format
 msgid "Partita contro il computer non creata. {motivo}"
 msgstr "Game against computer not created. {motivo}"
 
-#: orologic_modules/lichess_app.py:1735 orologic_modules/lichess_app.py:1868
+#: orologic_modules/lichess_app.py:1685 orologic_modules/lichess_app.py:1818
 #, python-brace-format
 msgid "Sfida non inviata. {motivo}"
 msgstr "Challenge not sent. {motivo}"
 
-#: orologic_modules/lichess_app.py:1753
+#: orologic_modules/lichess_app.py:1703
 #, python-brace-format
 msgid "Motivo: {m}"
 msgstr "Reason: {m}"
 
-#: orologic_modules/lichess_app.py:1794
+#: orologic_modules/lichess_app.py:1744
 msgid ""
 "\n"
 "Invio sfida in corso..."
@@ -6826,7 +6793,7 @@ msgstr ""
 "\n"
 "Sending challenge..."
 
-#: orologic_modules/lichess_app.py:1803
+#: orologic_modules/lichess_app.py:1753
 #, python-brace-format
 msgid ""
 "Sfida per corrispondenza inviata a {u}: resta su Lichess finche' non "
@@ -6835,11 +6802,11 @@ msgstr ""
 "Correspondence challenge sent to {u}: it stays on Lichess until they answer,"
 " and you find it in Challenges, among the sent ones."
 
-#: orologic_modules/lichess_app.py:1808
+#: orologic_modules/lichess_app.py:1758
 msgid "Lichess non ha confermato la sfida."
 msgstr "Lichess did not confirm the challenge."
 
-#: orologic_modules/lichess_app.py:1859
+#: orologic_modules/lichess_app.py:1809
 msgid ""
 "Sfida ritirata prima che Lichess la confermasse: se era gia' partita, scade "
 "da sola entro 20 secondi."
@@ -6847,44 +6814,44 @@ msgstr ""
 "Challenge withdrawn before Lichess confirmed it: if it had already left, it "
 "expires by itself within 20 seconds."
 
-#: orologic_modules/lichess_app.py:1864 orologic_modules/lichess_app.py:2521
+#: orologic_modules/lichess_app.py:1814 orologic_modules/lichess_app.py:2471
 msgid "Sfida annullata."
 msgstr "Challenge cancelled."
 
-#: orologic_modules/lichess_app.py:1873
+#: orologic_modules/lichess_app.py:1823
 #, python-brace-format
 msgid "Sfida inviata a {u}: aspetto la risposta, ESC la annulla."
 msgstr "Challenge sent to {u}: waiting for the answer, ESC cancels it."
 
-#: orologic_modules/lichess_app.py:1880 orologic_modules/lichess_app.py:1897
+#: orologic_modules/lichess_app.py:1830 orologic_modules/lichess_app.py:1847
 #, python-brace-format
 msgid "{u} ha accettato la sfida!"
 msgstr "{u} accepted the challenge!"
 
-#: orologic_modules/lichess_app.py:1886
+#: orologic_modules/lichess_app.py:1836
 #, python-brace-format
 msgid "{u} ha rifiutato la sfida."
 msgstr "{u} declined the challenge."
 
-#: orologic_modules/lichess_app.py:1890
+#: orologic_modules/lichess_app.py:1840
 msgid "La sfida e' stata annullata."
 msgstr "The challenge was cancelled."
 
-#: orologic_modules/lichess_app.py:1904
+#: orologic_modules/lichess_app.py:1854
 msgid "Il collegamento con Lichess si e' chiuso: la sfida e' stata ritirata."
 msgstr "The connection with Lichess closed: the challenge was withdrawn."
 
-#: orologic_modules/lichess_app.py:1911
+#: orologic_modules/lichess_app.py:1861
 msgid "Il collegamento con Lichess si e' chiuso: la sfida non e' piu' attiva."
 msgstr ""
 "The connection with Lichess closed: the challenge is no longer active."
 
-#: orologic_modules/lichess_app.py:1950 orologic_modules/lichess_app.py:2013
+#: orologic_modules/lichess_app.py:1900 orologic_modules/lichess_app.py:1963
 #, python-brace-format
 msgid "Ricerca interrotta. {motivo}"
 msgstr "Search interrupted. {motivo}"
 
-#: orologic_modules/lichess_app.py:1954
+#: orologic_modules/lichess_app.py:1904
 msgid ""
 "Richiesta per corrispondenza pubblicata: resta attiva su Lichess finche' "
 "qualcuno non la accetta, e la partita comparira' fra quelle in corso."
@@ -6892,7 +6859,7 @@ msgstr ""
 "Correspondence seek published: it stays active on Lichess until someone "
 "accepts it, and the game will appear among the ongoing ones."
 
-#: orologic_modules/lichess_app.py:2001
+#: orologic_modules/lichess_app.py:1951
 msgid ""
 "\n"
 "Ricerca avversario in corso... (Premi ESC per annullare)"
@@ -6900,25 +6867,25 @@ msgstr ""
 "\n"
 "Searching for opponent... (Press ESC to cancel)"
 
-#: orologic_modules/lichess_app.py:2018
+#: orologic_modules/lichess_app.py:1968
 msgid "Ricerca annullata."
 msgstr "Search cancelled."
 
-#: orologic_modules/lichess_app.py:2031
+#: orologic_modules/lichess_app.py:1981
 #, python-brace-format
 msgid ""
 "Ricerca avversario in corso da {m:02d}:{s:02d}... (Premi ESC per annullare)"
 msgstr "Searching for opponent for {m:02d}:{s:02d}... (Press ESC to cancel)"
 
-#: orologic_modules/lichess_app.py:2080
+#: orologic_modules/lichess_app.py:2030
 msgid "Avversario trovato!"
 msgstr "Opponent found!"
 
-#: orologic_modules/lichess_app.py:2084
+#: orologic_modules/lichess_app.py:2034
 msgid "Ricerca terminata o interrotta."
 msgstr "Search terminated or interrupted."
 
-#: orologic_modules/lichess_app.py:2092
+#: orologic_modules/lichess_app.py:2042
 msgid ""
 "\n"
 "Devi prima effettuare il login per giocare."
@@ -6926,31 +6893,31 @@ msgstr ""
 "\n"
 "You must first log in to play."
 
-#: orologic_modules/lichess_app.py:2096
+#: orologic_modules/lichess_app.py:2046
 msgid "          GIOCA PARTITA"
 msgstr "          PLAY GAME"
 
-#: orologic_modules/lichess_app.py:2099
+#: orologic_modules/lichess_app.py:2049
 msgid "Cerca avversario casuale (Seek)"
 msgstr "Search for random opponent (Seek)"
 
-#: orologic_modules/lichess_app.py:2100
+#: orologic_modules/lichess_app.py:2050
 msgid "Gioca contro il computer"
 msgstr "Play against the computer"
 
-#: orologic_modules/lichess_app.py:2101
+#: orologic_modules/lichess_app.py:2051
 msgid "Sfida un amico"
 msgstr "Challenge a friend"
 
-#: orologic_modules/lichess_app.py:2102
+#: orologic_modules/lichess_app.py:2052
 msgid "Sfide in attesa, ricevute e inviate"
 msgstr "Pending challenges, received and sent"
 
-#: orologic_modules/lichess_app.py:2103
+#: orologic_modules/lichess_app.py:2053
 msgid "Riprendi partita in corso"
 msgstr "Resume current game"
 
-#: orologic_modules/lichess_app.py:2119
+#: orologic_modules/lichess_app.py:2069
 msgid ""
 "\n"
 "Impostazioni per la ricerca dell'avversario:"
@@ -6958,11 +6925,11 @@ msgstr ""
 "\n"
 "Opponent search settings:"
 
-#: orologic_modules/lichess_app.py:2127
+#: orologic_modules/lichess_app.py:2077
 msgid "Livello di Stockfish (da 1 a 8, predefinito 3): "
 msgstr "Stockfish Level (1 to 8, default 3): "
 
-#: orologic_modules/lichess_app.py:2134
+#: orologic_modules/lichess_app.py:2084
 msgid ""
 "\n"
 "Impostazioni della partita:"
@@ -6970,7 +6937,7 @@ msgstr ""
 "\n"
 "Game Settings:"
 
-#: orologic_modules/lichess_app.py:2137
+#: orologic_modules/lichess_app.py:2087
 msgid ""
 "\n"
 "Avvio partita in corso..."
@@ -6978,16 +6945,16 @@ msgstr ""
 "\n"
 "Starting game in progress..."
 
-#: orologic_modules/lichess_app.py:2141
+#: orologic_modules/lichess_app.py:2091
 #, python-brace-format
 msgid "Partita avviata! ID: {id}"
 msgstr "Game started! ID: {id}"
 
-#: orologic_modules/lichess_app.py:2150
+#: orologic_modules/lichess_app.py:2100
 msgid "Recupero lista degli amici..."
 msgstr "Retrieving friends list..."
 
-#: orologic_modules/lichess_app.py:2155
+#: orologic_modules/lichess_app.py:2105
 msgid ""
 "Non stai seguendo nessun amico. Usa il Profilatore per cercare e seguire "
 "altri giocatori."
@@ -6995,12 +6962,12 @@ msgstr ""
 "You are not following any friends. Use the Profiler to search for and follow"
 " other players."
 
-#: orologic_modules/lichess_app.py:2163
+#: orologic_modules/lichess_app.py:2113
 #, python-brace-format
 msgid "{u} ({o})"
 msgstr "{u} ({o})"
 
-#: orologic_modules/lichess_app.py:2170
+#: orologic_modules/lichess_app.py:2120
 msgid ""
 "\n"
 "Scegli un amico da sfidare: "
@@ -7008,7 +6975,7 @@ msgstr ""
 "\n"
 "Choose a friend to challenge: "
 
-#: orologic_modules/lichess_app.py:2177
+#: orologic_modules/lichess_app.py:2127
 #: orologic_modules/lichess_profiler.py:692
 msgid ""
 "\n"
@@ -7017,20 +6984,20 @@ msgstr ""
 "\n"
 "Challenge Settings:"
 
-#: orologic_modules/lichess_app.py:2186
+#: orologic_modules/lichess_app.py:2136
 msgid "Cerco partite in corso..."
 msgstr "Looking for games in progress..."
 
-#: orologic_modules/lichess_app.py:2189
+#: orologic_modules/lichess_app.py:2139
 msgid "Non hai partite attive."
 msgstr "You have no active games."
 
-#: orologic_modules/lichess_app.py:2196
+#: orologic_modules/lichess_app.py:2146
 #, python-brace-format
 msgid "Contro {o} (Sei il {c})"
 msgstr "Against {o} (You are the {c})"
 
-#: orologic_modules/lichess_app.py:2205 orologic_modules/lichess_app.py:2345
+#: orologic_modules/lichess_app.py:2155 orologic_modules/lichess_app.py:2295
 msgid ""
 "\n"
 "Scegli la partita da riprendere: "
@@ -7038,108 +7005,108 @@ msgstr ""
 "\n"
 "Choose the game to resume: "
 
-#: orologic_modules/lichess_app.py:2225
+#: orologic_modules/lichess_app.py:2175
 msgid "Connessione a Lichess in corso..."
 msgstr "Connecting to Lichess..."
 
-#: orologic_modules/lichess_app.py:2229 orologic_modules/lichess_app.py:2305
+#: orologic_modules/lichess_app.py:2179 orologic_modules/lichess_app.py:2255
 msgid "Utente"
 msgstr "User"
 
-#: orologic_modules/lichess_app.py:2257
+#: orologic_modules/lichess_app.py:2207
 msgid "Logout (Rimuovi token)"
 msgstr "Logout (Remove token)"
 
-#: orologic_modules/lichess_app.py:2262
+#: orologic_modules/lichess_app.py:2212
 msgid "Riprendi partita in sospeso (1 attiva)"
 msgstr "Resume pending game (1 active)"
 
-#: orologic_modules/lichess_app.py:2266
+#: orologic_modules/lichess_app.py:2216
 #, python-brace-format
 msgid "Riprendi partita in sospeso ({n} attive)"
 msgstr "Resume pending game ({n} active)"
 
-#: orologic_modules/lichess_app.py:2277
+#: orologic_modules/lichess_app.py:2227
 msgid "Login (Imposta API Token)"
 msgstr "Login (Set API Token)"
 
-#: orologic_modules/lichess_app.py:2279
+#: orologic_modules/lichess_app.py:2229
 msgid "Risolvi puzzle"
 msgstr "Solve puzzles"
 
-#: orologic_modules/lichess_app.py:2281
+#: orologic_modules/lichess_app.py:2231
 #, python-brace-format
 msgid " (Partite: {p})"
 msgstr " (Games: {p})"
 
-#: orologic_modules/lichess_app.py:2285
+#: orologic_modules/lichess_app.py:2235
 msgid "Profilo Lichess"
 msgstr "Lichess Profile"
 
-#: orologic_modules/lichess_app.py:2286
+#: orologic_modules/lichess_app.py:2236
 msgid "Statistiche utente"
 msgstr "User statistics"
 
-#: orologic_modules/lichess_app.py:2287
+#: orologic_modules/lichess_app.py:2237
 #: orologic_modules/lichess_profiler.py:664
 msgid "Storia Elo e Sonificazione"
 msgstr "Elo History and Sonification"
 
-#: orologic_modules/lichess_app.py:2288
+#: orologic_modules/lichess_app.py:2238
 msgid "Gestione Amici"
 msgstr "Friends Management"
 
-#: orologic_modules/lichess_app.py:2290
+#: orologic_modules/lichess_app.py:2240
 msgid "Cerca e Profila Giocatore"
 msgstr "Search and Profile Player"
 
-#: orologic_modules/lichess_app.py:2291
+#: orologic_modules/lichess_app.py:2241
 msgid "Guarda una partita"
 msgstr "Watch a game"
 
-#: orologic_modules/lichess_app.py:2292
+#: orologic_modules/lichess_app.py:2242
 msgid "Gioca una partita"
 msgstr "Play a game"
 
-#: orologic_modules/lichess_app.py:2293
+#: orologic_modules/lichess_app.py:2243
 msgid "Tornei arena"
 msgstr "Arena tournaments"
 
-#: orologic_modules/lichess_app.py:2298
+#: orologic_modules/lichess_app.py:2248
 msgid "Casella Postale (Apri Lichess Inbox)"
 msgstr "Mailbox (Open Lichess Inbox)"
 
-#: orologic_modules/lichess_app.py:2302
+#: orologic_modules/lichess_app.py:2252
 msgid "Ritorna a Orologic (Esci)"
 msgstr "Return to Orologic (Exit)"
 
-#: orologic_modules/lichess_app.py:2309
+#: orologic_modules/lichess_app.py:2259
 #, python-brace-format
 msgid "Orolichess, connesso come: {username}{rating}"
 msgstr "Orolichess, logged in as: {username}{rating}"
 
-#: orologic_modules/lichess_app.py:2314
+#: orologic_modules/lichess_app.py:2264
 msgid "Orolichess, non connesso: scegli Login per iniziare"
 msgstr "Orolichess, not logged in: Choose Login to get started"
 
-#: orologic_modules/lichess_app.py:2323
+#: orologic_modules/lichess_app.py:2273
 msgid "Uscita da Orolichess in corso. Ritorno a orologic..."
 msgstr "Exiting Orolichess. Returning to Orologic..."
 
-#: orologic_modules/lichess_app.py:2334
+#: orologic_modules/lichess_app.py:2284
 msgid "Tocca a TE!"
 msgstr "It's your turn!"
 
-#: orologic_modules/lichess_app.py:2334
+#: orologic_modules/lichess_app.py:2284
 msgid "In attesa dell'avversario"
 msgstr "Waiting for the opponent"
 
-#: orologic_modules/lichess_app.py:2336
+#: orologic_modules/lichess_app.py:2286
 #, python-brace-format
 msgid "Contro {o} (Sei il {c}) - {t}"
 msgstr "Against {o} (You are the {c}) - {t}"
 
-#: orologic_modules/lichess_app.py:2372
+#: orologic_modules/lichess_app.py:2322
 msgid ""
 "\n"
 "Devi prima effettuare il login per vedere la storia Elo."
@@ -7147,16 +7114,16 @@ msgstr ""
 "\n"
 "You must first log in to view your Elo history."
 
-#: orologic_modules/lichess_app.py:2387
+#: orologic_modules/lichess_app.py:2337
 msgid "Apertura della casella postale nel browser..."
 msgstr "Opening your mailbox in your browser..."
 
-#: orologic_modules/lichess_app.py:2393
+#: orologic_modules/lichess_app.py:2343
 #, python-brace-format
 msgid "Impossibile aprire il browser: {e}"
 msgstr "Unable to open browser: {e}"
 
-#: orologic_modules/lichess_app.py:2421
+#: orologic_modules/lichess_app.py:2371
 msgid ""
 "\r"
 "Vuoi rispondere ora? INVIO per le sfide in attesa, ESC per restare nel menu\r"
@@ -7164,21 +7131,21 @@ msgstr ""
 "\r"
 "Reply now? ENTER for pending challenges, ESC to stay in the menu\r"
 
-#: orologic_modules/lichess_app.py:2468
+#: orologic_modules/lichess_app.py:2418
 msgid "Controllo le sfide in attesa..."
 msgstr "Checking pending challenges..."
 
-#: orologic_modules/lichess_app.py:2479
+#: orologic_modules/lichess_app.py:2429
 msgid "Non hai sfide in attesa."
 msgstr "You have no challenges waiting."
 
-#: orologic_modules/lichess_app.py:2491
+#: orologic_modules/lichess_app.py:2441
 #: orologic_modules/lichess_profiler.py:673
 #: orologic_modules/lichess_stats.py:225 orologic_modules/lichess_stats.py:305
 msgid "Torna indietro"
 msgstr "Go back"
 
-#: orologic_modules/lichess_app.py:2493
+#: orologic_modules/lichess_app.py:2443
 msgid ""
 "\n"
 "Scegli una sfida: "
@@ -7186,7 +7153,7 @@ msgstr ""
 "\n"
 "Choose a challenge: "
 
-#: orologic_modules/lichess_app.py:2501
+#: orologic_modules/lichess_app.py:2451
 msgid ""
 "\r"
 "INVIO accetta, r la rifiuta, ESC torna all'elenco\r"
@@ -7194,23 +7161,23 @@ msgstr ""
 "\r"
 "ENTER accepts, r declines it, ESC goes back to the list\r"
 
-#: orologic_modules/lichess_app.py:2504
+#: orologic_modules/lichess_app.py:2454
 msgid "Accetto la sfida..."
 msgstr "I accept the challenge..."
 
-#: orologic_modules/lichess_app.py:2507
+#: orologic_modules/lichess_app.py:2457
 msgid "Sfida accettata!"
 msgstr "Challenge accepted!"
 
-#: orologic_modules/lichess_app.py:2511
+#: orologic_modules/lichess_app.py:2461
 msgid "Impossibile accettare la sfida (potrebbe essere stata annullata)."
 msgstr "Unable to accept challenge (may have been cancelled)."
 
-#: orologic_modules/lichess_app.py:2514
+#: orologic_modules/lichess_app.py:2464
 msgid "Rifiuto la sfida..."
 msgstr "I refuse the challenge..."
 
-#: orologic_modules/lichess_app.py:2518
+#: orologic_modules/lichess_app.py:2468
 msgid ""
 "\r"
 "Vuoi annullare questa sfida? INVIO la annulla, ESC la lascia\r"
@@ -8006,10 +7973,20 @@ msgstr "Message not sent. {motivo}"
 msgid "Devi essere loggato per seguire i giocatori."
 msgstr "You must be logged in to follow players."
 
+#: orologic_modules/lichess_profiler.py:286
+#, python-brace-format
+msgid "Operazione non riuscita. {motivo}"
+msgstr "Operation failed. {motivo}"
+
 #: orologic_modules/lichess_profiler.py:290
 #, python-brace-format
 msgid "Ora segui {u}."
 msgstr "You now follow {u}."
+
+#: orologic_modules/lichess_profiler.py:292
+#, python-brace-format
+msgid "Non segui piu' {u}."
+msgstr "You no longer follow {u}."
 
 #: orologic_modules/lichess_profiler.py:305
 #, python-brace-format
@@ -10694,7 +10671,7 @@ msgstr "The server response is not understandable."
 msgid "{casa}, {pezzo}"
 msgstr "{casa}, {pezzo}"
 
-#: orologic_modules/easyfish/analysis_utils.py:83
+#: orologic_modules/easyfish/analysis_utils.py:31
 #: orologic_modules/scacchiera.py:128
 msgid "vuota"
 msgstr "empty"
@@ -11811,118 +11788,116 @@ msgstr "Updated analysis thresholds."
 msgid "Impostazioni dell'analisi aggiornate."
 msgstr "Analysis settings updated."
 
-#: orologic_modules/easyfish/analysis_utils.py:84
+#: orologic_modules/easyfish/analysis_utils.py:32
 #, python-brace-format
 msgid "{opzione}: {valore}"
 msgstr "{opzione}: {valore}"
 
-#: orologic_modules/easyfish/analysis_utils.py:105
+#: orologic_modules/easyfish/analysis_utils.py:53
 #, python-brace-format
 msgid "Motore: {nome}, di {autore}."
 msgstr "Engine: {nome}, by {autore}."
 
-#: orologic_modules/easyfish/analysis_utils.py:105
+#: orologic_modules/easyfish/analysis_utils.py:53
 #, python-brace-format
 msgid "Motore: {nome}."
 msgstr "Engine: {nome}."
 
-#: orologic_modules/easyfish/analysis_utils.py:107
+#: orologic_modules/easyfish/analysis_utils.py:55
 #, python-brace-format
 msgid "Tempo: {s:.2f} secondi."
 msgstr "Time: {s:.2f} seconds."
 
-#: orologic_modules/easyfish/analysis_utils.py:110
+#: orologic_modules/easyfish/analysis_utils.py:58
 #, python-brace-format
 msgid "Profondita': {p}, selettiva {s}."
 msgstr "Depth: {p}, selective {s}."
 
-#: orologic_modules/easyfish/analysis_utils.py:112
+#: orologic_modules/easyfish/analysis_utils.py:60
 #, python-brace-format
 msgid "Profondita': {p}."
 msgstr "Depth: {p}."
 
-#: orologic_modules/easyfish/analysis_utils.py:114
+#: orologic_modules/easyfish/analysis_utils.py:62
 #, python-brace-format
 msgid "Nodi: {n}."
 msgstr "Nodes: {n}."
 
-#: orologic_modules/easyfish/analysis_utils.py:116
+#: orologic_modules/easyfish/analysis_utils.py:64
 #, python-brace-format
 msgid "Nodi al secondo: {n}."
 msgstr "Nodes per second: {n}."
 
-#: orologic_modules/easyfish/analysis_utils.py:118
+#: orologic_modules/easyfish/analysis_utils.py:66
 #, python-brace-format
 msgid "Hash occupata: {p:.1f}%."
 msgstr "Hash used: {p:.1f}%."
 
-#: orologic_modules/easyfish/analysis_utils.py:120
+#: orologic_modules/easyfish/analysis_utils.py:68
 #, python-brace-format
 msgid "Posizioni trovate nelle tablebase: {n}."
 msgstr "Tablebase hits: {n}."
 
-#: orologic_modules/easyfish/analysis_utils.py:122
+#: orologic_modules/easyfish/analysis_utils.py:70
 #, python-brace-format
 msgid "Carico della CPU: {p:.1f}%."
 msgstr "CPU load: {p:.1f}%."
 
-#: orologic_modules/easyfish/analysis_utils.py:124
+#: orologic_modules/easyfish/analysis_utils.py:72
 #, python-brace-format
 msgid "Fattore di ramificazione: {f:.2f}."
 msgstr "Branching factor: {f:.2f}."
 
-#: orologic_modules/easyfish/analysis_utils.py:126
+#: orologic_modules/easyfish/analysis_utils.py:74
 #, python-brace-format
 msgid "Messaggio del motore: {testo}"
 msgstr "Engine message: {testo}"
 
-#: orologic_modules/easyfish/analysis_utils.py:128
+#: orologic_modules/easyfish/analysis_utils.py:76
 #, python-brace-format
 msgid "Linee: {chieste} chieste, {avute} avute."
 msgstr "Lines: {chieste} requested, {avute} received."
 
-#: orologic_modules/easyfish/analysis_utils.py:131
+#: orologic_modules/easyfish/analysis_utils.py:79
 msgid "Opzioni del motore:"
 msgstr "Engine options:"
 
-#: orologic_modules/easyfish/analysis_utils.py:141
-#: orologic_modules/easyfish/analysis_utils.py:221
+#: orologic_modules/easyfish/analysis_utils.py:89
 #: orologic_modules/easyfish/interaction.py:481
 msgid "Motore non disponibile."
 msgstr "Engine not available."
 
-#: orologic_modules/easyfish/analysis_utils.py:147
-#: orologic_modules/easyfish/analysis_utils.py:244
+#: orologic_modules/easyfish/analysis_utils.py:95
 #, python-brace-format
 msgid "Analisi fallita: {e}"
 msgstr "Analysis failed: {e}"
 
-#: orologic_modules/easyfish/analysis_utils.py:153
+#: orologic_modules/easyfish/analysis_utils.py:101
 msgid "Le linee:"
 msgstr "The lines:"
 
-#: orologic_modules/easyfish/analysis_utils.py:156
-#: orologic_modules/easyfish/easyfish_app.py:357
+#: orologic_modules/easyfish/analysis_utils.py:104
+#: orologic_modules/easyfish/easyfish_app.py:356
 #: orologic_modules/easyfish/game_mode.py:1260
 msgid "Nessuna linea trovata."
 msgstr "No lines found."
 
-#: orologic_modules/easyfish/analysis_utils.py:194
+#: orologic_modules/easyfish/analysis_utils.py:142
 #, python-brace-format
 msgid "matto in {n}"
 msgstr "mate in {n}"
 
-#: orologic_modules/easyfish/analysis_utils.py:194
+#: orologic_modules/easyfish/analysis_utils.py:142
 #, python-brace-format
 msgid "matto subito in {n}"
 msgstr "mated in {n}"
 
-#: orologic_modules/easyfish/analysis_utils.py:197
+#: orologic_modules/easyfish/analysis_utils.py:145
 #, python-brace-format
 msgid "Linea {n}: {valutazione}"
 msgstr "Line {n}: {valutazione}"
 
-#: orologic_modules/easyfish/analysis_utils.py:201
+#: orologic_modules/easyfish/analysis_utils.py:149
 #, python-brace-format
 msgid ", vittoria {v}%, patta {p}%, sconfitta {s}%"
 msgstr ", win {v}%, draw {p}%, loss {s}%"
@@ -12334,86 +12309,86 @@ msgstr "Y"
 msgid "Scelta non valida."
 msgstr "Invalid choice."
 
-#: orologic_modules/easyfish/easyfish_app.py:71
+#: orologic_modules/easyfish/easyfish_app.py:70
 #, python-brace-format
 msgid "{p}INIZIO {n}. "
 msgstr "{p}START {n}. "
 
-#: orologic_modules/easyfish/easyfish_app.py:101
+#: orologic_modules/easyfish/easyfish_app.py:100
 #: orologic_modules/easyfish/game_mode.py:644
 #: orologic_modules/easyfish/game_mode.py:788
 msgid "Scacco matto!"
 msgstr "Checkmate!"
 
-#: orologic_modules/easyfish/easyfish_app.py:176
+#: orologic_modules/easyfish/easyfish_app.py:175
 #: orologic_modules/easyfish/game_mode.py:722
 msgid "Patta per la regola delle 50/75 mosse!"
 msgstr "Draw by the 50/75-move rule!"
 
-#: orologic_modules/easyfish/easyfish_app.py:201
+#: orologic_modules/easyfish/easyfish_app.py:200
 #: orologic_modules/easyfish/game_mode.py:748
 msgid "Patta per ripetizione della posizione!"
 msgstr "Draw by repetition of the position!"
 
-#: orologic_modules/easyfish/easyfish_app.py:236
+#: orologic_modules/easyfish/easyfish_app.py:235
 msgid ""
 "Pronto per nuova variante. Inserisci una mossa diversa per creare un nuovo "
 "ramo."
 msgstr ""
 "Ready for new variation. Enter a different move to create a new branch."
 
-#: orologic_modules/easyfish/easyfish_app.py:242
+#: orologic_modules/easyfish/easyfish_app.py:241
 msgid "Comandi di Easyfish"
 msgstr "Easyfish commands"
 
-#: orologic_modules/easyfish/easyfish_app.py:258
+#: orologic_modules/easyfish/easyfish_app.py:257
 msgid "Partita in FEN. Copiata negli appunti"
 msgstr "Game in FEN. Copied to clipboard"
 
-#: orologic_modules/easyfish/easyfish_app.py:268
+#: orologic_modules/easyfish/easyfish_app.py:267
 msgid "Scacchiera copiata negli appunti, con il tratto e il FEN."
 msgstr "Board copied to the clipboard, with the side to move and the FEN."
 
-#: orologic_modules/easyfish/easyfish_app.py:272
+#: orologic_modules/easyfish/easyfish_app.py:271
 msgid "Errore: devi prima avviare la condivisione con il comando .cs"
 msgstr "Error: You must first start sharing with the .cs command"
 
-#: orologic_modules/easyfish/easyfish_app.py:275
+#: orologic_modules/easyfish/easyfish_app.py:274
 msgid "Orientamento scacchiera condivisa impostato: Bianco (fisso)."
 msgstr "Shared board orientation set: White (fixed)."
 
-#: orologic_modules/easyfish/easyfish_app.py:278
+#: orologic_modules/easyfish/easyfish_app.py:277
 msgid "Orientamento scacchiera condivisa impostato: Nero (fisso)."
 msgstr "Shared board orientation set: Black (fixed)."
 
-#: orologic_modules/easyfish/easyfish_app.py:283
+#: orologic_modules/easyfish/easyfish_app.py:282
 msgid ""
 "Orientamento scacchiera condivisa impostato: in base al turno (dinamico)."
 msgstr "Shared board orientation set: per turn (dynamic)."
 
-#: orologic_modules/easyfish/easyfish_app.py:304
-#: orologic_modules/easyfish/easyfish_app.py:337
+#: orologic_modules/easyfish/easyfish_app.py:303
+#: orologic_modules/easyfish/easyfish_app.py:336
 msgid "Motore non caricato in Orologic."
 msgstr "Engine not loaded in Orologic."
 
-#: orologic_modules/easyfish/easyfish_app.py:313
-#: orologic_modules/easyfish/easyfish_app.py:341
+#: orologic_modules/easyfish/easyfish_app.py:312
+#: orologic_modules/easyfish/easyfish_app.py:340
 #, python-brace-format
 msgid "Analisi posizione corrente per {s} secondi."
 msgstr "Current position analysis for {s} seconds."
 
-#: orologic_modules/easyfish/easyfish_app.py:351
+#: orologic_modules/easyfish/easyfish_app.py:350
 #, python-brace-format
 msgid "Errore analisi: {e}"
 msgstr "Analysis error: {e}"
 
-#: orologic_modules/easyfish/easyfish_app.py:363
+#: orologic_modules/easyfish/easyfish_app.py:362
 #: orologic_modules/easyfish/posizione.py:43
 #, python-brace-format
 msgid "[Linea: {linea}]"
 msgstr "[Line: {linea}]"
 
-#: orologic_modules/easyfish/easyfish_app.py:383
+#: orologic_modules/easyfish/easyfish_app.py:382
 msgid ""
 "\n"
 "Attivazione condivisione scacchiera (finestra grafica per didattica)..."
@@ -12421,15 +12396,15 @@ msgstr ""
 "\n"
 "Activation of board sharing (graphic window for teaching)..."
 
-#: orologic_modules/easyfish/easyfish_app.py:386
+#: orologic_modules/easyfish/easyfish_app.py:385
 msgid "ISTRUZIONI:"
 msgstr "INSTRUCTIONS:"
 
-#: orologic_modules/easyfish/easyfish_app.py:387
+#: orologic_modules/easyfish/easyfish_app.py:386
 msgid "- Puoi condividere la nuova finestra su Meet, Zoom o Teams."
 msgstr "- You can share the new window on Meet, Zoom or Teams."
 
-#: orologic_modules/easyfish/easyfish_app.py:390
+#: orologic_modules/easyfish/easyfish_app.py:389
 msgid ""
 "- Per continuare ad inserire comandi, ricordati di riportare il focus "
 "(cliccare) su questa finestra di testo della console."
@@ -12437,7 +12412,7 @@ msgstr ""
 "- To continue entering commands, remember to return the focus (click) to "
 "this console text window."
 
-#: orologic_modules/easyfish/easyfish_app.py:444
+#: orologic_modules/easyfish/easyfish_app.py:443
 msgid ""
 "\n"
 "Condivisione scacchiera disattivata."
@@ -12445,7 +12420,7 @@ msgstr ""
 "\n"
 "Board sharing disabled."
 
-#: orologic_modules/easyfish/easyfish_app.py:502
+#: orologic_modules/easyfish/easyfish_app.py:501
 msgid ""
 "\n"
 "Benvenuto in Easyfish, la tua interfaccia testuale con il motore scacchistico.\n"
@@ -12455,7 +12430,7 @@ msgstr ""
 "Welcome to Easyfish, your text-based chess engine interface.\n"
 "\tHave fun!"
 
-#: orologic_modules/easyfish/easyfish_app.py:515
+#: orologic_modules/easyfish/easyfish_app.py:514
 msgid ""
 "Il motore scacchistico non e' configurato, ma e' necessario per Easyfish. "
 "Vuoi configurarlo ora? (INVIO per si', ESC per no): "
@@ -12463,17 +12438,17 @@ msgstr ""
 "The chess engine is not configured, but is required for Easyfish. Do you "
 "want to set it up now? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/easyfish/easyfish_app.py:520
+#: orologic_modules/easyfish/easyfish_app.py:519
 msgid "Inizializzazione Motore Orologic per Easyfish..."
 msgstr "Orologic Engine Initialization for Easyfish..."
 
-#: orologic_modules/easyfish/easyfish_app.py:533
-#: orologic_modules/easyfish/easyfish_app.py:856
-#: orologic_modules/easyfish/easyfish_app.py:891
+#: orologic_modules/easyfish/easyfish_app.py:532
+#: orologic_modules/easyfish/easyfish_app.py:837
+#: orologic_modules/easyfish/easyfish_app.py:871
 msgid "Nuova partita caricata."
 msgstr "New game loaded."
 
-#: orologic_modules/easyfish/easyfish_app.py:583
+#: orologic_modules/easyfish/easyfish_app.py:568
 msgid ""
 "\n"
 "Finestra di condivisione scacchiera chiusa."
@@ -12481,16 +12456,16 @@ msgstr ""
 "\n"
 "Board sharing window closed."
 
-#: orologic_modules/easyfish/easyfish_app.py:636
+#: orologic_modules/easyfish/easyfish_app.py:621
 msgid "Chiusa variante. Ritorno al nodo padre."
 msgstr "Variation closed. Returning to the parent node."
 
-#: orologic_modules/easyfish/easyfish_app.py:642
-#: orologic_modules/easyfish/easyfish_app.py:883
+#: orologic_modules/easyfish/easyfish_app.py:627
+#: orologic_modules/easyfish/easyfish_app.py:864
 msgid "Salvataggio partita in corso..."
 msgstr "Saving game in progress..."
 
-#: orologic_modules/easyfish/easyfish_app.py:645
+#: orologic_modules/easyfish/easyfish_app.py:630
 msgid ""
 "La partita non si e' salvata, ma il PGN e' negli appunti. Esco lo stesso? "
 "(INVIO si', ESC no): "
@@ -12498,94 +12473,94 @@ msgstr ""
 "The game was not saved, but the PGN is on the clipboard. Exit anyway? (ENTER"
 " yes, ESC no): "
 
-#: orologic_modules/easyfish/easyfish_app.py:675
+#: orologic_modules/easyfish/easyfish_app.py:660
 msgid "Errore: nodo non trovato nelle varianti."
 msgstr "Error: Node not found in variations."
 
-#: orologic_modules/easyfish/easyfish_app.py:679
+#: orologic_modules/easyfish/easyfish_app.py:664
 msgid "Non sei in una variante o non ci sono alternative da promuovere."
 msgstr "You are not in a variation or there are no alternatives to promote."
 
-#: orologic_modules/easyfish/easyfish_app.py:698
+#: orologic_modules/easyfish/easyfish_app.py:683
 #: orologic_modules/easyfish/interaction.py:191
 msgid "Numero mossa: "
 msgstr "Move number: "
 
-#: orologic_modules/easyfish/easyfish_app.py:706
+#: orologic_modules/easyfish/easyfish_app.py:691
 msgid "B per Bianco, N per Nero: "
 msgstr "B for White, N for Black: "
 
-#: orologic_modules/easyfish/easyfish_app.py:721
+#: orologic_modules/easyfish/easyfish_app.py:706
 #, python-brace-format
 msgid "Salto alla mossa {n} ({c})..."
 msgstr "Jump to move {n} ({c})..."
 
-#: orologic_modules/easyfish/easyfish_app.py:763
+#: orologic_modules/easyfish/easyfish_app.py:748
 #, python-brace-format
 msgid "Mossa {n} {c} non raggiunta (fine partita)."
 msgstr "Move {n} {c} not reached (game over)."
 
-#: orologic_modules/easyfish/easyfish_app.py:773
+#: orologic_modules/easyfish/easyfish_app.py:757
 msgid "Accesso alla modalità esplorazione..."
 msgstr "Entering exploration mode..."
 
-#: orologic_modules/easyfish/easyfish_app.py:785
+#: orologic_modules/easyfish/easyfish_app.py:768
 msgid "Il navigatore della partita c'e' nella finestra: nel terminale usa .e"
 msgstr "The game navigator is in the window: in the terminal use .e"
 
-#: orologic_modules/easyfish/easyfish_app.py:823
+#: orologic_modules/easyfish/easyfish_app.py:805
 msgid "Opzione non valida. Usa: .cso on | .cso off"
 msgstr "Invalid option. Use: .cso on | .cso off"
 
-#: orologic_modules/easyfish/easyfish_app.py:827
+#: orologic_modules/easyfish/easyfish_app.py:809
 msgid "attivata"
 msgstr "activated"
 
-#: orologic_modules/easyfish/easyfish_app.py:827
+#: orologic_modules/easyfish/easyfish_app.py:809
 msgid "disattivata"
 msgstr "deactivated"
 
-#: orologic_modules/easyfish/easyfish_app.py:830
+#: orologic_modules/easyfish/easyfish_app.py:812
 #, python-brace-format
 msgid "Visualizzazione dell'output di testo sotto la scacchiera {status}."
 msgstr "Display of text output below the board {status}."
 
-#: orologic_modules/easyfish/easyfish_app.py:840
+#: orologic_modules/easyfish/easyfish_app.py:822
 msgid "Incolla una nuova posizione PGN dagli appunti..."
 msgstr "Paste a new PGN position from the clipboard..."
 
-#: orologic_modules/easyfish/easyfish_app.py:846
+#: orologic_modules/easyfish/easyfish_app.py:828
 msgid "ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova."
 msgstr "ATTENTION: The current game will be saved and a new one will begin."
 
-#: orologic_modules/easyfish/easyfish_app.py:850
-#: orologic_modules/easyfish/easyfish_app.py:885
-#: orologic_modules/easyfish/easyfish_app.py:920
-#: orologic_modules/easyfish/easyfish_app.py:934
-#: orologic_modules/easyfish/easyfish_app.py:958
+#: orologic_modules/easyfish/easyfish_app.py:832
+#: orologic_modules/easyfish/easyfish_app.py:866
+#: orologic_modules/easyfish/easyfish_app.py:900
+#: orologic_modules/easyfish/easyfish_app.py:913
+#: orologic_modules/easyfish/easyfish_app.py:936
 msgid ""
 "La partita corrente non si e' salvata: resta aperta. Il PGN e' negli "
 "appunti."
 msgstr ""
 "The current game was not saved: it stays open. The PGN is on the clipboard."
 
-#: orologic_modules/easyfish/easyfish_app.py:859
+#: orologic_modules/easyfish/easyfish_app.py:840
 msgid "PGN non valido o appunti vuoti."
 msgstr "Invalid PGN or blank clipboard."
 
-#: orologic_modules/easyfish/easyfish_app.py:899
+#: orologic_modules/easyfish/easyfish_app.py:879
 msgid "Spiacente, appunti vuoti. Copia prima un FEN valido."
 msgstr "Sorry, blank clipboard. Copy a valid FEN first."
 
-#: orologic_modules/easyfish/easyfish_app.py:902
+#: orologic_modules/easyfish/easyfish_app.py:882
 msgid "Incolla una nuova posizione FEN dagli appunti..."
 msgstr "Paste a new FEN position from the clipboard..."
 
-#: orologic_modules/easyfish/easyfish_app.py:910
+#: orologic_modules/easyfish/easyfish_app.py:890
 msgid "La posizione del FEN non e' legale:"
 msgstr "The FEN position is not legal:"
 
-#: orologic_modules/easyfish/easyfish_app.py:916
+#: orologic_modules/easyfish/easyfish_app.py:896
 msgid ""
 "FEN valido. ATTENZIONE: La partita corrente verrà salvata e ne inizierà una "
 "nuova da questa posizione."
@@ -12593,19 +12568,19 @@ msgstr ""
 "Valid FEN. ATTENTION: The current game will be saved and a new one will "
 "start from this position."
 
-#: orologic_modules/easyfish/easyfish_app.py:929
+#: orologic_modules/easyfish/easyfish_app.py:908
 msgid "Stringa FEN non valida."
 msgstr "Invalid FEN string."
 
-#: orologic_modules/easyfish/easyfish_app.py:932
+#: orologic_modules/easyfish/easyfish_app.py:911
 msgid "Nuova partita. La corrente verrà salvata."
 msgstr "New game. The current will be saved."
 
-#: orologic_modules/easyfish/easyfish_app.py:936
+#: orologic_modules/easyfish/easyfish_app.py:915
 msgid "Nuova scacchiera pronta. Si parte!"
 msgstr "New chessboard ready. Let's go!"
 
-#: orologic_modules/easyfish/easyfish_app.py:945
+#: orologic_modules/easyfish/easyfish_app.py:923
 msgid ""
 "Accesso all'editor. ATTENZIONE: Al termine dell'editing, la partita corrente"
 " verrà salvata e ne inizierà una nuova dalla posizione impostata."
@@ -12613,15 +12588,15 @@ msgstr ""
 "Access to the editor. ATTENTION: At the end of the editing, the current game"
 " will be saved and a new one will start from the set position."
 
-#: orologic_modules/easyfish/easyfish_app.py:965
+#: orologic_modules/easyfish/easyfish_app.py:942
 msgid "Nuova partita avviata dalla posizione editata."
 msgstr "New game started from the edited position."
 
-#: orologic_modules/easyfish/easyfish_app.py:984
+#: orologic_modules/easyfish/easyfish_app.py:961
 msgid "Lista delle mosse"
 msgstr "Move list"
 
-#: orologic_modules/easyfish/easyfish_app.py:992
+#: orologic_modules/easyfish/easyfish_app.py:969
 #, python-brace-format
 msgid ""
 "Spiacente, {cmd} non è un comando valido.\n"
@@ -12630,48 +12605,28 @@ msgstr ""
 "Sorry, {cmd} is not a valid command.\n"
 "Type '.?' for the menu."
 
-#: orologic_modules/easyfish/easyfish_app.py:1025
+#: orologic_modules/easyfish/easyfish_app.py:1002
 msgid "Mossa diversa trovata."
 msgstr "Different move found."
 
-#: orologic_modules/easyfish/easyfish_app.py:1027
+#: orologic_modules/easyfish/easyfish_app.py:1004
 msgid "Sovrascrivi linea (Invio) o Aggiungi Variante (Esc)? "
 msgstr "Overwrite Line (Enter) or Add Variation (Esc)? "
 
-#: orologic_modules/easyfish/easyfish_app.py:1035
+#: orologic_modules/easyfish/easyfish_app.py:1012
 msgid "Linea sovrascritta."
 msgstr "Overwritten line."
 
-#: orologic_modules/easyfish/easyfish_app.py:1039
+#: orologic_modules/easyfish/easyfish_app.py:1016
 #: orologic_modules/easyfish/interaction.py:523
 msgid "Nuova variante creata."
 msgstr "New variation created."
 
-#: orologic_modules/easyfish/easyfish_app.py:1046
+#: orologic_modules/easyfish/easyfish_app.py:1023
 #: orologic_modules/easyfish/interaction.py:512
 #, python-brace-format
 msgid "{k}: mossa illegale per il {c}."
 msgstr "{k}: Illegal move for {c}."
-
-#: orologic_modules/easyfish/engine_handler.py:21
-#, python-brace-format
-msgid "Results: time {time}, Hash {hash}, TB {tb}, Dibug: {dbg}"
-msgstr "Results: time {time}, Hash {hash}, TB {tb}, Dibug: {dbg}"
-
-#: orologic_modules/easyfish/engine_handler.py:31
-#, python-brace-format
-msgid ", WDL: {w:.1f}%/{d_:.1f}%/{l:.1f}%"
-msgstr ", WDL: {w:.1f}%/{d_:.1f}%/{l:.1f}%"
-
-#: orologic_modules/easyfish/engine_handler.py:38
-#, python-brace-format
-msgid "Depth {d}/{sd}, best {best}, score {sc:+.2f}{wdl}, node {n}, NPS {nps}"
-msgstr ""
-"Depth {d}/{sd}, best {best}, score {sc:+.2f}{wdl}, node {n}, NPS {nps}"
-
-#: orologic_modules/easyfish/engine_handler.py:56
-msgid "Line:"
-msgstr "Line:"
 
 #: orologic_modules/easyfish/game_mode.py:142
 #, python-brace-format
@@ -16290,3 +16245,28 @@ msgstr "Nobody."
 #~ msgstr ""
 #~ "\n"
 #~ "🎉 New personal record for {username}! Previous: {old_perf}, Current: {new_perf}."
+
+#~ msgid "Ora segui {u}!"
+#~ msgstr "You now follow {u}!"
+
+#~ msgid "Non e' stato possibile seguire {u}. {motivo}"
+#~ msgstr "It was not possible to follow {u}. {motivo}"
+
+#~ msgid "Messaggio inviato a {u} con successo!"
+#~ msgstr "Message sent to {u} successfully!"
+
+#~ msgid "Messaggio non inviato a {u}. {motivo}"
+#~ msgstr "Message not sent to {u}. {motivo}"
+
+#~ msgid "Results: time {time}, Hash {hash}, TB {tb}, Dibug: {dbg}"
+#~ msgstr "Results: time {time}, Hash {hash}, TB {tb}, Dibug: {dbg}"
+
+#~ msgid ", WDL: {w:.1f}%/{d_:.1f}%/{l:.1f}%"
+#~ msgstr ", WDL: {w:.1f}%/{d_:.1f}%/{l:.1f}%"
+
+#~ msgid "Depth {d}/{sd}, best {best}, score {sc:+.2f}{wdl}, node {n}, NPS {nps}"
+#~ msgstr ""
+#~ "Depth {d}/{sd}, best {best}, score {sc:+.2f}{wdl}, node {n}, NPS {nps}"
+
+#~ msgid "Line:"
+#~ msgstr "Line:"
