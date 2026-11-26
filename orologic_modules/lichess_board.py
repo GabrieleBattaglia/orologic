@@ -530,6 +530,9 @@ def async_spectator_loop(q, game_state):
                     kind=1,
                     adsr=[2, 8, 90, 0],
                 )
+                # Una volta sola: all'uscita dall'osservazione non si salva
+                # di nuovo, e nemmeno dopo "Salto il salvataggio" (R78).
+                game_state.salvataggio_fatto = True
                 if len(game_state.move_history) > 10:
                     save_lichess_game(game_state, winner)
                 else:
@@ -642,7 +645,12 @@ def spectate_game(game_id, token=None):
         else:
             print(_("\nComando non riconosciuto. Usa .? per l'aiuto."))
 
-    save_lichess_game(game_state, getattr(game_state, "winner", "*"))
+    # All'uscita si salva solo una partita vista davvero, e non gia'
+    # salvata o scartata alla sua fine: prima il salvataggio partiva
+    # sempre, anche se il flusso non si era mai aperto, con file inutili e
+    # appunti sovrascritti (R78).
+    if game_state.started and game_state.move_history and not getattr(game_state, "salvataggio_fatto", False):
+        save_lichess_game(game_state, getattr(game_state, "winner", "*"))
 
 
 class GamePlayState:
