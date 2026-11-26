@@ -19,15 +19,18 @@ cestino non c'e' il file resta dov'e'. Le due cancellazioni di molti file
 chiedono conferma; Canc su un file no, perche' dal cestino si torna indietro.
 """
 
+import threading
 import time
 
 import wx
-from GBUtils import Acusticator, formatta_dimensione, nel_cestino
+from GBUtils import Acusticator, cestino_disponibile, formatta_dimensione, nel_cestino
 from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
 from . import aspetto, cleaner, config
 from .config import _
 
+# Quanti nomi dice al piu' l'avviso dei file rimasti fuori dal cestino (R37).
+NOMI_NELL_AVVISO = 10
 SUONI = {
     # Come il terminale quando cancella i file vecchi.
     "eliminati": lambda: Acusticator(["c5", 0.1, -1, config.VOLUME, "c5", 0.1, 1, config.VOLUME], kind=1),
@@ -86,6 +89,7 @@ class FinestraPulizia(wx.Dialog):
         self._avvisa = avvisa
         self.giorni = cleaner.giorni_salvati()
         self.files = []
+        self.lavoro = None
         pannello = pannello_scorrevole(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
         # L'ordine di creazione e' quello del Tab, e ogni controllo prende
@@ -150,18 +154,46 @@ class FinestraPulizia(wx.Dialog):
         cleaner.salva_giorni(self.giorni)
         self.aggiorna()
 
-    def _nel_cestino(self, files):
-        """I file nel cestino; restituisce quelli che non ci sono andati."""
+    def in_lavoro(self):
+        """Vero mentre i file vanno nel cestino."""
+        return self.lavoro is not None and self.lavoro.is_alive()
+
+    def _nel_cestino(self, files, indice):
+        """I file nel cestino, in un filo suo; alla fine _dopo, nella
+        finestra. Prima una chiamata alla Shell per file, nel filo della
+        finestra, e con centinaia di file la finestra restava ferma e NVDA
+        muto; dove il cestino non c'e' si provava file per file, e l'avviso
+        li elencava tutti (R37). Il cestino si controlla una volta sola: i
+        file di Orologic stanno tutti nella sua cartella."""
+        if self.in_lavoro():
+            suona("no")
+            return
+        if not cestino_disponibile(files[0]["percorso"]):
+            suona("no")
+            self._avvisa(self, _("Il disco dei file di Orologic non ha il cestino: non ho cancellato niente."))
+            return
         maniglia = self.GetHandle()
-        return [file for file in files if not nel_cestino(file["percorso"], maniglia)]
+
+        def filo():
+            rimasti = [file for file in files if not nel_cestino(file["percorso"], maniglia)]
+            wx.CallAfter(self._dopo, files, rimasti, indice)
+
+        self.lavoro = threading.Thread(target=filo, name="pulizia", daemon=True)
+        self.lavoro.start()
 
     def _dopo(self, files, rimasti, indice):
+        if not self:
+            return
         self.aggiorna(indice)
         if len(rimasti) < len(files):
             suona("eliminati" if len(files) > 1 else "eliminato")
         if rimasti:
             suona("no")
-            self._avvisa(self, _("Non sono andati nel cestino: {elenco}.").format(elenco=", ".join(file["nome"] for file in rimasti)))
+            nomi = [file["nome"] for file in rimasti]
+            elenco = ", ".join(nomi[:NOMI_NELL_AVVISO])
+            if len(nomi) > NOMI_NELL_AVVISO:
+                elenco = _("{elenco} e altri {n}").format(elenco=elenco, n=len(nomi) - NOMI_NELL_AVVISO)
+            self._avvisa(self, _("Non sono andati nel cestino: {elenco}.").format(elenco=elenco))
 
     def elimina_il_file(self):
         """Canc: il file scelto nel cestino, senza domande."""
@@ -169,8 +201,7 @@ class FinestraPulizia(wx.Dialog):
         if not 0 <= indice < len(self.files):
             suona("no")
             return
-        file = self.files[indice]
-        self._dopo([file], self._nel_cestino([file]), indice)
+        self._nel_cestino([self.files[indice]], indice)
 
     def elimina_tutto(self):
         if not self.files:
@@ -183,7 +214,7 @@ class FinestraPulizia(wx.Dialog):
         if not self._chiedi_conferma(self, domanda):
             return
         files = list(self.files)
-        self._dopo(files, self._nel_cestino(files), 0)
+        self._nel_cestino(files, 0)
 
     def elimina_i_vecchi(self):
         files = cleaner.vecchi(self.files, self.giorni)
@@ -198,7 +229,7 @@ class FinestraPulizia(wx.Dialog):
                 n=len(files), durata=durata, peso=peso(sum(f["peso"] for f in files)))
         if not self._chiedi_conferma(self, domanda):
             return
-        self._dopo(files, self._nel_cestino(files), 0)
+        self._nel_cestino(files, 0)
 
     def ripristina_le_date(self):
         """I file vecchi tornano alla data di oggi, e non sono piu' vecchi."""

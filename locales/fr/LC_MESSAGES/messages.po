@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-26 07:37+0100\n"
+"POT-Creation-Date: 2026-11-26 07:39+0100\n"
 "PO-Revision-Date: 2026-04-12 16:04+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fr <LL@li.org>\n"
@@ -1015,7 +1015,7 @@ msgstr "{n} mois"
 msgid " e "
 msgstr " et "
 
-#: orologic_modules/cleaner.py:47 orologic_modules/finestra_pulizia.py:55
+#: orologic_modules/cleaner.py:47 orologic_modules/finestra_pulizia.py:58
 #: orologic_modules/lichess_app.py:202 orologic_modules/tempo.py:180
 #, python-brace-format
 msgid "{n} giorni"
@@ -1984,7 +1984,7 @@ msgstr ""
 #: orologic_modules/finestra_disegni.py:166
 #: orologic_modules/finestra_navigatore.py:76
 #: orologic_modules/finestra_orologi.py:198
-#: orologic_modules/finestra_pulizia.py:110
+#: orologic_modules/finestra_pulizia.py:114
 #: orologic_modules/finestra_ricerca.py:235
 #: orologic_modules/finestra_ricerca.py:333
 #: orologic_modules/finestra_scacchiera.py:302
@@ -4078,97 +4078,109 @@ msgstr "Écrivez le nom de l'horloge."
 msgid "La fase {n} ha 0 mosse: la fase dopo non comincerebbe mai."
 msgstr "La phase {n} a 0 coup : la phase suivante ne commencerait jamais."
 
-#: orologic_modules/finestra_pulizia.py:55 orologic_modules/lichess_app.py:202
+#: orologic_modules/finestra_pulizia.py:58 orologic_modules/lichess_app.py:202
 #: orologic_modules/lichess_profiler.py:201 orologic_modules/tempo.py:178
 msgid "1 giorno"
 msgstr "1 jour"
 
-#: orologic_modules/finestra_pulizia.py:60
+#: orologic_modules/finestra_pulizia.py:63
 #, python-brace-format
 msgid "{nome}, {cartella}, {eta}, {peso}"
 msgstr "{nome}, {cartella}, {eta}, {peso}"
 
-#: orologic_modules/finestra_pulizia.py:69
+#: orologic_modules/finestra_pulizia.py:72
 #, python-brace-format
 msgid "{cartella}: {n} file, {peso}"
 msgstr "{cartella} : {n} fichier(s), {peso}"
 
-#: orologic_modules/finestra_pulizia.py:71
+#: orologic_modules/finestra_pulizia.py:74
 #, python-brace-format
 msgid "{cartella}: nessun file"
 msgstr "{cartella} : aucun fichier"
 
-#: orologic_modules/finestra_pulizia.py:72
+#: orologic_modules/finestra_pulizia.py:75
 #, python-brace-format
 msgid "In tutto: {n} file, {peso}"
 msgstr "Au total : {n} fichier(s), {peso}"
 
-#: orologic_modules/finestra_pulizia.py:74
+#: orologic_modules/finestra_pulizia.py:77
 #, python-brace-format
 msgid "Piu' vecchi di {durata}: {n} file, {peso}"
 msgstr "Plus anciens que {durata} : {n} fichier(s), {peso}"
 
-#: orologic_modules/finestra_pulizia.py:84
+#: orologic_modules/finestra_pulizia.py:87
 #: orologic_modules/impostazioni.py:159
 msgid "Pulizia"
 msgstr "Nettoyage"
 
-#: orologic_modules/finestra_pulizia.py:93
-#: orologic_modules/finestra_pulizia.py:95
+#: orologic_modules/finestra_pulizia.py:97
+#: orologic_modules/finestra_pulizia.py:99
 msgid "Situazione dei file"
 msgstr "État des fichiers"
 
-#: orologic_modules/finestra_pulizia.py:97
-#: orologic_modules/finestra_pulizia.py:99
+#: orologic_modules/finestra_pulizia.py:101
+#: orologic_modules/finestra_pulizia.py:103
 msgid "File, dal piu' vecchio"
 msgstr "Fichiers, du plus ancien"
 
-#: orologic_modules/finestra_pulizia.py:101
+#: orologic_modules/finestra_pulizia.py:105
 msgid "Elimina &tutto"
 msgstr "&Tout supprimer"
 
-#: orologic_modules/finestra_pulizia.py:102
+#: orologic_modules/finestra_pulizia.py:106
 msgid "Elimina &piu' vecchi di"
 msgstr "Supprimer les &plus anciens que"
 
-#: orologic_modules/finestra_pulizia.py:103
+#: orologic_modules/finestra_pulizia.py:107
 msgid "Piu' vecchi di:"
 msgstr "Plus anciens que :"
 
-#: orologic_modules/finestra_pulizia.py:106
+#: orologic_modules/finestra_pulizia.py:110
 #, python-brace-format
 msgid "{durata}, {n} giorni"
 msgstr "{durata}, {n} jours"
 
-#: orologic_modules/finestra_pulizia.py:109
+#: orologic_modules/finestra_pulizia.py:113
 msgid "&Ripristina date ai file vecchi"
 msgstr "&Rétablir la date des anciens fichiers"
 
-#: orologic_modules/finestra_pulizia.py:144
+#: orologic_modules/finestra_pulizia.py:148
 msgid "Nessun file."
 msgstr "Aucun fichier."
 
-#: orologic_modules/finestra_pulizia.py:164
+#: orologic_modules/finestra_pulizia.py:173
+msgid ""
+"Il disco dei file di Orologic non ha il cestino: non ho cancellato niente."
+msgstr ""
+"Le disque des fichiers d'Orologic n'a pas de corbeille : je n'ai rien "
+"supprimé."
+
+#: orologic_modules/finestra_pulizia.py:195
+#, python-brace-format
+msgid "{elenco} e altri {n}"
+msgstr "{elenco} et {n} autres"
+
+#: orologic_modules/finestra_pulizia.py:196
 #, python-brace-format
 msgid "Non sono andati nel cestino: {elenco}."
 msgstr "Non placés dans la corbeille : {elenco}."
 
-#: orologic_modules/finestra_pulizia.py:180
+#: orologic_modules/finestra_pulizia.py:211
 #, python-brace-format
 msgid "Mando nel cestino l'unico file, {peso}?"
 msgstr "Mettre l'unique fichier, {peso}, à la corbeille ?"
 
-#: orologic_modules/finestra_pulizia.py:182
+#: orologic_modules/finestra_pulizia.py:213
 #, python-brace-format
 msgid "Mando nel cestino tutti i {n} file, {peso}?"
 msgstr "Mettre les {n} fichiers, {peso}, à la corbeille ?"
 
-#: orologic_modules/finestra_pulizia.py:195
+#: orologic_modules/finestra_pulizia.py:226
 #, python-brace-format
 msgid "Mando nel cestino il file piu' vecchio di {durata}, {peso}?"
 msgstr "Mettre à la corbeille le fichier plus ancien que {durata}, {peso} ?"
 
-#: orologic_modules/finestra_pulizia.py:197
+#: orologic_modules/finestra_pulizia.py:228
 #, python-brace-format
 msgid "Mando nel cestino i {n} file piu' vecchi di {durata}, {peso}?"
 msgstr ""

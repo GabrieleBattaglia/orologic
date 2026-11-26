@@ -81,7 +81,18 @@ class Prova:
         self.cestino_rotto = False
         monkeypatch.setattr(finestra_pulizia, "suona", self.suoni.append)
         monkeypatch.setattr(finestra_pulizia, "nel_cestino", self._cestino)
+        self.senza_cestino = False
+        monkeypatch.setattr(finestra_pulizia, "cestino_disponibile", lambda _percorso: not self.senza_cestino)
         self.dialogo = finestra_pulizia.FinestraPulizia(None, self._conferma, lambda _g, testo: self.avvisi.append(testo))
+        # Il cestino lavora in un filo (R37): si contano i lavori finiti.
+        self.finiti = 0
+        vero_dopo = self.dialogo._dopo
+
+        def dopo(*argomenti):
+            vero_dopo(*argomenti)
+            self.finiti += 1
+
+        self.dialogo._dopo = dopo
         self.dialogo.Show()
         pompa(lambda: wx.Window.FindFocus() is self.dialogo.riepilogo)
 
@@ -91,6 +102,12 @@ class Prova:
         os.remove(percorso)
         self.nel_cestino.append(os.path.basename(percorso))
         return True
+
+    def lavora(self, azione):
+        """L'azione, e l'attesa che il filo del cestino finisca."""
+        prima = self.finiti
+        azione()
+        assert pompa(lambda: self.finiti > prima)
 
     def _conferma(self, _genitore, testo):
         self.domande.append(testo)
@@ -135,7 +152,7 @@ def test_la_finestra_della_pulizia(prova, cartelle):
     evento = wx.KeyEvent(wx.wxEVT_CHAR_HOOK)
     evento.SetKeyCode(wx.WXK_DELETE)
     evento.SetEventObject(d.elenco)
-    d._tasto(evento)
+    p.lavora(lambda: d._tasto(evento))
     assert p.nel_cestino == ["scacchiera.pdf"]
     assert p.suoni == ["eliminato"]
     assert p.domande == []
@@ -150,19 +167,36 @@ def test_la_finestra_della_pulizia(prova, cartelle):
     assert p.domande[-1] == "Mando nel cestino il file piu' vecchio di 2 mesi, 2,0 KB?"
     assert p.nel_cestino == ["scacchiera.pdf"]
     p.risposta = True
-    d.elimina_i_vecchi()
+    p.lavora(d.elimina_i_vecchi)
     assert p.nel_cestino == ["scacchiera.pdf", "vecchia.pgn"]
     # Ripristina date: niente di vecchio, la nota del no.
     d.ripristina_le_date()
     assert p.suoni[-1] == "no"
     # Un cestino che non prende il file: il file resta, e lo si dice.
     p.cestino_rotto = True
-    d.elimina_tutto()
+    p.lavora(d.elimina_tutto)
     assert p.avvisi == ["Non sono andati nel cestino: nuova.pgn."]
     assert p.voci(d.elenco) == ["nuova.pgn, pgn, 5 giorni, 1,0 KB"]
-    p.cestino_rotto = False
+    # Un disco senza cestino: un controllo solo, e nessun tentativo (R37).
+    p.senza_cestino = True
     d.elimina_tutto()
+    assert p.avvisi[-1] == "Il disco dei file di Orologic non ha il cestino: non ho cancellato niente."
+    assert not d.in_lavoro()
+    p.senza_cestino = False
+    p.cestino_rotto = False
+    p.lavora(d.elimina_tutto)
     assert p.voci(d.elenco) == ["Nessun file."]
+
+
+def test_l_avviso_dei_file_rimasti_e_limitato(prova, cartelle):
+    """R37: dove il cestino non prende i file, l'avviso li elencava tutti."""
+    for numero in range(13):
+        cartelle("txt", f"f{numero:02d}.txt", 5)
+    p = prova()
+    p.cestino_rotto = True
+    p.lavora(p.dialogo.elimina_tutto)
+    assert p.avvisi[-1].endswith(" e altri 3.")
+    assert p.avvisi[-1].count(",") == 9
 
 
 def test_ripristina_date(prova, cartelle):
