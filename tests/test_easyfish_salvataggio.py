@@ -59,13 +59,18 @@ def test_il_matto_alla_fine_della_linea_principale_si_segna(monkeypatch):
     assert game.headers["Result"] == "1-0"
 
 
-def test_la_tripla_ripetizione_non_scrive_il_risultato(monkeypatch):
+def test_la_tripla_ripetizione_che_arriverebbe_non_scrive_il_risultato(monkeypatch):
+    """R14, con la regola di R9: la ripetizione che arriverebbe solo con la
+    mossa dopo non e' una patta, e Result resta com'era. Quella avvenuta, in
+    Easyfish, chiude: la prova e' in test_fine_partita."""
     import io
 
     import chess.pgn
 
-    monkeypatch.setattr(easyfish_app, "Acusticator", lambda *a, **k: None)
-    game = chess.pgn.read_game(io.StringIO("1. Nf3 Nf6 2. Ng1 Ng8 3. Nf3 Nf6 4. Ng1 Ng8 *"))
+    from orologic_modules import board_utils
+
+    monkeypatch.setattr(board_utils, "suona_la_fine", lambda: None)
+    game = chess.pgn.read_game(io.StringIO("1. Nf3 Nf6 2. Ng1 Ng8 3. Nf3 Nf6 4. Ng1 *"))
     assert game.end().board().can_claim_threefold_repetition()
     easyfish_app.CheckGameOver(game.end().board(), game.end())
     assert game.headers["Result"] == "*"

@@ -9,7 +9,7 @@ import chess
 import chess.engine
 from GBUtils import Acusticator, dgt, enter_escape, menu
 
-from .. import config, cruscotto, strato, ui
+from .. import board_utils, config, cruscotto, strato, ui
 from .. import engine as orologic_engine
 
 # DRY: Uso le utility di Orologic
@@ -82,144 +82,24 @@ def GetDynamicPrompt(board, node):
         return f"{prefix}{n}. {last_san}: "
 
 
-def _segna_il_risultato(node, risultato, automatico=True):
+def _segna_il_risultato(node, risultato):
     """L'esito nell'intestazione Result solo alla fine della linea
-    principale e solo per gli esiti automatici: dentro una variante, o per
-    una patta soltanto richiedibile, il PGN salvato e il nome del file
+    principale: dentro una variante il PGN salvato e il nome del file
     prendevano un risultato che la partita non ha (R14)."""
-    if automatico and node is not None and node.is_mainline() and not node.variations:
+    if node is not None and node.is_mainline() and not node.variations:
         node.root().headers["Result"] = risultato
 
 
 def CheckGameOver(board, node=None):
-    """Controlla se la partita è finita (matto, patta) e stampa l'esito."""
-    if board.is_game_over(claim_draw=True):
-        if board.is_checkmate():
-            res = "1-0" if board.turn == chess.BLACK else "0-1"
-            _segna_il_risultato(node, res)
-            print(_("Scacco matto!"))
-            Acusticator(
-                [
-                    "c5",
-                    0.1,
-                    -0.5,
-                    config.VOLUME,
-                    "e5",
-                    0.1,
-                    0,
-                    config.VOLUME,
-                    "g5",
-                    0.1,
-                    0.5,
-                    config.VOLUME,
-                    "c6",
-                    0.2,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 90, 0],
-            )
-        elif board.is_stalemate():
-            _segna_il_risultato(node, "1/2-1/2")
-            print(_("Patta per stallo!"))
-            Acusticator(
-                [
-                    "c5",
-                    0.1,
-                    -0.5,
-                    config.VOLUME,
-                    "e5",
-                    0.1,
-                    0,
-                    config.VOLUME,
-                    "g5",
-                    0.1,
-                    0.5,
-                    config.VOLUME,
-                    "c6",
-                    0.2,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 90, 0],
-            )
-        elif board.is_insufficient_material():
-            _segna_il_risultato(node, "1/2-1/2")
-            print(_("Patta per materiale insufficiente!"))
-            Acusticator(
-                [
-                    "c5",
-                    0.1,
-                    -0.5,
-                    config.VOLUME,
-                    "e5",
-                    0.1,
-                    0,
-                    config.VOLUME,
-                    "g5",
-                    0.1,
-                    0.5,
-                    config.VOLUME,
-                    "c6",
-                    0.2,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 90, 0],
-            )
-        elif board.is_seventyfive_moves() or board.can_claim_fifty_moves():
-            _segna_il_risultato(node, "1/2-1/2", automatico=board.is_seventyfive_moves())
-            print(_("Patta per la regola delle 50/75 mosse!"))
-            Acusticator(
-                [
-                    "c5",
-                    0.1,
-                    -0.5,
-                    config.VOLUME,
-                    "e5",
-                    0.1,
-                    0,
-                    config.VOLUME,
-                    "g5",
-                    0.1,
-                    0.5,
-                    config.VOLUME,
-                    "c6",
-                    0.2,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 90, 0],
-            )
-        elif board.is_fivefold_repetition() or board.can_claim_threefold_repetition():
-            _segna_il_risultato(node, "1/2-1/2", automatico=board.is_fivefold_repetition())
-            print(_("Patta per ripetizione della posizione!"))
-            Acusticator(
-                [
-                    "c5",
-                    0.1,
-                    -0.5,
-                    config.VOLUME,
-                    "e5",
-                    0.1,
-                    0,
-                    config.VOLUME,
-                    "g5",
-                    0.1,
-                    0.5,
-                    config.VOLUME,
-                    "c6",
-                    0.2,
-                    0,
-                    config.VOLUME,
-                ],
-                kind=1,
-                adsr=[2, 8, 90, 0],
-            )
+    """Controlla se la partita e' finita e dice l'esito, con la regola di
+    board_utils.fine_della_partita: la triplice ripetizione e le cinquanta
+    mosse solo a fatto avvenuto (R9, R94)."""
+    fine = board_utils.fine_della_partita(board)
+    if fine is None:
+        return
+    _segna_il_risultato(node, fine.risultato)
+    print(fine.frase())
+    board_utils.suona_la_fine()
 
 
 def _comandi_informativi(cmd, board, node, game, sharing_window):

@@ -1,6 +1,7 @@
 # Orologic, scacchiera: descrizione delle mosse, materiale, aperture.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
+import dataclasses
 import io
 import os
 import re
@@ -269,6 +270,76 @@ def DescribeMove(move, board, annotation=None):
     if annotation and annotation in L10N["annotations"]:
         finale += " ({a})".format(a=L10N["annotations"][annotation])
     return finale
+
+
+@dataclasses.dataclass(frozen=True)
+class FinePartita:
+    """Come si chiude la partita nella posizione: il risultato del PGN, il
+    motivo, e se la partita finisce da sola. In arbitraggio la triplice
+    ripetizione e le cinquanta mosse non chiudono: chiude e' falso, e la
+    patta la assegna l'arbitro (R9)."""
+
+    risultato: str
+    motivo: str
+    chiude: bool = True
+
+    def frase(self, vincitore=None):
+        """La frase dell'esito; per il matto col vincitore, se c'e'."""
+        if self.motivo == "matto":
+            return _("Scacco matto! Vince {winner}.").format(winner=vincitore) if vincitore else _("Scacco matto!")
+        if not self.chiude:
+            if self.motivo == "triplice":
+                return _("Patta richiedibile per triplice ripetizione: la partita continua finche' l'arbitro non la assegna, con .1/2.")
+            return _("Patta richiedibile per la regola delle 50 mosse: la partita continua finche' l'arbitro non la assegna, con .1/2.")
+        return {
+            "stallo": _("Patta per stallo!"),
+            "materiale": _("Patta per materiale insufficiente!"),
+            "75": _("Patta per la regola delle 75 mosse!"),
+            "quintupla": _("Patta per ripetizione della posizione (5 volte)!"),
+            "50": _("Patta per la regola delle 50 mosse!"),
+            "triplice": _("Patta per triplice ripetizione della posizione!"),
+        }[self.motivo]
+
+
+def fine_della_partita(board, arbitrata=False):
+    """La FinePartita della posizione, o None se si gioca ancora.
+
+    Chiudono da sole, dovunque: matto, stallo, materiale insufficiente, 75
+    mosse e quintupla ripetizione. La triplice ripetizione e le cinquanta
+    mosse contano solo a fatto avvenuto, is_repetition(3) e is_fifty_moves():
+    contro il motore e in Easyfish chiudono la partita; in arbitraggio no,
+    perche' sono patte da richiedere, e le assegna l'arbitro (FIDE, articoli
+    9.2 e 9.3). Prima can_claim_threefold_repetition e can_claim_fifty_moves
+    chiudevano la partita anche quando la ripetizione sarebbe arrivata solo
+    con una mossa di chi ha il tratto (R9, scelta di Gabriele del 26
+    novembre 2026). E' l'unico riconoscimento della fine partita: prima ce
+    n'erano quattro copie diverse, in game_flow, easyfish_app e due in
+    game_mode (R94)."""
+    if board.is_checkmate():
+        return FinePartita("0-1" if board.turn == chess.WHITE else "1-0", "matto")
+    automatiche = (
+        ("stallo", board.is_stalemate),
+        ("materiale", board.is_insufficient_material),
+        ("75", board.is_seventyfive_moves),
+        ("quintupla", board.is_fivefold_repetition),
+    )
+    for motivo, avvenuta in automatiche:
+        if avvenuta():
+            return FinePartita("1/2-1/2", motivo)
+    if board.is_repetition(3):
+        return FinePartita("1/2-1/2", "triplice", not arbitrata)
+    if board.is_fifty_moves():
+        return FinePartita("1/2-1/2", "50", not arbitrata)
+    return None
+
+
+def suona_la_fine():
+    """Il suono della partita finita, uguale per tutti gli esiti."""
+    Acusticator(
+        ["c5", 0.1, -0.5, config.VOLUME, "e5", 0.1, 0, config.VOLUME, "g5", 0.1, 0.5, config.VOLUME, "c6", 0.2, 0, config.VOLUME],
+        kind=1,
+        adsr=[2, 8, 90, 0],
+    )
 
 
 def mosse_al_controllo(game_state):

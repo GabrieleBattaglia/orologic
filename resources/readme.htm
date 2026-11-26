@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 9.5.97 - giovedì 26 novembre 2026)</h1>
+<h1>Guida Utente di Orologic (Versione 9.5.98 - giovedì 26 novembre 2026)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -864,7 +864,7 @@ margin: 1em 0;
         <tr><td><code>.b+</code>/<code>.b-</code>/<code>.n+</code>/<code>.n-</code></td><td>Aggiunge o sottrae tempo al Bianco (b) o al Nero (n), sempre a orologi fermi. Es: <code>.b+60</code> dà un minuto al Bianco. Sono comandi da arbitro: rispondono qui e nella modalità Tempo, mentre contro il motore e su Lichess non esistono, perché lì non c'è nessun arbitro che possa fermare gli orologi.</td></tr>
         <tr><td><code>.s</code> oppure <code>.b</code></td><td>Mostra la scacchiera testuale. I due comandi sono equivalenti in tutte le modalita'. In partita, se l'aggiornamento automatico è acceso, sotto la scacchiera compare la riga «Premi un tasto per tornare al prompt», e il prompt smette di riscriversi, così hai tutto il tempo di esplorarla. L'orologio intanto corre, e gli eventi esterni, come la mossa dell'avversario su Lichess, compaiono lo stesso. Il tasto che premi serve solo a tornare al prompt e non entra nella mossa.</td></tr>
         <tr><td><code>.c [commento]</code></td><td>Aggiunge un commento alla mossa corrente. Es: <code>.c Mossa chiave</code>.</td></tr>
-        <tr><td><code>.1-0</code> / <code>.0-1</code> / <code>.1/2</code> / <code>.*</code></td><td>Assegna la vittoria al Bianco / al Nero / patta / risultato indefinito e termina la partita. I primi tre si possono scrivere anche senza trattino e senza barra: <code>.10</code>, <code>.01</code> e <code>.12</code>.</td></tr>
+        <tr><td><code>.1-0</code> / <code>.0-1</code> / <code>.1/2</code> / <code>.*</code></td><td>Assegna la vittoria al Bianco / al Nero / patta / risultato indefinito e termina la partita. I primi tre si possono scrivere anche senza trattino e senza barra: <code>.10</code>, <code>.01</code> e <code>.12</code>. La triplice ripetizione e la regola delle 50 mosse non chiudono la partita da sole, perché la patta va richiesta: quando avvengono Orologic lo dice, e la patta la assegni tu con <code>.1/2</code>. Matto, stallo, materiale insufficiente, quintupla ripetizione e 75 mosse la chiudono da sole.</td></tr>
         <tr><td><code>.?</code></td><td>Mostra questa lista di comandi.</td></tr>
     </tbody>
 </table>

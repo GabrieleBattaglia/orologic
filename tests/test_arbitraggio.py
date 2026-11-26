@@ -252,3 +252,24 @@ def test_il_nucleo_fermo_alla_chiusura_salva_il_pgn(finestra, monkeypatch):
             assert pompa(lambda: not finestra.nucleo.is_alive(), 10)
         for percorso in _pgn_nuovi(prima):
             os.remove(percorso)
+
+
+def test_la_triplice_ripetizione_in_arbitraggio_la_assegna_l_arbitro(finestra, monkeypatch):
+    """R9: in arbitraggio la triplice ripetizione chiudeva la partita
+    d'ufficio, anche quando sarebbe arrivata solo con la mossa dopo. Ora
+    Orologic dice che la patta si puo' richiedere, una volta, e la partita
+    continua finche' l'arbitro non la assegna con .1/2."""
+    _arbitraggio_avviato(finestra, monkeypatch)
+    for passo in ("Nf3", "Nf6", "Ng1", "Ng8", "Nf3", "Nf6", "Ng1"):
+        _scrivi(finestra, passo)
+    assert "Partita terminata." not in finestra.area.GetValue()
+    assert "Patta" not in finestra.area.GetValue()
+    _scrivi(finestra, "Ng8")
+    testo = finestra.area.GetValue()
+    assert testo.count("Patta richiedibile per triplice ripetizione") == 1
+    assert "Partita terminata." not in testo
+    _scrivi(finestra, "e4")
+    assert "Partita terminata." not in finestra.area.GetValue()
+    assert finestra.nucleo.is_alive()
+    _scrivi(finestra, ".1/2")
+    assert "Risultato assegnato: 1/2-1/2" in finestra.area.GetValue()

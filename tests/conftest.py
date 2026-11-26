@@ -46,6 +46,26 @@ with open(os.path.join(CARTELLA_DELLE_PROVE, "settings", "orologic_db.json"), "w
     json.dump({"volume": 0.0}, _file)
 percorsi.cartella_applicazione = lambda: CARTELLA_DELLE_PROVE
 
+# Gli appunti di Windows sono di chi lavora: una partita finita nelle prove
+# ci copiava il suo PGN. Per tutta la corsa pyperclip copia e incolla in un
+# posto suo; le prove che vogliono un testo da incollare lo mettono con
+# monkeypatch, come prima.
+import pyperclip  # noqa: E402
+
+APPUNTI = {"testo": ""}
+
+
+def _copia_negli_appunti_finti(testo):
+    APPUNTI["testo"] = testo
+
+
+def _incolla_dagli_appunti_finti():
+    return APPUNTI["testo"]
+
+
+pyperclip.copy = _copia_negli_appunti_finti
+pyperclip.paste = _incolla_dagli_appunti_finti
+
 NOME_DEL_DESKTOP = f"orologic_prove_{os.getpid()}"
 GENERIC_ALL = 0x10000000
 DESKTOP_DELLE_PROVE = {}

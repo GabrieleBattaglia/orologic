@@ -496,205 +496,32 @@ def commenta_mossa(cmd, game_state):
 
 
 def verifica_fine_partita(game_state):
-    """Riconosce le posizioni che chiudono la partita.
+    """Riconosce le posizioni che chiudono la partita, con la regola di
+    board_utils.fine_della_partita (R9, R94).
 
-    Matto, stallo, materiale insufficiente, ripetizione e le altre
-    patte. Restituisce vero quando la partita e' finita, cosi' il ciclo
-    si ferma. Il tratto e' gia' passato quando si arriva qui, quindi il
-    vincitore si legge dalla scacchiera: chi deve muovere e' il mattato.
+    Restituisce vero quando la partita e' finita, cosi' il ciclo si ferma.
+    La triplice ripetizione e le cinquanta mosse non chiudono: Orologic dice
+    che la patta si puo' richiedere, una volta, e la partita continua finche'
+    l'arbitro non la assegna con .1/2. Prima la partita si chiudeva d'ufficio,
+    anche quando la ripetizione sarebbe arrivata solo con la mossa dopo.
     """
-    if game_state.board.is_checkmate():
-        game_state.game_over = True
-        result = "0-1" if game_state.board.turn == chess.WHITE else "1-0"
-        game_state.pgn_game.headers["Result"] = result
-        winner = game_state.black_player if result == "0-1" else game_state.white_player
-        print(_("Scacco matto! Vince {winner}.").format(winner=winner))
-        Acusticator(
-            [
-                "c5",
-                0.1,
-                -0.5,
-                config.VOLUME,
-                "e5",
-                0.1,
-                0,
-                config.VOLUME,
-                "g5",
-                0.1,
-                0.5,
-                config.VOLUME,
-                "c6",
-                0.2,
-                0,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[2, 8, 90, 0],
-        )
-        return True
-    elif game_state.board.is_stalemate():
-        game_state.game_over = True
-        game_state.pgn_game.headers["Result"] = "1/2-1/2"
-        print(_("Patta per stallo!"))
-        Acusticator(
-            [
-                "c5",
-                0.1,
-                -0.5,
-                config.VOLUME,
-                "e5",
-                0.1,
-                0,
-                config.VOLUME,
-                "g5",
-                0.1,
-                0.5,
-                config.VOLUME,
-                "c6",
-                0.2,
-                0,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[2, 8, 90, 0],
-        )
-        return True
-    elif game_state.board.is_insufficient_material():
-        game_state.game_over = True
-        game_state.pgn_game.headers["Result"] = "1/2-1/2"
-        print(_("Patta per materiale insufficiente!"))
-        Acusticator(
-            [
-                "c5",
-                0.1,
-                -0.5,
-                config.VOLUME,
-                "e5",
-                0.1,
-                0,
-                config.VOLUME,
-                "g5",
-                0.1,
-                0.5,
-                config.VOLUME,
-                "c6",
-                0.2,
-                0,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[2, 8, 90, 0],
-        )
-        return True
-    elif game_state.board.is_seventyfive_moves():
-        game_state.game_over = True
-        game_state.pgn_game.headers["Result"] = "1/2-1/2"
-        print(_("Patta per la regola delle 75 mosse!"))
-        Acusticator(
-            [
-                "c5",
-                0.1,
-                -0.5,
-                config.VOLUME,
-                "e5",
-                0.1,
-                0,
-                config.VOLUME,
-                "g5",
-                0.1,
-                0.5,
-                config.VOLUME,
-                "c6",
-                0.2,
-                0,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[2, 8, 90, 0],
-        )
-        return True
-    elif game_state.board.is_fivefold_repetition():
-        game_state.game_over = True
-        game_state.pgn_game.headers["Result"] = "1/2-1/2"
-        print(_("Patta per ripetizione della posizione (5 volte)!"))
-        Acusticator(
-            [
-                "c5",
-                0.1,
-                -0.5,
-                config.VOLUME,
-                "e5",
-                0.1,
-                0,
-                config.VOLUME,
-                "g5",
-                0.1,
-                0.5,
-                config.VOLUME,
-                "c6",
-                0.2,
-                0,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[2, 8, 90, 0],
-        )
-        return True
-    elif game_state.board.can_claim_fifty_moves():
-        game_state.game_over = True
-        game_state.pgn_game.headers["Result"] = "1/2-1/2"
-        print(_("Patta per la regola delle 50 mosse!"))
-        Acusticator(
-            [
-                "c5",
-                0.1,
-                -0.5,
-                config.VOLUME,
-                "e5",
-                0.1,
-                0,
-                config.VOLUME,
-                "g5",
-                0.1,
-                0.5,
-                config.VOLUME,
-                "c6",
-                0.2,
-                0,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[2, 8, 90, 0],
-        )
-        return True
-    elif game_state.board.can_claim_threefold_repetition():
-        game_state.game_over = True
-        game_state.pgn_game.headers["Result"] = "1/2-1/2"
-        print(_("Patta per triplice ripetizione della posizione!"))
-        Acusticator(
-            [
-                "c5",
-                0.1,
-                -0.5,
-                config.VOLUME,
-                "e5",
-                0.1,
-                0,
-                config.VOLUME,
-                "g5",
-                0.1,
-                0.5,
-                config.VOLUME,
-                "c6",
-                0.2,
-                0,
-                config.VOLUME,
-            ],
-            kind=1,
-            adsr=[2, 8, 90, 0],
-        )
-        return True
-    return False
+    fine = board_utils.fine_della_partita(game_state.board, arbitrata=True)
+    detta = getattr(game_state, "patta_richiedibile", None)
+    game_state.patta_richiedibile = fine.motivo if fine is not None and not fine.chiude else None
+    if fine is None:
+        return False
+    if not fine.chiude:
+        if fine.motivo != detta:
+            print(fine.frase())
+        return False
+    game_state.game_over = True
+    game_state.pgn_game.headers["Result"] = fine.risultato
+    vincitore = None
+    if fine.motivo == "matto":
+        vincitore = game_state.black_player if fine.risultato == "0-1" else game_state.white_player
+    print(fine.frase(vincitore))
+    board_utils.suona_la_fine()
+    return True
 
 
 def salva_pgn_partita(pgn_str, nome_file):
