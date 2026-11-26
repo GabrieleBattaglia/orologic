@@ -801,8 +801,16 @@ def show_leaderboard(all_scores):
 # --- FUNZIONI DEGLI ESERCIZI ---
 
 
-def ExKnights(ripetitions):
-    """Esercizio sui cavalli"""
+# Le mosse del cavallo, per l'esercizio.
+MOSSE_DEL_CAVALLO = ((1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1))
+
+
+def _esercizio_a_due_risposte(ripetitions, domanda, si, no):
+    """Il ciclo degli esercizi a due risposte, Invio per si' ed Esc per no:
+    cavalli, alfieri e colori. domanda() da' (testo della domanda per gli
+    errori, testo da dire, risposta giusta), o None per saltare il giro; si
+    e no sono le risposte come le scrive il resoconto degli errori. Prima il
+    ciclo era ricopiato in ogni esercizio (rilievo R94 della revisione 2)."""
     initial_rpt = ripetitions
     score = 0
     wins = 0
@@ -812,18 +820,77 @@ def ExKnights(ripetitions):
     esiti = []
     scoreslist = []
     errors_list = []
-    knight_moves = [
-        (1, 2),
-        (1, -2),
-        (-1, 2),
-        (-1, -2),
-        (2, 1),
-        (2, -1),
-        (-2, 1),
-        (-2, -1),
-    ]
 
     while ripetitions > 0:
+        posta = domanda()
+        if posta is None:
+            continue
+        question_str, testo, giusta = posta
+        print(testo, end="", flush=True)
+        time.sleep(READING_TIME)
+        # I tasti premuti prima che parta il cronometro, anche durante la
+        # pausa di lettura, non rispondono: il secondo Invio di una doppia
+        # pressione rispondeva alla domanda dopo, con tempo zero.
+        strato.svuota_tastiera()
+
+        now = time.perf_counter()
+
+        user_says_yes = None
+        while True:
+            s = key()
+            if s == "" or s in ("\r", "\n", "enter"):
+                user_says_yes = True
+                break
+            elif s in ("\x1b", "esc"):
+                user_says_yes = False
+                break
+
+        elapsed_q = time.perf_counter() - now
+        timeslist.append(elapsed_q)
+        singlescore = max((scoretime - elapsed_q) * 1000, 0)
+        correct = user_says_yes == giusta
+        if correct:
+            wins += 1
+            score += singlescore
+            scoreslist.append(singlescore)
+        else:
+            errors_list.append(
+                {
+                    "question": question_str,
+                    "user_answer": si if user_says_yes else no,
+                    "correct_answer": si if giusta else no,
+                }
+            )
+
+        esiti.append(correct)
+        current_rep_index = initial_rpt - ripetitions
+        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
+        current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
+        current_pan = PAN_START + (PAN_END - PAN_START) * progress
+
+        # Portamento a 6 semitoni (+6 se corretto, -6 se errato)
+        semitone_ratio = (2.0 ** (6.0 / 12.0)) if correct else (2.0 ** (-6.0 / 12.0))
+        target_freq = max(20.0, current_freq * semitone_ratio)
+
+        portamento_str = f"{int(current_freq)}.{int(target_freq)}"
+        sound_score = [
+            portamento_str,
+            AUDIO_BAR_DUR * 3.0,
+            current_pan,
+            config.VOLUME,
+        ]
+        Acusticator(sound_score, kind=1)
+        ripetitions -= 1
+
+    duration = time.perf_counter() - timeex
+    return score, scoreslist, duration, timeslist, wins, errors_list, esiti
+
+
+
+def ExKnights(ripetitions):
+    """Esercizio sui cavalli"""
+
+    def domanda():
         sq1 = random.choice(board)
         yes = random.choice([True, False])
         if not yes:
@@ -831,171 +898,38 @@ def ExKnights(ripetitions):
         else:
             x, y = ord(sq1[0]), ord(sq1[1])
             possible_sq2 = []
-            for dx, dy in knight_moves:
+            for dx, dy in MOSSE_DEL_CAVALLO:
                 new_x, new_y = x + dx, y + dy
                 if ord("A") <= new_x <= ord("H") and ord("1") <= new_y <= ord("8"):
                     possible_sq2.append(f"{chr(new_x)}{chr(new_y)}")
             if not possible_sq2:
-                continue
+                return None
             sq2 = random.choice(possible_sq2)
-
-        question_str = _("Mossa di cavallo: {sq1}-{sq2}").format(sq1=sq1, sq2=sq2)
-        print(
-            _(
-                "\nCavallo: {sq1_spelling} {sq1_rank} e {sq2_spelling} {sq2_rank}?"
-            ).format(
-                sq1_spelling=get_column_spelling(sq1[0]),
-                sq1_rank=sq1[1],
-                sq2_spelling=get_column_spelling(sq2[0]),
-                sq2_rank=sq2[1],
-            ),
-            end="",
-            flush=True,
+        testo = _("\nCavallo: {sq1_spelling} {sq1_rank} e {sq2_spelling} {sq2_rank}?").format(
+            sq1_spelling=get_column_spelling(sq1[0]),
+            sq1_rank=sq1[1],
+            sq2_spelling=get_column_spelling(sq2[0]),
+            sq2_rank=sq2[1],
         )
-        time.sleep(READING_TIME)
-        # I tasti premuti prima che parta il cronometro, anche durante la
-        # pausa di lettura, non rispondono: il secondo Invio di una doppia
-        # pressione rispondeva alla domanda dopo, con tempo zero.
-        strato.svuota_tastiera()
+        return _("Mossa di cavallo: {sq1}-{sq2}").format(sq1=sq1, sq2=sq2), testo, yes
 
-        now = time.perf_counter()
-
-        user_says_yes = None
-        while True:
-            s = key()
-            if s == "" or s in ("\r", "\n", "enter"):
-                user_says_yes = True
-                break
-            elif s in ("\x1b", "esc"):
-                user_says_yes = False
-                break
-
-        elapsed_q = time.perf_counter() - now
-        timeslist.append(elapsed_q)
-        singlescore = max((scoretime - elapsed_q) * 1000, 0)
-        correct = user_says_yes == yes
-        if correct:
-            wins += 1
-            score += singlescore
-            scoreslist.append(singlescore)
-        else:
-            errors_list.append(
-                {
-                    "question": question_str,
-                    "user_answer": "y" if user_says_yes else "n",
-                    "correct_answer": "y" if yes else "n",
-                }
-            )
-
-        esiti.append(correct)
-        current_rep_index = initial_rpt - ripetitions
-        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
-        current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
-        current_pan = PAN_START + (PAN_END - PAN_START) * progress
-
-        # Portamento a 6 semitoni (+6 se corretto, -6 se errato)
-        semitone_ratio = (2.0 ** (6.0 / 12.0)) if correct else (2.0 ** (-6.0 / 12.0))
-        target_freq = max(20.0, current_freq * semitone_ratio)
-
-        portamento_str = f"{int(current_freq)}.{int(target_freq)}"
-        sound_score = [
-            portamento_str,
-            AUDIO_BAR_DUR * 3.0,
-            current_pan,
-            config.VOLUME,
-        ]
-        Acusticator(sound_score, kind=1)
-        ripetitions -= 1
-
-    duration = time.perf_counter() - timeex
-    return score, scoreslist, duration, timeslist, wins, errors_list, esiti
+    return _esercizio_a_due_risposte(ripetitions, domanda, "y", "n")
 
 
 def ExBishops(ripetitions):
     """Esercizio sugli alfieri"""
-    initial_rpt = ripetitions
-    score = 0
-    wins = 0
-    scoretime = 15
-    timeex = time.perf_counter()
-    timeslist = []
-    esiti = []
-    scoreslist = []
-    errors_list = []
 
-    while ripetitions > 0:
+    def domanda():
         sq1, sq2, yes = case_dell_alfiere()
-
-        question_str = _("Stessa diagonale: {sq1}-{sq2}").format(sq1=sq1, sq2=sq2)
-        print(
-            _(
-                "\nAlfiere: {sq1_spelling} {sq1_rank} e {sq2_spelling} {sq2_rank}?"
-            ).format(
-                sq1_spelling=get_column_spelling(sq1[0]),
-                sq1_rank=sq1[1],
-                sq2_spelling=get_column_spelling(sq2[0]),
-                sq2_rank=sq2[1],
-            ),
-            end="",
-            flush=True,
+        testo = _("\nAlfiere: {sq1_spelling} {sq1_rank} e {sq2_spelling} {sq2_rank}?").format(
+            sq1_spelling=get_column_spelling(sq1[0]),
+            sq1_rank=sq1[1],
+            sq2_spelling=get_column_spelling(sq2[0]),
+            sq2_rank=sq2[1],
         )
-        time.sleep(READING_TIME)
-        # I tasti premuti prima che parta il cronometro, anche durante la
-        # pausa di lettura, non rispondono: il secondo Invio di una doppia
-        # pressione rispondeva alla domanda dopo, con tempo zero.
-        strato.svuota_tastiera()
+        return _("Stessa diagonale: {sq1}-{sq2}").format(sq1=sq1, sq2=sq2), testo, yes
 
-        now = time.perf_counter()
-
-        user_says_yes = None
-        while True:
-            s = key()
-            if s == "" or s in ("\r", "\n", "enter"):
-                user_says_yes = True
-                break
-            elif s in ("\x1b", "esc"):
-                user_says_yes = False
-                break
-
-        elapsed_q = time.perf_counter() - now
-        timeslist.append(elapsed_q)
-        singlescore = max((scoretime - elapsed_q) * 1000, 0)
-        correct = user_says_yes == yes
-        if correct:
-            wins += 1
-            score += singlescore
-            scoreslist.append(singlescore)
-        else:
-            errors_list.append(
-                {
-                    "question": question_str,
-                    "user_answer": "y" if user_says_yes else "n",
-                    "correct_answer": "y" if yes else "n",
-                }
-            )
-
-        esiti.append(correct)
-        current_rep_index = initial_rpt - ripetitions
-        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
-        current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
-        current_pan = PAN_START + (PAN_END - PAN_START) * progress
-
-        # Portamento a 6 semitoni (+6 se corretto, -6 se errato)
-        semitone_ratio = (2.0 ** (6.0 / 12.0)) if correct else (2.0 ** (-6.0 / 12.0))
-        target_freq = max(20.0, current_freq * semitone_ratio)
-
-        portamento_str = f"{int(current_freq)}.{int(target_freq)}"
-        sound_score = [
-            portamento_str,
-            AUDIO_BAR_DUR * 3.0,
-            current_pan,
-            config.VOLUME,
-        ]
-        Acusticator(sound_score, kind=1)
-        ripetitions -= 1
-
-    duration = time.perf_counter() - timeex
-    return score, scoreslist, duration, timeslist, wins, errors_list, esiti
+    return _esercizio_a_due_risposte(ripetitions, domanda, "y", "n")
 
 
 def ExMixed(ripetitions):
@@ -1214,83 +1148,13 @@ def ExMixed(ripetitions):
 
 def ExColors(ripetitions):
     """Esercizio sui colori delle case"""
-    initial_rpt = ripetitions
-    score = 0
-    wins = 0
-    scoretime = 15
-    timeex = time.perf_counter()
-    timeslist = []
-    esiti = []
-    scoreslist = []
-    errors_list = []
 
-    while ripetitions > 0:
+    def domanda():
         sq = random.choice(board)
-        print(
-            _("\nColore per {sq_spelling} {sq_rank}?").format(
-                sq_spelling=get_column_spelling(sq[0]), sq_rank=sq[1]
-            ),
-            end="",
-            flush=True,
-        )
-        time.sleep(READING_TIME)
-        # I tasti premuti prima che parta il cronometro, anche durante la
-        # pausa di lettura, non rispondono: il secondo Invio di una doppia
-        # pressione rispondeva alla domanda dopo, con tempo zero.
-        strato.svuota_tastiera()
+        testo = _("\nColore per {sq_spelling} {sq_rank}?").format(sq_spelling=get_column_spelling(sq[0]), sq_rank=sq[1])
+        return _("Colore di {sq}").format(sq=sq), testo, get_square_color(sq) == "w"
 
-        now = time.perf_counter()
-
-        user_says_white = None
-        while True:
-            s = key()
-            if s == "" or s in ("\r", "\n", "enter"):
-                user_says_white = True
-                break
-            elif s in ("\x1b", "esc"):
-                user_says_white = False
-                break
-
-        elapsed_q = time.perf_counter() - now
-        timeslist.append(elapsed_q)
-        singlescore = max((scoretime - elapsed_q) * 1000, 0)
-        correct_is_white = get_square_color(sq) == "w"
-        correct = user_says_white == correct_is_white
-        if correct:
-            wins += 1
-            score += singlescore
-            scoreslist.append(singlescore)
-        else:
-            errors_list.append(
-                {
-                    "question": _("Colore di {sq}").format(sq=sq),
-                    "user_answer": _("Bianco") if user_says_white else _("Nero"),
-                    "correct_answer": _("Bianco") if correct_is_white else _("Nero"),
-                }
-            )
-
-        esiti.append(correct)
-        current_rep_index = initial_rpt - ripetitions
-        progress = current_rep_index / (initial_rpt - 1) if initial_rpt > 1 else 1.0
-        current_freq = FREQ_START + (FREQ_END - FREQ_START) * progress
-        current_pan = PAN_START + (PAN_END - PAN_START) * progress
-
-        # Portamento a 6 semitoni (+6 se corretto, -6 se errato)
-        semitone_ratio = (2.0 ** (6.0 / 12.0)) if correct else (2.0 ** (-6.0 / 12.0))
-        target_freq = max(20.0, current_freq * semitone_ratio)
-
-        portamento_str = f"{int(current_freq)}.{int(target_freq)}"
-        sound_score = [
-            portamento_str,
-            AUDIO_BAR_DUR * 3.0,
-            current_pan,
-            config.VOLUME,
-        ]
-        Acusticator(sound_score, kind=1)
-        ripetitions -= 1
-
-    duration = time.perf_counter() - timeex
-    return score, scoreslist, duration, timeslist, wins, errors_list, esiti
+    return _esercizio_a_due_risposte(ripetitions, domanda, _("Bianco"), _("Nero"))
 
 
 def main():

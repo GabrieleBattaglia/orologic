@@ -259,3 +259,22 @@ def test_le_cadenze_della_board_api():
     assert motivo(300, 3, False) is None
     assert motivo(60, 0, False) is not None and "bullet" in motivo(60, 0, False)
     assert motivo(120, 2, False) is None
+
+
+# R94: il ciclo comune degli esercizi di Memoboard.
+
+
+@pytest.mark.parametrize("esercizio", ["ExKnights", "ExBishops", "ExColors"])
+def test_gli_esercizi_a_due_risposte_col_ciclo_comune(monkeypatch, esercizio):
+    from orologic_modules import memoboard_app
+
+    monkeypatch.setattr(memoboard_app.strato, "svuota_tastiera", lambda: None)
+    monkeypatch.setattr(memoboard_app, "key", lambda: "\r")
+    monkeypatch.setattr(memoboard_app.time, "sleep", lambda _secondi: None)
+    monkeypatch.setattr(memoboard_app, "Acusticator", lambda *_a, **_k: None)
+    _punti, _elenco, _durata, tempi, giuste, errori, esiti = getattr(memoboard_app, esercizio)(20)
+    assert len(tempi) == len(esiti) == 20
+    assert giuste == esiti.count(True) and len(errori) == esiti.count(False)
+    # Invio dice si': gli errori sono le domande dove la risposta era no.
+    for errore in errori:
+        assert errore["user_answer"] in ("y", "Bianco") and errore["correct_answer"] in ("n", "Nero")
