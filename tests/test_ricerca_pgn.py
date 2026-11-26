@@ -292,7 +292,7 @@ def test_la_lettura_tiene_tutto_il_testo_e_la_codifica(tmp_path):
             "[Event \"C\"]\r\n[White \"Bianchi\"]\r\n[Black \"Rossi\"]\r\n[Result \"0-1\"]\r\n\r\n1. d4 0-1\r\n").encode("cp1252")
     testo, cattive, a_capo, bom = archivio_pgn.decodifica(dati)
     assert "Müller" in testo and "\r" not in testo and a_capo == "\r\n" and not bom
-    assert cattive == [testo.index('[White "M')]
+    assert list(cattive) == [testo.index('[White "M')]
     file = tmp_path / "cp1252.pgn"
     file.write_bytes(dati)
     caricato, _righe = archivio_pgn.carica("file", str(file))
@@ -1159,3 +1159,50 @@ def test_esc_durante_classifica_tiene_quello_che_e_fatto(prova, tmp_path, monkey
     assert pompa(lambda: not d.in_corso() and p.avvisi)
     assert p.avvisi[-1].split("\n")[0] == "Classificate 1 partite su 1."
     assert p.testi(p.voce("Non classificate")) == ["Senza mosse (1 partite)", "Da una posizione di studio (1 partite)"]
+
+
+def _decodifica_riga_per_riga(dati):
+    """La decodifica di prima, riga per riga, per il confronto."""
+    parti, cattive, posizione = [], [], 0
+    for riga in dati.splitlines(keepends=True):
+        try:
+            pezzo = riga.decode("utf-8")
+        except UnicodeDecodeError:
+            pezzo = riga.decode("cp1252", errors="replace")
+            cattive.append(posizione)
+        pezzo = pezzo.replace("\r\n", "\n")
+        parti.append(pezzo)
+        posizione += len(pezzo)
+    return "".join(parti), cattive
+
+
+@pytest.mark.parametrize("a_capo", ["\n", "\r\n"])
+def test_la_decodifica_a_blocchi_da_lo_stesso_testo(monkeypatch, a_capo):
+    """R118: la decodifica a blocchi da' lo stesso testo e le stesse righe
+    cattive di quella riga per riga, anche a cavallo dei blocchi."""
+    monkeypatch.setattr(archivio_pgn, "BLOCCO_DELLA_DECODIFICA", 50)
+    righe = ['[Event "Müller"]', '[White "Groß"]', "1. e4 e5 *", '[Site "Città"]', "", "1. d4 *"]
+    dati = b"".join((riga + a_capo).encode("cp1252" if indice % 2 == 0 else "utf-8") for indice, riga in enumerate(righe * 7))
+    testo, cattive, letto_a_capo, bom = archivio_pgn.decodifica(dati)
+    vecchio_testo, vecchie_cattive = _decodifica_riga_per_riga(dati)
+    assert (testo, list(cattive), letto_a_capo, bom) == (vecchio_testo, vecchie_cattive, a_capo, False)
+    assert archivio_pgn.decodifica("tutto è UTF-8\r\n".encode())[0] == "tutto è UTF-8\n"
+
+
+def test_la_decodifica_di_un_archivio_latin1_non_moltiplica_la_memoria(monkeypatch):
+    """R118: bastava una riga non UTF-8 perche' il file si decodificasse riga
+    per riga, con cinque o sette volte la sua dimensione in memoria: un
+    archivio Latin-1 da un giga chiedeva sei giga. Ora meno di tre volte."""
+    import tracemalloc
+
+    monkeypatch.setattr(archivio_pgn, "BLOCCO_DELLA_DECODIFICA", 256 * 1024)
+    partita = '[Event "Müller Open"]\n[White "Müller, Jürgen"]\n[Black "Groß, Søren"]\n[Result "1-0"]\n\n1. e4 e5 2. Nf3 Nc6 1-0\n\n'
+    dati = (partita * 30000).encode("cp1252")
+    tracemalloc.start()
+    try:
+        testo, cattive, _a_capo, _bom = archivio_pgn.decodifica(dati)
+        _attuale, picco = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert len(cattive) == 90000 and testo.startswith('[Event "Müller Open"]')
+    assert picco < 3 * len(dati), picco / len(dati)

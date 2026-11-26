@@ -25,6 +25,7 @@ partite che non cambiano si copiano com'erano, anche quelle che la ricerca
 non carica.
 """
 
+import array
 import codecs
 import contextlib
 import http.client
@@ -78,28 +79,50 @@ def tipi_dei_problemi():
 # La lettura.
 
 
+# I byte che la decodifica guarda in una volta, fino al ritorno a capo dopo
+# (R118).
+BLOCCO_DELLA_DECODIFICA = 1024 * 1024
+
+
 def decodifica(dati):
     """I byte del file come testo: (testo, cattive, a_capo, bom). cattive
     sono i principi delle righe che non erano UTF-8, lette in cp1252; il
-    testo va a capo con \\n, e a_capo dice come andava il file."""
+    testo va a capo con \\n, e a_capo dice come andava il file. Quando il
+    file non e' tutto UTF-8 si decodifica a blocchi, e riga per riga solo
+    dentro i blocchi che non lo sono: prima bastava una riga per decodificare
+    tutto il file riga per riga, con cinque volte la sua dimensione in
+    memoria, e un archivio Latin-1 da un giga chiedeva sei giga (R118)."""
     bom = dati.startswith(codecs.BOM_UTF8)
     if bom:
         dati = dati[len(codecs.BOM_UTF8):]
     a_capo = "\r\n" if b"\r\n" in dati[:65536] else "\n"
-    try:
-        return dati.decode("utf-8").replace("\r\n", "\n"), [], a_capo, bom
-    except UnicodeDecodeError:
-        pass
-    parti, cattive, posizione = [], [], 0
-    for riga in dati.splitlines(keepends=True):
+    # Sempre a blocchi: anche il primo tentativo sul file intero preparava
+    # il testo di tutto il file prima di fallire. Le posizioni in un array di
+    # interi: una lista ne teneva un oggetto per riga cattiva, e in un
+    # archivio tutto Latin-1 sono milioni.
+    parti, cattive, posizione, inizio = [], array.array("q"), 0, 0
+    while inizio < len(dati):
+        fine = dati.find(b"\n", min(inizio + BLOCCO_DELLA_DECODIFICA, len(dati)) - 1)
+        fine = len(dati) if fine < 0 else fine + 1
+        blocco = dati[inizio:fine]
         try:
-            pezzo = riga.decode("utf-8")
+            pezzo = blocco.decode("utf-8").replace("\r\n", "\n")
         except UnicodeDecodeError:
-            pezzo = riga.decode("cp1252", errors="replace")
-            cattive.append(posizione)
-        pezzo = pezzo.replace("\r\n", "\n")
+            righe = []
+            for riga in blocco.splitlines(keepends=True):
+                try:
+                    testo_della_riga = riga.decode("utf-8")
+                except UnicodeDecodeError:
+                    testo_della_riga = riga.decode("cp1252", errors="replace")
+                    cattive.append(posizione)
+                testo_della_riga = testo_della_riga.replace("\r\n", "\n")
+                righe.append(testo_della_riga)
+                posizione += len(testo_della_riga)
+            pezzo = "".join(righe)
+        else:
+            posizione += len(pezzo)
         parti.append(pezzo)
-        posizione += len(pezzo)
+        inizio = fine
     return "".join(parti), cattive, a_capo, bom
 
 

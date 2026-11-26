@@ -19,6 +19,10 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 9</h2>
 <h3>Versione 9.5</h3>
+<h4>9.5.112 (26 novembre 2026)</h4>
+<ul>
+  <li>* [Ricerca PGN] Un archivio con righe non UTF-8, per esempio scritto in Latin-1, si legge con poco più di due volte la sua dimensione in memoria, invece di cinque o sette: un archivio da un giga non chiede più sei giga.</li>
+</ul>
 <h4>9.5.111 (26 novembre 2026)</h4>
 <ul>
   <li>* [PGN gestione archivi] I file che pgn-extract scrive per i parametri, come quelli di -d e -n, non possono essere un file che legge per un altro parametro, come quello di -c, né il file di un altro parametro che scrive: prima -c e -d sullo stesso archivio lo riscrivevano. La riga della copia di sicurezza fatta prima del lavoro resta in testa all'uscita e al resoconto, e la copia si fa senza fermare la finestra.</li>
