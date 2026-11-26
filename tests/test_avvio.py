@@ -81,3 +81,30 @@ def test_la_finestra_della_lingua(app):
     assert scelta == "en"
     assert viste == [("Orologic", "Select your language:", avvio.nome("it"), True)]
     pompa(lambda: False, 0.1)
+
+
+def test_la_app_della_finestra_della_lingua_resta_viva(app, monkeypatch):
+    """Al primo avvio una wx.App non c'e': quella nata per la finestra della
+    lingua resta tenuta, perche' wxPython non la distrugga prima del dialogo
+    (R1). La App vera delle prove fa da dialogo; quella nuova e' finta."""
+    nate = []
+
+    class AppFinta:
+        def __init__(self):
+            nate.append(self)
+
+    monkeypatch.setattr(avvio, "_APP", [])
+    monkeypatch.setattr(wx, "GetApp", lambda: None)
+    monkeypatch.setattr(wx, "App", AppFinta)
+
+    def chiudi():
+        for aperta in wx.GetTopLevelWindows():
+            if isinstance(aperta, wx.Dialog) and aperta.IsModal():
+                aperta.EndModal(wx.ID_CANCEL)
+                return
+        wx.CallLater(50, chiudi)
+
+    wx.CallLater(50, chiudi)
+    assert avvio.scegli_nella_finestra(["en", "it"], 1) is None
+    assert len(nate) == 1 and nate == avvio._APP
+    pompa(lambda: False, 0.1)

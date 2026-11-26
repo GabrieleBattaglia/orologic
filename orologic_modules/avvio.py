@@ -27,6 +27,11 @@ DOMINIO = "messages"
 # Il nome della lingua nella lingua stessa, per GetLocaleInfoEx.
 LOCALE_SNATIVELANGUAGENAME = 0x04
 TITOLO = "Select your language:"
+# La wx.App nata qui per la finestra della lingua. Senza un riferimento
+# wxPython la distruggerebbe subito, e il dialogo dopo non nascerebbe, con
+# PyNoAppError a ogni primo avvio (rilievo R1 della revisione 2, 26 novembre
+# 2026); finestra.avvia la ritrova con wx.GetApp.
+_APP = []
 
 
 def cartella_dei_cataloghi():
@@ -103,7 +108,8 @@ def scegli_nella_finestra(codici, scelta):
     import wx
     from GBwx import STILE_ADATTABILE, adatta_finestra, pannello_scorrevole
 
-    wx.GetApp() or wx.App()
+    if wx.GetApp() is None:
+        _APP.append(wx.App())
     with wx.Dialog(None, title="Orologic", style=STILE_ADATTABILE) as dialogo:
         pannello = pannello_scorrevole(dialogo)
         sizer = wx.BoxSizer(wx.VERTICAL)
