@@ -132,3 +132,83 @@ def test_il_matto_subito_ha_il_segno(monkeypatch):
     monkeypatch.setattr(engine, "Acusticator", lambda *a, **k: None)
     monkeypatch.setattr(engine, "_analizza_con_cache", lambda board, linee: [{"score": chess.engine.PovScore(chess.engine.Mate(-3), chess.WHITE), "pv": [chess.Move.from_uci("e2e4")]}])
     assert engine.CalculateBest(scacchiera, as_san=True)[0].startswith("Matto subito in 3")
+
+
+class MortoInPartita:
+    """Un motore morto durante una partita: ping, play e id cadono."""
+
+    def __init__(self):
+        self.options = {"UCI_Elo": None}
+
+    def ping(self):
+        raise chess.engine.EngineTerminatedError("engine process died unexpectedly")
+
+    def play(self, *a, **k):
+        raise chess.engine.EngineTerminatedError("engine process died unexpectedly")
+
+    @property
+    def id(self):
+        raise chess.engine.EngineTerminatedError("engine process died unexpectedly")
+
+    def quit(self):
+        pass
+
+
+class BuonoInPartita:
+    def __init__(self):
+        self.id = {"name": "Buono"}
+        self.options = {"UCI_Elo": None, "UCI_LimitStrength": None}
+        self.configurazioni = []
+
+    def ping(self):
+        pass
+
+    def configure(self, opzioni):
+        self.configurazioni.append(dict(opzioni))
+
+    def play(self, board, limit, **k):
+        return chess.engine.PlayResult(next(iter(board.legal_moves)), None)
+
+    def quit(self):
+        pass
+
+
+def test_la_partita_dopo_una_morte_del_motore_lo_riavvia(monkeypatch):
+    """R111: se il motore moriva in partita usciva Errore motore, ma ENGINE
+    restava non nullo, e alla partita dopo la proprieta' id faceva cadere il
+    nucleo, finche' non si riavviava Orologic."""
+    from orologic_modules import gioca
+
+    buono = BuonoInPartita()
+    monkeypatch.setattr(engine, "ENGINE", MortoInPartita())
+    monkeypatch.setattr(engine, "CloseEngine", lambda: None)
+
+    def avvia():
+        engine.ENGINE = buono
+        return True
+
+    monkeypatch.setattr(engine, "InitEngine", avvia)
+    assert not engine.motore_vivo()
+    motore = gioca._motore_pronto()
+    assert motore and engine.ENGINE is buono
+    assert motore.id == {"name": "Buono"}
+
+
+def test_la_mossa_del_motore_morto_si_riprova_con_la_forza(monkeypatch):
+    """R111: la mossa del motore passa da gioca_la_mossa, che riavvia il
+    motore morto una volta e gli rimette la forza della partita."""
+    from orologic_modules.easyfish import game_mode
+
+    buono = BuonoInPartita()
+    monkeypatch.setattr(engine, "ENGINE", MortoInPartita())
+    monkeypatch.setattr(engine, "CloseEngine", lambda: None)
+
+    def avvia():
+        engine.ENGINE = buono
+        return True
+
+    monkeypatch.setattr(engine, "InitEngine", avvia)
+    monkeypatch.setattr(engine, "forza", {"tipo": "elo", "valore": 1500, "profondita": None})
+    risultato = engine.gioca_la_mossa(chess.Board(), chess.engine.Limit(time=0.1), rimetti_la_forza=lambda motore: game_mode.applica_forza(motore, dict(engine.forza)))
+    assert risultato.move in chess.Board().legal_moves
+    assert {"UCI_Elo": 1500} in buono.configurazioni

@@ -75,7 +75,14 @@ def imposta_nome():
 
 
 def _motore_pronto():
-    """Il motore, avviato se serve; None se non c'e' verso."""
+    """Il motore, avviato se serve e vivo; None se non c'e' verso. Un motore
+    morto in una partita di prima si riavvia: restava non nullo, e la
+    partita dopo faceva cadere il nucleo (R111). Restituisce il motore vivo
+    di engine, che segue i riavvii."""
+    if engine.ENGINE is not None and not engine.motore_vivo():
+        print(_("Il motore si e' fermato: lo riavvio."))
+        engine.CloseEngine()
+        engine.ENGINE = None
     if engine.ENGINE is None and not engine.InitEngine():
         if enter_escape(
             _(
@@ -87,7 +94,7 @@ def _motore_pronto():
         if engine.ENGINE is None and not engine.InitEngine():
             print(_("Senza motore non si gioca. Ritorno al menu."))
             return None
-    return engine.ENGINE
+    return engine.MOTORE
 
 
 def _classifica_apertura(partita):

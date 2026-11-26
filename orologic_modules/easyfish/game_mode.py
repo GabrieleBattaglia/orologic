@@ -1021,8 +1021,13 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None, carriera=Fa
                     )
 
                 try:
-                    result = engine_instance.play(
-                        board, limit, info=chess.engine.INFO_SCORE
+                    # Dal motore vivo, che riparte se e' morto, con la forza
+                    # della partita rimessa (R111).
+                    result = orologic_engine.gioca_la_mossa(
+                        board,
+                        limit,
+                        rimetti_la_forza=lambda motore: applica_forza(motore, dict(orologic_engine.forza)),
+                        info=chess.engine.INFO_SCORE,
                     )
                     # La bandierina del motore e' caduta mentre pensava: la
                     # mossa arriva fuori tempo, e non si gioca.

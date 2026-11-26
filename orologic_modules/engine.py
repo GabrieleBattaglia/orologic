@@ -454,20 +454,59 @@ def interroga(board, limit, **opzioni):
     l'analisi automatica arrivava a "completata" con dati vuoti, e
     nell'analisi manuale e e w facevano cadere il programma (R41). Se non
     riparte, ENGINE resta None e l'errore sale."""
-    global ENGINE
     if ENGINE is None:
         raise chess.engine.EngineTerminatedError(_("Il motore non c'e'."))
     try:
         return ENGINE.analyse(board, limit, **opzioni)
     except chess.engine.EngineTerminatedError:
-        print(_("Il motore si e' fermato: lo riavvio."))
-        CloseEngine()
-        ENGINE = None
-        if not InitEngine() or ENGINE is None:
-            ENGINE = None
+        if not _riavviato():
             print(_("Il motore non riparte: niente analisi."))
             raise
         return ENGINE.analyse(board, limit, **opzioni)
+
+
+def _riavviato():
+    """Il motore morto si chiude e si riavvia, una volta, dicendolo: vero se
+    e' ripartito; se no ENGINE resta None."""
+    global ENGINE
+    print(_("Il motore si e' fermato: lo riavvio."))
+    CloseEngine()
+    ENGINE = None
+    if not InitEngine() or ENGINE is None:
+        ENGINE = None
+        return False
+    return True
+
+
+def motore_vivo():
+    """Vero se il motore c'e' e risponde. Un motore morto resta non nullo, e
+    la partita dopo cadeva sulla sua proprieta' id (R111)."""
+    if ENGINE is None:
+        return False
+    try:
+        ENGINE.ping()
+    except (chess.engine.EngineError, TimeoutError, OSError):
+        return False
+    return True
+
+
+def gioca_la_mossa(board, limit, rimetti_la_forza=None, **opzioni):
+    """ENGINE.play con la ripresa di interroga: se il motore e' morto lo si
+    riavvia una volta, e rimetti_la_forza(motore), se c'e', gli ridà la
+    forza della partita prima di riprovare. Prima la partita contro il
+    motore non passava da qui: usciva Errore motore, e la partita dopo
+    cadeva (R111)."""
+    if ENGINE is None:
+        raise chess.engine.EngineTerminatedError(_("Il motore non c'e'."))
+    try:
+        return ENGINE.play(board, limit, **opzioni)
+    except chess.engine.EngineTerminatedError:
+        if not _riavviato():
+            print(_("Il motore non riparte: la partita si ferma."))
+            raise
+        if rimetti_la_forza is not None:
+            rimetti_la_forza(ENGINE)
+        return ENGINE.play(board, limit, **opzioni)
 
 
 class _MotoreVivo:
