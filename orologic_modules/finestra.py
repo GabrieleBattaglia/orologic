@@ -84,6 +84,7 @@ from . import (
     cruscotto,
     dialoghi,
     plancia,
+    registro,
     richedit,
     strato,
     version,
@@ -1930,22 +1931,39 @@ class Finestra(wx.Frame):
 
     def avvia_il_nucleo(self, corpo):
         def filo():
+            errore = None
             try:
                 corpo()
             except (KeyboardInterrupt, SystemExit):
                 pass
-            except Exception:  # noqa: BLE001 - l'errore va letto nell'area, poi si chiude
-                print(traceback.format_exc())
-            wx.CallAfter(self._nucleo_finito)
+            # Un errore del nucleo va nell'area, nel registro degli errori e
+            # in una finestra da leggere prima di chiudere: prima la finestra
+            # si chiudeva col traceback dentro, e nessuno lo leggeva (R15).
+            except Exception:  # noqa: BLE001
+                testo = traceback.format_exc()
+                print(testo)
+                errore = (testo, registro.scrivi(f"Nucleo:\n{testo}"))
+            wx.CallAfter(self._nucleo_finito, errore)
 
         self.nucleo = threading.Thread(target=filo, name="nucleo di Orologic", daemon=True)
         self.nucleo.start()
 
-    def _nucleo_finito(self):
+    def _nucleo_finito(self, errore=None):
         if self:
             self._applica()
-            if self.chiudi_alla_fine:
+            if errore is not None:
+                self.mostra_l_errore(*errore)
+            if self.chiudi_alla_fine and self:
                 self.Destroy()
+
+    def mostra_l_errore(self, testo, file):
+        """L'errore che ha fermato il nucleo, in una finestra da leggere, con
+        il percorso del registro dove resta."""
+        righe = [_("Orologic si e' fermato per un errore.")]
+        if file:
+            righe.append(_("Il testo resta nel registro degli errori: {file}").format(file=file))
+        righe += testo.rstrip().splitlines()
+        dialoghi.da_leggere(self, _("Errore di Orologic"), righe)
 
     def _chiudi(self, evento):
         """Alt+F4: il nucleo riceve l'interruzione, come Ctrl+C nel

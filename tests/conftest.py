@@ -184,6 +184,10 @@ def finestra(app, request):
     # I messaggi braille della riga che cambia, a parte dagli annunci.
     vera.al_braille_mandati = []
     vera.al_braille = vera.al_braille_mandati.append
+    # L'errore che ferma il nucleo si segna, invece della finestra da
+    # leggere, che fermerebbe la prova (R15).
+    vera.errori_mostrati = []
+    vera.mostra_l_errore = lambda testo, file: vera.errori_mostrati.append((testo, file))
     # Col nucleo finto la finestra resta aperta, per leggerla; con Orologic
     # intero si chiude da sola, come nella vita vera.
     vera.chiudi_alla_fine = "orologic_parte" in request.node.name

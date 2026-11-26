@@ -169,10 +169,14 @@ def apri_la_console():
 def uscite_mute():
     """Nel pacchetto senza console, prima che la finestra prenda lo schermo,
     stdout e stderr non ci sono: una scrittura diretta cadrebbe in errore.
-    Vanno nel vuoto finche' la finestra non li prende."""
-    for nome in ("stdout", "stderr"):
-        if getattr(sys, nome) is None:
-            setattr(sys, nome, open(os.devnull, "w", encoding="utf-8"))  # noqa: SIM115
+    stdout va nel vuoto finche' la finestra non lo prende; stderr va nel
+    registro degli errori, che prima non c'era (R15)."""
+    from . import registro
+
+    if sys.stdout is None:
+        sys.stdout = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
+    if sys.stderr is None:
+        sys.stderr = registro.SulRegistro()
 
 
 def installazione_a_posto():
@@ -188,7 +192,10 @@ def installazione_a_posto():
 def prepara(argomenti):
     """Prima di importare il resto di Orologic: il mutex e App installate;
     col --cli la console del pacchetto; nella finestra la lingua del primo
-    avvio."""
+    avvio. Prima di tutto, il registro degli errori (R15)."""
+    from . import registro
+
+    registro.installa()
     installazione_a_posto()
     if "--cli" in argomenti:
         apri_la_console()
