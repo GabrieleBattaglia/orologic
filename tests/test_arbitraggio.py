@@ -273,3 +273,52 @@ def test_la_triplice_ripetizione_in_arbitraggio_la_assegna_l_arbitro(finestra, m
     assert finestra.nucleo.is_alive()
     _scrivi(finestra, ".1/2")
     assert "Risultato assegnato: 1/2-1/2" in finestra.area.GetValue()
+
+
+def test_le_mosse_annullate_due_volte_restano_nel_commento(finestra, monkeypatch):
+    """R132: il commento Mosse annullate sta sulla mossa giocata dopo
+    l'annullamento, e annullando anche quella si perdeva."""
+    salvati = []
+    monkeypatch.setattr(game_flow, "salva_pgn_partita", lambda testo, nome: salvati.append(testo))
+    _arbitraggio_avviato(finestra, monkeypatch)
+    for passo in ("e4", "e5", ".p", ".q", ".p", "d5", ".p", ".q", ".p", "c5", ".1/2"):
+        _scrivi(finestra, passo)
+    assert pompa(lambda: salvati, 10)
+    assert "Mosse annullate: e5 d5" in salvati[0]
+
+
+def test_la_ripresa_che_non_torna_riparte_dal_fen_anche_nel_pgn():
+    """R132: se la linea rigiocata non arrivava al FEN salvato, la
+    scacchiera nasceva dal FEN ma il PGN restava quello che non tornava."""
+    import io
+
+    import chess
+    import chess.pgn
+
+    pgn = chess.pgn.read_game(io.StringIO('[White "A"]\n[Black "B"]\n\n1. e4 e5 *\n'))
+    fen = chess.Board("rnbqkbnr/pppp1ppp/8/4p3/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").fen()
+    board, partita = game_flow.ripresa_coerente(pgn, fen)
+    assert board.fen() == fen
+    assert partita.headers["White"] == "A"
+    assert partita.board().fen() == fen and not list(partita.mainline_moves())
+
+
+def test_la_ripresa_fa_partire_l_orologio_solo_quando_si_gioca(monkeypatch):
+    """R132: il filo dell'orologio partiva dentro la preparazione della
+    ripresa, prima dei passi che possono cadere."""
+    import chess
+
+    orologio_di_prova = {"name": "Prova", "same_time": True, "phases": [{"white_time": 300, "black_time": 300, "white_inc": 0, "black_inc": 0, "moves": 0}], "alarms": []}
+    dati = {
+        "clock_config": orologio_di_prova, "board_fen": chess.Board().fen(), "white_remaining": 300, "black_remaining": 300,
+        "white_phase": 0, "black_phase": 0, "white_moves": 0, "black_moves": 0, "active_color": "white", "move_history": [],
+        "white_player": "A", "black_player": "B", "pgn_string": '[White "A"]\n[Black "B"]\n\n*\n',
+    }
+    avviati = []
+    monkeypatch.setattr(game_flow.orologio, "avvia", avviati.append)
+    monkeypatch.setattr(game_flow.board_utils, "LoadEcoDatabaseWithFEN", lambda _nome: {})
+    ripresa = game_flow.prepara_la_ripresa(dati)
+    assert avviati == []
+    monkeypatch.setattr(game_flow, "_gioca_e_finalizza", lambda *_argomenti: None)
+    game_flow.gioca_la_ripresa(*ripresa)
+    assert avviati == [ripresa[0]]

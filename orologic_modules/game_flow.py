@@ -48,6 +48,28 @@ def scacchiera_ripresa(pgn_game, fen_salvato, chess960=False):
     return board if board.fen() == dal_fen.fen() else dal_fen
 
 
+def ripresa_coerente(pgn_game, fen_salvato, chess960=False):
+    """(scacchiera, partita) della ripresa. Se la linea del PGN non arriva al
+    FEN salvato, la scacchiera nasce dal FEN e la partita anche, con le sue
+    intestazioni, e lo si dice: prima la scacchiera nasceva dal FEN ma il
+    PGN restava quello che non tornava (R132)."""
+    board = scacchiera_ripresa(pgn_game, fen_salvato, chess960)
+    if pgn_game is None:
+        return board, pgn_game
+    try:
+        arriva = pgn_game.end().board().fen() == board.fen()
+    except (ValueError, AssertionError):
+        arriva = False
+    if arriva:
+        return board, pgn_game
+    print(_("Il PGN salvato non arriva alla posizione salvata: la partita riprende da quella posizione, senza le mosse di prima."))
+    nuova = chess.pgn.Game.from_board(board)
+    for chiave, valore in pgn_game.headers.items():
+        if chiave not in ("FEN", "SetUp", "Variant"):
+            nuova.headers[chiave] = valore
+    return board, nuova
+
+
 def RiprendiPartita(dati_partita):
     """La partita del salvataggio automatico: prima si ricostruisce, poi si
     gioca."""
@@ -114,13 +136,13 @@ def prepara_la_ripresa(dati_partita):
         )
         game_state.pgn_game = chess.pgn.Game.from_board(game_state.board)
         game_state.pgn_node = game_state.pgn_game.end()
-    game_state.board = scacchiera_ripresa(game_state.pgn_game, dati_partita["board_fen"], e_chess960)
+    game_state.board, game_state.pgn_game = ripresa_coerente(game_state.pgn_game, dati_partita["board_fen"], e_chess960)
+    game_state.pgn_node = game_state.pgn_game.end()
     game_state.paused = True
     chess960_utils.verifica_motore_chess960(engine.ENGINE, e_chess960)
     # La partita ripresa non riceve di nuovo cio' che riceve all'avvio: il
     # suo tempo salvato lo contiene gia'. Il turno di chi ha il tratto si.
     controlli.inizio_turno(game_state, game_state.active_color == "white")
-    orologio.avvia(game_state)
     db = storage.LoadDB()
     autosave_is_on = db.get("autosave_enabled", False)
     eco_database = board_utils.LoadEcoDatabaseWithFEN("eco.pgn")
@@ -156,7 +178,11 @@ def prepara_la_ripresa(dati_partita):
 
 
 def gioca_la_ripresa(game_state, eco_database, autosave_is_on):
-    """La partita ripresa, dal punto in cui era rimasta, fino alla fine."""
+    """La partita ripresa, dal punto in cui era rimasta, fino alla fine. Il
+    filo dell'orologio parte qui, quando la partita si gioca: partiva dentro
+    la preparazione, prima dei passi che possono cadere, e restava acceso
+    senza partita (R132)."""
+    orologio.avvia(game_state)
     _gioca_e_finalizza(game_state, eco_database, autosave_is_on)
 
 
@@ -394,6 +420,9 @@ def annulla_ultima_mossa(game_state):
         parent.variations.remove(current_node)
     game_state.pgn_node = parent
     game_state.cancelled_san_moves.insert(0, undone_move_san)
+    # Le mosse annullate prima, scritte nel commento di questa mossa, non si
+    # perdono con lei: tornano in testa all'elenco (R132).
+    game_state.cancelled_san_moves[:0] = _mosse_annullate_nel_commento(current_node.comment)
     # Il tratto torna a chi aveva mosso, poi si disfa quanto
     # la mossa aveva prodotto: incremento, contatore delle
     # mosse ed eventuale passaggio di fase.
@@ -420,6 +449,15 @@ def annulla_ultima_mossa(game_state):
         game_state.descriptive_move_history.pop()
     print(_("Ultima mossa annullata: {mossa}").format(mossa=undone_move_san))
     return True
+
+
+def _mosse_annullate_nel_commento(commento):
+    """Le mosse del commento Mosse annullate, che va in fondo al commento
+    della mossa giocata dopo un annullamento, o un elenco vuoto."""
+    prefisso = _("Mosse annullate: {mosse}").split("{mosse}")[0]
+    if not commento or prefisso not in commento:
+        return []
+    return commento.rsplit(prefisso, 1)[1].split()
 
 
 def assegna_risultato(cmd, game_state):
