@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-26 18:15+0100\n"
+"POT-Creation-Date: 2026-11-26 18:19+0100\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -2143,7 +2143,7 @@ msgstr "Control panel background"
 msgid "Sfondo area"
 msgstr "Area background"
 
-#: orologic_modules/dialoghi.py:864 orologic_modules/finestra.py:684
+#: orologic_modules/dialoghi.py:864 orologic_modules/finestra.py:694
 msgid "Plancia"
 msgstr "Control panel"
 
@@ -3285,29 +3285,34 @@ msgstr "Enter the move overhead in milliseconds (min: 0, max: 500): "
 msgid "Configurazione del motore salvata."
 msgstr "Engine configuration saved."
 
-#: orologic_modules/finestra.py:679
+#: orologic_modules/finestra.py:689
 #, python-brace-format
 msgid "Orologic {versione}"
 msgstr "Orologic {versione}"
 
-#: orologic_modules/finestra.py:687
+#: orologic_modules/finestra.py:697
 msgid "Console"
 msgstr "Console"
 
-#: orologic_modules/finestra.py:1489
+#: orologic_modules/finestra.py:1339
+#, python-brace-format
+msgid "Altre {n} righe nell'area."
+msgstr "{n} more lines in the area."
+
+#: orologic_modules/finestra.py:1525
 msgid "Spazio: per accedere alla scacchiera interattiva"
 msgstr "Space: to open the interactive board"
 
-#: orologic_modules/finestra.py:2059
+#: orologic_modules/finestra.py:2095
 msgid "Orologic si e' fermato per un errore."
 msgstr "Orologic stopped because of an error."
 
-#: orologic_modules/finestra.py:2061
+#: orologic_modules/finestra.py:2097
 #, python-brace-format
 msgid "Il testo resta nel registro degli errori: {file}"
 msgstr "The text is kept in the error log: {file}"
 
-#: orologic_modules/finestra.py:2063
+#: orologic_modules/finestra.py:2099
 msgid "Errore di Orologic"
 msgstr "Orologic error"
 
@@ -8619,34 +8624,34 @@ msgid "ESC: esci dall'attesa; a torneo iniziato ti mette in pausa"
 msgstr ""
 "ESC: leave the waiting room; once the tournament has started, it pauses you"
 
-#: orologic_modules/lichess_tornei.py:403
+#: orologic_modules/lichess_tornei.py:405
 #, python-brace-format
 msgid "Abbinamento: giochi contro {u}."
 msgstr "Pairing: you play against {u}."
 
-#: orologic_modules/lichess_tornei.py:405
+#: orologic_modules/lichess_tornei.py:407
 msgid "Hai una partita in corso nel torneo: la riapro."
 msgstr "You have a game in progress in the tournament: reopening it."
 
-#: orologic_modules/lichess_tornei.py:408
+#: orologic_modules/lichess_tornei.py:410
 msgid "Sei di nuovo nell'attesa del torneo."
 msgstr "You are back in the tournament waiting room."
 
-#: orologic_modules/lichess_tornei.py:439
+#: orologic_modules/lichess_tornei.py:441
 #, python-brace-format
 msgid "Il torneo e' finito: sei arrivato al posto {r}."
 msgstr "The tournament is over: you finished in position {r}."
 
-#: orologic_modules/lichess_tornei.py:441
+#: orologic_modules/lichess_tornei.py:443
 msgid "Il torneo e' finito."
 msgstr "The tournament is over."
 
-#: orologic_modules/lichess_tornei.py:454
+#: orologic_modules/lichess_tornei.py:456
 #, python-brace-format
 msgid "Lichess non ha accettato la richiesta di abbinamento. {motivo}"
 msgstr "Lichess did not accept the pairing request. {motivo}"
 
-#: orologic_modules/lichess_tornei.py:488
+#: orologic_modules/lichess_tornei.py:490
 msgid ""
 "Resti iscritto. Quando il torneo comincia, torna nell'attesa: Lichess abbina"
 " solo chi e' presente."
@@ -8654,75 +8659,75 @@ msgstr ""
 "You remain registered. When the tournament starts, come back to the waiting "
 "room: Lichess only pairs players who are present."
 
-#: orologic_modules/lichess_tornei.py:503
+#: orologic_modules/lichess_tornei.py:505
 msgid "Non hai partite in corso nel torneo."
 msgstr "You have no games in progress in the tournament."
 
-#: orologic_modules/lichess_tornei.py:507
+#: orologic_modules/lichess_tornei.py:509
 msgid "Tasto non previsto: ? per l'aiuto."
 msgstr "Unexpected key: ? for help."
 
-#: orologic_modules/lichess_tornei.py:518
+#: orologic_modules/lichess_tornei.py:520
 msgid "1 punto"
 msgstr "1 point"
 
-#: orologic_modules/lichess_tornei.py:518
+#: orologic_modules/lichess_tornei.py:520
 #, python-brace-format
 msgid "{n} punti"
 msgstr "{n} points"
 
-#: orologic_modules/lichess_tornei.py:519
+#: orologic_modules/lichess_tornei.py:521
 #, python-brace-format
 msgid "{nome}, {punti}, Elo {elo}"
 msgstr "{nome}, {punti}, Elo {elo}"
 
-#: orologic_modules/lichess_tornei.py:529
+#: orologic_modules/lichess_tornei.py:531
 #, python-brace-format
 msgid "Classifica non scaricata. {motivo}"
 msgstr "Standings not downloaded. {motivo}"
 
-#: orologic_modules/lichess_tornei.py:532
+#: orologic_modules/lichess_tornei.py:534
 msgid "La classifica e' ancora vuota."
 msgstr "The standings are still empty."
 
-#: orologic_modules/lichess_tornei.py:548
+#: orologic_modules/lichess_tornei.py:550
 msgid "Iscriviti ed entra nell'attesa"
 msgstr "Register and enter the waiting room"
 
-#: orologic_modules/lichess_tornei.py:550
+#: orologic_modules/lichess_tornei.py:552
 msgid "Rientra nell'attesa del torneo"
 msgstr "Rejoin the tournament waiting room"
 
-#: orologic_modules/lichess_tornei.py:552
+#: orologic_modules/lichess_tornei.py:554
 msgid "Entra nell'attesa del torneo"
 msgstr "Enter the tournament waiting room"
 
-#: orologic_modules/lichess_tornei.py:554
+#: orologic_modules/lichess_tornei.py:556
 msgid "Mettiti in pausa nel torneo"
 msgstr "Pause in the tournament"
 
-#: orologic_modules/lichess_tornei.py:556
+#: orologic_modules/lichess_tornei.py:558
 msgid "Ritira l'iscrizione"
 msgstr "Withdraw your registration"
 
-#: orologic_modules/lichess_tornei.py:558
+#: orologic_modules/lichess_tornei.py:560
 msgid "Classifica"
 msgstr "Standings"
 
-#: orologic_modules/lichess_tornei.py:559
+#: orologic_modules/lichess_tornei.py:561
 msgid "Copia il link del torneo negli appunti"
 msgstr "Copy the tournament link to the clipboard"
 
-#: orologic_modules/lichess_tornei.py:560
+#: orologic_modules/lichess_tornei.py:562
 msgid "Torna all'elenco"
 msgstr "Back to the list"
 
-#: orologic_modules/lichess_tornei.py:573
+#: orologic_modules/lichess_tornei.py:575
 #, python-brace-format
 msgid "Torneo non scaricato. {motivo}"
 msgstr "Tournament not downloaded. {motivo}"
 
-#: orologic_modules/lichess_tornei.py:581
+#: orologic_modules/lichess_tornei.py:583
 msgid ""
 "Su Orologic si giocano solo i tornei rapid e classici: Lichess vieta il "
 "bullet e il blitz ai programmi come questo."
@@ -8730,7 +8735,7 @@ msgstr ""
 "Orologic only plays rapid and classical tournaments: Lichess forbids bullet "
 "and blitz for programs like this one."
 
-#: orologic_modules/lichess_tornei.py:590
+#: orologic_modules/lichess_tornei.py:592
 msgid ""
 "\n"
 "Scegli: "
@@ -8738,33 +8743,33 @@ msgstr ""
 "\n"
 "Choose: "
 
-#: orologic_modules/lichess_tornei.py:600
+#: orologic_modules/lichess_tornei.py:602
 msgid "Link del torneo copiato negli appunti."
 msgstr "Tournament link copied to the clipboard."
 
-#: orologic_modules/lichess_tornei.py:605
+#: orologic_modules/lichess_tornei.py:607
 msgid "Sei iscritto al torneo."
 msgstr "You are registered for the tournament."
 
-#: orologic_modules/lichess_tornei.py:617
+#: orologic_modules/lichess_tornei.py:619
 #, python-brace-format
 msgid "Rientro non riuscito. {motivo}"
 msgstr "Rejoining failed. {motivo}"
 
-#: orologic_modules/lichess_tornei.py:629
+#: orologic_modules/lichess_tornei.py:631
 #, python-brace-format
 msgid "Elenco dei tornei non scaricato. {motivo}"
 msgstr "Tournament list not downloaded. {motivo}"
 
-#: orologic_modules/lichess_tornei.py:632
+#: orologic_modules/lichess_tornei.py:634
 msgid "Tutte le cadenze"
 msgstr "All time controls"
 
-#: orologic_modules/lichess_tornei.py:633
+#: orologic_modules/lichess_tornei.py:635
 msgid "Torna al menu di Orolichess"
 msgstr "Back to the Orolichess menu"
 
-#: orologic_modules/lichess_tornei.py:639
+#: orologic_modules/lichess_tornei.py:641
 msgid ""
 "\n"
 "Tornei arena, scegli la cadenza: "
@@ -8772,20 +8777,20 @@ msgstr ""
 "\n"
 "Arena tournaments, choose the time control: "
 
-#: orologic_modules/lichess_tornei.py:646
+#: orologic_modules/lichess_tornei.py:648
 msgid "Nessun torneo di questa cadenza in corso o in arrivo."
 msgstr "No tournaments with this time control running or coming up."
 
-#: orologic_modules/lichess_tornei.py:649
+#: orologic_modules/lichess_tornei.py:651
 #, python-brace-format
 msgid "{n} tornei, prima quelli in corso."
 msgstr "{n} tournaments, running ones first."
 
-#: orologic_modules/lichess_tornei.py:651
+#: orologic_modules/lichess_tornei.py:653
 msgid "1 torneo."
 msgstr "1 tournament."
 
-#: orologic_modules/lichess_tornei.py:668
+#: orologic_modules/lichess_tornei.py:670
 msgid "Scegli un torneo (ESC per tornare alle cadenze): "
 msgstr "Choose a tournament (ESC to go back to time controls): "
 

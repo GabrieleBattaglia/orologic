@@ -172,3 +172,82 @@ def test_le_righe_di_un_annuncio_passano_tutte_dalla_barra(finestra, monkeypatch
     assert pompa(lambda: len(alla_barra()) >= 3, 3)
     assert alla_barra()[:3] == ["Prima riga.", "Seconda riga.", "Terza riga."]
     assert not [chiamata for chiamata in finestra.sintesi.chiamate[prima:] if chiamata[2] == "sintesi"]
+
+
+def _solo_braille(finestra, monkeypatch, minimo=0.05):
+    from orologic_modules import finestra as modulo_finestra
+
+    monkeypatch.setattr(modulo_finestra, "MINIMO_DEL_BRAILLE", minimo)
+    finestra.annunci = annunci.normalizza({"uscita": "nvda", "destinazione": "braille", "testo_interrompe": False})
+    prima = len(finestra.sintesi.chiamate)
+
+    def alla_barra():
+        return [testo for testo, _chiave, dove, _interrompi in finestra.sintesi.chiamate[prima:] if dove == "braille"]
+
+    return alla_barra
+
+
+def test_la_coda_della_barra_ha_un_tetto(finestra, monkeypatch):
+    """R127: la coda del braille non aveva tetto, e dopo un'uscita di trenta
+    righe la barra riceveva un messaggio ogni due secondi per un minuto. Ora
+    passano le prime righe, e una riga dice quante ne restano nell'area."""
+    from orologic_modules import finestra as modulo_finestra
+
+    alla_barra = _solo_braille(finestra, monkeypatch)
+    massimo = modulo_finestra.MASSIMO_DEL_BRAILLE
+    finestra.faccia.scrivi("".join(f"Riga {numero}.\n" for numero in range(1, 31)), None)
+    assert pompa(lambda: len(alla_barra()) >= massimo + 1, 5)
+    pompa(lambda: False, 0.3)
+    assert alla_barra() == [f"Riga {numero}." for numero in range(1, massimo + 1)] + [f"Altre {30 - massimo} righe nell'area."]
+
+
+def test_un_tasto_svuota_la_coda_della_barra(finestra, monkeypatch):
+    """R127: la coda si svuotava solo con un annuncio che interrompe, non
+    quando si preme un tasto: si rileggeva con le frecce e la barra riceveva
+    ancora i messaggi vecchi."""
+    import wx
+
+    alla_barra = _solo_braille(finestra, monkeypatch, minimo=0.5)
+    finestra.faccia.scrivi("Prima.\nSeconda.\nTerza.\nQuarta.\n", None)
+    assert pompa(lambda: alla_barra() == ["Prima."], 3)
+    evento = wx.KeyEvent(wx.wxEVT_CHAR_HOOK)
+    evento.SetKeyCode(wx.WXK_DOWN)
+    finestra._tasto_della_finestra(evento)
+    assert finestra.coda_del_braille.in_fila == 0
+    pompa(lambda: False, 1.2)
+    assert alla_barra() == ["Prima."]
+
+
+def test_con_un_dialogo_aperto_la_coda_della_barra_si_svuota(finestra, monkeypatch):
+    """R127: con la scacchiera o un dialogo aperto i messaggi vecchi della
+    coda coprivano quello che si leggeva."""
+    from orologic_modules import finestra as modulo_finestra
+
+    alla_barra = _solo_braille(finestra, monkeypatch, minimo=0.2)
+    finestra.faccia.scrivi("Prima.\nSeconda.\nTerza.\n", None)
+    assert pompa(lambda: alla_barra() == ["Prima."], 3)
+    monkeypatch.setattr(modulo_finestra, "_un_dialogo_aperto", lambda: True)
+    pompa(lambda: False, 0.8)
+    assert alla_barra() == ["Prima."] and finestra.coda_del_braille.in_fila == 0
+
+
+def test_l_ultima_riga_della_coda_ha_il_suo_tempo(finestra, monkeypatch):
+    """R127: finita la coda, il ripasso rimandava subito la riga del cursore,
+    e l'ultima riga di un annuncio poteva restare sulla barra un secondo."""
+    import wx
+
+    alla_barra = _solo_braille(finestra, monkeypatch, minimo=0.6)
+    finestra.faccia.scrivi("Prima.\nUltima.\n", None)
+    assert pompa(lambda: alla_barra() == ["Prima.", "Ultima."], 3)
+    finestra.area.SetFocus()
+    assert pompa(lambda: wx.Window.FindFocus() is finestra.area, 2)
+    finestra.area.SetInsertionPoint(0)
+    finestra.braille_indietro = True
+    mandati = len(finestra.al_braille_mandati)
+    finestra._ripassa_il_braille()
+    assert len(finestra.al_braille_mandati) == mandati
+    # Passato il suo tempo, la riga del cursore torna alla barra.
+    pompa(lambda: False, 0.7)
+    finestra.braille_indietro = True
+    finestra._ripassa_il_braille()
+    assert len(finestra.al_braille_mandati) == mandati + 1

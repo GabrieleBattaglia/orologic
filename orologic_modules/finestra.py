@@ -106,6 +106,16 @@ RIPASSO_DEL_BRAILLE = 1000
 RIPASSO_DOPO_UN_ANNUNCIO = 5000
 # I secondi minimi di lettura di ogni riga di un annuncio alla barra (R89).
 MINIMO_DEL_BRAILLE = 2.0
+# Le righe che aspettano al massimo nella coda della barra: oltre, una riga
+# dice quante ne restano nell'area. Dopo un'uscita di trenta righe la barra
+# riceveva un messaggio ogni due secondi per un minuto (R127).
+MASSIMO_DEL_BRAILLE = 8
+
+
+def _un_dialogo_aperto():
+    """Vero se c'e' un dialogo modale aperto, come la scacchiera: i blocchi
+    della coda della barra coprirebbero quello che si legge (R127)."""
+    return any(isinstance(finestra, wx.Dialog) and finestra.IsModal() for finestra in wx.GetTopLevelWindows())
 RIGHE_PREDEFINITE = 200
 RIGHE_MINIME = 20
 RIGHE_MASSIME = 10000
@@ -761,6 +771,10 @@ class Finestra(wx.Frame):
         # precedente, e di un annuncio di piu' righe restava l'ultima (R89,
         # dal collaudo di Gabriele).
         self.coda_del_braille = Coda(self._blocco_alla_barra, lambda secondi, funzione: wx.CallLater(max(1, int(secondi * 1000)), funzione))
+        # Le righe rimaste fuori dalla coda, oltre il tetto, e fin quando
+        # l'ultimo blocco mostrato deve restare sulla barra (R127).
+        self.righe_oltre_la_barra = 0
+        self.braille_libero_dal = 0.0
         self.annunci = annunci.carica()
         # Le impostazioni: chi scrive le righe e le cambia, e l'elenco aperto.
         self.gestore = modulo_impostazioni.Impostazioni(self)
@@ -881,9 +895,10 @@ class Finestra(wx.Frame):
         """La riga sotto il cursore alla barra, come messaggio, finche' NVDA
         non l'ha riletta da se' dopo un tasto; col fuoco altrove, o con la
         scacchiera aperta, il ripasso si ferma."""
-        # Mentre la coda degli annunci mostra le sue righe, la riga del
-        # cursore aspetta il suo turno (R89).
-        if self and self.coda_del_braille.in_fila:
+        # Mentre la coda degli annunci mostra le sue righe, e finche' l'ultima
+        # non ha avuto il suo tempo, la riga del cursore aspetta il suo turno:
+        # prima l'ultima riga poteva restare un secondo solo (R89, R127).
+        if self and (self.coda_del_braille.in_fila or time.monotonic() < self.braille_libero_dal):
             return
         if (
             not self
@@ -995,8 +1010,11 @@ class Finestra(wx.Frame):
         """I tasti di tutta la finestra, plancia e area: Ctrl e virgola le
         impostazioni, come nelle altre applicazioni (Gabriele, S1), F5 la
         plancia, F6 l'area. Ogni tasto fa rileggere l'area a NVDA: il
-        braille non va piu' rimandato."""
+        braille non va piu' rimandato, e la coda degli annunci alla barra si
+        svuota, perche' i suoi messaggi vecchi coprivano quello che si legge
+        (R127)."""
         self._braille_letto()
+        self._svuota_la_coda_della_barra()
         codice = evento.GetKeyCode()
         if evento.GetModifiers() == wx.MOD_CONTROL and codice == ord(","):
             self.impostazioni(suono=True)
@@ -1293,14 +1311,32 @@ class Finestra(wx.Frame):
                 self.sintesi.dici(riga, self.annunci["uscita"], "sintesi", interrompi=interrompi and numero == 0)
         if destinazione in ("entrambi", "braille"):
             if interrompi:
-                self.coda_del_braille.svuota()
+                self._svuota_la_coda_della_barra()
             for riga in righe:
+                # Il tetto: le righe oltre restano nell'area (R127).
+                if self.coda_del_braille.in_fila >= MASSIMO_DEL_BRAILLE - 1:
+                    self.righe_oltre_la_barra += 1
+                    continue
                 self.coda_del_braille.aggiungi(riga, minimo=MINIMO_DEL_BRAILLE)
 
+    def _svuota_la_coda_della_barra(self):
+        self.coda_del_braille.svuota()
+        self.righe_oltre_la_barra = 0
+
     def _blocco_alla_barra(self, blocco):
-        """Un blocco della coda del braille, con l'uscita degli annunci."""
-        if self:
-            self.sintesi.dici(blocco, self.annunci["uscita"], "braille")
+        """Un blocco della coda del braille, con l'uscita degli annunci. Con
+        un dialogo aperto, come la scacchiera, la coda si svuota; all'ultimo
+        blocco, una riga dice quante righe sono rimaste fuori (R127)."""
+        if not self:
+            return
+        if _un_dialogo_aperto():
+            self._svuota_la_coda_della_barra()
+            return
+        self.sintesi.dici(blocco, self.annunci["uscita"], "braille")
+        self.braille_libero_dal = time.monotonic() + MINIMO_DEL_BRAILLE
+        if not self.coda_del_braille.in_fila and self.righe_oltre_la_barra:
+            oltre, self.righe_oltre_la_barra = self.righe_oltre_la_barra, 0
+            self.coda_del_braille.aggiungi(_("Altre {n} righe nell'area.").format(n=oltre), minimo=MINIMO_DEL_BRAILLE)
 
     def alla_sintesi(self, testo, interrompi=True):
         """Un annuncio della scacchiera interattiva: sempre, e solo alla
