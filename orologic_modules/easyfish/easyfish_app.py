@@ -625,9 +625,9 @@ def _esegui(partita=None):
                     print(_("Chiusa variante. Ritorno al nodo padre."))
                     continue
 
-                if is_modified and (
-                    len(board.move_stack) > 0 or board.fen() != chess.STARTING_FEN
-                ):
+                # Si guarda la partita, non la scacchiera del momento: chi
+                # tornava all'inizio e poi usciva perdeva la partita (R12).
+                if is_modified and (game.variations or game.comment or game.board().fen() != chess.STARTING_FEN):
                     print(_("Salvataggio partita in corso..."))
                     SaveGameToFile(game)
                 if sharing_window:
