@@ -221,3 +221,20 @@ def test_le_semimosse_di_teoria_dell_analisi_automatica(mosse, attese, codice):
     eco = board_utils.LoadEcoDatabaseWithFEN("eco.pgn")
     voce, semimosse = board_utils.rileva_apertura(list(chess.pgn.read_game(io.StringIO(mosse)).mainline_moves()), eco)
     assert (semimosse, voce["eco"]) == (attese, codice)
+
+
+def test_il_due_in_apice_non_fa_cadere_ne_l_esplorazione_ne_i_comandi_di_forza(capsys):
+    """R130: il trattino, o un comando di forza, seguito da un carattere che
+    isdigit accetta e int rifiuta, come il due in apice della tastiera
+    francese, sollevava ValueError e faceva cadere il nucleo."""
+    import chess
+
+    from orologic_modules import ui
+    from orologic_modules.easyfish import game_mode
+
+    assert ui.esplora_scacchiera("-²", chess.Board()) is not None
+    assert ui.esplora_scacchiera("-e²", chess.Board()) is not None
+    assert not game_mode.comando_di_forza(".s²")
+    stato = game_mode.EasyfishGameState()
+    game_mode._imposta_profondita(".p²", chess.Board(), stato)
+    game_mode._imposta_livello_lichess(".l²", chess.Board(), stato, object())

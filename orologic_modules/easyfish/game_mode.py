@@ -193,10 +193,17 @@ def _segna_la_mossa(game_state, san, bianco):
     game_state.clocks_history.append(max(0.0, residuo))
 
 
+def _numero(testo):
+    """Vero se il testo e' fatto di sole cifre vere: il due in apice della
+    tastiera francese passa isdigit, e int lo rifiutava facendo cadere il
+    nucleo (R130)."""
+    return testo.isascii() and testo.isdigit()
+
+
 def comando_di_forza(cmd):
     """Vero per .s, .e, .f e .p seguiti da un numero: i comandi che cambiano
     la forza del motore in partita."""
-    return cmd[:2] in (".s", ".e", ".f", ".p") and cmd[2:].strip().isdigit()
+    return cmd[:2] in (".s", ".e", ".f", ".p") and _numero(cmd[2:].strip())
 
 
 def _forza_bloccata(cmd, game_state):
@@ -319,7 +326,7 @@ def _prepara_la_forza(engine_instance, game_state):
 
 def _imposta_livello_lichess(cmd, board, game_state, engine_instance):
     """Comando .f: uno degli otto livelli di Lichess."""
-    if not cmd[2:].isdigit() or int(cmd[2:]) not in LIVELLI_LICHESS:
+    if not _numero(cmd[2:]) or int(cmd[2:]) not in LIVELLI_LICHESS:
         Acusticator([400.0, 0.2, 0, config.VOLUME], kind=1)
         print(_("Il livello di Lichess va da 1 a 8, per esempio .f3."))
         return
@@ -353,7 +360,7 @@ def _imposta_livello_lichess(cmd, board, game_state, engine_instance):
 
 def _imposta_profondita(cmd, board, game_state):
     """Comando .p: la profondita' massima della ricerca, 0 per toglierla."""
-    if not cmd[2:].isdigit() or int(cmd[2:]) > 99:
+    if not _numero(cmd[2:]) or int(cmd[2:]) > 99:
         Acusticator([400.0, 0.2, 0, config.VOLUME], kind=1)
         print(_("La profondita' va da 1 a 99, per esempio .p5, oppure .p0 per toglierla."))
         return
@@ -594,7 +601,7 @@ def _comandi_informativi(cmd, board, game_state, engine_instance):
                 print(line)
     elif cmd == ".?":
         menu(MNGAME, show_only=True)
-    elif cmd.startswith(".s") and len(cmd) > 2 and cmd[2:].isdigit():
+    elif cmd.startswith(".s") and len(cmd) > 2 and _numero(cmd[2:]):
         try:
             new_skill = int(cmd[2:])
             if 0 <= new_skill <= 20:
@@ -872,7 +879,7 @@ def StartEngineGame(game_node, engine_instance, sharing_window=None, carriera=Fa
                     elif cmd.startswith(".e"):
                         try:
                             elo_part = cmd[2:].strip()
-                            if not elo_part.isdigit():
+                            if not _numero(elo_part):
                                 print(_("Formato non valido. Usa .e1200 o .e 1200."))
                                 continue
 

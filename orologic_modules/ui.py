@@ -547,14 +547,16 @@ def esplora_scacchiera(comando, origine):
         elif len(parametro) == 1 and parametro.isalpha():
             Acusticator(_colonna_sonora(), kind=3, adsr=[0, 0, 100, 100])
             read_file(origine, parametro)
-        elif len(parametro) == 1 and parametro.isdigit():
+        # Solo le cifre vere: il due in apice della tastiera francese passa
+        # isdigit, e int lo rifiutava facendo cadere il nucleo (R130).
+        elif len(parametro) == 1 and parametro.isascii() and parametro.isdigit():
             traversa = int(parametro)
             if 1 <= traversa <= 8:
                 Acusticator(_traversa_sonora(), kind=3, adsr=[0, 0, 100, 100])
                 read_rank(origine, traversa)
             else:
                 print(_("Traversa non valida: usa un numero da 1 a 8."))
-        elif len(parametro) == 2 and parametro[0].isalpha() and parametro[1].isdigit():
+        elif len(parametro) == 2 and parametro[0].isalpha() and parametro[1] in "12345678":
             Acusticator(["d#4", 0.7, 0, config.VOLUME], kind=1, adsr=[0, 0, 100, 100])
             read_square(origine, parametro)
         else:
