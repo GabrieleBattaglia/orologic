@@ -5,7 +5,7 @@ import datetime
 
 # QC
 BIRTH_DATE = datetime.datetime(2025, 2, 14, 10, 16)
-VERSION = "9.5.109"
+VERSION = "9.5.110"
 # La data va aggiornata insieme al numero di versione: la schermata di
 # benvenuto ne calcola l'eta' e, se resta indietro, mente.
 RELEASE_DATE = datetime.datetime(2026, 11, 26, 17, 57)

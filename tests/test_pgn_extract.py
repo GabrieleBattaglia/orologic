@@ -635,3 +635,19 @@ def test_i_nomi_fuori_dalla_codepage_sui_dischi_senza_nomi_corti(tmp_path, monke
     comando = pgn_extract.argomenti(PE_VERO, scelti, str(sorgente), uscita, per_pgn_extract=True)
     assert "-d" + provvisori[0].provvisorio in comando or provvisori[0].provvisorio in comando
     assert all(pgn_extract._nella_codepage(parte) for parte in comando)
+
+
+def test_dividere_per_eco_conosce_anche_noeco(tmp_path):
+    """R115: -E mette in noeco.pgn le partite senza codice ECO, ma lo schema
+    dei suoi file non lo conosceva: con un sorgente noeco.pgn nella cartella
+    della destinazione pgn-extract leggeva e accodava sullo stesso file, che
+    cresceva senza fine."""
+    # Anche con le maiuscole: per Windows e' lo stesso file.
+    for nome in ("NoEco.pgn", "partite.pgn"):
+        (tmp_path / nome).write_text("x", encoding="utf-8")
+
+    class Scelto:
+        def __init__(self, opzione):
+            self.parametro = type("P", (), {"opzione": opzione})()
+
+    assert pgn_extract.file_che_sovrascriverebbe([Scelto("-E")], str(tmp_path)) == ["NoEco.pgn"]

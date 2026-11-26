@@ -696,8 +696,10 @@ def scrive_la_destinazione(scelti):
 
 
 # I nomi dei file che -# ed -E scrivono da se' nella cartella: 1.pgn, 2.pgn
-# e seguenti; A.pgn, B00.pgn e simili, coi codici ECO (R60).
-NOMI_IN_PIU_FILE = {"-#": re.compile(r"^\d+\.pgn$", re.IGNORECASE), "-E": re.compile(r"^[A-E](\d{1,2})?\.pgn$", re.IGNORECASE)}
+# e seguenti; A.pgn, B00.pgn e simili, coi codici ECO (R60), e noeco.pgn,
+# per le partite senza codice: un sorgente con quel nome nella cartella si
+# leggeva e si accodava su se stesso, senza fine (R115).
+NOMI_IN_PIU_FILE = {"-#": re.compile(r"^\d+\.pgn$", re.IGNORECASE), "-E": re.compile(r"^(?:[A-E](\d{1,2})?|noeco)\.pgn$", re.IGNORECASE)}
 
 
 def file_che_sovrascriverebbe(scelti, cartella):
