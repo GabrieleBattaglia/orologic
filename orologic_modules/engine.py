@@ -2349,7 +2349,9 @@ def AnalisiAutomatica(pgn_game):
         base_name = _("{w}_vs_{b}_auto_{d}").format(
             w=pgn_game.headers.get("White", "B"),
             b=pgn_game.headers.get("Black", "N"),
-            d=datetime.datetime.now().strftime("%Y%m%d"),
+            # Con l'ora: due analisi nello stesso giorno fra gli stessi nomi
+            # si sovrascrivevano (R47).
+            d=datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
         )
         sanitized_pgn_name = config.sanitize_filename(base_name) + ".pgn"
         full_pgn_path = percorso_salvataggio(os.path.join("pgn", sanitized_pgn_name))
