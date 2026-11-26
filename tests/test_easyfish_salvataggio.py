@@ -183,3 +183,20 @@ def test_i_comandi_con_lo_spazio_arrivano_al_loro_ramo(finestra, monkeypatch):
     assert pompa(lambda: len(finestra.fornitore()["board"].move_stack) == 2)
     _premi(finestra, ".\r")
     assert pompa(lambda: not finestra.nucleo.is_alive())
+
+
+def test_chiudere_orologic_salva_la_partita_modificata(finestra, monkeypatch):
+    """R11: in Easyfish la partita modificata si salvava solo col punto, e
+    chiudendo la finestra mosse, varianti e commenti si perdevano."""
+    game = partita()
+    monkeypatch.setattr(orologic_engine, "ENGINE", object())
+    salvate = []
+    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda g: salvate.append(g) or True)
+    finestra.avvia_il_nucleo(lambda: easyfish_app.run(partita=game))
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+    _premi(finestra, "_Bella\r")
+    assert pompa(lambda: game.end().comment == "Bella")
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+    finestra.faccia.chiudi()
+    assert pompa(lambda: not finestra.nucleo.is_alive())
+    assert salvate == [game]

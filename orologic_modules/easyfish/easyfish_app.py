@@ -491,7 +491,23 @@ def run(partita=None):
     # partita contro il motore indebolito.
     orologic_engine.forza_della_configurazione()
     with _stampa_deviata(), strato.partita():
-        _esegui(partita)
+        try:
+            _esegui(partita)
+        # Chiudendo Orologic a meta', per esempio con Alt+F4, la partita
+        # modificata si salva comunque: prima si salvava solo col punto, e
+        # mosse, varianti e commenti si perdevano (R11).
+        except KeyboardInterrupt:
+            if _APERTA["modificata"] and _APERTA["game"] is not None:
+                print(_("Orologic si chiude con la partita modificata: la salvo."))
+                SaveGameToFile(_APERTA["game"])
+            raise
+        finally:
+            _APERTA.update(game=None, modificata=False)
+
+
+# La partita aperta in Easyfish e se e' modificata, rinfrescate a ogni giro
+# del ciclo, per il salvataggio d'emergenza di run (R11).
+_APERTA = {"game": None, "modificata": False}
 
 
 def _esegui(partita=None):
@@ -543,6 +559,7 @@ def _esegui(partita=None):
     stato = posizione.Stato("easyfish")
 
     while True:
+        _APERTA.update(game=game, modificata=is_modified)
         if sharing_window and not sharing_window.is_active():
             Acusticator(
                 [

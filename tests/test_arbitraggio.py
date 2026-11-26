@@ -153,3 +153,17 @@ def test_il_commento_resta_come_l_ha_scritto_l_arbitro(finestra, monkeypatch):
     for passo in ("e4", ".p", ".c Rossi propone patta.", ".p"):
         _scrivi(finestra, passo)
     assert commenti == [".c Rossi propone patta."]
+
+
+def test_chiudere_orologic_a_partita_in_corso_salva_il_pgn(finestra, monkeypatch):
+    """R11: in arbitraggio il PGN si scriveva solo dopo le domande di fine
+    partita; chiudendo per sbaglio, col salvataggio automatico spento, si
+    perdeva tutto."""
+    salvati = []
+    monkeypatch.setattr(game_flow, "salva_pgn_partita", lambda testo, nome: salvati.append((testo, nome)))
+    _arbitraggio_avviato(finestra, monkeypatch)
+    for passo in ("e4", "e5"):
+        _scrivi(finestra, passo)
+    finestra.faccia.chiudi()
+    assert pompa(lambda: not finestra.nucleo.is_alive(), 10)
+    assert len(salvati) == 1 and "1. e4 e5" in salvati[0][0] and "interrotta" in salvati[0][1]

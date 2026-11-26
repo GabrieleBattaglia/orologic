@@ -157,10 +157,35 @@ def prepara_la_ripresa(dati_partita):
 
 def gioca_la_ripresa(game_state, eco_database, autosave_is_on):
     """La partita ripresa, dal punto in cui era rimasta, fino alla fine."""
-    last_valid_eco_entry = _loop_principale_partita(
-        game_state, eco_database, autosave_is_on
+    _gioca_e_finalizza(game_state, eco_database, autosave_is_on)
+
+
+def _gioca_e_finalizza(game_state, eco_database, autosave_is_on):
+    """Il ciclo della partita e la sua chiusura. Se Orologic si chiude a
+    meta', per esempio con Alt+F4, il PGN si scrive comunque: prima si
+    scriveva solo dopo le domande di fine partita, e chiudendo per sbaglio,
+    col salvataggio automatico spento, si perdeva tutto (R11)."""
+    try:
+        last_valid_eco_entry = _loop_principale_partita(game_state, eco_database, autosave_is_on)
+        _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on)
+    except KeyboardInterrupt:
+        _salvataggio_d_emergenza(game_state)
+        raise
+
+
+def _salvataggio_d_emergenza(game_state):
+    """Il PGN della partita interrotta, se ha mosse e non e' gia' scritto."""
+    if not game_state.move_history or getattr(game_state, "pgn_salvato", False):
+        return
+    game_state.pgn_salvato = True
+    print(_("Orologic si chiude a partita in corso: salvo il PGN."))
+    base_filename = "{white}-{black}-{segno}-{timestamp}.pgn".format(
+        white=game_state.pgn_game.headers.get("White"),
+        black=game_state.pgn_game.headers.get("Black"),
+        segno=_("interrotta"),
+        timestamp=datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
     )
-    _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on)
+    salva_pgn_partita(board_utils.format_pgn_comments(str(game_state.pgn_game)), config.sanitize_filename(base_filename))
 
 
 def EseguiAutosave(game_state):
@@ -1002,6 +1027,7 @@ def _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on):
     )
     sanitized_name = config.sanitize_filename(base_filename)
     salva_pgn_partita(pgn_str, sanitized_name)
+    game_state.pgn_salvato = True
     # Dal PGN, che ha anche le mosse di prima di una ripresa (R46).
     ui.save_text_summary(game_state, board_utils.descrizioni_della_partita(game_state.pgn_game), last_valid_eco_entry)
     try:
@@ -1246,8 +1272,5 @@ def StartGame(clock_config):
     # Quello che la tipologia della prima fase da' prima della prima mossa.
     controlli.inizio_partita(game_state)
     orologio.avvia(game_state)
-    last_valid_eco_entry = _loop_principale_partita(
-        game_state, eco_database, autosave_is_on
-    )
-    _finalizza_partita(game_state, last_valid_eco_entry, autosave_is_on)
+    _gioca_e_finalizza(game_state, eco_database, autosave_is_on)
     return
