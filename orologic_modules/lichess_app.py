@@ -590,7 +590,9 @@ def handle_exploration_command(user_input, game_state):
             kind=1,
             adsr=[5, 5, 80, 10],
         )
-        print(game_state.board)
+        # Il puzzle passa la scacchiera nuda, senza lo stato di partita
+        # attorno: game_state.board faceva cadere il programma (R21).
+        print(ui.scacchiera_di(game_state))
         return True
 
     if user_input == ".?":

@@ -42,3 +42,15 @@ def test_le_funzioni_rifiutano_piu_di_una_lettera():
 
 def test_la_diagonale_giusta_si_legge_ancora():
     assert "non valida" not in _uscita("/a", chess.Board())
+
+
+def test_il_punto_b_del_puzzle_legge_la_scacchiera_nuda(monkeypatch):
+    """R21: il puzzle di Lichess passa la scacchiera, non uno stato di
+    partita, e .b ci cercava game_state.board."""
+    from orologic_modules import lichess_app
+
+    monkeypatch.setattr(lichess_app, "Acusticator", lambda *a, **k: None)
+    testo = io.StringIO()
+    with contextlib.redirect_stdout(testo):
+        assert lichess_app.handle_exploration_command(".b", chess.Board())
+    assert str(chess.Board()) in testo.getvalue()
