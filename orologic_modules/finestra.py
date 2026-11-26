@@ -802,6 +802,7 @@ class Finestra(wx.Frame):
         self._modali_chiusi = []
         self.area.Bind(wx.EVT_CHAR, self._carattere)
         self.area.Bind(wx.EVT_KEY_DOWN, self._tasto_giu)
+        self.area.Bind(wx.EVT_CONTEXT_MENU, self._menu_contestuale)
         self.Bind(wx.EVT_CHAR_HOOK, self._tasto_della_finestra)
         self.plancia.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self._voce_attivata)
         self.plancia.Bind(wx.EVT_TREE_ITEM_EXPANDING, self._si_apre)
@@ -1001,10 +1002,29 @@ class Finestra(wx.Frame):
             self._togli_la_parola()
             return
         # Tagliare, cancellare, annullare e ripetere cambierebbero l'area
-        # alle spalle del nucleo.
+        # alle spalle del nucleo; anche Alt e Backspace, che nei campi di
+        # Windows annulla (R128).
         if codice in (wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE) or (ctrl and codice in (ord("X"), ord("Z"), ord("Y"))):
             return
+        if evento.AltDown() and codice == wx.WXK_BACK:
+            return
         evento.Skip()
+
+    def _menu_contestuale(self, _evento):
+        """Il menu contestuale dell'area, col tasto Applicazioni o Maiuscolo
+        e F10: solo Copia e Seleziona tutto. Quello di serie aveva Taglia,
+        Incolla e Annulla, che cambiavano l'area alle spalle del nucleo
+        (R128)."""
+        menu = wx.Menu()
+        copia = menu.Append(wx.ID_COPY, _("Copia"))
+        tutto = menu.Append(wx.ID_SELECTALL, _("Seleziona tutto"))
+        copia.Enable(self.area.CanCopy())
+        menu.Bind(wx.EVT_MENU, lambda _scelta: self.area.Copy(), copia)
+        menu.Bind(wx.EVT_MENU, lambda _scelta: self.area.SelectAll(), tutto)
+        try:
+            self.area.PopupMenu(menu)
+        finally:
+            menu.Destroy()
 
     def _tasto_della_finestra(self, evento):
         """I tasti di tutta la finestra, plancia e area: Ctrl e virgola le

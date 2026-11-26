@@ -152,3 +152,33 @@ def test_ctrl_backspace_toglie_la_parola_anche_al_nucleo(finestra):
         finestra._manda(carattere)
     assert pompa(lambda: righe)
     assert righe[0].strip() == "e4"
+
+
+def test_il_menu_contestuale_dell_area_ha_solo_copia_e_seleziona_tutto(finestra, monkeypatch):
+    """R128: dal menu contestuale del tasto Applicazioni l'area si poteva
+    tagliare, incollare e annullare, alle spalle del nucleo."""
+    import wx
+
+    aperti = []
+
+    def apri(menu, *_argomenti):
+        aperti.append([voce.GetItemLabelText() for voce in menu.GetMenuItems()])
+        return True
+
+    monkeypatch.setattr(finestra.area, "PopupMenu", apri)
+    evento = wx.ContextMenuEvent(wx.wxEVT_CONTEXT_MENU, finestra.area.GetId())
+    evento.SetEventObject(finestra.area)
+    finestra.area.GetEventHandler().ProcessEvent(evento)
+    assert aperti == [["Copia", "Seleziona tutto"]]
+
+
+def test_alt_backspace_non_annulla_nell_area(finestra):
+    """R128: Alt e Backspace annullava l'ultima modifica dell'area, come nei
+    campi di Windows."""
+    import wx
+
+    evento = wx.KeyEvent(wx.wxEVT_KEY_DOWN)
+    evento.SetKeyCode(wx.WXK_BACK)
+    evento.SetAltDown(True)
+    finestra._tasto_giu(evento)
+    assert not evento.GetSkipped()
