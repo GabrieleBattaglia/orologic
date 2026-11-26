@@ -950,7 +950,9 @@ def comandi_lettura(comando, game_state, board=None, mosse=None):
             adsr=[1, 0, 80, 19],
         )
         elenco = mosse if mosse is not None else getattr(game_state, "move_history", [])
-        riepilogo = board_utils.riepilogo_mosse(elenco)
+        # Dalla posizione iniziale della partita, non sempre da quella
+        # standard (R45).
+        riepilogo = board_utils.riepilogo_mosse(elenco, board_utils.scacchiera_iniziale(scacchiera, elenco))
         if not riepilogo:
             print(_("Nessuna mossa ancora giocata."))
             return True

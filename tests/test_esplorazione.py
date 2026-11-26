@@ -103,3 +103,37 @@ def test_il_risultato_per_tempo(fen, bianco_scaduto, atteso):
     from orologic_modules import board_utils
 
     assert board_utils.risultato_per_tempo(chess.Board(fen), bianco_scaduto) == atteso
+
+
+# R45: il riepilogo delle mosse dalla posizione iniziale della partita.
+
+
+def test_il_riepilogo_da_una_posizione_fen_col_nero_che_comincia():
+    from orologic_modules import board_utils
+
+    scacchiera = chess.Board("4k3/8/8/8/8/8/4P3/4K3 b - - 0 10")
+    mosse = []
+    for uci in ("e8d7", "e2e4", "d7e6"):
+        mossa = chess.Move.from_uci(uci)
+        mosse.append(scacchiera.san(mossa))
+        scacchiera.push(mossa)
+    righe = board_utils.riepilogo_mosse(mosse, board_utils.scacchiera_iniziale(scacchiera, mosse))
+    assert len(righe) == 2 and righe[0].startswith("10... ") and righe[1].startswith("11. ")
+    assert not any("Errore" in riga for riga in righe)
+
+
+def test_il_riepilogo_di_una_partita_fischer_random():
+    from orologic_modules import board_utils
+
+    scacchiera = chess.Board.from_chess960_pos(518 - 100)
+    mosse = []
+    for mossa in list(scacchiera.legal_moves)[:1]:
+        mosse.append(scacchiera.san(mossa))
+        scacchiera.push(mossa)
+    risposta = next(iter(scacchiera.legal_moves))
+    mosse.append(scacchiera.san(risposta))
+    scacchiera.push(risposta)
+    righe = board_utils.riepilogo_mosse(mosse, board_utils.scacchiera_iniziale(scacchiera, mosse))
+    assert len(righe) == 1 and "Errore" not in righe[0]
+    # Senza pila che torni, la posizione standard, come prima.
+    assert board_utils.scacchiera_iniziale(chess.Board(), ["e4"]) is None
