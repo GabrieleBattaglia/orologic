@@ -11,14 +11,21 @@
 from . import storage
 from .config import _
 
+# La traduzione della lingua scelta, per predefinito, che ha un _ suo.
+_della_lingua = _
 
-def predefinito():
+
+def predefinito(traduci=None):
     """Dizionario di partenza, con i termini italiani di casa.
 
     Le colonne usano l'alfabeto telefonico italiano: alla sintesi vocale una
     parola intera arriva senza ambiguita', mentre le singole lettere si
-    confondono facilmente fra loro.
+    confondono facilmente fra loro. traduci, se c'e', e' la funzione di
+    traduzione di un'altra lingua: serve allo sfoltimento dei nomi salvati
+    interi (R110).
     """
+    # Un _ locale, e pybabel estrae ancora i nomi.
+    _ = traduci or _della_lingua
     return {
         "pieces": {
             "pawn": {"name": _("pedone"), "pname": _("pedoni"), "gender": "m"},
@@ -119,13 +126,73 @@ def unisci(base, personalizzazioni):
     return base
 
 
+def _foglie(dizionario, prima=()):
+    """I percorsi delle voci finali del dizionario."""
+    foglie = set()
+    for chiave, valore in dizionario.items():
+        if isinstance(valore, dict):
+            foglie |= _foglie(valore, (*prima, chiave))
+        else:
+            foglie.add((*prima, chiave))
+    return foglie
+
+
+def _predefiniti_di_ogni_lingua():
+    """I nomi di partenza in italiano e in ogni lingua dei cataloghi."""
+    import gettext
+    import os
+
+    from . import config
+
+    basi = [predefinito(lambda testo: testo)]
+    try:
+        lingue = sorted(os.listdir(config.CARTELLA_LOCALES))
+    except OSError:
+        return basi
+    for lingua in lingue:
+        if os.path.isdir(os.path.join(config.CARTELLA_LOCALES, lingua, "LC_MESSAGES")):
+            traduzione = gettext.translation("messages", localedir=config.CARTELLA_LOCALES, languages=[lingua], fallback=True)
+            basi.append(predefinito(traduzione.gettext))
+    return basi
+
+
+def _sfoltite(scelte, basi):
+    """Le scelte senza le voci uguali ai nomi di partenza di una delle basi."""
+    restano = {}
+    for chiave, valore in scelte.items():
+        sotto = [base.get(chiave) for base in basi]
+        if isinstance(valore, dict):
+            diverse = _sfoltite(valore, [base for base in sotto if isinstance(base, dict)])
+            if diverse:
+                restano[chiave] = diverse
+        elif valore not in sotto:
+            restano[chiave] = valore
+    return restano
+
+
+def sfoltisci(scelte):
+    """Le scelte salvate, sfoltite se sono il dizionario intero di prima
+    della 9.5.26: le voci uguali ai nomi di partenza di una lingua qualunque
+    se ne vanno, e restano le scelte vere. Prima nessuno sfoltiva quei
+    database, e cambiando lingua pezzi, colonne e giudizi restavano nella
+    vecchia (R110). Le sole differenze, salvate dopo, restano come sono."""
+    if not scelte or not _foglie(predefinito()) <= _foglie(scelte):
+        return scelte
+    return _sfoltite(scelte, _predefiniti_di_ogni_lingua())
+
+
 def carica(silenziosa=False):
     """Dizionario completo: termini di partenza piu' personalizzazioni salvate.
     silenziosa all'importazione: gli avvisi della lettura del database li
     dice Main dopo il benvenuto, perche' nella finestra andrebbero nel
-    vuoto (R31)."""
+    vuoto (R31). Il dizionario intero di prima della 9.5.26 si sfoltisce, e
+    lo sfoltito si salva, una volta (R110)."""
     dizionario = predefinito()
     scelte_utente = storage.LoadDB(silenziosa=silenziosa).get("localization", {})
+    sfoltite = sfoltisci(scelte_utente)
+    if sfoltite != scelte_utente:
+        storage.SetValue("localization", sfoltite)
+        scelte_utente = sfoltite
     if scelte_utente:
         unisci(dizionario, scelte_utente)
     return dizionario

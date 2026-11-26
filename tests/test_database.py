@@ -248,3 +248,28 @@ def test_il_database_dei_predefiniti_non_scrive_la_riserva(database):
     assert storage.SaveDB(db)
     with open(storage.copia_di_riserva(), encoding="utf-8") as file:
         assert file.read() == "{ guasta anche lei"
+
+
+def test_i_nomi_salvati_interi_di_prima_si_sfoltiscono(database):
+    """R110: dalla 9.5.26 dei nomi si salvano solo le differenze, ma un
+    database di prima teneva il dizionario intero, nella lingua di allora,
+    e cambiando lingua pezzi, colonne e giudizi restavano nella vecchia. Al
+    caricamento le voci uguali ai nomi di partenza di una lingua qualunque
+    dei cataloghi si tolgono, una volta, e restano le scelte vere."""
+    import gettext
+
+    from orologic_modules import localizzazione
+
+    inglese = gettext.translation("messages", localedir=config.CARTELLA_LOCALES, languages=["en"]).gettext
+    intero = localizzazione.predefinito(inglese)
+    assert intero["pieces"]["rook"]["name"] != localizzazione.predefinito()["pieces"]["rook"]["name"]
+    intero["columns"]["a"] = "Arezzo"
+    _scrivi(database, {"localization": intero})
+    dizionario = localizzazione.carica()
+    assert dizionario["pieces"]["rook"]["name"] == localizzazione.predefinito()["pieces"]["rook"]["name"]
+    assert dizionario["columns"]["a"] == "Arezzo"
+    assert storage.LoadDB()["localization"] == {"columns": {"a": "Arezzo"}}
+    # Le sole differenze, salvate dopo la 9.5.26, restano come sono, anche
+    # quando somigliano ai nomi di un'altra lingua.
+    _scrivi(database, {"localization": {"pieces": {"rook": {"name": intero["pieces"]["rook"]["name"]}}}})
+    assert localizzazione.carica()["pieces"]["rook"]["name"] == intero["pieces"]["rook"]["name"]
