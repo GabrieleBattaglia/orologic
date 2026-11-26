@@ -348,7 +348,7 @@ def test_easyfish_nella_finestra(finestra, monkeypatch):
     game = partita()
     monkeypatch.setattr(orologic_engine, "ENGINE", object())
     salvate = []
-    monkeypatch.setattr(easyfish_app, "SaveGameToFile", salvate.append)
+    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda g: salvate.append(g) or True)
     letture = []
     monkeypatch.setattr(dialoghi, "da_leggere", lambda _genitore, titolo, righe, *_resto: letture.append((titolo, righe)))
     navigate = []
@@ -407,7 +407,7 @@ def test_easyfish_nella_finestra(finestra, monkeypatch):
 def test_sovrascrivi_tiene_le_varianti_e_u_chiede(finestra, monkeypatch):
     game = partita()
     monkeypatch.setattr(orologic_engine, "ENGINE", object())
-    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda _game: None)
+    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda _game: True)
     finestra.avvia_il_nucleo(lambda: easyfish_app.run(partita=game))
     assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
     e5 = game.variations[0].variations[0]

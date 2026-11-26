@@ -373,7 +373,12 @@ def AddingPGNTAGS(game):
 
 
 def SaveGameToFile(game):
-    """Salva la partita corrente su un file PGN singolo nella cartella pgn/."""
+    """Salva la partita corrente su un file PGN singolo nella cartella pgn/.
+    Restituisce vero se e' andata. La scrittura e' quella di
+    game_flow.salva_pgn_partita, col ripiego nella cartella personale: prima
+    SaveGameToFile non diceva se era riuscita, e chi la chiamava buttava
+    subito la partita (R52). Il PGN va prima negli appunti, cosi' resta
+    anche quando il disco lo rifiuta."""
     # Aggiorna data salvataggio solo se assente
     if "Date" not in game.headers or game.headers["Date"] == "????.??.??":
         game.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
@@ -392,25 +397,13 @@ def SaveGameToFile(game):
     base_filename = f"{white}-{black}-{result}-{timestamp}.pgn"
     sanitized_name = sanitize_filename(base_filename)
 
-    # Percorso: usa config.percorso_salvataggio per garantire la cartella corretta
-    full_path = percorso_salvataggio(os.path.join("pgn", sanitized_name))
+    from ..game_flow import salva_pgn_partita
 
-    # Assicuriamoci che la cartella pgn esista (dovrebbe, ma per sicurezza)
-    os.makedirs(os.path.dirname(full_path), exist_ok=True)
-
+    # Copia negli appunti (filosofia Orologic)
     try:
-        with open(full_path, "w", encoding="utf-8") as f:
-            f.write(pgn_str)
-        print(_("Partita salvata in: {path}").format(path=full_path))
-
-        # Copia negli appunti (filosofia Orologic)
-        try:
-            pyperclip.copy(pgn_str)
-            print(_("PGN copiato automaticamente negli appunti."))
-        # Rete di sicurezza: un errore qui non deve fermare il programma.
-        except Exception:  # noqa: BLE001, S110
-            pass
-
+        pyperclip.copy(pgn_str)
+        print(_("PGN copiato automaticamente negli appunti."))
     # Rete di sicurezza: un errore qui non deve fermare il programma.
-    except Exception as e:  # noqa: BLE001
-        print(_("Errore durante il salvataggio del file PGN: {e}").format(e=e))
+    except Exception:  # noqa: BLE001, S110
+        pass
+    return salva_pgn_partita(pgn_str, sanitized_name) is not None

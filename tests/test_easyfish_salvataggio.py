@@ -17,7 +17,7 @@ def test_chi_torna_all_inizio_e_esce_salva_la_partita(finestra, monkeypatch):
     game = partita()
     monkeypatch.setattr(orologic_engine, "ENGINE", object())
     salvate = []
-    monkeypatch.setattr(easyfish_app, "SaveGameToFile", salvate.append)
+    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda g: salvate.append(g) or True)
     # Il navigatore riporta alla posizione iniziale, la radice della partita.
     monkeypatch.setattr(finestra_navigatore, "naviga", lambda _genitore, partita_navigata, _nodo, *_altro: (partita_navigata, False))
     finestra.avvia_il_nucleo(lambda: easyfish_app.run(partita=game))
@@ -69,3 +69,38 @@ def test_la_tripla_ripetizione_non_scrive_il_risultato(monkeypatch):
     assert game.end().board().can_claim_threefold_repetition()
     easyfish_app.CheckGameOver(game.end().board(), game.end())
     assert game.headers["Result"] == "*"
+
+
+def test_se_il_salvataggio_fallisce_la_partita_resta(finestra, monkeypatch):
+    """R52: SaveGameToFile non diceva se era riuscita, e .n, .pa, .fg e gli
+    altri buttavano subito la partita."""
+    game = partita()
+    monkeypatch.setattr(orologic_engine, "ENGINE", object())
+    tentativi = []
+    monkeypatch.setattr(easyfish_app, "SaveGameToFile", lambda g: tentativi.append(g) and False)
+    finestra.avvia_il_nucleo(lambda: easyfish_app.run(partita=game))
+    assert pompa(lambda: finestra.attesa.tipo == "area" and finestra.attesa.gioco)
+    _premi(finestra, "_Bella\r")
+    assert pompa(lambda: game.end().comment == "Bella")
+    _premi(finestra, ".n\r")
+    assert pompa(lambda: "resta aperta" in finestra.area.GetValue())
+    assert tentativi == [game]
+    assert len(finestra.fornitore()["board"].move_stack) == 5
+    # All'uscita la domanda: Invio esce lo stesso.
+    _premi(finestra, ".\r")
+    assert pompa(lambda: finestra.attesa.tipo == "sino" or "Esco lo stesso" in finestra.area.GetValue())
+    _premi(finestra, "\r")
+    assert pompa(lambda: not finestra.nucleo.is_alive())
+
+
+def test_save_game_to_file_dice_se_e_riuscita(monkeypatch):
+    import chess.pgn
+
+    from orologic_modules import game_flow
+    from orologic_modules.easyfish import pgn_handler
+
+    monkeypatch.setattr(pgn_handler.pyperclip, "copy", lambda testo: None)
+    monkeypatch.setattr(game_flow, "salva_pgn_partita", lambda testo, nome: None)
+    assert pgn_handler.SaveGameToFile(chess.pgn.Game()) is False
+    monkeypatch.setattr(game_flow, "salva_pgn_partita", lambda testo, nome: "C:/x.pgn")
+    assert pgn_handler.SaveGameToFile(chess.pgn.Game()) is True

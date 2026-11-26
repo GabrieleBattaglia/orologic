@@ -635,7 +635,11 @@ def _esegui(partita=None):
                 # tornava all'inizio e poi usciva perdeva la partita (R12).
                 if is_modified and (game.variations or game.comment or game.board().fen() != chess.STARTING_FEN):
                     print(_("Salvataggio partita in corso..."))
-                    SaveGameToFile(game)
+                    # Se non si salva, si esce solo se lo si vuole (R52).
+                    if not SaveGameToFile(game) and not enter_escape(
+                        _("La partita non si e' salvata, ma il PGN e' negli appunti. Esco lo stesso? (INVIO si', ESC no): ")
+                    ):
+                        continue
                 if sharing_window:
                     sharing_window.stop()
                 break
@@ -836,8 +840,9 @@ def _esegui(partita=None):
                             "ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova."
                         )
                     )
-                    if is_modified:
-                        SaveGameToFile(game)
+                    if is_modified and not SaveGameToFile(game):
+                        print(_("La partita corrente non si e' salvata: resta aperta. Il PGN e' negli appunti."))
+                        continue
                     game = loaded_game
                     board, node = _apri_partita(game)
                     game_state.board = board
@@ -870,7 +875,9 @@ def _esegui(partita=None):
                     # nuovo, quindi aprirne un'altra non fa perdere niente.
                     if is_modified:
                         print(_("Salvataggio partita in corso..."))
-                        SaveGameToFile(game)
+                        if not SaveGameToFile(game):
+                            print(_("La partita corrente non si e' salvata: resta aperta. Il PGN e' negli appunti."))
+                            continue
                     game = scelta
                     board, node = _apri_partita(game)
                     game_state.board = board
@@ -892,8 +899,9 @@ def _esegui(partita=None):
                                 "FEN valido. ATTENZIONE: La partita corrente verrà salvata e ne inizierà una nuova da questa posizione."
                             )
                         )
-                        if is_modified:
-                            SaveGameToFile(game)
+                        if is_modified and not SaveGameToFile(game):
+                            print(_("La partita corrente non si e' salvata: resta aperta. Il PGN e' negli appunti."))
+                            continue
                         board = CustomBoard()
                         board.set_fen(fen_from_clip)
                         game, node = InitNewPGN(board)
@@ -905,8 +913,9 @@ def _esegui(partita=None):
 
             elif cmd == ".n":
                 print(_("Nuova partita. La corrente verrà salvata."))
-                if is_modified:
-                    SaveGameToFile(game)
+                if is_modified and not SaveGameToFile(game):
+                    print(_("La partita corrente non si e' salvata: resta aperta. Il PGN e' negli appunti."))
+                    continue
                 print(_("Nuova scacchiera pronta. Si parte!"))
                 board = CustomBoard()
                 game, node = InitNewPGN(board)
@@ -928,8 +937,9 @@ def _esegui(partita=None):
                         starting_fen=board.fen(), sharing_window=sharing_window
                     )
                 if new_fen:
-                    if is_modified:
-                        SaveGameToFile(game)
+                    if is_modified and not SaveGameToFile(game):
+                        print(_("La partita corrente non si e' salvata: resta aperta. Il PGN e' negli appunti."))
+                        continue
                     board = CustomBoard()
                     board.set_fen(new_fen)
                     game, node = InitNewPGN(board)
