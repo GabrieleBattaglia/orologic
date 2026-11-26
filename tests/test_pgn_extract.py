@@ -560,3 +560,18 @@ def test_un_catalogo_di_forma_diversa_non_blocca_niente(tmp_path):
     vero = os.path.join(RADICE, "pgn-extract", "arguments.json")
     if os.path.isfile(vero):
         assert pgn_extract.leggi_il_catalogo(vero) is not None
+
+
+def test_i_file_che_dividere_in_piu_file_sovrascriverebbe(tmp_path):
+    """R60: con -# pgn-extract sovrascrive 1.pgn e seguenti, con -E accoda
+    ad A.pgn, B00.pgn e simili."""
+    for nome in ("1.pgn", "12.pgn", "A.pgn", "B00.pgn", "partite.pgn", "C123.pgn"):
+        (tmp_path / nome).write_text("x", encoding="utf-8")
+
+    class Scelto:
+        def __init__(self, opzione):
+            self.parametro = type("P", (), {"opzione": opzione})()
+
+    assert pgn_extract.file_che_sovrascriverebbe([Scelto("-#")], str(tmp_path)) == ["1.pgn", "12.pgn"]
+    assert pgn_extract.file_che_sovrascriverebbe([Scelto("-E")], str(tmp_path)) == ["A.pgn", "B00.pgn"]
+    assert pgn_extract.file_che_sovrascriverebbe([Scelto("-C")], str(tmp_path)) == []

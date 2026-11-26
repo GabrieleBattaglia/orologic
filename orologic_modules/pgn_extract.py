@@ -693,6 +693,25 @@ def scrive_la_destinazione(scelti):
     return not (opzioni & set(SOLO_CONTROLLO)) and not (opzioni & set(IN_PIU_FILE))
 
 
+# I nomi dei file che -# ed -E scrivono da se' nella cartella: 1.pgn, 2.pgn
+# e seguenti; A.pgn, B00.pgn e simili, coi codici ECO (R60).
+NOMI_IN_PIU_FILE = {"-#": re.compile(r"^\d+\.pgn$", re.IGNORECASE), "-E": re.compile(r"^[A-E](\d{1,2})?\.pgn$", re.IGNORECASE)}
+
+
+def file_che_sovrascriverebbe(scelti, cartella):
+    """I file della cartella che -# sovrascriverebbe, o a cui -E
+    aggiungerebbe le partite, in ordine. Prima Orologic diceva soltanto
+    che pgn-extract scrive piu' file nella cartella (R60)."""
+    schemi = [NOMI_IN_PIU_FILE[opzione] for opzione in _opzioni(scelti) if opzione in NOMI_IN_PIU_FILE]
+    if not schemi:
+        return []
+    try:
+        nomi = os.listdir(cartella)
+    except OSError:
+        return []
+    return sorted(nome for nome in nomi if any(schema.match(nome) for schema in schemi))
+
+
 def serve_la_destinazione(scelti):
     """Con -r la destinazione non serve; con -# ed -E serve la sua cartella."""
     return not (_opzioni(scelti) & set(SOLO_CONTROLLO))

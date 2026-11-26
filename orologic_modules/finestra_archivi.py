@@ -789,6 +789,12 @@ class FinestraArchivi(wx.Dialog):
                 sorgenti = [sorgente] + [scelto.valore for scelto in self.scelti if scelto.parametro.opzione == pgn_extract.ALTRO_SORGENTE]
                 if any(pgn_extract.stesso_file(destinazione, altro) for altro in sorgenti if altro):
                     righe.append(_("La destinazione non puo' essere un file sorgente: pgn-extract lo leggerebbe e lo scriverebbe insieme, rovinandolo."))
+                # Con -# ed -E, i file che ci sono gia' coi loro nomi (R60).
+                cartella = destinazione if os.path.isdir(destinazione) else os.path.dirname(destinazione)
+                esistenti = [] if pgn_extract.scrive_la_destinazione(self.scelti) else pgn_extract.file_che_sovrascriverebbe(self.scelti, cartella)
+                if esistenti:
+                    nomi = ", ".join(esistenti[:5]) + (_(" e altri {n}").format(n=len(esistenti) - 5) if len(esistenti) > 5 else "")
+                    righe.append(_("Nella cartella {cartella} ci sono gia' {nomi}: pgn-extract li sovrascriverebbe, o vi aggiungerebbe le partite. Scegli una cartella vuota.").format(cartella=cartella, nomi=nomi))
         return righe
 
     def file_da_scrivere(self):
