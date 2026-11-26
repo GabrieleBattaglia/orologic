@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orologic 6.5.0\n"
 "Report-Msgid-Bugs-To: gabriele.battaglia@gmail.com\n"
-"POT-Creation-Date: 2026-11-26 08:13+0100\n"
+"POT-Creation-Date: 2026-11-26 08:14+0100\n"
 "PO-Revision-Date: 2025-07-08 09:44+0200\n"
 "Last-Translator: Gabriele Battaglia <gabriele.battaglia@gmail.com>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -397,41 +397,50 @@ msgstr "{descrizione} ({numero} {mossa}) = {pct:.1f}%"
 msgid "Albero aperture"
 msgstr "Opening tree"
 
-#: orologic_modules/archivio_pgn.py:67
+#: orologic_modules/archivio_pgn.py:68
 msgid "Mosse illegali o illeggibili"
 msgstr "Illegal or unreadable moves"
 
-#: orologic_modules/archivio_pgn.py:68
+#: orologic_modules/archivio_pgn.py:69
 msgid "Intestazioni obbligatorie mancanti"
 msgstr "Missing required headers"
 
-#: orologic_modules/archivio_pgn.py:69
+#: orologic_modules/archivio_pgn.py:70
 msgid "Risultato che non torna"
 msgstr "Inconsistent result"
 
-#: orologic_modules/archivio_pgn.py:70
+#: orologic_modules/archivio_pgn.py:71
 msgid "Date malformate"
 msgstr "Malformed dates"
 
-#: orologic_modules/archivio_pgn.py:71
+#: orologic_modules/archivio_pgn.py:72
 msgid "Elo non numerici"
 msgstr "Non-numeric Elo"
 
-#: orologic_modules/archivio_pgn.py:72
+#: orologic_modules/archivio_pgn.py:73
 msgid "Caratteri illeggibili"
 msgstr "Unreadable characters"
 
-#: orologic_modules/archivio_pgn.py:73
+#: orologic_modules/archivio_pgn.py:74
 msgid "Partite doppie"
 msgstr "Duplicate games"
 
-#: orologic_modules/archivio_pgn.py:116 orologic_modules/pgn_search.py:147
+#: orologic_modules/archivio_pgn.py:117 orologic_modules/pgn_search.py:147
 msgid ""
 "Scaricamento interrotto dall'utente. Elaborazione delle partite caricate "
 "finora..."
 msgstr "Download interrupted by user. Processing the games loaded so far..."
 
-#: orologic_modules/archivio_pgn.py:126 orologic_modules/pgn_search.py:164
+#: orologic_modules/archivio_pgn.py:127
+#, python-brace-format
+msgid ""
+"Scaricamento interrotto dalla rete: {motivo}. Elaborazione delle partite "
+"caricate finora..."
+msgstr ""
+"Download interrupted by the network: {motivo}. Processing the games loaded "
+"so far..."
+
+#: orologic_modules/archivio_pgn.py:136 orologic_modules/pgn_search.py:164
 msgid ""
 "Tempo massimo di scaricamento (60 minuti) raggiunto. Elaborazione delle "
 "partite caricate finora..."
@@ -439,7 +448,7 @@ msgstr ""
 "Maximum download time (60 minutes) reached. Processing the games loaded so "
 "far..."
 
-#: orologic_modules/archivio_pgn.py:130 orologic_modules/pgn_search.py:173
+#: orologic_modules/archivio_pgn.py:140 orologic_modules/pgn_search.py:173
 #, python-brace-format
 msgid ""
 "\r"
@@ -448,45 +457,45 @@ msgstr ""
 "\r"
 "Downloading: {mb:.2f} MB ({elapsed:.0f}s)...\r"
 
-#: orologic_modules/archivio_pgn.py:146 orologic_modules/pgn_search.py:117
+#: orologic_modules/archivio_pgn.py:156 orologic_modules/pgn_search.py:117
 #, python-brace-format
 msgid "Rilevato percorso file: {path}"
 msgstr "File path detected: {path}"
 
-#: orologic_modules/archivio_pgn.py:151 orologic_modules/pgn_search.py:124
+#: orologic_modules/archivio_pgn.py:161 orologic_modules/pgn_search.py:124
 #, python-brace-format
 msgid "Errore nella lettura del file: {e}"
 msgstr "Error reading file: {e}"
 
-#: orologic_modules/archivio_pgn.py:155 orologic_modules/pgn_search.py:129
+#: orologic_modules/archivio_pgn.py:165 orologic_modules/pgn_search.py:129
 #, python-brace-format
 msgid "Rilevato URL: {url}"
 msgstr "URL detected: {url}"
 
-#: orologic_modules/archivio_pgn.py:162 orologic_modules/pgn_search.py:187
+#: orologic_modules/archivio_pgn.py:172 orologic_modules/pgn_search.py:187
 #, python-brace-format
 msgid "Errore HTTP durante il download: {code} {reason}"
 msgstr "HTTP error downloading: {code} {reason}"
 
-#: orologic_modules/archivio_pgn.py:164 orologic_modules/pgn_search.py:192
+#: orologic_modules/archivio_pgn.py:174 orologic_modules/pgn_search.py:192
 #, python-brace-format
 msgid "Errore nel download: {e}"
 msgstr "Download error: {e}"
 
-#: orologic_modules/archivio_pgn.py:169
+#: orologic_modules/archivio_pgn.py:179
 #: orologic_modules/finestra_ricerca.py:488 orologic_modules/pgn_search.py:108
 msgid "Gli appunti sono vuoti."
 msgstr "The clipboard is empty."
 
-#: orologic_modules/archivio_pgn.py:172 orologic_modules/pgn_search.py:206
+#: orologic_modules/archivio_pgn.py:182 orologic_modules/pgn_search.py:206
 msgid "Il testo negli appunti non sembra contenere dati PGN validi."
 msgstr "The text in the clipboard does not appear to contain valid PGN data."
 
-#: orologic_modules/archivio_pgn.py:179 orologic_modules/pgn_search.py:200
+#: orologic_modules/archivio_pgn.py:189 orologic_modules/pgn_search.py:200
 msgid "Nessun contenuto PGN trovato."
 msgstr "No PGN content found."
 
-#: orologic_modules/archivio_pgn.py:184 orologic_modules/pgn_search.py:214
+#: orologic_modules/archivio_pgn.py:194 orologic_modules/pgn_search.py:214
 #, python-brace-format
 msgid ""
 "\r"
@@ -495,53 +504,53 @@ msgstr ""
 "\r"
 "Loaded games: {n}..."
 
-#: orologic_modules/archivio_pgn.py:187 orologic_modules/pgn_search.py:221
+#: orologic_modules/archivio_pgn.py:197 orologic_modules/pgn_search.py:221
 #, python-brace-format
 msgid ""
 "Lettura interrotta: il PGN non e' leggibile da questo punto in poi. {errore}"
 msgstr ""
 "Reading interrupted: the PGN is not readable from this point on. {errore}"
 
-#: orologic_modules/archivio_pgn.py:191
+#: orologic_modules/archivio_pgn.py:201
 msgid "Lettura fermata: tengo le partite lette finora."
 msgstr "Reading stopped: keeping the games read so far."
 
-#: orologic_modules/archivio_pgn.py:312
+#: orologic_modules/archivio_pgn.py:322
 #: orologic_modules/easyfish/posizione.py:269
 #, python-brace-format
 msgid "{bianco} vs {nero}, {risultato}"
 msgstr "{bianco} vs {nero}, {risultato}"
 
-#: orologic_modules/archivio_pgn.py:341
+#: orologic_modules/archivio_pgn.py:351
 msgid "variante"
 msgstr "variation"
 
-#: orologic_modules/archivio_pgn.py:358
+#: orologic_modules/archivio_pgn.py:368
 #, python-brace-format
 msgid "{ramo} ({n} partite) | {statistiche}"
 msgstr "{ramo} ({n} games) | {statistiche}"
 
-#: orologic_modules/archivio_pgn.py:358 orologic_modules/pgn_search.py:880
+#: orologic_modules/archivio_pgn.py:368 orologic_modules/pgn_search.py:880
 #: orologic_modules/pgn_search.py:1168
 msgid "(radice)"
 msgstr "(root)"
 
-#: orologic_modules/archivio_pgn.py:374
+#: orologic_modules/archivio_pgn.py:384
 #, python-brace-format
 msgid "{descrizione} ({mossa}): {partita}"
 msgstr "{descrizione} ({mossa}): {partita}"
 
-#: orologic_modules/archivio_pgn.py:376
+#: orologic_modules/archivio_pgn.py:386
 #, python-brace-format
 msgid "{descrizione} ({mossa}): {partita}, in una variante"
 msgstr "{descrizione} ({mossa}): {partita}, in a variation"
 
-#: orologic_modules/archivio_pgn.py:378
+#: orologic_modules/archivio_pgn.py:388
 #, python-brace-format
 msgid "{descrizione} ({mossa}) ({v} partite dalle varianti)"
 msgstr "{descrizione} ({mossa}) ({v} games from variations)"
 
-#: orologic_modules/archivio_pgn.py:382
+#: orologic_modules/archivio_pgn.py:392
 #, python-brace-format
 msgid ""
 "{descrizione} ({mossa}) ({n} partite, piu' {v} dalle varianti) = {pct:.1f}% "
@@ -550,51 +559,51 @@ msgstr ""
 "{descrizione} ({mossa}) ({n} games, plus {v} from variations) = {pct:.1f}% |"
 " {statistiche}"
 
-#: orologic_modules/archivio_pgn.py:384
+#: orologic_modules/archivio_pgn.py:394
 #, python-brace-format
 msgid "{descrizione} ({mossa}) ({n} partite) = {pct:.1f}% | {statistiche}"
 msgstr "{descrizione} ({mossa}) ({n} games) = {pct:.1f}% | {statistiche}"
 
-#: orologic_modules/archivio_pgn.py:389
+#: orologic_modules/archivio_pgn.py:399
 #, python-brace-format
 msgid "{partita}, in una variante"
 msgstr "{partita}, in a variation"
 
-#: orologic_modules/archivio_pgn.py:394
+#: orologic_modules/archivio_pgn.py:404
 #, python-brace-format
 msgid "{ramo} ({n} partite)"
 msgstr "{ramo} ({n} games)"
 
-#: orologic_modules/archivio_pgn.py:401 orologic_modules/archivio_pgn.py:402
+#: orologic_modules/archivio_pgn.py:411 orologic_modules/archivio_pgn.py:412
 msgid "Con errori"
 msgstr "With errors"
 
-#: orologic_modules/archivio_pgn.py:402
+#: orologic_modules/archivio_pgn.py:412
 #, python-brace-format
 msgid "{ramo} ({n} partite), ricerca dei doppioni al {pct}%"
 msgstr "{ramo} ({n} games), duplicate search at {pct}%"
 
-#: orologic_modules/archivio_pgn.py:414
+#: orologic_modules/archivio_pgn.py:424
 #, python-brace-format
 msgid "la posizione dice {risultato}"
 msgstr "the position says {risultato}"
 
-#: orologic_modules/archivio_pgn.py:415
+#: orologic_modules/archivio_pgn.py:425
 #, python-brace-format
 msgid "in fondo alle mosse {segno}"
 msgstr "at the end of the moves {segno}"
 
-#: orologic_modules/archivio_pgn.py:417
+#: orologic_modules/archivio_pgn.py:427
 #, python-brace-format
 msgid "uguale alla partita {n}"
 msgstr "same as game {n}"
 
-#: orologic_modules/archivio_pgn.py:425
+#: orologic_modules/archivio_pgn.py:435
 #, python-brace-format
 msgid "{partita}: {dettaglio}"
 msgstr "{partita}: {dettaglio}"
 
-#: orologic_modules/archivio_pgn.py:446 orologic_modules/pgn_search.py:61
+#: orologic_modules/archivio_pgn.py:456 orologic_modules/pgn_search.py:61
 #, python-brace-format
 msgid ""
 "\n"
@@ -603,89 +612,89 @@ msgstr ""
 "\n"
 "Attention: the archive contains only {n} games (recommended minimum: 20)."
 
-#: orologic_modules/archivio_pgn.py:649
+#: orologic_modules/archivio_pgn.py:659
 #, python-brace-format
 msgid "Intestazioni aggiunte: {n} partite."
 msgstr "Headers added: {n} games."
 
-#: orologic_modules/archivio_pgn.py:650
+#: orologic_modules/archivio_pgn.py:660
 #, python-brace-format
 msgid "Risultati corretti: {n}."
 msgstr "Results corrected: {n}."
 
-#: orologic_modules/archivio_pgn.py:651
+#: orologic_modules/archivio_pgn.py:661
 #, python-brace-format
 msgid "Date riscritte: {n}."
 msgstr "Dates rewritten: {n}."
 
-#: orologic_modules/archivio_pgn.py:652
+#: orologic_modules/archivio_pgn.py:662
 #, python-brace-format
 msgid "Doppioni tolti: {n}."
 msgstr "Duplicates removed: {n}."
 
-#: orologic_modules/archivio_pgn.py:653
+#: orologic_modules/archivio_pgn.py:663
 #, python-brace-format
 msgid "Partite coi caratteri riletti: {n}."
 msgstr "Games with their characters reread: {n}."
 
-#: orologic_modules/archivio_pgn.py:654
+#: orologic_modules/archivio_pgn.py:664
 #, python-brace-format
 msgid "Mosse illegali, da sistemare a mano: {n} partite."
 msgstr "Illegal moves, to fix by hand: {n} games."
 
-#: orologic_modules/archivio_pgn.py:655
+#: orologic_modules/archivio_pgn.py:665
 #, python-brace-format
 msgid "Risultati da verificare a mano: {n}."
 msgstr "Results to check by hand: {n}."
 
-#: orologic_modules/archivio_pgn.py:656
+#: orologic_modules/archivio_pgn.py:666
 #, python-brace-format
 msgid "Date da riscrivere a mano: {n}."
 msgstr "Dates to rewrite by hand: {n}."
 
-#: orologic_modules/archivio_pgn.py:657
+#: orologic_modules/archivio_pgn.py:667
 #, python-brace-format
 msgid "Elo non numerici, da sistemare a mano: {n} partite."
 msgstr "Non-numeric Elo, to fix by hand: {n} games."
 
-#: orologic_modules/archivio_pgn.py:703 orologic_modules/pgn_extract.py:1169
+#: orologic_modules/archivio_pgn.py:713 orologic_modules/pgn_extract.py:1169
 msgid "copia"
 msgstr "backup"
 
-#: orologic_modules/archivio_pgn.py:799
+#: orologic_modules/archivio_pgn.py:809
 msgid "Modifiche annullate: l'archivio resta com'era."
 msgstr "Changes cancelled: the archive stays as it was."
 
-#: orologic_modules/archivio_pgn.py:801
+#: orologic_modules/archivio_pgn.py:811
 msgid "Le modifiche restano nell'archivio aperto: per tenerle, Salva il PGN."
 msgstr "The changes stay in the open archive: to keep them, Save PGN."
 
-#: orologic_modules/archivio_pgn.py:804
+#: orologic_modules/archivio_pgn.py:814
 msgid ""
 "Le modifiche vanno nel file quando esci dalla ricerca: te lo chiedo allora."
 msgstr ""
 "The changes go into the file when you leave the search: I will ask you then."
 
-#: orologic_modules/archivio_pgn.py:814
+#: orologic_modules/archivio_pgn.py:824
 #, python-brace-format
 msgid "Copia di sicurezza: {percorso}"
 msgstr "Backup copy: {percorso}"
 
-#: orologic_modules/archivio_pgn.py:817
+#: orologic_modules/archivio_pgn.py:827
 #, python-brace-format
 msgid "File riscritto: {percorso}"
 msgstr "File rewritten: {percorso}"
 
-#: orologic_modules/archivio_pgn.py:826
+#: orologic_modules/archivio_pgn.py:836
 msgid "non contiene una partita."
 msgstr "it does not contain a game."
 
-#: orologic_modules/archivio_pgn.py:828
+#: orologic_modules/archivio_pgn.py:838
 #, python-brace-format
 msgid "contiene {n} partite, invece di una."
 msgstr "it contains {n} games, instead of one."
 
-#: orologic_modules/archivio_pgn.py:831
+#: orologic_modules/archivio_pgn.py:841
 #, python-brace-format
 msgid "la mossa {mossa} non e' legale o non si legge."
 msgstr "the move {mossa} is illegal or unreadable."
@@ -984,7 +993,7 @@ msgstr ""
 msgid "Posizione valida! Numero Chess960: {number}"
 msgstr "Valid position! Chess960 Number: {number}"
 
-#: orologic_modules/cleaner.py:36 orologic_modules/lichess_profiler.py:192
+#: orologic_modules/cleaner.py:36 orologic_modules/lichess_profiler.py:193
 #: orologic_modules/tempo.py:166
 msgid "1 anno"
 msgstr "1 year"
@@ -994,7 +1003,7 @@ msgstr "1 year"
 msgid "{n} anni"
 msgstr "{n} years"
 
-#: orologic_modules/cleaner.py:38 orologic_modules/lichess_profiler.py:194
+#: orologic_modules/cleaner.py:38 orologic_modules/lichess_profiler.py:195
 #: orologic_modules/tempo.py:172
 msgid "1 mese"
 msgstr "1 month"
@@ -1989,7 +1998,7 @@ msgstr "Confirm"
 #: orologic_modules/finestra_editor.py:108
 #: orologic_modules/lichess_app.py:2107 orologic_modules/lichess_app.py:2142
 #: orologic_modules/lichess_app.py:2282
-#: orologic_modules/lichess_profiler.py:592
+#: orologic_modules/lichess_profiler.py:596
 msgid "Annulla"
 msgstr "Cancel"
 
@@ -4128,7 +4137,7 @@ msgid "La fase {n} ha 0 mosse: la fase dopo non comincerebbe mai."
 msgstr "Phase {n} has 0 moves: the next phase would never start."
 
 #: orologic_modules/finestra_pulizia.py:58 orologic_modules/lichess_app.py:202
-#: orologic_modules/lichess_profiler.py:201 orologic_modules/tempo.py:178
+#: orologic_modules/lichess_profiler.py:202 orologic_modules/tempo.py:178
 msgid "1 giorno"
 msgstr "1 day"
 
@@ -4995,7 +5004,7 @@ msgid "PGN copiato negli appunti."
 msgstr "PGN copied to clipboard."
 
 #: orologic_modules/game_flow.py:1012 orologic_modules/gioca.py:185
-#: orologic_modules/lichess_profiler.py:629
+#: orologic_modules/lichess_profiler.py:633
 #, python-brace-format
 msgid "Errore durante la copia del PGN negli appunti: {error}"
 msgstr "Error copying PGN to clipboard: {error}"
@@ -5592,7 +5601,7 @@ msgid "{n} ore"
 msgstr "{n} hours"
 
 #: orologic_modules/lichess_app.py:204
-#: orologic_modules/lichess_profiler.py:204 orologic_modules/tempo.py:38
+#: orologic_modules/lichess_profiler.py:205 orologic_modules/tempo.py:38
 #: orologic_modules/tempo.py:184
 msgid "1 ora"
 msgstr "1 hour"
@@ -5604,7 +5613,7 @@ msgid "{n} minuti"
 msgstr "{n} minutes"
 
 #: orologic_modules/lichess_app.py:207
-#: orologic_modules/lichess_profiler.py:207 orologic_modules/tempo.py:40
+#: orologic_modules/lichess_profiler.py:208 orologic_modules/tempo.py:40
 #: orologic_modules/tempo.py:190
 msgid "1 minuto"
 msgstr "1 minute"
@@ -5886,13 +5895,13 @@ msgid "Non e' stato possibile seguire {u}. {motivo}"
 msgstr "It was not possible to follow {u}. {motivo}"
 
 #: orologic_modules/lichess_app.py:467
-#: orologic_modules/lichess_profiler.py:290
+#: orologic_modules/lichess_profiler.py:291
 #, python-brace-format
 msgid "Non segui piu' {u}."
 msgstr "You no longer follow {u}."
 
 #: orologic_modules/lichess_app.py:469
-#: orologic_modules/lichess_profiler.py:284
+#: orologic_modules/lichess_profiler.py:285
 #, python-brace-format
 msgid "Operazione non riuscita. {motivo}"
 msgstr "Operation failed. {motivo}"
@@ -6534,8 +6543,8 @@ msgstr "TV channels not retrieved. {motivo}"
 #: orologic_modules/lichess_board.py:1382
 #: orologic_modules/lichess_eventi.py:63
 #: orologic_modules/lichess_eventi.py:113
-#: orologic_modules/lichess_profiler.py:561
-#: orologic_modules/lichess_profiler.py:567
+#: orologic_modules/lichess_profiler.py:565
+#: orologic_modules/lichess_profiler.py:571
 #: orologic_modules/memoboard_app.py:137 orologic_modules/memoboard_app.py:523
 #: orologic_modules/memoboard_app.py:535 orologic_modules/memoboard_app.py:735
 #: orologic_modules/memoboard_app.py:776
@@ -6972,7 +6981,7 @@ msgstr ""
 "Choose a friend to challenge: "
 
 #: orologic_modules/lichess_app.py:2120
-#: orologic_modules/lichess_profiler.py:687
+#: orologic_modules/lichess_profiler.py:691
 msgid ""
 "\n"
 "Impostazioni della sfida:"
@@ -7044,7 +7053,7 @@ msgid "Statistiche utente"
 msgstr "User statistics"
 
 #: orologic_modules/lichess_app.py:2230
-#: orologic_modules/lichess_profiler.py:659
+#: orologic_modules/lichess_profiler.py:663
 msgid "Storia Elo e Sonificazione"
 msgstr "Elo History and Sonification"
 
@@ -7136,7 +7145,7 @@ msgid "Non hai sfide in attesa."
 msgstr "You have no challenges waiting."
 
 #: orologic_modules/lichess_app.py:2434
-#: orologic_modules/lichess_profiler.py:668
+#: orologic_modules/lichess_profiler.py:672
 #: orologic_modules/lichess_stats.py:225 orologic_modules/lichess_stats.py:305
 msgid "Torna indietro"
 msgstr "Go back"
@@ -7722,11 +7731,11 @@ msgstr ""
 "One of your tournament games has started, against {u}: you'll find it under "
 "Resume current game, in the Play a game menu."
 
-#: orologic_modules/lichess_profiler.py:30
+#: orologic_modules/lichess_profiler.py:31
 msgid "RICERCA GIOCATORE"
 msgstr "PLAYER SEARCH"
 
-#: orologic_modules/lichess_profiler.py:33
+#: orologic_modules/lichess_profiler.py:34
 msgid ""
 "Digita il nome utente. Usa il tasto Backspace per correggere, INVIO per "
 "confermare, ESC per annullare."
@@ -7734,7 +7743,7 @@ msgstr ""
 "Type the username. Use the Backspace key to correct, ENTER to confirm, ESC "
 "to cancel."
 
-#: orologic_modules/lichess_profiler.py:38
+#: orologic_modules/lichess_profiler.py:39
 msgid ""
 "Seleziona uno dei suggerimenti scrivendolo per intero. Se non compare, "
 "premetti '=' al nome (es: =MioNome)."
@@ -7742,12 +7751,12 @@ msgstr ""
 "Select one of the suggestions by writing it in full. If it doesn't appear, "
 "prefix the name with '=' (e.g. =MyName)."
 
-#: orologic_modules/lichess_profiler.py:64
+#: orologic_modules/lichess_profiler.py:65
 #, python-brace-format
 msgid "Suggerimenti non disponibili. {motivo}"
 msgstr "Suggestions not available. {motivo}"
 
-#: orologic_modules/lichess_profiler.py:75
+#: orologic_modules/lichess_profiler.py:76
 #, python-brace-format
 msgid ""
 "\n"
@@ -7756,7 +7765,7 @@ msgstr ""
 "\n"
 "[Forced EXACT search for: {t}]"
 
-#: orologic_modules/lichess_profiler.py:81
+#: orologic_modules/lichess_profiler.py:82
 #, python-brace-format
 msgid ""
 "\n"
@@ -7765,11 +7774,11 @@ msgstr ""
 "\n"
 "No players found for '{t}'."
 
-#: orologic_modules/lichess_profiler.py:85
+#: orologic_modules/lichess_profiler.py:86
 msgid "Nome: "
 msgstr "Name: "
 
-#: orologic_modules/lichess_profiler.py:116
+#: orologic_modules/lichess_profiler.py:117
 #, python-brace-format
 msgid ""
 "\n"
@@ -7778,36 +7787,36 @@ msgstr ""
 "\n"
 "The entered term '{t}' is not exactly a suggestion. Refine your search or use '=' to force."
 
-#: orologic_modules/lichess_profiler.py:127
+#: orologic_modules/lichess_profiler.py:128
 #, python-brace-format
 msgid "PROFILO DI {u}"
 msgstr "PROFILE OF {u}"
 
-#: orologic_modules/lichess_profiler.py:129
+#: orologic_modules/lichess_profiler.py:130
 #, python-brace-format
 msgid "Titolo: {t}"
 msgstr "Title: {t}"
 
-#: orologic_modules/lichess_profiler.py:132
+#: orologic_modules/lichess_profiler.py:133
 #, python-brace-format
 msgid "Bio: {b}"
 msgstr "Bio: {b}"
 
-#: orologic_modules/lichess_profiler.py:133
+#: orologic_modules/lichess_profiler.py:134
 msgid "Non specificata"
 msgstr "Not specified"
 
-#: orologic_modules/lichess_profiler.py:144
+#: orologic_modules/lichess_profiler.py:145
 #, python-brace-format
 msgid "Iscritto il: {d}"
 msgstr "Registered on: {d}"
 
-#: orologic_modules/lichess_profiler.py:152
+#: orologic_modules/lichess_profiler.py:153
 #, python-brace-format
 msgid "Ultimo accesso: {d}"
 msgstr "Last seen: {d}"
 
-#: orologic_modules/lichess_profiler.py:165
+#: orologic_modules/lichess_profiler.py:166
 #, python-brace-format
 msgid ""
 "Partite totali: {t} (Vinte: {w} [{pw:.1f}%], Patte: {d} [{pd:.1f}%], Perse: "
@@ -7816,55 +7825,55 @@ msgstr ""
 "Total games: {t} (Won: {w} [{pw:.1f}%], Draws: {d} [{pd:.1f}%], Lost: {l} "
 "[{pl:.1f}%])"
 
-#: orologic_modules/lichess_profiler.py:170
+#: orologic_modules/lichess_profiler.py:171
 #, python-brace-format
 msgid "Partite totali: {t} (Vinte: {w}, Patte: {d}, Perse: {l})"
 msgstr "Total games: {t} (Won: {w}, Draws: {d}, Lost: {l})"
 
-#: orologic_modules/lichess_profiler.py:192
+#: orologic_modules/lichess_profiler.py:193
 #, python-brace-format
 msgid "{y} anni"
 msgstr "{y} years"
 
-#: orologic_modules/lichess_profiler.py:194
+#: orologic_modules/lichess_profiler.py:195
 #, python-brace-format
 msgid "{mo} mesi"
 msgstr "{mo} months"
 
-#: orologic_modules/lichess_profiler.py:197
+#: orologic_modules/lichess_profiler.py:198
 #, python-brace-format
 msgid "{wk} settimane"
 msgstr "{wk} weeks"
 
-#: orologic_modules/lichess_profiler.py:197
+#: orologic_modules/lichess_profiler.py:198
 msgid "1 settimana"
 msgstr "1 week"
 
-#: orologic_modules/lichess_profiler.py:201
+#: orologic_modules/lichess_profiler.py:202
 #, python-brace-format
 msgid "{dy} giorni"
 msgstr "{dy} days"
 
-#: orologic_modules/lichess_profiler.py:204
+#: orologic_modules/lichess_profiler.py:205
 #, python-brace-format
 msgid "{hr} ore"
 msgstr "{hr} hours"
 
-#: orologic_modules/lichess_profiler.py:207
+#: orologic_modules/lichess_profiler.py:208
 #, python-brace-format
 msgid "{mi} minuti"
 msgstr "{mi} minutes"
 
-#: orologic_modules/lichess_profiler.py:211
+#: orologic_modules/lichess_profiler.py:212
 #, python-brace-format
 msgid "Tempo di gioco totale: {t_str}"
 msgstr "Total playing time: {t_str}"
 
-#: orologic_modules/lichess_profiler.py:214
+#: orologic_modules/lichess_profiler.py:215
 msgid "Tempo di gioco totale: 0 minuti"
 msgstr "Total playing time: 0 minutes"
 
-#: orologic_modules/lichess_profiler.py:216
+#: orologic_modules/lichess_profiler.py:217
 msgid ""
 "\n"
 "-- Punteggi Elo --"
@@ -7872,44 +7881,44 @@ msgstr ""
 "\n"
 "-- Elo Scores --"
 
-#: orologic_modules/lichess_profiler.py:230
+#: orologic_modules/lichess_profiler.py:231
 #, python-brace-format
 msgid "{perf_name}: {rating} ({games} partite)"
 msgstr "{perf_name}: {rating} ({games} games)"
 
-#: orologic_modules/lichess_profiler.py:245
+#: orologic_modules/lichess_profiler.py:246
 #, python-brace-format
 msgid "Profilo non caricato. {motivo}"
 msgstr "Profile not loaded. {motivo}"
 
-#: orologic_modules/lichess_profiler.py:253
+#: orologic_modules/lichess_profiler.py:254
 msgid "Devi essere loggato per inviare messaggi."
 msgstr "You must be logged in to post messages."
 
-#: orologic_modules/lichess_profiler.py:257
+#: orologic_modules/lichess_profiler.py:258
 #, python-brace-format
 msgid "Scrivi il messaggio per {u}, vuoto per annullare: "
 msgstr "Write message for {u}, blank to cancel: "
 
-#: orologic_modules/lichess_profiler.py:269
+#: orologic_modules/lichess_profiler.py:270
 msgid "Messaggio inviato con successo."
 msgstr "Message sent successfully."
 
-#: orologic_modules/lichess_profiler.py:271
+#: orologic_modules/lichess_profiler.py:272
 #, python-brace-format
 msgid "Messaggio non inviato. {motivo}"
 msgstr "Message not sent. {motivo}"
 
-#: orologic_modules/lichess_profiler.py:276
+#: orologic_modules/lichess_profiler.py:277
 msgid "Devi essere loggato per seguire i giocatori."
 msgstr "You must be logged in to follow players."
 
-#: orologic_modules/lichess_profiler.py:288
+#: orologic_modules/lichess_profiler.py:289
 #, python-brace-format
 msgid "Ora segui {u}."
 msgstr "You now follow {u}."
 
-#: orologic_modules/lichess_profiler.py:303
+#: orologic_modules/lichess_profiler.py:304
 #, python-brace-format
 msgid ""
 "\n"
@@ -7918,32 +7927,32 @@ msgstr ""
 "\n"
 "URL for reporting {u} copied to clipboard: {url}"
 
-#: orologic_modules/lichess_profiler.py:307
+#: orologic_modules/lichess_profiler.py:308
 msgid "Apertura della pagina di segnalazione nel browser in corso..."
 msgstr "Opening the reporting page in your browser..."
 
-#: orologic_modules/lichess_profiler.py:312
+#: orologic_modules/lichess_profiler.py:313
 #, python-brace-format
 msgid "Scarica e Filtra Partite di {u}"
 msgstr "Download and Filter {u} Games"
 
-#: orologic_modules/lichess_profiler.py:316
+#: orologic_modules/lichess_profiler.py:317
 msgid ""
 "Premi INVIO per scaricare l'intero database, oppure ESC per impostare filtri"
 " di ricerca: "
 msgstr ""
 "Press ENTER to download the entire database, or ESC to set search filters: "
 
-#: orologic_modules/lichess_profiler.py:332
+#: orologic_modules/lichess_profiler.py:333
 msgid "Vuoi partite giocate col (b)ianco, (n)ero o (e)ntrambi? (b/n/e): "
 msgstr ""
 "Do you want games played with (b) white, (n) black or (e) both? (b/n/e): "
 
-#: orologic_modules/lichess_profiler.py:341
+#: orologic_modules/lichess_profiler.py:342
 msgid "Risultato: (v)ittoria, (p)areggio, (s)confitta o (t)utte? (v/p/s/t): "
 msgstr "Result: (v) win, (p) draw, (s) loss or (t) all? (v/p/s/t): "
 
-#: orologic_modules/lichess_profiler.py:349
+#: orologic_modules/lichess_profiler.py:350
 msgid ""
 "Vuoi specificare un range di Elo per l'avversario? (INVIO per si', ESC per "
 "no): "
@@ -7951,27 +7960,27 @@ msgstr ""
 "Do you want to specify an Elo range for the opponent? (ENTER for yes, ESC "
 "for no): "
 
-#: orologic_modules/lichess_profiler.py:352
+#: orologic_modules/lichess_profiler.py:353
 msgid "Elo minimo: "
 msgstr "Minimum rating: "
 
-#: orologic_modules/lichess_profiler.py:353
+#: orologic_modules/lichess_profiler.py:354
 msgid "Elo massimo: "
 msgstr "Maximum Elo: "
 
-#: orologic_modules/lichess_profiler.py:358
+#: orologic_modules/lichess_profiler.py:359
 msgid "Vuoi specificare un codice ECO? (INVIO per si', ESC per no): "
 msgstr "Do you want to specify an ECO code? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/lichess_profiler.py:361
+#: orologic_modules/lichess_profiler.py:362
 msgid "Codice ECO, per esempio B10: "
 msgstr "ECO code, for example B10: "
 
-#: orologic_modules/lichess_profiler.py:369
+#: orologic_modules/lichess_profiler.py:370
 msgid "Quante partite scaricare al massimo? "
 msgstr "Maximum number of games to download? "
 
-#: orologic_modules/lichess_profiler.py:380
+#: orologic_modules/lichess_profiler.py:381
 msgid ""
 "Scaricamento dell'intero archivio in corso. Con molte partite puo' volerci "
 "parecchio: premi ESC per interrompere e tenere quelle gia' arrivate."
@@ -7980,7 +7989,7 @@ msgstr ""
 "long time: press ESC to interrupt and keep the ones that have already "
 "arrived."
 
-#: orologic_modules/lichess_profiler.py:386
+#: orologic_modules/lichess_profiler.py:387
 #, python-brace-format
 msgid ""
 "Scaricamento in corso, al massimo {n} partite. Premi ESC per interrompere e "
@@ -7989,48 +7998,48 @@ msgstr ""
 "Downloading, maximum {n} games. Press ESC to interrupt and keep those "
 "already arrived."
 
-#: orologic_modules/lichess_profiler.py:409
+#: orologic_modules/lichess_profiler.py:410
 #, python-brace-format
 msgid "Scaricamento non riuscito. {motivo}"
 msgstr "Download failed. {motivo}"
 
-#: orologic_modules/lichess_profiler.py:419
+#: orologic_modules/lichess_profiler.py:420
 #, python-brace-format
 msgid "Scaricamento interrotto. Elaboro le {n} partite gia' ricevute."
 msgstr "Download interrupted. Processing the {n} games already received."
 
-#: orologic_modules/lichess_profiler.py:492
-#: orologic_modules/lichess_profiler.py:503
+#: orologic_modules/lichess_profiler.py:493
+#: orologic_modules/lichess_profiler.py:507
 #, python-brace-format
 msgid "Analizzate: {analyzed}, {matched} trovate."
 msgstr "Analyzed: {analyzed}, {matched} found."
 
-#: orologic_modules/lichess_profiler.py:499
+#: orologic_modules/lichess_profiler.py:503
 #, python-brace-format
 msgid "Scaricamento interrotto dalla rete: {e}"
 msgstr "Download interrupted by network: {e}"
 
 #: orologic_modules/easyfish/pgn_handler.py:251
-#: orologic_modules/lichess_profiler.py:510
+#: orologic_modules/lichess_profiler.py:514
 msgid "Nessuna partita corrisponde ai criteri di ricerca."
 msgstr "No games match your search criteria."
 
-#: orologic_modules/lichess_profiler.py:528
+#: orologic_modules/lichess_profiler.py:532
 #, python-brace-format
 msgid "Salvata 1 partita nella cartella pgn, nel file {f}."
 msgstr "1 game saved in the pgn folder, in the file {f}."
 
-#: orologic_modules/lichess_profiler.py:530
+#: orologic_modules/lichess_profiler.py:534
 #, python-brace-format
 msgid "Salvate {n} partite nella cartella pgn, nel file {f}."
 msgstr "{n} games saved in the pgn folder, in the file {f}."
 
-#: orologic_modules/lichess_profiler.py:534
+#: orologic_modules/lichess_profiler.py:538
 #, python-brace-format
 msgid "Errore nel salvataggio del file: {e}"
 msgstr "Error saving file: {e}"
 
-#: orologic_modules/lichess_profiler.py:539
+#: orologic_modules/lichess_profiler.py:543
 msgid ""
 "\n"
 "Vuoi scegliere una partita da analizzare? (INVIO per si', ESC per no): "
@@ -8038,25 +8047,25 @@ msgstr ""
 "\n"
 "Do you want to choose a game to analyze? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/lichess_profiler.py:582
+#: orologic_modules/lichess_profiler.py:586
 #, python-brace-format
 msgid "{w} vs {b} ({res}) - ECO: {eco} - {date}"
 msgstr "{w} vs {b} ({res}) - ECO: {eco} - {date}"
 
-#: orologic_modules/lichess_profiler.py:588
+#: orologic_modules/lichess_profiler.py:592
 msgid "Pagina Precedente"
 msgstr "Previous page"
 
-#: orologic_modules/lichess_profiler.py:590
+#: orologic_modules/lichess_profiler.py:594
 msgid "Pagina Successiva"
 msgstr "Next page"
 
-#: orologic_modules/lichess_profiler.py:595
+#: orologic_modules/lichess_profiler.py:599
 #, python-brace-format
 msgid "Partite Trovate (Pagina {c}/{t})"
 msgstr "Games Found (Page {c}/{t})"
 
-#: orologic_modules/lichess_profiler.py:604
+#: orologic_modules/lichess_profiler.py:608
 msgid ""
 "\n"
 "Scegli una partita (numero) o naviga: "
@@ -8064,7 +8073,7 @@ msgstr ""
 "\n"
 "Choose a game (number) or browse: "
 
-#: orologic_modules/lichess_profiler.py:625
+#: orologic_modules/lichess_profiler.py:629
 msgid ""
 "\n"
 "Il PGN della partita e' stato copiato negli appunti!"
@@ -8072,43 +8081,43 @@ msgstr ""
 "\n"
 "The game's PGN has been copied to the clipboard!"
 
-#: orologic_modules/lichess_profiler.py:633
+#: orologic_modules/lichess_profiler.py:637
 msgid "Vuoi aprirla in Easyfish? (INVIO per si', ESC per no): "
 msgstr "Do you want to open it in Easyfish? (ENTER for yes, ESC for no): "
 
-#: orologic_modules/lichess_profiler.py:654
+#: orologic_modules/lichess_profiler.py:658
 msgid "Leggi profilo dettagliato"
 msgstr "Read detailed profile"
 
-#: orologic_modules/lichess_profiler.py:655
+#: orologic_modules/lichess_profiler.py:659
 msgid "Invia un messaggio"
 msgstr "Send a message"
 
-#: orologic_modules/lichess_profiler.py:656
+#: orologic_modules/lichess_profiler.py:660
 msgid "Sfida a una partita"
 msgstr "Challenge to a game"
 
-#: orologic_modules/lichess_profiler.py:657
+#: orologic_modules/lichess_profiler.py:661
 msgid "Cerca e scarica partite"
 msgstr "Search and download games"
 
-#: orologic_modules/lichess_profiler.py:658
+#: orologic_modules/lichess_profiler.py:662
 msgid "Copia URL partite e vai a Ricerca PGN"
 msgstr "Copy game URLs and go to PGN Search"
 
-#: orologic_modules/lichess_profiler.py:660
+#: orologic_modules/lichess_profiler.py:664
 msgid "Segnala giocatore agli admin"
 msgstr "Report player to admins"
 
-#: orologic_modules/lichess_profiler.py:664
+#: orologic_modules/lichess_profiler.py:668
 msgid "Smetti di seguire"
 msgstr "Unfollow"
 
-#: orologic_modules/lichess_profiler.py:666
+#: orologic_modules/lichess_profiler.py:670
 msgid "Segui giocatore"
 msgstr "Follow player"
 
-#: orologic_modules/lichess_profiler.py:674
+#: orologic_modules/lichess_profiler.py:678
 #, python-brace-format
 msgid ""
 "\n"
@@ -8117,7 +8126,7 @@ msgstr ""
 "\n"
 "Actions for {u}: "
 
-#: orologic_modules/lichess_profiler.py:708
+#: orologic_modules/lichess_profiler.py:712
 #, python-brace-format
 msgid ""
 "\n"
@@ -8126,11 +8135,11 @@ msgstr ""
 "\n"
 "{u} PGN download URL copied to clipboard!"
 
-#: orologic_modules/lichess_profiler.py:712
+#: orologic_modules/lichess_profiler.py:716
 msgid "Passaggio a Ricerca PGN..."
 msgstr "Switching to PGN Search..."
 
-#: orologic_modules/lichess_profiler.py:728
+#: orologic_modules/lichess_profiler.py:732
 msgid "RICERCA GIOCATORE (PROFILATORE)"
 msgstr "PLAYER SEARCH (PROFILER)"
 

@@ -27,6 +27,7 @@ non carica.
 
 import codecs
 import contextlib
+import http.client
 import io
 import os
 import re
@@ -115,7 +116,16 @@ def _scarica(indirizzo, righe, avanzamento=None, fermato=None):
             if fermato is not None and fermato():
                 righe.append(pulita(_("Scaricamento interrotto dall'utente. Elaborazione delle partite caricate finora...")))
                 break
-            chunk = resp.read(pgn_search.BLOCCO)
+            # Un errore di rete a meta' tiene quello che e' arrivato, come
+            # Esc: prima si buttavano tutti i blocchi (R64). Senza niente
+            # arrivato, l'errore sale come prima.
+            try:
+                chunk = resp.read(pgn_search.BLOCCO)
+            except (OSError, http.client.HTTPException) as errore:
+                if not data:
+                    raise
+                righe.append(pulita(_("Scaricamento interrotto dalla rete: {motivo}. Elaborazione delle partite caricate finora...").format(motivo=errore)))
+                break
             if not chunk:
                 break
             data.append(chunk)

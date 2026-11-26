@@ -2,6 +2,7 @@
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
 import datetime
+import http.client
 import io
 import json
 import os
@@ -495,7 +496,10 @@ def download_games(username, token):
                     )
                     sys.stdout.flush()
 
-    except OSError as e:
+    # Anche gli errori del protocollo, come una risposta troncata: le
+    # partite arrivate restano, e il file si dice parziale (R64).
+    except (OSError, http.client.HTTPException) as e:
+        interrotto = True
         print(_("Scaricamento interrotto dalla rete: {e}").format(e=e))
 
     sys.stdout.write(

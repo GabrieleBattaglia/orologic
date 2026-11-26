@@ -114,3 +114,27 @@ def test_ripara_prende_il_result_dal_segno_in_fondo(tmp_path):
     assert "Result" in archivio.schede[0].problemi["intestazioni"]
     cambi, _tolte, _conti = archivio_pgn.ripara(archivio, [0], {"intestazioni"})
     assert '[Result "1-0"]' in cambi[0]
+
+
+def test_un_errore_di_rete_a_meta_tiene_le_partite_arrivate(monkeypatch):
+    """R64: un errore di rete a meta' scaricamento buttava tutti i blocchi
+    arrivati, mentre Esc li teneva."""
+    import contextlib
+    import http.client
+
+    from orologic_modules import pgn_search
+
+    class Risposta:
+        def __init__(self):
+            self.blocchi = [b'[Event "A"]\n[Result "*"]\n\n1. e4 *\n\n']
+
+        def read(self, _quanto):
+            if self.blocchi:
+                return self.blocchi.pop()
+            raise http.client.IncompleteRead(b"")
+
+    monkeypatch.setattr(pgn_search, "_apri_indirizzo", lambda indirizzo: contextlib.nullcontext(Risposta()))
+    righe = []
+    dati = archivio_pgn._scarica("https://lichess.org/x.pgn", righe)
+    assert dati.startswith(b'[Event "A"]')
+    assert righe[-1].startswith("Scaricamento interrotto dalla rete")
