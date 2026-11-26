@@ -215,7 +215,8 @@ def EditLocalization():
             # Suono di conferma standard
             nota_del_nome(i, num_items)
     arpeggio_dei_nomi()
-    storage.SetValue("localization", l10n_config)
+    # Solo le differenze dalla lingua del momento (R33).
+    storage.SetValue("localization", localizzazione.differenze(l10n_config))
     localizzazione.ricarica()
     print(_("\nImpostazioni di lingua salvate con successo!"))
 

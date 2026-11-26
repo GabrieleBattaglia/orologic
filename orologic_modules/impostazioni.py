@@ -551,7 +551,7 @@ class Impostazioni:
         for parte in chiave[:-1]:
             sopra = sopra.setdefault(parte, {})
         sopra[chiave[-1]] = nuovo
-        storage.SetValue("localization", nomi)
+        storage.SetValue("localization", localizzazione.differenze(nomi))
         localizzazione.ricarica()
 
     # Il motore.

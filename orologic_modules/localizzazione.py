@@ -87,6 +87,24 @@ def predefinito():
     }
 
 
+def differenze(dizionario, base=None):
+    """Le sole voci di dizionario diverse da quelle di partenza nella lingua
+    del momento. Prima si salvavano tutti i termini, e passando a un'altra
+    lingua pezzi, colonne e giudizi restavano nella vecchia per sempre
+    (R33)."""
+    if base is None:
+        base = predefinito()
+    diverse = {}
+    for chiave, valore in dizionario.items():
+        if isinstance(valore, dict) and isinstance(base.get(chiave), dict):
+            sotto = differenze(valore, base[chiave])
+            if sotto:
+                diverse[chiave] = sotto
+        elif base.get(chiave) != valore:
+            diverse[chiave] = valore
+    return diverse
+
+
 def unisci(base, personalizzazioni):
     """Sovrappone al dizionario di partenza le scelte dell'utente."""
     for chiave, valore in personalizzazioni.items():

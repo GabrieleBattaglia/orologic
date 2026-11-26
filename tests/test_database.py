@@ -131,3 +131,15 @@ def test_la_lettura_silenziosa_mette_da_parte_gli_avvisi(database, capsys):
     database.write_text("{ guasto", encoding="utf-8")
     storage.LoadDB()
     assert "non e' leggibile" in capsys.readouterr().out
+
+
+def test_i_nomi_salvati_sono_solo_le_differenze():
+    """R33: cambiando un nome si salvavano tutti i termini nella lingua del
+    momento, che restavano anche passando a un'altra lingua."""
+    from orologic_modules import localizzazione
+
+    nomi = localizzazione.predefinito()
+    nomi["pieces"]["rook"]["name"] = "rocca"
+    nomi["columns"]["a"] = "Alfa"
+    assert localizzazione.differenze(nomi) == {"pieces": {"rook": {"name": "rocca"}}, "columns": {"a": "Alfa"}}
+    assert localizzazione.differenze(localizzazione.predefinito()) == {}
