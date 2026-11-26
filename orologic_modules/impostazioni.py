@@ -699,6 +699,11 @@ class Impostazioni:
                     db["engine_config"] = cfg
 
                 storage.UpdateDB(modifica)
+            # Se intanto il motore e' ripartito, per una partita o
+            # un'analisi, non gli si chiude sotto (R32).
+            if engine.ENGINE is not None or self.finestra.motore_in_uso():
+                print(_("Stockfish e' pronto: il motore in uso resta acceso, e quello nuovo parte la prossima volta che il motore si avvia."))
+                return
             self._riavvia_il_motore()
 
         self.in_disparte(lavoro)

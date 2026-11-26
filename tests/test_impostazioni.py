@@ -313,3 +313,21 @@ def test_le_righe_dell_area_principale(gestore):
         assert finestra._taglia_il_registro() == 0
     finally:
         finestra.righe = di_prima
+
+
+def test_a_scaricamento_finito_il_motore_in_uso_non_si_riavvia(gestore, monkeypatch, capsys):
+    """R32: uscendo dalle impostazioni e cominciando una partita durante lo
+    scaricamento, il motore le veniva chiuso sotto."""
+    from orologic_modules import stockfish_installer
+
+    def scarica():
+        gestore.motore.append("scaricato")
+        # Intanto comincia una partita.
+        monkeypatch.setattr(gestore.finestra, "motore_in_uso", lambda: True)
+        return None, None
+
+    monkeypatch.setattr(stockfish_installer, "DownloadAndInstallEngine", scarica)
+    gestore.cambia_il_motore("scarica", None)
+    gestore.lavoro.join(5)
+    assert gestore.motore == ["chiuso", "scaricato"]
+    assert "il motore in uso resta acceso" in capsys.readouterr().out
