@@ -1124,6 +1124,14 @@ def fetch_user_profile(username, token=None):
     return dati
 
 
+def id_della_partita(indirizzo):
+    """L'id di una partita da un suo indirizzo, come
+    https://lichess.org/ID/black: il primo pezzo dopo lichess.org, di otto
+    caratteri. Il campo playing di Lichess finisce col colore, e l'ultimo
+    pezzo dava white o black al posto dell'id (R22)."""
+    return indirizzo.split("lichess.org/")[-1].split("/")[0].split("?")[0].split("#")[0][:8]
+
+
 def watch_player(username, token):
     import sys
 
@@ -1132,7 +1140,7 @@ def watch_player(username, token):
     if profile:
         if "playing" in profile:
             game_url = profile["playing"]
-            game_id = game_url.split("/")[-1][:8]
+            game_id = id_della_partita(game_url)
             lichess_board.spectate_game(game_id, token)
             return True
         else:
@@ -1181,7 +1189,7 @@ def watch_player(username, token):
                     profile = fetch_user_profile(username, token)
                     if profile and "playing" in profile:
                         game_url = profile["playing"]
-                        game_id = game_url.split("/")[-1][:8]
+                        game_id = id_della_partita(game_url)
                         sys.stdout.write("\n")
                         print(_("Partita iniziata! Connessione in corso..."))
                         lichess_board.spectate_game(game_id, token)
@@ -1230,8 +1238,7 @@ def menu_guarda(db):
                 username = val.split("lichess.org/@/")[-1].split("/")[0]
                 watch_player(username, token)
             elif "lichess.org/" in val:
-                val = val.split("lichess.org/")[-1].split("/")[0][:8]
-                lichess_board.spectate_game(val, token)
+                lichess_board.spectate_game(id_della_partita(val), token)
             else:
                 lichess_board.spectate_game(val, token)
 
@@ -1291,7 +1298,7 @@ def menu_guarda(db):
                 )
                 if "playing" in f_obj:
                     game_url = f_obj["playing"]
-                    game_id = game_url.split("/")[-1][:8]
+                    game_id = id_della_partita(game_url)
                     lichess_board.spectate_game(game_id, token)
                 else:
                     watch_player(amico_scelto, token)

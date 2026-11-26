@@ -54,3 +54,15 @@ def test_il_punto_b_del_puzzle_legge_la_scacchiera_nuda(monkeypatch):
     with contextlib.redirect_stdout(testo):
         assert lichess_app.handle_exploration_command(".b", chess.Board())
     assert str(chess.Board()) in testo.getvalue()
+
+
+@pytest.mark.parametrize(
+    "indirizzo",
+    ["https://lichess.org/AbCd1234/black", "https://lichess.org/AbCd1234", "https://lichess.org/AbCd1234wxyz/white", "lichess.org/AbCd1234?x=1"],
+)
+def test_l_id_della_partita_dal_campo_playing(indirizzo):
+    """R22: il campo playing di Lichess finisce col colore, e l'id si
+    prendeva dall'ultimo pezzo."""
+    from orologic_modules import lichess_app
+
+    assert lichess_app.id_della_partita(indirizzo) == "AbCd1234"
