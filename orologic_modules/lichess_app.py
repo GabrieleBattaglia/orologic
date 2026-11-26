@@ -1865,6 +1865,22 @@ def seek_game(token, params_dict):
     if params_dict.get("rating_range"):
         payload["ratingRange"] = params_dict["rating_range"]
 
+    if "days" in payload:
+        # Per corrispondenza la richiesta non e' un flusso: Lichess risponde
+        # subito e la tiene attiva finche' qualcuno non la accetta. Prima il
+        # ciclo la ripubblicava ogni secondo, con centinaia di richieste,
+        # il blocco per troppe richieste e piu' seek aperti (R23).
+        riuscito, errore = rete.invia("https://lichess.org/api/board/seek", token=token, dati=payload)
+        if not riuscito:
+            print(_("Ricerca interrotta. {motivo}").format(motivo=errore))
+            return None
+        print(
+            _(
+                "Richiesta per corrispondenza pubblicata: resta attiva su Lichess finche' qualcuno non la accetta, e la partita comparira' fra quelle in corso."
+            )
+        )
+        return None
+
     stop_seek = threading.Event()
     problemi = []
 

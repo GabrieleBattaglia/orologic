@@ -66,3 +66,17 @@ def test_l_id_della_partita_dal_campo_playing(indirizzo):
     from orologic_modules import lichess_app
 
     assert lichess_app.id_della_partita(indirizzo) == "AbCd1234"
+
+
+def test_la_richiesta_per_corrispondenza_si_manda_una_volta(monkeypatch, capsys):
+    """R23: la richiesta di avversario per corrispondenza non e' un flusso,
+    e il ciclo la ripubblicava ogni secondo."""
+    from orologic_modules import lichess_app
+
+    inviate = []
+    monkeypatch.setattr(lichess_app.rete, "invia", lambda url, **k: inviate.append((url, k["dati"])) or (True, None))
+    monkeypatch.setattr(lichess_app.rete, "apri", lambda *a, **k: pytest.fail("nessun flusso per corrispondenza"))
+    parametri = {"color": "random", "variant": "standard", "rated": False, "clock_limit": None, "clock_increment": None, "days": 3}
+    assert lichess_app.seek_game("token", parametri) is None
+    assert len(inviate) == 1 and inviate[0][1]["days"] == 3
+    assert "corrispondenza pubblicata" in capsys.readouterr().out
