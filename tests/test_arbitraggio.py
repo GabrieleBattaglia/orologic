@@ -115,3 +115,30 @@ def test_il_q_senza_mosse_nella_pila_lo_dice(monkeypatch):
     stato.paused = True
     assert game_flow.annulla_ultima_mossa(stato) is False
     assert stato.move_history == ["e4"]
+
+
+def test_la_ripresa_mette_da_parte_il_file_rotto_e_non_cancella_quello_buono(tmp_path, monkeypatch):
+    """Rilievo R5 della revisione 2: un file di ripresa che non si legge si
+    mette da parte; un errore della partita ripresa non lo cancella piu'."""
+    import json
+
+    import pytest
+
+    import orologic
+
+    rotto = tmp_path / "autosave.json"
+    rotto.write_text("{ rotto", encoding="utf-8")
+    orologic.riprendi_dal_salvataggio(str(rotto))
+    assert not rotto.exists()
+    assert [percorso.name.startswith("autosave.json.danneggiato-") for percorso in tmp_path.iterdir()] == [True]
+    buono = tmp_path / "buono.json"
+    buono.write_text(json.dumps({"qualcosa": 1}), encoding="utf-8")
+    monkeypatch.setattr(game_flow, "prepara_la_ripresa", lambda _dati: ("stato", None, False))
+
+    def partita_che_cade(*_ripresa):
+        raise RuntimeError("errore della partita")
+
+    monkeypatch.setattr(game_flow, "gioca_la_ripresa", partita_che_cade)
+    with pytest.raises(RuntimeError):
+        orologic.riprendi_dal_salvataggio(str(buono))
+    assert buono.exists()

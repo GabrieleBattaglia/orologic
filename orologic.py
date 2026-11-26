@@ -253,6 +253,28 @@ def menu_impostazioni():
             ui.RegolaVolume()
 
 
+def riprendi_dal_salvataggio(percorso):
+    """La partita in sospeso del salvataggio automatico, letta da percorso,
+    ricostruita e giocata."""
+    # Nel try solo la lettura e la ricostruzione: un errore della
+    # partita ripresa non e' un file illeggibile, e non deve
+    # cancellarlo (rilievo R5 della revisione 2).
+    try:
+        with open(percorso, encoding="utf-8") as f:
+            dati_partita = json.load(f)
+        ripresa = game_flow.prepara_la_ripresa(dati_partita)
+    # Il file di ripresa puo' essere di una versione precedente o
+    # essere stato scritto a meta': si dice perche' e lo si mette da
+    # parte, invece di non far partire il programma o di perderlo.
+    except Exception as e:  # noqa: BLE001
+        print(_("Impossibile ripristinare la partita: {e}").format(e=e))
+        copia = storage.metti_da_parte(percorso)
+        if copia:
+            print(_("Il file di ripresa e' stato messo da parte: {copia}").format(copia=copia))
+    else:
+        game_flow.gioca_la_ripresa(*ripresa)
+
+
 def _voci_del_menu_principale():
     """Le voci del menu principale; nella finestra anche archivi, PGN
     gestione archivi con pgn-extract (issue 74), e aperture, l'albero delle
@@ -353,19 +375,7 @@ def Main():
                 "E' stata rilevata una partita di arbitraggio in sospeso. Desideri riprenderla? (INVIO per si', ESC per no): "
             )
         ):
-            try:
-                with open(autosave_file_path, encoding="utf-8") as f:
-                    dati_partita = json.load(f)
-                game_flow.RiprendiPartita(dati_partita)
-            # Il file di ripresa puo' essere di una versione precedente o
-            # essere stato scritto a meta': in ogni caso si dice perche' e
-            # si riparte puliti, invece di non far partire il programma.
-            except Exception as e:  # noqa: BLE001
-                print(_("Impossibile ripristinare la partita: {e}").format(e=e))
-                try:
-                    os.remove(autosave_file_path)
-                except OSError:
-                    pass
+            riprendi_dal_salvataggio(autosave_file_path)
         else:
             try:
                 os.remove(autosave_file_path)

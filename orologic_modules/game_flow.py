@@ -49,6 +49,16 @@ def scacchiera_ripresa(pgn_game, fen_salvato, chess960=False):
 
 
 def RiprendiPartita(dati_partita):
+    """La partita del salvataggio automatico: prima si ricostruisce, poi si
+    gioca."""
+    gioca_la_ripresa(*prepara_la_ripresa(dati_partita))
+
+
+def prepara_la_ripresa(dati_partita):
+    """Lo stato della partita ripresa, dal salvataggio automatico:
+    restituisce (game_state, eco_database, autosave_is_on). Un errore qui
+    vuol dire un file di ripresa che non si legge; quelli della partita
+    vengono dopo, in gioca_la_ripresa (rilievo R5 della revisione 2)."""
     print(_("Ricostruzione dello stato della partita..."))
     game_state = board_utils.GameState(dati_partita["clock_config"])
     game_state.vista_fermabile = True
@@ -142,6 +152,11 @@ def RiprendiPartita(dati_partita):
         else game_state.black_player
     )
     print(_("Tocca a: {player}").format(player=tocca_a_player))
+    return game_state, eco_database, autosave_is_on
+
+
+def gioca_la_ripresa(game_state, eco_database, autosave_is_on):
+    """La partita ripresa, dal punto in cui era rimasta, fino alla fine."""
     last_valid_eco_entry = _loop_principale_partita(
         game_state, eco_database, autosave_is_on
     )
