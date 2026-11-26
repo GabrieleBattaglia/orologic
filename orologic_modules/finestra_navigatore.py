@@ -32,7 +32,8 @@ def analizza(board):
     """L'analisi della posizione col motore di Orologic: (righe, forma
     verbosa o None, riga della prima linea o None); le prove la
     sostituiscono."""
-    analisi, righe = analysis_utils.analizza(board, orologic_engine.ENGINE, orologic_engine.analysis_time, orologic_engine.multipv)
+    # Il motore vivo, che riparte se e' morto (R41).
+    analisi, righe = analysis_utils.analizza(board, orologic_engine.MOTORE, orologic_engine.analysis_time, orologic_engine.multipv)
     if not analisi:
         return righe, None, None
     return (righe, *analysis_utils.dettagli_della_lettura(board, analisi, righe))
@@ -194,9 +195,10 @@ class Navigatore(wx.Dialog):
         self.filo.start()
 
     def _analizzata(self, lettura):
-        self.filo = None
+        # A navigatore chiuso l'analisi arrivata si scarta.
         if not self:
             return
+        self.filo = None
         righe, verbosa, inizio = lettura
         dialoghi.da_leggere(self, _("Analisi"), righe, verbosa, inizio)
         self.albero.SetFocus()
@@ -218,8 +220,9 @@ class Navigatore(wx.Dialog):
 def naviga(genitore, game, nodo, chiedi_conferma, chiedi_valore, annuncia):
     """Il navigatore aperto su nodo: (mossa dove andare o None, vero se la
     partita e' cambiata); le prove lo sostituiscono."""
+    # Nessuna attesa dell'analisi in corso: il filo di wx l'aspettava alla
+    # chiusura, fino a mezz'ora con l'analisi lunga. Il filo finisce da
+    # solo, e il suo risultato si scarta (R85).
     with Navigatore(genitore, game, nodo, chiedi_conferma, chiedi_valore, annuncia) as dialogo:
         dialogo.ShowModal()
-        if dialogo.filo is not None:
-            dialogo.filo.join(timeout=orologic_engine.analysis_time + 5)
         return dialogo.scelto, dialogo.modificata

@@ -136,3 +136,33 @@ def test_fg_rifiuta_una_posizione_senza_re(finestra, monkeypatch):
     assert len(finestra.fornitore()["board"].move_stack) == 5
     _premi(finestra, ".\r")
     assert pompa(lambda: not finestra.nucleo.is_alive())
+
+
+def test_chiudere_il_navigatore_non_aspetta_l_analisi(finestra, monkeypatch):
+    """R85: chiudendo il navigatore mentre Analizza lavora, il filo della
+    finestra aspettava la fine dell'analisi, anche mezz'ora."""
+    import threading
+    import time
+
+    sblocca = threading.Event()
+    fili = []
+
+    def analizza_lenta(_board):
+        fili.append(threading.current_thread())
+        sblocca.wait(10)
+        return (["1. +0.30 e5"], None, None)
+
+    monkeypatch.setattr(finestra_navigatore, "analizza", analizza_lenta)
+
+    def modale(dialogo):
+        dialogo.analizza()
+        return 0
+
+    monkeypatch.setattr(finestra_navigatore.Navigatore, "ShowModal", modale)
+    game = partita()
+    inizio = time.monotonic()
+    finestra_navigatore.naviga(finestra, game, game.end(), lambda *_a: True, lambda *_a, **_k: None, lambda _righe: None)
+    assert time.monotonic() - inizio < 2
+    sblocca.set()
+    assert pompa(lambda: fili and not fili[0].is_alive())
+    pompa(lambda: False, 0.1)
