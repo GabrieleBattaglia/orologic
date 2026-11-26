@@ -19,6 +19,10 @@ li { margin-bottom: 0.3em; }
 <h1>ChangeLog di Orologic</h1>
 <h2>Versione 9</h2>
 <h3>Versione 9.5</h3>
+<h4>9.5.11 (26 novembre 2026)</h4>
+<ul>
+  <li>* [Impostazioni] Il database delle impostazioni è più robusto. Se un antivirus o un programma di sincronizzazione lo tiene un momento, Orologic riprova, e se non riesce a leggerlo non lo sostituisce più con le impostazioni predefinite: prima orologi, motore e carriera potevano sparire. Ogni salvataggio va su disco per intero e lascia una copia di riserva, orologic_db.json.bak, da cui Orologic riparte se il file si guasta; due salvataggi nello stesso momento non si pestano più i piedi.</li>
+</ul>
 <h4>9.5.10 (26 novembre 2026)</h4>
 <ul>
   <li>* [Lichess] Nel puzzle il comando .b mostra la scacchiera: prima chiudeva Orologic.</li>

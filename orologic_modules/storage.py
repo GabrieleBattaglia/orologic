@@ -1,9 +1,13 @@
 # Orologic, modulo storage: accesso al database delle impostazioni.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
+import contextlib
+import copy
 import datetime
 import json
 import os
+import tempfile
+import threading
 import time
 
 from . import config
@@ -215,36 +219,111 @@ def _salva_copia_danneggiata():
     return metti_da_parte(config.DB_FILE)
 
 
+# Il lucchetto del database: scrivono il nucleo, la finestra, con le
+# impostazioni aperte in ogni momento, e il filo del motore (R29 della
+# revisione 2, 26 novembre 2026).
+_LUCCHETTO = threading.RLock()
+# Un database che non si lascia leggere, tenuto un momento da un antivirus
+# o da un programma di sincronizzazione, si riprova prima di arrendersi (R7).
+TENTATIVI_DI_LETTURA = 10
+PAUSA_FRA_I_TENTATIVI = 0.1
+
+
+class DatabaseNonLetto(dict):
+    """I predefiniti al posto di un database che c'e' ma non si e' potuto
+    leggere, o che non si e' potuto mettere da parte: SaveDB non li scrive,
+    per non coprire il database vero. Prima un solo errore di lettura
+    metteva da parte il database buono come danneggiato, e i predefiniti
+    lo sostituivano (R7)."""
+
+
+def _predefiniti():
+    # Una copia profonda: con dict(DEFAULT_DB) gli orologi aggiunti finivano
+    # nella lista dei predefiniti stessi.
+    return copy.deepcopy(DEFAULT_DB)
+
+
+def copia_di_riserva():
+    """L'ultimo database scritto per intero, che LoadDB riprende se il file
+    vero si guasta (R30)."""
+    return config.DB_FILE + ".bak"
+
+
+def _leggi(percorso):
+    """Il contenuto JSON del file. Un errore di lettura si riprova; un JSON
+    non valido solleva ValueError subito, e un file che manca subito
+    FileNotFoundError."""
+    for tentativo in range(TENTATIVI_DI_LETTURA):
+        try:
+            with open(percorso, encoding="utf-8") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            raise
+        except OSError:
+            if tentativo == TENTATIVI_DI_LETTURA - 1:
+                raise
+            time.sleep(PAUSA_FRA_I_TENTATIVI)
+    return None
+
+
+def _dalla_riserva():
+    """Il database dell'ultima copia buona, o None."""
+    try:
+        dati = _leggi(copia_di_riserva())
+    except (OSError, ValueError):
+        return None
+    return dati if isinstance(dati, dict) else None
+
+
+def _da_danneggiato(errore):
+    """Il database da usare al posto di uno danneggiato, che va da parte."""
+    copia = _salva_copia_danneggiata()
+    print(_("Il database delle impostazioni non e' leggibile: {errore}").format(errore=errore))
+    if not copia:
+        print(_("Attenzione: non sono riuscita a metterne da parte una copia."))
+        print(_("Le modifiche non si salvano finche' il database non torna leggibile."))
+        return DatabaseNonLetto(_predefiniti())
+    print(_("Ne ho messo da parte una copia in {percorso}").format(percorso=copia))
+    riserva = _dalla_riserva()
+    if riserva is not None:
+        print(_("Riparto dall'ultima copia buona: {percorso}").format(percorso=copia_di_riserva()))
+        db, _scartati, _completati = _normalizza(riserva)
+        SaveDB(db)
+        return db
+    print(_("Riparto dalle impostazioni predefinite, gli orologi salvati non sono andati perduti nella copia."))
+    return _predefiniti()
+
+
 def LoadDB():
     """Carica il database, completando le chiavi mancanti.
 
     Un database illeggibile non viene mai perso in silenzio: viene messo da
-    parte con la data nel nome e l'utente ne viene avvisato a schermo.
+    parte con la data nel nome e l'utente ne viene avvisato a schermo; se
+    c'e', si riparte dall'ultima copia buona. Un file che c'e' ma non si
+    lascia leggere non e' danneggiato: si riprova, e se non si legge si
+    usano i predefiniti senza scriverli.
     """
+    with _LUCCHETTO:
+        return _carica()
+
+
+def _carica():
     if not os.path.exists(config.DB_FILE):
-        return dict(DEFAULT_DB)
+        return _predefiniti()
     try:
-        with open(config.DB_FILE, encoding="utf-8") as f:
-            dati = json.load(f)
-    except (OSError, ValueError) as e:
-        copia = _salva_copia_danneggiata()
-        print(
-            _("Il database delle impostazioni non e' leggibile: {errore}").format(
-                errore=e
-            )
-        )
-        if copia:
-            print(
-                _("Ne ho messo da parte una copia in {percorso}").format(percorso=copia)
-            )
-            print(
-                _(
-                    "Riparto dalle impostazioni predefinite, gli orologi salvati non sono andati perduti nella copia."
-                )
-            )
-        else:
-            print(_("Attenzione: non sono riuscita a metterne da parte una copia."))
-        return dict(DEFAULT_DB)
+        dati = _leggi(config.DB_FILE)
+    except FileNotFoundError:
+        return _predefiniti()
+    except OSError as e:
+        print(_("Il database delle impostazioni non si lascia leggere: {errore}").format(errore=e))
+        print(_("Le modifiche non si salvano finche' il database non torna leggibile."))
+        return DatabaseNonLetto(_predefiniti())
+    except ValueError as e:
+        return _da_danneggiato(e)
+    # Un JSON valido che non e' un oggetto e' un database guasto come gli
+    # altri: prima i predefiniti lo sostituivano senza un avviso (R30).
+    if not isinstance(dati, dict):
+        return _da_danneggiato(_("non contiene le impostazioni"))
     db, scartati, completati = _normalizza(dati)
     if scartati:
         print(
@@ -268,34 +347,45 @@ def scrivi_json(percorso, dati, indent=4):
     mai un file troncato. In caso di guai il temporaneo viene rimosso e
     l'errore risale al chiamante, che sa cosa dire all'utente.
     """
-    temporaneo = percorso + ".tmp"
+    cartella = os.path.dirname(percorso)
+    if cartella:
+        os.makedirs(cartella, exist_ok=True)
+    # Un temporaneo col suo nome a ogni scrittura: con un nome fisso due
+    # fili che salvavano insieme si scambiavano il file (R29).
+    descrittore, temporaneo = tempfile.mkstemp(prefix=os.path.basename(percorso) + ".", suffix=".tmp", dir=cartella or None)
     try:
-        cartella = os.path.dirname(percorso)
-        if cartella:
-            os.makedirs(cartella, exist_ok=True)
-        with open(temporaneo, "w", encoding="utf-8") as f:
+        with os.fdopen(descrittore, "w", encoding="utf-8") as f:
             json.dump(dati, f, indent=indent, ensure_ascii=False)
+            # Su disco prima della sostituzione: dopo uno spegnimento brusco
+            # il file non resta vuoto (R30).
+            f.flush()
+            os.fsync(f.fileno())
         os.replace(temporaneo, percorso)
     except (OSError, TypeError, ValueError):
-        try:
-            if os.path.exists(temporaneo):
-                os.remove(temporaneo)
-        except OSError:
-            pass
+        with contextlib.suppress(OSError):
+            os.remove(temporaneo)
         raise
 
 
 def SaveDB(db):
     """Salva il database in modo atomico.
 
-    Restituisce vero se il salvataggio e' andato a buon fine.
+    Restituisce vero se il salvataggio e' andato a buon fine. Il database
+    salvato va anche nella copia di riserva (R30). I predefiniti dati al
+    posto di un database che non si e' letto non si scrivono (R7).
     """
-    try:
-        scrivi_json(config.DB_FILE, db)
-        return True
-    except (OSError, TypeError, ValueError) as e:
-        print(_("Errore nel salvataggio del database: {errore}").format(errore=e))
+    if isinstance(db, DatabaseNonLetto):
+        print(_("Modifica non salvata: il database delle impostazioni non si e' potuto leggere."))
         return False
+    with _LUCCHETTO:
+        try:
+            scrivi_json(config.DB_FILE, db)
+        except (OSError, TypeError, ValueError) as e:
+            print(_("Errore nel salvataggio del database: {errore}").format(errore=e))
+            return False
+        with contextlib.suppress(OSError, TypeError, ValueError):
+            scrivi_json(copia_di_riserva(), db)
+        return True
 
 
 def UpdateDB(modifica):
@@ -307,12 +397,16 @@ def UpdateDB(modifica):
     La funzione ricevuta modifica il dizionario sul posto; se restituisce un
     dizionario, viene usato quello. Restituisce il database aggiornato.
     """
-    db = LoadDB()
-    risultato = modifica(db)
-    if isinstance(risultato, dict):
-        db = risultato
-    SaveDB(db)
-    return db
+    with _LUCCHETTO:
+        db = LoadDB()
+        # LoadDB ha gia' detto che il database non si e' letto.
+        non_letto = isinstance(db, DatabaseNonLetto)
+        risultato = modifica(db)
+        if isinstance(risultato, dict):
+            db = risultato
+        if not non_letto:
+            SaveDB(db)
+        return db
 
 
 def SetValue(chiave, valore):
