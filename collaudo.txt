@@ -2,20 +2,24 @@ Collaudo di Orologic 9.5.93, revisione 2: solo le prove che servono la tua tasti
 Prova 1, rilievo R86. Prima: una partita in arbitraggio nella finestra, al prompt delle mosse.
 Passo 1: scrivi una mossa qualunque, premi Ctrl+Backspace e poi Invio.
 Domanda 1: la parola sparisce dallo schermo? Che cosa dice Orologic di aver ricevuto?
+* dice:
+1. Cavallo in firenze 3 0% in 4 secondi.
+Messaggi:
+Testb: Cavallo in firenze 3
+Apertura rilevata: A04 - Reti opening
+Mossa '' non valida. Alternative:
+Destinazione non riconosciuta.
+1. Nf3  1:44:56 0% < +00:40 1:44:15 1% 0 0
+* ctrl+backspace fa sparire Nf3, poi su invio dice il messaggio che ti ho copiato.
+
 Prova 2, rilievo R89. Prima: nelle impostazioni la destinazione degli annunci sul solo braille; chiudi e riavvia Orologic.
 Domanda 2: sulla barra passano tutte le righe del benvenuto, o resta solo l'ultima?
+* l'ultima
+
 Prova 3, rilievo R88. Prima: in una partita, il menu dei comandi aperto con Backspace.
-Passo 3: vai su una voce che apre un elenco di valori e tieni premuto Invio per un secondo.
-Domanda 3: il primo valore viene scelto da solo?
+* backspace cancella l'ultimo carattere, non apre i menu. Ci vado con Tab
+
 Prova 4, rilievo R90. Passo 4: lancia dalla finestra un'analisi automatica di una partita breve.
-Domanda 4: NVDA annuncia la riga Semimossa a ogni semimossa? La barra la mostra?
-Prova 5, rilievo R77. Prima: iscriviti a un torneo arena di Lichess che deve ancora cominciare, e resta nell'attesa.
-Domanda 5: mentre i secondi scorrono NVDA tace e la barra li segue? Si sente la riga quando cambia qualcosa oltre ai secondi?
-Prova 6, rilievi R72, R18 e R19. Prima: una partita su Lichess contro un amico, o contro un tuo secondo account.
-Passo 6a: fatti offrire la patta dall'avversario.
-Domanda 6a: senti il suono nuovo dell'offerta, tre note da sinistra a destra, e la riga con draw e nodraw? Il suono ti piace?
-Passo 6b: stacca la rete e scrivi una mossa.
-Domanda 6b: senti il suono dell'invio fallito, tre note che scendono, e la riga che dice che la mossa non è arrivata? Il suono ti piace?
-Passo 6c: riattacca la rete entro un minuto.
-Domanda 6c: Orologic si ricollega da solo, e la partita continua dalla posizione giusta?
-Esito:
+* La cosa strana è che mi salta solo una ply riconosciuta ma credo che l'aertura sia un po più lunga. Verifica che il riconoscimento mosse da saltare in OAA funzioni.
+
+* Per le prove sui tornei di lichess, dalle per ok, le farò più avanti.
