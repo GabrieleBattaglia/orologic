@@ -1936,6 +1936,10 @@ def seek_game(token, params_dict):
             if not stop_seek.is_set():
                 time.sleep(1)
 
+    # Le partite gia' attive si leggono prima che la richiesta parta: dopo,
+    # un abbinamento immediato finiva fra quelle di prima, e non si
+    # riconosceva mai (R74).
+    initial_games = {g["gameId"] for g in get_active_games(token, usa_cache=False)}
     t = threading.Thread(target=do_seek, daemon=True)
     t.start()
 
@@ -1947,8 +1951,6 @@ def seek_game(token, params_dict):
     start_time = time.time()
     last_poll = start_time
     last_print = start_time
-
-    initial_games = {g["gameId"] for g in get_active_games(token, usa_cache=False)}
 
     while t.is_alive() or not stop_seek.is_set():
         if problemi:
