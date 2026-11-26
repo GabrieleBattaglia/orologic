@@ -854,7 +854,10 @@ def _loop_principale_partita(game_state, eco_database, autosave_is_on):
                         new_node.comment = existing_comment + " " + undo_comment
                     else:
                         new_node.comment = undo_comment
-                    del game_state.cancelled_san_moves
+                    # Si svuota, non si cancella: il .q dopo lo usa ancora
+                    # (rilievo R3 della revisione 2: col del il secondo .q
+                    # della partita sollevava AttributeError).
+                    game_state.cancelled_san_moves = []
                 game_state.pgn_node = new_node
                 if eco_database:
                     current_board = game_state.board

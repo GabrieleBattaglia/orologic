@@ -52,3 +52,33 @@ def test_un_arbitraggio_vero_nel_cruscotto(finestra, monkeypatch):
     assert righe[-1] == ("prompt", "3. Bb5 ")
     detti = [testo for testo, _interrompi in finestra.sintesi.detti]
     assert any(testo.startswith("Bianco: alfiere in ") for testo in detti)
+
+
+def _scrivi(finestra, testo):
+    for tasto in testo + "\r":
+        finestra.faccia.premi(tasto)
+    _fermo(finestra)
+
+
+def _arbitraggio_avviato(finestra, monkeypatch):
+    monkeypatch.setattr(engine, "InitEngine", lambda: False)
+    orologio = {"name": "Prova", "same_time": True, "phases": [{"white_time": 300, "black_time": 300, "white_inc": 0, "black_inc": 0, "moves": 0}], "alarms": []}
+    finestra.avvia_il_nucleo(lambda: game_flow.StartGame(orologio))
+    for _domanda in range(15):
+        _fermo(finestra)
+        if finestra.fornitore is not None:
+            break
+        finestra.faccia.premi("\r")
+    assert finestra.fornitore is not None
+    _fermo(finestra, 0.6)
+
+
+def test_due_annullamenti_nella_stessa_partita(finestra, monkeypatch):
+    """Rilievo R3 della revisione 2: dopo il primo .q e una mossa nuova, che
+    scrive nel PGN il commento delle mosse annullate, il secondo .q faceva
+    cadere la partita."""
+    _arbitraggio_avviato(finestra, monkeypatch)
+    for passo in ("e4", "e5", ".p", ".q", ".p", "e6", ".p", ".q"):
+        _scrivi(finestra, passo)
+    assert finestra.nucleo.is_alive()
+    assert [mossa.uci() for mossa in finestra.fornitore()["board"].move_stack] == ["e2e4"]
