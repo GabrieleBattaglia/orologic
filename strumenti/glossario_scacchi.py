@@ -79,7 +79,9 @@ GLOSSARIO = {
 LINGUE = ("en", "es", "fr", "pt")
 
 
-def sistema(radice="locales", prova=False):
+def sistema(radice=None, prova=False):
+    # locales accanto allo strumento, da qualunque cartella lo si lanci (R102).
+    radice = radice or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "locales")
     totale = 0
     for posizione, lingua in enumerate(LINGUE):
         percorso = os.path.join(radice, lingua, "LC_MESSAGES", "messages.po")

@@ -52,6 +52,9 @@ a = Analysis(
         ('resources/readme.htm', 'resources'),
         ('resources/changelog.htm', 'resources'),
         ('resources/eco.pgn', 'resources'),
+        # La licenza viaggia col programma, anche nello zip di chi non usa
+        # l'installatore (rilievo R102 della revisione 2).
+        ('LICENSE', '.'),
         # Il componente di NVDA per Orologic, dalla 9.1.0: la voce delle
         # impostazioni ne fa il pacchetto e lo apre.
         ('nvda_addon/manifest.ini', 'nvda_addon'),
@@ -125,7 +128,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     # Dalla 9.0.0 Orologic parte nella finestra: senza console. Con --cli la
     # console se la apre da se', avvio.apri_la_console.
     console=False,
@@ -142,7 +145,7 @@ coll = COLLECT(
     a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     name='orologic',
 )

@@ -78,7 +78,8 @@ def controlla(percorso):
 
 
 def main():
-    radice = sys.argv[1] if len(sys.argv) > 1 else "locales"
+    # locales accanto allo strumento, da qualunque cartella lo si lanci (R102).
+    radice = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "locales")
     if not os.path.isdir(radice):
         print(f"Cartella non trovata: {radice}")
         return 1
