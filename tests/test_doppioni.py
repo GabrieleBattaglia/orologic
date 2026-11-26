@@ -65,3 +65,30 @@ def test_la_continuazione_si_ferma_su_una_mossa_impossibile(tmp_path):
     assert archivio.continuazione(chess.Board(), mosse, 0) == "1. e4 e5"
     voce = archivio_pgn.voce_del_ramo(archivio, chess.Board(), chess.Move.from_uci("d3d4"), [0], [], 1, {})
     assert "d3d4" in voce
+
+
+# R27: la rilettura delle partite cambiate.
+
+
+def _molte(tmp_path, quante):
+    testo = "".join(f'[Event "E{n}"]\n[White "B{n}"]\n[Black "N{n}"]\n[Result "*"]\n\n1. e4 e5 2. Nf3 *\n\n' for n in range(quante))
+    return _archivio(tmp_path, testo)
+
+
+def test_la_rilettura_tiene_le_posizioni(tmp_path):
+    archivio = _molte(tmp_path, 300)
+    cambi = {n: archivio.testo_della_partita(n).replace(f'[Event "E{n}"]', f'[Event "Nuovo {n}"]') for n in range(0, 300, 3)}
+    nuovo = archivio_pgn.riscritto(archivio, cambi, tolte={1})
+    assert len(nuovo) == 299
+    for inizio, fine, indice in nuovo.pezzi:
+        if indice is not None:
+            assert (nuovo.schede[indice].inizio, nuovo.schede[indice].fine) == (inizio, fine)
+    assert nuovo.info[0]["Event"] == "Nuovo 0" and nuovo.info[2]["Event"] == "Nuovo 3"
+    assert nuovo.testo_della_partita(2).startswith('[Event "Nuovo 3"]')
+
+
+def test_la_rilettura_si_ferma(tmp_path):
+    archivio = _molte(tmp_path, 50)
+    cambi = {n: archivio.testo_della_partita(n) for n in range(50)}
+    nuovo, righe = archivio_pgn.applica_le_modifiche(archivio, cambi, fermato=lambda: True)
+    assert nuovo is None and righe == ["Modifiche annullate: l'archivio resta com'era."]

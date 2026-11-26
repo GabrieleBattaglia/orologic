@@ -719,12 +719,14 @@ def scrivi_il_file(percorso, testo, a_capo="\n", bom=False):
     os.replace(temporaneo, percorso)
 
 
-def riscritto(archivio, cambi, tolte=()):
+def riscritto(archivio, cambi, tolte=(), avanzamento=None, fermato=None):
     """L'archivio col testo nuovo: le partite di cambi col loro testo, senza
     quelle di tolte, tutto il resto com'era. Le partite cambiate si
     rileggono; i caratteri illeggibili non ci sono piu', perche' il testo e'
     gia' decodificato e si riscrive in UTF-8. I doppioni si cercano di
-    nuovo."""
+    nuovo. avanzamento(percentuale) ogni tre secondi durante la rilettura;
+    fermato(), vero, la ferma e restituisce None, con l'archivio di prima
+    intatto (R27)."""
     parti = []
     posizione = 0
     pezzi, schede, info = [], [], []
@@ -741,7 +743,11 @@ def riscritto(archivio, cambi, tolte=()):
             continue
         pezzi.append((nuovo_inizio, posizione, len(schede)))
         if indice in cambi:
-            da_rileggere.append(len(schede))
+            # Inizio e fine si ricordano qui: prima si cercavano scorrendo
+            # i pezzi dall'inizio per ogni partita cambiata, e dopo
+            # Classifica su quarantamila partite la finestra taceva per
+            # minuti, col quadrato del numero (R27).
+            da_rileggere.append((len(schede), nuovo_inizio, posizione))
             schede.append(None)
             info.append(None)
             continue
@@ -750,8 +756,14 @@ def riscritto(archivio, cambi, tolte=()):
         schede.append(scheda)
         info.append(archivio.info[indice])
     testo = "".join(parti)
-    for nuovo in da_rileggere:
-        inizio, fine, _indice = next(pezzo for pezzo in pezzi if pezzo[2] == nuovo)
+    ultima = time.time()
+    for fatte, (nuovo, inizio, fine) in enumerate(da_rileggere):
+        if fatte % 200 == 0:
+            if fermato is not None and fermato():
+                return None
+            if avanzamento is not None and time.time() - ultima >= pgn_search.OGNI_QUANTO:
+                avanzamento(fatte * 100 // len(da_rileggere))
+                ultima = time.time()
         letta = chess.pgn.read_game(board_utils.RighePGN(testo[inizio:fine]), Visitor=_Costruttore)
         scheda, dati = _scheda(letta, inizio, fine, pgn_search._partita_da_tenere(letta[0]) == "esclusa")
         scheda.problemi = _senza(scheda.problemi, ("codifica",))
@@ -767,17 +779,20 @@ def _senza(problemi, tipi):
     return rimasti or None
 
 
-def applica_le_modifiche(archivio, cambi, tolte=(), riscrivi_comunque=False):
+def applica_le_modifiche(archivio, cambi, tolte=(), riscrivi_comunque=False, avanzamento=None, fermato=None):
     """Le modifiche nell'archivio aperto: (archivio nuovo, righe del
     resoconto). Un archivio che viene da un file le scrive nel file
     all'uscita dalla ricerca, dopo la domanda e, se la si vuole, la copia di
     sicurezza (Gabriele, collaudo del 23 novembre 2026: c'e' chi lavora su
     archivi da quattro giga, e una copia a ogni modifica sarebbe troppo).
-    riscrivi_comunque vale anche senza cambi, per i caratteri."""
+    riscrivi_comunque vale anche senza cambi, per i caratteri. avanzamento e
+    fermato come in riscritto: fermate, le modifiche non si applicano."""
     righe = []
     if not cambi and not tolte and not riscrivi_comunque:
         return archivio, righe
-    nuovo = riscritto(archivio, cambi, tolte)
+    nuovo = riscritto(archivio, cambi, tolte, avanzamento, fermato)
+    if nuovo is None:
+        return None, [_("Modifiche annullate: l'archivio resta com'era.")]
     if archivio.percorso is None:
         righe.append(_("Le modifiche restano nell'archivio aperto: per tenerle, Salva il PGN."))
     else:

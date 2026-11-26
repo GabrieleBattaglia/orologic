@@ -993,8 +993,10 @@ class FinestraRicerca(wx.Dialog):
                 righe.append(_("Le altre restano senza codice ECO: le loro mosse non si trovano in eco.pgn."))
             if senza_mosse or studio:
                 righe.append(_("Le partite senza mosse o da una posizione di studio non si classificano."))
-            nuovo, altre = archivio_pgn.applica_le_modifiche(archivio, cambi)
-            return nuovo, righe + altre
+            nuovo, altre = archivio_pgn.applica_le_modifiche(
+                archivio, cambi, avanzamento=lambda pct: avanzamento(_("Rilettura delle partite cambiate: {pct}%").format(pct=pct)), fermato=fermato
+            )
+            return nuovo, (righe if nuovo is not None else []) + altre
 
         self._lavora(_("Classificazione delle aperture in corso..."), lavoro, self._modificato)
 
@@ -1026,10 +1028,15 @@ class FinestraRicerca(wx.Dialog):
                     return
         self.ricerca.posizione = self.chiavi(voce)
 
-        def lavoro(_avanzamento, _fermato):
+        def lavoro(avanzamento, fermato):
             cambi, tolte, conti = archivio_pgn.ripara(archivio, indici, tipi)
             righe = archivio_pgn.righe_della_riparazione(conti)
-            nuovo, altre = archivio_pgn.applica_le_modifiche(archivio, cambi, tolte, riscrivi_comunque=bool(conti["codifica"]))
+            nuovo, altre = archivio_pgn.applica_le_modifiche(
+                archivio, cambi, tolte, riscrivi_comunque=bool(conti["codifica"]),
+                avanzamento=lambda pct: avanzamento(_("Rilettura delle partite cambiate: {pct}%").format(pct=pct)), fermato=fermato,
+            )
+            if nuovo is None:
+                return nuovo, altre
             return nuovo, (righe or [_("Niente da riparare.")]) + altre
 
         self._lavora(_("Riparazione in corso..."), lavoro, self._modificato)
