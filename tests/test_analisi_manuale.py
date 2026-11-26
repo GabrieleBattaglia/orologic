@@ -70,3 +70,17 @@ def test_k_senza_mosse_non_cade(finestra):
     assert finestra.nucleo.is_alive()
     _premi(finestra, ".")
     assert pompa(lambda: not finestra.nucleo.is_alive())
+
+
+def test_k_vede_le_mosse_aggiunte_con_z(finestra, monkeypatch):
+    """R131: il conto delle mosse per k si faceva una volta, all'inizio, e
+    non vedeva le mosse che z aggiunge in fondo alla linea principale."""
+    game = chess.pgn.read_game(io.StringIO('[White "A"]\n[Black "B"]\n[Result "*"]\n\n*\n'))
+    monkeypatch.setattr(engine, "CalculateBest", lambda *_a, **_k: [chess.Move.from_uci("e2e4"), chess.Move.from_uci("e7e5")])
+    finestra.avvia_il_nucleo(lambda: engine.AnalyzeGame(game))
+    assert pompa(lambda: finestra.fornitore is not None and finestra.comandi == config.ANALYSIS_COMMANDS)
+    _premi(finestra, "z")
+    assert pompa(lambda: "Variante aggiunta." in finestra.area.GetValue())
+    _premi(finestra, "k")
+    assert pompa(lambda: "(Max 1)" in finestra.area.GetValue())
+    assert "La partita non ha mosse." not in finestra.area.GetValue()

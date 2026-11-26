@@ -1,6 +1,7 @@
 # Orologic, motore: analisi assistita e analisi automatica.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
 
+import contextlib
 import datetime
 import math
 import os
@@ -377,11 +378,17 @@ def InitEngine():
     )
     if not os.path.exists(path):
         # Prima si taceva, e restava "motore non configurato" senza una
-        # spiegazione: ora lo si dice, e lo si cerca di nuovo (R49).
-        print(_("Il motore configurato non si trova piu': {p}. Lo cerco.").format(p=path))
+        # spiegazione: ora lo si dice, e lo si cerca di nuovo (R49). Una
+        # volta per sessione: le due righe tornavano a ogni avvio del
+        # motore (R131).
+        detto = path in _MOTORI_MANCANTI_DETTI
+        _MOTORI_MANCANTI_DETTI.add(path)
+        if not detto:
+            print(_("Il motore configurato non si trova piu': {p}. Lo cerco.").format(p=path))
         p, e, _unused_v = SearchForEngine()
         if not (p and e):
-            print(_("Nessun motore trovato: puoi sceglierlo dalle impostazioni."))
+            if not detto:
+                print(_("Nessun motore trovato: puoi sceglierlo dalle impostazioni."))
             ENGINE = None
             ENGINE_NAME = "Nessuno"
             return False
@@ -437,14 +444,28 @@ def forza_della_configurazione():
     forza.update(tipo="livello", valore=livello, profondita=None)
 
 
+# I motori configurati che non si trovano piu', gia' detti in questa
+# sessione (R131).
+_MOTORI_MANCANTI_DETTI = set()
+
+
 def CloseEngine():
+    """Chiude il motore: quit, e poi close comunque, che chiude il processo
+    anche quando quit non ha risposto. Prima un motore che non rispondeva
+    teneva il processo e poteva restare orfano (R131)."""
     global ENGINE
     if ENGINE:
+        motore, ENGINE = ENGINE, None
         try:
-            ENGINE.quit()
-        except (chess.engine.EngineError, chess.engine.EngineTerminatedError, OSError):
+            motore.quit()
+        except (chess.engine.EngineError, chess.engine.EngineTerminatedError, OSError, TimeoutError):
             pass
-        ENGINE = None
+        finally:
+            # close su un motore gia' chiuso non ha niente da fare; su uno
+            # che non ha risposto lo chiude. Nessun suo errore deve fermare
+            # l'uscita.
+            with contextlib.suppress(Exception):
+                motore.close()
 
 
 def interroga(board, limit, **opzioni):
@@ -458,7 +479,9 @@ def interroga(board, limit, **opzioni):
         raise chess.engine.EngineTerminatedError(_("Il motore non c'e'."))
     try:
         return ENGINE.analyse(board, limit, **opzioni)
-    except chess.engine.EngineTerminatedError:
+    # Anche il motore vivo che non risponde: prima il suo TimeoutError non
+    # lo prendeva nessuno, e i comandi e e w cadevano (R131).
+    except (chess.engine.EngineTerminatedError, TimeoutError):
         if not _riavviato():
             print(_("Il motore non riparte: niente analisi."))
             raise
@@ -467,14 +490,17 @@ def interroga(board, limit, **opzioni):
 
 def _riavviato():
     """Il motore morto si chiude e si riavvia, una volta, dicendolo: vero se
-    e' ripartito; se no ENGINE resta None."""
-    global ENGINE
+    e' ripartito; se no ENGINE resta None. Il tempo d'analisi e le linee
+    restano quelli scelti: InitEngine li rimetteva ai predefiniti (R131)."""
+    global ENGINE, analysis_time, multipv
+    tempo, linee = analysis_time, multipv
     print(_("Il motore si e' fermato: lo riavvio."))
     CloseEngine()
     ENGINE = None
     if not InitEngine() or ENGINE is None:
         ENGINE = None
         return False
+    analysis_time, multipv = tempo, linee
     return True
 
 
@@ -500,7 +526,7 @@ def gioca_la_mossa(board, limit, rimetti_la_forza=None, **opzioni):
         raise chess.engine.EngineTerminatedError(_("Il motore non c'e'."))
     try:
         return ENGINE.play(board, limit, **opzioni)
-    except chess.engine.EngineTerminatedError:
+    except (chess.engine.EngineTerminatedError, TimeoutError):
         if not _riavviato():
             print(_("Il motore non riparte: la partita si ferma."))
             raise
@@ -549,8 +575,9 @@ def _analizza_con_cache(board, linee):
     if chiave not in cache_analysis:
         try:
             cache_analysis[chiave] = interroga(board, chess.engine.Limit(time=analysis_time), multipv=linee)
-        # Il motore morto e non ripartito l'ha gia' detto interroga.
-        except chess.engine.EngineError:
+        # Il motore morto, o che non risponde, e non ripartito l'ha gia'
+        # detto interroga (R41, R131).
+        except (chess.engine.EngineError, TimeoutError):
             return None
     return cache_analysis[chiave]
 
@@ -1383,6 +1410,9 @@ def _analisi_manuale(pgn_game, is_corrected):
                 kind=1,
                 adsr=[0, 0, 100, 0],
             )
+            # Le mosse di adesso: z puo' averne aggiunte in fondo alla linea
+            # principale, e il conto fatto all'inizio non le vedeva (R131).
+            total_moves = len(list(pgn_game.mainline_moves()))
             max_m = (total_moves + 1) // 2
             # Senza mosse dgt riceveva un intervallo da 1 a 0 e cadeva (R42).
             if max_m < 1:
@@ -2206,10 +2236,12 @@ def AnalisiAutomatica(pgn_game):
     # valutava da un'altra ricerca, sulla posizione dopo, e il matto si
     # contava in due modi (Gabriele, 23 novembre 2026).
     fase = FASI[0]
+    interrotta = False
     for i, node in enumerate(mainline_nodes):
         if key(attesa=0.002) in ("\x1b", "esc"):
             Acusticator(["c3", 0.3, 0.5, config.VOLUME], kind=2)
             print(_("\nAnalisi interrotta dall'utente."))
+            interrotta = True
             break
 
         ply = i + 1
@@ -2255,6 +2287,7 @@ def AnalisiAutomatica(pgn_game):
             # saltare tutte le mosse fino a "completata" (R41).
             if ENGINE is None:
                 print(_("\nAnalisi interrotta: il motore non risponde."))
+                interrotta = True
                 break
             continue
         best_alternative = analysis_before[0]
@@ -2395,7 +2428,11 @@ def AnalisiAutomatica(pgn_game):
             }
         )
 
-    print("\n" + _("Analisi automatica completata."))
+    # Dopo un'interruzione non si dice completata (R131).
+    if interrotta:
+        print("\n" + _("Analisi automatica fermata: il PGN tiene le mosse analizzate fin qui."))
+    else:
+        print("\n" + _("Analisi automatica completata."))
     pgn_game.headers["Annotator"] = _("Orologic V{v} (Auto)").format(v=version.VERSION)
     duration = time.time() - start_time
 

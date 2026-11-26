@@ -212,3 +212,72 @@ def test_la_mossa_del_motore_morto_si_riprova_con_la_forza(monkeypatch):
     risultato = engine.gioca_la_mossa(chess.Board(), chess.engine.Limit(time=0.1), rimetti_la_forza=lambda motore: game_mode.applica_forza(motore, dict(engine.forza)))
     assert risultato.move in chess.Board().legal_moves
     assert {"UCI_Elo": 1500} in buono.configurazioni
+
+
+class SordoAlQuit:
+    """Un motore che non risponde a quit: close lo chiude comunque."""
+
+    def __init__(self):
+        self.chiuso = False
+
+    def quit(self):
+        raise TimeoutError("il motore non risponde")
+
+    def close(self):
+        self.chiuso = True
+
+
+def test_dopo_un_quit_fallito_il_motore_si_chiude_comunque(monkeypatch):
+    """R131: CloseEngine non chiamava close dopo un quit fallito, e un motore
+    che non rispondeva teneva il processo e poteva restare orfano."""
+    sordo = SordoAlQuit()
+    monkeypatch.setattr(engine, "ENGINE", sordo)
+    engine.CloseEngine()
+    assert sordo.chiuso and engine.ENGINE is None
+
+
+class Lento(Morto):
+    """Un motore vivo che non risponde."""
+
+    def analyse(self, *a, **k):
+        raise TimeoutError("nessuna risposta")
+
+
+def test_il_motore_che_non_risponde_si_riavvia_e_tiene_tempo_e_linee(motore, monkeypatch):
+    """R131: il TimeoutError del motore vivo che non risponde non lo
+    prendeva nessuno, e il riavvio dentro interroga rimetteva tempo
+    d'analisi e linee ai predefiniti."""
+    monkeypatch.setattr(engine, "ENGINE", Lento())
+    monkeypatch.setattr(engine, "analysis_time", 7)
+    monkeypatch.setattr(engine, "multipv", 4)
+
+    def avvia():
+        engine.ENGINE = Buono()
+        engine.analysis_time, engine.multipv = 2, 1
+        return True
+
+    monkeypatch.setattr(engine, "InitEngine", avvia)
+    assert engine.interroga(chess.Board(), chess.engine.Limit(time=0.1))
+    assert (engine.analysis_time, engine.multipv) == (7, 4)
+    # Se non riparte, l'analisi in cache non cade.
+    monkeypatch.setattr(engine, "ENGINE", Lento())
+    monkeypatch.setattr(engine, "InitEngine", lambda: False)
+    engine.cache_analysis.clear()
+    assert engine._analizza_con_cache(chess.Board(), 1) is None
+
+
+def test_il_motore_mancante_si_dice_una_volta(monkeypatch, capsys):
+    """R131: se il motore configurato era sparito, le due righe tornavano a
+    ogni avvio del motore."""
+    from orologic_modules import storage
+
+    db = storage.LoadDB()
+    db["engine_config"] = {"engine_path": "C:/non/c/e/stockfish.exe", "engine_is_relative": False}
+    monkeypatch.setattr(storage, "LoadDB", lambda *a, **k: db)
+    monkeypatch.setattr(engine, "SearchForEngine", lambda: (None, None, None))
+    monkeypatch.setattr(engine, "_MOTORI_MANCANTI_DETTI", set())
+    monkeypatch.setattr(engine, "ENGINE", None)
+    assert not engine.InitEngine()
+    assert not engine.InitEngine()
+    uscita = capsys.readouterr().out
+    assert uscita.count("non si trova piu'") == 1 and uscita.count("Nessun motore trovato") == 1

@@ -330,3 +330,23 @@ def test_la_riga_semimossa_si_pulisce_prima_di_riscriverla(monkeypatch, tmp_path
     testo = uscita.getvalue()
     assert testo.count("\rSemimossa ") >= 3
     assert testo.count("\rSemimossa ") == testo.count("<PULITA>\rSemimossa ")
+
+
+def test_l_analisi_interrotta_non_si_dice_completata(monkeypatch, tmp_path):
+    """R131: dopo Analisi interrotta usciva comunque Analisi automatica
+    completata."""
+    import sys
+
+    uscita = io.StringIO()
+    partita = chess.pgn.read_game(io.StringIO(PARTITA))
+    monkeypatch.setattr(engine, "percorso_salvataggio", lambda relativo: str(tmp_path / relativo))
+    monkeypatch.setattr(engine, "ENGINE", MotoreFinto(partita, {}))
+    monkeypatch.setattr(engine, "key", lambda *_a, **_k: "\x1b")
+    monkeypatch.setattr(engine, "Acusticator", lambda *_a, **_k: None)
+    monkeypatch.setattr(engine, "_parametri_analisi_automatica", lambda *_a: (1, chess.engine.Limit(depth=1), 0, 0, None))
+    monkeypatch.setattr(engine, "genera_sommario_analitico_txt", lambda *_argomenti: None)
+    monkeypatch.setattr(sys, "stdout", uscita)
+    engine.AnalisiAutomatica(partita)
+    testo = uscita.getvalue()
+    assert "Analisi interrotta dall'utente." in testo
+    assert "Analisi automatica completata." not in testo
