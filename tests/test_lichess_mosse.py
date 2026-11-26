@@ -140,3 +140,19 @@ def test_a_partita_finita_il_flusso_non_si_riprende(monkeypatch):
 def test_senza_rete_per_troppo_ci_si_arrende(monkeypatch):
     messaggi = _messaggi_del_filo(monkeypatch, [], tentativi=4)
     assert [m["type"] for m in messaggi] == ["riconnessione"] * 3 + ["error", "eof"]
+
+
+# R72: le offerte dell'avversario.
+
+
+def test_le_offerte_dell_avversario_si_dicono_una_volta():
+    stato = _stato()
+    stato.my_color = chess.WHITE
+    assert lichess_board.offerte_dell_avversario(stato, {"type": "gameState", "bdraw": True}) == ["L'avversario offre patta: draw accetta, nodraw rifiuta."]
+    # La stessa offerta, al gameState dopo, non si ripete.
+    assert lichess_board.offerte_dell_avversario(stato, {"type": "gameState", "bdraw": True}) == []
+    # La propria offerta non si annuncia come dell'avversario.
+    assert lichess_board.offerte_dell_avversario(stato, {"type": "gameState", "wdraw": True}) == []
+    righe = lichess_board.offerte_dell_avversario(stato, {"type": "gameState", "btakeback": True, "bdraw": True})
+    assert righe == ["L'avversario offre patta: draw accetta, nodraw rifiuta.", "L'avversario chiede di ritirare la mossa: takeback accetta, notakeback rifiuta."]
+    assert any(riga.startswith("nodraw :") for riga in lichess_board._righe_del_gioco(stato))

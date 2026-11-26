@@ -307,9 +307,12 @@ def _righe_del_gioco(game_state):
     righe = [
         *_righe_comuni(),
         _("draw : Proponi patta"),
+        _("nodraw : Rifiuta la patta offerta dall'avversario"),
         _("resign : Abbandona la partita"),
         _("takeback : Chiedi di ritirare la mossa"),
+        _("notakeback : Rifiuta il ritiro chiesto dall'avversario"),
         _("claim : Reclama vittoria per abbandono avversario"),
+        _("claimdraw : Reclama la patta per abbandono avversario"),
     ]
     if getattr(game_state, "tournament_id", None):
         righe.append(_(".berserk : Dimezza il tuo tempo per un punto in piu', torneo arena"))
@@ -882,6 +885,30 @@ def send_action(game_id, token, action, uci=None, chat_text=None, motivo=None):
     return riuscito
 
 
+def offerte_dell_avversario(game_state, msg):
+    """Le righe da dire per le offerte nuove dell'avversario in un
+    gameState: la patta e il ritiro della mossa, una volta per offerta.
+    Prima wdraw, bdraw, wtakeback e btakeback non si leggevano, e l'utente
+    non sapeva dell'offerta (R72)."""
+    avversario = "b" if game_state.my_color == chess.WHITE else "w"
+    righe = []
+    for campo, attributo, testo in (
+        (f"{avversario}draw", "patta_offerta", _("L'avversario offre patta: draw accetta, nodraw rifiuta.")),
+        (f"{avversario}takeback", "ritiro_chiesto", _("L'avversario chiede di ritirare la mossa: takeback accetta, notakeback rifiuta.")),
+    ):
+        attiva = bool(msg.get(campo))
+        if attiva and not getattr(game_state, attributo, False):
+            righe.append(testo)
+        setattr(game_state, attributo, attiva)
+    return righe
+
+
+def suono_dell_offerta():
+    """Tre note che salgono e tornano, da sinistra a destra: l'avversario
+    offre patta o chiede il ritiro (R72)."""
+    Acusticator([523.0, 0.06, -0.5, config.VOLUME, 784.0, 0.06, 0.5, config.VOLUME, 523.0, 0.1, 0, config.VOLUME], kind=3, adsr=[2, 10, 80, 10])
+
+
 def suono_dell_invio_fallito():
     """Tre note che scendono, un tritono: l'invio a Lichess non e' riuscito."""
     Acusticator(["b4", 0.07, 0, config.VOLUME, "f4", 0.07, 0, config.VOLUME, "b3", 0.25, 0, config.VOLUME], kind=2, adsr=[2, 10, 70, 20])
@@ -1068,6 +1095,11 @@ def async_play_loop(q, game_state):
                 refresh_line()
 
             elif msg.get("type") == "gameState":
+                for riga in offerte_dell_avversario(game_state, msg):
+                    ui.pulisci_riga()
+                    sys.stdout.write(riga + "\n")
+                    suono_dell_offerta()
+                    refresh_line()
                 moves = msg.get("moves", "").strip()
                 new_moves = moves.split(" ") if moves else []
                 # Un elenco che non prolunga quello locale, dopo un ritiro
@@ -1600,6 +1632,17 @@ def _gioca_partita(game_id, token, username):
                 riuscita=_("Richiesta di annullamento mossa inviata."),
                 fallita=_("La richiesta di annullamento non e' arrivata a Lichess."),
             )
+            continue
+        # Rifiutare le offerte dell'avversario e reclamare la patta: prima
+        # mancavano (R72).
+        elif cmd == "nodraw":
+            invia_e_riferisci(q, game_id, token, "draw/no", riuscita=_("Patta rifiutata."), fallita=_("Il rifiuto della patta non e' arrivato a Lichess."))
+            continue
+        elif cmd == "notakeback":
+            invia_e_riferisci(q, game_id, token, "takeback/no", riuscita=_("Ritiro della mossa rifiutato."), fallita=_("Il rifiuto del ritiro non e' arrivato a Lichess."))
+            continue
+        elif cmd == "claimdraw":
+            invia_e_riferisci(q, game_id, token, "claim-draw", riuscita=_("Patta reclamata."), fallita=_("Il reclamo della patta non e' arrivato a Lichess."))
             continue
         elif cmd == "claim":
             if game_state.claim_win_in_seconds and game_state.claim_win_in_seconds > 0:
