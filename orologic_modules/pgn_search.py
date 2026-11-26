@@ -253,10 +253,13 @@ def _apri_indirizzo(indirizzo):
         headers={"User-Agent": "Orologic PGN Search"},
     )
     # Aggiungi token Lichess se presente
+    from orologic_modules import rete
     from orologic_modules.lichess_app import load_secrets
 
     token = load_secrets().get("lichess_token")
-    if token and "lichess.org" in indirizzo.lower():
+    # Il token solo a lichess.org in https, non a ogni indirizzo che ne
+    # contiene la scritta (R39).
+    if token and rete.e_di_lichess(indirizzo):
         req.add_header("Authorization", f"Bearer {token}")
     return urllib.request.urlopen(req, timeout=30, context=contesto_ssl())
 

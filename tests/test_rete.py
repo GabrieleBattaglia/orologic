@@ -81,3 +81,16 @@ def test_gli_errori_degli_altri_server_non_parlano_di_lichess():
 )
 def test_il_token_solo_a_lichess(indirizzo, atteso):
     assert rete.e_di_lichess(indirizzo) is atteso
+
+
+def test_la_ricerca_manda_il_token_solo_a_lichess(monkeypatch):
+    """R39: la ricerca PGN aggiungeva il token a ogni indirizzo con la
+    scritta lichess.org."""
+    from orologic_modules import lichess_app, pgn_search
+
+    richieste = []
+    monkeypatch.setattr(lichess_app, "load_secrets", lambda: {"lichess_token": "segreto"})
+    monkeypatch.setattr(pgn_search.urllib.request, "urlopen", lambda richiesta, **k: richieste.append(richiesta))
+    pgn_search._apri_indirizzo("https://lichess.org.altro.example/partite.pgn")
+    pgn_search._apri_indirizzo("https://lichess.org/api/games/user/x")
+    assert [r.get_header("Authorization") for r in richieste] == [None, "Bearer segreto"]
