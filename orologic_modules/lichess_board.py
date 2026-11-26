@@ -885,6 +885,16 @@ def send_action(game_id, token, action, uci=None, chat_text=None, motivo=None):
     return riuscito
 
 
+def secondi_al_reclamo(game_state):
+    """I secondi che restano prima di poter reclamare la vittoria contro un
+    avversario che se ne e' andato; zero se si puo' gia' (R83)."""
+    claim_in = getattr(game_state, "claim_win_in_seconds", 0) or 0
+    if claim_in <= 0:
+        return 0
+    passati = int(time.time() - getattr(game_state, "opponent_gone_time", time.time()))
+    return max(0, claim_in - passati)
+
+
 def offerte_dell_avversario(game_state, msg):
     """Le righe da dire per le offerte nuove dell'avversario in un
     gameState: la patta e il ritiro della mossa, una volta per offerta.
@@ -942,16 +952,9 @@ def async_play_loop(q, game_state):
             stati.append(f"[{game_state.premove}]")
 
         if hasattr(game_state, "opponent_gone") and game_state.opponent_gone:
-            claim_in = getattr(game_state, "claim_win_in_seconds", 0)
-            if claim_in and claim_in > 0:
-                elapsed_gone = int(
-                    time.time() - getattr(game_state, "opponent_gone_time", time.time())
-                )
-                rem = max(0, claim_in - elapsed_gone)
-                if rem > 0:
-                    stati.append(_(" [RECLAMA TRA {rem}s] ").format(rem=rem).strip())
-                else:
-                    stati.append(_(" [RECLAMA] ").strip())
+            rem = secondi_al_reclamo(game_state)
+            if rem > 0:
+                stati.append(_(" [RECLAMA TRA {rem}s] ").format(rem=rem).strip())
             else:
                 stati.append(_(" [RECLAMA] ").strip())
 
@@ -1560,22 +1563,27 @@ def _gioca_partita(game_id, token, username):
             if len(game_state.move_history) > 10:
                 from GBUtils import enter_escape
 
-                if enter_escape(
-                    _(
-                        "Vuoi vedere come hai usato il tempo a tua disposizione? (INVIO per si', ESC per no): "
-                    )
-                ):
-                    board_utils.AnalizzaEStampaStatisticheTempo(
-                        game_state, color_filter=None
-                    )
+                # Il PGN si salva comunque, anche chiudendo Orologic durante
+                # le domande o il resoconto: prima si salvava solo alla fine
+                # di tutto, e si perdeva (R83).
+                try:
                     if enter_escape(
                         _(
-                            "Desideri salvare i tempi mossa nel PGN? (INVIO per si', ESC per no): "
+                            "Vuoi vedere come hai usato il tempo a tua disposizione? (INVIO per si', ESC per no): "
                         )
                     ):
-                        game_state.save_clock_times = True
-                show_post_game_report(game_id, token, username)
-                save_lichess_game(game_state, getattr(game_state, "winner", "*"))
+                        board_utils.AnalizzaEStampaStatisticheTempo(
+                            game_state, color_filter=None
+                        )
+                        if enter_escape(
+                            _(
+                                "Desideri salvare i tempi mossa nel PGN? (INVIO per si', ESC per no): "
+                            )
+                        ):
+                            game_state.save_clock_times = True
+                    show_post_game_report(game_id, token, username)
+                finally:
+                    save_lichess_game(game_state, getattr(game_state, "winner", "*"))
             else:
                 print(
                     _(
@@ -1645,11 +1653,14 @@ def _gioca_partita(game_id, token, username):
             invia_e_riferisci(q, game_id, token, "claim-draw", riuscita=_("Patta reclamata."), fallita=_("Il reclamo della patta non e' arrivato a Lichess."))
             continue
         elif cmd == "claim":
-            if game_state.claim_win_in_seconds and game_state.claim_win_in_seconds > 0:
+            # I secondi che restano, come li mostra il prompt: prima si
+            # guardavano quelli iniziali, e col prompt gia' a RECLAMA il
+            # comando diceva ancora troppo presto (R83).
+            if secondi_al_reclamo(game_state) > 0:
                 print(
                     _(
                         "Troppo presto. Potrai reclamare la vittoria tra {s} secondi."
-                    ).format(s=game_state.claim_win_in_seconds)
+                    ).format(s=secondi_al_reclamo(game_state))
                 )
             else:
                 print(_("Tentativo di reclamare la vittoria (claim victory)..."))

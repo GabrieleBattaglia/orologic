@@ -156,3 +156,18 @@ def test_le_offerte_dell_avversario_si_dicono_una_volta():
     righe = lichess_board.offerte_dell_avversario(stato, {"type": "gameState", "btakeback": True, "bdraw": True})
     assert righe == ["L'avversario offre patta: draw accetta, nodraw rifiuta.", "L'avversario chiede di ritirare la mossa: takeback accetta, notakeback rifiuta."]
     assert any(riga.startswith("nodraw :") for riga in lichess_board._righe_del_gioco(stato))
+
+
+def test_i_secondi_al_reclamo_scendono():
+    """R83: claim guardava i secondi iniziali, mentre il prompt mostrava
+    gia' RECLAMA."""
+    import time
+
+    stato = _stato()
+    stato.claim_win_in_seconds = 30
+    stato.opponent_gone_time = time.time() - 40
+    assert lichess_board.secondi_al_reclamo(stato) == 0
+    stato.opponent_gone_time = time.time() - 10
+    assert 19 <= lichess_board.secondi_al_reclamo(stato) <= 20
+    stato.claim_win_in_seconds = None
+    assert lichess_board.secondi_al_reclamo(stato) == 0
