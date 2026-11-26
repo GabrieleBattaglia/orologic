@@ -231,3 +231,17 @@ def test_gli_amici_hanno_lo_stato_online(monkeypatch):
     assert amici[0]["online"] and amici[0]["playing"] == "https://lichess.org/AbCd1234"
     assert not amici[1]["online"] and "playing" not in amici[1]
     assert lichess_app.id_della_partita(amici[0]["playing"]) == "AbCd1234"
+
+
+# R81: le squadre di una battaglia a squadre.
+
+
+def test_le_squadre_nelle_varie_forme():
+    from orologic_modules import lichess_tornei
+
+    trova = lichess_tornei.squadre_del_torneo
+    assert trova({"teamBattle": {"teams": {"a": "Alfa"}}}) == {"a": "Alfa"}
+    assert trova({"teamBattle": {"teams": [["a", "Alfa"], ["b", "Beta"]]}}) == {"a": "Alfa", "b": "Beta"}
+    assert trova({"teamBattle": {"teams": ["a", "b"]}}) == {"a": "a", "b": "b"}
+    assert trova({"teamBattle": {"teams": [{"id": "a", "name": "Alfa"}]}}) == {"a": "Alfa"}
+    assert trova({}) == {}
