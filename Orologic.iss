@@ -87,7 +87,7 @@ Type: filesandordirs; Name: "{app}\_internal_vecchio"
 ; Il pacchetto a cartella di PyInstaller, senza i dati che una prova avesse lasciato in dist, come lo
 ; zip. Ogni motivo comincia con la barra rovesciata, che lo lega alla cartella dell'eseguibile, e ogni
 ; cartella e' scritta anche col suo contenuto, perche' createallsubdirs creerebbe quelle vuote.
-Source: "dist\orologic\*"; DestDir: "{app}"; Excludes: "\settings,\settings\*,\pgn,\pgn\*,\txt,\txt\*,\images,\images\*,\engine,\engine\*,\engine.nuovo,\engine.nuovo\*,\engine.vecchio,\engine.vecchio\*,\pgn-extract,\pgn-extract\*,\pgn-extract.nuovo,\pgn-extract.nuovo\*,\pgn-extract.vecchio,\pgn-extract.vecchio\*,\log,\log\*,\logs,\logs\*,\*.log,\*.log.1,\*.tmp,\*.bak"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\orologic\*"; DestDir: "{app}"; Excludes: "\settings,\settings\*,\pgn,\pgn\*,\txt,\txt\*,\images,\images\*,\engine,\engine\*,\engine.nuovo,\engine.nuovo\*,\engine.vecchio,\engine.vecchio\*,\pgn-extract,\pgn-extract\*,\pgn-extract.nuovo,\pgn-extract.nuovo\*,\pgn-extract.vecchio,\pgn-extract.vecchio\*,\log,\log\*,\logs,\logs\*,\*.log,\*.log.1,\*.tmp,\*.bak,\*.zip"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\Orologic"; Filename: "{app}\orologic.exe"

@@ -74,3 +74,26 @@ def test_il_mutex_si_tiene(monkeypatch):
     maniglia = installazione.tieni_il_mutex(f"Orologic-prove-{os.getpid()}")
     assert maniglia
     assert installazione.tieni_il_mutex() == maniglia
+
+
+def _testo_della_radice(nome, codifica="utf-8"):
+    radice = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(radice, nome), encoding=codifica) as file:
+        return file.read()
+
+
+def test_l_installatore_lascia_fuori_gli_zip():
+    """R141: in dist/orologic era rimasto un Orologic.zip da 92 MB, e
+    Orologic.iss non escludeva gli zip: setup_maker.py l'avrebbe messo
+    nell'installatore."""
+    testo = _testo_della_radice("Orologic.iss", "utf-8-sig")
+    riga = next(riga for riga in testo.splitlines() if riga.startswith('Source: "dist\\orologic\\*"'))
+    esclusi = re.search(r'Excludes: "([^"]*)"', riga).group(1).split(",")
+    assert "\\*.zip" in esclusi
+
+
+def test_i_requisiti_delle_prove_e_dei_cataloghi():
+    """R141: requirements-dev.txt non aveva babel e pytest, che servono alle
+    prove e all'aggiornamento dei cataloghi."""
+    pacchetti = {re.split(r"[<>=~!\[ ]", riga.strip(), maxsplit=1)[0].lower() for riga in _testo_della_radice("requirements-dev.txt").splitlines() if riga.strip() and not riga.lstrip().startswith(("#", "-"))}
+    assert {"babel", "polib", "pytest"} <= pacchetti

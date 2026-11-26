@@ -52,7 +52,7 @@ margin: 1em 0;
 </style>
 </head>
 <body>
-<h1>Guida Utente di Orologic (Versione 9.5.133 - giovedì 26 novembre 2026)</h1>
+<h1>Guida Utente di Orologic (Versione 9.5.134 - giovedì 26 novembre 2026)</h1>
 
 <div class="note">
     <p><strong>Nota sulla lingua:</strong> Benché il codice del programma sia localizzabile, questa guida verrà rilasciata soltanto in italiano. Incoraggio gli utenti ad utilizzare i numerosi strumenti online gratuiti, per tradurla automaticamente nella propria lingua madre.</p>
@@ -360,15 +360,17 @@ margin: 1em 0;
     <li><code>F6</code>: va alla console.</li>
     <li><code>Tab</code> e <code>Maiuscolo+Tab</code>: passano dall'una all'altra.</li>
     <li><code>Ctrl+virgola</code>: apre le impostazioni, sezione 2.10.2.</li>
-    <li><code>Alt+F4</code>: chiude Orologic, come Ctrl+C nel terminale.</li>
+    <li><code>Alt+F4</code>: chiude Orologic, come Ctrl+C nel terminale, senza chiedere conferma: la partita aperta si salva, come dice il paragrafo qui sotto.</li>
     <li><code>Ctrl+V</code>: incolla nella console, fino al primo a capo.</li>
 </ul>
+<p>Chiudendo Orologic a partita in corso la partita non si perde. In arbitraggio e contro il motore il PGN va nella cartella <code>pgn</code>, con <code>interrotta</code> nel nome del file; su Lichess va nella stessa cartella la ricostruzione che Orologic fa da sé, senza rete, se la partita è durata più di cinque mosse; in Easyfish la partita si salva se l'hai cambiata dall'ultimo salvataggio. Succede anche quando Orologic si ferma per un errore, e quando in quel momento è occupato, per esempio in un'analisi lunga o in attesa della rete.</p>
 <p>Tutti i tasti della finestra, finestra per finestra, sono nella sezione 1.8.</p>
 
 <h4 id="cap-1-3-3">1.3.3. Le partite: il cruscotto e gli annunci</h4>
 <p>Durante una partita, nell'arbitraggio, in Tempo, contro il motore e su Lichess, la console diventa un <strong>cruscotto</strong> che si riscrive da solo ogni secondo: dall'alto i giocatori e lo stato della partita, la scacchiera, gli orologi a parole, le ultime mosse a parole, con le due semimosse sulla stessa riga, il consumo dell'orologio di chi ha mosso e il tempo speso, poi gli ultimi messaggi e in fondo il prompt. Puoi fermarti su una riga, per esempio quella degli orologi: si aggiorna senza spostarti. A fine partita torna la console intera, con tutto quello che è stato scritto.</p>
 <p>In partita la plancia mostra i comandi della modalità, con le righe del loro aiuto: Invio su un comando lo scrive nel prompt e lo manda, come se lo avessi digitato. I comandi con un seguito sono rami con i valori possibili: la diagonale e la colonna hanno le otto lettere, la casa ha le colonne e le traverse, i pezzi le loro sigle, il livello del motore in Easyfish i suoi numeri. Quelli con un valore libero, come l'Elo o un messaggio in chat, scrivono l'inizio del comando e ti lasciano completarlo nella console. Dove la scacchiera interattiva si può aprire, la prima voce è <code>Spazio: per accedere alla scacchiera interattiva</code>, che la apre come lo spazio a riga vuota.</p>
 <p>Il testo nuovo che compare nella console viene annunciato alla sintesi e al braille, come lo leggeva NVDA nel terminale, ma senza ripeterti quello che scrivi. Il prompt delle mosse si annuncia quando compare, la prima volta e quando ci torni dopo una domanda o un menu; quando si riscrive, dopo una mossa o un messaggio, non si ripete: resta sulla barra braille e in fondo al cruscotto, che continuano ad aggiornarsi. Le impostazioni degli annunci, sezione 2.10.2, dicono se annunciare, con quale uscita, se alla sintesi, al braille o a tutti e due, e se un annuncio nuovo interrompe quello in corso o si accoda: di partenza la risposta a un tasto interrompe e il resto si accoda.</p>
+<p>Al braille gli annunci passano uno dopo l'altro, come messaggi, e ogni riga resta sulla barra almeno due secondi. La fila tiene al massimo otto righe: dopo un'uscita lunga, come l'aiuto dei comandi, le righe in più restano soltanto nella console, e l'ultima riga della fila ti dice quante sono, per esempio <code>Altre 22 righe nell'area.</code> Un tasto qualunque della finestra svuota la fila, perché i messaggi vecchi non coprano quello che stai rileggendo; la svuota anche una finestra aperta sopra, come la scacchiera interattiva.</p>
 
 <h4 id="cap-1-3-4">1.3.4. La scacchiera interattiva</h4>
 <p>Solo nella finestra, nell'arbitraggio, nelle partite contro il motore e su Lichess: al prompt delle mosse, a riga vuota, lo <code>Spazio</code> apre la scacchiera interattiva, e <code>Esc</code> la chiude. È un testo di otto righe, una per traversa, come <code>1| R | - | q | - | N | K | + | b |1</code>: il numero ai due lati, le case fra barre verticali, i pezzi con le lettere inglesi, maiuscole i bianchi e minuscole i neri, il trattino le case chiare vuote e il più le scure, il pezzo sollevato fra parentesi quadre, come <code>[N]</code>, e l'ultimo pezzo mosso, tuo o dell'avversario, fra parentesi tonde, come <code>(n)</code>; se lo sollevi, vincono le quadre. Quando giochi la guardi dal tuo colore; quando arbitri o osservi, dal Bianco. Il cursore di NVDA, e il display braille, stanno sul segno della casa scelta.</p>
@@ -542,7 +544,7 @@ margin: 1em 0;
 <h4 id="cap-1-8-1">1.8.1. La finestra principale</h4>
 <p>Valgono nella finestra principale, non nelle finestre aperte sopra.</p>
 <ul>
-    <li><code>Alt+F4</code>: chiude Orologic, come Ctrl+C nel terminale: il programma ha cinque secondi per chiudersi da solo.</li>
+    <li><code>Alt+F4</code>: chiude Orologic, come Ctrl+C nel terminale, senza chiedere conferma: il programma ha cinque secondi per chiudersi da solo, e la partita aperta si salva, sezione 1.3.2.</li>
     <li><code>Ctrl+virgola</code>: apre le impostazioni, sezione 2.10.2; se sono già aperte non fa niente.</li>
     <li><code>F5</code>: va alla plancia.</li>
     <li><code>F6</code>: va alla console.</li>
@@ -559,8 +561,10 @@ margin: 1em 0;
 
 <h4 id="cap-1-8-3">1.8.3. La console</h4>
 <ul>
+    <li><code>Applicazioni e Maiuscolo+F10</code>: il menu contestuale della console, con Copia e Seleziona tutto.</li>
     <li><code>Backspace</code>: nelle domande a testo cancella l'ultimo carattere scritto; altrimenti va a Orologic, come nel terminale.</li>
-    <li><code>Canc, Ctrl+X, Ctrl+Z e Ctrl+Y</code>: non fanno niente: la console non si modifica.</li>
+    <li><code>Canc, Ctrl+X, Ctrl+Z, Ctrl+Y e Alt+Backspace</code>: non fanno niente: la console non si modifica.</li>
+    <li><code>Ctrl+Backspace</code>: cancella l'ultima parola scritta nel prompt, sullo schermo e in quello che Orologic sta leggendo, insieme.</li>
     <li><code>Ctrl+V e Maiuscolo+Ins</code>: incollano nel prompt gli appunti, fino al primo a capo.</li>
     <li><code>Esc</code>: nelle domande a testo svuota la riga scritta; altrimenti va a Orologic, come nel terminale.</li>
     <li><code>Frecce, Pagina su, Pagina giù, Home e Fine</code>: percorrono la console, per rileggerla.</li>
