@@ -58,3 +58,57 @@ def test_il_motore_che_non_riparte_si_dice_e_non_fa_cadere(motore, monkeypatch, 
     assert engine.ENGINE is None and not engine.MOTORE
     assert "Il motore non riparte: niente analisi." in capsys.readouterr().out
     assert engine.CalculateBest(chess.Board()) is None
+
+
+# R49: la configurazione del motore.
+
+
+class Finto:
+    def __init__(self):
+        self.id = {"name": "Finto"}
+        self.chiuso = False
+
+    def quit(self):
+        self.chiuso = True
+
+
+@pytest.fixture
+def motore_finto(impostazioni_rimesse, monkeypatch, tmp_path):
+    import os
+
+    from orologic_modules import config
+
+    cartella = config.percorso_salvataggio("motore_di_prova")
+    os.makedirs(cartella, exist_ok=True)
+    open(os.path.join(cartella, "finto.exe"), "wb").close()
+    aperti = []
+    monkeypatch.setattr(engine.chess.engine.SimpleEngine, "popen_uci", lambda percorso, **k: aperti.append((percorso, Finto())) or aperti[-1][1])
+    monkeypatch.setattr(engine, "SearchForEngine", lambda: (cartella, "finto.exe", False))
+    monkeypatch.setattr(engine, "ENGINE", None)
+    yield aperti
+    engine.CloseEngine()
+
+
+def test_il_motore_spostato_si_dice_e_si_cerca(motore_finto, monkeypatch, capsys):
+    from orologic_modules import storage
+
+    monkeypatch.setattr(engine, "_configura_opzioni", lambda cfg: None)
+    storage.SetValue("engine_config", {"engine_path": "Z:/non/esiste/stockfish.exe", "engine_is_relative": False})
+    assert engine.InitEngine()
+    assert "Il motore configurato non si trova piu'" in capsys.readouterr().out
+    cfg = storage.LoadDB()["engine_config"]
+    # Sta nella cartella di Orologic: si salva relativo.
+    assert cfg["engine_is_relative"] is True and cfg["engine_path"].endswith("finto.exe")
+
+
+def test_la_configurazione_fallita_chiude_il_motore(motore_finto, monkeypatch):
+    from orologic_modules import storage
+
+    def guasta(_cfg):
+        raise chess.engine.EngineError("opzione rifiutata")
+
+    monkeypatch.setattr(engine, "_configura_opzioni", guasta)
+    storage.SetValue("engine_config", {})
+    assert not engine.InitEngine()
+    assert engine.ENGINE is None
+    assert motore_finto[-1][1].chiuso

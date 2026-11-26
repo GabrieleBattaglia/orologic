@@ -358,13 +358,15 @@ def InitEngine():
             ENGINE_NAME = "Nessuno"
             return False
         cfg = {
-            "engine_path": os.path.join(p, e),
-            "engine_is_relative": False,
             "hash_size": 128,
             "num_cores": 1,
             "skill_level": 20,
             "move_overhead": 0,
         }
+        # Relativo alla cartella di Orologic, quando ci sta: prima si
+        # salvava sempre assoluto, e spostando la cartella il motore non si
+        # trovava piu' (R49).
+        cfg["engine_path"], cfg["engine_is_relative"] = percorso_da_salvare(percorso_assoluto(os.path.join(p, e)))
         storage.SetValue("engine_config", cfg)
 
     percorso_configurato = cfg.get("engine_path", "")
@@ -373,28 +375,43 @@ def InitEngine():
         if cfg.get("engine_is_relative")
         else percorso_configurato
     )
-    if os.path.exists(path):
-        try:
-            # Senza la sua finestra: dal pacchetto senza console, su Windows,
-            # Stockfish ne aprirebbe una nera tutta sua.
-            opzioni = {"creationflags": subprocess.CREATE_NO_WINDOW} if sys.platform == "win32" else {}
-            ENGINE = chess.engine.SimpleEngine.popen_uci(path, **opzioni)
-            _configura_opzioni(cfg)
-            forza.update(
-                tipo="livello", valore=cfg.get("skill_level", 20), profondita=None
-            )
-            ENGINE_NAME = ENGINE.id.get("name", "UCI Engine")
-            print(_("Motore {n} pronto.").format(n=ENGINE_NAME))
-            return True
-        except (
-            chess.engine.EngineError,
-            chess.engine.EngineTerminatedError,
-            OSError,
-        ) as e:
-            print(_("Errore motore: {e}").format(e=e))
+    if not os.path.exists(path):
+        # Prima si taceva, e restava "motore non configurato" senza una
+        # spiegazione: ora lo si dice, e lo si cerca di nuovo (R49).
+        print(_("Il motore configurato non si trova piu': {p}. Lo cerco.").format(p=path))
+        p, e, _unused_v = SearchForEngine()
+        if not (p and e):
+            print(_("Nessun motore trovato: puoi sceglierlo dalle impostazioni."))
             ENGINE = None
+            ENGINE_NAME = "Nessuno"
             return False
-    return False
+        path = percorso_assoluto(os.path.join(p, e))
+        cfg = dict(cfg)
+        cfg["engine_path"], cfg["engine_is_relative"] = percorso_da_salvare(path)
+        storage.SetValue("engine_config", cfg)
+    try:
+        # Senza la sua finestra: dal pacchetto senza console, su Windows,
+        # Stockfish ne aprirebbe una nera tutta sua.
+        opzioni = {"creationflags": subprocess.CREATE_NO_WINDOW} if sys.platform == "win32" else {}
+        ENGINE = chess.engine.SimpleEngine.popen_uci(path, **opzioni)
+        _configura_opzioni(cfg)
+        forza.update(
+            tipo="livello", valore=cfg.get("skill_level", 20), profondita=None
+        )
+        ENGINE_NAME = ENGINE.id.get("name", "UCI Engine")
+        print(_("Motore {n} pronto.").format(n=ENGINE_NAME))
+        return True
+    except (
+        chess.engine.EngineError,
+        chess.engine.EngineTerminatedError,
+        OSError,
+    ) as e:
+        print(_("Errore motore: {e}").format(e=e))
+        # Il motore partito ma non configurato si chiude: prima si
+        # azzerava senza chiuderlo, e restava acceso (R49).
+        CloseEngine()
+        ENGINE = None
+        return False
 
 
 def forza_della_configurazione():

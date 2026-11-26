@@ -25,7 +25,6 @@ R20. Alto, fragilità. orologic_modules/lichess_app.py righe 1553-1562; lichess_
 Rilievi medi, per area.
 Persistenza, avvio e rete.
 Partita, orologio e motore.
-R49. Medio, fragilità. orologic_modules/engine.py righe 360-362, 376 e 394-396. La configurazione automatica salva un percorso assoluto anche quando il motore sta nella cartella di Orologic; se il percorso non esiste si tace e non si ricerca; se la configurazione delle opzioni fallisce il motore viene azzerato senza chiuderlo. Impatto: spostando la cartella, "motore non configurato" senza spiegazione. Correzione: percorso_da_salvare, un messaggio, la chiusura nell'except. Letto.
 Easyfish e Memoboard.
 R52. Medio, fragilità, DRY. orologic_modules/easyfish/pgn_handler.py righe 399-416. SaveGameToFile non dice al chiamante se è riuscita, e i chiamanti subito dopo buttano la partita; os.makedirs sta fuori dal try. game_flow.salva_pgn_partita è la versione robusta, col ripiego. Correzione: usarla, e non procedere se fallisce. Letto.
 R53. Medio, fragilità. orologic_modules/easyfish/easyfish_app.py riga 876; pgn_handler.py riga 36. Le due letture degli appunti stanno fuori da ogni try, mentre la copia è protetta. Correzione: una ui.leggi_dagli_appunti. Letto.
