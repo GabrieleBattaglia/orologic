@@ -56,3 +56,17 @@ def test_l_analisi_manuale_nella_finestra(finestra, monkeypatch):
     _premi(finestra, ".")
     assert pompa(lambda: not finestra.nucleo.is_alive())
     assert finestra.fornitore is None and finestra.comandi is None
+
+
+
+def test_k_senza_mosse_non_cade(finestra):
+    """R42: con un PGN senza mosse k chiedeva a dgt un numero fra 1 e 0, e
+    dgt sollevava ValueError."""
+    game = chess.pgn.read_game(io.StringIO('[White "A"]\n[Black "B"]\n[Result "*"]\n\n*\n'))
+    finestra.avvia_il_nucleo(lambda: engine.AnalyzeGame(game))
+    assert pompa(lambda: finestra.fornitore is not None and finestra.comandi == config.ANALYSIS_COMMANDS)
+    _premi(finestra, "k")
+    assert pompa(lambda: "La partita non ha mosse." in finestra.area.GetValue())
+    assert finestra.nucleo.is_alive()
+    _premi(finestra, ".")
+    assert pompa(lambda: not finestra.nucleo.is_alive())

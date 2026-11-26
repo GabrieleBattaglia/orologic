@@ -1281,6 +1281,10 @@ def _analisi_manuale(pgn_game, is_corrected):
                 adsr=[0, 0, 100, 0],
             )
             max_m = (total_moves + 1) // 2
+            # Senza mosse dgt riceveva un intervallo da 1 a 0 e cadeva (R42).
+            if max_m < 1:
+                print(_("\nLa partita non ha mosse."))
+                continue
             target = dgt(
                 _("\nVai a mossa n.# (Max {m}): ").format(m=max_m),
                 kind="i",
