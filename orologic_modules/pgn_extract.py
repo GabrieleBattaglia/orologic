@@ -725,22 +725,81 @@ def percorso_eco():
     return board_utils.percorso_eco()
 
 
-def argomenti(percorso_di_pe, scelti, sorgente, uscita):
+def _nella_codepage(testo):
+    """Vero se il testo passa nella codepage di Windows, quella in cui
+    pgn-extract riceve gli argomenti."""
+    if sys.platform != "win32":
+        return True
+    try:
+        testo.encode("mbcs")
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
+def _nome_corto(percorso):
+    """Il nome corto 8.3 di un file o di una cartella che c'e', o None."""
+    if sys.platform != "win32":
+        return None
+    import ctypes
+
+    spazio = ctypes.create_unicode_buffer(32768)
+    if not ctypes.windll.kernel32.GetShortPathNameW(percorso, spazio, len(spazio)):
+        return None
+    return spazio.value
+
+
+def per_pe(percorso, crea=False):
+    """Il percorso come pgn-extract lo sa aprire: com'e', se passa nella
+    codepage di Windows; altrimenti col nome corto 8.3 del file, o della
+    sua cartella. crea fa nascere vuoto il file che pe scrivera', per
+    averne il nome corto. None se non c'e' verso. Prima un sorgente come
+    Kasparov in cirillico non si apriva, e restava un file d'uscita dal
+    nome storpiato (R62)."""
+    if not percorso or _nella_codepage(percorso):
+        return percorso
+    if crea and not os.path.exists(percorso):
+        with contextlib.suppress(OSError):
+            open(percorso, "a", encoding="utf-8").close()
+    if os.path.exists(percorso):
+        corto = _nome_corto(percorso)
+        return corto if corto and _nella_codepage(corto) else None
+    cartella, nome = os.path.split(percorso)
+    corta = _nome_corto(cartella) if cartella else ""
+    if corta is not None and _nella_codepage(nome) and _nella_codepage(corta):
+        return os.path.join(corta, nome)
+    return None
+
+
+def argomenti(percorso_di_pe, scelti, sorgente, uscita, per_pgn_extract=False):
     """La riga di comando: pe, i parametri nell'ordine di scelta con -S
     davanti, -o con il file d'uscita se scrive la destinazione, e i file
-    sorgente in fondo, il primo e gli altri file sorgente."""
+    sorgente in fondo, il primo e gli altri file sorgente. per_pgn_extract,
+    per il comando da lanciare, mette i nomi dei file come pe li sa aprire
+    (R62); senza, per la riga da leggere, restano quelli veri."""
+    if per_pgn_extract:
+
+        def nome(percorso, crea=False):
+            return per_pe(percorso, crea) or percorso
+    else:
+
+        def nome(percorso, crea=False):
+            return percorso
+
     ordinati = sorted(scelti, key=lambda scelto: 0 if scelto.parametro.opzione in PRIMA else 1)
     comando = [percorso_di_pe]
-    sorgenti = [sorgente]
+    sorgenti = [nome(sorgente)]
     for scelto in ordinati:
         parametro = scelto.parametro
         if parametro.opzione == ALTRO_SORGENTE:
             if scelto.valore:
-                sorgenti.append(scelto.valore)
+                sorgenti.append(nome(scelto.valore))
             continue
         valore = scelto.valore or ""
         if parametro.opzione == "-e" and not valore:
             valore = percorso_eco()
+        if valore and parametro.valore in ("file", "file_nuovo"):
+            valore = nome(valore, crea=parametro.valore == "file_nuovo")
         if not parametro.vuole_un_valore or not valore:
             comando.append(parametro.prefisso)
         elif parametro.separato:
@@ -748,7 +807,7 @@ def argomenti(percorso_di_pe, scelti, sorgente, uscita):
         else:
             comando.append(parametro.prefisso + valore)
     if uscita and scrive_la_destinazione(scelti):
-        comando.append("-o" + uscita)
+        comando.append("-o" + nome(uscita, crea=True))
     comando.extend(sorgenti)
     return comando
 

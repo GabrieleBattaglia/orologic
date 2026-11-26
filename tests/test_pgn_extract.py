@@ -575,3 +575,24 @@ def test_i_file_che_dividere_in_piu_file_sovrascriverebbe(tmp_path):
     assert pgn_extract.file_che_sovrascriverebbe([Scelto("-#")], str(tmp_path)) == ["1.pgn", "12.pgn"]
     assert pgn_extract.file_che_sovrascriverebbe([Scelto("-E")], str(tmp_path)) == ["A.pgn", "B00.pgn"]
     assert pgn_extract.file_che_sovrascriverebbe([Scelto("-C")], str(tmp_path)) == []
+
+
+def test_i_nomi_fuori_dalla_codepage_arrivano_a_pe_col_nome_corto(tmp_path):
+    """R62: pgn-extract riceve gli argomenti nella codepage di Windows, e un
+    sorgente come Kasparov in cirillico non si apriva."""
+    import subprocess
+
+    cartella = tmp_path / "Čech Łódź"
+    cartella.mkdir()
+    sorgente = cartella / "Каспаров.pgn"
+    sorgente.write_text('[Event "E"]\n[White "A"]\n[Black "B"]\n[Result "1-0"]\n\n1. e4 e5 1-0\n', encoding="utf-8")
+    assert pgn_extract.per_pe("C:/semplice/città.pgn") == "C:/semplice/città.pgn"
+    corto = pgn_extract.per_pe(str(sorgente))
+    if corto is None:
+        pytest.skip("il disco delle prove non ha i nomi corti 8.3")
+    assert corto.isascii()
+    uscita = cartella / "uscita è.pgn"
+    comando = pgn_extract.argomenti(PE_VERO, [], str(sorgente), str(uscita) + ".pgn-extract.tmp", per_pgn_extract=True)
+    assert all(parte.encode("mbcs") for parte in comando)
+    subprocess.run(comando, cwd=str(tmp_path), capture_output=True, timeout=60, check=False)
+    assert "1. e4 e5" in (cartella / "uscita è.pgn.pgn-extract.tmp").read_text(encoding="utf-8", errors="replace")

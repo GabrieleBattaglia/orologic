@@ -795,6 +795,13 @@ class FinestraArchivi(wx.Dialog):
                 if esistenti:
                     nomi = ", ".join(esistenti[:5]) + (_(" e altri {n}").format(n=len(esistenti) - 5) if len(esistenti) > 5 else "")
                     righe.append(_("Nella cartella {cartella} ci sono gia' {nomi}: pgn-extract li sovrascriverebbe, o vi aggiungerebbe le partite. Scegli una cartella vuota.").format(cartella=cartella, nomi=nomi))
+        # I file che pgn-extract non saprebbe aprire, nemmeno col nome corto
+        # 8.3: i sorgenti, e le cartelle dei file che scrive (R62).
+        da_aprire = [percorso for percorso in sorgenti if percorso]
+        da_aprire += [os.path.dirname(percorso) for percorso in (destinazione, *(scelto.valore for scelto in self.file_da_scrivere())) if percorso]
+        illeggibile = next((percorso for percorso in da_aprire if os.path.exists(percorso) and pgn_extract.per_pe(percorso) is None), None)
+        if illeggibile:
+            righe.append(_("pgn-extract non sa aprire {percorso}: il nome ha caratteri fuori dalla codepage di Windows. Rinomina il file, o la cartella, con lettere semplici.").format(percorso=illeggibile))
         return righe
 
     def file_da_scrivere(self):
@@ -850,7 +857,7 @@ class FinestraArchivi(wx.Dialog):
             cartella = destinazione if os.path.isdir(destinazione) else os.path.dirname(destinazione)
         else:
             cartella = os.path.dirname(os.path.abspath(sorgente))
-        comando = pgn_extract.argomenti(self.pe, self.scelti, sorgente, uscita)
+        comando = pgn_extract.argomenti(self.pe, self.scelti, sorgente, uscita, per_pgn_extract=True)
         # Gli archivi veri da copiare a lavoro riuscito: non il file
         # provvisorio degli appunti.
         sorgenti = [] if provvisorio else [sorgente]
