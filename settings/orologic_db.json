@@ -21,7 +21,7 @@
             ],
             "note": "",
             "created": "2026-10-01T23:30",
-            "run_seconds": 1997
+            "run_seconds": 2105
         },
         {
             "name": "ASCID-Sociale11",
@@ -44,7 +44,7 @@
             ],
             "note": "Un'ora secca. Creato per il sociale ASCID, 11° edizione.",
             "created": "2026-10-01T23:30",
-            "run_seconds": 0
+            "run_seconds": 150
         },
         {
             "name": "Primavera2",
@@ -108,51 +108,70 @@
             ],
             "note": "2026",
             "created": "2026-10-01T23:30",
-            "run_seconds": 17065
+            "run_seconds": 17194
+        },
+        {
+            "name": "Clessidra1",
+            "same_time": true,
+            "phases": [
+                {
+                    "white_time": 900,
+                    "black_time": 900,
+                    "white_inc": 0,
+                    "black_inc": 0,
+                    "moves": 0,
+                    "tipo": "clessidra",
+                    "white_ritardo": 5,
+                    "black_ritardo": 5,
+                    "white_periodo": 30,
+                    "black_periodo": 30,
+                    "white_periodi": 5,
+                    "black_periodi": 5,
+                    "white_minuti_periodo": 5,
+                    "black_minuti_periodo": 5,
+                    "white_mosse_periodo": 25,
+                    "black_mosse_periodo": 25
+                }
+            ],
+            "alarms": [
+                45
+            ],
+            "note": "Test della clessidra",
+            "created": "2026-11-25T20:34",
+            "run_seconds": 0
         }
     ],
     "default_pgn": {
-        "Event": "Autunneo 2",
-        "Site": "WhatsApp",
-        "Round": "4",
-        "White": "Paglia, Virginio",
-        "Black": "Rossi, Milena",
-        "WhiteElo": "136",
-        "BlackElo": "1399"
+        "Event": "test",
+        "Site": "pc",
+        "Round": "-",
+        "White": "Testb",
+        "Black": "Testn",
+        "WhiteElo": "1500",
+        "BlackElo": "1500"
     },
     "volume": 0.41,
-    "launch_count": 742,
+    "launch_count": 759,
     "localization": {
         "pieces": {
             "pawn": {
                 "name": "Pedone",
-                "pname": "Pedoni",
-                "gender": "m"
+                "pname": "Pedoni"
             },
             "knight": {
-                "name": "Cavallo",
-                "pname": "cavalli",
-                "gender": "m"
+                "name": "Cavallo"
             },
             "bishop": {
-                "name": "Alfiere",
-                "pname": "alfieri",
-                "gender": "m"
+                "name": "Alfiere"
             },
             "rook": {
-                "name": "Torre",
-                "pname": "torri",
-                "gender": "f"
+                "name": "Torre"
             },
             "queen": {
-                "name": "Donna",
-                "pname": "donne",
-                "gender": "f"
+                "name": "Donna"
             },
             "king": {
-                "name": "Re",
-                "pname": "re",
-                "gender": "m"
+                "name": "Re"
             }
         },
         "columns": {
@@ -165,51 +184,21 @@
             "g": "genova",
             "h": "hotel"
         },
-        "adjectives": {
-            "white": {
-                "m": "bianco",
-                "f": "bianca",
-                "mp": "bianchi",
-                "fp": "bianche"
-            },
-            "black": {
-                "m": "nero",
-                "f": "nera",
-                "mp": "neri",
-                "fp": "nere"
-            }
-        },
         "moves": {
             "capture": "per",
-            "capture_on": "in",
-            "move": "va in",
-            "move_to": "in",
             "en_passant": "al varco",
-            "short_castle": "arrocco corto",
-            "long_castle": "arrocco lungo",
-            "promotion": "promuove a",
             "promotes_to": "promuove a",
             "check": "scacco!",
-            "mate": "scacco matto",
             "checkmate": "Matto!"
         },
         "annotations": {
-            "!": "mossa forte",
-            "?": "mossa debole",
             "!!": "mossa geniale!",
             "??": "mossa pessima",
-            "!?": "mossa dubbia",
-            "?!": "mossa dubbia",
-            "=": "proposta di patta"
+            "!?": "mossa dubbia"
         },
         "analysis": {
             "blunder": "Errore grave",
-            "mistake": "Errore",
-            "inaccuracy": "Inesattezza",
-            "good": "Buona",
-            "brilliant": "Ottima",
-            "normal": "Ok",
-            "book": "Teoria"
+            "brilliant": "Ottima"
         }
     },
     "engine_config": {
@@ -305,7 +294,10 @@
         "errore": 100,
         "svarione": 250,
         "mossa_buona": 20,
-        "mossa_geniale_gap": 180
+        "mossa_geniale_gap": 180,
+        "calo_inesattezza": 5,
+        "calo_errore": 10,
+        "calo_svarione": 15
     },
     "nome_utente": "Battaglia, Gabriele",
     "modello_del_motore": {
@@ -315,15 +307,15 @@
         "elo_motore": 1320
     },
     "punteggio_contro_il_motore": {
-        "punteggio": 1110,
-        "partite": 11,
+        "punteggio": 1101,
+        "partite": 12,
         "vinte": 3,
         "patte": 0,
-        "perse": 8,
+        "perse": 9,
         "massimo": 1174,
         "minimo": 1100,
         "ultimo_avversario": 1320,
-        "ultima_partita": "2026-11-20T08:51"
+        "ultima_partita": "2026-11-21T10:16"
     },
     "partite_contro_il_motore": [
         {
@@ -501,6 +493,92 @@
             "elo_utente": 1110,
             "variazione": -10,
             "elo_motore": 1320
+        },
+        {
+            "data": "2026-11-21T10:16",
+            "colore": "w",
+            "risultato": "0-1",
+            "punti": 0,
+            "forza": {
+                "tipo": "elo",
+                "valore": 1320
+            },
+            "profondita": null,
+            "elo": true,
+            "carriera": true,
+            "elo_utente": 1101,
+            "variazione": -9,
+            "elo_motore": 1320
+        }
+    ],
+    "annunci": {
+        "attivi": true,
+        "uscita": "automatica",
+        "destinazione": "sintesi",
+        "tasti_interrompono": true,
+        "testo_interrompe": false
+    },
+    "pulizia_giorni": 365,
+    "forza_del_motore": {
+        "tipo": "livello",
+        "valore": 20,
+        "profondita": null
+    },
+    "pgn_extract_catene": [
+        {
+            "nome": "ECO e pulizia",
+            "parametri": [
+                [
+                    "-r",
+                    null
+                ],
+                [
+                    "--commentlines",
+                    null
+                ],
+                [
+                    "--fixresulttags",
+                    null
+                ],
+                [
+                    "--fixtagstrings",
+                    null
+                ],
+                [
+                    "-e",
+                    null
+                ]
+            ]
+        },
+        {
+            "nome": "Togli giocatore",
+            "parametri": [
+                [
+                    "-Tp",
+                    null
+                ],
+                [
+                    "-n",
+                    null
+                ]
+            ]
+        },
+        {
+            "nome": "via i -16",
+            "parametri": [
+                [
+                    "-pl",
+                    "16"
+                ],
+                [
+                    "-e",
+                    null
+                ],
+                [
+                    "--commentlines",
+                    null
+                ]
+            ]
         }
     ]
 }
